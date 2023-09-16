@@ -44,11 +44,11 @@ void ReadWrite::readCAN() {
     }
 }
 
-void ReadWrite::printCAN() {
+void ReadWrite::printCAN(int mtrID, int canID) {
     Serial.println("CAN #1");
     Serial.print("{\t");
     for (int i = 0; i < 8; i++) {
-        Serial.print(input[0][i]);
+        Serial.print(input[canID][mtrID][i]);
         Serial.print(\t);
     }
     Serial.print("}");

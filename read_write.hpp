@@ -24,7 +24,7 @@ public:
 
     void readCAN();
     void writeCAN();
-    void printCAN();
+    void printCAN(int mtrID, int canID);
 
     void zeroCAN();
     void writeMtr(short val, int motID, int canNum);
