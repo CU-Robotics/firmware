@@ -44,6 +44,17 @@ void ReadWrite::readCAN() {
     }
 }
 
+void ReadWrite::printCAN() {
+    Serial.println("CAN #1");
+    Serial.print("{\t");
+    for (int i = 0; i < 8; i++) {
+        Serial.print(input[0][i]);
+        Serial.print(\t);
+    }
+    Serial.print("}");
+    Serial.println();
+}
+
 void ReadWrite::writeCAN() {
     CAN_message_t out;
     out.id = 0x200;
