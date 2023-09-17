@@ -7,6 +7,7 @@
 
 // #include <Arduino.h> // https://www.arduino.cc/reference/en/
 #include <Wire.h> // https://www.arduino.cc/reference/en/language/functions/communication/wire/
+// learning about wire communication: https://docs.arduino.cc/learn/communication/wire
 
 void setup() {
   Wire.begin(0x6A);
