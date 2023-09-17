@@ -1,7 +1,8 @@
   /// Questions:
   /// How often does i2C communicate between the Teensy and the IMU? (SCL: Clock pin. SDA: data pin)
   /// Can we optimize adafruit behavior, or is it hardware limited?
-  /// Can we put the IMU ionto bootloader mode to change firmware? We might be able to change the clock speed to be faster (if it is hardcoded)
+  /// Can we put the IMU ionto bootloader mode to change firmware? We might be able to change the clock speed to be faster (if it is hardcoded).
+      /// No information gained from bottom of IMU. But it has relevant hardware specs/capabilities on it.
 
 
 // #include <Arduino.h> // https://www.arduino.cc/reference/en/
