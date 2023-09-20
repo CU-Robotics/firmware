@@ -13,7 +13,7 @@ private:
 
 
 public:
-    void ReadWrite();
+    ReadWrite();
     
 
     void init();

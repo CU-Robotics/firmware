@@ -4,86 +4,209 @@
 #include <isotp.h>
 #include <isotp_server.h>
 #include <kinetis_flexcan.h>
+//#include "C:\Users\lachl\OneDrive\Desktop\CURobotics\firmware/read_write.hpp"
 
-FlexCAN_T4<CAN1, RX_SIZE_256, TX_SIZE_16> can;
+//FlexCAN_T4<CAN1, RX_SIZE_256, TX_SIZE_16> can;
+
+class ReadWrite {
+private:
+    FlexCAN_T4<CAN1, RX_SIZE_256, TX_SIZE_16> can1;
+    FlexCAN_T4<CAN2, RX_SIZE_256, TX_SIZE_16> can2;
+
+    int output[2][16];
+    int input[2][8][8];
 
 
-// Begin new code (not tested)
-int setMotor(int motorID, short value);
+    struct Motor {
+      int mtrNum;
+      int theta;
+      int rotSpd;
+      int trq;
+      uint16_t tmp;
+    }; Motor motors[2][8];
 
-int setMotor(int motorID, short value) {
-  CAN_message_t out;
 
-  union stob {
-    short num;
-    struct Byte {
-      char c1,c2;
+public:
+    ReadWrite() {
+
     }
-  } stob converter;
-  converter.num = value;
+    
 
-  out.id = motorID;
+    void init() {
+        can1.begin();
+        can1.setBaudRate(1000000);
+        can1.enableFIFO();
 
-  out.buf[motorID * 2 - 2] = converter.c2;
-  out.buf[motorID * 2 - 1] = converter.c1;
+        can2.begin();
+        can2.setBaudRate(1000000);
+        can2.enableFIFO();
+    }
 
-  return can.write(out);
-}
+    int getAngle(int motID, int canNum);
+    int getRotSpd(int motID, int canNum);
+    int getTrqCur(int motID, int canNum);
 
-// Begin old code (has been tested and works)
+    void readCAN() {
+      CAN_message_t msg;
+
+      while (can1.read(msg)) {
+
+        int index = msg.id - 0x201;
+
+        motors[0][index].theta = (msg.buf[0] << 8) | msg.buf[1];
+
+        if (index == 3) {
+          union Conv {
+            struct {
+              uint16_t one;
+              uint16_t two;
+            } Byte;
+            int val;
+          }; Conv conv;
+          conv.Byte.one = msg.buf[0];
+          conv.Byte.two = msg.buf[1];
+
+          
+
+          Serial.print("Read: ");
+          
+
+          Serial.print(msg.buf[0]);
+          Serial.print(" : ");
+          Serial.print(msg.buf[1]);
+          Serial.print("   ===   ");
+          Serial.print(motors[0][index].theta);
+          Serial.print("   ==   ");
+          Serial.print(conv.val);
+          Serial.println();
+        }
+        motors[0][index].rotSpd = (msg.buf[2] << 8) | msg.buf[3];
+        motors[0][index].trq = (msg.buf[4] << 8) | msg.buf[5];
+        motors[0][index].tmp = msg.buf[6];
+      }
+
+      while (can2.read(msg)) {
+
+        int index = msg.id - 0x200;
+
+        motors[1][index].theta = (msg.buf[0] << 8) | msg.buf[1];
+        motors[1][index].rotSpd = (msg.buf[2] << 8) | msg.buf[3];
+        motors[1][index].trq = (msg.buf[4] << 8) | msg.buf[5];
+        motors[1][index].tmp = msg.buf[6];
+      }
+    }
+    
+    void writeCAN() {
+          CAN_message_t out;
+          out.id = 0x200;
+          for (int val = 0; val < 8; val++) {
+              out.buf[val] = output[0][val];
+          }
+          can1.write(out);
+
+          out.id = 0x1FF;
+          for (int val = 8; val < 16; val++) {
+              out.buf[val-8] = output[0][val];
+          }
+          can1.write(out);
+
+          out.id = 0x200;
+          for (int val = 0; val < 8; val++) {
+              out.buf[0] = output[1][val];
+          }
+          can2.write(out);
+
+          out.id = 0x1FF;
+          for (int val = 8; val < 16; val++) {
+              out.buf[val-8] = output[1][val];
+          }
+          can2.write(out);
+    }
+
+
+    void printCAN(int mtrID, int canID) {
+      Serial.print("CAN #");
+      Serial.println(mtrID);
+      Serial.print("{\t");
+
+
+      // for (int i = 0; i < 8; i++) {
+      //     Serial.print(input[canID][mtrID-1][i]);
+      //     Serial.print("\t");
+      // // }
+
+      Serial.print("Speed: ");
+      Serial.print(motors[canID-1][mtrID-1].rotSpd);
+      Serial.print("\t");
+
+      Serial.print("Angle: ");
+      Serial.print(motors[canID-1][mtrID-1].theta);
+      Serial.print("\t");
+
+      Serial.print("Torque: ");
+      Serial.print(motors[canID-1][mtrID-1].trq);
+      Serial.print("\t");
+
+      Serial.print("Temp: ");
+      Serial.print(motors[canID-1][mtrID-1].tmp);
+      Serial.print("\t");
+
+      Serial.print("}");
+      Serial.println();
+    }
+
+    void zeroCAN() {
+      CAN_message_t out;
+      out.id = 0x200;
+      for (int val = 0; val < 8; val++) {
+          out.buf[val] = 0;
+      }
+      can1.write(out);
+
+      out.id = 0x1FF;
+      for (int val = 8; val < 16; val++) {
+          out.buf[val-8] = 0;
+      }
+      can1.write(out);
+
+      out.id = 0x200;
+      for (int val = 0; val < 8; val++) {
+          out.buf[0] = 0;
+      }
+      can2.write(out);
+
+      out.id = 0x1FF;
+      for (int val = 8; val < 16; val++) {
+          out.buf[val-8] = 0;
+      }
+      can2.write(out);
+    }
+
+
+    void writeMtr(short val, int motID, int canNum) {
+      output[canNum][motID*2-2] = (val >> 8) & 0xff;
+      output[canNum][motID*2-1] = val & 0xff;
+    }
+
+};
+
+ReadWrite readWriteObj;
 
 void setup() {
   // put your setup code here, to run once:
-  Serial.begin(115200);
+  Serial.begin(9600);
 
-  //Initialise the CAN bus
-  can.begin();
-  can.setBaudRate(1000000);
-  can.enableFIFO();
+  readWriteObj.init();
+  readWriteObj.zeroCAN();
 
 }
 
 void loop() {
 
-  CAN_message_t out;
-  out.id = 0x200;
-  out.buf[0] = 0;
-  out.buf[1] = 0;
-  out.buf[2] = 0;
-  out.buf[3] = 0;
-  out.buf[4] = 0;
-  out.buf[5] = 0;
-  out.buf[6] = 0;
-  out.buf[7] = 0;
-  
-  int outSuc = can.write(out);
+  readWriteObj.readCAN();
+  //readWriteObj.printCAN(4, 1);
 
-  CAN_message_t msg;
-
-  while (can.read(msg)) {
-
-
-    if (msg.id != 0x204) continue;
-    Serial.println("\t======");
-    Serial.print("\tid: "); Serial.println(msg.id, HEX);
-    Serial.print("\t\t[");
-    Serial.print(msg.buf[0]);
-    Serial.print("\t");
-    Serial.print(msg.buf[1]);
-
-    Serial.print("\t");
-    Serial.print(msg.buf[2]);
-    Serial.print("\t");
-    Serial.print(msg.buf[3]);
-    Serial.print("\t");
-    Serial.print(msg.buf[4]);
-    Serial.print("\t");
-    Serial.print(msg.buf[5]);
-    Serial.print("\t");
-    Serial.print(msg.buf[6]);
-    Serial.print("\t");
-    Serial.print(msg.buf[7]);  
-    Serial.println("]");
-  }
+  // readWriteObj.writeMtr(0, 2, 0);
+  // readWriteObj.writeCAN();
 
 }
