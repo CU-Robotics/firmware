@@ -1,3 +1,4 @@
+#pragma region CAN_Manager Definition
 #ifndef CAN_MANAGER_HPP
 #define CAN_MANAGER_HPP
 
@@ -92,7 +93,7 @@ private:
   FlexCAN_T4<CAN2, RX_SIZE_256, TX_SIZE_16> m_can2;
 
   /// @brief Output array in the format of CAN_message_t's
-  uint8_t m_output[NUM_CANS][NUM_MESSAGE_IDS][CAN_MESSAGE_SIZE];
+  CAN_message_t m_output[NUM_CANS][NUM_MESSAGE_IDS];
   /// @brief Input array in the format of uint8_t's
   uint8_t m_input[NUM_CANS][NUM_MOTORS][CAN_MESSAGE_SIZE];
 };
@@ -108,6 +109,8 @@ inline uint16_t combineBytes(uint8_t high, uint8_t low)
 }
 
 #endif // CAN_MANAGER_HPP
+
+#pragma endregion
 
 CAN_Manager can;
 
@@ -127,12 +130,15 @@ void loop() {
   Serial.println();
   Serial.println("Post read");
 
-  can.WriteMotor(0, 0, 0);
+  int val = 0;
+  can.ZeroCANs();
 
   can.PrintOutput();
 
   can.Write();
 }
+
+#pragma region CAN_Manager Implementation
 
 void CAN_Manager::Init()
 {
@@ -190,26 +196,13 @@ uint8_t CAN_Manager::Read()
 
 uint8_t CAN_Manager::Write()
 {
-    CAN_message_t out;
-    out.id = 0x200;
-    for (int i = 0; i < CAN_MESSAGE_SIZE; i++)
-        out.buf[i] = m_output[CAN_1][0][i];
-    Serial.print(m_can1.write(out));
+    // write all messages to CAN 1
+    for (int i = 0; i < NUM_MESSAGE_IDS; i++)
+        m_can1.write(m_output[CAN_1][i]);
 
-    out.id = 0x1ff;
-    for (int i = 0; i < CAN_MESSAGE_SIZE; i++)
-        out.buf[i] = m_output[CAN_1][1][i];
-    Serial.print(m_can1.write(out));
-
-    out.id = 0x200;
-    for (int i = 0; i < CAN_MESSAGE_SIZE; i++)
-        out.buf[i] = m_output[CAN_2][0][i];
-    Serial.print(m_can2.write(out));
-
-    out.id = 0x1ff;
-    for (int i = 0; i < CAN_MESSAGE_SIZE; i++)
-        out.buf[i] = m_output[CAN_2][1][i];
-    Serial.print(m_can2.write(out));
+    // write all messages to CAN 2
+    for (int i = 0; i < NUM_MESSAGE_IDS; i++)
+        m_can2.write(m_output[CAN_2][i]);
 
     return 0;
 }
@@ -223,10 +216,18 @@ void CAN_Manager::ZeroOutput()
         {
             for (int k = 0; k < CAN_MESSAGE_SIZE; k++)
             {
-                m_output[i][j][k] = 0;
+                m_output[i][j].buf[k] = 0;
             }
         }
     }
+
+    m_output[CAN_1][0].id = 0x200;
+    m_output[CAN_1][1].id = 0x1ff;
+    m_output[CAN_1][2].id = 0x2ff;
+
+    m_output[CAN_2][0].id = 0x200;
+    m_output[CAN_2][1].id = 0x1ff;
+    m_output[CAN_2][2].id = 0x2ff;
 }
 
 void CAN_Manager::ZeroCANs()
@@ -252,9 +253,9 @@ void CAN_Manager::WriteMotor(uint16_t canID, uint16_t motorID, int32_t value)
     // expected output by the motors. Explained in motor documentation (page 14-16)
 
     // set big byte to correct index in buffer
-    m_output[canID][messageID][mID * 2]     = (value >> 8) & 0xff;
+    m_output[canID][messageID].buf[mID * 2]     = (value >> 8) & 0xff;
     // set small byte to correct index in buffer
-    m_output[canID][messageID][mID * 2 + 1] = value & 0xff;
+    m_output[canID][messageID].buf[mID * 2 + 1] = value & 0xff;
 }
 
 uint16_t CAN_Manager::GetMotorAttribute(uint16_t canID, uint16_t motorID, MotorAttribute valueType)
@@ -311,13 +312,15 @@ void CAN_Manager::PrintOutput()
     Serial.printf("CAN: %x\n", i);
     for (int j = 0; j < NUM_MESSAGE_IDS; j++)
     {
-      Serial.printf("Message: %x\t", j);
+      Serial.printf("Message: %x\t", m_output[i][j].id);
       for (int k = 0; k < CAN_MESSAGE_SIZE; k++)
       {
-        Serial.printf("%x ", m_output[i][j][k]);
+        Serial.printf("%x ", m_output[i][j].buf[k]);
       }
       Serial.println();
     }
   }
   Serial.println();
 }
+
+#pragma endregion
