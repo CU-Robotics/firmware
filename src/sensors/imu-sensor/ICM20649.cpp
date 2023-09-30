@@ -7,8 +7,8 @@ ICM20649::ICM20649() {
     sensor.begin_I2C();
 
     // set data ranges
-    sensor.setAccelRange(ICM20649_ACCEL_RANGE_30_G)
-    sensor.setGyroRange(ICM20649_GYRO_RANGE_4000_DPS)
+    sensor.setAccelRange(ICM20649_ACCEL_RANGE_30_G);
+    sensor.setGyroRange(ICM20649_GYRO_RANGE_4000_DPS);
 
     // set accel rate (via divisor setting)
     sensor.setAccelRateDivisor(4095);
@@ -21,9 +21,9 @@ ICM20649::ICM20649() {
 
 float get_temperature() { return temperature; };
 
-float get_accel_X() { return accel_X};
-float get_accel_Y() { return accel_X};
-float get_accel_Z() { return accel_X};
+float get_accel_X() { return accel_X; };
+float get_accel_Y() { return accel_X; };
+float get_accel_Z() { return accel_X; };
 
 float get_gyro_X() { return gyro_X; };
 float get_gyro_Y() { return gyro_Y; };

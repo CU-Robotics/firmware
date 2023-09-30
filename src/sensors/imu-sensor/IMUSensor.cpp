@@ -3,14 +3,12 @@
 
 #include <IMUSensor.hpp>
 
-IMUSensor::IMUSensor() {
-    // initialize IMU
-    Wire.read()
-    Serial.begin(115200);
-}
+float IMUSensor::get_temperature() { return temperature; };
 
-void IMUSensor::read() {
-    // I2C on SDA and SCL pins.
-    // Serial.digitalRead(pin)
+float IMUSensor::get_accel_X() { return accel_X; };
+float IMUSensor::get_accel_Y() { return accel_X; };
+float IMUSensor::get_accel_Z() { return accel_X; };
 
-}
+float IMUSensor::get_gyro_X() { return gyro_X; };
+float IMUSensor::get_gyro_Y() { return gyro_Y; };
+float IMUSensor::get_gyro_Z() { return gyro_Z; };
