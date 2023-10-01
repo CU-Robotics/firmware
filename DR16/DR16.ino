@@ -12,6 +12,8 @@ void readState()
 {
   byte tmp[18];
 	Serial5.readBytes(tmp, 18); 
+  Serial5.flush();
+  Serial5.clear();
 
   // translates data into info about controller actions
   float r_stick_x = bounded_map(((tmp[1] & 0x07) << 8) | tmp[0], 364, 1684, -1000, 1000) / 1000.0;
