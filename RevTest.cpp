@@ -8,7 +8,7 @@ FreqMeasureMulti freq;
 void setup()
 {
   Serial.begin(9600);
-  inPin = 4;
+  inPin = 33;
   pinMode(inPin, INPUT);
   freq.begin(inPin, FREQMEASUREMULTI_MARK_ONLY);
 
