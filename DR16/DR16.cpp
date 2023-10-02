@@ -57,21 +57,63 @@ void DR16::Read()
 	s1 = (m_inputRaw[5] & 0x30) >> 4;
 	s2 = (m_inputRaw[5] & 0xc0) >> 6;
 
+  // set these split values into the seperated raw input array
+  m_inputRawSeperated[0] = c0;
+  m_inputRawSeperated[1] = c1;
+  m_inputRawSeperated[2] = c2;
+  m_inputRawSeperated[3] = c3;
+  m_inputRawSeperated[4] = wh;
+  m_inputRawSeperated[5] = s1;
+  m_inputRawSeperated[6] = s2;
+
+  // simple safety check
 	// assign formated data (within ranges of [-1,1]) to the true input buffer
-	// joy sticks
-	m_input[0] = bounded_map(c0, DR16_CONTROLLER_INPUT_LOW, DR16_CONTROLLER_INPUT_HIGH, -1000, 1000) / 1000.f;
-	m_input[1] = bounded_map(c1, DR16_CONTROLLER_INPUT_LOW, DR16_CONTROLLER_INPUT_HIGH, -1000, 1000) / 1000.f;
-	m_input[2] = bounded_map(c2, DR16_CONTROLLER_INPUT_LOW, DR16_CONTROLLER_INPUT_HIGH, -1000, 1000) / 1000.f;
-	m_input[3] = bounded_map(c3, DR16_CONTROLLER_INPUT_LOW, DR16_CONTROLLER_INPUT_HIGH, -1000, 1000) / 1000.f;
+#ifdef ENABLE_VALUE_CHECK_SAFETY
+  if (IsDataValid())
+  {
+#endif
+    // joy sticks
+    m_input[0] = bounded_map(c0, DR16_CONTROLLER_INPUT_LOW, DR16_CONTROLLER_INPUT_HIGH, -1000, 1000) / 1000.f;
+    m_input[1] = bounded_map(c1, DR16_CONTROLLER_INPUT_LOW, DR16_CONTROLLER_INPUT_HIGH, -1000, 1000) / 1000.f;
+    m_input[2] = bounded_map(c2, DR16_CONTROLLER_INPUT_LOW, DR16_CONTROLLER_INPUT_HIGH, -1000, 1000) / 1000.f;
+    m_input[3] = bounded_map(c3, DR16_CONTROLLER_INPUT_LOW, DR16_CONTROLLER_INPUT_HIGH, -1000, 1000) / 1000.f;
 
-	// wheel
-	m_input[4] = bounded_map(wh, DR16_CONTROLLER_INPUT_LOW, DR16_CONTROLLER_INPUT_HIGH, -1000, 1000) / 1000.f;
-	
-	// switches
-	m_input[5] = (float)s1;
-	m_input[6] = (float)s2;
+    // wheel
+    m_input[4] = bounded_map(wh, DR16_CONTROLLER_INPUT_LOW, DR16_CONTROLLER_INPUT_HIGH, -1000, 1000) / 1000.f;
+    
+    // switches
+    m_input[5] = (float)s1;
+    m_input[6] = (float)s2;
+#ifdef ENABLE_VALUE_CHECK_SAFETY
+  }
+  else 
+  {
+#endif
+    Zero();
+    Serial5.clear();
+    Serial.println("\n\n\nDiscarded bad packet\n\n\n");
+    Serial.print("Received: "); PrintRaw();
+    Serial.print("Expected: "); Print();
+#ifdef ENABLE_VALUE_CHECK_SAFETY
+  }
+#endif
 
-	Print();
+  Serial.printf("%.4d (%.3f)\t%.4d (%.3f)\t%.4d (%.3f)\t%.4d (%.3f)\t%.4d (%.3f)\t%.4d\t%.4d\n", c0, m_input[0], c1, m_input[1], c2, m_input[2], c3, m_input[3], wh, m_input[4], s1, s2);
+
+	// Print();
+}
+
+void DR16::Zero()
+{
+  // zero input buffer
+  for (int i = 0; i < DR16_INPUT_VALUE_COUNT; i++)
+  {
+    m_input[i] = 0;
+  }
+
+  // set switches to a specific value
+  m_input[5] = 1;
+  m_input[6] = 1;
 }
 
 float* DR16::GetInput()
@@ -97,4 +139,17 @@ float DR16::bounded_map(int value, int in_low, int in_high, int out_low, int out
 	value = max(min(value, in_high), in_low);
 	
 	return (value - in_low) * (out_high - out_low) / (in_high - in_low) + out_low;
+}
+
+bool DR16::IsDataValid()
+{
+  // go through all values in raw seperated input and compare them against maximum and minimum values
+  // the - 2 is to exclude switch values
+  for (int i = 0; i < DR16_INPUT_VALUE_COUNT - 2; i++)
+  {
+    if (m_inputRawSeperated[i] < DR16_CONTROLLER_INPUT_LOW || m_inputRawSeperated[i] > DR16_CONTROLLER_INPUT_HIGH)
+      return false;
+  }
+
+  return true;
 }

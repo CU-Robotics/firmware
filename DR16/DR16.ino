@@ -4,6 +4,9 @@
 CAN_Manager can;
 DR16 sensor;
 
+uint32_t currTime = 0;
+uint32_t dt = 0;
+
 void setup() {
   Serial5.clear();
 	Serial5.begin(100000, SERIAL_8E1_RXINV_TXINV);
@@ -13,7 +16,7 @@ void setup() {
 }
 
 void loop() {
-  delay(10);
+  delay(1);
   while(can.read()) {}
 
   sensor.Read();

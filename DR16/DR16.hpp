@@ -14,6 +14,8 @@ constexpr uint16_t DR16_CONTROLLER_INPUT_ZERO 	= 1024;	// the medium joystick in
 constexpr uint16_t DR16_CONTROLLER_SWITCH_HIGH 	= 3;	// the maximum switch input value
 constexpr uint16_t DR16_CONTROLLER_SWITCH_LOW 	= 1;	// the minimum switch input value
 
+#define ENABLE_VALUE_CHECK_SAFETY
+
 /// DR16 Packet Structure
 /// (translated from this: https://rm-static.djicdn.com/tem/17348/4.RoboMaster%20%E6%9C%BA%E5%99%A8%E4%BA%BA%E4%B8%93%E7%94%A8%E9%81%A5%E6%8E%A7%E5%99%A8%EF%BC%88%E6%8E%A5%E6%94%B6%E6%9C%BA%EF%BC%89%E7%94%A8%E6%88%B7%E6%89%8B%E5%86%8C.pdf)
 
@@ -70,6 +72,9 @@ public:
 	/// @brief Attempts to read a full packet from the receiver. This function shouldn't be ran more than 100kHz
 	void Read();
 
+  /// @brief Zeros the normalized input array
+  void Zero();
+
 public:
 	/// @brief Get the 7 float length input buffer. These values are normalized [-1, 1]
 	/// @return float buffer
@@ -91,9 +96,16 @@ private:
 	/// @return Mapped input in the range of [out_low, out_high]
 	float bounded_map(int value, int in_low, int in_high, int out_low, int out_high);
 
+  /// @brief A simple check to see if read data is within expected values
+  /// @return True/false whether data is deemed valid or not
+  bool IsDataValid();
+
 private:
 	/// @brief normalized input buffer
 	float m_input[DR16_INPUT_VALUE_COUNT] = { 0 };
+
+  /// @brief raw input split into the 7 input channels
+  float m_inputRawSeperated[DR16_INPUT_VALUE_COUNT] = { 0 };
 
 	/// @brief non-normalized, raw 18 byte packet
 	uint8_t m_inputRaw[DR16_PACKET_SIZE] = { 0 };
