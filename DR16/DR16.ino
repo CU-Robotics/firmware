@@ -24,7 +24,7 @@ void readState()
 	int l_switch = (tmp[5] & 0xC0) >> 6;
 	int r_switch = (tmp[5] & 0x30) >> 4;
 
-  for (int i = 0; i < 18; i++)
+  for (int i = 0; i < 18; i++) 
     Serial.printf("%.2x\t", tmp[i]);
   Serial.println();
 
