@@ -20,12 +20,12 @@ void LSM6DSOX::read() {
 
     // assign result to this object's members.
     // (could increase efficiency by specifying which values we need, and only assigning values from that. However, getEvent will read all values from the sensor regardless)
-    accel_X = accel.accel.x;
-    accel_Y = accel.accel.y;
-    accel_Z = accel.accel.z;
-    gyro_X = gryo.gyro.x;
-    gyro_Y = gryo.gyro.y;
-    gyro_Z = gryo.gyro.z;
+    accel_X = accel.acceleration.x;
+    accel_Y = accel.acceleration.y;
+    accel_Z = accel.acceleration.z;
+    gyro_X = gyro.gyro.x;
+    gyro_Y = gyro.gyro.y;
+    gyro_Z = gyro.gyro.z;
 
-    temp = temp.temperature;
+    temperature = temp.temperature;
 }

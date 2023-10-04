@@ -15,19 +15,19 @@ ICM20649::ICM20649() {
     accel_rate = get_accel_data_rate();
 
     // set gyro rate (via divisor setting)
-    sensor.setGyroRateDivisor();
+    sensor.setGyroRateDivisor(255);
     gyro_rate = get_gyro_data_rate();
 }
 
-float get_temperature() { return temperature; };
+// float ICM20649::get_temperature() { return temperature; };
 
-float get_accel_X() { return accel_X; };
-float get_accel_Y() { return accel_X; };
-float get_accel_Z() { return accel_X; };
+// float ICM20649::get_accel_X() { return accel_X; };
+// float ICM20649::get_accel_Y() { return accel_X; };
+// float ICM20649::get_accel_Z() { return accel_X; };
 
-float get_gyro_X() { return gyro_X; };
-float get_gyro_Y() { return gyro_Y; };
-float get_gyro_Z() { return gyro_Z; };
+// float ICM20649::get_gyro_X() { return gyro_X; };
+// float ICM20649::get_gyro_Y() { return gyro_Y; };
+// float ICM20649::get_gyro_Z() { return gyro_Z; };
 
 void ICM20649::read() {
     // get the event data from the sensor class
@@ -35,14 +35,14 @@ void ICM20649::read() {
 
     // assign result to this object's members.
     // (could increase efficiency by specifying which values we need, and only assigning values from that. However, getEvent will read all values from the sensor regardless)
-    accel_X = accel.accel.x;
-    accel_Y = accel.accel.y;
-    accel_Z = accel.accel.z;
-    gyro_X = gryo.gyro.x;
-    gyro_Y = gryo.gyro.y;
-    gyro_Z = gryo.gyro.z;
+    accel_X = accel.acceleration.x;
+    accel_Y = accel.acceleration.y;
+    accel_Z = accel.acceleration.z;
+    gyro_X = gyro.gyro.x;
+    gyro_Y = gyro.gyro.y;
+    gyro_Z = gyro.gyro.z;
 
-    temp = temp.temperature;
+    temperature = temp.temperature;
 }
 
 // calculate the approximate acceleration rate (Hz) from the divisor.

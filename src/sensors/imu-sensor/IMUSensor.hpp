@@ -20,7 +20,7 @@ public:
     float get_gyro_Y();
     float get_gyro_Z();
 
-private:
+protected:
     // sensor events to read from
     sensors_event_t accel;
     sensors_event_t gyro;

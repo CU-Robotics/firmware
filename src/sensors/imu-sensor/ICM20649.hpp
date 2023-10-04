@@ -3,7 +3,7 @@
 #define ICM20649_H
 
 // adafruit library specific to ICM20(...) hardware
-#include <Adafruit_ICM20X.h> // https://adafruit.github.io/Adafruit_ICM20X/html/class_adafruit___i_c_m20_x.html
+#include <Adafruit_ICM20649.h> // https://adafruit.github.io/Adafruit_ICM20X/html/class_adafruit___i_c_m20_x.html
 
 #include "IMUSensor.hpp"
 
@@ -23,6 +23,6 @@ private:
     float accel_rate; // approximate acceleration data rate (Hz) calculated from divisor. 
 
     float gyro_rate; // approximate gyroscope data rate (Hz) calculated from divisor.
-}
+};
 
 #endif
