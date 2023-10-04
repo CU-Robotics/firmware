@@ -153,3 +153,31 @@ bool DR16::IsDataValid()
 
   return true;
 }
+
+float DR16::get_r_stick_x() {
+	return m_input[0];
+}
+    
+float DR16::get_r_stick_y() {
+	return m_input[1];
+}
+
+float DR16::get_l_stick_x() {
+	return m_input[2];
+}
+
+float DR16::get_l_stick_y() {
+	return m_input[3];
+}
+
+float DR16::get_wheel() {
+	return m_input[4];
+}
+
+float DR16::get_l_switch() {
+	return m_input[5];
+}
+
+float DR16::get_r_switch() {
+	return m_input[6];
+}

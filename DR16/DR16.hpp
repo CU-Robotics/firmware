@@ -80,6 +80,21 @@ public:
 	/// @return float buffer
 	float* GetInput();
 
+	// Getters for each individual attribute
+	float get_r_stick_x();
+    
+    float get_r_stick_y();
+
+    float get_l_stick_x();
+
+    float get_l_stick_y();
+
+    float get_wheel();
+
+    float get_l_switch();
+
+    float get_r_switch();
+
 	/// @brief Prints the normalized input buffer
 	void Print();
 
