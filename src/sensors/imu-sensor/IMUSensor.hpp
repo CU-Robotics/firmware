@@ -11,15 +11,15 @@ public:
     virtual void read();
     virtual void init();
 
-    float get_temperature();
+    inline float get_temperature() { return temperature; };
 
-    float get_accel_X();
-    float get_accel_Y();
-    float get_accel_Z();
+    inline float get_accel_X() { return accel_X; };
+    inline float get_accel_Y() { return accel_Y; };
+    inline float get_accel_Z() { return accel_Z; };
 
-    float get_gyro_X();
-    float get_gyro_Y();
-    float get_gyro_Z();
+    inline float get_gyro_X() { return gyro_X; };
+    inline float get_gyro_Y() { return gyro_Y; };
+    inline float get_gyro_Z() { return gyro_Z; };
 
 protected:
     // sensor events to read from
