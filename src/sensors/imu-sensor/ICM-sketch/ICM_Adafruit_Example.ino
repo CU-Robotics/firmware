@@ -66,7 +66,7 @@ void setup(void) {
     break;
   }
 
-  //  icm.setAccelRateDivisor(4095);
+   icm.setAccelRateDivisor(4095);
   uint16_t accel_divisor = icm.getAccelRateDivisor();
   float accel_rate = 1125 / (1.0 + accel_divisor);
 
@@ -75,7 +75,7 @@ void setup(void) {
   Serial.print("Accelerometer data rate (Hz) is approximately: ");
   Serial.println(accel_rate);
 
-  //  icm.setGyroRateDivisor(255);
+   icm.setGyroRateDivisor(255);
   uint8_t gyro_divisor = icm.getGyroRateDivisor();
   float gyro_rate = 1100 / (1.0 + gyro_divisor);
 

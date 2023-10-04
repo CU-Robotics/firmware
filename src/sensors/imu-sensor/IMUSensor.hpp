@@ -9,6 +9,7 @@
 class IMUSensor {
 public:
     virtual void read();
+    virtual void init();
 
     float get_temperature();
 

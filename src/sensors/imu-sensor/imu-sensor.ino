@@ -11,13 +11,13 @@ void setup() {
   Serial.println("Adafruit ICM20649 test!");
 
   // Try to initialize!
-
+  icm.init();
 
   Serial.println("ICM20649 Found!");
 }
 
 void loop() {
-
+  icm.read();
   Serial.print("\t\tTemperature ");
   Serial.print(icm.get_temperature());
   Serial.println(" deg C");

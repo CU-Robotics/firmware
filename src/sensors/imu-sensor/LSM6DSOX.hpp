@@ -11,6 +11,7 @@ public:
     LSM6DSOX();
     
     void read() override;
+    void init() override;
 private:
     // sensor object from adafruit libraries.
     Adafruit_LSM6DSOX sensor;

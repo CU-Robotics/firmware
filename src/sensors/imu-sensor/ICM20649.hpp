@@ -11,6 +11,7 @@ class ICM20649 : public IMUSensor {
 public:
     ICM20649();
     void read() override;
+    void init() override;
 private:
     // sensor object from adafruit libraries.
     Adafruit_ICM20649 sensor;

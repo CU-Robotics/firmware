@@ -1,8 +1,9 @@
 #include "LSM6DSOX.hpp"
 
-LSM6DSOX::LSM6DSOX() {
-    // initialize LSM
+LSM6DSOX::LSM6DSOX() {}
 
+// initialize LSM
+void LSM6DSOX::init() {
     // start I2C communication 
     sensor.begin_I2C();
 

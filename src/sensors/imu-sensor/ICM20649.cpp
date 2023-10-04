@@ -1,10 +1,14 @@
 #include "ICM20649.hpp"
 
-ICM20649::ICM20649() {
-    // initialize ICM
+ICM20649::ICM20649() {}
 
+// initialize ICM
+void ICM20649::init() {
     // start I2C communication 
-    sensor.begin_I2C();
+    
+    if (!sensor.begin_I2C()) {
+      Serial.println("Failed to begin i2c");
+    }
 
     // set data ranges
     sensor.setAccelRange(ICM20649_ACCEL_RANGE_30_G);
@@ -18,16 +22,6 @@ ICM20649::ICM20649() {
     sensor.setGyroRateDivisor(255);
     gyro_rate = get_gyro_data_rate();
 }
-
-// float ICM20649::get_temperature() { return temperature; };
-
-// float ICM20649::get_accel_X() { return accel_X; };
-// float ICM20649::get_accel_Y() { return accel_X; };
-// float ICM20649::get_accel_Z() { return accel_X; };
-
-// float ICM20649::get_gyro_X() { return gyro_X; };
-// float ICM20649::get_gyro_Y() { return gyro_Y; };
-// float ICM20649::get_gyro_Z() { return gyro_Z; };
 
 void ICM20649::read() {
     // get the event data from the sensor class
