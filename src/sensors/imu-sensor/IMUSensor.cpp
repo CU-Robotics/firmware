@@ -1,7 +1,4 @@
-#include <Arduino.h> // https://www.arduino.cc/reference/en/
-#include <Wire.h> // https://www.arduino.cc/reference/en/language/functions/communication/wire/
-
-#include <IMUSensor.hpp>
+#include "IMUSensor.hpp"
 
 float IMUSensor::get_temperature() { return temperature; };
 

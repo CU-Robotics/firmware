@@ -2,12 +2,9 @@
 #ifndef LSM6DSOX_H
 #define LSM6DSOX_H
 
-#include <Arduino.h> // https://www.arduino.cc/reference/en/
-#include <Wire.h> // https://www.arduino.cc/reference/en/language/functions/communication/wire/
-
-#include <IMUSensor.hpp> // abstract parent
+#include "IMUSensor.hpp" // abstract parent
 // adafruit library specific to LSM6DS(...) hardware
-#include <Adafruit_LSM6DS>
+#include <Adafruit_LSM6DSOX.h>
 
 class LSM6DSOX : public IMUSensor {
 public:

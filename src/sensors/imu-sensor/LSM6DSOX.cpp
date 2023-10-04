@@ -1,4 +1,4 @@
-#include <LSM6DSOX.hpp>
+#include "LSM6DSOX.hpp"
 
 LSM6DSOX::LSM6DSOX() {
     // initialize LSM

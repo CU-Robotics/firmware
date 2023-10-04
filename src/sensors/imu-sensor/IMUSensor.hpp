@@ -1,6 +1,9 @@
 #ifndef ICMSENSOR_H
 #define ICMSENSOR_H
 
+#include <Arduino.h> // https://www.arduino.cc/reference/en/
+#include <Wire.h> // https://www.arduino.cc/reference/en/language/functions/communication/wire/
+
 #include <Adafruit_Sensor.h>
 
 class IMUSensor {
