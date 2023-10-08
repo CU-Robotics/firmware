@@ -7,23 +7,29 @@
 
 #include "IMUSensor.hpp"
 
+/// @brief Sensor access for an ICM20649 IMU Sensor. Child of the abstract IMUSensor class.
 class ICM20649 : public IMUSensor {
 public:
+    /// @brief Constructor. Currently does nothing, use init() instead.
     ICM20649();
+    /// @copydoc IMUSensor::read()    
     void read() override;
+    /// @copydoc IMUSensor::init()
     void init() override;
 private:
-    // sensor object from adafruit libraries.
+    /// @brief sensor object from adafruit libraries.
     Adafruit_ICM20649 sensor;
 
-    // calculate the approximate acceleration  rates in Hz from the divisor.
+    /// @brief calculate the approximate acceleration  rates in Hz from the divisor.
     float get_accel_data_rate();
-    // calculate the approximate gyroscope rates in Hz from the divisor.
+    /// @brief calculate the approximate gyroscope rates in Hz from the divisor.
     float get_gyro_data_rate();
 
-    float accel_rate; // approximate acceleration data rate (Hz) calculated from divisor. 
+    /// @brief approximate acceleration data rate (Hz) calculated from divisor. 
+    float accel_rate; 
 
-    float gyro_rate; // approximate gyroscope data rate (Hz) calculated from divisor.
+    /// @brief approximate gyroscope data rate (Hz) calculated from divisor.
+    float gyro_rate; 
 };
 
 #endif
