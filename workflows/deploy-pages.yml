@@ -20,6 +20,8 @@ jobs:
           # These are default values, but included for clarity
           doxyfile-path: ./workflows/Doxyfile
           working-directory: .
+          # Non-default:
+          enable-latex: true
       - name: Pages Deployment
         uses: peaceiris/actions-gh-pages@v3
         with:
