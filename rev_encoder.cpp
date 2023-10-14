@@ -1,6 +1,20 @@
-#include <RevEncoder.h>
+/**
+ * @file rev_encoder.cpp
+ * @author Aidan Donnelly
+ * @brief The implementation of the Rev Encoder 
+ * @version 0.1
+ * @date 2023-10-14
+ * 
+ * @copyright Copyright (c) 2023
+ * 
+ */
+#include <rev_encoder.hpp>
 
-// inPin: 
+/**
+ * @brief Construct a new Rev Encoder:: Rev Encoder object
+ * 
+ * @param encPin the pin number that the enoders signal pin is plugged into
+ */
 RevEncoder::RevEncoder(uint8_t encPin)
 {
     this->inPin = encPin;
@@ -9,7 +23,9 @@ RevEncoder::RevEncoder(uint8_t encPin)
     freq.begin(this->inPin,FREQMEASUREMULTI_MARK_ONLY);
 }
 
-//updates rawAngle
+/**
+ * @brief updates the current angle in ticks (1024) and radians
+ */
 void RevEncoder::read(void) 
 {
     float sum = 0;
