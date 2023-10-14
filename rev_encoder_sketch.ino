@@ -1,8 +1,6 @@
 /**
  * @file rev_encoder_sketch.ino
- * @author Aidan Donnelly
  * @brief Original Arduino IDE Sketch that validates functionality 
- * @version 0.1
  * @date 2023-10-14
  * 
  */

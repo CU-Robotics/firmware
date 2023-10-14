@@ -1,8 +1,6 @@
 /**
  * @file rev_encoder.hpp
- * @author Aidan Donnelly
  * @brief Header file for the Rev Encoder 
- * @version 0.1
  * @date 2023-10-14
  */
 #include <cmath>
