@@ -40,7 +40,8 @@ jobs:
       - name: Get File Contents
         if: success() || failure() # Run commenting steps even if above steps fails
         id: doxygen-warnings
-        run: echo "warnings=$(cat "doxygen-warnings.txt")" >> $GITHUB_OUTPUT
+        # run: echo "warnings=$(cat "doxygen-warnings.txt")" >> $GITHUB_OUTPUT
+        run: echo "warnings="test-output" " >> $GITHUB_OUTPUT
 
       # Create or update/edit comment containing build warnings
       - name: Create or update comment
