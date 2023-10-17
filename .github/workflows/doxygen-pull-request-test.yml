@@ -42,6 +42,11 @@ jobs:
         id: doxygen-warnings
         run: echo "warnings=$(cat docs/doxygen_warnings.txt)" >> $GITHUB_OUTPUT
 
+      # test output
+      - name: Test Output
+        if: success() || failure()
+        run: echo ${{ steps.doxygen-warnings.outputs.warnings }}
+
       # Create or update/edit comment containing build warnings
       - name: Create or update comment
         if: success() || failure() # Run commenting steps even if above steps fails
