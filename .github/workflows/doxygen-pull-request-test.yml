@@ -40,7 +40,11 @@ jobs:
       - name: Get File Contents
         if: success() || failure() # Run commenting steps even if above steps fails
         id: doxygen-warnings
-        run: echo "warnings=$(cat docs/doxygen_warnings.txt)" >> $GITHUB_OUTPUT
+        run: |
+          EOF=$(dd if=/dev/urandom bs=15 count=1 status=none | base64)
+          echo "text<<$EOF" >> $GITHUB_OUTPUT
+          echo "$(cat docs/doxygen_warnings.txt)" >> $GITHUB_OUTPUT
+          echo "$EOF" >> $GITHUB_OUTPUT
 
       # test output
       - name: Test Output
@@ -57,6 +61,6 @@ jobs:
           body: |
             Doxygen warnings output
             ```
-            ${{ steps.doxygen-warnings.outputs.warnings }}
+            ${{ steps.doxygen-warnings.outputs }}
             ```
           edit-mode: replace
