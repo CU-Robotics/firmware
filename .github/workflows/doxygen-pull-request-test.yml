@@ -23,3 +23,32 @@ jobs:
           working-directory: .
           # Non-default:
           enable-latex: true
+
+      # Comment warnings onto pull request for easy viewing and feedback.
+
+      # Actions modified from https://github.com/peter-evans/create-or-update-comment
+      - name: Find Comment
+        uses: peter-evans/find-comment@v2
+        id: fc
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          comment-author: 'github-actions[bot]'
+          body-includes: Doxygen warnings output
+
+      # Get file contents as GITHUB_OUTPUT to be used in comment body. Can't simply use body-path since I want to support editing the existing comment.
+      - name: Get File Contents
+        id: doxygen-warnings
+        run: echo "warnings=$(cat "doxygen-warnings.txt")" >> $GITHUB_OUTPUT
+
+      # Create or update/edit comment containing build warnings
+      - name: Create or update comment
+        uses: peter-evans/create-or-update-comment@v3
+        with:
+          comment-id: ${{ steps.fc.outputs.comment-id }}
+          issue-number: ${{ github.event.pull_request.number }}
+          body: |
+            Doxygen warnings output
+            ```
+            ${{ steps.doxygen-warnings.outputs.warnings }}
+            ```
+          edit-mode: replace
