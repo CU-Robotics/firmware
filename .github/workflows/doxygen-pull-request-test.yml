@@ -28,6 +28,7 @@ jobs:
 
       # Actions modified from https://github.com/peter-evans/create-or-update-comment
       - name: Find Comment
+        if: success() || failure() # Run commenting steps even if above step fails
         uses: peter-evans/find-comment@v2
         id: fc
         with:
