@@ -28,7 +28,7 @@ jobs:
 
       # Actions modified from https://github.com/peter-evans/create-or-update-comment
       - name: Find Comment
-        if: success() || failure() # Run commenting steps even if above step fails
+        if: success() || failure() # Run commenting steps even if above steps fails
         uses: peter-evans/find-comment@v2
         id: fc
         with:
@@ -38,11 +38,13 @@ jobs:
 
       # Get file contents as GITHUB_OUTPUT to be used in comment body. Can't simply use body-path since I want to support editing the existing comment.
       - name: Get File Contents
+        if: success() || failure() # Run commenting steps even if above steps fails
         id: doxygen-warnings
         run: echo "warnings=$(cat "doxygen-warnings.txt")" >> $GITHUB_OUTPUT
 
       # Create or update/edit comment containing build warnings
       - name: Create or update comment
+        if: success() || failure() # Run commenting steps even if above steps fails
         uses: peter-evans/create-or-update-comment@v3
         with:
           comment-id: ${{ steps.fc.outputs.comment-id }}
