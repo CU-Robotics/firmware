@@ -2,4 +2,4 @@
 /docs/html/
 /docs/latex/
 # Don't commit doxygen warnings log
-/docs/doxygen_warnings.txt
+# /docs/doxygen_warnings.txt
