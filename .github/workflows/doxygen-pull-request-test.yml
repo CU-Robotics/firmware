@@ -19,7 +19,7 @@ jobs:
         uses: mattnotmitt/doxygen-action@v1.9.5
         with:
           # These are default values, but included for clarity
-          doxyfile-path: ./Doxyfile-test
+          doxyfile-path: ./Doxyfile
           working-directory: .
           # Non-default:
           enable-latex: true
