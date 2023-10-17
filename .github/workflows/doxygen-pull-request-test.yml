@@ -22,7 +22,7 @@ jobs:
           doxyfile-path: ./Doxyfile
           working-directory: .
           # Non-default:
-          enable-latex: true
+          enable-latex: false
 
       # Comment warnings onto pull request for easy viewing and feedback.
 
