@@ -14,7 +14,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
       - name: Run Doxygen
         uses: mattnotmitt/doxygen-action@v1.9.5
         with:
@@ -40,7 +40,7 @@ jobs:
       - name: Get File Contents
         if: success() || failure() # Run commenting steps even if above steps fails
         id: doxygen-warnings
-        run: echo "warnings=$(cat ${{ github.workspace }}/docs/doxygen_warnings.txt)" >> $GITHUB_OUTPUT
+        run: echo "warnings=$(cat docs/doxygen_warnings.txt)" >> $GITHUB_OUTPUT
 
       # test output
       - name: Test Output
