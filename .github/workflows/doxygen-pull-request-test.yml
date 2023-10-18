@@ -24,6 +24,12 @@ jobs:
           # Non-default:
           enable-latex: false
 
+      - name: Identify Filename
+        if: success() || failure()
+        run: |
+          ls -a
+          ls docs/ -a
+
       # Comment warnings onto pull request for easy viewing and feedback.
 
       # Actions modified from https://github.com/peter-evans/create-or-update-comment
