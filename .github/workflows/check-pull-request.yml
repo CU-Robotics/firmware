@@ -1,4 +1,4 @@
-name: Test Documentation
+name: Check Pull Request
 
 # Controls when the action will run. 
 on:
@@ -10,6 +10,7 @@ on:
       - review_requested
     
 jobs:
+  # Test documentation build for proper doxygen coverage
   build-documentation:
     runs-on: ubuntu-latest
     steps:
