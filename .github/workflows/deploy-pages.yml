@@ -12,12 +12,13 @@ jobs:
   build-documentation:
     runs-on: ubuntu-latest
     steps:
+        # Checkout sets up working directory as project root
       - name: Checkout
         uses: actions/checkout@v2
+        # Run Doxygen Build
       - name: Run Doxygen
         uses: mattnotmitt/doxygen-action@v1.9.5
         with:
-          # These are default values, but included for clarity
           doxyfile-path: ./Doxyfile
           working-directory: .
           # Non-default:

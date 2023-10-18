@@ -13,38 +13,28 @@ jobs:
   build-documentation:
     runs-on: ubuntu-latest
     steps:
+        # Checkout sets up working directory as project root
       - name: Checkout
         uses: actions/checkout@v4
+        # Run Doxygen Build
       - name: Run Doxygen
         uses: mattnotmitt/doxygen-action@v1.9.5
         with:
-          # These are default values, but included for clarity
           doxyfile-path: ./Doxyfile
           working-directory: .
-          # Non-default:
-          enable-latex: false
-
-      - name: Identify Filename
-        if: success() || failure()
-        run: |
-          echo "ls root"
-          ls -a
-          echo "ls docs"
-          ls docs/ -a
-          echo "cat the file:"
-          cat docs/doxygen_warnings.txt
+          enable-latex: false # could enable latex later if needed, but it has a slow install.
 
       # Comment warnings onto pull request for easy viewing and feedback.
 
       # Actions modified from https://github.com/peter-evans/create-or-update-comment
-      - name: Find Comment
+      - name: Find Editable Comment
         if: success() || failure() # Run commenting steps even if above steps fails
         uses: peter-evans/find-comment@v2
         id: fc
         with:
           issue-number: ${{ github.event.pull_request.number }}
           comment-author: 'github-actions[bot]'
-          body-includes: Doxygen warnings output
+          body-includes: "Doxygen warnings output: (if empty, there are no warnings)"
 
       # Get file contents as GITHUB_OUTPUT to be used in comment body. Can't simply use body-path since I want to support editing the existing comment.
       - name: Get File Contents
@@ -61,11 +51,6 @@ jobs:
           echo "$(cat docs/doxygen_warnings.txt)" >> $GITHUB_OUTPUT
           echo "$EOF" >> $GITHUB_OUTPUT
 
-      # test output
-      - name: Test Output
-        if: success() || failure()
-        run: echo ${{ steps.doxygen-warnings.outputs.warnings }}
-
       # Create or update/edit comment containing build warnings
       - name: Create or update comment
         if: success() || failure() # Run commenting steps even if above steps fails
@@ -74,7 +59,7 @@ jobs:
           comment-id: ${{ steps.fc.outputs.comment-id }}
           issue-number: ${{ github.event.pull_request.number }}
           body: |
-            Doxygen warnings output
+            Doxygen warnings output: (if empty, there are no warnings)
             ```
               ${{ steps.doxygen-warnings.outputs.warnings }}
             ```
