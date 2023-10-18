@@ -72,6 +72,6 @@ jobs:
           body: |
             Doxygen warnings output
             ```
-              
+              ${{ steps.doxygen-warnings.outputs.warnings }}
             ```
           edit-mode: replace
