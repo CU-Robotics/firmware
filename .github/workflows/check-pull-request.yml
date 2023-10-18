@@ -35,7 +35,7 @@ jobs:
         with:
           issue-number: ${{ github.event.pull_request.number }}
           comment-author: 'github-actions[bot]'
-          body-includes: "Doxygen warnings output: (if empty, there are no warnings)"
+          body-includes: "Doxygen warnings output: (if empty, there are no warnings). Please correct all warnings before merging."
 
       # Get file contents as GITHUB_OUTPUT to be used in comment body. Can't simply use body-path since I want to support editing the existing comment.
       - name: Get File Contents
@@ -60,7 +60,7 @@ jobs:
           comment-id: ${{ steps.fc.outputs.comment-id }}
           issue-number: ${{ github.event.pull_request.number }}
           body: |
-            Doxygen warnings output: (if empty, there are no warnings)
+            Doxygen warnings output: (if empty, there are no warnings). Please correct all warnings before merging.
             ```yaml
               ${{ steps.doxygen-warnings.outputs.warnings }}
             ```
