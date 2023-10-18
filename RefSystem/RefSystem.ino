@@ -17,23 +17,6 @@ void loop()
     if (Serial2.peek() == 0xA5)
     {
         bool success = true;
-
-        Frame frame{};
-        success = ref.ReadFrameStart(frame);
-
-        if (success)
-            success = ref.ReadFrameCommandID(frame);
-
-        if (success)
-            success = ref.ReadFrameData(frame);
-
-        if (success)
-            success = ref.ReadFrameEnd(frame);
-
-        if (success)
-        {
-            frame.printType();
-        }
     }
     else
     {
