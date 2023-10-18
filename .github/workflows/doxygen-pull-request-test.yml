@@ -54,7 +54,7 @@ jobs:
         run: |
           EOF=$(dd if=/dev/urandom bs=15 count=1 status=none | base64)
           echo "text<<$EOF" >> $GITHUB_OUTPUT
-          echo "warnings='is data here?'" >> $GITHUB_OUTPUT
+          echo "warnings=5" >> $GITHUB_OUTPUT
           echo "$EOF" >> $GITHUB_OUTPUT
 
       # test output
@@ -72,6 +72,6 @@ jobs:
           body: |
             Doxygen warnings output
             ```
-            ${{ steps.doxygen-warnings.outputs.warnings }}
+              
             ```
           edit-mode: replace
