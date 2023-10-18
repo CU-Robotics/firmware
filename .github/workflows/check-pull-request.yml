@@ -10,7 +10,7 @@ on:
       - review_requested
   push:
     branches:
-      ${{ GITHUB_REF_NAME }}
+      - ${{ GITHUB_REF_NAME }}
     
 jobs:
   # Test documentation build for proper doxygen coverage
