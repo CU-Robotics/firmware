@@ -40,10 +40,11 @@ jobs:
       - name: Get File Contents
         if: success() || failure() # Run commenting steps even if above steps fails
         id: doxygen-warnings
+        # run inspired from https://stackoverflow.com/questions/74137120/how-to-fix-or-avoid-error-unable-to-process-file-command-output-successfully
         run: |
           EOF=$(dd if=/dev/urandom bs=15 count=1 status=none | base64)
           echo "text<<$EOF" >> $GITHUB_OUTPUT
-          echo "$(cat docs/doxygen_warnings.txt)" >> $GITHUB_OUTPUT
+          echo "warnings=$(cat docs/doxygen_warnings.txt)" >> $GITHUB_OUTPUT
           echo "$EOF" >> $GITHUB_OUTPUT
 
       # test output
@@ -61,6 +62,6 @@ jobs:
           body: |
             Doxygen warnings output
             ```
-            ${{ steps.doxygen-warnings.outputs }}
+            ${{ steps.doxygen-warnings.outputs.warnings }}
             ```
           edit-mode: replace
