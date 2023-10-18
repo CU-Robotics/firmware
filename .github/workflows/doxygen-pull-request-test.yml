@@ -58,7 +58,7 @@ jobs:
         run: |
           EOF=$(dd if=/dev/urandom bs=15 count=1 status=none | base64)
           echo "warnings<<$EOF" >> $GITHUB_OUTPUT
-          echo "5" >> $GITHUB_OUTPUT
+          echo "$(cat docs/doxygen_warnings.txt)" >> $GITHUB_OUTPUT
           echo "$EOF" >> $GITHUB_OUTPUT
 
       # test output
