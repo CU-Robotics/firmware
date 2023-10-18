@@ -3,7 +3,6 @@
 
 #include <cassert>
 #include "Arduino.h"
-#include <set>
 
 #include "RefSystemPacketDefs.hpp"
 
