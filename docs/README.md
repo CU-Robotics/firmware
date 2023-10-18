@@ -12,8 +12,8 @@ You can find Doxygen's getting started guide here: [https://www.doxygen.nl/manua
 Make sure to install both of these dependencies as well.
 
 We have configured a Doxyfile containing our configuration. To compile (with doxygen installed), simply run `doxygen Doxyfile-build` or `doxygen Doxyfile-test` at the root of your branch.
-- `Doxyfile-build` builds doxygen docs without failing on undocumented warnings, and includes private members.
 - `Doxyfile-test` is what you use to test if your documentation is complete. This will give you warnings for any documentation you may have missed in [doxygen_warnings.txt](./doxygen_warnings.txt).
+- `Doxyfile-build` builds doxygen docs without failing on undocumented warnings, and includes private members. [doxygen_warnings.txt](./doxygen_warnings.txt) will populate with any compilation errors.
 
 Then, to view the generated docs, open the file [file:///{project_root}/docs/html/index.html](./html/index.html) in your browser as a local html website. 
 
