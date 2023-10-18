@@ -174,10 +174,10 @@ float DR16::get_wheel() {
 	return m_input[4];
 }
 
-float DR16::get_l_switch() {
+float DR16::get_r_switch() {
 	return m_input[5];
 }
 
-float DR16::get_r_switch() {
+float DR16::get_l_switch() {
 	return m_input[6];
 }
