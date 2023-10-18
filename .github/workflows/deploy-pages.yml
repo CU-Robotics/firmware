@@ -21,8 +21,7 @@ jobs:
         with:
           doxyfile-path: ./Doxyfile
           working-directory: .
-          # Non-default:
-          enable-latex: true
+          enable-latex: false # could enable latex later if needed, but it has a slow install.
       - name: Pages Deployment
         uses: peaceiris/actions-gh-pages@v3
         with:
