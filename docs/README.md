@@ -25,7 +25,7 @@ When you write documentation, ask yourself two questions:
 
 Keep it high level, but be clear. Include any information that you think might help you or someone else later.
 
-You must document all your public functions, objects, variables, structs, etc.
+You must document all your public functions, objects, variables, structs, private virtual members, etc.
 - Private members are not required to be documented, but any documentation on these could help understanding the code later.
 
 See the [Doxygen docblocks manual](https://www.doxygen.nl/manual/docblocks.html) for information on different tags. Some important ones include:
