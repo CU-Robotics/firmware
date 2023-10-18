@@ -61,7 +61,7 @@ jobs:
           issue-number: ${{ github.event.pull_request.number }}
           body: |
             Doxygen warnings output: (if empty, there are no warnings)
-            ```
+            ```yaml
               ${{ steps.doxygen-warnings.outputs.warnings }}
             ```
           edit-mode: replace
