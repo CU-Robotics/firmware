@@ -50,11 +50,15 @@ jobs:
       - name: Get File Contents
         if: success() || failure() # Run commenting steps even if above steps fails
         id: doxygen-warnings
-        # run inspired from https://stackoverflow.com/questions/74137120/how-to-fix-or-avoid-error-unable-to-process-file-command-output-successfully
+        # run inspired from https://stackoverflow.com/questions/74137120/how-to-fix-or-avoid-error-unable-to-process-file-command-output-successfully for multiline messages
+        # structure of run: (delimiter is randomly generated to prevent false EOF)
+          # {name}<<{delimiter}
+          # {value}
+          # {delimiter}
         run: |
           EOF=$(dd if=/dev/urandom bs=15 count=1 status=none | base64)
-          echo "text<<$EOF" >> $GITHUB_OUTPUT
-          echo "warnings=5" >> $GITHUB_OUTPUT
+          echo "warnings<<$EOF" >> $GITHUB_OUTPUT
+          echo "5" >> $GITHUB_OUTPUT
           echo "$EOF" >> $GITHUB_OUTPUT
 
       # test output
