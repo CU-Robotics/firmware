@@ -27,8 +27,12 @@ jobs:
       - name: Identify Filename
         if: success() || failure()
         run: |
+          echo "ls root"
           ls -a
+          echo "ls docs"
           ls docs/ -a
+          echo "cat the file:"
+          cat docs/doxygen_warnings.txt
 
       # Comment warnings onto pull request for easy viewing and feedback.
 
