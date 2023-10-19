@@ -19,7 +19,7 @@ jobs:
       - name: Run Doxygen
         uses: mattnotmitt/doxygen-action@v1.9.5
         with:
-          doxyfile-path: ./Doxyfile-build # Builds docs, including private members
+          doxyfile-path: ./Doxyfile # Docs build settings
           working-directory: .
           enable-latex: false # could enable latex later if needed, but it has a slow install.
       - name: Pages Deployment
