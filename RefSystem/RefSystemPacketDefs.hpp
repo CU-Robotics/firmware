@@ -9,16 +9,21 @@ constexpr uint16_t REF_MAX_COMMAND_ID = 0x0307;
 enum FrameType
 {
     GAME_STATUS = 0x0001,
-    GAME_RESULT = 0x0002
+    GAME_RESULT = 0x0002,
+    ROBOT_HEALTH = 0x0003
 };
 
 struct FrameHeader
 {
     static const uint8_t packet_size = 5;
 
+    /// @brief Start of Frame byte, should be 0xAF if valid frame
     uint8_t SOF = 0;
+    /// @brief length of the FrameData portion of a Frame
     uint16_t data_length = 0;
+    /// @brief Sequence number, increments per frame, wraps around 255
     uint8_t sequence = 0;
+    /// @brief An 8-bit CRC for the FrameHeader only
     uint8_t CRC = 0;
 
     void print()
@@ -32,8 +37,10 @@ struct FrameHeader
 
 struct FrameData
 {
+    /// @brief Data array to hold the Frame data portion
     uint8_t data[REF_MAX_PACKET_SIZE] = { 0 };
 
+    /// @brief Helpful index operator. Allows array-like indexing from the object itself
     uint8_t operator[](int index)
     {
         return data[index];
@@ -42,9 +49,13 @@ struct FrameData
 
 struct Frame
 {
+    /// @brief Header portion of a Frame
     FrameHeader header{};
+    /// @brief Command ID potion of a Frame
     uint16_t commandID = 0;
+    /// @brief Data portion of a Frame
     FrameData data{};
+    /// @brief 16-bit CRC for the entire Frame
     uint16_t CRC = 0;
 
     void print()
@@ -154,12 +165,36 @@ struct RobotHealth
 
     void initialize_from_data(FrameData& data)
     {
+        for (int i = 0; i < 8; i++)
+        {
+            red_robot_HP = (data[i * 2 + 1] << 8) | data[i * 2];
+        }
 
+        for (int i = 8; i < 16; i++)
+        {
+            blue_robot_HP = (data[i * 2 + 1] << 8) | data[i * 2];
+        }
     }
 
     void print()
     {
-
+        Serial.println("--== RobotHealth Frame ==--");
+        Serial.printf("Red Hero: %u\n", red_robot_HP[0]);
+        Serial.printf("Red Engineer: %u\n", red_robot_HP[1]);
+        Serial.printf("Red Standard 3: %u\n", red_robot_HP[2]);
+        Serial.printf("Red Standard 4: %u\n", red_robot_HP[3]);
+        Serial.printf("Red Standard 5: %u\n", red_robot_HP[4]);
+        Serial.printf("Red Sentry: %u\n", red_robot_HP[5]);
+        Serial.printf("Red Outpost: %u\n", red_robot_HP[6]);
+        Serial.printf("Red Base: %u\n", red_robot_HP[7]);
+        Serial.printf("Blue Hero: %u\n", blue_robot_HP[0]);
+        Serial.printf("Blue Engineer: %u\n", blue_robot_HP[1]);
+        Serial.printf("Blue Standard 3: %u\n", blue_robot_HP[2]);
+        Serial.printf("Blue Standard 4: %u\n", blue_robot_HP[3]);
+        Serial.printf("Blue Standard 5: %u\n", blue_robot_HP[4]);
+        Serial.printf("Blue Sentry: %u\n", blue_robot_HP[5]);
+        Serial.printf("Blue Outpost: %u\n", blue_robot_HP[6]);
+        Serial.printf("Blue Base: %u\n", blue_robot_HP[7]);
     }
 };
 
