@@ -6,6 +6,12 @@ constexpr uint16_t REF_MAX_COMMAND_ID = 0x0307;
 
 /*--- Ref System Frame Structs ---*/
 
+enum FrameType
+{
+    GAME_STATUS = 0x0001,
+    GAME_RESULT = 0x0002
+};
+
 struct FrameHeader
 {
     static const uint8_t packet_size = 5;
@@ -14,11 +20,24 @@ struct FrameHeader
     uint16_t data_length = 0;
     uint8_t sequence = 0;
     uint8_t CRC = 0;
+
+    void print()
+    {
+        Serial.printf("\tSOF: %x\n", SOF);
+        Serial.printf("\tLength: %u\n", data_length);
+        Serial.printf("\tSequence: %u\n", sequence);
+        Serial.printf("\tCRC: %x\n", CRC);
+    }
 };
 
 struct FrameData
 {
     uint8_t data[REF_MAX_PACKET_SIZE] = { 0 };
+
+    uint8_t operator[](int index)
+    {
+        return data[index];
+    }
 };
 
 struct Frame
@@ -27,6 +46,19 @@ struct Frame
     uint16_t commandID = 0;
     FrameData data{};
     uint16_t CRC = 0;
+
+    void print()
+    {
+        Serial.println("Read Frame:");
+        header.print();
+        Serial.printf("Command ID: %.2x\n", commandID);
+        for (int i = 0; i < header.data_length; i++)
+        {
+            Serial.printf("%x ", data[i]);
+        }
+        Serial.println();
+        Serial.printf("CRC: %.2x\n", CRC);
+    }
 };
 
 /*--- Ref System Command ID Packet Structs ---*/
@@ -46,6 +78,30 @@ struct GameStatus
     uint16_t round_timer = 0;
     /// @brief UNIX time, effective after the robot is correctly linked to the Referee System’s NTP server
     uint64_t real_time = 0;
+
+    void initialize_from_data(FrameData& data)
+    {
+        game_config[0] = data[0] & 0x0f;
+        game_config[1] = (data[0] & 0xf0) >> 4;
+        round_timer = (data[2] << 8) | data[1];
+        real_time = data[10];
+        real_time = (real_time << 8) | data[9];
+        real_time = (real_time << 8) | data[8];
+        real_time = (real_time << 8) | data[7];
+        real_time = (real_time << 8) | data[6];
+        real_time = (real_time << 8) | data[5];
+        real_time = (real_time << 8) | data[4];
+        real_time = (real_time << 8) | data[3];
+    }
+
+    void print()
+    {
+        Serial.println("--==GameStatus Frame==--");
+        Serial.printf("Game Type: %x\n", game_config[0]);
+        Serial.printf("Game Stage: %x\n", game_config[1]);
+        Serial.printf("Round Time: %us\n", round_timer);
+        Serial.printf("Real Time: %u\n", real_time);
+    }
 };
 
 /// @brief Competition result data. Transmitted on game end event to all robots
@@ -58,6 +114,17 @@ struct GameResult
     /// @brief Winner of the match \
     /// @brief 0 = Draw, 1 = Red, 2 = Blue
     uint8_t winner = 0;
+
+    void initialize_from_data(FrameData& data)
+    {
+        winner = data[0];
+    }
+
+    void print()
+    {
+        Serial.println("--== GameResult Frame ==--");
+        Serial.printf("Match Winner: %x\n", winner);
+    }
 };
 
 /// @brief Robot health data. Transmitted at 3Hz to all robots
@@ -84,6 +151,16 @@ struct RobotHealth
     /// @brief [6] = Outpost \
     /// @brief [7] = Base    
     uint16_t blue_robot_HP[8] = { 0 };
+
+    void initialize_from_data(FrameData& data)
+    {
+
+    }
+
+    void print()
+    {
+
+    }
 };
 
 /// @brief Site event data. Transmitted at 3Hz to all our robots
@@ -117,6 +194,16 @@ struct SiteEvent
     uint16_t outpost_HP = 0;
     /// @brief Whether the Sentry is in own Patrol Zone
     uint8_t is_sentry_in_patrol_zone = 0;
+
+    void initialize_from_data(FrameData& data)
+    {
+
+    }
+
+    void print()
+    {
+
+    }
 };
 
 /// @brief Official Projectile Supplier action identifier data.Transmitted on Projectile Supplier event to all our robots
@@ -138,6 +225,16 @@ struct ProjectileSupplier
 
     /// @brief Number of supplied projectiles
     uint8_t supplied_count = 0;
+
+    void initialize_from_data(FrameData& data)
+    {
+
+    }
+
+    void print()
+    {
+
+    }
 };
 
 /// @brief Referee warning data. Transmitted on penalty event to all robots on penalized team
@@ -155,6 +252,16 @@ struct RefereeWarning
     /// @brief 0xx = Red Team, 1xx = Blue Team
     /// @note In the case of a forfeiture or where both teams have been issued a Yellow Card, the value is 0.
     uint8_t robot_ID = 0;
+
+    void initialize_from_data(FrameData& data)
+    {
+
+    }
+
+    void print()
+    {
+
+    }
 };
 
 /// @brief Dart launching time data. Transmitted at 10Hz to all our robots
@@ -166,6 +273,16 @@ struct DartLaunch
 
     /// @brief Own team’s remaining time for dart launching; unit: second
     uint8_t dart_remaining_time = 0;
+
+    void initialize_from_data(FrameData& data)
+    {
+
+    }
+
+    void print()
+    {
+
+    }
 };
 
 /// @brief Robot performance system data. Transmitted at 10Hz to single robot
@@ -207,6 +324,16 @@ struct RobotPerformance
     /// @brief [1] = Output from chassis port \
     /// @brief [2] = Output from shooter port
     uint8_t power_output_status[3] = { 0 };
+
+    void initialize_from_data(FrameData& data)
+    {
+
+    }
+
+    void print()
+    {
+
+    }
 };
 
 /// @brief Real-time power heat data. Transmitted at 50Hz to single robot
@@ -231,6 +358,16 @@ struct PowerHeat
     /// @brief [1] = 2nd 17mm \
     /// @brief [2] = 42mm 
     uint16_t barrel_heat = { 0 };
+
+    void initialize_from_data(FrameData& data)
+    {
+
+    }
+
+    void print()
+    {
+
+    }
 };
 
 /// @brief Robot position data. Transmitted at 10Hz to single robot
@@ -249,6 +386,16 @@ struct RobotPosition
     /// @brief Direction of this robot’s Speed Monitor Module; unit: degree. True north is 0 degrees.
     /// @note This value is highly dependant on physical attachment of the speed monitor
     float angle = 0.f;
+
+    void initialize_from_data(FrameData& data)
+    {
+
+    }
+
+    void print()
+    {
+
+    }
 };
 
 /// @brief Robot buff data. Transmitted at 3Hz to single robot
@@ -264,6 +411,16 @@ struct RobotBuff
     /// @brief [2] = Robot defense buff (in percentage) \
     /// @brief [3] = Robot attack buff (in percentage)
     uint8_t buff_status[4] = { 0 };
+
+    void initialize_from_data(FrameData& data)
+    {
+
+    }
+
+    void print()
+    {
+
+    }
 };
 
 /// @brief Air support time data. Transmitted at 10Hz to all our aerial robots
@@ -277,6 +434,16 @@ struct AirSupportTime
     /// @brief [0] = Aerial robot status: 0 = Cooling, 1 = Done Cooling, 2 = Air support ongoing \
     /// @brief [1] = Time remaining of this status (in seconds) (truncated to lowest integer)
     uint8_t air_status[2] = { 0 };
+
+    void initialize_from_data(FrameData& data)
+    {
+
+    }
+
+    void print()
+    {
+
+    }
 };
 
 /// @brief Damage status data. Transmitted on hurt event to single robot
@@ -290,6 +457,16 @@ struct DamageStatus
     /// @brief [0] = ID of the Armor Module hit by projectile. (0 if this is not the reason for damage) \
     /// @brief [1] = Type of HP change: 0 = Projectile, 1 = Module offline, 2 = Shooting too fast, 3 = barrel heat, 4 = Power consumption, 5 = collision
     uint8_t hurt_status[2] = { 0 };
+
+    void initialize_from_data(FrameData& data)
+    {
+
+    }
+
+    void print()
+    {
+
+    }
 };
 
 /// @brief Real-time launching data. Transmitted on projectile launch event to single robot
@@ -309,6 +486,16 @@ struct LaunchingEvent
 
     /// @brief Projectile initial speed (unit: m/s)
     float projectile_initial_speed = 0.f;
+
+    void initialize_from_data(FrameData& data)
+    {
+
+    }
+
+    void print()
+    {
+
+    }
 };
 
 /// @brief Projectile Allowance. Transmitted at 10Hz to our hero, standards, sentry, and aerial robots
@@ -323,6 +510,16 @@ struct ProjectileAllowance
     /// @brief [1] = 42mm allowance \
     /// @brief [2] = remaining gold coins
     uint16_t allowance[3] = { 0 };
+
+    void initialize_from_data(FrameData& data)
+    {
+
+    }
+
+    void print()
+    {
+
+    }
 };
 
 /// @brief Robot RFID status. Transmitted at 3Hz to all our robots (with RFID module)
@@ -335,6 +532,16 @@ struct RFID
     /// @brief various data based on whether a robot is occupying a certain point on the map 
     /// @note See Referee System Specification on what each bit represents. Remember it's little endian
     uint32_t RFID_status = 0;
+
+    void initialize_from_data(FrameData& data)
+    {
+
+    }
+
+    void print()
+    {
+
+    }
 };
 
 /// @brief Dart player client command data. Transmitted at 10Hz to all our dart robots
@@ -344,15 +551,52 @@ struct DartCommand
     /// @brief size of packet sent by Ref System in bytes
     static const uint8_t packet_size = 6;
 
+    /// @brief Status of the Dart Launching Station \
+    /// @brief [0] = door status: 0 = Opened, 1 = Closed, 2 = Opening/Closing \
+    /// @brief [1] = dart target: 0 = Outpost, 1 = Base
+    uint8_t dart_status[2] = { 0 };
 
+    /// @brief Time stamps on the Dart Launching Station \
+    /// @brief [0] = Time remaining in the competition when switching targets (seconds) \
+    /// @brief [1] = Time remaining in the competition when the Operator confirms the launch command for the last time (seconds)
+    uint16_t time_status[2] = { 0 };
+
+    void initialize_from_data(FrameData& data)
+    {
+
+    }
+
+    void print()
+    {
+
+    }
 };
 
 /// @brief Ground Robot position data. Transmitted at 1Hz to our sentry
 /// @note ID: 0x020B
+/// @note The intersection of the site perimeter wall near the Red Team’s Official Projectile Supplier is the origin; the orientation of the site’s longer edge facing the Blue Team is the positive x-axis direction, while the orientation of the site’s shorter edge facing the Red Team’s Landing Pad is the positive y-axis direction
 struct GroundRobotPosition
 {
     /// @brief size of packet sent by Ref System in bytes
     static const uint8_t packet_size = 40;
+
+    /// @brief Position of each ground robots excluding the sentry (meters) \
+    /// @brief [0, 1] = X/Y of Hero robot \
+    /// @brief [2, 3] = X/Y of Engineer robot \
+    /// @brief [4, 5] = X/Y of Standard 3 robot \
+    /// @brief [6, 7] = X/Y of Standard 4 robot \
+    /// @brief [8, 9] = X/Y of Standard 5 robot
+    float positions[10] = { 0.f };
+
+    void initialize_from_data(FrameData& data)
+    {
+
+    }
+
+    void print()
+    {
+
+    }
 };
 
 /// @brief Radar marked progress data. Transmitted at 1Hz to our radar
@@ -361,6 +605,25 @@ struct RadarProgress
 {
     /// @brief size of packet sent by Ref System in bytes
     static const uint8_t packet_size = 6;
+
+    /// @brief Marked progress of the enemy team's ground robots (0 - 120) \
+    /// @brief [0] = Marked progress of Hero \
+    /// @brief [1] = Marked progress of Engineer \
+    /// @brief [2] = Marked progress of Standard 3\
+    /// @brief [3] = Marked progress of Standard 4\
+    /// @brief [4] = Marked progress of Standard 5 \
+    /// @brief [5] = Marked progress of Sentry 
+    uint8_t mark_progress[6] = { 0 };
+
+    void initialize_from_data(FrameData& data)
+    {
+
+    }
+
+    void print()
+    {
+
+    }
 };
 
 

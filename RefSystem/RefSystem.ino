@@ -6,7 +6,7 @@ void setup()
 {
     Serial.begin(9800);
     Serial.println("Start");
-    ref.Init();
+    ref.init();
     Serial.println("Init");
 }
 
@@ -16,7 +16,7 @@ void loop()
 
     if (Serial2.peek() == 0xA5)
     {
-        bool success = true;
+        ref.read(0x0001);
     }
     else
     {
