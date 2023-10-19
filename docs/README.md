@@ -7,9 +7,8 @@ This README describe how to install Doxygen, write documentation following our s
 
 ## Installing and Building Doxygen
 You can find Doxygen's getting started guide here: [https://www.doxygen.nl/manual/index.html](https://www.doxygen.nl/manual/index.html). It provides download links for the documentation compiler and a guide on how to use doxygen [here](https://www.doxygen.nl/manual/install.html). 
-- There are additional installs for latex support: https://www.tug.org/texlive/
-- Class graphs and diagrams from graphviz: https://www.graphviz.org/
-Make sure to install both of these dependencies as well.
+- There is an additional install for class graphs and diagrams from graphviz: https://www.graphviz.org/
+Make sure to install this dependency as well.
 
 We have configured a Doxyfile containing our configuration. To compile (with doxygen installed), simply run `doxygen Doxyfile` at the root of your branch.
 - Remember to check for warnings/errors when building to avoid leaving any members undocumented! You can view warnings in [doxygen_warnings.txt](./doxygen_warnings.txt)
