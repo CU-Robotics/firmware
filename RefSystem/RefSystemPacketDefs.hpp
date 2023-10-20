@@ -567,16 +567,24 @@ struct RobotBuff
 
     void initialize_from_data(FrameData& data)
     {
-
+        buff_status[0] = data[0];
+        buff_status[1] = data[1];
+        buff_status[2] = data[2];
+        buff_status[3] = data[3];
     }
 
     void print()
     {
-
+        Serial.println("--== RobotBuff Frame ==--");
+        Serial.printf("HP Buff: %u%\n", buff_status[0]);
+        Serial.printf("Cooling Buff: %ux\n", buff_status[1]);
+        Serial.printf("Defense Buff: %u%\n", buff_status[2]);
+        Serial.printf("Attack Buff: %u%\n", buff_status[3]);
     }
 };
 
 /// @brief Air support time data. Transmitted at 10Hz to all our aerial robots
+/// @todo Verify
 /// @note ID: 0x0205
 struct AirSupportTime
 {
@@ -590,12 +598,15 @@ struct AirSupportTime
 
     void initialize_from_data(FrameData& data)
     {
-
+        air_status[0] = data[0];
+        air_status[1] = data[1];
     }
 
     void print()
     {
-
+        Serial.println("--== AirSupportTime Frame ==--");
+        Serial.printf("Aerial Robot Status: %x\n", air_status[0]);
+        Serial.printf("Time Remaining: %us\n", air_status[1]);
     }
 };
 
@@ -613,12 +624,15 @@ struct DamageStatus
 
     void initialize_from_data(FrameData& data)
     {
-
+        hurt_status[0] = data[0] & 0x0f;
+        hurt_status[1] = (data[0] & 0xf0) >> 4;
     }
 
     void print()
     {
-
+        Serial.println("--== DamageStatus Frame ==--");
+        Serial.printf("Armor Plate ID: %x\n", hurt_status[0]);
+        Serial.printf("Damage Reason: %x\n", hurt_status[1]);
     }
 };
 
@@ -642,12 +656,26 @@ struct LaunchingEvent
 
     void initialize_from_data(FrameData& data)
     {
+        barrel_data[0] = data[0];
+        barrel_data[1] = data[1];
 
+        launching_speed = data[2];
+
+        uint32_t rawFloat = 0;
+        rawFloat = data[6];
+        rawFloat = (rawFloat << 8) | data[5];
+        rawFloat = (rawFloat << 8) | data[4];
+        rawFloat = (rawFloat << 8) | data[3];
+        memcpy(&projectile_initial_speed, &rawFloat, sizeof(float));
     }
 
     void print()
     {
-
+        Serial.println("--== LaunchingEvent Frame ==--");
+        Serial.printf("Projectile Type: %x\n", barrel_data[0]);
+        Serial.printf("Barrel ID: %x\n", barrel_data[1]);
+        Serial.printf("Launching Speed: %uHz\n", launching_speed);
+        Serial.printf("Projectile Speed: %um/s\n", projectile_initial_speed);
     }
 };
 
@@ -666,16 +694,22 @@ struct ProjectileAllowance
 
     void initialize_from_data(FrameData& data)
     {
-
+        allowance[0] = (data[1] << 8) | data[0];
+        allowance[1] = (data[3] << 8) | data[2];
+        allowance[2] = (data[5] << 8) | data[4];
     }
 
     void print()
     {
-
+        Serial.println("--== ProjectileAllowance Frame ==--");
+        Serial.printf("17mm Allowance: %u\n", allowance[0]);
+        Serial.printf("42mm Allowance: %u\n", allowance[1]);
+        Serial.printf("Gold Coins: %u\n", allowance[2]);
     }
 };
 
 /// @brief Robot RFID status. Transmitted at 3Hz to all our robots (with RFID module)
+/// @todo Verify
 /// @note ID: 0x0209
 struct RFID
 {
@@ -688,12 +722,16 @@ struct RFID
 
     void initialize_from_data(FrameData& data)
     {
-
+        RFID_status = data[3];
+        RFID_status = (RFID_status << 8) | data[2];
+        RFID_status = (RFID_status << 8) | data[1];
+        RFID_status = (RFID_status << 8) | data[0];
     }
 
     void print()
     {
-
+        Serial.println("--== RFID Frame ==--");
+        Serial.println("Not broken up. Todo");
     }
 };
 
@@ -716,12 +754,20 @@ struct DartCommand
 
     void initialize_from_data(FrameData& data)
     {
+        dart_status[0] = data[0];
+        dart_status[1] = data[1];
 
+        time_status[0] = (data[3] << 8) | data[2];
+        time_status[1] = (data[5] << 8) | data[4];
     }
 
     void print()
     {
-
+        Serial.println("--== DartCommand Frame ==--");
+        Serial.printf("Door Status: %x\n", dart_status[0]);
+        Serial.printf("Dart Target: %x\n", dart_status[1]);
+        Serial.printf("Time of Target Swap: %us\n", time_status[0]);
+        Serial.printf("Time of Launch Confirmation: %us\n", time_status[1]);
     }
 };
 
@@ -743,12 +789,26 @@ struct GroundRobotPosition
 
     void initialize_from_data(FrameData& data)
     {
+        for (int i = 0; i < 10; i++)
+        {
+            uint32_t rawFloat = 0;
 
+            rawFloat = data[i * 4 + 3];
+            rawFloat = rawFloat << 8 | data[i * 4 + 2];
+            rawFloat = rawFloat << 8 | data[i * 4 + 1];
+            rawFloat = rawFloat << 8 | data[i * 4];
+            memcpy(&positions[i], &rawFloat, sizeof(float));
+        }
     }
 
     void print()
     {
-
+        Serial.println("--== GroundRobotPosition Frame ==--");
+        Serial.printf("Hero Position: x:%fm\ty:%fm\n", positions[0], positions[1]);
+        Serial.printf("Engineer Position: x:%fm\ty:%fm\n", positions[2], positions[3]);
+        Serial.printf("Standard 3 Position: x:%fm\ty:%fm\n", positions[4], positions[5]);
+        Serial.printf("Standard 4 Position: x:%fm\ty:%fm\n", positions[6], positions[7]);
+        Serial.printf("Standard 5 Position: x:%fm\ty:%fm\n", positions[8], positions[9]);
     }
 };
 
@@ -770,12 +830,21 @@ struct RadarProgress
 
     void initialize_from_data(FrameData& data)
     {
-
+        for (int i = 0; i < 6; i++)
+        {
+            mark_progress[i] = data[i];
+        }
     }
 
     void print()
     {
-
+        Serial.println("--== RadarProgress Frame ==--");
+        Serial.printf("Mark Progress of Hero: %u\n", mark_progress[0]);
+        Serial.printf("Mark Progress of Engineer: %u\n", mark_progress[1]);
+        Serial.printf("Mark Progress of Standard 3: %u\n", mark_progress[2]);
+        Serial.printf("Mark Progress of Standard 4: %u\n", mark_progress[3]);
+        Serial.printf("Mark Progress of Standard 5: %u\n", mark_progress[4]);
+        Serial.printf("Mark Progress of Sentry: %u\n", mark_progress[5]);
     }
 };
 
