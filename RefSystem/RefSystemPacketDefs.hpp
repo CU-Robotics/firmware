@@ -139,6 +139,7 @@ struct GameResult
 };
 
 /// @brief Robot health data. Transmitted at 3Hz to all robots
+/// @todo Verify that this is valid. Endian-ness is messing me up.
 /// @note ID: 0x0003
 struct RobotHealth
 {
@@ -167,12 +168,12 @@ struct RobotHealth
     {
         for (int i = 0; i < 8; i++)
         {
-            red_robot_HP = (data[i * 2 + 1] << 8) | data[i * 2];
+            red_robot_HP[i] = (data[i * 2 + 1] << 8) | data[i * 2];
         }
 
         for (int i = 8; i < 16; i++)
         {
-            blue_robot_HP = (data[i * 2 + 1] << 8) | data[i * 2];
+            blue_robot_HP[i - 8] = (data[i * 2 + 1] << 8) | data[i * 2];
         }
     }
 
@@ -223,7 +224,7 @@ struct SiteEvent
     /// @brief [2] = R4 Trapezoid
     uint8_t elevated_ground_occupation[3] = { 0 };
 
-/// @brief Value of own Base’s Virtual Shield (0-250)
+    /// @brief Value of own Base’s Virtual Shield (0-250)
     uint8_t base_shield_HP = 0;
     /// @brief HP of own Outpost (0-1500)
     uint16_t outpost_HP = 0;
@@ -232,16 +233,38 @@ struct SiteEvent
 
     void initialize_from_data(FrameData& data)
     {
+        restoration_zone_occupation[0] = data[0] & 0x01; // bit 0
+        restoration_zone_occupation[1] = data[0] & 0x02; // bit 1
+        restoration_zone_occupation[2] = data[0] & 0x04; // bit 2
 
+        power_rune_status[0] = data[0] & 0x08; // bit 3
+        power_rune_status[1] = data[0] & 0x10; // bit 4
+        power_rune_status[2] = data[0] & 0x20; // bit 5
+
+        elevated_ground_occupation[0] = data[0] & 0x40; // bit 6
+        elevated_ground_occupation[1] = data[0] & 0x80; // bit 7
+        elevated_ground_occupation[2] = data[1] & 0x01; // bit 8
+
+        base_shield_HP = ((data[1] & 0x7f) << 1) | (data[2] & 0x80); // bits [9, 16]
+        outpost_HP = ((data[2] & 0x7f) << 4) | (data[3] & 0x0f0); // bits [17, 27]
+
+        is_sentry_in_patrol_zone = (data[3] & 0x08) >> 3; // bit 28
     }
 
     void print()
     {
-
+        Serial.println("--== SiteEvent Frame ==--");
+        Serial.printf("Restoration Zone Occupation: f:%x l:%x r:%x\n", restoration_zone_occupation[0], restoration_zone_occupation[1], restoration_zone_occupation[2]);
+        Serial.printf("Power Rune Status: o:%x s:%x l:%x\n", power_rune_status[0], power_rune_status[1], power_rune_status[2]);
+        Serial.printf("Elevated Ground Occupation: r:%x r3:%x r4:%x\n", elevated_ground_occupation[0], elevated_ground_occupation[1], elevated_ground_occupation[2]);
+        Serial.printf("Base Shield HP: %u\n", base_shield_HP);
+        Serial.printf("Outpost HP: %u\n", outpost_HP);
+        Serial.printf("Sentry Patrol Zone: %x\n", is_sentry_in_patrol_zone);
     }
 };
 
 /// @brief Official Projectile Supplier action identifier data.Transmitted on Projectile Supplier event to all our robots
+/// @todo Verify
 /// @note ID: 0x0102
 struct ProjectileSupplier
 {
@@ -263,12 +286,20 @@ struct ProjectileSupplier
 
     void initialize_from_data(FrameData& data)
     {
+        corresponding_ID[0] = data[0];
+        corresponding_ID[1] = data[1];
 
+        outlet_status = data[2];
+        supplied_count = data[3];
     }
 
     void print()
     {
-
+        Serial.println("--== ProjectileSupplier Frame ==--");
+        Serial.printf("Supplier ID: %x\n", corresponding_ID[0]);
+        Serial.printf("Reloading Robot ID: %x\n", corresponding_ID[1]);
+        Serial.printf("Status: %x\n", outlet_status);
+        Serial.printf("Supplied Projectiles: %u\n", supplied_count);
     }
 };
 
@@ -290,16 +321,20 @@ struct RefereeWarning
 
     void initialize_from_data(FrameData& data)
     {
-
+        penalty_level = data[0];
+        robot_ID = data[1];
     }
 
     void print()
     {
-
+        Serial.println("--== RefereeWarning Frame ==--");
+        Serial.printf("Penalty Level: %x\n", penalty_level);
+        Serial.printf("Offending Robot ID: %x\n", robot_ID);
     }
 };
 
 /// @brief Dart launching time data. Transmitted at 10Hz to all our robots
+/// @todo Verify
 /// @note ID: 0x0105
 struct DartLaunch
 {
@@ -311,12 +346,13 @@ struct DartLaunch
 
     void initialize_from_data(FrameData& data)
     {
-
+        dart_remaining_time = data[0];
     }
 
     void print()
     {
-
+        Serial.println("--== DartLaunch Frame ==--");
+        Serial.printf("Reamining Time: %us\n", dart_remaining_time);
     }
 };
 
@@ -362,12 +398,42 @@ struct RobotPerformance
 
     void initialize_from_data(FrameData& data)
     {
+        robot_ID = data[0];
+        robot_level = data[1];
 
+        health_status[0] = (data[3] << 8) | data[2];
+        health_status[1] = (data[5] << 8) | data[4];
+
+        barrel_17mm_1_status[0] = (data[7] << 8) | data[6];
+        barrel_17mm_1_status[1] = (data[9] << 8) | data[8];
+        barrel_17mm_1_status[2] = (data[11] << 8) | data[10];
+
+        barrel_17mm_2_status[0] = (data[13] << 8) | data[12];
+        barrel_17mm_2_status[1] = (data[15] << 8) | data[14];
+        barrel_17mm_2_status[2] = (data[17] << 8) | data[16];
+
+        barrel_42mm_status[0] = (data[19] << 8) | data[18];
+        barrel_42mm_status[1] = (data[21] << 8) | data[20];
+        barrel_42mm_status[2] = (data[23] << 8) | data[22];
+
+        chassis_power_limit = (data[25] << 8) | data[24];
+
+        power_output_status[0] = (data[26] & 0x01);
+        power_output_status[1] = (data[26] & 0x02) >> 1;
+        power_output_status[2] = (data[26] & 0x04) >> 2;
     }
 
     void print()
     {
-
+        Serial.println("--== RobotPerformance Frame ==--");
+        Serial.printf("Robot ID: %x\n", robot_ID);
+        Serial.printf("Robot level: %x\n", robot_level);
+        Serial.printf("Robot HP: %u/%u\n", health_status[0], health_status[1]);
+        Serial.printf("17mm Barrel 1: Cooling: %ux\tHeat Limit: %u\tSpeed Limit: %u\n", barrel_17mm_1_status[0], barrel_17mm_1_status[1], barrel_17mm_1_status[2]);
+        Serial.printf("17mm Barrel 2: Cooling: %ux\tHeat Limit: %u\tSpeed Limit: %u\n", barrel_17mm_2_status[0], barrel_17mm_2_status[1], barrel_17mm_2_status[2]);
+        Serial.printf("42mm Barrel: Cooling: %ux\tHeat Limit: %u\tSpeed Limit: %u\n", barrel_42mm_status[0], barrel_42mm_status[1], barrel_42mm_status[2]);
+        Serial.printf("Chassis Power Limit: %u\n", chassis_power_limit);
+        Serial.printf("Power Output Status: Gimbol: %x\tChassis: %x\tShooter: %x\n", power_output_status[0], power_output_status[1], power_output_status[2]);
     }
 };
 
@@ -392,16 +458,36 @@ struct PowerHeat
     /// @brief [0] = 1st 17mm \
     /// @brief [1] = 2nd 17mm \
     /// @brief [2] = 42mm 
-    uint16_t barrel_heat = { 0 };
+    uint16_t barrel_heat[3] = { 0 };
 
     void initialize_from_data(FrameData& data)
     {
+        chassis_power_status[0] = (data[1] << 8) | data[0];
+        chassis_power_status[1] = (data[3] << 8) | data[2];
 
+        uint32_t rawFloat = 0;
+        rawFloat = data[7];
+        rawFloat = (rawFloat << 8) | data[6];
+        rawFloat = (rawFloat << 8) | data[5];
+        rawFloat = (rawFloat << 8) | data[4];
+        memcpy(&chassis_power, &rawFloat, sizeof(float));
+
+        buffer_energy = (data[9] << 8) | data[8];
+        barrel_heat[0] = (data[11] << 8) | data[10];
+        barrel_heat[1] = (data[13] << 8) | data[12];
+        barrel_heat[2] = (data[15] << 8) | data[14];
     }
 
     void print()
     {
-
+        Serial.println("--== PowerHeat Frame ==--");
+        Serial.printf("Chassis Voltage: %umV\n", chassis_power_status[0]);
+        Serial.printf("Chassis Current: %umA\n", chassis_power_status[1]);
+        Serial.printf("Chassis Power: %fW\n", chassis_power);
+        Serial.printf("Buffer Energy: %uJ\n", buffer_energy);
+        Serial.printf("17mm Barrel 1 Heat: %u\n", barrel_heat[0]);
+        Serial.printf("17mm Barrel 2 Heat: %u\n", barrel_heat[1]);
+        Serial.printf("42mm Barrel Heat: %u\n", barrel_heat[2]);
     }
 };
 
@@ -424,12 +510,44 @@ struct RobotPosition
 
     void initialize_from_data(FrameData& data)
     {
+        uint32_t rawFloat = 0;
+        int i = 0;
 
+        rawFloat = data[i * 4 + 3];
+        rawFloat = rawFloat << 8 | data[i * 4 + 2];
+        rawFloat = rawFloat << 8 | data[i * 4 + 1];
+        rawFloat = rawFloat << 8 | data[i * 4];
+        memcpy(&position[0], &rawFloat, sizeof(float));
+        i++;
+
+        rawFloat = data[i * 4 + 3];
+        rawFloat = rawFloat << 8 | data[i * 4 + 2];
+        rawFloat = rawFloat << 8 | data[i * 4 + 1];
+        rawFloat = rawFloat << 8 | data[i * 4];
+        memcpy(&position[1], &rawFloat, sizeof(float));
+        i++;
+
+        rawFloat = data[i * 4 + 3];
+        rawFloat = rawFloat << 8 | data[i * 4 + 2];
+        rawFloat = rawFloat << 8 | data[i * 4 + 1];
+        rawFloat = rawFloat << 8 | data[i * 4];
+        memcpy(&position[2], &rawFloat, sizeof(float));
+        i++;
+
+        rawFloat = data[i * 4 + 3];
+        rawFloat = rawFloat << 8 | data[i * 4 + 2];
+        rawFloat = rawFloat << 8 | data[i * 4 + 1];
+        rawFloat = rawFloat << 8 | data[i * 4];
+        memcpy(&angle, &rawFloat, sizeof(float));
     }
 
     void print()
     {
-
+        Serial.println("--== RobotPosition Frame ==--");
+        Serial.printf("X: %fm\n", position[0]);
+        Serial.printf("Y: %fm\n", position[1]);
+        Serial.printf("Z: %fm\n", position[2]);
+        Serial.printf("Angle: %f\n", angle);
     }
 };
 
