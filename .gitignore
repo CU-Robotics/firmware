@@ -1,3 +1,5 @@
 # Ignore doxygen output directory. Shared documentation is handled by github-actions in a separate branch, not individuals' compilations sent here.
 /docs/html
 /docs/latex
+# Don't commit doxygen warnings log
+/docs/doxygen_warnings.txt

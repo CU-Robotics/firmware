@@ -12,16 +12,16 @@ jobs:
   build-documentation:
     runs-on: ubuntu-latest
     steps:
+        # Checkout sets up working directory as project root
       - name: Checkout
         uses: actions/checkout@v2
+        # Run Doxygen Build
       - name: Run Doxygen
         uses: mattnotmitt/doxygen-action@v1.9.5
         with:
-          # These are default values, but included for clarity
-          doxyfile-path: ./Doxyfile
+          doxyfile-path: ./Doxyfile # Docs build settings
           working-directory: .
-          # Non-default:
-          enable-latex: true
+          enable-latex: false # could enable latex later if needed, but it has a slow install.
       - name: Pages Deployment
         uses: peaceiris/actions-gh-pages@v3
         with:
