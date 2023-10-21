@@ -637,6 +637,7 @@ struct DamageStatus
 };
 
 /// @brief Real-time launching data. Transmitted on projectile launch event to single robot
+/// @todo Verify
 /// @note ID: 0x0207
 struct LaunchingEvent
 {
@@ -736,7 +737,8 @@ struct RFID
 };
 
 /// @brief Dart player client command data. Transmitted at 10Hz to all our dart robots
-/// @note ID: 0x020A
+/// @todo Verify
+/// @note ID: 0x020Ax
 struct DartCommand
 {
     /// @brief size of packet sent by Ref System in bytes
@@ -772,6 +774,7 @@ struct DartCommand
 };
 
 /// @brief Ground Robot position data. Transmitted at 1Hz to our sentry
+/// @todo Verify
 /// @note ID: 0x020B
 /// @note The intersection of the site perimeter wall near the Red Team’s Official Projectile Supplier is the origin; the orientation of the site’s longer edge facing the Blue Team is the positive x-axis direction, while the orientation of the site’s shorter edge facing the Red Team’s Landing Pad is the positive y-axis direction
 struct GroundRobotPosition
@@ -813,6 +816,7 @@ struct GroundRobotPosition
 };
 
 /// @brief Radar marked progress data. Transmitted at 1Hz to our radar
+/// @todo Verify
 /// @note ID: 0x020C
 struct RadarProgress
 {

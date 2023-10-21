@@ -35,7 +35,7 @@ void RefSystem::read(uint16_t filterID)
         {
             if (filterID == frame.commandID)
             {
-                RobotPosition status;
+                RadarProgress status;
                 status.initialize_from_data(frame.data);
                 status.print();
             }
