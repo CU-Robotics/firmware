@@ -16,7 +16,8 @@ void loop()
 
     if (Serial2.peek() == 0xA5)
     {
-        ref.read(0x020C);
+        ref.read(0x5);
+        ref.write();
     }
     else
     {

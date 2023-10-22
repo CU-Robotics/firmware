@@ -45,6 +45,35 @@ void RefSystem::read(uint16_t filterID)
     }
 }
 
+void RefSystem::write(Frame& frame)
+{
+    uint8_t packet[REF_MAX_PACKET_SIZE] = { 0 };
+
+    // write frame header
+    packet[0] = frame.header.SOF;
+    packet[1] = frame.header.data_length & 0x00ff;
+    packet[2] = (frame.header.data_length & 0xff00) >> 8;
+    packet[3] = frame.header.sequence;
+    packet[4] = frame.header.CRC;
+
+    // write frame command ID
+    packet[5] = frame.commandID & 0x00ff;
+    packet[6] = (frame.commandID & 0xff00) >> 8;
+
+    // write frame data
+    for (int i = 0; i < REF_MAX_PACKET_SIZE - 7; i++)
+    {
+        packet[7 + i] = frame.data[i];
+    }
+
+    // write frame CRC
+    packet[REF_MAX_PACKET_SIZE - 2] = frame.CRC & 0x00ff;
+    packet[REF_MAX_PACKET_SIZE - 1] = (frame.CRC & 0xff00) >> 8;
+
+    // issue write command
+    Serial2.write(packet, REF_MAX_PACKET_SIZE);
+}
+
 bool RefSystem::read_frame_header(Frame& frame)
 {
     int bytesRead = Serial2.readBytes(raw_buffer, FrameHeader::packet_size);
