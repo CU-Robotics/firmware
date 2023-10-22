@@ -5,6 +5,7 @@ ICM20649::ICM20649() {}
 // initialize ICM
 void ICM20649::init() {
     // start I2C communication 
+    // TODO switch to SPI
     
     if (!sensor.begin_I2C()) {
       Serial.println("Failed to begin i2c");
