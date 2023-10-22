@@ -11,7 +11,7 @@ class IMUSensor {
 public:
     /// @brief initialize the sensor. Call this for construction.
     virtual void init();
-    /// @brief read values from the sensor. Call this to update values before accessing them from the getters. 
+    /// @brief read values from the sensor. Call this to update sensor data before accessing them from the getters. 
     virtual void read();
 
     /// @brief Get the temperature of the sensor
@@ -45,13 +45,13 @@ public:
 protected:
     // sensor events to read from
 
-    /// @brief acceleration sensor event from adafruit. Read this to get acceleration
+    /// @brief acceleration sensor event from adafruit. Read from this to get acceleration data
     sensors_event_t accel;
 
-    /// @brief gyroscope sensor event from adafruit. Read this to get acceleration
+    /// @brief gyroscope sensor event from adafruit. Read from this to get gyroscope data
     sensors_event_t gyro;
 
-    /// @brief temperature sensor event from adafruit. Read this to get acceleration
+    /// @brief temperature sensor event from adafruit. Read from this to get temperature data
     sensors_event_t temp;
 
     // acceleration values assignmed after read() 

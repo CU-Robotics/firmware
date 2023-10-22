@@ -20,7 +20,7 @@ private:
     /// @brief sensor object from adafruit libraries.
     Adafruit_ICM20649 sensor;
 
-    /// @brief calculate the approximate acceleration  rates in Hz from the divisor.
+    /// @brief calculate the approximate acceleration rates in Hz from the divisor.
     float get_accel_data_rate();
     /// @brief calculate the approximate gyroscope rates in Hz from the divisor.
     float get_gyro_data_rate();
