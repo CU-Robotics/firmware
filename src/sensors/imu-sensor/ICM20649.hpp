@@ -1,4 +1,3 @@
-
 #ifndef ICM20649_H
 #define ICM20649_H
 

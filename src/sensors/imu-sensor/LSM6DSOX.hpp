@@ -1,4 +1,3 @@
-
 #ifndef LSM6DSOX_H
 #define LSM6DSOX_H
 
