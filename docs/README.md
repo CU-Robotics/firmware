@@ -1,7 +1,7 @@
 # Documentation Guidelines
 We utilize [Doxygen](https://www.doxygen.nl/index.html) to autogenerate documentation from your code. 
 
-Documentation from accepted code on `main` is hosted on github pages at [cu-robotics.github.io/firmware](cu-robotics.github.io/firmware). You can also compile the documentation locally by reading below.
+Documentation from accepted code on `main` is hosted on github pages at [cu-robotics.github.io/firmware](cu-robotics.github.io/firmware). You can also compile the documentation locally by reading below. Documentation will only be generated for files within [src/](../src/) and [docs/](../docs/) directories.
 
 This README describe how to install Doxygen, write documentation following our standards, and accessing your documentation once complete.
 
