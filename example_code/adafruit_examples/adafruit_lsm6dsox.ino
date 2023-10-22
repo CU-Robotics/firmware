@@ -10,12 +10,7 @@
 
 Adafruit_LSM6DSOX sox;
 
-int start;
-int diff;
-
 void setup(void) {
-  start = 0;
-  diff = 0;
   Serial.begin(115200);
   while (!Serial)
     delay(10); // will pause Zero, Leonardo, etc until serial console opens
@@ -70,7 +65,6 @@ void setup(void) {
       break; // unsupported range for the DSOX
   }
 
-  sox.setAccelDataRate(LSM6DS_RATE_52_HZ);
   // sox.setAccelDataRate(LSM6DS_RATE_6_66K_HZ);
   Serial.print("Accelerometer data rate set to: ");
   switch (sox.getAccelDataRate()) {
@@ -108,7 +102,7 @@ void setup(void) {
       Serial.println("6.66 KHz");
       break;
   }
-  sox.setGyroDataRate(LSM6DS_RATE_52_HZ);
+
   // sox.setGyroDataRate(LSM6DS_RATE_6_66K_HZ);
   Serial.print("Gyro data rate set to: ");
   switch (sox.getGyroDataRate()) {
@@ -152,19 +146,8 @@ void loop() {
   sensors_event_t accel;
   sensors_event_t gyro;
   sensors_event_t temp;
-  sox.getEvent(&accel, &gyro, &temp);
-
-  start = micros(); // goal : 0.2microseconds or less
-  // /* Get a new normalized sensor event */
 
   sox.getEvent(&accel, &gyro, &temp);
-
-  diff = micros() - start;
-
-  Serial.print("time: " );
-  Serial.print(diff); // about 1500 microseconds
-  Serial.print("micros\n");
-
 
   Serial.print("\t\tTemperature ");
   Serial.print(temp.temperature);
