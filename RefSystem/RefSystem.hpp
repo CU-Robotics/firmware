@@ -51,6 +51,29 @@ const uint16_t CRC16Lookup[256] = {
     0x3de3, 0x2c6a, 0x1ef1, 0x0f78
 };
 
+/// @brief Encompassing all read-able packet structs of the Ref System
+struct RefData
+{
+    GameStatus game_status{};
+    GameResult game_result{};
+    RobotHealth robot_health{};
+    SiteEvent site_event{};
+    ProjectileSupplier proj_supplier{};
+    RefereeWarning ref_warning{};
+    RobotPerformance robot_performance{};
+    PowerHeat power_heat{};
+    RobotPosition position{};
+    RobotBuff robot_buff{};
+    AirSupportTime air_support_time{};
+    DamageStatus damage_status{};
+    LaunchingEvent launching_event{};
+    ProjectileAllowance proj_allowance{};
+    RFID rfid{};
+    DartCommand dart_command{};
+    GroundRobotPosition ground_positions{};
+    RadarProgress radar_progress{};
+};
+
 class RefSystem
 {
 public:
@@ -72,7 +95,8 @@ private:
 
 private:
     uint8_t raw_buffer[REF_MAX_PACKET_SIZE] = { 0 };
-    uint8_t ID = 0;
+    RefData ref_data{};
+
 };
 
 #endif // REF_SYSTEM_HPP
