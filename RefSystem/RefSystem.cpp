@@ -1,5 +1,28 @@
 #include "RefSystem.hpp"
 
+uint8_t generateCRC8(uint8_t* data, uint32_t len)
+{
+    uint8_t CRC8 = 0xFF;
+    while (len-- > 0)
+    {
+        uint8_t curr = CRC8 ^ (*data++);
+        CRC8 = CRC8Lookup[curr];
+    }
+    return CRC8;
+}
+
+uint16_t generateCRC16(uint8_t* data, uint32_t len)
+{
+    uint16_t CRC16 = 0xFFFF;
+    while (len-- > 0)
+    {
+        uint8_t curr = *data++;
+        CRC16 = (CRC16 >> 8) ^ CRC16Lookup[(CRC16 ^ static_cast<uint16_t>(curr)) & 0x00FF];
+    }
+    return CRC16;
+}
+
+
 RefSystem::RefSystem()
 {}
 
@@ -46,31 +69,43 @@ void RefSystem::read(uint16_t filterID)
 
 void RefSystem::write(Frame& frame)
 {
+    // generate raw packet
+    uint16_t size = 0;
     uint8_t packet[REF_MAX_PACKET_SIZE] = { 0 };
 
     // write frame header
     packet[0] = frame.header.SOF;
-    packet[1] = frame.header.data_length & 0x00ff;
-    packet[2] = (frame.header.data_length & 0xff00) >> 8;
+    packet[1] = frame.header.data_length;
+    packet[2] = frame.header.data_length >> 8;
     packet[3] = frame.header.sequence;
-    packet[4] = frame.header.CRC;
+    packet[4] = generateCRC8(packet, 4);
+    size += 5;
 
     // write frame command ID
-    packet[5] = frame.commandID & 0x00ff;
-    packet[6] = (frame.commandID & 0xff00) >> 8;
+    packet[5] = frame.commandID;
+    packet[6] = frame.commandID >> 8;
+    size += 2;
 
     // write frame data
-    for (int i = 0; i < REF_MAX_PACKET_SIZE - 7; i++)
+    for (int i = 0; i < frame.header.data_length; i++)
     {
-        packet[7 + i] = frame.data[i];
+        packet[size + i] = frame.data[i];
     }
+    size += frame.header.data_length;
 
     // write frame CRC
-    packet[REF_MAX_PACKET_SIZE - 2] = frame.CRC & 0x00ff;
-    packet[REF_MAX_PACKET_SIZE - 1] = (frame.CRC & 0xff00) >> 8;
+    uint16_t CRC16 = generateCRC16(packet, size);
+    packet[size + 1] = CRC16;
+    packet[size + 2] = CRC16 >> 8;
+    size += 2;
+
+    Serial.println("Attempting to write: ");
+    for (int i = 0; i < size; i++)
+        Serial.printf("%x ", packet[i]);
+    Serial.println();
 
     // issue write command
-    Serial2.write(packet, frame.header.data_length + FrameHeader::packet_size + 4);
+    Serial2.write(packet, size);
 }
 
 bool RefSystem::read_frame_header(Frame& frame)
