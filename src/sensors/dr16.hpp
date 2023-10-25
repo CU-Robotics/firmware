@@ -4,17 +4,15 @@
 #include <cstdint>		// for access to fixed-width types
 #include "Arduino.h"	// for access to HardwareSerial defines
 
-constexpr uint16_t DR16_PACKET_SIZE 			= 18;	// the size in bytes of a DR16-Receiver packet
-constexpr uint16_t DR16_INPUT_VALUE_COUNT 		= 7;	// the size in floats of the normalized input
+constexpr uint16_t DR16_PACKET_SIZE = 18;	// the size in bytes of a DR16-Receiver packet
+constexpr uint16_t DR16_INPUT_VALUE_COUNT = 7;	// the size in floats of the normalized input
 
-constexpr uint16_t DR16_CONTROLLER_INPUT_HIGH 	= 1684;	// the maximum joystick input value
-constexpr uint16_t DR16_CONTROLLER_INPUT_LOW 	= 364;	// the minimum joystick input value
-constexpr uint16_t DR16_CONTROLLER_INPUT_ZERO 	= 1024;	// the medium joystick input value
+constexpr uint16_t DR16_CONTROLLER_INPUT_HIGH = 1684;	// the maximum joystick input value
+constexpr uint16_t DR16_CONTROLLER_INPUT_LOW = 364;	// the minimum joystick input value
+constexpr uint16_t DR16_CONTROLLER_INPUT_ZERO = 1024;	// the medium joystick input value
 
-constexpr uint16_t DR16_CONTROLLER_SWITCH_HIGH 	= 3;	// the maximum switch input value
-constexpr uint16_t DR16_CONTROLLER_SWITCH_LOW 	= 1;	// the minimum switch input value
-
-#define ENABLE_VALUE_CHECK_SAFETY
+constexpr uint16_t DR16_CONTROLLER_SWITCH_HIGH = 3;	// the maximum switch input value
+constexpr uint16_t DR16_CONTROLLER_SWITCH_LOW = 1;	// the minimum switch input value
 
 /// DR16 Packet Structure
 /// (translated from this: https://rm-static.djicdn.com/tem/17348/4.RoboMaster%20%E6%9C%BA%E5%99%A8%E4%BA%BA%E4%B8%93%E7%94%A8%E9%81%A5%E6%8E%A7%E5%99%A8%EF%BC%88%E6%8E%A5%E6%94%B6%E6%9C%BA%EF%BC%89%E7%94%A8%E6%88%B7%E6%89%8B%E5%86%8C.pdf)
@@ -67,39 +65,52 @@ public:
 	DR16();
 
 	/// @brief Initializes DR16 receiver, starts the Serial interface, and zeros input buffers
-	void Init();
+	void init();
 
 	/// @brief Attempts to read a full packet from the receiver. This function shouldn't be ran more than 100kHz
-	void Read();
+	void read();
 
   /// @brief Zeros the normalized input array
-  void Zero();
+	void zero();
 
 public:
 	/// @brief Get the 7 float length input buffer. These values are normalized [-1, 1]
 	/// @return float buffer
-	float* GetInput();
+	float* get_input();
 
-	// Getters for each individual attribute
+	/// @brief Get right stick x value
+	/// @return Right stick x value [-1.f, 1.f]
 	float get_r_stick_x();
-    
-    float get_r_stick_y();
 
-    float get_l_stick_x();
+	/// @brief Get right stick y value
+	/// @return Right stick y value [-1.f, 1.f]
+	float get_r_stick_y();
 
-    float get_l_stick_y();
+	/// @brief Get left stick x value
+	/// @return Left stick x value [-1.f, 1.f]
+	float get_l_stick_x();
 
-    float get_wheel();
+	/// @brief Get left stick y value
+	/// @return Left stick y value [-1.f, 1.f]
+	float get_l_stick_y();
 
-    float get_l_switch();
+	/// @brief Get wheel value
+	/// @return Wheel value [-1.f, 1.f]
+	float get_wheel();
 
-    float get_r_switch();
+	/// @brief Get left switch value
+	/// @return Switch value [1, 2, 3]
+	float get_l_switch();
+
+	/// @brief Get right switch value
+	/// @return Switch value [1, 2, 3]
+	float get_r_switch();
 
 	/// @brief Prints the normalized input buffer
-	void Print();
+	void print();
 
 	/// @brief Prints the raw 18-byte packet from the receiver
-	void PrintRaw();
+	void print_raw();
 
 private:
 	/// @brief Maps the input value to a specified value range
@@ -113,16 +124,16 @@ private:
 
   /// @brief A simple check to see if read data is within expected values
   /// @return True/false whether data is deemed valid or not
-  bool IsDataValid();
+	bool is_data_valid();
 
 private:
 	/// @brief normalized input buffer
 	float m_input[DR16_INPUT_VALUE_COUNT] = { 0 };
 
   /// @brief raw input split into the 7 input channels
-  float m_inputRawSeperated[DR16_INPUT_VALUE_COUNT] = { 0 };
+	float m_inputRawSeperated[DR16_INPUT_VALUE_COUNT] = { 0 };
 
-	/// @brief non-normalized, raw 18 byte packet
+	  /// @brief non-normalized, raw 18 byte packet
 	uint8_t m_inputRaw[DR16_PACKET_SIZE] = { 0 };
 
 };
