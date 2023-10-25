@@ -55,7 +55,7 @@ public:
   /// @note Does not issue a Write command to the CANs
   /// @param canID ID of the CAN which the motor is on, expects indexable ID value
   /// @param motorID ID of the individual motor, expects indexable ID value
-  /// @param value A value in the range of []
+  /// @param value A value in the range of [-16385, 16384] which maps to [-20A, 20A]
   void write_motor(uint16_t canID, uint16_t motorID, int32_t value);
 
   /// @brief Reads and returns value from input array of specified motor
