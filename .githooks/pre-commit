@@ -1,0 +1,19 @@
+#!/bin/bash
+
+# pre-commit githook, runs before a git commit is accepted.
+
+# branch protection githook inspired from https://stackoverflow.com/questions/75955185/is-there-a-way-to-protect-a-git-branch-locally
+# githook directory must be set locally in order for the hook to run.
+# set directory using: git config --local core.hooksPath <new_dir>
+
+current_branch="$(git branch --show-current)"
+
+# supports multiple protected branches. Add additional branches to for loop: for protected_branch in "branch1" "branch2" ... ; do
+for protected_branch in "main"; do 
+    if [[ "$protected_branch" == "$current_branch" ]]; then
+        echo "ERROR: local branch $current_branch is protected" 
+        exit 1
+    fi
+done
+
+exit 0

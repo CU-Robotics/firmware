@@ -12,8 +12,12 @@ To begin, download this repo: \
 git clone https://gitlab.com/cu-robotics/firmware.git
 ```
 
-Then, install dependencies: \
-`TODO`
+Then, install dependencies:
+
+`githooks` provide branch protection locally. Set the .githook/ directory with:
+```bash
+git config --local core.hooksPath .githooks
+```
 
 `buff-core` is required to build firmware. Clone the repo:
 ```bash
