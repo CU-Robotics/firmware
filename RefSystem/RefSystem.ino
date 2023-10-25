@@ -37,9 +37,9 @@ void loop()
         FrameData data{};
         data.data[0] = 0x01;    // Sub-content ID
         data.data[1] = 0x02;
-        data.data[2] = 7;       // Sender ID
+        data.data[2] = 1;       // Sender ID
         data.data[3] = 0;
-        data.data[4] = 1;       // Receiver ID
+        data.data[4] = 7;       // Receiver ID
         data.data[5] = 0;
 
         // raw data content
@@ -52,7 +52,7 @@ void loop()
 
         frame.CRC = 0;  // figure out crc in write command
 
-        ref.write(frame);
+        // ref.write(frame);
     }
 
 
