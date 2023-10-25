@@ -10,7 +10,23 @@ enum FrameType
 {
     GAME_STATUS = 0x0001,
     GAME_RESULT = 0x0002,
-    ROBOT_HEALTH = 0x0003
+    ROBOT_HEALTH = 0x0003,
+    SITE_EVENT = 0x0101,
+    PROJECTILE_SUPPLIER = 0x0102,
+    REFEREE_WARNING = 0x0104,
+    DART_LAUNCH = 0x0105,
+    ROBOT_PERFORMANCE = 0x0201,
+    POWER_HEAT = 0x0202,
+    ROBOT_POSITION = 0x0203,
+    ROBOT_BUFF = 0x0204,
+    AIR_SUPPORT_TIME = 0x0205,
+    DAMAGE_STATUS = 0x0206,
+    LAUNCHING_EVENT = 0x0207,
+    PROJECTILE_ALLOWANCE = 0x0208,
+    RFID = 0x0209,
+    DART_COMMAND = 0x020A,
+    GROUND_ROBOT_POSITION = 0x020B,
+    RADAR_PROGRESS = 0x020C
 };
 
 struct FrameHeader
@@ -712,7 +728,7 @@ struct ProjectileAllowance
 /// @brief Robot RFID status. Transmitted at 3Hz to all our robots (with RFID module)
 /// @todo Verify
 /// @note ID: 0x0209
-struct RFID
+struct RFIDData
 {
     /// @brief size of packet sent by Ref System in bytes
     static const uint8_t packet_size = 4;
@@ -738,7 +754,7 @@ struct RFID
 
 /// @brief Dart player client command data. Transmitted at 10Hz to all our dart robots
 /// @todo Verify
-/// @note ID: 0x020Ax
+/// @note ID: 0x020A
 struct DartCommand
 {
     /// @brief size of packet sent by Ref System in bytes

@@ -60,6 +60,7 @@ struct RefData
     SiteEvent site_event{};
     ProjectileSupplier proj_supplier{};
     RefereeWarning ref_warning{};
+    DartLaunch dart_launch{};
     RobotPerformance robot_performance{};
     PowerHeat power_heat{};
     RobotPosition position{};
@@ -68,7 +69,7 @@ struct RefData
     DamageStatus damage_status{};
     LaunchingEvent launching_event{};
     ProjectileAllowance proj_allowance{};
-    RFID rfid{};
+    RFIDData rfid{};
     DartCommand dart_command{};
     GroundRobotPosition ground_positions{};
     RadarProgress radar_progress{};

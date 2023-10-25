@@ -54,15 +54,69 @@ void RefSystem::read(uint16_t filterID)
 
     if (success)
     {
-        if (frame.commandID == 0x0201)
+        switch (frame.commandID)
         {
-            RobotPerformance status;
-            status.initialize_from_data(frame.data);
-            ID = status.robot_ID;
-        }
-        else if (filterID == frame.commandID)
-        {
+        case GAME_STATUS:
+            ref_data.game_status.initialize_from_data(frame.data);
+            break;
+        case GAME_RESULT:
+            ref_data.game_result.initialize_from_data(frame.data);
+            break;
+        case ROBOT_HEALTH:
+            ref_data.robot_health.initialize_from_data(frame.data);
+            break;
+        case SITE_EVENT:
+            ref_data.site_event.initialize_from_data(frame.data);
+            break;
+        case PROJECTILE_SUPPLIER:
+            ref_data.proj_supplier.initialize_from_data(frame.data);
+            break;
+        case REFEREE_WARNING:
+            ref_data.ref_warning.initialize_from_data(frame.data);
+            break;
+        case DART_LAUNCH:
+            ref_data.dart_launch.initialize_from_data(frame.data);
+            break;
+        case ROBOT_PERFORMANCE:
+            ref_data.robot_performance.initialize_from_data(frame.data);
+            break;
+        case POWER_HEAT:
+            ref_data.power_heat.initialize_from_data(frame.data);
+            break;
+        case ROBOT_POSITION:
+            ref_data.position.initialize_from_data(frame.data);
+            break;
+        case ROBOT_BUFF:
+            ref_data.robot_buff.initialize_from_data(frame.data);
+            break;
+        case AIR_SUPPORT_TIME:
+            ref_data.air_support_time.initialize_from_data(frame.data);
+            break;
+        case DAMAGE_STATUS:
+            ref_data.damage_status.initialize_from_data(frame.data);
+            break;
+        case LAUNCHING_EVENT:
+            ref_data.launching_event.initialize_from_data(frame.data);
+            break;
+        case PROJECTILE_ALLOWANCE:
+            ref_data.proj_allowance.initialize_from_data(frame.data);
+            break;
+        case RFID:
+            ref_data.rfid.initialize_from_data(frame.data);
+            break;
+        case DART_COMMAND:
+            ref_data.dart_command.initialize_from_data(frame.data);
+            break;
+        case GROUND_ROBOT_POSITION:
+            ref_data.ground_positions.initialize_from_data(frame.data);
+            break;
+        case RADAR_PROGRESS:
+            ref_data.radar_progress.initialize_from_data(frame.data);
+            break;
+        default:
+            Serial.println("What?");
             frame.print();
+            break;
         }
     }
 }
