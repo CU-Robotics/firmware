@@ -31,17 +31,16 @@ void RefSystem::read(uint16_t filterID)
 
     if (success)
     {
-        if (filterID)
+        if (frame.commandID == 0x0201)
         {
-            if (filterID == frame.commandID)
-            {
-                RadarProgress status;
-                status.initialize_from_data(frame.data);
-                status.print();
-            }
+            RobotPerformance status;
+            status.initialize_from_data(frame.data);
+            ID = status.robot_ID;
         }
-        else
+        else if (filterID == frame.commandID)
+        {
             frame.print();
+        }
     }
 }
 
@@ -71,7 +70,7 @@ void RefSystem::write(Frame& frame)
     packet[REF_MAX_PACKET_SIZE - 1] = (frame.CRC & 0xff00) >> 8;
 
     // issue write command
-    Serial2.write(packet, REF_MAX_PACKET_SIZE);
+    Serial2.write(packet, frame.header.data_length + FrameHeader::packet_size + 4);
 }
 
 bool RefSystem::read_frame_header(Frame& frame)

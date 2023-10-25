@@ -28,7 +28,7 @@ private:
 
 private:
     uint8_t raw_buffer[REF_MAX_PACKET_SIZE] = { 0 };
-
+    uint8_t ID = 0;
 };
 
 #endif // REF_SYSTEM_HPP
