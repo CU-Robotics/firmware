@@ -25,34 +25,8 @@ void loop()
     if (accumulator >= 30000)
     {
         accumulator = 0;
-
         Frame frame{};
-        frame.header.SOF = 0xA5;
-        frame.header.data_length = 32;
-        frame.header.sequence = 5;
-        frame.header.CRC = 0;
-
-        frame.commandID = 0x0301;
-
-        FrameData data{};
-        data.data[0] = 0x01;    // Sub-content ID
-        data.data[1] = 0x02;
-        data.data[2] = 1;       // Sender ID
-        data.data[3] = 0;
-        data.data[4] = 7;       // Receiver ID
-        data.data[5] = 0;
-
-        // raw data content
-        for (int i = 0; i < 32 - 6; i++)
-        {
-            data.data[6 + i] = i;
-        }
-
-        frame.data = data;
-
-        frame.CRC = 0;  // figure out crc in write command
-
-        // ref.write(frame);
+        ref.write(frame);
     }
 
 

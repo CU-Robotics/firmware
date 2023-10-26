@@ -123,43 +123,55 @@ void RefSystem::read(uint16_t filterID)
 
 void RefSystem::write(Frame& frame)
 {
-    // generate raw packet
-    uint16_t size = 0;
-    uint8_t packet[REF_MAX_PACKET_SIZE] = { 0 };
+    byte msg[128] = { 0 };
+    int msg_len = 0;
+    const int data_bytes = 20;
 
-    // write frame header
-    packet[0] = frame.header.SOF;
-    packet[1] = frame.header.data_length;
-    packet[2] = frame.header.data_length >> 8;
-    packet[3] = frame.header.sequence;
-    packet[4] = generateCRC8(packet, 4);
-    size += 5;
+    uint16_t sender = 0x0007;
+    uint16_t receiver = 0x0007;
 
-    // write frame command ID
-    packet[5] = frame.commandID;
-    packet[6] = frame.commandID >> 8;
-    size += 2;
+    uint16_t content_id = 0x0200 | sender;
 
-    // write frame data
-    for (int i = 0; i < frame.header.data_length; i++)
-    {
-        packet[size + i] = frame.data[i];
-    }
-    size += frame.header.data_length;
+    uint8_t data[data_bytes] = { 0 };
+    for (int i = 0; i < data_bytes; i++)
+        data[i] = i;
 
-    // write frame CRC
-    uint16_t CRC16 = generateCRC16(packet, size);
-    packet[size + 1] = CRC16;
-    packet[size + 2] = CRC16 >> 8;
-    size += 2;
 
-    Serial.println("Attempting to write: ");
-    for (int i = 0; i < size; i++)
-        Serial.printf("%x ", packet[i]);
-    Serial.println();
+	msg[0] = 0xA5;
+	msg[1] = 6+data_bytes;
+	msg[2] = 0x00;
+	msg[3] = get_seq();
+	msg[4] = generateCRC8(msg, 4);
 
-    // issue write command
-    Serial2.write(packet, size);
+	// cmd 0x0301
+	msg[5] = 0x01;
+	msg[6] = 0x03;
+
+	// content ID
+	msg[7] = content_id;
+	msg[8] = content_id >> 8;
+
+	// sender ID
+	msg[9] = sender;
+	msg[10] = sender >> 8;
+
+	// receiver ID
+	msg[11] = receiver;
+    msg[12] = receiver >> 8;
+
+    // data section
+    for (int i = 0; i < data_bytes; i++)
+        msg[13 + i] = data[i];
+
+    uint16_t footerCRC = generateCRC16(msg, 13+data_bytes);
+	msg[13+data_bytes] = (footerCRC & 0x00FF);
+    msg[14 + data_bytes] = (footerCRC >> 8);
+
+    msg_len = 15 + data_bytes;
+
+    
+    // Serial.println("Attempting to send msg");
+    Serial2.write(msg, msg_len);
 }
 
 bool RefSystem::read_frame_header(Frame& frame)

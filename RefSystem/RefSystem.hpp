@@ -94,9 +94,13 @@ private:
     bool read_frame_data(Frame& frame);
     bool read_frame_CRC(Frame& frame);
 
+    uint8_t get_seq() { seq++;  return seq; }
+
 private:
     uint8_t raw_buffer[REF_MAX_PACKET_SIZE] = { 0 };
     RefData ref_data{};
+
+    uint8_t seq = 0;
 
 };
 
