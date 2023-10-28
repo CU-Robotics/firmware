@@ -1,0 +1,66 @@
+name: Check Pull Request
+
+# Controls when the action will run. 
+on:
+  pull_request:
+    types:
+      - opened
+      - reopened
+      - synchronize
+    
+jobs:
+  # Test documentation build for proper doxygen coverage
+  build-documentation:
+    runs-on: ubuntu-latest
+    steps:
+        # Checkout sets up working directory as project root
+      - name: Checkout
+        uses: actions/checkout@v4
+        # Run Doxygen Build
+      - name: Run Doxygen
+        uses: mattnotmitt/doxygen-action@v1.9.5
+        with:
+          doxyfile-path: ./Doxyfile # Docs build settings
+          working-directory: .
+          enable-latex: false # could enable latex later if needed, but it has a slow install.
+
+      # Comment warnings onto pull request for easy viewing and feedback.
+
+      # Get file contents of docs/doxygen_warnings.txt as GITHUB_OUTPUT to be used in comment body. Can't simply use body-path since I want to support editing the existing comment.
+      - name: Get File Contents
+        if: success() || failure() # Run commenting steps even if above steps fails
+        id: doxygen-warnings
+        # run inspired from https://stackoverflow.com/questions/74137120/how-to-fix-or-avoid-error-unable-to-process-file-command-output-successfully for multiline messages
+        # structure of run: (delimiter is randomly generated to prevent false EOF)
+          # {name}<<{delimiter}
+          # {value}
+          # {delimiter}
+        run: |
+          EOF=$(dd if=/dev/urandom bs=15 count=1 status=none | base64)
+          echo "warnings<<$EOF" >> $GITHUB_OUTPUT
+          echo "$(cat docs/doxygen_warnings.txt)" >> $GITHUB_OUTPUT
+          echo "$EOF" >> $GITHUB_OUTPUT
+
+      # Actions modified from https://github.com/peter-evans/create-or-update-comment
+      - name: Find Editable Comment
+        if: success() || failure() # Run commenting steps even if above steps fails
+        uses: peter-evans/find-comment@v2
+        id: fc
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          comment-author: 'github-actions[bot]'
+          body-includes: "Doxygen warnings output: (if empty, there are no warnings). Please correct any warnings before merging."
+        
+      # Create or update/edit comment containing build warnings
+      - name: Create or update comment
+        if: success() || failure() # Run commenting steps even if above steps fails
+        uses: peter-evans/create-or-update-comment@v3
+        with:
+          comment-id: ${{ steps.fc.outputs.comment-id }}
+          issue-number: ${{ github.event.pull_request.number }}
+          body: |
+            Doxygen warnings output: (if empty, there are no warnings). Please correct any warnings before merging.
+            ```yaml
+              ${{ steps.doxygen-warnings.outputs.warnings }}
+            ```
+          edit-mode: replace
