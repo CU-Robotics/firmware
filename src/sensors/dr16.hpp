@@ -14,6 +14,8 @@ constexpr uint16_t DR16_CONTROLLER_INPUT_ZERO = 1024;	// the medium joystick inp
 constexpr uint16_t DR16_CONTROLLER_SWITCH_HIGH = 3;	// the maximum switch input value
 constexpr uint16_t DR16_CONTROLLER_SWITCH_LOW = 1;	// the minimum switch input value
 
+constexpr uint32_t DR16_FAIL_STATE_TIMEOUT = 250000;
+
 /// DR16 Packet Structure
 /// (translated from this: https://rm-static.djicdn.com/tem/17348/4.RoboMaster%20%E6%9C%BA%E5%99%A8%E4%BA%BA%E4%B8%93%E7%94%A8%E9%81%A5%E6%8E%A7%E5%99%A8%EF%BC%88%E6%8E%A5%E6%94%B6%E6%9C%BA%EF%BC%89%E7%94%A8%E6%88%B7%E6%89%8B%E5%86%8C.pdf)
 
@@ -73,7 +75,12 @@ public:
   /// @brief Zeros the normalized input array
 	void zero();
 
+
 public:
+	/// @brief Returns the fail bit. Set only if invalid packets have been received for more then 250ms
+	/// @return Failure status
+	uint8_t is_fail() { return m_fail; }
+
 	/// @brief Get the 7 float length input buffer. These values are normalized [-1, 1]
 	/// @return float buffer
 	float* get_input();
@@ -126,7 +133,7 @@ private:
   /// @return True/false whether data is deemed valid or not
 	bool is_data_valid();
 
-private:
+public:
 	/// @brief normalized input buffer
 	float m_input[DR16_INPUT_VALUE_COUNT] = { 0 };
 
@@ -135,6 +142,13 @@ private:
 
 	  /// @brief non-normalized, raw 18 byte packet
 	uint8_t m_inputRaw[DR16_PACKET_SIZE] = { 0 };
+
+	/// @brief stores previous time value (in micros) for use in calculating a dt
+	uint32_t m_prevTime = 0;
+	/// @brief time since last valid packet
+	uint32_t m_failTime = 0;
+	/// @brief fail state
+	uint8_t m_fail = false;
 
 };
 

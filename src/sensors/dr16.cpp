@@ -1,4 +1,4 @@
-#include "DR16.hpp"
+#include "dr16.hpp"
 
 DR16::DR16() {}
 
@@ -69,6 +69,8 @@ void DR16::read()
 	// simple safety check
 	if (is_data_valid())
 	{
+		m_fail = false;
+		m_failTime = 0;
 		// assign formated data (within ranges of [-1,1]) to the true input buffer
 		// joy sticks
 		m_input[0] = bounded_map(c0, DR16_CONTROLLER_INPUT_LOW, DR16_CONTROLLER_INPUT_HIGH, -1000, 1000) / 1000.f;
@@ -83,8 +85,19 @@ void DR16::read()
 		m_input[5] = (float)s1;
 		m_input[6] = (float)s2;
 	}
+	else
+	{
+		uint32_t dt = micros() - m_prevTime;
+		m_failTime += dt;
+		if (m_failTime > DR16_FAIL_STATE_TIMEOUT)
+			m_fail = true;
+		else
+			m_fail = false;
+	}
+
 
 	Serial.printf("%.4d (%.3f)\t%.4d (%.3f)\t%.4d (%.3f)\t%.4d (%.3f)\t%.4d (%.3f)\t%.4d\t%.4d\n", c0, m_input[0], c1, m_input[1], c2, m_input[2], c3, m_input[3], wh, m_input[4], s1, s2);
+	m_prevTime = micros();
 }
 
 void DR16::zero()
