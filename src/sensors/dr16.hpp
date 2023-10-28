@@ -60,8 +60,7 @@ constexpr uint32_t DR16_FAIL_STATE_TIMEOUT = 250000;
 // wheel	|	Wheel Axis				|	[364 - 1024 - 1684]
 
 /// @brief Wrapper for reading and mapping input from the DR16-Receiver and associated controller
-class DR16
-{
+class DR16 {
 public:
 	/// @brief Constructor, left empty
 	DR16();
@@ -74,7 +73,6 @@ public:
 
   /// @brief Zeros the normalized input array
 	void zero();
-
 
 public:
 	/// @brief Returns the fail bit. Set only if invalid packets have been received for more then 250ms
@@ -129,18 +127,18 @@ private:
 	/// @return Mapped input in the range of [out_low, out_high]
 	float bounded_map(int value, int in_low, int in_high, int out_low, int out_high);
 
-  /// @brief A simple check to see if read data is within expected values
-  /// @return True/false whether data is deemed valid or not
+	/// @brief A simple check to see if read data is within expected values
+	/// @return True/false whether data is deemed valid or not
 	bool is_data_valid();
 
 public:
 	/// @brief normalized input buffer
 	float m_input[DR16_INPUT_VALUE_COUNT] = { 0 };
 
-  /// @brief raw input split into the 7 input channels
+	/// @brief raw input split into the 7 input channels
 	float m_inputRawSeperated[DR16_INPUT_VALUE_COUNT] = { 0 };
 
-	  /// @brief non-normalized, raw 18 byte packet
+	/// @brief non-normalized, raw 18 byte packet
 	uint8_t m_inputRaw[DR16_PACKET_SIZE] = { 0 };
 
 	/// @brief stores previous time value (in micros) for use in calculating a dt
@@ -149,7 +147,6 @@ public:
 	uint32_t m_failTime = 0;
 	/// @brief fail state
 	uint8_t m_fail = false;
-
 };
 
 #endif // DR16_HPP

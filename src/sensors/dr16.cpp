@@ -2,8 +2,7 @@
 
 DR16::DR16() {}
 
-void DR16::init()
-{
+void DR16::init() {
 	// start Serial5 HardwareSerial with 1
 	Serial5.begin(100000, SERIAL_8E1_RXINV_TXINV);
 	// await any active writing and clear the buffer
@@ -11,19 +10,16 @@ void DR16::init()
 	Serial5.clear();
 
 	// init all input buffers to 0
-	for (int i = 0; i < DR16_PACKET_SIZE; i++)
-	{
+	for (int i = 0; i < DR16_PACKET_SIZE; i++) {
 		m_inputRaw[i] = 0;
 	}
 
-	for (int i = 0; i < DR16_INPUT_VALUE_COUNT; i++)
-	{
+	for (int i = 0; i < DR16_INPUT_VALUE_COUNT; i++) {
 		m_input[i] = 0;
 	}
 }
 
-void DR16::read()
-{
+void DR16::read() {
 	// each channel is 11 bits, minus the switches
 	uint16_t c0{ 0 }, c1{ 0 }, c2{ 0 }, c3{ 0 }, wh{ 0 };
 	uint8_t s1{ 0 }, s2{ 0 };
@@ -32,15 +28,13 @@ void DR16::read()
 	// since each packet it sends is 18 bytes, verify that there are exactly 8 bytes in the buffer
 
 	// clear if there are more than 18 bytes, i.e. we missed a previous packet
-	if (Serial5.available() > DR16_PACKET_SIZE)
-	{
+	if (Serial5.available() > DR16_PACKET_SIZE) {
 		Serial5.clear();
 		return;
 	}
 
 	// dont read if there are less than 18 bytes, i.e. we caught the packet as it was being written
-	if (Serial5.available() < DR16_PACKET_SIZE)
-	{
+	if (Serial5.available() < DR16_PACKET_SIZE) {
 		return;
 	}
 
@@ -67,8 +61,7 @@ void DR16::read()
 	m_inputRawSeperated[6] = s2;
 
 	// simple safety check
-	if (is_data_valid())
-	{
+	if (is_data_valid()) {
 		m_fail = false;
 		m_failTime = 0;
 		// assign formated data (within ranges of [-1,1]) to the true input buffer
@@ -85,8 +78,7 @@ void DR16::read()
 		m_input[5] = (float)s1;
 		m_input[6] = (float)s2;
 	}
-	else
-	{
+	else {
 		uint32_t dt = micros() - m_prevTime;
 		m_failTime += dt;
 		if (m_failTime > DR16_FAIL_STATE_TIMEOUT)
@@ -100,11 +92,9 @@ void DR16::read()
 	m_prevTime = micros();
 }
 
-void DR16::zero()
-{
+void DR16::zero() {
   // zero input buffer
-	for (int i = 0; i < DR16_INPUT_VALUE_COUNT; i++)
-	{
+	for (int i = 0; i < DR16_INPUT_VALUE_COUNT; i++) {
 		m_input[i] = 0;
 	}
 
@@ -113,37 +103,31 @@ void DR16::zero()
 	m_input[6] = 1;
 }
 
-float* DR16::get_input()
-{
+float* DR16::get_input() {
 	return m_input;
 }
 
-void DR16::print()
-{
+void DR16::print() {
 	Serial.printf("%.4f\t%.4f\t%.4f\t%.4f\t%.4f\t%.4f\t%.4f\n", m_input[0], m_input[1], m_input[2], m_input[3], m_input[4], m_input[5], m_input[6]);
 }
 
-void DR16::print_raw()
-{
+void DR16::print_raw() {
 	for (int i = 0; i < DR16_PACKET_SIZE; i++)
 		Serial.printf("%.2x\t", m_inputRaw[i]);
 	Serial.println();
 }
 
-float DR16::bounded_map(int value, int in_low, int in_high, int out_low, int out_high)
-{
+float DR16::bounded_map(int value, int in_low, int in_high, int out_low, int out_high) {
 	// this is derived from sthe arduino map() function
 	value = max(min(value, in_high), in_low);
 
 	return (value - in_low) * (out_high - out_low) / (in_high - in_low) + out_low;
 }
 
-bool DR16::is_data_valid()
-{
+bool DR16::is_data_valid() {
   // go through all values in raw seperated input and compare them against maximum and minimum values
   // the - 2 is to exclude switch values
-	for (int i = 0; i < DR16_INPUT_VALUE_COUNT - 2; i++)
-	{
+	for (int i = 0; i < DR16_INPUT_VALUE_COUNT - 2; i++) {
 		if (m_inputRawSeperated[i] < DR16_CONTROLLER_INPUT_LOW || m_inputRawSeperated[i] > DR16_CONTROLLER_INPUT_HIGH)
 			return false;
 	}
@@ -151,37 +135,30 @@ bool DR16::is_data_valid()
 	return true;
 }
 
-float DR16::get_r_stick_x()
-{
+float DR16::get_r_stick_x() {
 	return m_input[0];
 }
 
-float DR16::get_r_stick_y()
-{
+float DR16::get_r_stick_y() {
 	return m_input[1];
 }
 
-float DR16::get_l_stick_x()
-{
+float DR16::get_l_stick_x() {
 	return m_input[2];
 }
 
-float DR16::get_l_stick_y()
-{
+float DR16::get_l_stick_y() {
 	return m_input[3];
 }
 
-float DR16::get_wheel()
-{
+float DR16::get_wheel() {
 	return m_input[4];
 }
 
-float DR16::get_r_switch()
-{
+float DR16::get_r_switch() {
 	return m_input[6];
 }
 
-float DR16::get_l_switch()
-{
+float DR16::get_l_switch() {
 	return m_input[5];
 }
