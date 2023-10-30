@@ -32,7 +32,7 @@
 /**
 * TEENSY INCLUDES
 */
-#include <Arduino.h>
+#include <Arduino.h> // hardware serial
 
 #endif
 
@@ -125,65 +125,101 @@ const uint16_t CRC16_LOOKUP[256] = {
 /// @brief Simple struct to store packet data
 struct SerialPacket {
     enum CommandID: uint16_t {
+        /// @brief ID for the data request packet
         DATA_REQUEST = 0x0FF,
+        /// @brief ID for the DR16 packet
         DR16 = 0x0103,
+        /// @brief ID for the Rev Encoder packet
         REV_ENCODER = 0x0104,
+        /// @brief ID for the ISM packet
         ISM = 0x0105
     };
 
+    /// @brief command ID for packet
     CommandID cmd_id;
 
+    /// @brief the data request packet
     struct {
+        /// @brief refer to external docs
         CommandID cmd_id;
+        /// @brief refer to external docs
         uint8_t sensor_id;
     } data_req;
 
+    /// @brief raw DR16 data
     struct {
+        /// @brief refer to external docs
         float l_stick_x, l_stick_y, r_stick_x, r_stick_y, wheel;
+        /// @brief refer to external docs
         uint32_t l_switch, r_switch;
     } dr16[MAX_SENSOR_ARR_SIZE];
 
+    /// @brief raw Rev Encoder data
     struct {
+        /// @brief refer to external docs
         float angle;
     } rev_encoder[MAX_SENSOR_ARR_SIZE];
 
+    /// @brief raw ISM data
     struct {
+        /// @brief refer to external docs
         float psi, theta, phi;
     } ism[MAX_SENSOR_ARR_SIZE];
 };
 
+/// @brief Simple struct for drafting packets
 struct RawPacket {
+    /// @brief command ID for packet
     SerialPacket::CommandID cmd_id;
+    /// @brief packet bytes, limited by MAX_DATA_SIZE for now (avoiding heap alloc when possible)
     uint8_t data[MAX_DATA_SIZE];
+    /// @brief length of the data segment
     int length;
 
+    /// @brief constructor for the packet that takes in a command ID
+    /// @param cmd_id command ID for packet
+    /// @return packet draft with given command ID
     RawPacket(SerialPacket::CommandID cmd_id): cmd_id{cmd_id} {}
 };
 
+/// @brief Simple struct to represent data transmission requests over serial
 struct SerialRequest {
+    /// @brief packet draft
     RawPacket packet;
+    /// @brief next packet in the queue
     SerialRequest *next_req = nullptr;
 
+    /// @brief construcftor for the request that takes in a packet draft
+    /// @param packet the RawPacket that the client wants to send
+    /// @return serial request
     SerialRequest(RawPacket packet): packet{packet} {}
 };
 
+/// @brief Bare bones heap-allocated FIFO queue for processing serial requests (will ultimately exist in shared memory)
 class SerialRequestQueue {
     private:
+        /// @brief head of the queue
         SerialRequest *head;
+        /// @brief tail of the queue
         SerialRequest *tail;
     
     public:
+        /// @brief constructor for the queue, initalizes head and tail to NULL
+        /// @return serial request queue
         SerialRequestQueue() 
             : head{nullptr}
             , tail{nullptr}
         {}
 
+        /// @brief destructor for the queue, dequeues all current requests
         ~SerialRequestQueue() {
             while (head) {
                 deq_request();
             }
         }
 
+        /// @brief enqueues a packet draft onto the serial request queue
+        /// @param packet the packet draft the client wants to send
         void enq_request(RawPacket packet) {
             if (head && tail) {
                 tail->next_req = new SerialRequest(packet);
@@ -193,14 +229,12 @@ class SerialRequestQueue {
             }
         }
 
-        SerialRequest *peek() {
-            return tail;
-        }
-
-        void deq_request() {
+        /// @brief dequeue the first packet in the queue
+        RawPacket deq_request() {
             if (empty())
                 return;
 
+            RawPacket packet = head->packet;
             SerialRequest *tmp = head;
             head = head->next_req;
             if (head == nullptr) {
@@ -208,8 +242,11 @@ class SerialRequestQueue {
             }
 
             delete tmp;
+            return packet;
         }
 
+        /// @brief check if the queue is empty or not
+        /// @return true if the queue is empty, false otherwise
         bool empty() {
             return head == nullptr && tail == nullptr;
         }
@@ -223,16 +260,29 @@ class SerialComms {
         
         /// @brief Sequence number which may be used to track packet loss; resets when it reaches 255
         uint8_t seq = 0;
+
+        /// @brief Sequece number of the previous packet
         uint8_t prev_seq = 0;
         
+        /// @brief buffer for reading 
         uint8_t read_buffer[READ_BUFFER_MAX_SIZE];
+
+        /// @brief buffer for writing
         uint8_t write_buffer[WRITE_BUFFER_MAX_SIZE];
         
+        /// @brief current size of the read buffer
         int read_buffer_current_size = 0;
+
+        /// @brief current size of the write buffer
         int write_buffer_current_size = 0;
+
+        /// @brief current offset into the read buffer
         int read_buffer_offset = 0;
+
+        /// @brief current offset into the write buffer
         int write_buffer_offset = 0;
 
+        /// @brief serial request queue
         SerialRequestQueue queue;
         
         /// @brief Decodes unsigned-integer value of arbitrary size from byte array
@@ -268,12 +318,14 @@ class SerialComms {
         /// @return Either -1 if no bytes are available or the byte value
         int read_byte();
 
-        /// @brief  Read multiple bytes from the stream
+        /// @brief Read multiple bytes from the stream
         /// @param data Pointer to the data array that you want to read into
         /// @param count Desired number of bytes to be read
         /// @return The number of bytes successfully read from the stream
         int read_bytes(uint8_t *data, int count);
 
+        /// @brief Flush the write buffer (dispatch on serial)
+        /// @return -1 if flush was unsuccessful
         int flush_write_buffer();
 
         /// @brief Write single byte to the write buffer
@@ -300,12 +352,30 @@ class SerialComms {
         /// @brief Log error without message
         void log_err(const char* func_name);
 
+        /// @brief find size of the response packet
+        /// @param cmd_id the command ID for which you want the response size
+        /// @return byte length of the response packet
         int calc_data_response_size(SerialPacket::CommandID cmd_id);
+
+        /// @brief generate a crc8 for a given data segment
+        /// @param data pointer to data array
+        /// @param size size of the data array
+        /// @return the crc8 value
         uint8_t generate_crc8(const uint8_t *data, int size);
+
+        /// @brief generate crc16 for a given data segment
+        /// @param data pointer to the data array
+        /// @param size size of the data array
+        /// @return the crc16 value
         uint16_t generate_crc16(const uint8_t *data, int size);
         
     public:
+        /// @brief construct a SerialComms object
+        /// @param port_name C string referring to the serial port (Linux) or empty string (Teensy)
+        /// @return new SerialComms object
         SerialComms(const char *port_name);
+
+        /// @brief destruct SerialComms object
         ~SerialComms();
 
         /// @brief Send packet to the Teensy
@@ -314,20 +384,25 @@ class SerialComms {
         /// @param length Length of the data section
         void send_packet(const RawPacket &packet);
         
-        /// @brief Attempt to read packet from 
+        /// @brief Attempt to read packet from serial
+        /// @param packet the packet struct to read into
         /// @return -1 if unable to detect packet in the stream
         bool read_packet(SerialPacket& packet);
 
-        /// @brief enqueue a packet and send
-        void request_data(SerialPacket::CommandID cmd_id, uint8_t sensor_id);
-
         /// @brief enqueue a packet (add SerialRequest to the queue)
+        /// @param cmd_id command ID of the packet you want to enqueue
+        /// @param data pointer to the data array representing the data segment of the packet
+        /// @param length size of the data array
         void enqueue_packet(SerialPacket::CommandID cmd_id, uint8_t *data, uint16_t length);
 
         /// @brief enqueue data request (KHADAS)
+        /// @param cmd_id command ID of the subsystem you want to request data for
+        /// @param sensor_id sensor ID of the subsystem you want to request data for
         void enqueue_data_request(SerialPacket::CommandID cmd_id, uint8_t sensor_id);
 
         /// @brief send as many packets as possible on this loop iteration
+        /// @param loop_freq frequency of the packet handling loop (Hz)
+        /// @return number of packets flushed during this iteration
         int flush_queue(int loop_freq);
 };
 

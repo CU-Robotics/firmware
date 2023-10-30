@@ -335,10 +335,9 @@ int SerialComms::flush_queue(int loop_freq)
     int throughput = 0;
 
     while (!queue.empty() && bitrate_limit >= 0) {
-        SerialRequest *curr_req = queue.peek();
-        send_packet(curr_req->packet);
-        bitrate_limit -= calc_data_response_size(curr_req->packet.cmd_id);
-        queue.deq_request();
+        RawPacket packet = queue.deq_request();
+        send_packet(packet);
+        bitrate_limit -= calc_data_response_size(packet.cmd_id);
         throughput++;
     }
 
