@@ -1,14 +1,32 @@
 #include "ICM20649.hpp"
+#include <cassert>
 
-ICM20649::ICM20649() {}
+// constructor
+ICM20649::ICM20649(CommunicationProtocol protocol) {
+    // assign protocol to object.
+    this->protocol = protocol
+}
 
 // initialize ICM
 void ICM20649::init() {
-    // start I2C communication 
-    // TODO switch to SPI
-    
-    if (!sensor.begin_I2C()) {
-      Serial.println("Failed to begin i2c");
+    // begin sensor depending on selected protocol
+    switch (protocol) {
+    case I2C:
+        // start I2C communication 
+        if (!sensor.begin_I2C()) {
+            Serial.println("Failed to begin I2C");
+        }
+        break;
+    case SPI:
+        // start SPI communication
+        if (!icm.begin_SPI(ICM_CS, ICM_SCK, ICM_MISO, ICM_MOSI)) {
+            Serial.println("Failed to begin SPI")
+        }
+        break;
+    default:
+        // any other value is unexpected and will not allow the sensor to function.
+        assert(false && "Invalid ICM20649 protocol selected! Expects only I2C or SPI.")
+        break;
     }
 
     // set data ranges
@@ -29,7 +47,7 @@ void ICM20649::read() {
     sensor.getEvent(&accel, &gyro, &temp);
 
     // assign result to this object's members.
-    // (could increase efficiency by specifying which values we need, and only assigning values from that. However, getEvent will read all values from the sensor regardless)
+    // (could increase efficiency by specifying which values we need, and only assigning values to the object's members from that. However, getEvent will read all values from the sensor regardless)
     accel_X = accel.acceleration.x;
     accel_Y = accel.acceleration.y;
     accel_Z = accel.acceleration.z;
@@ -47,5 +65,6 @@ float ICM20649::get_accel_data_rate() {
 }
 
 float ICM20649::get_gyro_data_rate() {
+    // equation from Adafruit ICM20649 example code
     return gyro_rate = 1100 / (1.0 + sensor.getGyroRateDivisor());
 }
