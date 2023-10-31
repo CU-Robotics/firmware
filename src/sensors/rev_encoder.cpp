@@ -17,7 +17,7 @@ RevEncoder::RevEncoder(uint8_t encPin, int baudrate)
 void RevEncoder::read() 
 {
     float sum = 0;
-    int count = 0;
+    int count = 0;  
     if (freq.available()) 
     {
         // average several reading together
@@ -43,5 +43,3 @@ float RevEncoder::getAngleRadians()
 {
     return this->radians;
 }
-
-

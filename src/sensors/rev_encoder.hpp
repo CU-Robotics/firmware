@@ -10,6 +10,9 @@
 #ifndef REV_ENCODER_H
 #define REV_ENCODER_H
 
+/**
+ * @brief Rev Encoder Class
+ */
 class RevEncoder 
 {
 	private:
