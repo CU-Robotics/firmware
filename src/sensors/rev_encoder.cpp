@@ -9,9 +9,8 @@
 RevEncoder::RevEncoder(uint8_t encPin, int baudrate)
 {
     this->inPin = encPin;
-    this->baudrate = baudrate;
     pinMode(this->inPin, INPUT); // Set the pin used to measure the encoder to be an input
-    Serial.begin(this->baudrate);
+    Serial.begin(baudrate);
     freq.begin(this->inPin, FREQMEASUREMULTI_MARK_ONLY);
 }
 

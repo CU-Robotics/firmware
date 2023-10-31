@@ -29,7 +29,6 @@ class RevEncoder
 		 * @brief how many readings will be avergaed to update the current angle 
 		 */
 		const int READ_SIZE = 10;
-		
 		/**
 		 * @brief measure of current angle in ticks (1024 ticks = 1 rotation )
 		 */
@@ -51,11 +50,13 @@ class RevEncoder
 		 */
         void read();
 		/**
-		 * @brief return the last angle of the encoder in ticks (1024 = 1 Rotation).
+		 * @brief get the last angle of the encoder in ticks
+		 * @return the last angle of the encoder in ticks
 		 */
 		float getAngleTicks();
 		/**
-		 * @brief return the last angle of the encoder in radians
+		 * @brief get the last angle of the encoder in radians
+		 * @return the last angle of the encoder in radians
 		 */
 		float getAngleRadians();
 		
