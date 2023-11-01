@@ -10,6 +10,9 @@
 #ifndef REV_ENCODER_H
 #define REV_ENCODER_H
 
+/**
+ * @brief the class for the Rev Encoder
+ */
 class RevEncoder 
 {
 	private:
@@ -41,11 +44,13 @@ class RevEncoder
 		*/
 		void read();
 		/**
-		* @brief return the last angle of the encoder in ticks (1024 = 1 Rotation).
+		* @brief get the last angle of the encoder ticks
+		* @return the last angle of the encoder in ticks (1024 = 1 Rotation).
 		*/
 		float getAngleTicks();
 		/**
-		* @brief return the last angle of the encoder in radians
+		* @brief get the last angle of the encoder in radians
+		* @return the last angle of the encoder in radians
 		*/
 		float getAngleRadians();
 };
