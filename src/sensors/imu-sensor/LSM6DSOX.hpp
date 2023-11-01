@@ -12,7 +12,7 @@ public:
     /// @brief Constructor. Currently does nothing, use init() instead.
     LSM6DSOX();
 
-    /// @brief Initialize the sensor with the assigned communication protocol.
+    /// @brief Initialize the sensor
     void init();
 
     /// @copydoc IMUSensor::read()    
