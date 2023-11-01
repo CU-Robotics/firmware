@@ -4,7 +4,7 @@
 #ifndef REV_ENCODER_H
 #define REV_ENCODER_H
 
-/// @brief the class for the Rev Encoder
+/// @brief the class for the Rev Through Bore Encoder(www.revrobotics.com/rev-11-1271/)
 class RevEncoder 
 {
 	private:
