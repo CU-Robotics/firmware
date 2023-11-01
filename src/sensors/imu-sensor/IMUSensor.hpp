@@ -9,8 +9,6 @@
 /// @brief Abstract parent class for all IMUSensors, which give acceleration and gyroscope data. 
 class IMUSensor {
 public:
-    /// @brief initialize the sensor. Call this for construction.
-    virtual void init();
     /// @brief read values from the sensor. Call this to update sensor data before accessing them from the getters. 
     virtual void read();
 

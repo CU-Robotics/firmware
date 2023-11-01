@@ -26,14 +26,15 @@ public:
         SPI ///< Serial Peripheral Interface. Four-wire: SDA (serial data in), AD0(serial data out), SCL/SCK (serial clock pin), CS (chip select pin)
     };
 
-    /// @brief Constructor, initializes the communication protocol. Does not enable the sensor until @ref init() is called.
+    /// @brief Constructor. Currently does nothing, use init() instead.
+    ICM20649();
+
+    /// @brief Initialize the sensor with the assigned communication protocol.
     /// @param protocol Which communication protocol to use for this sensor.
-    explicit ICM20649(CommunicationProtocol protocol);
+    void init(CommunicationProtocol protocol);
 
     /// @copydoc IMUSensor::read()    
     void read() override;
-    /// @copydoc IMUSensor::init()
-    void init() override;
 private:
     /// @brief sensor object from adafruit libraries.
     Adafruit_ICM20649 sensor;

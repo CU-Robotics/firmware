@@ -11,7 +11,8 @@ void setup() {
   Serial.println("Adafruit ICM20649 test!");
 
   // Try to initialize!
-  icm.init();
+  ICM20649::CommunicationProtocol protocol = ICM20649::CommunicationProtocol::SPI;
+  icm.init(protocol);
 
   Serial.println("ICM20649 Found!");
 }

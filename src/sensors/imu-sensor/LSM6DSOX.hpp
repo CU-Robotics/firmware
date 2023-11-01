@@ -11,10 +11,12 @@ class LSM6DSOX : public IMUSensor {
 public:
     /// @brief Constructor. Currently does nothing, use init() instead.
     LSM6DSOX();
+
+    /// @brief Initialize the sensor with the assigned communication protocol.
+    void init();
+
     /// @copydoc IMUSensor::read()    
     void read() override;
-    /// @copydoc IMUSensor::init()
-    void init() override;
 
 private:
     /// @brief sensor object from adafruit libraries.
