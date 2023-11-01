@@ -1,8 +1,3 @@
-/**
- * @file rev_encoder.cpp
- * @brief The implementation of the Rev Encoder 
- * @date 2023-10-31
- */
 #include <rev_encoder.hpp>
 
 RevEncoder::RevEncoder(uint8_t encPin, int baudrate) 
