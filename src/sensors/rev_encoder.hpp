@@ -22,18 +22,6 @@ class RevEncoder
 		*/
 		FreqMeasureMulti freq;
 		/**
-		 * @brief how many readings will be avergaed to update the current angle 
-		 */
-		const int READ_SIZE = 10;
-		/**
-		 * @brief used to add up sequencial encoder readings to evenutually average
-		 */
-		float sum;
-		/** 
-		 * @brief to track how many encoder readings are used to eventually average 
-		 */
-		int count;
-		/**
 		* @brief measure of current angle in ticks (1024 ticks = 1 rotation). When set to 1 individual readings are returned
 		*/
 		float ticks;

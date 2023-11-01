@@ -19,19 +19,13 @@ RevEncoder::RevEncoder(uint8_t encPin, int baudrate)
 void RevEncoder::read() 
 {
   if (freq.available()) 
-  {
-    // average several reading together
-    this->sum += this->freq.read();
-    this->count++;
-    if (this->count >= this->READ_SIZE)  //averges the angle across n readings
     {
-      float frequency = freq.countToNanoseconds(sum / count) / 1000;
+      float frequency = freq.countToNanoseconds(this->freq.read()) / 1000;
       this->ticks = (int) frequency % 1024;
       this->radians = (this->ticks / 1024) * M_PI * 2;
       this->sum = 0;
       this->count = 0;
     }
-  }
 }
 
 float RevEncoder::getAngleTicks() 
@@ -39,7 +33,7 @@ float RevEncoder::getAngleTicks()
   return this->ticks;
 }
 
-float RevEncoder::getAngleRadians() 
+float RevEncoder::getAngleRadians()
 {
   return this->radians;
 }
