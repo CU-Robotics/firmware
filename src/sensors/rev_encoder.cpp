@@ -13,17 +13,17 @@ void RevEncoder::read()
   if (freq.available()) 
     {
       float frequency = this->freq.countToNanoseconds(this->freq.read()) / 1000;
-      this->ticks = (int) frequency % 1024;
+      this->ticks = frequency % 1024;
       this->radians = (this->ticks / 1024) * M_PI * 2;
     }
 }
 
-float RevEncoder::getAngleTicks() 
+float RevEncoder::get_angle_ticks() 
 {
   return this->ticks;
 }
 
-float RevEncoder::getAngleRadians()
+float RevEncoder::get_angle_radians()
 {
   return this->radians;
 }
