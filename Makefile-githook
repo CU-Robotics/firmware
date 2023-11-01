@@ -1,0 +1,7 @@
+#!/usr/bin/make
+
+# run with: make -f Makefile-githook init
+
+# Set githook path to .githooks/ (from ./git/hooks) so that they are tracked on the repository's version control.
+init:
+	git config --local core.hooksPath .githooks
