@@ -868,6 +868,42 @@ struct RadarProgress
     }
 };
 
+/// @brief Communication between robots. Transmitted at most 30Hz to any other robot of our own team
+/// @note ID: 0x0301
+struct InterRobotComm
+{
+    /// @brief ID that is specified by user. Not critical to REF
+    uint16_t content_id = 0;
+    /// @brief ID of the robot that should receive this packet
+    uint16_t receiver_id = 0;
 
+    /// @brief Size (in bytes) of the data array
+    uint8_t size = 0;
+    /// @brief Actual data array holding our byte reperesentation of whatever were sending
+    uint8_t data[REF_MAX_PACKET_SIZE] = { 0 };
 
+    /// @brief Fills the data array dependending on what type of data were passing
+    /// @tparam T The data type. Can be anything that can be split into single bytes
+    /// @param _data Array of data
+    /// @param _count Number of values in the input data
+    template <typename T>
+    void set_data(T* _data, uint8_t _count)
+    {
+        size = _count * sizeof(T);
+        for (int i = 0; i < size; i++)
+        {
+            data[i] = ((uint8_t*)_data)[i];
+        }
+    }
+
+    void print()
+    {
+        for (int i = 0; i < size; i++)
+        {
+            Serial.printf("%x ", data[i]);
+        }
+        Serial.println();
+
+    }
+};
 #endif // REF_SYSTEM_PACKET_DEFINITIONS_HPP

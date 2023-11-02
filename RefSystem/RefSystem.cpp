@@ -121,55 +121,48 @@ void RefSystem::read(uint16_t filterID)
     }
 }
 
-void RefSystem::write(Frame& frame)
+void RefSystem::write(InterRobotComm message)
 {
     byte msg[128] = { 0 };
     int msg_len = 0;
-    const int data_bytes = 20;
 
-    uint16_t sender = 0x0007;
-    uint16_t receiver = 0x0007;
+    uint8_t data[message.size] = { 0 };
+    for (int i = 0; i < message.size; i++)
+        data[i] = message.data[i];
 
-    uint16_t content_id = 0x0200 | sender;
+    msg[0] = 0xA5;
+    msg[1] = 6 + message.size;
+    msg[2] = 0x00;
+    msg[3] = get_seq();
+    msg[4] = generateCRC8(msg, 4);
 
-    uint8_t data[data_bytes] = { 0 };
-    for (int i = 0; i < data_bytes; i++)
-        data[i] = i;
+    // cmd 0x0301
+    msg[5] = 0x01;
+    msg[6] = 0x03;
 
+    // content ID
+    msg[7] = message.content_id;
+    msg[8] = message.content_id >> 8;
 
-	msg[0] = 0xA5;
-	msg[1] = 6+data_bytes;
-	msg[2] = 0x00;
-	msg[3] = get_seq();
-	msg[4] = generateCRC8(msg, 4);
+    // sender ID
+    msg[9] = ref_data.robot_performance.robot_ID;
+    msg[10] = ref_data.robot_performance.robot_ID >> 8;
 
-	// cmd 0x0301
-	msg[5] = 0x01;
-	msg[6] = 0x03;
-
-	// content ID
-	msg[7] = content_id;
-	msg[8] = content_id >> 8;
-
-	// sender ID
-	msg[9] = sender;
-	msg[10] = sender >> 8;
-
-	// receiver ID
-	msg[11] = receiver;
-    msg[12] = receiver >> 8;
+    // receiver ID
+    msg[11] = message.receiver_id;
+    msg[12] = message.receiver_id >> 8;
 
     // data section
-    for (int i = 0; i < data_bytes; i++)
+    for (int i = 0; i < message.size; i++)
         msg[13 + i] = data[i];
 
-    uint16_t footerCRC = generateCRC16(msg, 13+data_bytes);
-	msg[13+data_bytes] = (footerCRC & 0x00FF);
-    msg[14 + data_bytes] = (footerCRC >> 8);
+    uint16_t footerCRC = generateCRC16(msg, 13 + message.size);
+    msg[13 + message.size] = (footerCRC & 0x00FF);
+    msg[14 + message.size] = (footerCRC >> 8);
 
-    msg_len = 15 + data_bytes;
+    msg_len = 15 + message.size;
 
-    
+
     // Serial.println("Attempting to send msg");
     Serial2.write(msg, msg_len);
 }
