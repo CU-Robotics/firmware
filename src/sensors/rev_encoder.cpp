@@ -10,12 +10,16 @@ RevEncoder::RevEncoder(uint8_t encPin, int baudrate)
 
 void RevEncoder::read() 
 {
+  while (this->freq.available() > 1) 
+  {
+		this->freq.read();
+	}
   if (freq.available()) 
-    {
+  {
       float frequency = this->freq.countToNanoseconds(this->freq.read()) / 1000;
       this->ticks = frequency % 1024;
       this->radians = (this->ticks / 1024) * M_PI * 2;
-    }
+  }
 }
 
 float RevEncoder::get_angle_ticks() 
