@@ -6,17 +6,19 @@
 
 #include "IMUSensor.hpp"
 
+// Configure pin numbers used for SPI communication on the teensy
+
 /// @brief CS (Chip Select) pin for SPI mode
 #define ICM_CS 10
 /// @brief SDA/MOSI (Serial Data In) (Microcontroller Out Sensor In) pin for software-SPI mode
-#define ICM_MOSI 11
-/// @brief SDO/MISO (Serial Data Out) (Microcontroller In Sensor Out) pin for software-SPI mode
+#define ICM_MOSI 18
+/// @brief AD0/MISO/SD0 (Serial Data Out) (Microcontroller In Sensor Out) pin for software-SPI mode
 #define ICM_MISO 12
 /// @brief SCL/SCK (SPI Clock) pin for software-SPI mode
-#define ICM_SCK 13
+#define ICM_SCK 19
 
 /// @brief Sensor access for an ICM20649 IMU Sensor. Child of the abstract IMUSensor class.
-/// @note supports I2C and SPI communication
+/// @note supports I2C and SPI communication. Adafruit library: https://adafruit.github.io/Adafruit_ICM20X/html/
 class ICM20649 : public IMUSensor {
 public:
     /// @brief Types of supported communication protocols supported by the ICM.

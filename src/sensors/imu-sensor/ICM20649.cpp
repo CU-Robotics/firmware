@@ -32,12 +32,12 @@ void ICM20649::init(CommunicationProtocol protocol) {
     sensor.setAccelRange(ICM20649_ACCEL_RANGE_30_G);
     sensor.setGyroRange(ICM20649_GYRO_RANGE_4000_DPS);
 
-    // set accel rate (via divisor setting)
-    sensor.setAccelRateDivisor(4095);
+    // set bit period (via divisor setting). 12-bit, Max (slowest) is 4095, min (fastest) is 0.
+    sensor.setAccelRateDivisor(0);
     accel_rate = get_accel_data_rate();
 
-    // set gyro rate (via divisor setting)
-    sensor.setGyroRateDivisor(255);
+    // set bit period (via divisor setting). 8-bit, Max (slowest) is 255, min (fastest) is 0. 
+    sensor.setGyroRateDivisor(0);
     gyro_rate = get_gyro_data_rate();
 }
 
@@ -46,7 +46,9 @@ void ICM20649::read() {
     sensor.getEvent(&accel, &gyro, &temp);
 
     // assign result to this object's members.
-    // (could increase efficiency by specifying which values we need, and only assigning values to the object's members from that. However, getEvent will read all values from the sensor regardless)
+        // could increase efficiency by specifying which values we need, and only assigning values to the object's members from that. 
+        // However, getEvent will read all values from the sensor regardless, and assigning these values is very fast
+
     accel_X = accel.acceleration.x;
     accel_Y = accel.acceleration.y;
     accel_Z = accel.acceleration.z;
