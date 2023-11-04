@@ -96,11 +96,19 @@ private:
 
     uint8_t get_seq() { seq++;  return seq; }
 
-private:
+public:
     uint8_t raw_buffer[REF_MAX_PACKET_SIZE] = { 0 };
     RefData ref_data{};
 
     uint8_t seq = 0;
+
+    uint32_t packets_sent = 0;
+    uint32_t packets_received = 0;
+
+    uint16_t bytes_sent = 0;
+
+    uint8_t sent_sequence_queue[256] = { 0 };
+    uint8_t index = 0;
 
 };
 

@@ -54,6 +54,12 @@ void RefSystem::read(uint16_t filterID)
 
     if (success)
     {
+        if (frame.commandID == 0x0301)
+        {
+            packets_received++;
+
+        }
+
         switch (frame.commandID)
         {
         case GAME_STATUS:
@@ -114,8 +120,8 @@ void RefSystem::read(uint16_t filterID)
             ref_data.radar_progress.initialize_from_data(frame.data);
             break;
         default:
-            Serial.println("What?");
-            frame.print();
+            // Serial.println("What?");
+            // frame.print();
             break;
         }
     }
@@ -123,6 +129,12 @@ void RefSystem::read(uint16_t filterID)
 
 void RefSystem::write(InterRobotComm message)
 {
+    if (bytes_sent >= 3720)
+    {
+        Serial.println("Too many bytes");
+        return;
+    }
+
     byte msg[128] = { 0 };
     int msg_len = 0;
 
@@ -162,9 +174,16 @@ void RefSystem::write(InterRobotComm message)
 
     msg_len = 15 + message.size;
 
+    sent_sequence_queue[index++] = msg[3];
 
     // Serial.println("Attempting to send msg");
-    Serial2.write(msg, msg_len);
+    if (Serial2.write(msg, msg_len) == msg_len)
+    {
+        packets_sent++;
+        bytes_sent += msg_len;
+    }
+    else
+        Serial.println("Failed to write");
 }
 
 bool RefSystem::read_frame_header(Frame& frame)
