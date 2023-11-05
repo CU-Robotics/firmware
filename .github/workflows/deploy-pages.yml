@@ -23,6 +23,7 @@ jobs:
           working-directory: .
           enable-latex: false # could enable latex later if needed, but it has a slow install.
       - name: Pages Deployment
+        if: success() || failure() # (Attempt to) deploy docs even if doxygen fails
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
