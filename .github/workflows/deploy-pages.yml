@@ -14,7 +14,7 @@ jobs:
     steps:
         # Checkout sets up working directory as project root
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
         # Run Doxygen Build
       - name: Run Doxygen
         uses: mattnotmitt/doxygen-action@v1.9.1
