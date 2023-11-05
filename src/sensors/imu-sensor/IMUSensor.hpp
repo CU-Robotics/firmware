@@ -40,6 +40,9 @@ public:
     /// @return gyroscope z in radians/s
     inline float get_gyro_Z() { return gyro_Z; };
 
+    /// @brief Print out all IMU data to Serial for debugging purposes
+    void print();
+
 protected:
     // sensor events to read from
 
