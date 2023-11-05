@@ -6,7 +6,6 @@ LSM6DSOX::LSM6DSOX() {}
 void LSM6DSOX::init() {
     // start I2C communication 
     sensor.begin_I2C();
-    // TODO switch to SPI
 
     // set data ranges
     sensor.setAccelRange(LSM6DS_ACCEL_RANGE_16_G);
