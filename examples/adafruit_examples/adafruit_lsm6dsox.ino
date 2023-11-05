@@ -1,3 +1,5 @@
+// Example code from https://learn.adafruit.com/adafruit-icm20649-wide-range-6-dof-imu-accelerometer-and-gyro/arduino
+
 // Basic demo for accelerometer & gyro readings from Adafruit
 // LSM6DSOX sensor
 #include <Adafruit_LSM6DSOX.h>

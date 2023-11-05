@@ -1,3 +1,5 @@
+// Example code from https://learn.adafruit.com/lsm6dsox-and-ism330dhc-6-dof-imu/arduino
+
 // Basic demo for accelerometer readings from Adafruit ICM20649
 
 #include <Adafruit_ICM20X.h>
