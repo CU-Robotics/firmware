@@ -4,7 +4,7 @@ LSM6DSOX::LSM6DSOX() {}
 
 // initialize LSM
 void LSM6DSOX::init() {
-    // start I2C communication 
+    // start I2C communication (SPI not supported on LSM6DOX+LIS3MDL hardware)
     sensor.begin_I2C();
 
     // set data ranges
@@ -20,7 +20,9 @@ void LSM6DSOX::read() {
     sensor.getEvent(&accel, &gyro, &temp);
 
     // assign result to this object's members.
-    // (could increase efficiency by specifying which values we need, and only assigning values from that. However, getEvent will read all values from the sensor regardless)
+        // could increase efficiency by specifying which values we need, and only assigning values to the object's members from that. 
+        // However, getEvent will read all values from the sensor regardless, and assigning these values is very fast
+
     accel_X = accel.acceleration.x;
     accel_Y = accel.acceleration.y;
     accel_Z = accel.acceleration.z;

@@ -2,7 +2,7 @@
 #define ICM20649_H
 
 // adafruit library specific to ICM20(...) hardware
-#include <Adafruit_ICM20649.h> // https://adafruit.github.io/Adafruit_ICM20X/html/class_adafruit___i_c_m20_x.html
+#include <Adafruit_ICM20649.h> 
 
 #include "IMUSensor.hpp"
 
@@ -18,7 +18,8 @@
 #define ICM_SCK 19
 
 /// @brief Sensor access for an ICM20649 IMU Sensor. Child of the abstract IMUSensor class.
-/// @note supports I2C and SPI communication. Adafruit library: https://adafruit.github.io/Adafruit_ICM20X/html/
+/// @note supports I2C and SPI communication. 
+/// @see Adafruit library this class utilizes: https://adafruit.github.io/Adafruit_ICM20X/html/class_adafruit___i_c_m20_x.html
 class ICM20649 : public IMUSensor {
 public:
     /// @brief Types of supported communication protocols supported by the ICM.
@@ -28,7 +29,7 @@ public:
         SPI ///< Serial Peripheral Interface. Four-wire: SDA (serial data in), AD0(serial data out), SCL/SCK (serial clock pin), CS (chip select pin)
     };
 
-    /// @brief Constructor. Currently does nothing, use init() instead.
+    /// @brief Constructor. Currently does nothing, use @ref init(CommunicationProtocol) instead for initialization.
     ICM20649();
 
     /// @brief Initialize the sensor with the assigned communication protocol.

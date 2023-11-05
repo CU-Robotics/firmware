@@ -59,12 +59,13 @@ void ICM20649::read() {
     temperature = temp.temperature;
 }
 
-// calculate the approximate acceleration rate (Hz) from the divisor.
+// calculate the approximate acceleration data rate (Hz) from the divisor.
 float ICM20649::get_accel_data_rate() {
     // equation from Adafruit ICM20649 example code
     return 1125 / (1.0 + sensor.getAccelRateDivisor());
 }
 
+// calculate the approximate gyroscope data rate from the divisor.
 float ICM20649::get_gyro_data_rate() {
     // equation from Adafruit ICM20649 example code
     return gyro_rate = 1100 / (1.0 + sensor.getGyroRateDivisor());
