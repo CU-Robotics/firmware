@@ -83,7 +83,7 @@ public:
     void init();
 
     void read(uint16_t filterID = 0x0);
-    void write(InterRobotComm message);
+    void write();
 
 public:
     void pretty_print(Frame& frame);

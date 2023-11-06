@@ -31,17 +31,13 @@ void loop()
         second_accumulator = 0;
     }
 
-    if (accumulator > 35000)
+    if (accumulator > 40000)
     {
         accumulator = 0;
-        InterRobotComm msg{};
-        msg.content_id = 0x0201;
-        msg.receiver_id = 0x0007;
-        msg.set_data(data, 75);
-        ref.write(msg);
+        ref.write();
     }
 
     ref.read();
 
-    Serial.printf("S: %u\tR: %u\t\t%.2f\n", ref.packets_sent, ref.packets_received, (float)ref.packets_received / (float)ref.packets_sent);
+    Serial.printf("S: %u\tR: %u\tM: %u\t%.4f\tA: %u\n", ref.packets_sent, ref.packets_received, ref.packets_sent - ref.packets_received, (float)ref.packets_received / (float)ref.packets_sent, Serial2.available());
 }

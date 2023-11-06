@@ -41,7 +41,7 @@ void RefSystem::read(uint16_t filterID)
     bool success = true;
 
     if (success)
-        read_frame_header(frame);
+        success = read_frame_header(frame);
 
     if (success)
         success = read_frame_command_ID(frame);
@@ -127,7 +127,7 @@ void RefSystem::read(uint16_t filterID)
     }
 }
 
-void RefSystem::write(InterRobotComm message)
+void RefSystem::write()
 {
     if (bytes_sent >= 3720)
     {
@@ -135,15 +135,12 @@ void RefSystem::write(InterRobotComm message)
         return;
     }
 
-    byte msg[128] = { 0 };
+    uint8_t msg[128] = { 0 };
     int msg_len = 0;
-
-    uint8_t data[message.size] = { 0 };
-    for (int i = 0; i < message.size; i++)
-        data[i] = message.data[i];
+    uint8_t data_length = 112;
 
     msg[0] = 0xA5;
-    msg[1] = 6 + message.size;
+    msg[1] = 6 + data_length;
     msg[2] = 0x00;
     msg[3] = get_seq();
     msg[4] = generateCRC8(msg, 4);
@@ -153,26 +150,29 @@ void RefSystem::write(InterRobotComm message)
     msg[6] = 0x03;
 
     // content ID
-    msg[7] = message.content_id;
-    msg[8] = message.content_id >> 8;
+    msg[7] = 0x0201;
+    msg[8] = 0x0201 >> 8;
 
     // sender ID
+    if (ref_data.robot_performance.robot_ID == 0)
+        return;
+    
     msg[9] = ref_data.robot_performance.robot_ID;
     msg[10] = ref_data.robot_performance.robot_ID >> 8;
 
     // receiver ID
-    msg[11] = message.receiver_id;
-    msg[12] = message.receiver_id >> 8;
+    msg[11] = 0x0007;
+    msg[12] = 0x0007 >> 8;
 
     // data section
-    for (int i = 0; i < message.size; i++)
-        msg[13 + i] = data[i];
+    for (int i = 0; i < data_length; i++)
+        msg[13 + i] = i;
 
-    uint16_t footerCRC = generateCRC16(msg, 13 + message.size);
-    msg[13 + message.size] = (footerCRC & 0x00FF);
-    msg[14 + message.size] = (footerCRC >> 8);
+    uint16_t footerCRC = generateCRC16(msg, 13 + data_length);
+    msg[13 + data_length] = (footerCRC & 0x00FF);
+    msg[14 + data_length] = (footerCRC >> 8);
 
-    msg_len = 15 + message.size;
+    msg_len = 15 + data_length;
 
     sent_sequence_queue[index++] = msg[3];
 
@@ -197,9 +197,9 @@ bool RefSystem::read_frame_header(Frame& frame)
     frame.header.sequence = raw_buffer[3];
     frame.header.CRC = raw_buffer[4];
 
-    if (frame.header.data_length > REF_MAX_PACKET_SIZE)
+    if (frame.header.CRC != generateCRC8(raw_buffer, 4))
         return false;
-
+    
     return true;
 }
 
