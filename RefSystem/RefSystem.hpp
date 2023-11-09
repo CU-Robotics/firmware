@@ -66,8 +66,7 @@ const uint16_t CRC16Lookup[256] = {
 };
 
 /// @brief Encompassing all read-able packet structs of the Ref System
-struct RefData
-{
+struct RefData {
     GameStatus game_status{};
     GameResult game_result{};
     RobotHealth robot_health{};
@@ -93,8 +92,7 @@ struct RefData
 
 /// @brief Wrapper class to send and receive packets from the Referee System
 /// @see https://rm-static.djicdn.com/tem/71710/RoboMaster%20Referee%20System%20Serial%20Port%20Protocol%20Appendix%20V1.5%EF%BC%8820230717%EF%BC%89.pdf
-class RefSystem
-{
+class RefSystem {
 public:
     /// @brief Default constructor. Set to do nothing
     RefSystem();

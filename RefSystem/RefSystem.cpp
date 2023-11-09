@@ -1,32 +1,26 @@
 #include "RefSystem.hpp"
 
-uint8_t generateCRC8(uint8_t* data, uint32_t len)
-{
+uint8_t generateCRC8(uint8_t* data, uint32_t len) {
     uint8_t CRC8 = 0xFF;
-    while (len-- > 0)
-    {
+    while (len-- > 0) {
         uint8_t curr = CRC8 ^ (*data++);
         CRC8 = CRC8Lookup[curr];
     }
     return CRC8;
 }
 
-uint16_t generateCRC16(uint8_t* data, uint32_t len)
-{
+uint16_t generateCRC16(uint8_t* data, uint32_t len) {
     uint16_t CRC16 = 0xFFFF;
-    while (len-- > 0)
-    {
+    while (len-- > 0) {
         uint8_t curr = *data++;
         CRC16 = (CRC16 >> 8) ^ CRC16Lookup[(CRC16 ^ static_cast<uint16_t>(curr)) & 0x00FF];
     }
     return CRC16;
 }
 
-RefSystem::RefSystem()
-{}
+RefSystem::RefSystem() {}
 
-void RefSystem::init()
-{
+void RefSystem::init() {
     // clear and start Serial2
     Serial2.clear();
     Serial2.begin(112500);
@@ -34,8 +28,7 @@ void RefSystem::init()
     Serial2.clear();
 }
 
-void RefSystem::read()
-{
+void RefSystem::read() {
     Frame frame{};
 
     bool success = true;
@@ -57,13 +50,11 @@ void RefSystem::read()
         success = read_frame_tail(frame);
 
     // process data
-    if (success)
-    {
+    if (success) {
         if (frame.commandID == 0x0301)
             packets_received++;
 
-        switch (frame.commandID)
-        {
+        switch (frame.commandID) {
         case GAME_STATUS:
             ref_data.game_status.initialize_from_data(frame.data);
             break;
@@ -133,18 +124,15 @@ void RefSystem::read()
     }
 }
 
-void RefSystem::write(uint8_t* packet, uint8_t length)
-{
+void RefSystem::write(uint8_t* packet, uint8_t length) {
     // return if over baud rate
-    if (bytes_sent >= REF_MAX_BAUD_RATE)
-    {
+    if (bytes_sent >= REF_MAX_BAUD_RATE) {
         Serial.println("Too many bytes");
         return;
     }
 
     // return if writing too many bytes
-    if (length > REF_MAX_PACKET_SIZE)
-    {
+    if (length > REF_MAX_PACKET_SIZE) {
         Serial.println("Packet Too Long to Send!");
         return;
     }
@@ -167,8 +155,7 @@ void RefSystem::write(uint8_t* packet, uint8_t length)
     packet[14 + data_length] = (footerCRC >> 8);        // set CRC
 
     // Serial.println("Attempting to send msg");
-    if (Serial2.write(packet, length) == length)
-    {
+    if (Serial2.write(packet, length) == length) {
         packets_sent++;
         bytes_sent += length;
     }
@@ -176,12 +163,10 @@ void RefSystem::write(uint8_t* packet, uint8_t length)
         Serial.println("Failed to write");
 }
 
-bool RefSystem::read_frame_header(Frame& frame)
-{
+bool RefSystem::read_frame_header(Frame& frame) {
     // read and verify header
     int bytesRead = Serial2.readBytes(raw_buffer, FrameHeader::packet_size);
-    if (bytesRead != FrameHeader::packet_size)
-    {
+    if (bytesRead != FrameHeader::packet_size) {
         Serial.println("Couldnt read enough bytes for Header");
         packets_failed++;
         return false;
@@ -194,8 +179,7 @@ bool RefSystem::read_frame_header(Frame& frame)
     frame.header.CRC = raw_buffer[4];
 
     // verify the CRC is correct
-    if (frame.header.CRC != generateCRC8(raw_buffer, 4))
-    {
+    if (frame.header.CRC != generateCRC8(raw_buffer, 4)) {
         Serial.println("Header failed CRC");
         packets_failed++;
         return false;
@@ -204,12 +188,10 @@ bool RefSystem::read_frame_header(Frame& frame)
     return true;
 }
 
-bool RefSystem::read_frame_command_ID(Frame& frame)
-{
+bool RefSystem::read_frame_command_ID(Frame& frame) {
     // read and verify command ID
     int bytesRead = Serial2.readBytes(raw_buffer, 2);
-    if (bytesRead != 2)
-    {
+    if (bytesRead != 2) {
         Serial.println("Couldnt read enough bytes for ID");
         packets_failed++;
         return false;
@@ -219,8 +201,7 @@ bool RefSystem::read_frame_command_ID(Frame& frame)
     frame.commandID = (raw_buffer[1] << 8) | raw_buffer[0];
 
     // sanity check, verify the ID is valid
-    if (frame.commandID > REF_MAX_COMMAND_ID)
-    {
+    if (frame.commandID > REF_MAX_COMMAND_ID) {
         Serial.println("Invalid Command ID");
         packets_failed++;
         return false;
@@ -229,12 +210,10 @@ bool RefSystem::read_frame_command_ID(Frame& frame)
     return true;
 }
 
-bool RefSystem::read_frame_data(Frame& frame)
-{
+bool RefSystem::read_frame_data(Frame& frame) {
     // read and verify data
     int bytesRead = Serial2.readBytes(&frame.data.data[0], frame.header.data_length);
-    if (bytesRead != frame.header.data_length)
-    {
+    if (bytesRead != frame.header.data_length) {
         Serial.println("Couldnt read enough bytes for Data");
         packets_failed++;
         return false;
@@ -243,12 +222,10 @@ bool RefSystem::read_frame_data(Frame& frame)
     return true;
 }
 
-bool RefSystem::read_frame_tail(Frame& frame)
-{
+bool RefSystem::read_frame_tail(Frame& frame) {
     // read and verify tail
     int bytesRead = Serial2.readBytes(raw_buffer, 2);
-    if (bytesRead != 2)
-    {
+    if (bytesRead != 2) {
         Serial.println("Couldnt read enough bytes for CRC");
         packets_failed++;
         return false;
