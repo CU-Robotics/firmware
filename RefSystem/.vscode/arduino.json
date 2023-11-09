@@ -1,6 +1,0 @@
-{
-    "configuration": "usb=serial,speed=600,opt=o2std,keys=en-us",
-    "board": "teensy:avr:teensy41",
-    "port": "/dev/ttyACM0",
-    "sketch": "RefSystem.ino"
-}
