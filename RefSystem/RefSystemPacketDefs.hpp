@@ -6,6 +6,7 @@ constexpr uint16_t REF_MAX_COMMAND_ID = 0x0307;
 
 /*--- Ref System Frame Structs ---*/
 
+/// @brief Base enum maping the ref structs to their ID
 enum FrameType
 {
     GAME_STATUS = 0x0001,

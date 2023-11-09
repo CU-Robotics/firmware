@@ -7,7 +7,12 @@ uint32_t second_accumulator = 0;
 uint32_t dt = 0;
 uint32_t curr_time = 0;
 
-uint8_t data[] = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 1 };
+uint8_t length = 112;
+uint8_t packet[REF_MAX_PACKET_SIZE] = {
+    0xA5, length, 0x00, 0x00, 0x00,
+    0x01, 0x03,
+    0x01, 0x02, 0x07, 0x00, 0x07, 0x00
+};
 
 void setup()
 {
@@ -16,6 +21,11 @@ void setup()
     ref.init();
     Serial.println("Init");
     curr_time = micros();
+
+    for (int i = 0; i < length; i++)
+    {
+        packet[13 + i] = i + 1;
+    }
 }
 
 void loop()
@@ -31,13 +41,15 @@ void loop()
         second_accumulator = 0;
     }
 
-    if (accumulator > 40000)
+    if (accumulator > REF_MAX_PACKET_DELAY)
     {
         accumulator = 0;
-        ref.write();
+        ref.write(packet, length + 5 + 2 + 2 + 6);
     }
 
     ref.read();
 
-    Serial.printf("S: %u\tR: %u\tM: %u\t%.4f\tA: %u\n", ref.packets_sent, ref.packets_received, ref.packets_sent - ref.packets_received, (float)ref.packets_received / (float)ref.packets_sent, Serial2.available());
+    // Serial.printf("Failed: %u\n", ref.packets_failed);
+
+    Serial.printf("S: %u\tR: %u\tM: %u\t%.2f%%\tF: %u\n", ref.packets_sent, ref.packets_received, ref.packets_sent - ref.packets_received, (1.0 - (double)ref.packets_received / (double)ref.packets_sent) * 100.0, ref.packets_failed);
 }

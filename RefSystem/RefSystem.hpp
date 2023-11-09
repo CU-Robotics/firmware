@@ -1,13 +1,25 @@
 #ifndef REF_SYSTEM_HPP
 #define REF_SYSTEM_HPP
 
-#include <cassert>
 #include "Arduino.h"
 
 #include "RefSystemPacketDefs.hpp"
 
-uint8_t generateCRC8(const uint8_t*, uint32_t);
-uint16_t generateCRC16(const uint8_t*, uint32_t);
+/// @brief Time (in us) between packet writes
+constexpr uint32_t REF_MAX_PACKET_DELAY = 40000;
+/// @brief Maximum number of bytes that is allowed to be sent within a second. Includes Ref header/tail
+constexpr uint32_t REF_MAX_BAUD_RATE = 3720;
+
+/// @brief Generates a 1-byte CRC
+/// @param data data array
+/// @param length size of the data array
+/// @return the 8-bit CRC
+uint8_t generateCRC8(const uint8_t* data, uint32_t length);
+/// @brief Generates a 2-byte CRC
+/// @param data data array
+/// @param length size of the data array
+/// @return the 16-bit CRC
+uint16_t generateCRC16(const uint8_t* data, uint32_t length);
 const uint8_t CRC8Lookup[256] = {
     0x00, 0x5e, 0xbc, 0xe2, 0x61, 0x3f, 0xdd, 0x83, 0xc2, 0x9c, 0x7e, 0x20, 0xa3, 0xfd, 0x1f, 0x41,
     0x9d, 0xc3, 0x21, 0x7f, 0xfc, 0xa2, 0x40, 0x1e, 0x5f, 0x01, 0xe3, 0xbd, 0x3e, 0x60, 0x82, 0xdc,
@@ -75,40 +87,70 @@ struct RefData
     RadarProgress radar_progress{};
 };
 
+/// @brief Wrapper class to send and receive packets from the Referee System
+/// @see https://rm-static.djicdn.com/tem/71710/RoboMaster%20Referee%20System%20Serial%20Port%20Protocol%20Appendix%20V1.5%EF%BC%8820230717%EF%BC%89.pdf
 class RefSystem
 {
 public:
+    /// @brief Default constructor. Set to do nothing
     RefSystem();
 
+    /// @brief Initializes the RefSystem. Sets up the Serial connection
     void init();
 
-    void read(uint16_t filterID = 0x0);
-    void write();
+    /// @brief Read from the Serial buffer the next packet and store it
+    void read();
 
-public:
-    void pretty_print(Frame& frame);
+    /// @brief Send a pre-constructed packet to Ref
+    /// @param packet Byte array of the packet to be sent
+    /// @param length The total size of the packet, including header/tail
+    /// @note Re-computes the CRC, so no need to do it yourself
+    void write(uint8_t* packet, uint8_t length);
 
 private:
+    /// @brief Helper function: Reads and stores frame header
+    /// @param frame Frame reference to fill
+    /// @return Whether the read was successful or not
     bool read_frame_header(Frame& frame);
+
+    /// @brief Helper function: Reads and stores frame command ID
+    /// @param frame Frame reference to fill
+    /// @return Whether the read was successful or not
     bool read_frame_command_ID(Frame& frame);
+
+    /// @brief Helper function: Reads and stores frame data
+    /// @param frame Frame reference to fill
+    /// @return Whether the read was successful or not
     bool read_frame_data(Frame& frame);
-    bool read_frame_CRC(Frame& frame);
 
-    uint8_t get_seq() { seq++;  return seq; }
+    /// @brief Helper function: Reads and stores frame tail
+    /// @param frame Frame reference to fill
+    /// @return Whether the read was successful or not
+    bool read_frame_tail(Frame& frame);
 
-public:
+    /// @brief Get the current outgoing sequence. Used in sending frames
+    /// @return The next sequence
+    inline uint8_t get_seq() noexcept { seq++;  return seq; }
+
+private:
+    /// @brief Buffer to store frames-in-progress
     uint8_t raw_buffer[REF_MAX_PACKET_SIZE] = { 0 };
+    /// @brief Mega-struct to store all ref data that have been read
     RefData ref_data{};
 
+    /// @brief Current sequence number. Used to send packets
     uint8_t seq = 0;
 
+public:
+    /// @brief Number of inter-robot packets sent
     uint32_t packets_sent = 0;
+    /// @brief Number of inter-robot packets received
     uint32_t packets_received = 0;
+    /// @brief Number of packets that failed to be read properly
+    uint32_t packets_failed = 0;
 
+    /// @brief Current count of bytes sent since last reset
     uint16_t bytes_sent = 0;
-
-    uint8_t sent_sequence_queue[256] = { 0 };
-    uint8_t index = 0;
 
 };
 
