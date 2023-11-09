@@ -11,7 +11,7 @@ uint8_t length = 112;
 uint8_t packet[REF_MAX_PACKET_SIZE] = {
     0xA5, length, 0x00, 0x00, 0x00,
     0x01, 0x03,
-    0x01, 0x02, 0x07, 0x00, 0x07, 0x00
+    0x01, 0x02, 0x07, 0x00, 0x01, 0x00
 };
 
 void setup()
@@ -44,7 +44,7 @@ void loop()
     if (accumulator > REF_MAX_PACKET_DELAY)
     {
         accumulator = 0;
-        ref.write(packet, length + 5 + 2 + 2 + 6);
+        // ref.write(packet, length + 5 + 2 + 2 + 6);
     }
 
     ref.read();

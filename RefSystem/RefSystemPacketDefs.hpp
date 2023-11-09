@@ -1,7 +1,7 @@
 #ifndef REF_SYSTEM_PACKET_DEFINITIONS_HPP
 #define REF_SYSTEM_PACKET_DEFINITIONS_HPP
 
-constexpr uint16_t REF_MAX_PACKET_SIZE = 196;
+constexpr uint16_t REF_MAX_PACKET_SIZE = 128;
 constexpr uint16_t REF_MAX_COMMAND_ID = 0x0307;
 
 /*--- Ref System Frame Structs ---*/
@@ -27,7 +27,8 @@ enum FrameType
     RFID = 0x0209,
     DART_COMMAND = 0x020A,
     GROUND_ROBOT_POSITION = 0x020B,
-    RADAR_PROGRESS = 0x020C
+    RADAR_PROGRESS = 0x020C,
+    INTER_ROBOT_COMM = 0x0301
 };
 
 struct FrameHeader
@@ -875,6 +876,8 @@ struct InterRobotComm
 {
     /// @brief ID that is specified by user. Not critical to REF
     uint16_t content_id = 0;
+    /// @brief ID of the robot that should send this packet
+    uint16_t sender_id = 0;
     /// @brief ID of the robot that should receive this packet
     uint16_t receiver_id = 0;
 
@@ -883,17 +886,17 @@ struct InterRobotComm
     /// @brief Actual data array holding our byte reperesentation of whatever were sending
     uint8_t data[REF_MAX_PACKET_SIZE] = { 0 };
 
-    /// @brief Fills the data array dependending on what type of data were passing
-    /// @tparam T The data type. Can be anything that can be split into single bytes
-    /// @param _data Array of data
-    /// @param _count Number of values in the input data
-    template <typename T>
-    void set_data(T* _data, uint8_t _count)
+    void initialize_from_data(Frame& frame)
     {
-        size = _count * sizeof(T);
+        size = frame.header.data_length - 6;
+
+        content_id = (frame.data.data[1] << 8) | frame.data.data[0];
+        sender_id = (frame.data.data[3] << 8) | frame.data.data[2];
+        receiver_id = (frame.data.data[5] << 8) | frame.data.data[4];
+
         for (int i = 0; i < size; i++)
         {
-            data[i] = ((uint8_t*)_data)[i];
+            data[i] = frame.data.data[i + 6];
         }
     }
 

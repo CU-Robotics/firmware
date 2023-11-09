@@ -121,9 +121,13 @@ void RefSystem::read()
         case RADAR_PROGRESS:
             ref_data.radar_progress.initialize_from_data(frame.data);
             break;
+        case INTER_ROBOT_COMM:
+            ref_data.inter_robot_comms[inter_robot_comm_index].initialize_from_data(frame);
+            inter_robot_comm_index++;
+            if (inter_robot_comm_index >= REF_MAX_COMM_BUFFER_SIZE)
+                inter_robot_comm_index = 0;
+            break;
         default:
-            // Serial.println("What?");
-            // frame.print();
             break;
         }
     }

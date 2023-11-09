@@ -9,6 +9,8 @@
 constexpr uint32_t REF_MAX_PACKET_DELAY = 40000;
 /// @brief Maximum number of bytes that is allowed to be sent within a second. Includes Ref header/tail
 constexpr uint32_t REF_MAX_BAUD_RATE = 3720;
+/// @brief Maximum number of inter robot packets should be able to be stored.
+constexpr uint32_t REF_MAX_COMM_BUFFER_SIZE = 5;
 
 /// @brief Generates a 1-byte CRC
 /// @param data data array
@@ -85,6 +87,8 @@ struct RefData
     DartCommand dart_command{};
     GroundRobotPosition ground_positions{};
     RadarProgress radar_progress{};
+    // robot comm buffer implemented as a circular queue, it will overwrite its own data if not read from
+    InterRobotComm inter_robot_comms[REF_MAX_COMM_BUFFER_SIZE];
 };
 
 /// @brief Wrapper class to send and receive packets from the Referee System
@@ -140,6 +144,9 @@ private:
 
     /// @brief Current sequence number. Used to send packets
     uint8_t seq = 0;
+
+    /// @brief Current index to the inter_robot_comm buffer
+    uint8_t inter_robot_comm_index = 0;
 
 public:
     /// @brief Number of inter-robot packets sent
