@@ -12,7 +12,7 @@ class RevEncoder
 		uint8_t in_pin;
 		/// @brief Used to read rise time of the encoder
 		FreqMeasureMulti freq;
-		//// @brief measure of current angle in ticks [0, 1023]
+		/// @brief measure of current angle in ticks [0, 1023]
 		int ticks;
 		/// @brief measure of current angle in radians [0, 2pi)
 		float radians;
