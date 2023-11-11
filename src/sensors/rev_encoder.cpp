@@ -1,11 +1,11 @@
-#include <rev_encoder.hpp>
+#include "rev_encoder.hpp"
 
-RevEncoder::RevEncoder(uint8_t encPin, int baudrate) 
+RevEncoder::RevEncoder(uint8_t encoder_pin, int baudrate) 
 {
-  this->inPin = encPin;
-  pinMode(this->inPin, INPUT);  // Set the pin used to measure the encoder to be an input
+  this->in_pin = encoder_pin;
+  pinMode(this->in_pin, INPUT);  // Set the pin used to measure the encoder to be an input
   Serial.begin(baudrate);
-  freq.begin(this->inPin, FREQMEASUREMULTI_MARK_ONLY);
+  freq.begin(this->in_pin, FREQMEASUREMULTI_MARK_ONLY);
 }
 
 void RevEncoder::read() 
@@ -16,9 +16,9 @@ void RevEncoder::read()
 	}
   if (freq.available()) 
   {
-      float frequency = this->freq.countToNanoseconds(this->freq.read()) / 1000;
+      int frequency = round(this->freq.countToNanoseconds(this->freq.read()) / 1000);
       this->ticks = frequency % 1024;
-      this->radians = (this->ticks / 1024) * M_PI * 2;
+      this->radians =  (((float) this->ticks) / 1024.0) * M_PI * 2;
   }
 }
 
