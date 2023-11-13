@@ -20,9 +20,9 @@ void DR16::init() {
 }
 
 void DR16::read() {
-	// each channel is 11 bits, minus the switches
+	// each channel is 11 bits, minus the switches and keyboard inputs
 	uint16_t c0{ 0 }, c1{ 0 }, c2{ 0 }, c3{ 0 }, wh{ 0 };
-	uint8_t s1{ 0 }, s2{ 0 };
+	uint8_t s1{ 0 }, s2{ 0 }, k1{ 0 }, k2{ 0 };
 
 	// verify that the receiver is ready to be read
 	// since each packet it sends is 18 bytes, verify that there are exactly 8 bytes in the buffer
@@ -48,6 +48,8 @@ void DR16::read() {
 	c2 = ((m_inputRaw[4] & 0x01) << 10) | ((m_inputRaw[3] & 0xff) << 2) | ((m_inputRaw[2] & 0xc0) >> 6);
 	c3 = ((m_inputRaw[5] & 0x0f) << 7) | ((m_inputRaw[4] & 0xfe) >> 1);
 	wh = ((m_inputRaw[17] & 0x7) << 8) | m_inputRaw[16];
+	k1 = m_inputRaw[14];
+	k2 = m_inputRaw[15];
 	s1 = (m_inputRaw[5] & 0x30) >> 4;
 	s2 = (m_inputRaw[5] & 0xc0) >> 6;
 
@@ -77,6 +79,26 @@ void DR16::read() {
 		// switches
 		m_input[5] = (float)s1;
 		m_input[6] = (float)s2;
+
+		/// keys
+		// first byte
+		keys.w = (k1 >> 0) & 0x01;
+		keys.s = (k1 >> 1) & 0x01;
+		keys.a = (k1 >> 2) & 0x01;
+		keys.d = (k1 >> 3) & 0x01;
+		keys.shift = (k1 >> 4) & 0x01;
+		keys.ctrl = (k1 >> 5) & 0x01;
+		keys.q = (k1 >> 6) & 0x01;
+		keys.e = (k1 >> 7) & 0x01;
+		// second byte
+		keys.r = (k1 >> 0) & 0x01;
+		keys.f = (k1 >> 1) & 0x01;
+		keys.g = (k1 >> 2) & 0x01;
+		keys.z = (k1 >> 3) & 0x01;
+		keys.x = (k1 >> 4) & 0x01;
+		keys.c = (k1 >> 5) & 0x01;
+		keys.v = (k1 >> 6) & 0x01;
+		keys.b = (k1 >> 7) & 0x01;
 	}
 	else {
 		uint32_t dt = micros() - m_prevTime;

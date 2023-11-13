@@ -1,5 +1,4 @@
 #include "controllers.hpp"
-#include <cstdlib>
 
 Controllers::Controllers() {
     zero_speeds();
@@ -14,14 +13,20 @@ void Controllers::update() {
     // if info from the remote is not being detected
     // or if safety switch is on, don't write anything
     if (remote.get_l_switch() == 1 || remote.is_fail()) {
+        Serial.println("SAFETY: ON");
+
         zero_speeds();
         can.zero();
         can.zero_motors();
         can.write();
     } else {
+        Serial.println("SAFETY: OFF");
         while (can.read()) {}
 
-        
+        // here is where the main driver code will be
+        // TODO: get angle of the yaw function, use that
+        //       determine the context to move
+
 
         update_speeds();
         can.write();

@@ -43,6 +43,6 @@ private:
     /// @param _mtrNum the motor number
     /// @param val the value you want to set
     void set_mtr_speed(int _canNum, int _mtrNum, int val);
-}
+};
 
 #endif // CONTROLLERS_HPP

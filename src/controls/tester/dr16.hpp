@@ -137,6 +137,10 @@ public:
 
 	/// @brief keeps track of keys pressed on the rm client
 	struct Keys {
+		// just testing with keys at the moment
+		// but will eventually implement
+		// the mouse functionalities.
+
 		bool w;
 		bool s;
 		bool a;
@@ -153,7 +157,7 @@ public:
 		bool c;
 		bool v;
 		bool b;
-	}
+	} keys;
 
 	/// @brief normalized input buffer
 	float m_input[DR16_INPUT_VALUE_COUNT] = { 0 };
