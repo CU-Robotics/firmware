@@ -79,6 +79,10 @@ public:
 	/// @return Failure status
 	uint8_t is_fail() { return m_fail; }
 
+  	/// @brief Returns a the current connection status for the dr16 controller
+  	/// @return true for connected false for not connected
+  	bool is_connected() { return m_connected; }
+
 	/// @brief Get the 7 float length input buffer. These values are normalized [-1, 1]
 	/// @return float buffer
 	float* get_input();
@@ -117,6 +121,8 @@ public:
 	/// @brief Prints the raw 18-byte packet from the receiver
 	void print_raw();
 
+
+
 private:
 	/// @brief Maps the input value to a specified value range
 	/// @param value the input value
@@ -132,6 +138,31 @@ private:
 	bool is_data_valid();
 
 public:
+
+	/// @brief keeps track of keys pressed on the rm client
+	struct Keys {
+		// just testing with keys at the moment
+		// but will eventually implement
+		// the mouse functionalities.
+
+		bool w;
+		bool s;
+		bool a;
+		bool d;
+		bool shift;
+		bool ctrl;
+		bool q;
+		bool e;
+		bool r;
+		bool f;
+		bool g;
+		bool z;
+		bool x;
+		bool c;
+		bool v;
+		bool b;
+	} keys;
+
 	/// @brief normalized input buffer
 	float m_input[DR16_INPUT_VALUE_COUNT] = { 0 };
 
@@ -147,6 +178,10 @@ public:
 	uint32_t m_failTime = 0;
 	/// @brief fail state
 	uint8_t m_fail = false;
+  /// @brief connection status
+  uint8_t m_connected = false;
+  
+  uint32_t m_disctTime = 0;
 };
 
 #endif // DR16_HPP
