@@ -33,7 +33,7 @@ public:
   /// @brief Initializes and zeros CANs
   void init();
 
-  /// @brief Reads current CAN input and fills the input array array accordingly
+  /// @brief Reads all inbound CAN packets and fills the input array accordingly
   /// @return True or false depending if it actually read anything
   uint8_t read();
 
