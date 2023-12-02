@@ -70,7 +70,7 @@ int main() { // Basically a schudeling algorithm
 
     // if info from the remote is not being detected
     // or if safety switch is on, don't write anything
-    if (dr16.get_l_switch() == 1 || !dr16.is_connected()) {
+    if (!dr16.is_connected() || dr16.get_l_switch() == 1) {
         Serial.println("SAFETY: ON");
 
         can.zero();
@@ -79,6 +79,8 @@ int main() { // Basically a schudeling algorithm
         Serial.println("SAFETY: OFF");
         
         while (can.read()) {}
+
+        // control code goes here
 
         can.write();
     }

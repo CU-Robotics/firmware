@@ -89,7 +89,7 @@ void DR16::read() {
 		m_input[5] = (float)s1;
 		m_input[6] = (float)s2;
 
-		/// keys
+		/// data from the rm control client
 		// first byte
 		keys.w = (k1 >> 0) & 0x01;
 		keys.s = (k1 >> 1) & 0x01;
