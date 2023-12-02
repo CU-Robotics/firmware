@@ -177,7 +177,10 @@ public:
 		bool v;
 		/// @brief if the key 'b' is pressed
 		bool b;
-	} keys;
+	};
+
+	/// @brief struct instance to keep track of the rm control data
+	Keys keys;
 
 	/// @brief normalized input buffer
 	float m_input[DR16_INPUT_VALUE_COUNT] = { 0 };
