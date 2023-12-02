@@ -17,7 +17,7 @@ void rm_CAN::init() {
     zero();
 }
 
-uint8_t rm_CAN::read() {
+void rm_CAN::read() {
     // read from CAN 1
     CAN_message_t msg1;
     uint16_t read1;
