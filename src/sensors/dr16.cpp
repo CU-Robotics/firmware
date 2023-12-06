@@ -35,17 +35,17 @@ void DR16::read() {
 
 	// dont read if there are less than 18 bytes, i.e. we caught the packet as it was being written
 	if (Serial5.available() < DR16_PACKET_SIZE) {
-		if (millis() - m_disctTime > 250) {
-			m_connected = false;
-		}
+    if (millis() - m_disctTime > 250) {
+      m_connected = false;
+    }
 		return;
 	}
 
-	// Serial.println(m_disctTime);
-	m_disctTime = millis();
-	m_connected = true;
-	// Serial.print("CONNCETD: ");
-	// Serial.println(m_connected);
+  // Serial.println(m_disctTime);
+  m_disctTime = millis();
+  m_connected = true;
+  // Serial.print("CONNCETD: ");
+  // Serial.println(m_connected);
 
 	// issue read command, fills m_inputRaw with 18 bytes
 	Serial5.readBytes(m_inputRaw, DR16_PACKET_SIZE);

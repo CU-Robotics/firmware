@@ -11,12 +11,13 @@ enum control_types {
 
 class control_manager {
 public:
-    control_manager();
+    control_manager(rm_CAN* _can);
 
     /// @brief updates all of the torques for each motor based on the yaml file
     void update_motors();
 
-private:
+private: // members
+
     /// @brief The state we want each motor to be
     float set_state[NUM_CANS][NUM_MOTORS];
 
@@ -33,9 +34,10 @@ private:
     float output[NUM_CANS][NUM_MOTORS];
 
     /// @brief can instance to write to motors
-    rm_CAN can;
+    rm_CAN* can;
 
-private:
+private: // methods
+
     /// @brief updates each motors output based on set control type
     void step_motors();
 
