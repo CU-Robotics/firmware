@@ -35,8 +35,17 @@ void DR16::read() {
 
 	// dont read if there are less than 18 bytes, i.e. we caught the packet as it was being written
 	if (Serial5.available() < DR16_PACKET_SIZE) {
-		return;
+		if (millis() - m_disctTime > 250) {
+			m_connected = false;
+		}
+			return;
 	}
+
+	// Serial.println(m_disctTime);
+	m_disctTime = millis();
+	m_connected = true;
+	// Serial.print("CONNCETD: ");
+	// Serial.println(m_connected);
 
 	// issue read command, fills m_inputRaw with 18 bytes
 	Serial5.readBytes(m_inputRaw, DR16_PACKET_SIZE);
@@ -80,7 +89,7 @@ void DR16::read() {
 		m_input[5] = (float)s1;
 		m_input[6] = (float)s2;
 
-		/// keys
+		/// data from the rm control client
 		// first byte
 		keys.w = (k1 >> 0) & 0x01;
 		keys.s = (k1 >> 1) & 0x01;
@@ -178,9 +187,9 @@ float DR16::get_wheel() {
 }
 
 float DR16::get_r_switch() {
-	return m_input[6];
+	return m_input[5];
 }
 
 float DR16::get_l_switch() {
-	return m_input[5];
+	return m_input[6];
 }
