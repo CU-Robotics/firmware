@@ -5,11 +5,13 @@ uint32_t cycle_time_ms = cycle_time_us / 1000;
 float cycle_time_s = cycle_time_us * 1E-6;
 
 // Runs once
-void setup() {
-	Serial.begin(1000000); // the serial monitor is actually always active (for debug use Serial.println & tycmd)
+void setup()
+{
+    Serial.begin(1000000); // the serial monitor is actually always active (for debug use Serial.println & tycmd)
 
-	if (Serial) {
-		Serial.println("TEENSY SERIAL START\n\n");
+    if (Serial)
+    {
+        Serial.println("TEENSY SERIAL START\n\n");
         Serial.print("\033[1;33m");
         Serial.println("                  .:^!?!^.                        ");
         Serial.println("           .:~!?JYYYJ?7?Y5Y7!!.                   ");
@@ -31,32 +33,21 @@ void setup() {
         Serial.println("                   7PY!^^~?PY:                    ");
         Serial.println("                    .!JJJJ?^                      ");
         Serial.print("\033[0m");
-		Serial.println("\n\033[1;92mFW Ver. 2.0.0");
+        Serial.println("\n\033[1;92mFW Ver. 2.0.0");
         Serial.print("\nBoot datetime: 00/00/00 at 00:00am");
-		Serial.print("Boot hash (random): 0x");
-		unsigned long time = micros();
-		Serial.print(time & 0xFFFF, HEX);
-		Serial.println("\033[0m\n");
-	}
+        Serial.print("Boot hash (random): 0x");
+        unsigned long time = micros();
+        Serial.print(time & 0xFFFF, HEX);
+        Serial.println("\033[0m\n");
+    }
 }
 
 // Master loop
-int main() { // Basically a schudeling algorithm
-    Timer timer;
+int main()
+{ // Basically a schudeling algorithm
+    setup();
 
-	unsigned long prev_time = micros();
+    while (true) { delay(1000); Serial.println("Still Alive!"); }
 
-	while (true) {
-		timer.startTimer()
-
-		// Calculate dt
-		unsigned long curr_time = micros();
-		float dt = (curr_time - prev_time) / 1000000.0;
-		prev_time = curr_time;
-
-		timer.delayMicros(0, cycle_time_us);	        // normalize master loop cycle time to cycle_time_u
-		blink();										// helpful if you think the loop is crashing (light will pause)
-	}
-
-	return 0;
+    return 0;
 }

@@ -212,3 +212,6 @@ clean:
 clean_hex:
 	@$(LOGSTRING) "[MAKE]\tCleaning hex"
 	@$(CLEANUP) "$(BUILD_PATH)/$(TARGET).hex"
+
+githook:
+	git config --local core.hooksPath .githooks
