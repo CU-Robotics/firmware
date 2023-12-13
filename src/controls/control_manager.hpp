@@ -1,7 +1,7 @@
 #ifndef CONTROL_MANAGER_HPP
 #define CONTROL_MANAGER_HPP
 
-#include "rm_CAN.hpp"
+#include "../comms/rm_CAN.hpp"
 
 /// @brief enums for each control type
 enum control_types {

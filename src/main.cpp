@@ -1,7 +1,7 @@
 #include "utils/timing.h"
 #include "sensors/dr16.hpp"
 #include "comms/rm_CAN.hpp"
-#include "controls/tester/control_manager.hpp"
+#include "controls/control_manager.hpp"
 
 uint32_t cycle_time_us = 1000;
 uint32_t cycle_time_ms = cycle_time_us / 1000;
@@ -9,7 +9,7 @@ float cycle_time_s = cycle_time_us * 1E-6;
 
 DR16 dr16;
 rm_CAN can;
-control_manager controls;
+control_manager control;
 
 // Runs once
 void setup() {
@@ -17,7 +17,7 @@ void setup() {
 
     dr16.init(); // set up dr16
     can.init(); // set up can
-    controls = control_manager(&can);
+    control(&can); // pass the controller manager the can to write to
 
 	if (Serial) {
 		Serial.println("TEENSY SERIAL START\n\n");
@@ -53,7 +53,6 @@ void setup() {
 
 // Master loop
 int main() { // Basically a schudeling algorithm
-    dr16.read(); // read data from controller
 
     Timer timer;
 
@@ -68,25 +67,29 @@ int main() { // Basically a schudeling algorithm
 		prev_time = curr_time;
 
 		timer.delayMicros(0, cycle_time_us);	        // normalize master loop cycle time to cycle_time_u
-		blink();										// helpful if you think the loop is crashing (light will pause)
-	}
+		blink();    									// helpful if you think the loop is crashing (light will pause)
+	
+        /// Start of control
 
-    // if info from the remote is not being detected
-    // or if safety switch is on, don't write anything
-    if (!dr16.is_connected() || dr16.get_l_switch() == 1) {
-        Serial.println("SAFETY: ON");
+        dr16.read(); // read data from controller
 
-        can.zero();
-        can.zero_motors();
-    } else {
-        Serial.println("SAFETY: OFF");
-        
-        while (can.read()) {}
+        // if info from the remote is not being detected
+        // or if safety switch is on, don't write anything
+        if (!dr16.is_connected() || dr16.get_l_switch() == 1) {
+            Serial.println("SAFETY: ON");
 
-        // control code goes here
-        controls.update_motors();
+            can.zero();
+            can.zero_motors();
+        } else {
+            Serial.println("SAFETY: OFF");
+            
+            while (can.read()) {}
 
-        can.write();
+            // control code goes here
+            control.update_motors();
+
+            can.write();
+        }
     }
 
 	return 0;
