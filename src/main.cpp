@@ -1,6 +1,7 @@
 #include "utils/timing.h"
 #include "sensors/dr16.hpp"
 #include "comms/rm_CAN.hpp"
+#include "controls/control_manager.hpp"
 
 uint32_t cycle_time_us = 1000;
 uint32_t cycle_time_ms = cycle_time_us / 1000;
@@ -50,14 +51,22 @@ void setup() {
 
 // Master loop
 int main() { // Basically a schudeling algorithm
-    dr16.read(); // read data from controller
+    setup();
+
+    // control declerations
+    DR16 dr16;
+    rm_CAN can;
+    control_manager control(&can);
+
+    dr16.init(); // set up dr16
+    can.init(); // set up can
 
     Timer timer;
 
 	unsigned long prev_time = micros();
 
 	while (true) {
-		timer.startTimer()
+		timer.startTimer();
 
 		// Calculate dt
 		unsigned long curr_time = micros();
@@ -65,8 +74,30 @@ int main() { // Basically a schudeling algorithm
 		prev_time = curr_time;
 
 		timer.delayMicros(0, cycle_time_us);	        // normalize master loop cycle time to cycle_time_u
-		blink();										// helpful if you think the loop is crashing (light will pause)
-	}
+		blink();    									// helpful if you think the loop is crashing (light will pause)
+	
+        /// Start of control
+
+        dr16.read(); // read data from dr16 controller
+
+        // if info from the remote is not being detected
+        // or if safety switch is on, set all torques to 0
+        if (!dr16.is_connected() || dr16.get_l_switch() == 1) {
+            Serial.println("SAFETY: ON");
+
+            can.zero();
+            can.zero_motors();
+        } else {
+            Serial.println("SAFETY: OFF");
+            
+            while (can.read()) {}
+
+            // control code goes here
+            control.update_motors();
+
+            can.write();
+        }
+    }
 
     // if info from the remote is not being detected
     // or if safety switch is on, don't write anything
