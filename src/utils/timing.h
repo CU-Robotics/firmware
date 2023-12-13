@@ -49,6 +49,6 @@ struct Timer {
         */
         while(DURATION_MS(t, ARM_DWT_CYCCNT) < duration) {}
     }
-}
+};
 
 #endif

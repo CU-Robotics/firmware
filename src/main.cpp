@@ -7,17 +7,9 @@ uint32_t cycle_time_us = 1000;
 uint32_t cycle_time_ms = cycle_time_us / 1000;
 float cycle_time_s = cycle_time_us * 1E-6;
 
-DR16 dr16;
-rm_CAN can;
-control_manager control;
-
 // Runs once
 void setup() {
 	Serial.begin(1000000); // the serial monitor is actually always active (for debug use Serial.println & tycmd)
-
-    dr16.init(); // set up dr16
-    can.init(); // set up can
-    control(&can); // pass the controller manager the can to write to
 
 	if (Serial) {
 		Serial.println("TEENSY SERIAL START\n\n");
@@ -53,6 +45,15 @@ void setup() {
 
 // Master loop
 int main() { // Basically a schudeling algorithm
+    setup();
+
+    // control declerations
+    DR16 dr16;
+    rm_CAN can;
+    control_manager control(&can);
+
+    dr16.init(); // set up dr16
+    can.init(); // set up can
 
     Timer timer;
 
@@ -71,10 +72,10 @@ int main() { // Basically a schudeling algorithm
 	
         /// Start of control
 
-        dr16.read(); // read data from controller
+        dr16.read(); // read data from dr16 controller
 
         // if info from the remote is not being detected
-        // or if safety switch is on, don't write anything
+        // or if safety switch is on, set all torques to 0
         if (!dr16.is_connected() || dr16.get_l_switch() == 1) {
             Serial.println("SAFETY: ON");
 
