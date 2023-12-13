@@ -17,13 +17,12 @@ void rm_CAN::init() {
     zero();
 }
 
-uint8_t rm_CAN::read() {
+void rm_CAN::read() {
     // read from CAN 1
     CAN_message_t msg1;
     uint16_t read1;
-    
-    read1 = m_can1.read(msg1);
-    if (read1) {
+
+    while (read1 = m_can1.read(msg1)) {
         // isolate the ID part of the message id (0x202 becomes 2)
         int id = msg1.id & 0xf;
         id -= 1; // subtract by 1 to allow for array indexing
@@ -37,8 +36,7 @@ uint8_t rm_CAN::read() {
     CAN_message_t msg2;
     uint16_t read2;
     
-    read2 = m_can2.read(msg2);
-    if (read2) {
+    while (read2 = m_can2.read(msg2)) {
         // isolate the ID part of the message id (0x202 becomes 2)
         int id = msg1.id & 0xf;
         id -= 1; // subtract by 1 to allow for array indexing
@@ -47,9 +45,6 @@ uint8_t rm_CAN::read() {
         for (int i = 0; i < CAN_MESSAGE_SIZE; i++)
             m_input[CAN_2][id][i] = msg2.buf[i];
     }
-
-    // return true if either read was successful
-    return read1 || read2;
 }
 
 uint8_t rm_CAN::write() {
