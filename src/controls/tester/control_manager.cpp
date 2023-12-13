@@ -46,3 +46,7 @@ void control_manager::update_motors() {
         can->write_motor(CAN_2, i, output[CAN_2][i]);
     }
 }
+
+void control_manager::step_PID(float curr, float set) {
+    
+}
