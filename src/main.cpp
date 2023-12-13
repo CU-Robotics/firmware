@@ -1,4 +1,7 @@
 #include "utils/timing.h"
+#include "comms/rm_CAN.hpp"
+#include "build_time.h"
+#include "sensors/ICM20649.hpp"
 
 uint32_t cycle_time_us = 1000;
 uint32_t cycle_time_ms = cycle_time_us / 1000;
@@ -34,10 +37,8 @@ void setup()
         Serial.println("                    .!JJJJ?^                      ");
         Serial.print("\033[0m");
         Serial.println("\n\033[1;92mFW Ver. 2.0.0");
-        Serial.print("\nBoot datetime: 00/00/00 at 00:00am");
-        Serial.print("Boot hash (random): 0x");
-        unsigned long time = micros();
-        Serial.print(time & 0xFFFF, HEX);
+        Serial.printf("\nLast Built: %s at %s", __DATE__, __TIME__);
+        Serial.printf("\nRun Hash:   %x", ARM_DWT_CYCCNT);
         Serial.println("\033[0m\n");
     }
 }
@@ -47,7 +48,11 @@ int main()
 { // Basically a schudeling algorithm
     setup();
 
+    // rm_CAN can;
+    // can.init();
+
     while (true) { delay(1000); Serial.println("Still Alive!"); }
+
 
     return 0;
 }
