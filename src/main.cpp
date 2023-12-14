@@ -1,6 +1,5 @@
 #include "utils/timing.h"
 #include "comms/rm_CAN.hpp"
-#include "build_time.h"
 #include "sensors/ICM20649.hpp"
 
 uint32_t cycle_time_us = 1000;
@@ -47,9 +46,6 @@ void setup()
 int main()
 { // Basically a schudeling algorithm
     setup();
-
-    // rm_CAN can;
-    // can.init();
 
     while (true) { delay(1000); Serial.println("Still Alive!"); }
 

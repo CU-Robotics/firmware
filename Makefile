@@ -73,7 +73,7 @@ build:
 	@$(OBJCOPY) -O ihex -R .eeprom $(PROJECT_NAME).elf $(PROJECT_NAME).hex
 	@chmod +x $(PROJECT_NAME).hex
 	@echo [Cleaning Up]
-	@rm $(PROJECT_NAME).elf
+	@rm $(PROJECT_NAME).elf -f
 
 clean_objs:
 	@rm *.o -f
@@ -89,5 +89,7 @@ clean:
 	@rm *.elf -f
 
 upload: build
+	@echo [Uploading] - If this fails, press the button on the teensy and re-run make upload
+	@echo
 	tycmd upload $(PROJECT_NAME).hex
 	@tycmd monitor --timeout-eof=-1 -R
