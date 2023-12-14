@@ -66,7 +66,7 @@ libraries:
 
 lib_all: clean teensy libraries
 	
-build:
+build: clean
 	@echo [Building Source]
 	@$(COMPILER_CPP) $(COMPILE_FLAGS) $(CPP_FLAGS) $(PROJECT_SOURCE) $(LIBRARY_LIB_NAME) $(TEENSY_LIB_NAME) $(LIBRARY_INCLUDE) $(TEENSY_INCLUDE) $(LINKING_FLAGS) -o $(PROJECT_NAME).elf
 	@echo [Constructing $(PROJECT_NAME).hex]
@@ -81,15 +81,17 @@ clean_objs:
 clean_libs:
 	@rm *.a -f
 
-clean:
-	@echo [Cleaning Object Files and Libraries]
-	@rm *.a -f
-	@rm *.o -f
+clean_bin:
 	@rm *.hex -f
 	@rm *.elf -f
 
+clean: clean_objs clean_bin
+
 upload: build
 	@echo [Uploading] - If this fails, press the button on the teensy and re-run make upload
-	@echo
-	tycmd upload $(PROJECT_NAME).hex
+	@tycmd upload $(PROJECT_NAME).hex
+	@tycmd monitor --timeout-eof=-1 -R
+
+monitor:
+	@echo [Monitoring]
 	@tycmd monitor --timeout-eof=-1 -R
