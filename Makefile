@@ -43,6 +43,7 @@ OBJCOPY = ~/.arduino15/packages/teensy/tools/teensy-compile/5.4.1/arm/bin/arm-no
 
 # targets are phony to force it to rebuild every time
 .PHONY: teensy libraries lib_all build clean clean_objs clean_libs upload
+.DEFAULT_GOAL = build
 
 teensy:
 	@echo [Building Teensy Core CPP]
