@@ -1,3 +1,5 @@
+# Created by Jackson Stepka (Github: Pandabear1125)
+
 # Teensy core library files
 TEENSY_DIR = teensy4
 TEENSY_SOURCE = $(TEENSY_DIR)/*.c $(TEENSY_DIR)/*.cpp
@@ -78,6 +80,11 @@ monitor:
 kill:
 	@echo [Attempting to Kill Teensy]
 	@tycmd reset -b
+
+# restarts teensy
+restart:
+	@echo [Attempting to Restart Firmware]
+	@tycmd reset
 
 # deletes all object files
 clean_objs:
