@@ -45,28 +45,6 @@ OBJCOPY = ~/.arduino15/packages/teensy/tools/teensy-compile/5.4.1/arm/bin/arm-no
 .PHONY: teensy libraries lib_all build clean clean_objs clean_libs upload
 .DEFAULT_GOAL = build
 
-teensy:
-	@echo [Building Teensy Core CPP]
-	@$(COMPILER_CPP) $(COMPILE_FLAGS) $(CPP_FLAGS) -c $(TEENSY_DIR)/*.cpp $(TEENSY_INCLUDE)
-	@echo [Building Teensy Core C]
-	@$(COMPILER_C) $(COMPILE_FLAGS) -c $(TEENSY_DIR)/*.c $(TEENSY_INCLUDE)
-	@echo [Assembling Static Library]
-	@ar rcs $(TEENSY_LIB_NAME) *.o
-	@echo [$(TEENSY_LIB_NAME) Created in $(PROJECT_DIR)]
-	@rm *.o -f
-	@echo [Cleaning Up]
-
-libraries: 
-	@echo [Building Libraries]
-	@$(COMPILER_CPP) $(COMPILE_FLAGS) $(CPP_FLAGS) -c $(LIBRARY_SOURCE) $(LIBRARY_INCLUDE) $(TEENSY_INCLUDE) 
-	@echo [Assembling Static Library]
-	@ar rcs $(LIBRARY_LIB_NAME) *.o
-	@echo [$(LIBRARY_LIB_NAME) Created in $(PROJECT_DIR)]
-	@rm *.o -f
-	@echo [Cleaning Up]
-
-lib_all: clean teensy libraries
-	
 build: clean
 	@echo [Building Source]
 	@$(COMPILER_CPP) $(COMPILE_FLAGS) $(CPP_FLAGS) $(PROJECT_SOURCE) $(LIBRARY_LIB_NAME) $(TEENSY_LIB_NAME) $(LIBRARY_INCLUDE) $(TEENSY_INCLUDE) $(LINKING_FLAGS) -o $(PROJECT_NAME).elf
@@ -78,9 +56,6 @@ build: clean
 
 clean_objs:
 	@rm *.o -f
-
-clean_libs:
-	@rm *.a -f
 
 clean_bin:
 	@rm *.hex -f
