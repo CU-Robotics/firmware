@@ -20,7 +20,7 @@ LIBRARY_LIB = libs
 PROJECT_DIR = .
 PROJECT_SOURCE = src/comms/*.cpp src/controls/*.cpp src/sensors/*.cpp src/main.cpp
 PROJECT_INCLUDE = ""
-# application filename
+# application filename will end up as PROJECT_NAME.hex once built
 PROJECT_NAME = firmware
 
 # Teensy41 compiler flags
@@ -29,22 +29,30 @@ TEENSY4_FLAGS = -DF_CPU=600000000 -DUSB_RAWHID -DLAYOUT_US_ENGLISH -D__IMXRT1062
 # CPU flags to tailor the code for the Teensy processor
 CPU_FLAGS = -mcpu=cortex-m7 -mfloat-abi=hard -mfpu=fpv5-d16 -mthumb
 
+# Base compiler flags for both C++ and C
 COMPILE_FLAGS = -Wall -g -O2 $(CPU_FLAGS) $(TEENSY4_FLAGS) -I$(TEENSY_INCLUDE) -ffunction-sections -fdata-sections
+# C++ specific flags for compiling
 CPP_FLAGS = -std=gnu++14 -felide-constructors -fno-exceptions -fpermissive -fno-rtti -Wno-error=narrowing
+# c++ moment
 CPP_FLAGS += -Wno-trigraphs
 
+# Required linker config for teensy related things
 LINKING_FLAGS = -Wl,--gc-sections,--relax $(CPU_FLAGS) -Tteensy4/imxrt1062_t41.ld
 
+# Required base libs for teensy
 BASE_LIBS = -larm_cortexM7lfsp_math -lm -lstdc++
 
+# Compiler for C++ and C
 COMPILER_CPP = ~/.arduino15/packages/teensy/tools/teensy-compile/5.4.1/arm/bin/arm-none-eabi-g++
 COMPILER_C = ~/.arduino15/packages/teensy/tools/teensy-compile/5.4.1/arm/bin/arm-none-eabi-gcc
+# Objcopy program to turn .elf into .hex properly
 OBJCOPY = ~/.arduino15/packages/teensy/tools/teensy-compile/5.4.1/arm/bin/arm-none-eabi-objcopy
 
 # targets are phony to force it to rebuild every time
-.PHONY: teensy libraries lib_all build clean clean_objs clean_libs upload
+.PHONY: build upload monitor kill clean_objs clean_bin clean
 .DEFAULT_GOAL = build
 
+# builds source, links with libraries, and constructs the .hex to be uploaded
 build: clean
 	@echo [Building Source]
 	@$(COMPILER_CPP) $(COMPILE_FLAGS) $(CPP_FLAGS) $(PROJECT_SOURCE) $(LIBRARY_LIB_NAME) $(TEENSY_LIB_NAME) $(LIBRARY_INCLUDE) $(TEENSY_INCLUDE) $(LINKING_FLAGS) -o $(PROJECT_NAME).elf
@@ -54,24 +62,32 @@ build: clean
 	@echo [Cleaning Up]
 	@rm $(PROJECT_NAME).elf -f
 
-clean_objs:
-	@rm *.o -f
-
-clean_bin:
-	@rm *.hex -f
-	@rm *.elf -f
-
-clean: clean_objs clean_bin
-
+# builds hex, uploades it, and starts monitoring output
 upload: build
 	@echo [Uploading] - If this fails, press the button on the teensy and re-run make upload
 	@tycmd upload $(PROJECT_NAME).hex
 	@tycmd monitor --timeout-eof=-1 -R
 
+# monitors currently running firmware on robot
 monitor:
 	@echo [Monitoring]
 	@tycmd monitor --timeout-eof=-1 -R
 
+# resets teensy and switches it into boot-loader mode, effectively stopping any execution
+# this only works if power is consistent, will restart loaded firmware if turned off and on again
 kill:
 	@echo [Attempting to Kill Teensy]
 	@tycmd reset -b
+
+# deletes all object files
+clean_objs:
+	@rm *.o -f
+
+# deletes all hex files
+clean_bin:
+	@rm *.hex -f
+	@rm *.elf -f
+
+# overall clean target
+clean: clean_objs clean_bin
+
