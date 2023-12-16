@@ -71,3 +71,7 @@ upload: build
 monitor:
 	@echo [Monitoring]
 	@tycmd monitor --timeout-eof=-1 -R
+
+kill:
+	@echo [Attempting to Kill Teensy]
+	@tycmd reset -b
