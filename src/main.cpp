@@ -60,7 +60,7 @@ int main()
     {
         Serial.println("SAFETY: OFF");
 
-        while (can.read()) {}
+        can.read();
 
         // control code goes here
 
