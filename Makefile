@@ -2,7 +2,6 @@
 
 # Teensy core library files
 TEENSY_DIR = teensy4
-TEENSY_SOURCE = $(TEENSY_DIR)/*.c $(TEENSY_DIR)/*.cpp
 TEENSY_INCLUDE = -I$(TEENSY_DIR)
 # name of the output lib file
 TEENSY_LIB_NAME = libteensy4.a
@@ -11,17 +10,17 @@ TEENSY_LIB = teensy4
 
 # Used external libraries
 LIBRARY_DIR = libraries
-LIBRARY_SOURCE = $(shell find $(LIBRARY_DIR) -name "*.cpp" -or -name "*.c")
-LIBRARY_INCLUDE = $(addprefix -I, $(wildcard $(LIBRARY_DIR)/*))
+# this is where you add your new library to, add it's path with a '-I' attached to the front
+LIBRARY_INCLUDE = -Ilibraries/Adafruit_BusIO -Ilibraries/Adafruit_ICM20X -Ilibraries/Adafruit_LIS3MDL -Ilibraries/Adafruit_LSM6DS -Ilibraries/Adafruit_Sensor -Ilibraries/FlexCAN_T4 -Ilibraries/FreqMeasureMulti -Ilibraries/SPI -Ilibraries/unity -Ilibraries/Wire
 # name of the output lib file
 LIBRARY_LIB_NAME = liblibs.a
 # lib file name stripped of initial 'lib' and '.a'
 LIBRARY_LIB = libs
 
 # Project files
-PROJECT_DIR = src
-PROJECT_SOURCE = $(shell find $(PROJECT_DIR) -name "*.cpp")
-PROJECT_INCLUDE = ""
+PROJECT_DIR = .
+PROJECT_SOURCE = src/*.cpp src/comms/*.cpp src/controls/*.cpp src/filters/*.cpp src/sensors/*.cpp src/utils/*.cpp
+PROJECT_INCLUDE = src
 # application filename will end up as PROJECT_NAME.hex once built
 PROJECT_NAME = firmware
 
