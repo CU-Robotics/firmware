@@ -1,1 +1,0 @@
-~/.arduino15/packages/teensy/tools/teensy-compile/5.4.1/arm/bin/arm-none-eabi-g++ teensy4/*.cpp teensy4/*.c -Iteensy4
