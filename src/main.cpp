@@ -1,10 +1,9 @@
 #include "utils/timing.h"
 #include "comms/rm_CAN.hpp"
-#include "sensors/ICM20649.hpp"
+#include "sensors/dr16.hpp"
 
-uint32_t cycle_time_us = 1000;
-uint32_t cycle_time_ms = cycle_time_us / 1000;
-float cycle_time_s = cycle_time_us * 1E-6;
+DR16 dr16;
+rm_CAN can;
 
 // Runs once
 void setup()
@@ -47,8 +46,26 @@ int main()
 { // Basically a schudeling algorithm
     setup();
 
-    while (true) { delay(1000); Serial.println("Still Alive!"); }
+    dr16.init();
+    can.init();
 
+    if (!dr16.is_connected() || dr16.get_l_switch() == 1)
+    {
+        Serial.println("SAFETY: ON");
+
+        can.zero();
+        can.zero_motors();
+    }
+    else
+    {
+        Serial.println("SAFETY: OFF");
+
+        while (can.read()) {}
+
+        // control code goes here
+
+        can.write();
+    }
 
     return 0;
 }
