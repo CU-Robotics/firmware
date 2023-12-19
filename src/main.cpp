@@ -1,23 +1,18 @@
 #include "utils/timing.h"
-#include "sensors/dr16.hpp"
 #include "comms/rm_CAN.hpp"
-
-uint32_t cycle_time_us = 1000;
-uint32_t cycle_time_ms = cycle_time_us / 1000;
-float cycle_time_s = cycle_time_us * 1E-6;
+#include "sensors/dr16.hpp"
 
 DR16 dr16;
 rm_CAN can;
 
 // Runs once
-void setup() {
-	Serial.begin(1000000); // the serial monitor is actually always active (for debug use Serial.println & tycmd)
+void setup()
+{
+    Serial.begin(1000000); // the serial monitor is actually always active (for debug use Serial.println & tycmd)
 
-    dr16.init(); // set up dr16
-    can.init(); // set up can
-
-	if (Serial) {
-		Serial.println("TEENSY SERIAL START\n\n");
+    if (Serial)
+    {
+        Serial.println("TEENSY SERIAL START\n\n");
         Serial.print("\033[1;33m");
         Serial.println("                  .:^!?!^.                        ");
         Serial.println("           .:~!?JYYYJ?7?Y5Y7!!.                   ");
@@ -39,51 +34,38 @@ void setup() {
         Serial.println("                   7PY!^^~?PY:                    ");
         Serial.println("                    .!JJJJ?^                      ");
         Serial.print("\033[0m");
-		Serial.println("\n\033[1;92mFW Ver. 2.0.0");
-        Serial.print("\nBoot datetime: 00/00/00 at 00:00am");
-		Serial.print("Boot hash (random): 0x");
-		unsigned long time = micros();
-		Serial.print(time & 0xFFFF, HEX);
-		Serial.println("\033[0m\n");
-	}
+        Serial.println("\n\033[1;92mFW Ver. 2.0.0");
+        Serial.printf("\nLast Built: %s at %s", __DATE__, __TIME__);
+        Serial.printf("\nRun Hash:   %x", ARM_DWT_CYCCNT);
+        Serial.println("\033[0m\n");
+    }
 }
 
 // Master loop
-int main() { // Basically a schudeling algorithm
-    dr16.read(); // read data from controller
+int main()
+{ // Basically a schudeling algorithm
+    setup();
 
-    Timer timer;
+    dr16.init();
+    can.init();
 
-	unsigned long prev_time = micros();
-
-	while (true) {
-		timer.startTimer()
-
-		// Calculate dt
-		unsigned long curr_time = micros();
-		float dt = (curr_time - prev_time) / 1000000.0;
-		prev_time = curr_time;
-
-		timer.delayMicros(0, cycle_time_us);	        // normalize master loop cycle time to cycle_time_u
-		blink();										// helpful if you think the loop is crashing (light will pause)
-	}
-
-    // if info from the remote is not being detected
-    // or if safety switch is on, don't write anything
-    if (!dr16.is_connected() || dr16.get_l_switch() == 1) {
+    if (!dr16.is_connected() || dr16.get_l_switch() == 1)
+    {
         Serial.println("SAFETY: ON");
 
         can.zero();
         can.zero_motors();
-    } else {
+    }
+    else
+    {
         Serial.println("SAFETY: OFF");
-        
-        while (can.read()) {}
+
+        can.read();
 
         // control code goes here
 
         can.write();
     }
 
-	return 0;
+    return 0;
 }
