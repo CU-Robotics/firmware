@@ -1,12 +1,6 @@
 #include "utils/timing.h"
 #include "comms/rm_can.hpp"
 #include "sensors/dr16.hpp"
-#include "comms/usb_hid.hpp"
-#include "sensors/ICM20649.hpp"
-#include "sensors/IMUSensor.hpp"
-#include "sensors/LSM6DSOX.hpp"
-
-
 
 // Runs once
 void setup()
