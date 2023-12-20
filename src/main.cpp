@@ -1,9 +1,12 @@
 #include "utils/timing.h"
 #include "comms/rm_can.hpp"
 #include "sensors/dr16.hpp"
+#include "comms/usb_hid.hpp"
+#include "sensors/ICM20649.hpp"
+#include "sensors/IMUSensor.hpp"
+#include "sensors/LSM6DSOX.hpp"
 
-DR16 dr16;
-rm_CAN can;
+
 
 // Runs once
 void setup()
@@ -44,6 +47,9 @@ void setup()
 // Master loop
 int main()
 { // Basically a schudeling algorithm
+    DR16 dr16;
+    rm_CAN can;
+
     setup();
 
     dr16.init();
