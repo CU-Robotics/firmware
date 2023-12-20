@@ -2,13 +2,12 @@
 #include "comms/rm_can.hpp"
 #include "sensors/dr16.hpp"
 
-// Runs once
-void setup()
-{
-    Serial.begin(1000000); // the serial monitor is actually always active (for debug use Serial.println & tycmd)
+// DONT put anything outside of main(). It messes with the .hex execution
 
-    if (Serial)
-    {
+// DONT put anything else in this function. It is not a setup function
+void print_logo() {
+    Serial.begin(1000000); // the serial monitor is actually always active (for debug use Serial.println & tycmd)
+    if (Serial) {
         Serial.println("TEENSY SERIAL START\n\n");
         Serial.print("\033[1;33m");
         Serial.println("                  .:^!?!^.                        ");
@@ -39,32 +38,33 @@ void setup()
 }
 
 // Master loop
-int main()
-{ // Basically a schudeling algorithm
+int main() {
+    print_logo();
+
+    // declare any 'global' variables here
     DR16 dr16;
     rm_CAN can;
 
-    setup();
-
+    // initialize any 'setup' functions here
     dr16.init();
     can.init();
 
-    if (!dr16.is_connected() || dr16.get_l_switch() == 1)
-    {
-        Serial.println("SAFETY: ON");
+    // main loop
+    while (true) {
+        dr16.read();
+        if (!dr16.is_connected() || dr16.get_l_switch() == 1) {
+            // SAFETY ON
+            can.zero();
+            can.zero_motors();
+        }
+        else {
+            // SAFETY OFF
+            can.read();
 
-        can.zero();
-        can.zero_motors();
-    }
-    else
-    {
-        Serial.println("SAFETY: OFF");
+            // control code goes here
 
-        can.read();
-
-        // control code goes here
-
-        can.write();
+            can.write();
+        }
     }
 
     return 0;
