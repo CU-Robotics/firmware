@@ -1,5 +1,5 @@
 #include "utils/timing.h"
-#include "comms/rm_CAN.hpp"
+#include "comms/rm_can.hpp"
 #include "sensors/dr16.hpp"
 
 DR16 dr16;
