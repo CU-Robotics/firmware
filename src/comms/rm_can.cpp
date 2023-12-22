@@ -20,9 +20,8 @@ void rm_CAN::init() {
 void rm_CAN::read() {
     // read from CAN 1
     CAN_message_t msg1;
-    uint16_t read1;
 
-    while ((read1 = m_can1.read(msg1))) {
+    while (m_can1.read(msg1)) {
         // isolate the ID part of the message id (0x202 becomes 2)
         int id = msg1.id & 0xf;
         id -= 1; // subtract by 1 to allow for array indexing
@@ -34,9 +33,8 @@ void rm_CAN::read() {
 
     // read from CAN 2
     CAN_message_t msg2;
-    uint16_t read2;
     
-    while ((read2 = m_can2.read(msg2))) {
+    while (m_can2.read(msg2)) {
         // isolate the ID part of the message id (0x202 becomes 2)
         int id = msg1.id & 0xf;
         id -= 1; // subtract by 1 to allow for array indexing
