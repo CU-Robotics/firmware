@@ -21,35 +21,32 @@
 #define DURATION_US(cyccnt1, cyccnt2) (CYCLES_TO_US(cyccnt2 - cyccnt1))
 #define DURATION_NS(cyccnt1, cyccnt2) (CYCLES_TO_NS(cyccnt2 - cyccnt1))
 
-struct Timer
-{
+struct Timer {
     uint32_t t = ARM_DWT_CYCCNT;
 
     void startTimer() { t = ARM_DWT_CYCCNT; }
 
-    void delayMicros(uint32_t duration)
-    {
-/*
-Helper to pause for a duration. Duration starts
-when startTimer() is called.
-@param
-duration: (uint32_t) microseconds to wait (from when startTimer() was called)
-@return
-    None
-*/
+    void delayMicros(uint32_t duration) {
+        /*
+        Helper to pause for a duration. Duration starts
+        when startTimer() is called.
+        @param
+        duration: (uint32_t) microseconds to wait (from when startTimer() was called)
+        @return
+            None
+        */
         while (DURATION_US(t, ARM_DWT_CYCCNT) < duration) {}
     }
 
-    void delayMillis(uint32_t duration)
-    {
-/*
-Helper to pause for a duration. Duration starts
-when startTimer() is called.
-@param
-duration: (uint32_t) milliseconds to wait (from when startTimer() was called)
-@return
-    None
-*/
+    void delayMillis(uint32_t duration) {
+        /*
+        Helper to pause for a duration. Duration starts
+        when startTimer() is called.
+        @param
+        duration: (uint32_t) milliseconds to wait (from when startTimer() was called)
+        @return
+            None
+        */
         while (DURATION_MS(t, ARM_DWT_CYCCNT) < duration) {}
     }
 };
