@@ -1,5 +1,3 @@
-#include "math.h"
-
 #ifndef STATE_H
 #define STATE_H
 
