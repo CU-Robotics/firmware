@@ -20,7 +20,7 @@ void State::set_reference(float ungoverned_reference[STATE_LEN][3]) {
     @return
         None
     */
-    dt = governor_timer.delta();
+    float dt = governor_timer.delta();
 
     for (int n = 0; n < STATE_LEN; n++) {
         // Keep values within absolute limits
