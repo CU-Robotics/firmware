@@ -9,7 +9,9 @@
 
 class State {
     private:
-        // Sample state (does not represent every robot):
+        static State* instance;
+
+        // Here is a sample state (does not represent every robot):
         // {x, y, psi (chassis angle), theta (yaw angle), phi (pitch angle), feed, flywheel}
         // In this example case, as with all other cases, the unused state rows are kept blank.
 
@@ -29,6 +31,13 @@ class State {
         Timer governor_timer;
 
     public:
+        static State* get_instance() {
+            if (instance == NULL) {
+                instance = new State(); 
+                return instance;
+            } else return instance;
+        }
+
         void get_reference(float reference[STATE_LEN][3]);
         void set_reference(float ungoverned_reference[STATE_LEN][3], float dt);
 
