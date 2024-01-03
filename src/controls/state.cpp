@@ -1,14 +1,14 @@
 #include "state.hpp"
 
-float* State::get_reference() {
+void State::get_reference(float reference[STATE_LEN][3]) {
     /*
     Provides the instantaneous governed state reference 2D matrix (also known as desired state).
     @param
-        None
+        reference: (float*) The array to override with the reference matrix. Must be of shape [STATE_LEN][3].
     @return
-        reference: (float*) Desired robot state, in the form of a matrix.
+        None
     */
-    return reference;
+    memcpy(this.reference, reference, sizeof(this.reference));
 }
 
 void State::set_reference(float ungoverned_reference[STATE_LEN][3]) {
@@ -47,15 +47,15 @@ void State::set_reference(float ungoverned_reference[STATE_LEN][3]) {
     }
 }
 
-float* State::get_estimate() {
+void State::get_estimate(float estimate[STATE_LEN][3]) {
     /*
     Provides the instantaneous state estimate 2D matrix.
     @param
-        None
+        estimate: (float*) The array to override with the estimate matrix. Must be of shape [STATE_LEN][3].
     @return
-        estimate: (float*) State estimate, in the form of a 2D matrix.
+        None
     */
-    return estimate;
+    memcpy(this.estimate, estimate, sizeof(this.estimate));
 }
 
 void State::set_estimate(float estimate[STATE_LEN][3]) {
@@ -73,9 +73,9 @@ void State::set_estimate(float estimate[STATE_LEN][3]) {
     }
 }
 
-void State::set_estimate_row(float estimate[3], int row) {
+void State::set_estimate_coordinates(float estimate, int row, int col) {
     /*
-    Sets a single row of instantaneous state estimate 2D matrix.
+    Sets a instantaneous estimate at a specific coordinate in the 2D estimate matrix.
     @param
         estimate: (float*) State estimate, in the form of a vactor (pos, vel, accel).
         row: (int) The row of the matrix in which to write to. Corresponds to the index of a particular state value.
@@ -83,7 +83,8 @@ void State::set_estimate_row(float estimate[3], int row) {
         None
     */
     if (row < 0 || row >= STATE_LEN) return; // Avoids a potential crash!
-    for (int p = 0; p < 3; p++) this.estimate[row][p] = estimate[p];
+    if (col < 0 || col >= 3) return; // Avoids a potential crash!
+    this.estimate[row][col] = estimate;
 }
 
 void State::set_reference_limits(float reference_limits[STATE_LEN][3][2]) {

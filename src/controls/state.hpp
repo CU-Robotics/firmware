@@ -29,12 +29,12 @@ class State {
         Timer governor_timer;
 
     public:
-        float* get_reference();
+        void get_reference(float reference[STATE_LEN][3]);
         void set_reference(float ungoverned_reference[STATE_LEN][3], float dt);
 
-        float* get_estimate();
+        void get_estimate(float estimate[STATE_LEN][3]);
         void set_estimate(float estimate[STATE_LEN][3]);
-        void set_estimate_row(float estimate[3], int row);
+        void set_estimate_coordinates(float estimate, int row, int col);
 
         void set_reference_limits(float reference_limits[STATE_LEN][3][2]);
 };
