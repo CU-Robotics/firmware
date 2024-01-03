@@ -1,3 +1,5 @@
+#include "timing.h"
+
 #ifndef STATE_H
 #define STATE_H
 
@@ -22,6 +24,9 @@ class State {
         // Reference limits. Used to keep the reference physically obtainable,
         // where [n][m][0] is the low bound and [n][m][1] is the high bound.
         float reference_limits[STATE_LEN][3][2];
+
+        // Timer for reference governor
+        Timer governor_timer;
 
     public:
         float* get_reference();

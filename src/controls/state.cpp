@@ -11,16 +11,16 @@ float* State::get_reference() {
     return reference;
 }
 
-void State::set_reference(float ungoverned_reference[STATE_LEN][3], float dt) {
+void State::set_reference(float ungoverned_reference[STATE_LEN][3]) {
     /*
     Sets the reference matrix, applying a reference governor to prevent impossible motion.
     This function acts as a step, and therefore must be called at the same frequency as controllers.
     @param
         ungoverned_reference: (float*) Desired robot state, in the form of a 2D matrix.
-        dt: (float) Time in seconds since the last time this function was called.
     @return
         None
     */
+    dt = governor_timer.delta();
 
     for (int n = 0; n < STATE_LEN; n++) {
         // Keep values within absolute limits
