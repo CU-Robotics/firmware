@@ -1,20 +1,21 @@
 #ifndef CONTROL_MANAGER_HPP
 #define CONTROL_MANAGER_HPP
 
-#include "../comms/rm_CAN.hpp"
+#define WEIGHTS_LEN  12
+#define MAX_MOTORS 16
 
-/// @brief enums for each control type
-enum control_types {
-    PID = 0,
-    // ... the rest of the control types
-};
+#include "../comms/rm_CAN.hpp"
+#include <vector>
+
 
 class control_manager {
 public:
-    control_manager(rm_CAN* _can);
+    control_manager(rm_CAN* _can, float control_weights[STATE_LEN][WEIGHTS_LEN]);
 
     /// @brief updates all of the torques for each motor based on the yaml file
     void update_motors();
+
+    float get_outputs();
 
 private: // members
 
@@ -27,11 +28,16 @@ private: // members
     /// @brief what kind of control theory we want to use on each motor
     int control_type[NUM_CANS][NUM_MOTORS];
 
-    /// @brief the amplitude of torque we write to each motor
-    float gains[NUM_CANS][NUM_MOTORS];
+    // /// @brief the final output to write to each motor
+    // float output[NUM_CANS][NUM_MOTORS];
 
-    /// @brief the final output to write to each motor
-    float output[NUM_CANS][NUM_MOTORS];
+    float outputs[MAX_MOTORS];
+
+    float control_gains[STATE_LEN][WEIGHTS_LEN];
+
+    float control_data[STATE_LEN][WEIGHTS_LEN];
+
+    float motor_id_map[][]
 
     /// @brief can instance to write to motors
     rm_CAN* can;

@@ -1,7 +1,10 @@
 #include "control_manager.hpp"
+#include 
 
-control_manager::control_manager(rm_CAN* _can) {
+
+control_manager::control_manager(rm_CAN* _can, float control_weights[WEIGHTS_LEN][STATE_LEN]) {
     can = _can;
+    control_gains = control_weights;
 }
 
 void control_manager::step_motors() {
@@ -33,20 +36,34 @@ void control_manager::step_motors() {
     }
 }
 
-void control_manager::update_motors() {
-    // update motor output
-    step_motors();
+//this needs to happen somewhere else
+//
+// void control_manager::update_motors() {
+//     // update motor output 
+//     step_motors();
 
-    // careful writing to motors here plz
-    for (int i = 0; i < NUM_MOTORS; i++) {
-        // can 1
-        can->write_motor(CAN_1, i, output[CAN_1][i]);
+//     // careful writing to motors here plz
+//     for (int i = 0; i < NUM_MOTORS; i++) {
+//         // can 1
+//         can->write_motor(CAN_1, i, output[CAN_1][i]);
         
-        // can 2
-        can->write_motor(CAN_2, i, output[CAN_2][i]);
-    }
-}
+//         // can 2
+//         can->write_motor(CAN_2, i, output[CAN_2][i]);
+//     }
+// }
 
-void control_manager::step_PID(float curr, float set) {
+void control_manager::step_PID_position(int row, std::vector<float> reference, std::vector<float> estimate) {
     
+
+    float error = reference.get(0) - estimate.get(0);
+    float KP = error * control_gains[row][0];
+
+    float delta_error = error - control_data[row][0];
+    float KD = delta_error * control_gains[row][2];
+
+    float KI = control_data[row][1] * control_gains[row][1]; 
+
+    control_data[row][0] = error;
+    control_data[row][1] = control_data[row][1] + error;
+
 }
