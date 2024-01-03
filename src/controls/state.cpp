@@ -29,19 +29,18 @@ void State::set_reference(float ungoverned_reference[STATE_LEN][3]) {
             if (reference[n][p] > reference_limits[n][p][1]) reference[n][p] = reference_limits[n][p][1];
         }
 
-        // Step position and velocity towards ungoverned reference
-        for (int p = 0; p < 2; p++) {
-            float error = ungoverned_reference[n][p] - reference[n][p];
-            if (error < reference_limits[n][p+1][0] * dt) reference[n][p] -= reference_limits[n][p+1][0] * dt;
-            else if (error > reference_limits[n][p+1][1] * dt) reference[n][p] += reference_limits[n][p+1][1] * dt;
-            else reference[n][p] = ungoverned_reference[n][p]; // This happens if getting to the ungoverned reference is achievable in this timestep
-        }
-        
-        // Acceleration always jumps directly to ungoverned reference
-        reference[n][3] = ungoverned_reference[n][3];
-
-        // Keep values within absolute limits
         for (int p = 0; p < 3; p++) {
+            // Step position and velocity towards ungoverned reference
+            if (p < 3) {
+                float error = ungoverned_reference[n][p] - reference[n][p];
+                if (error < reference_limits[n][p+1][0] * dt) reference[n][p] -= reference_limits[n][p+1][0] * dt;
+                else if (error > reference_limits[n][p+1][1] * dt) reference[n][p] += reference_limits[n][p+1][1] * dt;
+                else reference[n][p] = ungoverned_reference[n][p]; // This happens if getting to the ungoverned reference is achievable in this timestep
+            } else {
+                // Acceleration always jumps directly to ungoverned reference
+                reference[n][3] = ungoverned_reference[n][3]; 
+            }
+            // Keep values within absolute limits
             if (reference[n][p] < reference_limits[n][p][0]) reference[n][p] = reference_limits[n][p][0];
             if (reference[n][p] > reference_limits[n][p][1]) reference[n][p] = reference_limits[n][p][1];
         }
