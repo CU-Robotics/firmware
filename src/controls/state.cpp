@@ -8,7 +8,7 @@ void State::get_reference(float reference[STATE_LEN][3]) {
     @return
         None
     */
-    memcpy(this.reference, reference, sizeof(this.reference));
+    memcpy(this->reference, reference, sizeof(this->reference));
 }
 
 void State::set_reference(float ungoverned_reference[STATE_LEN][3]) {
@@ -55,7 +55,7 @@ void State::get_estimate(float estimate[STATE_LEN][3]) {
     @return
         None
     */
-    memcpy(this.estimate, estimate, sizeof(this.estimate));
+    memcpy(this->estimate, estimate, sizeof(this->estimate));
 }
 
 void State::set_estimate(float estimate[STATE_LEN][3]) {
@@ -68,7 +68,7 @@ void State::set_estimate(float estimate[STATE_LEN][3]) {
     */
     for (int n = 0; n < STATE_LEN; n++) {
         for (int p = 0; p < 3; p++) {
-            this.estimate[n][p] = estimate[n][p];
+            this->estimate[n][p] = estimate[n][p];
         }
     }
 }
@@ -84,7 +84,7 @@ void State::set_estimate_coordinates(float estimate, int row, int col) {
     */
     if (row < 0 || row >= STATE_LEN) return; // Avoids a potential crash!
     if (col < 0 || col >= 3) return; // Avoids a potential crash!
-    this.estimate[row][col] = estimate;
+    this->estimate[row][col] = estimate;
 }
 
 void State::set_reference_limits(float reference_limits[STATE_LEN][3][2]) {
@@ -97,7 +97,8 @@ void State::set_reference_limits(float reference_limits[STATE_LEN][3][2]) {
     */
     for (int n = 0; n < STATE_LEN; n++) {
         for (int p = 0; p < 3; p++) {
-            this.reference_limits[n][p] = reference_limits[n][p];
+            this->reference_limits[n][p][0] = reference_limits[n][p][0];
+            this->reference_limits[n][p][1] = reference_limits[n][p][1];
         }
     }
 }
