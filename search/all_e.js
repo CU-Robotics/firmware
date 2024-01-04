@@ -1,0 +1,8 @@
+var searchData=
+[
+  ['s_80',['s',['../structDR16_1_1Keys.html#a31d2fbdf90baa0c6447b58aa371ed228',1,'DR16::Keys']]],
+  ['sensor_81',['sensor',['../classICM20649.html#a5ff3bfd87d1a864a7766755a1075614e',1,'ICM20649::sensor()'],['../classLSM6DSOX.html#a7d65b45c0fb3f50245c31dd7b1868a8c',1,'LSM6DSOX::sensor()']]],
+  ['shift_82',['shift',['../structDR16_1_1Keys.html#ab88c53a25b3e4e94a91da6b3623a6034',1,'DR16::Keys']]],
+  ['spi_83',['SPI',['../classICM20649.html#a0312da603fc0259e882956763edf7675a57e33222ef8dbccd5d48921419d51e2e',1,'ICM20649']]],
+  ['state_84',['State',['../classState.html',1,'']]]
+];
