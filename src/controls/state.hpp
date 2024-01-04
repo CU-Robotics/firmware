@@ -39,7 +39,7 @@ class State {
         }
 
         void get_reference(float reference[STATE_LEN][3]);
-        void set_reference(float ungoverned_reference[STATE_LEN][3], float dt);
+        void set_reference(float ungoverned_reference[STATE_LEN][3]);
 
         void get_estimate(float estimate[STATE_LEN][3]);
         void set_estimate(float estimate[STATE_LEN][3]);
