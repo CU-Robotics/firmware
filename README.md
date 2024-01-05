@@ -6,8 +6,8 @@ You can find up-to-date documentation at [cu-robotics.github.io/firmware](cu-rob
 
 You can find our documentation guidelines at [docs/README](docs/README.md), and how to access your documentation before being merged to main.
 
-## Installation & Usage
-To begin, download this repo: \
+## Installation
+To begin, clone the repository:
 ```bash
 git clone https://gitlab.com/cu-robotics/firmware.git
 ```
@@ -19,25 +19,31 @@ Then, install dependencies:
 git config --local core.hooksPath .githooks
 ```
 
-`buff-core` is required to build firmware. Clone the repo:
+If the files `liblibs.a` and `libsteensy4.a` do not exist in the core directory, follow these steps.
+ * Checkout the branch `lib-source`
+ * Run `make`
+ * Store the resulting library files `liblibs.a` and `libteensy4.a` to some tempory location outside of the repository
+ * Return to your old branch (or `main`)
+ * Copy those library files into the core directory
+
+## Usage
+
+Now, navigate to the main directory, and run:
+
 ```bash
-git clone https://gitlab.com/cu-robotics/buff-core.git
+make
 ```
 
-Once installed, source `buff-tools`:
+This will build the current firmware. To upload, run:
+
 ```bash
-cd buff-core
-source buff-tools.bash
+make upload
 ```
 
-Then, build firmware:
-```bash
-buff -b fw
-```
+If you only wish to monitor an already uploaded firmware version, run: 
 
-Finally, to flash firmware to a Teensy, use `-f` (also builds):
 ```bash
-buff -f fw
+make monitor
 ```
 
 ## Contributing
@@ -47,3 +53,4 @@ This repo follows the CU Robotics code standard:
 - `feature` branches are named `feature-[featurename]` and contain major new features that require unit and integration testing.
 - `patch` branches are named `patch-[patchname]` and contain bugfixes and/or minor adjustments. Unit and integration testing is a soft requirement.
 - All software is required to pass formatting and build tests before being merged into a `production` branch.
+- Other branch-based style questions are answered in the [style guide](docs/README.md).
