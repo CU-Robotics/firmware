@@ -1,6 +1,5 @@
 #include "utils/timing.hpp"
 #include "comms/rm_can.hpp"
-#include <FlexCAN_T4.h>
 #include "sensors/dr16.hpp"
 
 // DONT put anything outside of main(). It messes with the .hex execution
@@ -71,7 +70,7 @@ int main() {
             // float err = can.get_motor_attribute(CAN_2, 4, SPEED);
             // Serial.println(err);
 
-            // can.write();
+            can.write();
         }
 
         // LED blink program
