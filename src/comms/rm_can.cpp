@@ -14,7 +14,7 @@ void rm_CAN::init() {
     m_can2.enableFIFO(true);
 
     // zero CANs just in case
-    zero();
+    // zero();
 }
 
 void rm_CAN::read() {
@@ -116,24 +116,22 @@ void rm_CAN::write_motor(uint16_t canID, uint16_t motorID, int32_t value) {
 
 uint16_t rm_CAN::get_motor_attribute(uint16_t canID, uint16_t motorID, MotorAttribute valueType) {
     // return correct value depending on valueType enum
-    switch (valueType) 
-    {
-    case MotorAttribute::ANGLE:
-        return combine_bytes(m_input[canID][motorID][0], m_input[canID][motorID][1]);
-        break;
-    case MotorAttribute::SPEED:
-        return combine_bytes(m_input[canID][motorID][2], m_input[canID][motorID][3]);
-        break;
-    case MotorAttribute::TORQUE:
-        return combine_bytes(m_input[canID][motorID][4], m_input[canID][motorID][5]);
-        break;
-    case MotorAttribute::TEMP:
-        return m_input[canID][motorID][6];
-        break;
-
-    default:
-        return 0;
-        break;
+    switch (valueType) {
+        case MotorAttribute::ANGLE:
+            return combine_bytes(m_input[canID][motorID][0], m_input[canID][motorID][1]);
+            break;
+        case MotorAttribute::SPEED:
+            return combine_bytes(m_input[canID][motorID][2], m_input[canID][motorID][3]);
+            break;
+        case MotorAttribute::TORQUE:
+            return combine_bytes(m_input[canID][motorID][4], m_input[canID][motorID][5]);
+            break;
+        case MotorAttribute::TEMP:
+            return m_input[canID][motorID][6];
+            break;
+        default:
+            return 0;
+            break;
     }
 }
 

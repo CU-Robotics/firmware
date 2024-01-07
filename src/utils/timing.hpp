@@ -61,6 +61,10 @@ struct Timer {
         return DURATION_US(t, ARM_DWT_CYCCNT) / (float)(1E6);
         t = ARM_DWT_CYCCNT;
     }
+
+    float time() {
+        return DURATION_US(t, ARM_DWT_CYCCNT) / (float)(1E6);
+    }
 };
 
 #endif

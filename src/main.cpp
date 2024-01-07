@@ -1,5 +1,6 @@
-#include "utils/timing.h"
+#include "utils/timing.hpp"
 #include "comms/rm_can.hpp"
+#include <FlexCAN_T4.h>
 #include "sensors/dr16.hpp"
 
 // DONT put anything outside of main(). It messes with the .hex execution
@@ -49,22 +50,40 @@ int main() {
     dr16.init();
     can.init();
 
+    pinMode(13, OUTPUT);
+
+    Timer program_time;
+    Timer loop_timer;
+
     // main loop
     while (true) {
         dr16.read();
         if (!dr16.is_connected() || dr16.get_l_switch() == 1) {
+            Serial.println(dr16.get_r_switch());
             // SAFETY ON
-            can.zero();
-            can.zero_motors();
-        }
-        else {
+            // can.zero();
+        } else {
             // SAFETY OFF
             can.read();
+ 
+            Serial.println("isaac was here");
+            can.print_can(CAN_1, false);
+            // float err = can.get_motor_attribute(CAN_2, 4, SPEED);
+            // Serial.println(err);
 
-            // control code goes here
-
-            can.write();
+            // can.write();
         }
+
+        // LED blink program
+        if ((int)(program_time.time()*16.0) % 2 && (int)(program_time.time()*4.0) % 2) {
+            digitalWrite(13, HIGH);
+        } else {
+            digitalWrite(13, LOW);
+        }
+
+        // Keep the loop running at 1kHz
+        loop_timer.delayMillis(1);
+        loop_timer.startTimer();
     }
 
     return 0;
