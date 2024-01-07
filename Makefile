@@ -2,6 +2,7 @@
 
 # Teensy core library files
 TEENSY_DIR = teensy4
+TEENSY_SOURCE = $(TEENSY_DIR)/*.c $(TEENSY_DIR)/*.cpp
 TEENSY_INCLUDE = -I$(TEENSY_DIR)
 # name of the output lib file
 TEENSY_LIB_NAME = libteensy4.a
@@ -10,7 +11,7 @@ TEENSY_LIB = teensy4
 
 # Used external libraries
 LIBRARY_DIR = libraries
-# this is where you add your new library to, add it's path with a '-I' attached to the front
+LIBRARY_SOURCE = libraries/Adafruit_BusIO/*.cpp libraries/Adafruit_ICM20X/*.cpp libraries/Adafruit_LIS3MDL/*.cpp libraries/Adafruit_LSM6DS/*.cpp libraries/Adafruit_Sensor/*.cpp libraries/FreqMeasureMulti/*.cpp libraries/SPI/*.cpp libraries/unity/*.c libraries/Wire/*.cpp
 LIBRARY_INCLUDE = -Ilibraries/Adafruit_BusIO -Ilibraries/Adafruit_ICM20X -Ilibraries/Adafruit_LIS3MDL -Ilibraries/Adafruit_LSM6DS -Ilibraries/Adafruit_Sensor -Ilibraries/FlexCAN_T4 -Ilibraries/FreqMeasureMulti -Ilibraries/SPI -Ilibraries/unity -Ilibraries/Wire
 # name of the output lib file
 LIBRARY_LIB_NAME = liblibs.a
@@ -30,28 +31,40 @@ TEENSY4_FLAGS = -DF_CPU=600000000 -DUSB_RAWHID -DLAYOUT_US_ENGLISH -D__IMXRT1062
 # CPU flags to tailor the code for the Teensy processor
 CPU_FLAGS = -mcpu=cortex-m7 -mfloat-abi=hard -mfpu=fpv5-d16 -mthumb
 
-# Base compiler flags for both C++ and C
 COMPILE_FLAGS = -Wall -g -O2 $(CPU_FLAGS) $(TEENSY4_FLAGS) -I$(TEENSY_INCLUDE) -ffunction-sections -fdata-sections
-# C++ specific flags for compiling
 CPP_FLAGS = -std=gnu++14 -felide-constructors -fno-exceptions -fpermissive -fno-rtti -Wno-error=narrowing
-# c++ moment
 CPP_FLAGS += -Wno-trigraphs
 
-# Required linker config for teensy related things
 LINKING_FLAGS = -Wl,--gc-sections,--relax $(CPU_FLAGS) -Tteensy4/imxrt1062_t41.ld
 
-# Required base libs for teensy
 BASE_LIBS = -larm_cortexM7lfsp_math -lm -lstdc++
 
-# Compiler for C++ and C
 COMPILER_CPP = ~/.arduino15/packages/teensy/tools/teensy-compile/5.4.1/arm/bin/arm-none-eabi-g++
 COMPILER_C = ~/.arduino15/packages/teensy/tools/teensy-compile/5.4.1/arm/bin/arm-none-eabi-gcc
-# Objcopy program to turn .elf into .hex properly
 OBJCOPY = ~/.arduino15/packages/teensy/tools/teensy-compile/5.4.1/arm/bin/arm-none-eabi-objcopy
 
 # targets are phony to force it to rebuild every time
-.PHONY: build upload monitor kill clean_objs clean_bin clean
-.DEFAULT_GOAL = build
+.PHONY: build upload monitor kill clean_objs clean_bin clean test
+.DEFAULT_GOAL = test
+
+test:
+	rm -f *.o
+	@echo [Building Teensy Core CPP]
+	@$(COMPILER_CPP) $(COMPILE_FLAGS) $(CPP_FLAGS) -c $(TEENSY_DIR)/*.cpp $(TEENSY_INCLUDE)
+	@echo [Building Teensy Core C]
+	@$(COMPILER_C) $(COMPILE_FLAGS) -c $(TEENSY_DIR)/*.c $(TEENSY_INCLUDE)
+	@echo [Building Libraries]
+	@$(COMPILER_CPP) $(COMPILE_FLAGS) $(CPP_FLAGS) -c $(LIBRARY_SOURCE) $(LIBRARY_INCLUDE) $(TEENSY_INCLUDE) 
+	@echo [Building Source]
+	@$(COMPILER_CPP) $(COMPILE_FLAGS) $(CPP_FLAGS) -c $(PROJECT_SOURCE) $(LIBRARY_INCLUDE) $(TEENSY_INCLUDE) -Isrc
+	@echo [Linking Project]
+	@$(COMPILER_CPP) $(COMPILE_FLAGS) $(CPP_FLAGS) *.o $(LINKING_FLAGS) $(LIBRARY_INCLUDE) $(TEENSY_INCLUDE) -Isrc -o $(PROJECT_NAME).elf
+	@echo [Constructing $(PROJECT_NAME).hex]
+	@$(OBJCOPY) -O ihex -R .eeprom $(PROJECT_NAME).elf $(PROJECT_NAME).hex
+	@chmod +x $(PROJECT_NAME).hex
+	@echo [Cleaning Up]
+	@rm $(PROJECT_NAME).elf -f
+	rm -f *.o
 
 # builds source, links with libraries, and constructs the .hex to be uploaded
 build: clean
