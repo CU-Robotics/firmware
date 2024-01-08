@@ -67,7 +67,7 @@ float Controller::step_PID_position(int motor_id, float reference[3], float esti
     float KD = delta_error * controller_weights[motor_id][2];
     
     control_data[motor_id][0] = error;
-    control_data[motor_id][1] = control_data[row][1] + error;
+    control_data[motor_id][1] = control_data[motor_id][1] + error;
 
     return KP+KI+KD;
 }
