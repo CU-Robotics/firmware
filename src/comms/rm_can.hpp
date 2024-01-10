@@ -78,7 +78,7 @@ public:
   /// @param motorID ID of the individual motor, expects indexable ID value
   /// @param valueType MotorAttribute enum for what type of value requested
   /// @return Requested value
-  uint16_t get_motor_attribute(uint16_t canID, uint16_t motorID, MotorAttribute valueType);
+  int get_motor_attribute(uint16_t canID, uint16_t motorID, MotorAttribute valueType);
 
   /// @brief Print off all values associated with specified motor
   /// @param canID ID of the CAN which the motor is on, expects indexable ID value

@@ -3,12 +3,18 @@
 #include "utils/timing.hpp"
 #include "comms/rm_can.hpp"
 #include "sensors/dr16.hpp"
+#include "filters/pid_filter.hpp"
 
 // declare any 'global' variables here
 DR16 dr16;
 rm_CAN can;
 
 Timer loop_timer;
+
+// REMOVE THIS
+PIDFilter fortnite;
+PIDFilter roblox1;
+PIDFilter roblox2;
 
 // DONT put anything else in this function. It is not a setup function
 void print_logo() {
@@ -52,6 +58,11 @@ int main() {
     dr16.init();
     can.init();
 
+    fortnite.K[0] = 0.0125;
+    fortnite.K[2] = 0.005;
+    roblox1.K[0] = 0.0008;
+    roblox2.K[0] = 0.0008;
+
     // main loop
     while (true) {
         dr16.read();
@@ -60,12 +71,33 @@ int main() {
             // SAFETY ON
             can.zero();
             can.zero_motors();
-        }
-        else {
+        } else if (dr16.is_connected() && dr16.get_l_switch() != 1) {
             // SAFETY OFF
 
-            // can.write_motor_norm(CAN_2, 5, dr16.get_l_stick_x());
-            Serial.println(dr16.get_l_stick_x());
+            // REMOVE THIS
+            float motor_speed = can.get_motor_attribute(CAN_2, 4, MotorAttribute::SPEED) / 36.0;
+            fortnite.setpoint = dr16.get_l_stick_x() * 200;
+            fortnite.measurement = motor_speed;
+            float output = fortnite.filter(0.001);
+            can.write_motor_norm(CAN_2, 4, C610, output);
+
+            ///
+
+            motor_speed = can.get_motor_attribute(CAN_2, 2, MotorAttribute::SPEED);
+            roblox1.setpoint = -(dr16.get_r_switch()-1) * 4500;
+            roblox1.measurement = motor_speed;
+            output = roblox1.filter(0.001);
+            can.write_motor_norm(CAN_2, 2, C620, output);
+
+            ///
+
+            motor_speed = can.get_motor_attribute(CAN_2, 3, MotorAttribute::SPEED);
+            roblox2.setpoint = (dr16.get_r_switch()-1) * 4500;
+            roblox2.measurement = motor_speed;
+            output = roblox2.filter(0.001);
+            can.write_motor_norm(CAN_2, 3, C620, output);
+
+            can.write_motor_norm(CAN_2, 5, C610, dr16.get_r_stick_x());
 
             can.write();
         }

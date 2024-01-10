@@ -37,8 +37,7 @@ void rm_CAN::read() {
         id -= 1; // subtract by 1 to allow for array indexing
         
         // fill appropriate buffer
-        for (int i = 0; i < CAN_MESSAGE_SIZE; i++)
-            m_input[CAN_1][id][i] = msg1.buf[i];
+        for (int i = 0; i < CAN_MESSAGE_SIZE; i++) m_input[CAN_1][id][i] = msg1.buf[i];
     }
 
     // read from CAN 2
@@ -46,12 +45,11 @@ void rm_CAN::read() {
     
     while (m_can2.read(msg2)) {
         // isolate the ID part of the message id (0x202 becomes 2)
-        int id = msg1.id & 0xf;
+        int id = msg2.id & 0xf;
         id -= 1; // subtract by 1 to allow for array indexing
         
         // fill appropriate buffer
-        for (int i = 0; i < CAN_MESSAGE_SIZE; i++)
-            m_input[CAN_2][id][i] = msg2.buf[i];
+        for (int i = 0; i < CAN_MESSAGE_SIZE; i++) m_input[CAN_2][id][i] = msg2.buf[i];
     }
 }
 
@@ -130,34 +128,33 @@ void rm_CAN::write_motor_norm(uint16_t canID, uint16_t motorID, uint8_t controll
     }
 }
 
-uint16_t rm_CAN::get_motor_attribute(uint16_t canID, uint16_t motorID, MotorAttribute valueType) {
+int rm_CAN::get_motor_attribute(uint16_t canID, uint16_t motorID, MotorAttribute valueType) {
     // return correct value depending on valueType enum
-    switch (valueType) 
-    {
-    case MotorAttribute::ANGLE:
-        return combine_bytes(m_input[canID][motorID][0], m_input[canID][motorID][1]);
-        break;
-    case MotorAttribute::SPEED:
-        return combine_bytes(m_input[canID][motorID][2], m_input[canID][motorID][3]);
-        break;
-    case MotorAttribute::TORQUE:
-        return combine_bytes(m_input[canID][motorID][4], m_input[canID][motorID][5]);
-        break;
-    case MotorAttribute::TEMP:
-        return m_input[canID][motorID][6];
-        break;
+    switch (valueType) {
+        case MotorAttribute::ANGLE:
+            return (uint16_t)(combine_bytes(m_input[canID][motorID][0], m_input[canID][motorID][1]));
+            break;
+        case MotorAttribute::SPEED:
+            return (int16_t)(combine_bytes(m_input[canID][motorID][2], m_input[canID][motorID][3]));
+            break;
+        case MotorAttribute::TORQUE:
+            return (int16_t)(combine_bytes(m_input[canID][motorID][4], m_input[canID][motorID][5]));
+            break;
+        case MotorAttribute::TEMP:
+            return (uint16_t)(m_input[canID][motorID][6]);
+            break;
 
-    default:
-        return 0;
-        break;
+        default:
+            return 0;
+            break;
     }
 }
 
 void rm_CAN::print_motor(uint16_t canID, uint16_t motorID, bool showFullHex) {
     // strip angle, speed, torque, and temp from input array
     uint16_t angle = combine_bytes(m_input[canID][motorID][0], m_input[canID][motorID][0 + 1]);
-    uint16_t speed = combine_bytes(m_input[canID][motorID][2], m_input[canID][motorID][2 + 1]);
-    uint16_t torque = combine_bytes(m_input[canID][motorID][4], m_input[canID][motorID][4 + 1]);
+    int16_t speed = combine_bytes(m_input[canID][motorID][2], m_input[canID][motorID][2 + 1]);
+    int16_t torque = combine_bytes(m_input[canID][motorID][4], m_input[canID][motorID][4 + 1]);
     uint16_t temp = m_input[canID][motorID][6];
 
     // speed and torque are interpreted as signed values. all others are unsigned
@@ -188,4 +185,9 @@ void rm_CAN::print_output() {
     }
   }
   Serial.println();
+}
+
+uint16_t combine_bytes(uint8_t high, uint8_t low) {
+  uint16_t result = 0;
+  return ((result | high) << 8) | low;
 }
