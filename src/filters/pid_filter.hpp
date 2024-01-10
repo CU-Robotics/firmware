@@ -25,4 +25,4 @@ struct PIDFilter {
     }
 };
 
-#endif
+#endif // PID_FILTER_H

@@ -7,4 +7,4 @@ float wrapAngle(float angle) {
 	return angle;
 }
 
-#endif
+#endif // WRAPPING_H

@@ -1,12 +1,15 @@
+#include <Arduino.h>
+
 #include "utils/timing.h"
 #include "comms/rm_can.hpp"
 #include "sensors/dr16.hpp"
 
-// DONT put anything outside of main(). It messes with the .hex execution
+// declare any 'global' variables here
+DR16 dr16;
+rm_CAN can;
 
 // DONT put anything else in this function. It is not a setup function
 void print_logo() {
-    Serial.begin(1000000); // the serial monitor is actually always active (for debug use Serial.println & tycmd)
     if (Serial) {
         Serial.println("TEENSY SERIAL START\n\n");
         Serial.print("\033[1;33m");
@@ -39,11 +42,8 @@ void print_logo() {
 
 // Master loop
 int main() {
+    Serial.begin(1000000); // the serial monitor is actually always active (for debug use Serial.println & tycmd)
     print_logo();
-
-    // declare any 'global' variables here
-    DR16 dr16;
-    rm_CAN can;
 
     // initialize any 'setup' functions here
     dr16.init();

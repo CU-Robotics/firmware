@@ -1,5 +1,6 @@
 #ifndef LOWPASS_FILTER_H
 #define LOWPASS_FILTER_H
+
 class LowpassFilter {
     private:
         float K = 0.4; // default gain
@@ -7,11 +8,11 @@ class LowpassFilter {
 
     public:
         LowpassFilter(float K) { this->K = K; }
-        void setGain(float K) { this->K = K; }
+        void set_gain(float K) { this->K = K; }
         float filter(float measurement) {
             output = (K * output) + ((1 - K) * measurement);
             return output;
         }
 };
 
-#endif
+#endif // LOWPASS_FILTER_H

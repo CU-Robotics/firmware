@@ -13,6 +13,16 @@ void rm_CAN::init() {
     m_can2.setBaudRate(1000000);
     m_can2.enableFIFO(true);
 
+    // set message IDs for CAN 1
+    m_output[CAN_1][0].id = 0x200;
+    m_output[CAN_1][1].id = 0x1ff;
+    m_output[CAN_1][2].id = 0x2ff;
+
+    // set message IDs for CAN 2
+    m_output[CAN_2][0].id = 0x200;
+    m_output[CAN_2][1].id = 0x1ff;
+    m_output[CAN_2][2].id = 0x2ff;
+
     // zero CANs just in case
     zero();
 }
@@ -74,16 +84,6 @@ void rm_CAN::zero_motors() {
             }
         }
     }
-
-    // set message IDs for CAN 1
-    m_output[CAN_1][0].id = 0x200;
-    m_output[CAN_1][1].id = 0x1ff;
-    m_output[CAN_1][2].id = 0x2ff;
-
-    // set message IDs for CAN 2
-    m_output[CAN_2][0].id = 0x200;
-    m_output[CAN_2][1].id = 0x1ff;
-    m_output[CAN_2][2].id = 0x2ff;
 }
 
 void rm_CAN::zero() {
@@ -109,7 +109,7 @@ void rm_CAN::write_motor(uint16_t canID, uint16_t motorID, int32_t value) {
     // expected output by the motors. Explained in motor documentation (page 14-16)
 
     // set big byte to correct index in buffer
-    m_output[canID][messageID].buf[mID * 2]     = (value >> 8) & 0xff;
+    m_output[canID][messageID].buf[mID * 2] = (value >> 8) & 0xff;
     // set small byte to correct index in buffer
     m_output[canID][messageID].buf[mID * 2 + 1] = value & 0xff;
 }
@@ -172,9 +172,4 @@ void rm_CAN::print_output() {
     }
   }
   Serial.println();
-}
-
-uint16_t combine_bytes(uint8_t high, uint8_t low) {
-  uint16_t result = 0;
-  return ((result | high) << 8) | low;
 }
