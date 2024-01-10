@@ -1,12 +1,14 @@
 #include <Arduino.h>
 
-#include "utils/timing.h"
+#include "utils/timing.hpp"
 #include "comms/rm_can.hpp"
 #include "sensors/dr16.hpp"
 
 // declare any 'global' variables here
 DR16 dr16;
 rm_CAN can;
+
+Timer loop_timer;
 
 // DONT put anything else in this function. It is not a setup function
 void print_logo() {
@@ -33,9 +35,9 @@ void print_logo() {
         Serial.println("                   7PY!^^~?PY:                    ");
         Serial.println("                    .!JJJJ?^                      ");
         Serial.print("\033[0m");
-        Serial.println("\n\033[1;92mFW Ver. 2.0.0");
+        Serial.println("\n\033[1;92mFW Ver. 2.1.0");
         Serial.printf("\nLast Built: %s at %s", __DATE__, __TIME__);
-        Serial.printf("\nRun Hash:   %x", ARM_DWT_CYCCNT);
+        Serial.printf("\nRandom Num: %x", ARM_DWT_CYCCNT);
         Serial.println("\033[0m\n");
     }
 }
@@ -46,12 +48,14 @@ int main() {
     print_logo();
 
     // initialize any 'setup' functions here
+    pinMode(13, OUTPUT);
     dr16.init();
     can.init();
 
     // main loop
     while (true) {
         dr16.read();
+        can.read();
         if (!dr16.is_connected() || dr16.get_l_switch() == 1) {
             // SAFETY ON
             can.zero();
@@ -59,12 +63,18 @@ int main() {
         }
         else {
             // SAFETY OFF
-            can.read();
 
-            // control code goes here
+            // can.write_motor_norm(CAN_2, 5, dr16.get_l_stick_x());
+            Serial.println(dr16.get_l_stick_x());
 
             can.write();
         }
+
+        // LED heartbeat
+        millis() % 500 < 100 ? digitalWrite(13, HIGH) : digitalWrite(13, LOW);
+
+        // Keep the loop running at 1kHz
+        loop_timer.delay_millis(1);
     }
 
     return 0;

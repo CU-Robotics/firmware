@@ -19,6 +19,14 @@ constexpr uint16_t NUM_MESSAGE_IDS = 3;   // 3 messages per can: 0x200, 0x1ff, 0
 
 constexpr uint16_t CAN_MESSAGE_SIZE = 8;  // 8 uint8_t's per message buffer
 
+#define C610   0
+#define C620   1
+#define GM6020 2
+
+#define C610_OUTPUT_SCALE  10000
+#define C620_OUTPUT_SCALE  16384
+#define GM6020_OUTPUT_SCALE 30000
+
 /// @brief Simple enum to specify types of values able to be read from motors
 enum MotorAttribute {
   ANGLE, SPEED, TORQUE, TEMP
@@ -56,6 +64,14 @@ public:
   /// @param motorID ID of the individual motor, expects indexable ID value
   /// @param value A value in the range of [-16385, 16384] which maps to [-20A, 20A]
   void write_motor(uint16_t canID, uint16_t motorID, int32_t value);
+
+  /// @brief Sets the output array message for the corresponding motor, with a normalized value input
+  /// @note Does not issue a Write command to the CANs
+  /// @param canID ID of the CAN which the motor is on, expects indexable ID value
+  /// @param motorID ID of the individual motor, expects indexable ID value
+  /// @param motorID Motor controller type (C610, C620, M3508)
+  /// @param value A value in the range of [-1.0, 1.0]
+  void write_motor_norm(uint16_t canID, uint16_t motorID, uint8_t controllerType, float value);
 
   /// @brief Reads and returns value from input array of specified motor
   /// @param canID ID of the CAN which the motor is on, expects indexable ID value

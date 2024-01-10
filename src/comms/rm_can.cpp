@@ -114,6 +114,22 @@ void rm_CAN::write_motor(uint16_t canID, uint16_t motorID, int32_t value) {
     m_output[canID][messageID].buf[mID * 2 + 1] = value & 0xff;
 }
 
+void rm_CAN::write_motor_norm(uint16_t canID, uint16_t motorID, uint8_t controllerType, float value) {
+    switch (controllerType) {
+        case C610:
+            write_motor(canID, motorID, (int)(value*C610_OUTPUT_SCALE));
+            break;
+        case C620:
+            write_motor(canID, motorID, (int)(value*C620_OUTPUT_SCALE));
+            break;
+        case GM6020:
+            write_motor(canID, motorID, (int)(value*GM6020_OUTPUT_SCALE));
+            break;
+        default:
+            Serial.println("CURo WARN: Invalid motor controller type on write_motor_norm() call!");
+    }
+}
+
 uint16_t rm_CAN::get_motor_attribute(uint16_t canID, uint16_t motorID, MotorAttribute valueType) {
     // return correct value depending on valueType enum
     switch (valueType) 
