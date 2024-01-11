@@ -3,10 +3,14 @@
 #include "utils/timing.hpp"
 #include "comms/rm_can.hpp"
 #include "sensors/dr16.hpp"
-// declare any 'global' variables here
+
+// Loop constants
+#define LOOP_FREQ      1000
+#define HEARTBEAT_FREQ 2
+
+// Declare global objects
 DR16 dr16;
 rm_CAN can;
-
 Timer loop_timer;
 
 // DONT put anything else in this function. It is not a setup function
@@ -46,32 +50,37 @@ int main() {
     Serial.begin(1000000); // the serial monitor is actually always active (for debug use Serial.println & tycmd)
     print_logo();
 
-    // initialize any 'setup' functions here
+    // Execute setup functions
     pinMode(13, OUTPUT);
     dr16.init();
     can.init();
 
-    // main loop
+    long long loopc = 0; // Loop counter for heartbeat
+
+    // Main loop
     while (true) {
+        // Read sensors
         dr16.read();
         can.read();
 
         // Controls code goes here
 
+        // Write actuators
         if (!dr16.is_connected() || dr16.get_l_switch() == 1) {
             // SAFETY ON
+            // TODO: Reset all controller integrators here
             can.zero();
-            can.zero_motors();
         } else if (dr16.is_connected() && dr16.get_l_switch() != 1) {
             // SAFETY OFF
             can.write();
         }
 
-        // LED heartbeat
-        millis() % 500 < 100 ? digitalWrite(13, HIGH) : digitalWrite(13, LOW);
+        // LED heartbeat -- linked to loop count to reveal slowdowns and freezes.
+        loopc % (int)(1E3/float(HEARTBEAT_FREQ)) < (int)(1E3/float(5*HEARTBEAT_FREQ)) ? digitalWrite(13, HIGH) : digitalWrite(13, LOW);
+        loopc++;
 
         // Keep the loop running at 1kHz
-        loop_timer.delay_millis(1);
+        loop_timer.delay_micros((int)(1E6/(float)(LOOP_FREQ)));
     }
 
     return 0;
