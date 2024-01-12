@@ -3,11 +3,19 @@
 DR16::DR16() {}
 
 void DR16::init() {
+<<<<<<< HEAD
 	// start Serial5 HardwareSerial with 1
 	Serial5.begin(100000, SERIAL_8E1_RXINV_TXINV);
 	// await any active writing and clear the buffer
 	Serial5.flush();
 	Serial5.clear();
+=======
+	// start Serial8 HardwareSerial with 1
+	Serial8.begin(100000, SERIAL_8E1_RXINV_TXINV);
+	// await any active writing and clear the buffer
+	Serial8.flush();
+	Serial8.clear();
+>>>>>>> main
 
 	// init all input buffers to 0
 	for (int i = 0; i < DR16_PACKET_SIZE; i++) {
@@ -20,26 +28,55 @@ void DR16::init() {
 }
 
 void DR16::read() {
+<<<<<<< HEAD
 	// each channel is 11 bits, minus the switches
 	uint16_t c0{ 0 }, c1{ 0 }, c2{ 0 }, c3{ 0 }, wh{ 0 };
 	uint8_t s1{ 0 }, s2{ 0 };
+=======
+	// each channel is 11 bits, minus the switches and keyboard inputs
+	uint16_t c0{ 0 }, c1{ 0 }, c2{ 0 }, c3{ 0 }, wh{ 0 };
+	uint8_t s1{ 0 }, s2{ 0 }, k1{ 0 }, k2{ 0 };
+>>>>>>> main
 
 	// verify that the receiver is ready to be read
 	// since each packet it sends is 18 bytes, verify that there are exactly 8 bytes in the buffer
 
 	// clear if there are more than 18 bytes, i.e. we missed a previous packet
+<<<<<<< HEAD
 	if (Serial5.available() > DR16_PACKET_SIZE) {
 		Serial5.clear();
+=======
+	if (Serial8.available() > DR16_PACKET_SIZE) {
+		Serial8.clear();
+>>>>>>> main
 		return;
 	}
 
 	// dont read if there are less than 18 bytes, i.e. we caught the packet as it was being written
+<<<<<<< HEAD
 	if (Serial5.available() < DR16_PACKET_SIZE) {
 		return;
 	}
 
 	// issue read command, fills m_inputRaw with 18 bytes
 	Serial5.readBytes(m_inputRaw, DR16_PACKET_SIZE);
+=======
+	if (Serial8.available() < DR16_PACKET_SIZE) {
+    if (millis() - m_disctTime > 250) {
+      m_connected = false;
+    }
+		return;
+	}
+
+  // Serial.println(m_disctTime);
+  m_disctTime = millis();
+  m_connected = true;
+  // Serial.print("CONNCETD: ");
+  // Serial.println(m_connected);
+
+	// issue read command, fills m_inputRaw with 18 bytes
+	Serial8.readBytes(m_inputRaw, DR16_PACKET_SIZE);
+>>>>>>> main
 
 	// set channel values, since each channel is packed within each other, and are 11 bits long
 	// some bit shifting is required
@@ -48,6 +85,11 @@ void DR16::read() {
 	c2 = ((m_inputRaw[4] & 0x01) << 10) | ((m_inputRaw[3] & 0xff) << 2) | ((m_inputRaw[2] & 0xc0) >> 6);
 	c3 = ((m_inputRaw[5] & 0x0f) << 7) | ((m_inputRaw[4] & 0xfe) >> 1);
 	wh = ((m_inputRaw[17] & 0x7) << 8) | m_inputRaw[16];
+<<<<<<< HEAD
+=======
+	k1 = m_inputRaw[14];
+	k2 = m_inputRaw[15];
+>>>>>>> main
 	s1 = (m_inputRaw[5] & 0x30) >> 4;
 	s2 = (m_inputRaw[5] & 0xc0) >> 6;
 
@@ -77,6 +119,29 @@ void DR16::read() {
 		// switches
 		m_input[5] = (float)s1;
 		m_input[6] = (float)s2;
+<<<<<<< HEAD
+=======
+
+		/// data from the rm control client
+		// first byte
+		keys.w = (k1 >> 0) & 0x01;
+		keys.s = (k1 >> 1) & 0x01;
+		keys.a = (k1 >> 2) & 0x01;
+		keys.d = (k1 >> 3) & 0x01;
+		keys.shift = (k1 >> 4) & 0x01;
+		keys.ctrl = (k1 >> 5) & 0x01;
+		keys.q = (k1 >> 6) & 0x01;
+		keys.e = (k1 >> 7) & 0x01;
+		// second byte
+		keys.r = (k1 >> 0) & 0x01;
+		keys.f = (k1 >> 1) & 0x01;
+		keys.g = (k1 >> 2) & 0x01;
+		keys.z = (k1 >> 3) & 0x01;
+		keys.x = (k1 >> 4) & 0x01;
+		keys.c = (k1 >> 5) & 0x01;
+		keys.v = (k1 >> 6) & 0x01;
+		keys.b = (k1 >> 7) & 0x01;
+>>>>>>> main
 	}
 	else {
 		uint32_t dt = micros() - m_prevTime;
@@ -88,7 +153,11 @@ void DR16::read() {
 	}
 
 
+<<<<<<< HEAD
 	Serial.printf("%.4d (%.3f)\t%.4d (%.3f)\t%.4d (%.3f)\t%.4d (%.3f)\t%.4d (%.3f)\t%.4d\t%.4d\n", c0, m_input[0], c1, m_input[1], c2, m_input[2], c3, m_input[3], wh, m_input[4], s1, s2);
+=======
+	// Serial.printf("%.4d (%.3f)\t%.4d (%.3f)\t%.4d (%.3f)\t%.4d (%.3f)\t%.4d (%.3f)\t%.4d\t%.4d\n", c0, m_input[0], c1, m_input[1], c2, m_input[2], c3, m_input[3], wh, m_input[4], s1, s2);
+>>>>>>> main
 	m_prevTime = micros();
 }
 
@@ -156,9 +225,17 @@ float DR16::get_wheel() {
 }
 
 float DR16::get_r_switch() {
+<<<<<<< HEAD
 	return m_input[6];
 }
 
 float DR16::get_l_switch() {
 	return m_input[5];
+=======
+	return m_input[5];
+}
+
+float DR16::get_l_switch() {
+	return m_input[6];
+>>>>>>> main
 }

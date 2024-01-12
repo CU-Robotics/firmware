@@ -1,18 +1,33 @@
 #include "rev_encoder.hpp"
 
-RevEnc::RevEnc(uint8_t pin) {
-    this->pin = pin;
-	freq.begin(this->inPin, FREQMEASUREMULTI_MARK_ONLY);
+RevEncoder::RevEncoder(uint8_t encoder_pin, int baudrate) 
+{
+  this->in_pin = encoder_pin;
+  pinMode(this->in_pin, INPUT);  // Set the pin used to measure the encoder to be an input
+  Serial.begin(baudrate);
+  freq.begin(this->in_pin, FREQMEASUREMULTI_MARK_ONLY);
 }
 
-int RevEnc::getAngleRaw() {
-	while (this->freq.available() > 1) this->freq.read(); // Burn through buffer of values in freq
-	int angle = round(freq.countToNanoseconds(freq.read()) / 1000.0);
-	if (angle >= 1 && angle <= 1025) return angle;
-	return -1;
+void RevEncoder::read() 
+{
+  while (this->freq.available() > 1) 
+  {
+		this->freq.read();
+	}
+  if (freq.available()) 
+  {
+      int frequency = round(this->freq.countToNanoseconds(this->freq.read()) / 1000);
+      this->ticks = frequency % 1024;
+      this->radians =  (((float) this->ticks) / 1024.0) * M_PI * 2;
+  }
 }
 
-float RevEnc::getAngle() {
-	int rawAngle = this->getAngleRaw();
-	return rawAngle == -1 ? -1 : map(rawAngle, 1, 1024, -PI*1000.0, PI*1000.0) / 1000.0;
+float RevEncoder::get_angle_ticks() 
+{
+  return this->ticks;
+}
+
+float RevEncoder::get_angle_radians()
+{
+  return this->radians;
 }

@@ -79,6 +79,13 @@ public:
 	/// @return Failure status
 	uint8_t is_fail() { return m_fail; }
 
+<<<<<<< HEAD
+=======
+  	/// @brief Returns a the current connection status for the dr16 controller
+  	/// @return true for connected false for not connected
+  	bool is_connected() { return m_connected; }
+
+>>>>>>> main
 	/// @brief Get the 7 float length input buffer. These values are normalized [-1, 1]
 	/// @return float buffer
 	float* get_input();
@@ -117,6 +124,11 @@ public:
 	/// @brief Prints the raw 18-byte packet from the receiver
 	void print_raw();
 
+<<<<<<< HEAD
+=======
+
+
+>>>>>>> main
 private:
 	/// @brief Maps the input value to a specified value range
 	/// @param value the input value
@@ -132,6 +144,53 @@ private:
 	bool is_data_valid();
 
 public:
+<<<<<<< HEAD
+=======
+
+	/// @brief keeps track of keys pressed on the rm client
+	struct Keys {
+		// just testing with keys at the moment
+		// but will eventually implement
+		// the mouse functionalities.
+
+		/// @brief If the key 'w' is pressed
+		bool w;
+		/// @brief If the key 's' is pressed
+		bool s;
+		/// @brief if the key 'a' is pressed
+		bool a;
+		/// @brief if the key 'd' is pressed
+		bool d;
+		/// @brief if the key 'shift' is pressed
+		bool shift;
+		/// @brief if the key 'ctrl' is pressed
+		bool ctrl;
+		/// @brief if the key 'q' is pressed
+		bool q;
+		/// @brief if the key 'e' is pressed
+		bool e;
+		/// @brief if the key 'r' is pressed
+		bool r;
+		/// @brief if the key 'f' is pressed
+		bool f;
+		/// @brief if the key 'g' is pressed
+		bool g;
+		/// @brief if the key 'z' is pressed
+		bool z;
+		/// @brief if the key 'x' is pressed
+		bool x;
+		/// @brief if the key 'c' is pressed
+		bool c;
+		/// @brief if the key 'v' is pressed
+		bool v;
+		/// @brief if the key 'b' is pressed
+		bool b;
+	};
+
+	/// @brief struct instance to keep track of the rm control data
+	Keys keys;
+
+>>>>>>> main
 	/// @brief normalized input buffer
 	float m_input[DR16_INPUT_VALUE_COUNT] = { 0 };
 
@@ -147,6 +206,13 @@ public:
 	uint32_t m_failTime = 0;
 	/// @brief fail state
 	uint8_t m_fail = false;
+<<<<<<< HEAD
+=======
+	/// @brief connection status
+	uint8_t m_connected = false;
+	/// @brief keeps track of what time the last packet came in
+	uint32_t m_disctTime = 0;
+>>>>>>> main
 };
 
 #endif // DR16_HPP

@@ -1,16 +1,34 @@
+#include <cmath>
 #include <FreqMeasureMulti.h>
 
 #ifndef REV_ENCODER_H
 #define REV_ENCODER_H
 
-class RevEncoder {
+/// @brief the class for the Rev Through Bore Encoder(www.revrobotics.com/rev-11-1271/)
+class RevEncoder 
+{
 	private:
-		uint8_t pin;
+		/// @brief the pin number that the encoder's signal pin is plugged into
+		uint8_t in_pin;
+		/// @brief Used to read rise time of the encoder
 		FreqMeasureMulti freq;
+		/// @brief measure of current angle in ticks [0, 1023]
+		int ticks;
+		/// @brief measure of current angle in radians [0, 2pi)
+		float radians;
 	public:
-		RevEncoder(uint8_t pin);
-		int getRawOutput();
-		float getAngle();
+		/// @brief Construct a new rev_encoder object
+		/// @param encoder_pin the pin number that the encoders signal pin is plugged into
+		/// @param baudrate the desired baudrate for the encoder
+		RevEncoder(uint8_t encoder_pin, int baudrate);
+		/// @brief updates ticks and radians to the current angle 
+		void read();
+		/// @brief get the last angle of the encoder in ticks
+		/// @return the last angle of the encoder in ticks [0, 1023]
+		float get_angle_ticks();
+		/// @brief get the last angle of the encoder in radians
+		/// @return the last angle of the encoder in radians [0, 2pi)
+		float get_angle_radians();
 };
 
 #endif
