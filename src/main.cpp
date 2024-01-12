@@ -4,17 +4,63 @@
 #include "comms/rm_can.hpp"
 #include "sensors/dr16.hpp"
 #include "filters/pid_filter.hpp"
+#include "SPI.h"
+
+
+#define MT6835_OP_READ  0b0011
+#define MT6835_OP_WRITE 0b0110
+#define MT6835_OP_PROG  0b1100
+#define MT6835_OP_ZERO  0b0101
+#define MT6835_OP_ANGLE 0b1010
+
+#define MT6835_CMD_MASK  0b111100000000000000000000
+#define MT6835_ADDR_MASK 0b000011111111111100000000
+#define MT6835_DATA_MASK 0b000000000000000011111111
+
+#define MT6835_CPR 2097152
+
+#define MT6835_STATUS_OVERSPEED 0x01
+#define MT6835_STATUS_WEAKFIELD 0x02
+#define MT6835_STATUS_UNDERVOLT 0x04
+#define MT6835_CRC_ERROR 0x08
+
+#define MT6835_WRITE_ACK 0x55
+
+#define MT6835_REG_USERID 0x001
+
+#define MT6835_REG_ANGLE1 0x003
+#define MT6835_REG_ANGLE2 0x004
+#define MT6835_REG_ANGLE3 0x005
+#define MT6835_REG_ANGLE4 0x006
+
+#define MT6835_REG_ABZ_RES1 0x007
+#define MT6835_REG_ABZ_RES2 0x008
+
+#define MT6835_REG_ZERO1 0x009
+#define MT6835_REG_ZERO2 0x00A
+
+#define MT6835_REG_OPTS0 0x00A
+#define MT6835_REG_OPTS1 0x00B
+#define MT6835_REG_OPTS2 0x00C
+#define MT6835_REG_OPTS3 0x00D
+#define MT6835_REG_OPTS4 0x00E
+#define MT6835_REG_OPTS5 0x011
+
+// NLC table, 192 bytes
+#define MT6835_REG_NLC_BASE 0x013
+#define MT6835_REG_CAL_STATUS 0x113
+
+#define MT6835_BITORDER MSBFIRST
+
 
 // declare any 'global' variables here
 DR16 dr16;
 rm_CAN can;
+static SPISettings settings(1000000, MT6835_BITORDER, SPI_MODE3);
 
 Timer loop_timer;
 
-// REMOVE THIS
-PIDFilter fortnite;
-PIDFilter roblox1;
-PIDFilter roblox2;
+PIDFilter calib_motor_pid;
 
 // DONT put anything else in this function. It is not a setup function
 void print_logo() {
@@ -41,7 +87,7 @@ void print_logo() {
         Serial.println("                   7PY!^^~?PY:                    ");
         Serial.println("                    .!JJJJ?^                      ");
         Serial.print("\033[0m");
-        Serial.println("\n\033[1;92mFW Ver. 2.1.0");
+        Serial.println("\n\033[1;92mFW Ver. 999.999.999");
         Serial.printf("\nLast Built: %s at %s", __DATE__, __TIME__);
         Serial.printf("\nRandom Num: %x", ARM_DWT_CYCCNT);
         Serial.println("\033[0m\n");
@@ -58,46 +104,73 @@ int main() {
     dr16.init();
     can.init();
 
-    fortnite.K[0] = 0.0125;
-    fortnite.K[2] = 0.005;
-    roblox1.K[0] = 0.0008;
-    roblox2.K[0] = 0.0008;
+    int nCS = 36;
+    pinMode(nCS, OUTPUT);
+    pinMode(6, OUTPUT);
+    digitalWrite(nCS, HIGH);
+    Serial.println("Starting SPI");
+    SPI.begin();
+    Serial.println("SPI Started");
+
+    calib_motor_pid.K[0] = 0.0002;
 
     // main loop
     while (true) {
         dr16.read();
         can.read();
+
+        //// CALIB
+        // uint8_t data[3] = {0};
+        // data[0] = MT6835_OP_READ << 4 | MT6835_REG_CAL_STATUS >> 8;
+        // data[1] = MT6835_REG_CAL_STATUS;
+
+        // SPI.beginTransaction(settings);
+        // digitalWrite(nCS, LOW);
+        // SPI.transfer(data, 3);
+        // digitalWrite(nCS, HIGH);
+        // SPI.endTransaction();
+
+        // Serial.println(data[2] >> 6);
+        ////
+
+        //// READ
+        uint8_t data[6]; // transact 48 bits
+        data[0] = (MT6835_OP_ANGLE<<4);
+        data[1] = MT6835_REG_ANGLE1;
+        data[2] = 0;
+        data[3] = 0;
+        data[4] = 0;
+        data[5] = 0;
+        SPI.beginTransaction(settings);
+        digitalWrite(nCS, LOW);
+        SPI.transfer(data, 6);
+        digitalWrite(nCS, HIGH);
+        SPI.endTransaction();
+        int raw_angle = (data[2] << 13) | (data[3] << 5) | (data[4] >> 3);
+        float angle = raw_angle / (float)MT6835_CPR * (3.14159265 * 2.0);
+        float degrees = angle * 57.2957795131;
+        // Serial.println(angle);
+        // Serial.println(raw_angle);
+        Serial.printf("%0.2f\n", degrees);
+        ////
+
         if (!dr16.is_connected() || dr16.get_l_switch() == 1) {
             // SAFETY ON
             can.zero();
             can.zero_motors();
-        } else if (dr16.is_connected() && dr16.get_l_switch() != 1) {
+            digitalWrite(6, LOW);
+        } else if (dr16.is_connected() && dr16.get_l_switch() == 3) {
             // SAFETY OFF
 
-            // REMOVE THIS
-            float motor_speed = can.get_motor_attribute(CAN_2, 4, MotorAttribute::SPEED) / 36.0;
-            fortnite.setpoint = dr16.get_l_stick_x() * 200;
-            fortnite.measurement = motor_speed;
-            float output = fortnite.filter(0.001);
-            can.write_motor_norm(CAN_2, 4, C610, output);
-
-            ///
-
-            motor_speed = can.get_motor_attribute(CAN_2, 2, MotorAttribute::SPEED);
-            roblox1.setpoint = -(dr16.get_r_switch()-1) * 4500;
-            roblox1.measurement = motor_speed;
-            output = roblox1.filter(0.001);
-            can.write_motor_norm(CAN_2, 2, C620, output);
-
-            ///
-
-            motor_speed = can.get_motor_attribute(CAN_2, 3, MotorAttribute::SPEED);
-            roblox2.setpoint = (dr16.get_r_switch()-1) * 4500;
-            roblox2.measurement = motor_speed;
-            output = roblox2.filter(0.001);
-            can.write_motor_norm(CAN_2, 3, C620, output);
-
-            can.write_motor_norm(CAN_2, 5, C610, dr16.get_r_stick_x());
+            //// CALIBRATE
+            digitalWrite(6, HIGH);
+            float motor_speed = can.get_motor_attribute(CAN_2, 4, MotorAttribute::SPEED);
+            calib_motor_pid.setpoint = 4800;
+            calib_motor_pid.measurement = motor_speed;
+            float output = calib_motor_pid.filter(0.001);
+            can.write_motor_norm(CAN_2, 4, C620, output);
+            Serial.println(motor_speed);
+            ////
 
             can.write();
         }
@@ -111,3 +184,6 @@ int main() {
 
     return 0;
 }
+
+
+// Calibrated at 4800 RPM
