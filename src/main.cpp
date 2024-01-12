@@ -104,7 +104,7 @@ int main() {
     dr16.init();
     can.init();
 
-    int nCS = 36;
+    int nCS = 37;
     pinMode(nCS, OUTPUT);
     pinMode(6, OUTPUT);
     digitalWrite(nCS, HIGH);
@@ -149,7 +149,7 @@ int main() {
         int raw_angle = (data[2] << 13) | (data[3] << 5) | (data[4] >> 3);
         float radians = raw_angle / (float)MT6835_CPR * (3.14159265*2.0);
         float degrees = radians * (180/3.14159265);
-        Serial.printf("%0.2f\n degrees      %0.3f\n radians", degrees, radians);
+        Serial.printf("%0.2f degrees      %0.3f radians\n", degrees, radians);
         ////
 
         if (!dr16.is_connected() || dr16.get_l_switch() == 1) {
