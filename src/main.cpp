@@ -147,11 +147,9 @@ int main() {
         digitalWrite(nCS, HIGH);
         SPI.endTransaction();
         int raw_angle = (data[2] << 13) | (data[3] << 5) | (data[4] >> 3);
-        float angle = raw_angle / (float)MT6835_CPR * (3.14159265 * 2.0);
-        float degrees = angle * 57.2957795131;
-        // Serial.println(angle);
-        // Serial.println(raw_angle);
-        Serial.printf("%0.2f\n", degrees);
+        float radians = raw_angle / (float)MT6835_CPR * (3.14159265*2.0);
+        float degrees = radians * (180/3.14159265);
+        Serial.printf("%0.2f\n degrees      %0.3f\n radians", degrees, radians);
         ////
 
         if (!dr16.is_connected() || dr16.get_l_switch() == 1) {
