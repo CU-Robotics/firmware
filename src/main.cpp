@@ -104,9 +104,10 @@ int main() {
     dr16.init();
     can.init();
 
-    int nCS = 37;
+    int nCS = 37; // 37 or 36 (enc 1, enc 2)
+    int nCAL = 6; // 6 or 5 (enc 1, enc 2)
     pinMode(nCS, OUTPUT);
-    pinMode(6, OUTPUT);
+    pinMode(nCAL, OUTPUT);
     digitalWrite(nCS, HIGH);
     Serial.println("Starting SPI");
     SPI.begin();
@@ -119,55 +120,51 @@ int main() {
         dr16.read();
         can.read();
 
-        //// CALIB
-        // uint8_t data[3] = {0};
-        // data[0] = MT6835_OP_READ << 4 | MT6835_REG_CAL_STATUS >> 8;
-        // data[1] = MT6835_REG_CAL_STATUS;
-
-        // SPI.beginTransaction(settings);
-        // digitalWrite(nCS, LOW);
-        // SPI.transfer(data, 3);
-        // digitalWrite(nCS, HIGH);
-        // SPI.endTransaction();
-
-        // Serial.println(data[2] >> 6);
-        ////
-
-        //// READ
-        uint8_t data[6]; // transact 48 bits
-        data[0] = (MT6835_OP_ANGLE<<4);
-        data[1] = MT6835_REG_ANGLE1;
-        data[2] = 0;
-        data[3] = 0;
-        data[4] = 0;
-        data[5] = 0;
-        SPI.beginTransaction(settings);
-        digitalWrite(nCS, LOW);
-        SPI.transfer(data, 6);
-        digitalWrite(nCS, HIGH);
-        SPI.endTransaction();
-        int raw_angle = (data[2] << 13) | (data[3] << 5) | (data[4] >> 3);
-        float radians = raw_angle / (float)MT6835_CPR * (3.14159265*2.0);
-        float degrees = radians * (180/3.14159265);
-        Serial.printf("%d raw      %0.8f degrees      %0.8f radians\n", raw_angle, degrees, radians);
-        ////
-
         if (!dr16.is_connected() || dr16.get_l_switch() == 1) {
             // SAFETY ON
             can.zero();
             can.zero_motors();
             digitalWrite(6, LOW);
+
+            //// READ
+            uint8_t data[6] = {0}; // transact 48 bits
+            data[0] = (MT6835_OP_ANGLE<<4);
+            data[1] = MT6835_REG_ANGLE1;
+            SPI.beginTransaction(settings);
+            digitalWrite(nCS, LOW);
+            SPI.transfer(data, 6);
+            digitalWrite(nCS, HIGH);
+            SPI.endTransaction();
+            int raw_angle = (data[2] << 13) | (data[3] << 5) | (data[4] >> 3);
+            float radians = raw_angle / (float)MT6835_CPR * (3.14159265*2.0);
+            float degrees = radians * (180/3.14159265);
+            ////
+            Serial.printf("%d raw      %0.8f degrees      %0.8f radians\n", raw_angle, degrees, radians);
         } else if (dr16.is_connected() && dr16.get_l_switch() == 3) {
             // SAFETY OFF
+            digitalWrite(nCAL, HIGH);
 
             //// CALIBRATE
-            digitalWrite(6, HIGH);
+            uint8_t data[3] = {0};
+            data[0] = MT6835_OP_READ << 4 | MT6835_REG_CAL_STATUS >> 8;
+            data[1] = MT6835_REG_CAL_STATUS;
+
+            SPI.beginTransaction(settings);
+            digitalWrite(nCS, LOW);
+            SPI.transfer(data, 3);
+            digitalWrite(nCS, HIGH);
+            SPI.endTransaction();
+
+            int calib_mode = data[2] >> 6;
+
+            ////
+
             float motor_speed = can.get_motor_attribute(CAN_2, 4, MotorAttribute::SPEED);
             calib_motor_pid.setpoint = 4800;
             calib_motor_pid.measurement = motor_speed;
             float output = calib_motor_pid.filter(0.001);
             can.write_motor_norm(CAN_2, 4, C620, output);
-            Serial.println(motor_speed);
+            Serial.printf("CALIBRATING! %f motor rpm      %f calibration mode\n", motor_speed, calib_mode);
             ////
 
             can.write();
