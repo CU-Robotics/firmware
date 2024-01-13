@@ -79,7 +79,7 @@ int main() {
         loopc % (int)(1E3/float(HEARTBEAT_FREQ)) < (int)(1E3/float(5*HEARTBEAT_FREQ)) ? digitalWrite(13, HIGH) : digitalWrite(13, LOW);
         loopc++;
 
-        // Keep the loop running at 1kHz
+        // Keep the loop running at the desired rate
         loop_timer.delay_micros((int)(1E6/(float)(LOOP_FREQ)));
     }
 
