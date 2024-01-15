@@ -164,7 +164,7 @@ int main() {
             calib_motor_pid.measurement = motor_speed;
             float output = calib_motor_pid.filter(0.001);
             can.write_motor_norm(CAN_2, 4, C620, output);
-            Serial.printf("CALIBRATING! %f motor rpm      %f calibration mode\n", motor_speed, calib_mode);
+            Serial.printf("CALIBRATING! %f motor rpm      %d calibration mode\n", motor_speed, calib_mode);
             ////
 
             can.write();
