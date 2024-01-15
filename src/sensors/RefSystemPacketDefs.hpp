@@ -1,6 +1,8 @@
 #ifndef REF_SYSTEM_PACKET_DEFINITIONS_HPP
 #define REF_SYSTEM_PACKET_DEFINITIONS_HPP
 
+#include <Arduino.h>
+
 constexpr uint16_t REF_MAX_PACKET_SIZE = 128;
 constexpr uint16_t REF_MAX_COMMAND_ID = 0x0307;
 
@@ -30,7 +32,9 @@ enum FrameType {
     INTER_ROBOT_COMM = 0x0301
 };
 
+/// @brief Struct for the Frame header portion
 struct FrameHeader {
+    /// @brief size of packet sent by Ref System in bytes
     static const uint8_t packet_size = 5;
 
     /// @brief Start of Frame byte, should be 0xAF if valid frame
@@ -38,10 +42,18 @@ struct FrameHeader {
     /// @brief length of the FrameData portion of a Frame
     uint16_t data_length = 0;
     /// @brief Sequence number, increments per frame, wraps around 255
-    uint8_t sequence = 0;
+    uint8_t sequence = 0;    void print()
+    {
+        Serial.printf("\tSOF: %x\n", SOF);
+        Serial.printf("\tLength: %u\n", data_length);
+        Serial.printf("\tSequence: %u\n", sequence);
+        Serial.printf("\tCRC: %x\n", CRC);
+    }
+
     /// @brief An 8-bit CRC for the FrameHeader only
     uint8_t CRC = 0;
 
+    /// @brief 
     void print() {
         Serial.printf("\tSOF: %x\n", SOF);
         Serial.printf("\tLength: %u\n", data_length);
@@ -50,11 +62,13 @@ struct FrameHeader {
     }
 };
 
+/// @brief Struct for the Frame data portion
 struct FrameData {
     /// @brief Data array to hold the Frame data portion
     uint8_t data[REF_MAX_PACKET_SIZE] = { 0 };
 
     /// @brief Helpful index operator. Allows array-like indexing from the object itself
+    /// @param index index
     uint8_t operator[](int index) {
         return data[index];
     }
@@ -70,6 +84,7 @@ struct Frame {
     /// @brief 16-bit CRC for the entire Frame
     uint16_t CRC = 0;
 
+    /// @brief 
     void print() {
         Serial.println("Read Frame:");
         header.print();
@@ -99,6 +114,7 @@ struct GameStatus {
     /// @brief UNIX time, effective after the robot is correctly linked to the Referee System’s NTP server
     uint64_t real_time = 0;
 
+    /// @brief 
     void initialize_from_data(FrameData& data) {
         game_config[0] = data[0] & 0x0f;
         game_config[1] = (data[0] & 0xf0) >> 4;
@@ -113,6 +129,7 @@ struct GameStatus {
         real_time = (real_time << 8) | data[3];
     }
 
+    /// @brief 
     void print() {
         Serial.println("--==GameStatus Frame==--");
         Serial.printf("Game Type: %x\n", game_config[0]);
@@ -132,10 +149,12 @@ struct GameResult {
     /// @brief 0 = Draw, 1 = Red, 2 = Blue
     uint8_t winner = 0;
 
+    /// @brief 
     void initialize_from_data(FrameData& data) {
         winner = data[0];
     }
 
+    /// @brief 
     void print() {
         Serial.println("--== GameResult Frame ==--");
         Serial.printf("Match Winner: %x\n", winner);
@@ -167,6 +186,7 @@ struct RobotHealth {
     /// @brief [7] = Base    
     uint16_t blue_robot_HP[8] = { 0 };
 
+    /// @brief 
     void initialize_from_data(FrameData& data) {
         for (int i = 0; i < 8; i++) {
             red_robot_HP[i] = (data[i * 2 + 1] << 8) | data[i * 2];
@@ -177,6 +197,7 @@ struct RobotHealth {
         }
     }
 
+    /// @brief 
     void print() {
         Serial.println("--== RobotHealth Frame ==--");
         Serial.printf("Red Hero: %u\n", red_robot_HP[0]);
@@ -229,6 +250,7 @@ struct SiteEvent {
     /// @brief Whether the Sentry is in own Patrol Zone
     uint8_t is_sentry_in_patrol_zone = 0;
 
+    /// @brief 
     void initialize_from_data(FrameData& data) {
         restoration_zone_occupation[0] = data[0] & 0x01; // bit 0
         restoration_zone_occupation[1] = data[0] & 0x02; // bit 1
@@ -248,6 +270,7 @@ struct SiteEvent {
         is_sentry_in_patrol_zone = (data[3] & 0x08) >> 3; // bit 28
     }
 
+    /// @brief 
     void print() {
         Serial.println("--== SiteEvent Frame ==--");
         Serial.printf("Restoration Zone Occupation: f:%x l:%x r:%x\n", restoration_zone_occupation[0], restoration_zone_occupation[1], restoration_zone_occupation[2]);
@@ -279,6 +302,7 @@ struct ProjectileSupplier {
     /// @brief Number of supplied projectiles
     uint8_t supplied_count = 0;
 
+    /// @brief 
     void initialize_from_data(FrameData& data) {
         corresponding_ID[0] = data[0];
         corresponding_ID[1] = data[1];
@@ -287,6 +311,7 @@ struct ProjectileSupplier {
         supplied_count = data[3];
     }
 
+    /// @brief 
     void print() {
         Serial.println("--== ProjectileSupplier Frame ==--");
         Serial.printf("Supplier ID: %x\n", corresponding_ID[0]);
@@ -311,11 +336,13 @@ struct RefereeWarning {
     /// @note In the case of a forfeiture or where both teams have been issued a Yellow Card, the value is 0.
     uint8_t robot_ID = 0;
 
+    /// @brief 
     void initialize_from_data(FrameData& data) {
         penalty_level = data[0];
         robot_ID = data[1];
     }
 
+    /// @brief 
     void print() {
         Serial.println("--== RefereeWarning Frame ==--");
         Serial.printf("Penalty Level: %x\n", penalty_level);
@@ -337,6 +364,7 @@ struct DartLaunch {
         dart_remaining_time = data[0];
     }
 
+    /// @brief 
     void print() {
         Serial.println("--== DartLaunch Frame ==--");
         Serial.printf("Reamining Time: %us\n", dart_remaining_time);
@@ -382,6 +410,7 @@ struct RobotPerformance {
     /// @brief [2] = Output from shooter port
     uint8_t power_output_status[3] = { 0 };
 
+    /// @brief 
     void initialize_from_data(FrameData& data) {
         robot_ID = data[0];
         robot_level = data[1];
@@ -408,6 +437,7 @@ struct RobotPerformance {
         power_output_status[2] = (data[26] & 0x04) >> 2;
     }
 
+    /// @brief 
     void print() {
         Serial.println("--== RobotPerformance Frame ==--");
         Serial.printf("Robot ID: %x\n", robot_ID);
@@ -443,6 +473,7 @@ struct PowerHeat {
     /// @brief [2] = 42mm 
     uint16_t barrel_heat[3] = { 0 };
 
+    /// @brief 
     void initialize_from_data(FrameData& data) {
         chassis_power_status[0] = (data[1] << 8) | data[0];
         chassis_power_status[1] = (data[3] << 8) | data[2];
@@ -460,6 +491,7 @@ struct PowerHeat {
         barrel_heat[2] = (data[15] << 8) | data[14];
     }
 
+    /// @brief 
     void print() {
         Serial.println("--== PowerHeat Frame ==--");
         Serial.printf("Chassis Voltage: %umV\n", chassis_power_status[0]);
@@ -488,6 +520,7 @@ struct RobotPosition {
     /// @note This value is highly dependant on physical attachment of the speed monitor
     float angle = 0.f;
 
+    /// @brief 
     void initialize_from_data(FrameData& data) {
         uint32_t rawFloat = 0;
         int i = 0;
@@ -520,6 +553,7 @@ struct RobotPosition {
         memcpy(&angle, &rawFloat, sizeof(float));
     }
 
+    /// @brief 
     void print() {
         Serial.println("--== RobotPosition Frame ==--");
         Serial.printf("X: %fm\n", position[0]);
@@ -542,6 +576,7 @@ struct RobotBuff {
     /// @brief [3] = Robot attack buff (in percentage)
     uint8_t buff_status[4] = { 0 };
 
+    /// @brief 
     void initialize_from_data(FrameData& data) {
         buff_status[0] = data[0];
         buff_status[1] = data[1];
@@ -549,6 +584,7 @@ struct RobotBuff {
         buff_status[3] = data[3];
     }
 
+    /// @brief 
     void print() {
         Serial.println("--== RobotBuff Frame ==--");
         Serial.printf("HP Buff: %u%\n", buff_status[0]);
@@ -570,11 +606,13 @@ struct AirSupportTime {
     /// @brief [1] = Time remaining of this status (in seconds) (truncated to lowest integer)
     uint8_t air_status[2] = { 0 };
 
+    /// @brief 
     void initialize_from_data(FrameData& data) {
         air_status[0] = data[0];
         air_status[1] = data[1];
     }
 
+    /// @brief 
     void print() {
         Serial.println("--== AirSupportTime Frame ==--");
         Serial.printf("Aerial Robot Status: %x\n", air_status[0]);
@@ -593,11 +631,13 @@ struct DamageStatus {
     /// @brief [1] = Type of HP change: 0 = Projectile, 1 = Module offline, 2 = Shooting too fast, 3 = barrel heat, 4 = Power consumption, 5 = collision
     uint8_t hurt_status[2] = { 0 };
 
+    /// @brief
     void initialize_from_data(FrameData& data) {
         hurt_status[0] = data[0] & 0x0f;
         hurt_status[1] = (data[0] & 0xf0) >> 4;
     }
 
+    /// @brief
     void print() {
         Serial.println("--== DamageStatus Frame ==--");
         Serial.printf("Armor Plate ID: %x\n", hurt_status[0]);
@@ -623,6 +663,7 @@ struct LaunchingEvent {
     /// @brief Projectile initial speed (unit: m/s)
     float projectile_initial_speed = 0.f;
 
+    /// @brief
     void initialize_from_data(FrameData& data) {
         barrel_data[0] = data[0];
         barrel_data[1] = data[1];
@@ -637,6 +678,7 @@ struct LaunchingEvent {
         memcpy(&projectile_initial_speed, &rawFloat, sizeof(float));
     }
 
+    /// @brief
     void print() {
         Serial.println("--== LaunchingEvent Frame ==--");
         Serial.printf("Projectile Type: %x\n", barrel_data[0]);
@@ -658,12 +700,14 @@ struct ProjectileAllowance {
     /// @brief [2] = remaining gold coins
     uint16_t allowance[3] = { 0 };
 
+    /// @brief
     void initialize_from_data(FrameData& data) {
         allowance[0] = (data[1] << 8) | data[0];
         allowance[1] = (data[3] << 8) | data[2];
         allowance[2] = (data[5] << 8) | data[4];
     }
 
+    /// @brief
     void print() {
         Serial.println("--== ProjectileAllowance Frame ==--");
         Serial.printf("17mm Allowance: %u\n", allowance[0]);
@@ -683,6 +727,7 @@ struct RFIDData {
     /// @note See Referee System Specification on what each bit represents. Remember it's little endian
     uint32_t RFID_status = 0;
 
+    /// @brief
     void initialize_from_data(FrameData& data) {
         RFID_status = data[3];
         RFID_status = (RFID_status << 8) | data[2];
@@ -690,6 +735,7 @@ struct RFIDData {
         RFID_status = (RFID_status << 8) | data[0];
     }
 
+    /// @brief
     void print() {
         Serial.println("--== RFID Frame ==--");
         Serial.println("Not broken up. Todo");
@@ -713,6 +759,7 @@ struct DartCommand {
     /// @brief [1] = Time remaining in the competition when the Operator confirms the launch command for the last time (seconds)
     uint16_t time_status[2] = { 0 };
 
+    /// @brief
     void initialize_from_data(FrameData& data) {
         dart_status[0] = data[0];
         dart_status[1] = data[1];
@@ -721,6 +768,7 @@ struct DartCommand {
         time_status[1] = (data[5] << 8) | data[4];
     }
 
+    /// @brief
     void print() {
         Serial.println("--== DartCommand Frame ==--");
         Serial.printf("Door Status: %x\n", dart_status[0]);
@@ -746,6 +794,7 @@ struct GroundRobotPosition {
     /// @brief [8, 9] = X/Y of Standard 5 robot
     float positions[10] = { 0.f };
 
+    /// @brief
     void initialize_from_data(FrameData& data) {
         for (int i = 0; i < 10; i++) {
             uint32_t rawFloat = 0;
@@ -758,6 +807,7 @@ struct GroundRobotPosition {
         }
     }
 
+    /// @brief
     void print() {
         Serial.println("--== GroundRobotPosition Frame ==--");
         Serial.printf("Hero Position: x:%fm\ty:%fm\n", positions[0], positions[1]);
@@ -784,12 +834,14 @@ struct RadarProgress {
     /// @brief [5] = Marked progress of Sentry 
     uint8_t mark_progress[6] = { 0 };
 
+    /// @brief
     void initialize_from_data(FrameData& data) {
         for (int i = 0; i < 6; i++) {
             mark_progress[i] = data[i];
         }
     }
 
+    /// @brief
     void print() {
         Serial.println("--== RadarProgress Frame ==--");
         Serial.printf("Mark Progress of Hero: %u\n", mark_progress[0]);
@@ -816,6 +868,7 @@ struct InterRobotComm {
     /// @brief Actual data array holding our byte reperesentation of whatever were sending
     uint8_t data[REF_MAX_PACKET_SIZE] = { 0 };
 
+    /// @brief
     void initialize_from_data(Frame& frame) {
         size = frame.header.data_length - 6;
 
@@ -828,6 +881,7 @@ struct InterRobotComm {
         }
     }
 
+    /// @brief
     void print() {
         for (int i = 0; i < size; i++) {
             Serial.printf("%x ", data[i]);

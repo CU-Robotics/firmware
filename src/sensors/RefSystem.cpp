@@ -1,6 +1,7 @@
 #include "RefSystem.hpp"
 
-uint8_t generateCRC8(uint8_t* data, uint32_t len) {
+uint8_t generateCRC8(uint8_t* data, uint32_t len)
+{
     uint8_t CRC8 = 0xFF;
     while (len-- > 0) {
         uint8_t curr = CRC8 ^ (*data++);

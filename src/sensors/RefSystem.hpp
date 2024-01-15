@@ -67,25 +67,45 @@ const uint16_t CRC16Lookup[256] = {
 
 /// @brief Encompassing all read-able packet structs of the Ref System
 struct RefData {
+    /// @brief 
     GameStatus game_status{};
+    /// @brief 
     GameResult game_result{};
+    /// @brief 
     RobotHealth robot_health{};
+    /// @brief 
     SiteEvent site_event{};
+    /// @brief 
     ProjectileSupplier proj_supplier{};
+    /// @brief 
     RefereeWarning ref_warning{};
+    /// @brief 
     DartLaunch dart_launch{};
+    /// @brief 
     RobotPerformance robot_performance{};
+    /// @brief 
     PowerHeat power_heat{};
+    /// @brief 
     RobotPosition position{};
+    /// @brief 
     RobotBuff robot_buff{};
+    /// @brief 
     AirSupportTime air_support_time{};
+    /// @brief 
     DamageStatus damage_status{};
+    /// @brief 
     LaunchingEvent launching_event{};
+    /// @brief 
     ProjectileAllowance proj_allowance{};
+    /// @brief 
     RFIDData rfid{};
+    /// @brief 
     DartCommand dart_command{};
+    /// @brief 
     GroundRobotPosition ground_positions{};
+    /// @brief 
     RadarProgress radar_progress{};
+    /// @brief
     // robot comm buffer implemented as a circular queue, it will overwrite its own data if not read from
     InterRobotComm inter_robot_comms[REF_MAX_COMM_BUFFER_SIZE];
 };
