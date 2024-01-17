@@ -6,6 +6,8 @@
 constexpr uint16_t REF_MAX_PACKET_SIZE = 128;
 constexpr uint16_t REF_MAX_COMMAND_ID = 0x0307;
 
+/// @cond Doxygen_Suppress
+
 /*--- Ref System Frame Structs ---*/
 
 /// @brief Base enum maping the ref structs to their ID
@@ -890,4 +892,7 @@ struct InterRobotComm {
 
     }
 };
+
+/// @endcond
+
 #endif // REF_SYSTEM_PACKET_DEFINITIONS_HPP
