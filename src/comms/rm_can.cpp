@@ -75,7 +75,7 @@ uint8_t rm_CAN::write() {
 
 void rm_CAN::zero_motors() {
     // go through the entire m_output array and zero the buffers
-    for (int i = 0; i < NUM_CANS; i++) {
+    for (int i = 0; i < NUM_CAN_BUSES; i++) {
         for (int j = 0; j < NUM_MESSAGE_IDS; j++) {
             for (int k = 0; k < CAN_MESSAGE_SIZE; k++) {
                 m_output[i][j].buf[k] = 0;
@@ -98,10 +98,10 @@ void rm_CAN::write_motor(uint16_t canID, uint16_t motorID, int32_t value) {
     //      [0 - 3]  to index 0 (ID: 0x200)
     //      [4 - 7]  to index 1 (ID: 0x1ff)
     //      [8 - 11] to index 2 (ID: 0x2ff)
-    uint8_t messageID = motorID / 4;
+    uint8_t messageID = (motorID-1) / 4;
 
     // mID just finds the 'actual' ID based on what index it should be
-    uint8_t mID = motorID % 4;
+    uint8_t mID = (motorID-1) % 4;
 
     // set to buffer indexes (mID * 2) and (miD * 2 + 1) corresponding to the
     // expected output by the motors. Explained in motor documentation (page 14-16)
@@ -132,16 +132,16 @@ int rm_CAN::get_motor_attribute(uint16_t canID, uint16_t motorID, MotorAttribute
     // return correct value depending on valueType enum
     switch (valueType) {
         case MotorAttribute::ANGLE:
-            return (uint16_t)(combine_bytes(m_input[canID][motorID][0], m_input[canID][motorID][1]));
+            return (uint16_t)(combine_bytes(m_input[canID][motorID-1][0], m_input[canID][motorID-1][1]));
             break;
         case MotorAttribute::SPEED:
-            return (int16_t)(combine_bytes(m_input[canID][motorID][2], m_input[canID][motorID][3]));
+            return (int16_t)(combine_bytes(m_input[canID][motorID-1][2], m_input[canID][motorID-1][3]));
             break;
         case MotorAttribute::TORQUE:
-            return (int16_t)(combine_bytes(m_input[canID][motorID][4], m_input[canID][motorID][5]));
+            return (int16_t)(combine_bytes(m_input[canID][motorID-1][4], m_input[canID][motorID-1][5]));
             break;
         case MotorAttribute::TEMP:
-            return (uint16_t)(m_input[canID][motorID][6]);
+            return (uint16_t)(m_input[canID][motorID-1][6]);
             break;
 
         default:
@@ -152,27 +152,27 @@ int rm_CAN::get_motor_attribute(uint16_t canID, uint16_t motorID, MotorAttribute
 
 void rm_CAN::print_motor(uint16_t canID, uint16_t motorID, bool showFullHex) {
     // strip angle, speed, torque, and temp from input array
-    uint16_t angle = combine_bytes(m_input[canID][motorID][0], m_input[canID][motorID][0 + 1]);
-    int16_t speed = combine_bytes(m_input[canID][motorID][2], m_input[canID][motorID][2 + 1]);
-    int16_t torque = combine_bytes(m_input[canID][motorID][4], m_input[canID][motorID][4 + 1]);
-    uint16_t temp = m_input[canID][motorID][6];
+    uint16_t angle = combine_bytes(m_input[canID][motorID-1][0], m_input[canID][motorID-1][0 + 1]);
+    int16_t speed = combine_bytes(m_input[canID][motorID-1][2], m_input[canID][motorID-1][2 + 1]);
+    int16_t torque = combine_bytes(m_input[canID][motorID-1][4], m_input[canID][motorID-1][4 + 1]);
+    uint16_t temp = m_input[canID][motorID-1][6];
 
     // speed and torque are interpreted as signed values. all others are unsigned
 
     if (showFullHex)
-        Serial.printf("CAN: %x\tMotor: %x\t\t%.4x\t%.4x | %.4x\t%.4x | %.4x\t%.4x | %.4x\t%.4x\n", canID + 1, motorID + 1, (angle >> 8) & 0xff, angle & 0xff, (speed >> 8) & 0xff, speed & 0xff, (torque >> 8) & 0xff, torque & 0xff, temp, 0);
+        Serial.printf("CAN: %x\tMotor: %x\t\t%.4x\t%.4x | %.4x\t%.4x | %.4x\t%.4x | %.4x\t%.4x\n", canID + 1, motorID-1 + 1, (angle >> 8) & 0xff, angle & 0xff, (speed >> 8) & 0xff, speed & 0xff, (torque >> 8) & 0xff, torque & 0xff, temp, 0);
     else 
-        Serial.printf("CAN: %x\tMotor: %x\t\tAngle: %.4u\tSpeed: %.5d\tTorque: %.5d\tTemp: %.2u\n", canID + 1, motorID + 1, angle, speed, torque, temp);
+        Serial.printf("CAN: %x\tMotor: %x\t\tAngle: %.4u\tSpeed: %.5d\tTorque: %.5d\tTemp: %.2u\n", canID + 1, motorID-1 + 1, angle, speed, torque, temp);
 }
 
 void rm_CAN::print_can(uint16_t canID, bool showFullHex) {
     // for all motors, print that motor
-    for (int i = 0; i < NUM_MOTORS; i++)
+    for (int i = 0; i < NUM_MOTORS_PER_BUS; i++)
         print_motor(canID, i, showFullHex);
 }
 
 void rm_CAN::print_output() {
-  for (int i = 0; i < NUM_CANS; i++) {
+  for (int i = 0; i < NUM_CAN_BUSES; i++) {
     Serial.printf("CAN: %x\n", i);
     
     for (int j = 0; j < NUM_MESSAGE_IDS; j++) {

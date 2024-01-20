@@ -13,11 +13,11 @@
 constexpr uint16_t CAN_1 = 0;             // CAN 1 (indexable value)
 constexpr uint16_t CAN_2 = 1;             // CAN 2 (indexable value)
 
-constexpr uint16_t NUM_CANS = 2;          // 2 cans per robot
-constexpr uint16_t NUM_MOTORS = 8;        // 8 motors per can
-constexpr uint16_t NUM_MESSAGE_IDS = 3;   // 3 messages per can: 0x200, 0x1ff, 0x2ff
-
-constexpr uint16_t CAN_MESSAGE_SIZE = 8;  // 8 uint8_t's per message buffer
+#define NUM_CAN_BUSES      2 // 2 cans per robot
+#define NUM_MOTORS_PER_BUS 8 // 8 motors per can
+#define NUM_MOTORS         (NUM_CAN_BUSES * NUM_MOTORS_PER_BUS);
+#define NUM_MESSAGE_IDS    3 // 3 messages per can: 0x200, 0x1ff, 0x2ff
+#define CAN_MESSAGE_SIZE   8 // 8 uint8_t's per message buffer
 
 #define C610   0
 #define C620   1
@@ -101,9 +101,9 @@ private:
   FlexCAN_T4<CAN2, RX_SIZE_256, TX_SIZE_16> m_can2;
 
   /// @brief Output array in the format of CAN_message_t's
-  CAN_message_t m_output[NUM_CANS][NUM_MESSAGE_IDS];
+  CAN_message_t m_output[NUM_CAN_BUSES][NUM_MESSAGE_IDS];
   /// @brief Input array in the format of uint8_t's
-  uint8_t m_input[NUM_CANS][NUM_MOTORS][CAN_MESSAGE_SIZE];
+  uint8_t m_input[NUM_CAN_BUSES][NUM_MOTORS_PER_BUS][CAN_MESSAGE_SIZE];
 };
 
 /// @brief Returns a 2-byte value given 2 1-byte values

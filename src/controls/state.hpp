@@ -40,7 +40,7 @@ class State {
             } else return instance;
         }
 
-        /// @brief Gives the instantaneous governed state reference matrix (also known as desired state
+        /// @brief Gives the instantaneous governed state reference matrix (also known as desired state)
         /// @param reference The array to override with the reference matrix; Must be of shape [STATE_LEN][3]
         void get_reference(float reference[STATE_LEN][3]);
 
