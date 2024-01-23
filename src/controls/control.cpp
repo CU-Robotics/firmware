@@ -18,9 +18,9 @@ void Control::step(float reference[STATE_LEN][3], float estimate[STATE_LEN][3], 
     for (int m = 0; m < NUM_MOTORS; m++) {
         Controller controller = controllers[m];
         float output = 0;
-        for (int s = 0; s < STATE_LEN; s++) {
-            if (kinematics[m][s] == 0) continue;
-            output += controller.step(reference[s], estimate[s]) * kinematics[m][s];
+        for (int j = 0; j < STATE_LEN; j++) {
+            if (kinematics[m][j] == 0) continue;
+            output += controller.step(reference[j], estimate[j]) * kinematics[m][j];
         }
     }
 }
