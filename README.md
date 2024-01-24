@@ -1,4 +1,4 @@
-# firmware
+# firmware 
 This repo contains the source code for the CU Boulder Robotics Teams' microcontroller firmware. It runs on a PJRC Teensy 4.1 and interfaces with any device running `buff-core`.
 
 # Documentation
