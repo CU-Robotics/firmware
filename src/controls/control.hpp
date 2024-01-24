@@ -28,6 +28,9 @@ class Control {
 
         /// @brief Stores motor outputs
         float output[NUM_MOTORS];
+
+        /// @brief get the ratio (between 0 and 1) of power limit. 1 when 60 to 20 and x/20 under 20.
+        float powerlimit_ratio ();
 };
 
 #endif // CONTROL_H
