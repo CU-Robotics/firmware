@@ -13,14 +13,16 @@ void Control::init_controller(uint8_t can_id, uint8_t motor_id, int controller_t
     }
 }
 
-void Control::step(float reference[STATE_LEN][3], float estimate[STATE_LEN][3], float kinematics[NUM_MOTORS][STATE_LEN]) {
+void Control::step(float dt, float reference[STATE_LEN][3], float estimate[STATE_LEN][3], float kinematics[NUM_MOTORS][STATE_LEN], float outputs[NUM_MOTORS]) {
     // Iterate through motors
     for (int m = 0; m < NUM_MOTORS; m++) {
         Controller controller = controllers[m];
         float output = 0;
         for (int s = 0; s < STATE_LEN; s++) {
             if (kinematics[m][s] == 0) continue;
-            output += controller.step(reference[s], estimate[s]) * kinematics[m][s];
+            output += controller.step(dt, reference[s], estimate[s]) * kinematics[m][s];
         }
+        this->output[m] = output;
     }
+    memcpy(this->output, outputs, NUM_MOTORS * sizeof(float));
 }
