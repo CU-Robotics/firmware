@@ -51,8 +51,8 @@ struct PIDPositionController : public Controller {
         }
 
         void reset() {
-          Controller::reset();
-          pid.sumError = 0.0;
+            Controller::reset();
+            pid.sumError = 0.0;
         }
 }
 
@@ -77,9 +77,43 @@ struct PIDVelocityController : public Controller {
         }
 
         void reset() {
-          Controller::reset();
-          pid.sumError = 0.0;
+            Controller::reset();
+            pid.sumError = 0.0;
         }
+}
+
+struct FullStateFeedbackController : public Controller {
+    private:
+        PIDFilter pid1, pid2;
+      
+      public:
+          void set_gains(float gains[NUM_GAINS]) {
+              Controller::set_gains(gains);
+              memcpy(gains[0], pid1.K, sizeof(pid1.K));
+              memcpy(gains[3], pid2.K, sizeof(pid2.K));
+          }
+
+          float step(float reference[3], float estimate[3]) {
+              float dt = timer.delta();
+              float output = 0.0;
+
+              pid1.setpoint = reference[0];
+              pid1.measurement = estimate[0];
+
+              pid2.setpoint = reference[1];
+              pid2.measurement = estimate[1];
+
+              output += pid1.filter(dt);
+              output += pid2.filter(dt);
+              
+              return output;
+          }
+
+          void reset() {
+              Controller::reset();
+              pid1.sumError = 0.0;
+              pid2.sumError = 0.0;
+          }
 }
 
 #endif // CONTROLLERS_H
