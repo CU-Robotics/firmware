@@ -12,6 +12,8 @@ byte USBHID::get(int index){
     return packet[index];
 }
 
-void USBHID::put(int index, byte* value){
-    packet[index] = value;
-}
+
+
+
+
+
