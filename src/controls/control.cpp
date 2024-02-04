@@ -7,6 +7,15 @@ void Control::init_controller(uint8_t can_id, uint8_t motor_id, int controller_t
         case 0:
             controllers[index] = new NullController();
             break;
+        case 1:
+            controllers[index] = new PIDPositionController();
+            break;
+        case 2:
+            controllers[index] = new PIDVelocityController();
+            break;
+        case 3:
+            controllers[index] = new FullStateFeedbackController();
+            break;
         default:
             controllers[index] = new NullController();
             break;
