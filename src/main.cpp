@@ -1,6 +1,7 @@
 #include "utils/timing.h"
 #include "comms/rm_can.hpp"
 #include "sensors/dr16.hpp"
+#include "comms/usb_hid.hpp"
 
 // DONT put anything outside of main(). It messes with the .hex execution
 

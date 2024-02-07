@@ -893,10 +893,10 @@ let me know?  http://forum.pjrc.com/forums/4-Suggestions-amp-Bug-Reports
   #define MOUSE_INTERVAL        2
   #define RAWHID_INTERFACE      5	// RawHID
   #define RAWHID_TX_ENDPOINT    6
-  #define RAWHID_TX_SIZE        64
+  #define RAWHID_TX_SIZE        1024
   #define RAWHID_TX_INTERVAL    1
   #define RAWHID_RX_ENDPOINT    6
-  #define RAWHID_RX_SIZE        64
+  #define RAWHID_RX_SIZE        1024
   #define RAWHID_RX_INTERVAL    1
   #define FLIGHTSIM_INTERFACE	6	// Flight Sim Control
   #define FLIGHTSIM_TX_ENDPOINT	9
