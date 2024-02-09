@@ -1,5 +1,7 @@
 #include "buff_encoder.hpp"
 
+const SPISettings BuffEncoder::m_settings = SPISettings(1000000, MT6835_BITORDER, SPI_MODE3);
+
 float BuffEncoder::read()
 {
     uint8_t data[6] = { 0 }; // transact 48 bits

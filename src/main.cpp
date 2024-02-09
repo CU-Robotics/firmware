@@ -14,10 +14,8 @@ DR16 dr16;
 rm_CAN can;
 Timer loop_timer;
 
-static SPISettings settings(1000000, MT6835_BITORDER, SPI_MODE3);
-
-BuffEncoder yaw(YAW_BUFF_CS, settings);
-BuffEncoder pitch(PITCH_BUFF_CS, settings);
+BuffEncoder yaw(YAW_BUFF_CS);
+BuffEncoder pitch(PITCH_BUFF_CS);
 
 // DONT put anything else in this function. It is not a setup function
 void print_logo() {
@@ -61,10 +59,10 @@ int main() {
     dr16.init();
     can.init();
 
-    pinMode(nCS_yaw, OUTPUT);
-    pinMode(nCS_pitch, OUTPUT);
-    digitalWrite(nCS_yaw, HIGH);
-    digitalWrite(nCS_pitch, HIGH);
+    pinMode(YAW_BUFF_CS, OUTPUT);
+    pinMode(PITCH_BUFF_CS, OUTPUT);
+    digitalWrite(YAW_BUFF_CS, HIGH);
+    digitalWrite(PITCH_BUFF_CS, HIGH);
     Serial.println("Starting SPI");
     SPI.begin();
     Serial.println("SPI Started");

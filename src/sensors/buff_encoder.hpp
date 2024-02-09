@@ -48,7 +48,7 @@ class BuffEncoder
 public:
     /// @brief Initialize the encoder object with the specific Chip Select pin
     /// @param cs The Chip Select pin
-    BuffEncoder(int cs, SPISettings settings) : m_CS(cs), m_settings(settings) {};
+    BuffEncoder(int cs) : m_CS(cs) {};
 
     /// @brief Read via SPI the current angle of the encoder
     /// @return Read angle (radians)
@@ -59,6 +59,7 @@ public:
     /// @return Read angle (radians)
     inline float get_angle() const { return m_angle; }
 
+    
 private:
     /// @brief Stored Chip Select pin
     int m_CS = 0;
@@ -67,7 +68,7 @@ private:
     float m_angle = 0.f;
 
     /// @brief The SPI settings of this encoder
-    SPISettings m_settings;
+    static const SPISettings m_settings;
 
 };
 
