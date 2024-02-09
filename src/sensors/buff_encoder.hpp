@@ -67,7 +67,7 @@ private:
     /// @brief Read angle from the encoder
     float m_angle = 0.f;
 
-    /// @brief The SPI settings of this encoder
+    /// @brief The SPI settings of the buff encoders
     static const SPISettings m_settings;
 
 };
