@@ -8,7 +8,7 @@ void EstimatorManager::init_estimator(int state_id){
             estimators[4] = new PitchEstimator(values, buff_sensors[1], can);
             break;
         default:
-            estimators[state_id] = new NullController();
+            estimators[state_id] = new NullEstimator();
     }
 }
 
@@ -22,7 +22,7 @@ void EstimatorManager::step(float outputs[STATE_LEN][3]){
     memcpy(this->output, outputs, STATE_LEN * 3 * sizeof(float))
 }
 
-void EstimatorManager::init(DR16 &dr, rm_CAN &rm_can){
+void EstimatorManager::init(DR16 dr, rm_CAN rm_can){
     pinMode(YAW_BUFF_CS, OUTPUT);
     pinMode(PITCH_BUFF_CS, OUTPUT);
     digitalWrite(YAW_BUFF_CS, HIGH);

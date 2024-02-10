@@ -22,7 +22,7 @@ class EstimatorManager {
         rm_CAN can;
         ICM20649 icm_sensors[NUM_SENSOR_TYPE];
         LSM6DSOX lsm_sensors[NUM_SENSOR_TYPE];
-        RevEncoder rev_sensors[NUM_SENSOR_TYPE];
+        // RevEncoder rev_sensors[NUM_SENSOR_TYPE];
         BuffEncoder buff_sensors[NUM_SENSOR_TYPE];
 
         // ISAAC COMMENTS: Make the above more descriptive with a word that shows that these all do the same thing (icm_sensors. rev_sensors, etc)
@@ -33,7 +33,7 @@ class EstimatorManager {
         static EstimatorManager* instance;
         Estimator estimators[STATE_LEN];
 
-        float [STATE_LEN][3] output;
+        float output[STATE_LEN][3];
 
     public:
         /// @brief Gives the singleton instance
@@ -44,11 +44,15 @@ class EstimatorManager {
             } else return instance;
         }
 
-        void init();
+        void init(DR16 dr, rm_CAN rm_can);
 
         /// @brief Populates the corresponding index of the "estimators" array attribute with an estimator object
-        void init_estimator(int state_id, int estimator_type);
+        void init_estimator(int state_id);
 
         /// @brief Steps through estimators and calculates current state, which is written to the "state" array attribute
-        void step();
-}
+        void step(float state[STATE_LEN][3]);
+
+
+        void read_sensors();
+};
+#endif

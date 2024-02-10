@@ -6,7 +6,7 @@ struct Estimator {
     public:
         Estimator();
 
-        void set_values(float values[8]) { std::memcpy(values, this->values, NUM_SENSOR_VALUES * 4); }
+        void set_values(float values[8]) { memcpy(values, this->values, NUM_SENSOR_VALUES * 4); }
 
         float step_position();
         float step_velocity();
@@ -17,7 +17,7 @@ struct Estimator {
         float values[NUM_SENSOR_VALUES];
 };
 
-struct NullController : public Controller {
+struct NullEstimator : public Estimator {
     public:
         float step_position(){
             return 0;
@@ -30,7 +30,7 @@ struct NullController : public Controller {
         float step_acceleration(){
             return 0;
         }
-}
+};
 
 struct PitchEstimator : public Estimator {
     private:
@@ -38,7 +38,7 @@ struct PitchEstimator : public Estimator {
         BuffEncoder buff_enc;
         rm_CAN can;
     public:
-        PitchEstimator(float values[], BuffEncoder *b, rm_CAN *c){
+        PitchEstimator(float values[], BuffEncoder b, rm_CAN c){
             buff_enc = b;
             can = c;
             set_values(values);

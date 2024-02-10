@@ -4,6 +4,7 @@
 #include "comms/rm_can.hpp"
 #include "sensors/dr16.hpp"
 #include "controls/estimator.hpp"
+#include "controls/control.hpp"
 
 // Loop constants
 #define LOOP_FREQ      1000
@@ -13,6 +14,7 @@
 DR16 dr16;
 rm_CAN can;
 Timer loop_timer;
+
 
 // DONT put anything else in this function. It is not a setup function
 void print_logo() {
@@ -57,9 +59,9 @@ int main() {
     can.init();
 
 
-    estimator_manager.init(dr16, can);
+    EstimatorManager.get_instance().init(dr16, can);
 
-    estimator_manager.init_estimator(4);
+    EstimatorManager.get_instance().init_estimator(4);
 
     float state[STATE_LEN][3];
 
@@ -73,7 +75,7 @@ int main() {
         // Read sensors
         dr16.read();
         can.read();
-        estimator_manager.read_sensors();
+        EstimatorManager.get_instance().read_sensors();
         // Controls code goes here
 
         // Write actuators

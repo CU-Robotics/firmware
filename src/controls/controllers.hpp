@@ -15,7 +15,7 @@ struct Controller {
         Controller();
 
         /// @brief Sets this controller's gains
-        void set_gains(float gains[NUM_GAINS]) { memcpy(gains, this->gains, NUM_GAINS) }
+        void set_gains(float gains[NUM_GAINS]) { memcpy(gains, this->gains, NUM_GAINS); }
 
         /// @brief Generates a motor current from a joint reference and estimation
         /// @returns motor output
@@ -23,12 +23,12 @@ struct Controller {
 
         /// @brief Resets integrators/timers
         void reset() { timer.start_timer(); }
-}
+};
 
 struct NullController : public Controller {
     public:
         float step() {return 0;}
-}
+};
 
 struct PIDPositionController : public Controller {
     private:
@@ -37,7 +37,7 @@ struct PIDPositionController : public Controller {
     public:
         void set_gains(float gains[NUM_GAINS]) {
             Controller::set_gains(gains);
-            memcpy(gains, pid.K, sizeof(pid.K));
+            // memcpy(gains, pid.K, sizeof(pid.K));
         }
 
         float step(float reference[3], float estimate[3]) {
@@ -54,7 +54,7 @@ struct PIDPositionController : public Controller {
             Controller::reset();
             pid.sumError = 0.0;
         }
-}
+};
 
 struct PIDVelocityController : public Controller {
     private:
@@ -63,7 +63,7 @@ struct PIDVelocityController : public Controller {
     public:
         void set_gains(float gains[NUM_GAINS]) {
             Controller::set_gains(gains);
-            memcpy(gains, pid.K, sizeof(pid.K));
+            // memcpy(gains, pid.K, sizeof(pid.K));
         }
 
         float step(float reference[3], float estimate[3]) {
@@ -80,7 +80,7 @@ struct PIDVelocityController : public Controller {
             Controller::reset();
             pid.sumError = 0.0;
         }
-}
+};
 
 struct FullStateFeedbackController : public Controller {
     private:
@@ -89,8 +89,8 @@ struct FullStateFeedbackController : public Controller {
       public:
           void set_gains(float gains[NUM_GAINS]) {
               Controller::set_gains(gains);
-              memcpy(gains[0], pid1.K, sizeof(pid1.K));
-              memcpy(gains[3], pid2.K, sizeof(pid2.K));
+            //   memcpy(gains[0], pid1.K, sizeof(pid1.K));
+            //   memcpy(gains[3], pid2.K, sizeof(pid2.K));
           }
 
           float step(float reference[3], float estimate[3]) {
@@ -114,6 +114,6 @@ struct FullStateFeedbackController : public Controller {
               pid1.sumError = 0.0;
               pid2.sumError = 0.0;
           }
-}
+};
 
 #endif // CONTROLLERS_H
