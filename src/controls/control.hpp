@@ -10,7 +10,7 @@ class Control {
         Control() = default;
 
         /// @brief Singleton instance
-        static Control* instance;
+        // static Control* instance;
         Controller* controllers[NUM_MOTORS];
 
     public:

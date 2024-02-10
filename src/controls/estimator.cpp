@@ -10,7 +10,6 @@ void EstimatorManager::init_estimator(int state_id){
             estimators[4] = new PitchEstimator(values, buff_sensors[1], can);
             break;
         default:
-            estimators[state_id] = new NullEstimator();
             break;
     }
 }
@@ -25,11 +24,16 @@ void EstimatorManager::step(float outputs[STATE_LEN][3]){
     memcpy(this->output, outputs, STATE_LEN * 3 * sizeof(float));
 }
 
-void EstimatorManager::init(DR16 dr, rm_CAN rm_can){
+void EstimatorManager::init(){
+
+    // icm_sensors[0].init(icm_sensors[0].CommunicationProtocol::SPI);
+
     pinMode(YAW_BUFF_CS, OUTPUT);
     pinMode(PITCH_BUFF_CS, OUTPUT);
+    pinMode(ICM_CS, OUTPUT);
     digitalWrite(YAW_BUFF_CS, HIGH);
     digitalWrite(PITCH_BUFF_CS, HIGH);
+    digitalWrite(ICM_CS, HIGH);
     Serial.println("Starting SPI");
     SPI.begin();
     Serial.println("SPI Started");
@@ -37,15 +41,14 @@ void EstimatorManager::init(DR16 dr, rm_CAN rm_can){
 
     buff_sensors[0] = BuffEncoder(YAW_BUFF_CS);
     buff_sensors[1] = BuffEncoder(PITCH_BUFF_CS);
+    Serial.print("beans1 ");
 
-    icm_sensors[0].init(icm_sensors[0].CommunicationProtocol::SPI);
-
-    dr16 = dr16;
-    can = rm_can;
+    can = rm_CAN::get_instance();
+    Serial.print("beans2");
 }
 
 void EstimatorManager::read_sensors(){
     buff_sensors[0].read();
     buff_sensors[1].read();
-    icm_sensors[0].read();
+    // icm_sensors[0].read();
 }

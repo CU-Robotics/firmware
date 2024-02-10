@@ -38,6 +38,11 @@ public:
   /// @brief Empty constructor (implementation weirdly needs to be in the .cpp)
   rm_CAN();
 
+  static rm_CAN* get_instance() {
+    static rm_CAN* instance;
+    return instance;
+  }
+
   /// @brief Initializes and zeros CANs
   void init();
 
@@ -104,6 +109,9 @@ private:
   CAN_message_t m_output[NUM_CAN_BUSES][NUM_MESSAGE_IDS];
   /// @brief Input array in the format of uint8_t's
   uint8_t m_input[NUM_CAN_BUSES][NUM_MOTORS_PER_BUS][CAN_MESSAGE_SIZE];
+
+  // rm_CAN *instance;
+
 };
 
 /// @brief Returns a 2-byte value given 2 1-byte values

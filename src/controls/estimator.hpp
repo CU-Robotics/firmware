@@ -7,6 +7,7 @@
 #include "../sensors/buff_encoder.hpp"
 #include "estimators.hpp"
 #include "../comms/rm_can.hpp"
+#include <SPI.h>
 
 #ifndef ESTIMATOR_H
 #define ESTIMATOR_H
@@ -20,8 +21,7 @@ class EstimatorManager {
         EstimatorManager() = default;
 
         /// @brief sensor arrays
-        DR16 dr16;
-        rm_CAN can;
+        rm_CAN *can;
         ICM20649 icm_sensors[NUM_SENSOR_TYPE];
         LSM6DSOX lsm_sensors[NUM_SENSOR_TYPE];
         // RevEncoder rev_sensors[NUM_SENSOR_TYPE];
@@ -43,7 +43,7 @@ class EstimatorManager {
             return instance;
         }
 
-        void init(DR16 dr, rm_CAN rm_can);
+        void init();
 
         /// @brief Populates the corresponding index of the "estimators" array attribute with an estimator object
         void init_estimator(int state_id);

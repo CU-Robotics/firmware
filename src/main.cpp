@@ -13,7 +13,7 @@
 
 // Declare global objects
 DR16 dr16;
-rm_CAN can;
+rm_CAN* can;
 Timer loop_timer;
 EstimatorManager* estimator_manager;
 Control* controller_manager;
@@ -58,15 +58,19 @@ int main() {
 
     // Execute setup functions
     pinMode(13, OUTPUT); 
-    dr16.init();
-    can.init();
-
+    
+    Serial.print("lol");
+    can = rm_CAN::get_instance();
+    
     estimator_manager = EstimatorManager::get_instance();
     controller_manager = Control::get_instance();
 
-    estimator_manager->init(dr16, can);
-    estimator_manager->init_estimator(4);
+    dr16.init();
+    can->init();
+    estimator_manager->init();
+    Serial.print("lol1");
 
+    estimator_manager->init_estimator(4);
     float state[STATE_LEN][3];
 
     long long loopc = 0; // Loop counter for heartbeat
@@ -75,18 +79,26 @@ int main() {
     while (true) {
         // Read sensors
         dr16.read();
-        can.read();
+        can->read();
         estimator_manager->read_sensors();
+        estimator_manager->step(state);
+
+        Serial.print(state[4][0]);
+        Serial.print(", ");
+        Serial.print(state[4][1]);
+        Serial.print(", ");
+        Serial.println(state[4][2]);
+
         // Controls code goes here
 
         // Write actuators
         if (!dr16.is_connected() || dr16.get_l_switch() == 1) {
             // SAFETY ON
             // TODO: Reset all controller integrators here
-            can.zero();
+            can->zero();
         } else if (dr16.is_connected() && dr16.get_l_switch() != 1) {
             // SAFETY OFF
-            can.write();
+            can->write();
         }
 
 
