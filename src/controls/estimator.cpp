@@ -9,6 +9,7 @@ void EstimatorManager::init_estimator(int state_id){
             break;
         default:
             estimators[state_id] = new NullEstimator();
+            break;
     }
 }
 
@@ -19,7 +20,7 @@ void EstimatorManager::step(float outputs[STATE_LEN][3]){
         output[i][2] = estimators[i].step_acceleration();
     }
 
-    memcpy(this->output, outputs, STATE_LEN * 3 * sizeof(float))
+    memcpy(this->output, outputs, STATE_LEN * 3 * sizeof(float));
 }
 
 void EstimatorManager::init(DR16 dr, rm_CAN rm_can){
@@ -35,7 +36,7 @@ void EstimatorManager::init(DR16 dr, rm_CAN rm_can){
     buff_sensors[0] = BuffEncoder(YAW_BUFF_CS);
     buff_sensors[1] = BuffEncoder(PITCH_BUFF_CS);
 
-    icm_sensors[0].init(icm[0].CommunicationProtocol::SPI);
+    icm_sensors[0].init(icm_sensors[0].CommunicationProtocol::SPI);
 
     dr16 = dr16;
     can = rm_can;

@@ -5,6 +5,7 @@
 #include "sensors/dr16.hpp"
 #include "controls/estimator.hpp"
 #include "controls/control.hpp"
+#include "controls/state.hpp"
 
 // Loop constants
 #define LOOP_FREQ      1000

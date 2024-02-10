@@ -38,7 +38,7 @@ struct PitchEstimator : public Estimator {
         BuffEncoder buff_enc;
         rm_CAN can;
     public:
-        PitchEstimator(float values[], BuffEncoder b, rm_CAN c){
+        PitchEstimator(float values[8], BuffEncoder b, rm_CAN c){
             buff_enc = b;
             can = c;
             set_values(values);

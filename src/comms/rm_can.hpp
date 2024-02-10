@@ -15,7 +15,7 @@ constexpr uint16_t CAN_2 = 1;             // CAN 2 (indexable value)
 
 #define NUM_CAN_BUSES      2 // 2 cans per robot
 #define NUM_MOTORS_PER_BUS 8 // 8 motors per can
-#define NUM_MOTORS         (NUM_CAN_BUSES * NUM_MOTORS_PER_BUS);
+#define NUM_MOTORS         (NUM_CAN_BUSES * NUM_MOTORS_PER_BUS)
 #define NUM_MESSAGE_IDS    3 // 3 messages per can: 0x200, 0x1ff, 0x2ff
 #define CAN_MESSAGE_SIZE   8 // 8 uint8_t's per message buffer
 
