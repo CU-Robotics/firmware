@@ -7,7 +7,7 @@
 #define NUM_GAINS 12
 
 struct Controller {
-    private:
+    protected:
         float gains[NUM_GAINS];
         Timer timer;
 
@@ -27,7 +27,7 @@ struct Controller {
 
 struct NullController : public Controller {
     public:
-        float step(float dt, float reference[3], float estimate[3]) { return 0; }
+        float step() {return 0;}
 }
 
 struct PIDPositionController : public Controller {

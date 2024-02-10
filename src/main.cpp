@@ -3,6 +3,7 @@
 #include "utils/timing.hpp"
 #include "comms/rm_can.hpp"
 #include "sensors/dr16.hpp"
+#include "controls/estimator.hpp"
 
 // Loop constants
 #define LOOP_FREQ      1000
@@ -12,6 +13,7 @@
 DR16 dr16;
 rm_CAN can;
 Timer loop_timer;
+EstimatorManager estimator;
 
 // DONT put anything else in this function. It is not a setup function
 void print_logo() {
@@ -55,6 +57,13 @@ int main() {
     dr16.init();
     can.init();
 
+    estimator.init(dr16, can);
+
+    estimator.init_estimator(4);
+
+    float state[STATE_LEN][3];
+
+
     long long loopc = 0; // Loop counter for heartbeat
 
     // Main loop
@@ -63,7 +72,7 @@ int main() {
         dr16.read();
         can.read();
 
-        // Controls code goes here
+        estimator.step(state);
 
         // Write actuators
         if (!dr16.is_connected() || dr16.get_l_switch() == 1) {
@@ -74,6 +83,7 @@ int main() {
             // SAFETY OFF
             can.write();
         }
+
 
         // LED heartbeat -- linked to loop count to reveal slowdowns and freezes.
         loopc % (int)(1E3/float(HEARTBEAT_FREQ)) < (int)(1E3/float(5*HEARTBEAT_FREQ)) ? digitalWrite(13, HIGH) : digitalWrite(13, LOW);
