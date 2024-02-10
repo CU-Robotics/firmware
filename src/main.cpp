@@ -200,7 +200,7 @@ int main()
     dr16.init();
     can.init();
     ref.init();
-    // imu.init(imu.CommunicationProtocol::SPI);
+    imu.init(imu.CommunicationProtocol::SPI);
 
     // Encoder setup
     int nCS_yaw = 37; // 37 or 36 (enc 1, enc 2)
@@ -238,6 +238,10 @@ int main()
     float initial_pitch_angle;
     bool isCal = false;
 
+    int big_buff_size = 10000;
+    float big_buff[big_buff_size][2];
+    int big_buff_head = 0;
+
     // Main looppit
     while (true)
     {
@@ -246,7 +250,7 @@ int main()
         dr16.read();
         can.read();
         ref.read();
-        // imu.read();
+        imu.read();
         // imu.print();
 
         float yaw_raw = read_enc(nCS_yaw);
@@ -257,33 +261,28 @@ int main()
 
 
         // Serial.printf("yaw enc: %f     pitch enc: %f\n", yaw_raw, pitch_raw);
-        // if (!isCal)
-        // {
-        //     /*initial_accel_vector[0] = imu.get_accel_X();
-        //     initial_accel_vector[1] = imu.get_accel_Y();
-        //     initial_accel_vector[2] = imu.get_accel_Z();
-        //     inital_pitch_angle = pitch_ref; */
-        //     initial_accel_vector[0] = 0;
-        //     initial_accel_vector[1] = 0;
-        //     initial_accel_vector[2] = 1;
-        //     initial_pitch_angle = 1.57079;
-        //     isCal = true;
-        // }
-        // float pitch_diff = initial_pitch_angle - pitch_ref;
-        // float ground_pointing_unitvector[3] = { 0 };
-        // for (int i = 1;i < 3;i++)
-        // {
-        //     ground_pointing_unitvector[i] = initial_accel_vector[i] / __magnitude(initial_accel_vector, 3);
-        // }
-        // float ground_pointing_unitvector_rotated[3];
-        // __rotate2D3D(ground_pointing_unitvector, ground_pointing_unitvector_rotated, pitch_diff);
-        // float raw_omega_vector[3] = { imu.get_gyro_X(),imu.get_gyro_Y() ,imu.get_gyro_Z() };
-        // float yaw_omega = __vectorProduct(ground_pointing_unitvector_rotated, raw_omega_vector, 3);
-        // Serial.print(pitch_diff);
-        // Serial.print(" ");
-        // Serial.print(pitch_ref);
-        // Serial.print(" ");
-        // Serial.println(raw_omega_vector[2]);
+        if (!isCal)
+        {
+            /*initial_accel_vector[0] = imu.get_accel_X();
+            initial_accel_vector[1] = imu.get_accel_Y();
+            initial_accel_vector[2] = imu.get_accel_Z();
+            inital_pitch_angle = pitch_ref; */
+            initial_accel_vector[0] = 0;
+            initial_accel_vector[1] = 0;
+            initial_accel_vector[2] = 1;
+            initial_pitch_angle = 1.57079;
+            isCal = true;
+        }
+        float pitch_diff = initial_pitch_angle - pitch_ref;
+        float ground_pointing_unitvector[3] = { 0 };
+        for (int i = 1;i < 3;i++)
+        {
+            ground_pointing_unitvector[i] = initial_accel_vector[i] / __magnitude(initial_accel_vector, 3);
+        }
+        float ground_pointing_unitvector_rotated[3];
+        __rotate2D3D(ground_pointing_unitvector, ground_pointing_unitvector_rotated, pitch_diff);
+        float raw_omega_vector[3] = { imu.get_gyro_X(),imu.get_gyro_Y() ,imu.get_gyro_Z() };
+        float yaw_omega = __vectorProduct(ground_pointing_unitvector_rotated, raw_omega_vector, 3);
         // Read DR16
         bool w_key = dr16.keys.w * 0.5;
         bool a_key = dr16.keys.a * 0.5;
@@ -296,7 +295,7 @@ int main()
         float drive_raw[2] = { 0 };
         drive_raw[0] = -dr16.get_l_stick_x() - d_key + a_key;
         drive_raw[1] = -dr16.get_l_stick_y() - w_key + s_key;
-        float s = dr16.get_wheel() + 0.2 + (dr16.keys.shift ? 0.4 : 0);
+        float s = dr16.get_wheel();// + 0.2 + (dr16.keys.shift ? 0.4 : 0);
         float drive_rot[2] = { 0 };
         rotate_2D(drive_raw, drive_rot, yaw_ref + (3.14159 / 4.0));
         float x = drive_rot[0];
@@ -356,9 +355,28 @@ int main()
         // Yaw
         m_id = 4;
         motor_speed = can.get_motor_attribute(CAN_1, m_id, MotorAttribute::SPEED) * 0.05105105105;
-        yaw.setpoint = yaw_js * 300 + s * 270 - (sqrt(fabs(x * x) + fabs(y * y)) * 15);
+        yaw.setpoint = yaw_js * 300 + (yaw_js * 300 - raw_omega_vector[2] * 25);// 350/17
+        // Serial.println(yaw.setpoint);
         yaw.measurement = motor_speed;
         output = yaw.filter(0.001, false);
+
+        output = 0.0175;
+        big_buff_head = big_buff_head >= big_buff_size ? 0 : big_buff_head+1;
+        big_buff[big_buff_head][0] = can.get_motor_attribute(CAN_1, m_id, MotorAttribute::SPEED) * 0.05105105105;
+        big_buff[big_buff_head][1] = can.get_motor_attribute(CAN_1, m_id, MotorAttribute::TORQUE) * 0.05105105105;
+
+        float vel_sum = 0;
+        float torque_sum = 0;
+        for (int p = big_buff_head+1; p < big_buff_head+1000; p++) {
+            int idx = p;
+            if (idx >= big_buff_size) idx -= big_buff_size;
+            vel_sum += big_buff[idx][0];
+            torque_sum += big_buff[idx][1];
+        }
+        float vel_avg = vel_sum / 1000.0;
+        float torque_avg = torque_sum / 1000.0;
+        Serial.printf("Average over one second, delayed by 9 seconds:\nspeed: %f    torque: %f\n", vel_avg, torque_avg);
+
         can.write_motor_norm(CAN_1, m_id, C620, output);
         m_id = 5;
         can.write_motor_norm(CAN_1, m_id, C620, output);
