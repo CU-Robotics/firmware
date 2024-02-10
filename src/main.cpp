@@ -61,16 +61,13 @@ int main() {
     dr16.init();
     can.init();
 
-    // estimator_manager = EstimatorManager ::get_instance();
-
+    estimator_manager = EstimatorManager::get_instance();
+    controller_manager = Control::get_instance();
 
     estimator_manager->init(dr16, can);
     estimator_manager->init_estimator(4);
 
     float state[STATE_LEN][3];
-
-    
-
 
     long long loopc = 0; // Loop counter for heartbeat
 

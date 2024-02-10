@@ -7,6 +7,8 @@
 
 class Control {
     private:
+        Control() = default;
+
         /// @brief Singleton instance
         static Control* instance;
         Controller* controllers[NUM_MOTORS];
@@ -14,10 +16,8 @@ class Control {
     public:
         /// @brief Gives the singleton instance
         static Control* get_instance() {
-            if (instance == NULL) {
-                instance = new Control(); 
-                return instance;
-            } else return instance;
+            static Control* instance;
+            return instance;
         }
 
         /// @brief Populates the corresponding index of the "controllers" array attribute with a controller object

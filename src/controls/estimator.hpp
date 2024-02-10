@@ -17,6 +17,8 @@
 //x y psi theta phi flywheel_l flywheel_r feeder switcher
 class EstimatorManager {
     private:
+        EstimatorManager() = default;
+
         /// @brief sensor arrays
         DR16 dr16;
         rm_CAN can;
@@ -30,20 +32,15 @@ class EstimatorManager {
         // Looks really fucking good overall. Maybe think about the pitch estimator logic a little more, I think there are some edge cases
        
         /// @brief Singleton instance
-        static EstimatorManager* instance;
         Estimator* estimators[STATE_LEN];
 
         float output[STATE_LEN][3];
 
     public:
-        // EstimatorManager() {};
-
         /// @brief Gives the singleton instance
         static EstimatorManager* get_instance() {
-            if (instance == NULL) {
-                instance = new EstimatorManager();
-                return instance;
-            } else return instance;
+            static EstimatorManager* instance;
+            return instance;
         }
 
         void init(DR16 dr, rm_CAN rm_can);
