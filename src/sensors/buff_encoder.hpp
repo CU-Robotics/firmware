@@ -46,6 +46,10 @@ constexpr int PITCH_BUFF_CS = 36;
 class BuffEncoder
 {
 public:
+    /// @brief 
+    /// @param 
+    BuffEncoder() {};
+
     /// @brief Initialize the encoder object with the specific Chip Select pin
     /// @param cs The Chip Select pin
     BuffEncoder(int cs) : m_CS(cs) {};

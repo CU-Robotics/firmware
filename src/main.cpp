@@ -15,7 +15,7 @@
 DR16 dr16;
 rm_CAN can;
 Timer loop_timer;
-
+EstimatorManager* estimator_manager = EstimatorManager ::get_instance();
 
 // DONT put anything else in this function. It is not a setup function
 void print_logo() {
@@ -60,9 +60,9 @@ int main() {
     can.init();
 
 
-    EstimatorManager.get_instance().init(dr16, can);
+    estimator_manager->init(dr16, can);
 
-    EstimatorManager.get_instance().init_estimator(4);
+    estimator_manager->init_estimator(4);
 
     float state[STATE_LEN][3];
 
@@ -76,7 +76,7 @@ int main() {
         // Read sensors
         dr16.read();
         can.read();
-        EstimatorManager.get_instance().read_sensors();
+        estimator_manager->read_sensors();
         // Controls code goes here
 
         // Write actuators

@@ -1,7 +1,5 @@
 #define NUM_SENSOR_VALUES 8
 
-#define PI 3.1415962
-
 struct Estimator {
     public:
         Estimator();
