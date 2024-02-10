@@ -15,7 +15,7 @@
 DR16 dr16;
 rm_CAN can;
 Timer loop_timer;
-EstimatorManager* estimator_manager = EstimatorManager ::get_instance();
+EstimatorManager* estimator_manager;
 
 // DONT put anything else in this function. It is not a setup function
 void print_logo() {
@@ -58,6 +58,8 @@ int main() {
     pinMode(13, OUTPUT); 
     dr16.init();
     can.init();
+
+    estimator_manager = EstimatorManager ::get_instance();
 
 
     estimator_manager->init(dr16, can);

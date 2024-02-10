@@ -31,7 +31,7 @@ class EstimatorManager {
        
         /// @brief Singleton instance
         static EstimatorManager* instance;
-        Estimator estimators[STATE_LEN];
+        Estimator* estimators[STATE_LEN];
 
         float output[STATE_LEN][3];
 

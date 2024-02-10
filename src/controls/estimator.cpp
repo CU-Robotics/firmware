@@ -1,6 +1,8 @@
 #include "estimator.hpp"
 
 void EstimatorManager::init_estimator(int state_id){
+    delete [] estimators;
+
     switch(state_id){
         case 4:
             float values[8];
@@ -15,9 +17,9 @@ void EstimatorManager::init_estimator(int state_id){
 
 void EstimatorManager::step(float outputs[STATE_LEN][3]){
     for (int i = 0; i < STATE_LEN; i++) {
-        output[i][0] = estimators[i].step_position();
-        output[i][1] = estimators[i].step_velocity();
-        output[i][2] = estimators[i].step_acceleration();
+        output[i][0] = estimators[i]->step_position();
+        output[i][1] = estimators[i]->step_velocity();
+        output[i][2] = estimators[i]->step_acceleration();
     }
 
     memcpy(this->output, outputs, STATE_LEN * 3 * sizeof(float));
