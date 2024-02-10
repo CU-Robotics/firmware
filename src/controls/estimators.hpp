@@ -46,7 +46,7 @@ struct PitchEstimator : public Estimator {
         }
 
         float step_position(){
-            float angle = buff_enc.read() - PITCH_ZERO;
+            float angle = buff_enc.get_angle() - PITCH_ZERO;
             while(angle >= PI) angle -= 2;
             while(angle <= PI) angle += 2;
 

@@ -23,6 +23,15 @@ void EstimatorManager::step(float outputs[STATE_LEN][3]){
 }
 
 void EstimatorManager::init(DR16 &dr, rm_CAN &rm_can){
+    pinMode(YAW_BUFF_CS, OUTPUT);
+    pinMode(PITCH_BUFF_CS, OUTPUT);
+    digitalWrite(YAW_BUFF_CS, HIGH);
+    digitalWrite(PITCH_BUFF_CS, HIGH);
+    Serial.println("Starting SPI");
+    SPI.begin();
+    Serial.println("SPI Started");
+
+
     buff_sensors[0] = BuffEncoder(YAW_BUFF_CS);
     buff_sensors[1] = BuffEncoder(PITCH_BUFF_CS);
 
@@ -30,4 +39,10 @@ void EstimatorManager::init(DR16 &dr, rm_CAN &rm_can){
 
     dr16 = dr16;
     can = rm_can;
+}
+
+void EstimatorManager::read_sensors(){
+    buff_sensors[0].read();
+    buff_sensors[1].read();
+    icm_sensors[0].read();
 }

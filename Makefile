@@ -35,7 +35,7 @@ COMPILE_FLAGS = -Wall -g -O2 $(CPU_FLAGS) $(TEENSY4_FLAGS) -I$(TEENSY_INCLUDE) -
 # C++ specific flags for compiling
 CPP_FLAGS = -std=gnu++14 -felide-constructors -fno-exceptions -fpermissive -fno-rtti -Wno-error=narrowing
 # c++ moment
-CPP_FLAGS += -Wno-trigraphs
+CPP_FLAGS += -Wno-trigraphs -Wno-comment
 
 # Required linker config for teensy related things
 LINKING_FLAGS = -Wl,--gc-sections,--relax $(CPU_FLAGS) -Tteensy4/imxrt1062_t41.ld
