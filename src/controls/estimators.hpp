@@ -1,3 +1,7 @@
+#include "../comms/rm_can.hpp"
+#ifndef ESTIMATORS_H
+#define ESTIMATORS_H
+
 #define NUM_SENSOR_VALUES 8
 
 struct Estimator {
@@ -59,3 +63,4 @@ struct PitchEstimator : public Estimator {
             return 0;
         }
 };
+#endif
