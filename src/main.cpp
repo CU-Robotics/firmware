@@ -13,7 +13,7 @@
 DR16 dr16;
 rm_CAN can;
 Timer loop_timer;
-EstimatorManager estimator;
+EstimatorManager estimator_manager;
 
 // DONT put anything else in this function. It is not a setup function
 void print_logo() {
@@ -57,12 +57,11 @@ int main() {
     dr16.init();
     can.init();
 
-    estimator.init(dr16, can);
+    estimator_manager.init(dr16, can);
 
-    estimator.init_estimator(4);
+    estimator_manager.init_estimator(4);
 
     float state[STATE_LEN][3];
-
 
     long long loopc = 0; // Loop counter for heartbeat
 
@@ -72,7 +71,8 @@ int main() {
         dr16.read();
         can.read();
 
-        estimator.step(state);
+        estimator_manager.step(state);
+
 
         // Write actuators
         if (!dr16.is_connected() || dr16.get_l_switch() == 1) {

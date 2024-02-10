@@ -3,7 +3,9 @@
 void EstimatorManager::init_estimator(int state_id){
     switch(state_id){
         case 4:
-            estimators[4] = new PitchEstimator(buff[1], can[0]);
+            float values[8];
+            values[1] = 50;
+            estimators[4] = new PitchEstimator(values, buff_sensors[1], can);
             break;
         default:
             estimators[state_id] = new NullController();
@@ -25,7 +27,7 @@ void EstimatorManager::init(DR16 &dr, rm_CAN &rm_can){
     buff_sensors[1] = BuffEncoder(PITCH_BUFF_CS);
 
     icm_sensors[0].init(icm[0].CommunicationProtocol::SPI);
-    
+
     dr16 = dr16;
     can = rm_can;
 }

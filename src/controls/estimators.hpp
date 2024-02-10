@@ -34,13 +34,14 @@ struct NullController : public Controller {
 
 struct PitchEstimator : public Estimator {
     private:
-        float PITCH_ZERO = values[1];
+        float PITCH_ZERO;
         BuffEncoder buff_enc;
         rm_CAN can;
     public:
-        PitchEstimator(BuffEncoder *b, rm_CAN *c){
+        PitchEstimator(float values[], BuffEncoder *b, rm_CAN *c){
             buff_enc = b;
             can = c;
+            PITCH_ZERO = values[1];
         }
 
         float step_position(){
