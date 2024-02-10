@@ -10,15 +10,16 @@ class Control {
         Control() = default;
 
         /// @brief Singleton instance
-        // static Control* instance;
+        static Control* instance;
         Controller* controllers[NUM_MOTORS];
 
     public:
         /// @brief Gives the singleton instance
         static Control* get_instance() {
-            static Control* instance;
+            if(instance == nullptr) instance = new Control();
             return instance;
         }
+
 
         /// @brief Populates the corresponding index of the "controllers" array attribute with a controller object
         void init_controller(uint8_t can_id, uint8_t motor_id, int controller_type);

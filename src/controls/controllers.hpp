@@ -15,7 +15,7 @@ struct Controller {
         Controller();
 
         /// @brief Sets this controller's gains
-        void set_gains(float gains[NUM_GAINS]) { memcpy(gains, this->gains, NUM_GAINS); }
+        void set_gains(float gains[NUM_GAINS]) { memcpy(this->gains, gains, NUM_GAINS); }
 
         /// @brief Generates a motor current from a joint reference and estimation
         /// @returns motor output

@@ -8,11 +8,11 @@ struct Estimator {
     public:
         Estimator() {};
 
-        void set_values(float values[8]) { memcpy(values, this->values, NUM_SENSOR_VALUES * 4); }
+        void set_values(float values[8]) { memcpy(this->values, values, NUM_SENSOR_VALUES * 4); }
 
-        float step_position(){return 0;}
-        float step_velocity(){return 0;}
-        float step_acceleration(){return 0;}
+        virtual float step_position(){return 0;}
+        virtual float step_velocity(){return 0;}
+        virtual float step_acceleration(){return 0;}
 
     protected:
         //[port, offset, ratio, distance]
@@ -31,20 +31,20 @@ struct PitchEstimator : public Estimator {
             set_values(values);
             PITCH_ZERO = this->values[1];
         }
-
-        float step_position(){
+        
+        float step_position() override{
             float angle = buff_enc.get_angle() - PITCH_ZERO;
-            while(angle >= PI) angle -= 2;
-            while(angle <= PI) angle += 2;
-
+            while(angle >= PI) angle -= 2 * PI;
+            while(angle <= -PI) angle += 2 * PI;
+            Serial.print("position");
             return angle;
         }
 
-        float step_velocity(){
-            return can->get_motor_attribute(CAN_2, 0, MotorAttribute::SPEED);
+        float step_velocity()override{
+            return can->get_motor_attribute(CAN_2, 1, MotorAttribute::SPEED);
         }
 
-        float step_acceleration(){
+        float step_acceleration()override{
             return 0;
         }
 };

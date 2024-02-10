@@ -4,6 +4,7 @@ const SPISettings BuffEncoder::m_settings = SPISettings(1000000, MT6835_BITORDER
 
 float BuffEncoder::read()
 {
+    
     uint8_t data[6] = { 0 }; // transact 48 bits
 
     // set the operation
@@ -23,5 +24,6 @@ float BuffEncoder::read()
 
     // assign and return angle
     m_angle = radians;
+    Serial.print("read");
     return radians;
 }

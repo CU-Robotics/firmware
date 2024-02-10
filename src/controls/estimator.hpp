@@ -21,7 +21,7 @@ class EstimatorManager {
         EstimatorManager() = default;
 
         /// @brief sensor arrays
-        rm_CAN *can;
+        rm_CAN can;
         ICM20649 icm_sensors[NUM_SENSOR_TYPE];
         LSM6DSOX lsm_sensors[NUM_SENSOR_TYPE];
         // RevEncoder rev_sensors[NUM_SENSOR_TYPE];
@@ -32,14 +32,16 @@ class EstimatorManager {
         // Looks really fucking good overall. Maybe think about the pitch estimator logic a little more, I think there are some edge cases
        
         /// @brief Singleton instance
-        Estimator* estimators[STATE_LEN];
+        Estimator *estimators[STATE_LEN];
 
         float output[STATE_LEN][3];
+
+        static EstimatorManager* instance;
 
     public:
         /// @brief Gives the singleton instance
         static EstimatorManager* get_instance() {
-            static EstimatorManager* instance;
+            if(instance == nullptr) instance = new EstimatorManager();
             return instance;
         }
 
@@ -53,5 +55,7 @@ class EstimatorManager {
 
 
         void read_sensors();
+
+        rm_CAN* get_can();
 };
 #endif

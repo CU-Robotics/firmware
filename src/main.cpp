@@ -7,13 +7,15 @@
 #include "controls/control.hpp"
 #include "controls/state.hpp"
 
+EstimatorManager *EstimatorManager::instance = nullptr;
+Control *Control::instance = nullptr;
+
 // Loop constants
 #define LOOP_FREQ      1000
 #define HEARTBEAT_FREQ 2
 
 // Declare global objects
 DR16 dr16;
-rm_CAN* can;
 Timer loop_timer;
 EstimatorManager* estimator_manager;
 Control* controller_manager;
@@ -60,34 +62,37 @@ int main() {
     pinMode(13, OUTPUT); 
     
     Serial.print("lol");
-    can = rm_CAN::get_instance();
-    
+   
     estimator_manager = EstimatorManager::get_instance();
-    controller_manager = Control::get_instance();
+    // controller_manager = Control::get_instance();
 
     dr16.init();
-    can->init();
     estimator_manager->init();
-    Serial.print("lol1");
+    
 
-    estimator_manager->init_estimator(4);
+    // estimator_manager->init_estimator(4);
     float state[STATE_LEN][3];
-
+    
     long long loopc = 0; // Loop counter for heartbeat
 
     // Main loop
     while (true) {
         // Read sensors
+        
         dr16.read();
-        can->read();
+        // Serial.print("test");
         estimator_manager->read_sensors();
+        // Serial.print("lol1");
         estimator_manager->step(state);
 
-        Serial.print(state[4][0]);
-        Serial.print(", ");
-        Serial.print(state[4][1]);
-        Serial.print(", ");
-        Serial.println(state[4][2]);
+
+        Serial.print("lol2");
+
+        Serial.print(state[3][0]);
+        // Serial.print(", ");
+        Serial.print(state[3][1]);
+        // Serial.print(", ");
+        Serial.println(state[3][2]);
 
         // Controls code goes here
 
@@ -95,12 +100,12 @@ int main() {
         if (!dr16.is_connected() || dr16.get_l_switch() == 1) {
             // SAFETY ON
             // TODO: Reset all controller integrators here
-            can->zero();
+            estimator_manager->get_can()->zero();
+            Serial.print("zero");
         } else if (dr16.is_connected() && dr16.get_l_switch() != 1) {
             // SAFETY OFF
-            can->write();
+            estimator_manager->get_can()->write();
         }
-
 
         // LED heartbeat -- linked to loop count to reveal slowdowns and freezes.
         loopc % (int)(1E3/float(HEARTBEAT_FREQ)) < (int)(1E3/float(5*HEARTBEAT_FREQ)) ? digitalWrite(13, HIGH) : digitalWrite(13, LOW);
@@ -108,6 +113,7 @@ int main() {
 
         // Keep the loop running at the desired rate
         loop_timer.delay_micros((int)(1E6/(float)(LOOP_FREQ)));
+
     }
 
     return 0;

@@ -1,7 +1,6 @@
 #include "control.hpp"
 
 void Control::init_controller(uint8_t can_id, uint8_t motor_id, int controller_type) {
-    delete [] controllers;
     
     int index = ((can_id-1)*NUM_MOTORS_PER_BUS) + (motor_id-1);
 
@@ -34,5 +33,5 @@ void Control::step(float dt, float reference[STATE_LEN][3], float estimate[STATE
         }
         this->output[m] = output;
     }
-    memcpy(this->output, outputs, NUM_MOTORS * sizeof(float));
+    memcpy(outputs, this->output, NUM_MOTORS * sizeof(float));
 }

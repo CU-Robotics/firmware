@@ -39,7 +39,8 @@ public:
   rm_CAN();
 
   static rm_CAN* get_instance() {
-    static rm_CAN* instance;
+    if(instance == nullptr)
+      instance = new rm_CAN();
     return instance;
   }
 
@@ -110,8 +111,7 @@ private:
   /// @brief Input array in the format of uint8_t's
   uint8_t m_input[NUM_CAN_BUSES][NUM_MOTORS_PER_BUS][CAN_MESSAGE_SIZE];
 
-  // rm_CAN *instance;
-
+  static rm_CAN *instance;
 };
 
 /// @brief Returns a 2-byte value given 2 1-byte values
