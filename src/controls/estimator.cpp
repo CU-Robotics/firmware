@@ -4,7 +4,7 @@ void EstimatorManager::init_estimator(int state_id){
     switch(state_id){
         case 4:
             float values[8];
-            values[1] = 50;
+            values[1] = 0;
             estimators[4] = new PitchEstimator(values, buff_sensors[1], can);
             break;
         default:

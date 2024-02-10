@@ -41,7 +41,8 @@ struct PitchEstimator : public Estimator {
         PitchEstimator(float values[], BuffEncoder *b, rm_CAN *c){
             buff_enc = b;
             can = c;
-            PITCH_ZERO = values[1];
+            set_values(values);
+            PITCH_ZERO = this->values[1];
         }
 
         float step_position(){
