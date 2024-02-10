@@ -16,6 +16,8 @@ DR16 dr16;
 rm_CAN can;
 Timer loop_timer;
 EstimatorManager* estimator_manager;
+Control* controller_manager;
+
 
 // DONT put anything else in this function. It is not a setup function
 void print_logo() {
@@ -59,11 +61,10 @@ int main() {
     dr16.init();
     can.init();
 
-    estimator_manager = EstimatorManager ::get_instance();
+    // estimator_manager = EstimatorManager ::get_instance();
 
 
     estimator_manager->init(dr16, can);
-
     estimator_manager->init_estimator(4);
 
     float state[STATE_LEN][3];

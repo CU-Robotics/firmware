@@ -6,7 +6,7 @@
 
 struct Estimator {
     public:
-        Estimator();
+        Estimator() {};
 
         void set_values(float values[8]) { memcpy(values, this->values, NUM_SENSOR_VALUES * 4); }
 

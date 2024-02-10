@@ -36,6 +36,8 @@ class EstimatorManager {
         float output[STATE_LEN][3];
 
     public:
+        // EstimatorManager() {};
+
         /// @brief Gives the singleton instance
         static EstimatorManager* get_instance() {
             if (instance == NULL) {
