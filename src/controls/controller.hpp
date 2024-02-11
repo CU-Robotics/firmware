@@ -1,8 +1,8 @@
 #include "../filters/pid_filter.hpp"
 #include "../utils/timing.hpp"
 
-#ifndef CONTROLLERS_H
-#define CONTROLLERS_H
+#ifndef CONTROLLER_H
+#define CONTROLLER_H
 
 #define NUM_GAINS 12
 
@@ -116,4 +116,4 @@ struct FullStateFeedbackController : public Controller {
           }
 };
 
-#endif // CONTROLLERS_H
+#endif // CONTROLLER_H

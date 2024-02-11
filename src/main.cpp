@@ -3,12 +3,9 @@
 #include "utils/timing.hpp"
 #include "comms/rm_can.hpp"
 #include "sensors/dr16.hpp"
-#include "controls/estimator.hpp"
-#include "controls/control.hpp"
+#include "controls/estimator_manager.hpp"
+#include "controls/controller_manager.hpp"
 #include "controls/state.hpp"
-
-EstimatorManager *EstimatorManager::instance = nullptr;
-Control *Control::instance = nullptr;
 
 // Loop constants
 #define LOOP_FREQ      1000
@@ -16,10 +13,10 @@ Control *Control::instance = nullptr;
 
 // Declare global objects
 DR16 dr16;
+rm_CAN can;
 Timer loop_timer;
-EstimatorManager* estimator_manager;
-Control* controller_manager;
-
+EstimatorManager *estimator_manager;
+// ControllerManager *controller_manager;
 
 // DONT put anything else in this function. It is not a setup function
 void print_logo() {
@@ -59,62 +56,61 @@ int main() {
     print_logo();
 
     // Execute setup functions
-    pinMode(13, OUTPUT); 
+    pinMode(13, OUTPUT);
     
-    Serial.print("lol");
-   
-    estimator_manager = EstimatorManager::get_instance();
+    
+    can.init();
+    dr16.init();
+    
+    CANData* can_data = can.get_data();
+
     // controller_manager = Control::get_instance();
 
-    dr16.init();
-    estimator_manager->init();
-    
+    estimator_manager = new EstimatorManager(can_data);
+    // controller_manager = new ControllerManager();
 
-    // estimator_manager->init_estimator(4);
-    float state[STATE_LEN][3];
-    
+    estimator_manager->init_estimator(4);
+
     long long loopc = 0; // Loop counter for heartbeat
+    float state[STATE_LEN][3]; // Temp state array
 
     // Main loop
     while (true) {
-        // Read sensors
-        
+
+        can.read();
         dr16.read();
-        // Serial.print("test");
+
+        // Read sensors
         estimator_manager->read_sensors();
-        // Serial.print("lol1");
         estimator_manager->step(state);
 
-
-        Serial.print("lol2");
-
-        Serial.print(state[3][0]);
-        // Serial.print(", ");
-        Serial.print(state[3][1]);
-        // Serial.print(", ");
-        Serial.println(state[3][2]);
+        Serial.print(state[4][0]);
+        Serial.print(", ");
+        Serial.print(state[4][1]);
+        Serial.print(", ");
+        Serial.println(state[4][2]);
 
         // Controls code goes here
 
         // Write actuators
-        if (!dr16.is_connected() || dr16.get_l_switch() == 1) {
+        if (!dr16.is_connected() || dr16.get_l_switch() == 1)
+        {
             // SAFETY ON
             // TODO: Reset all controller integrators here
-            estimator_manager->get_can()->zero();
-            Serial.print("zero");
+            can.zero();
         } else if (dr16.is_connected() && dr16.get_l_switch() != 1) {
             // SAFETY OFF
-            estimator_manager->get_can()->write();
+            can.write();
         }
 
         // LED heartbeat -- linked to loop count to reveal slowdowns and freezes.
-        loopc % (int)(1E3/float(HEARTBEAT_FREQ)) < (int)(1E3/float(5*HEARTBEAT_FREQ)) ? digitalWrite(13, HIGH) : digitalWrite(13, LOW);
+        loopc % (int)(1E3 / float(HEARTBEAT_FREQ)) < (int)(1E3 / float(5 * HEARTBEAT_FREQ)) ? digitalWrite(13, HIGH) : digitalWrite(13, LOW);
         loopc++;
 
         // Keep the loop running at the desired rate
-        loop_timer.delay_micros((int)(1E6/(float)(LOOP_FREQ)));
-
+        loop_timer.delay_micros((int)(1E6 / (float)(LOOP_FREQ)));
     }
 
+    delete estimator_manager;
     return 0;
 }

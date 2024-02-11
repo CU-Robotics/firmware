@@ -7,10 +7,10 @@
 // Encoder Registers and Config
 constexpr uint32_t MT6835_OP_READ = 0b0011;
 constexpr uint32_t MT6835_OP_WRITE = 0b0110;
-constexpr uint32_t MT6835_OP_PROG  = 0b1100;
-constexpr uint32_t MT6835_OP_ZERO  = 0b0101;
+constexpr uint32_t MT6835_OP_PROG = 0b1100;
+constexpr uint32_t MT6835_OP_ZERO = 0b0101;
 constexpr uint32_t MT6835_OP_ANGLE = 0b1010;
-constexpr uint32_t MT6835_CMD_MASK  = 0b111100000000000000000000;
+constexpr uint32_t MT6835_CMD_MASK = 0b111100000000000000000000;
 constexpr uint32_t MT6835_ADDR_MASK = 0b000011111111111100000000;
 constexpr uint32_t MT6835_DATA_MASK = 0b000000000000000011111111;
 constexpr uint32_t MT6835_CPR = 2097152;
@@ -54,6 +54,8 @@ public:
     /// @param cs The Chip Select pin
     BuffEncoder(int cs) : m_CS(cs) {};
 
+    void init(int cs) { m_CS = cs; }
+
     /// @brief Read via SPI the current angle of the encoder
     /// @return Read angle (radians)
     /// @note Returns and sets m_angle when it reads
@@ -63,7 +65,7 @@ public:
     /// @return Read angle (radians)
     inline float get_angle() const { return m_angle; }
 
-    
+
 private:
     /// @brief Stored Chip Select pin
     int m_CS = 0;

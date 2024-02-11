@@ -1,61 +1,83 @@
-#include "./state.hpp"
-#include "../sensors/dr16.hpp"
-#include "../sensors/ICM20649.hpp"
-#include "../sensors/IMUSensor.hpp"
-#include "../sensors/LSM6DSOX.hpp"
-#include "../sensors/rev_encoder.hpp"
-#include "../sensors/buff_encoder.hpp"
-#include "estimators.hpp"
+#ifndef ESTIMATORS_H
+#define ESTIMATORS_H
+
 #include "../comms/rm_can.hpp"
-#include <SPI.h>
 
-#ifndef ESTIMATOR_H
-#define ESTIMATOR_H
+#define NUM_SENSOR_VALUES 8
 
-// maximum number of each sensor (arbitrary)
-#define NUM_SENSOR_TYPE 16
-
-//x y psi theta phi flywheel_l flywheel_r feeder switcher
-class EstimatorManager {
-    private:
-        EstimatorManager() = default;
-
-        /// @brief sensor arrays
-        rm_CAN can;
-        ICM20649 icm_sensors[NUM_SENSOR_TYPE];
-        LSM6DSOX lsm_sensors[NUM_SENSOR_TYPE];
-        // RevEncoder rev_sensors[NUM_SENSOR_TYPE];
-        BuffEncoder buff_sensors[NUM_SENSOR_TYPE];
-
-        // ISAAC COMMENTS: Make the above more descriptive with a word that shows that these all do the same thing (icm_sensors. rev_sensors, etc)
-        // Get rid of IMUSensor, dont need that one
-        // Looks really fucking good overall. Maybe think about the pitch estimator logic a little more, I think there are some edge cases
-       
-        /// @brief Singleton instance
-        Estimator *estimators[STATE_LEN];
-
-        float output[STATE_LEN][3];
-
-        static EstimatorManager* instance;
-
+struct Estimator {
     public:
-        /// @brief Gives the singleton instance
-        static EstimatorManager* get_instance() {
-            if(instance == nullptr) instance = new EstimatorManager();
-            return instance;
+        Estimator() {};
+
+        void set_values(float values[8]) { memcpy(this->values, values, NUM_SENSOR_VALUES * 4); }
+
+        virtual float step_position(){return 0;}
+        virtual float step_velocity(){return 0;}
+        virtual float step_acceleration(){return 0;}
+
+    protected:
+        //[port, offset, ratio, distance]
+        float values[NUM_SENSOR_VALUES];
+};
+
+struct PitchEstimator : public Estimator {
+    private:
+        float PITCH_ZERO;
+        BuffEncoder *buff_enc;
+        CANData *can_data;
+        ICM20649 *icm_imu;
+    public:
+        PitchEstimator(float values[8], BuffEncoder *b, ICM20649* imu, CANData* data){
+            buff_enc = b;
+            can_data = data;
+            set_values(values);
+            PITCH_ZERO = this->values[1];
+            icm_imu = imu;
+        }
+        
+        float step_position() override{
+            float angle = (-buff_enc->get_angle()) + PITCH_ZERO;
+            while(angle >= PI) angle -= 2 * PI;
+            while(angle <= -PI) angle += 2 * PI;
+            return angle;
         }
 
-        void init();
+        float step_velocity()override{
+            return can_data->get_motor_attribute(CAN_2, 1, MotorAttribute::SPEED);
+        }
 
-        /// @brief Populates the corresponding index of the "estimators" array attribute with an estimator object
-        void init_estimator(int state_id);
-
-        /// @brief Steps through estimators and calculates current state, which is written to the "state" array attribute
-        void step(float state[STATE_LEN][3]);
-
-
-        void read_sensors();
-
-        rm_CAN* get_can();
+        float step_acceleration()override{
+            return icm_imu->get_gyro_Y();
+        }
 };
+
+// struct YawEstimator : public Estimator {
+//     private:
+//         float PITCH_ZERO;
+//         BuffEncoder buff_enc;
+//         rm_CAN *can;
+//     public:
+//         YawEstimator(float values[8], BuffEncoder b, rm_CAN *c){
+//             buff_enc = b;
+//             can = c;
+//             set_values(values);
+//             YAW_ZERO = this->values[1];
+//         }
+
+//         float step_position(){
+//             float angle = buff_enc.get_angle() - YAW_ZERO;
+//             while(angle >= PI) angle -= 2;
+//             while(angle <= PI) angle += 2;
+
+//             return angle;
+//         }
+
+//         float step_velocity(){
+//             return can->get_motor_attribute(CAN_1, 0, MotorAttribute::SPEED);
+//         }
+
+//         float step_acceleration(){
+//             return 0;
+//         }
+// };
 #endif

@@ -24,6 +24,5 @@ float BuffEncoder::read()
 
     // assign and return angle
     m_angle = radians;
-    Serial.print("read");
     return radians;
 }

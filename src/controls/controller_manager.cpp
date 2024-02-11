@@ -1,6 +1,7 @@
-#include "control.hpp"
+#include "controller_manager.hpp"
 
-void Control::init_controller(uint8_t can_id, uint8_t motor_id, int controller_type) {
+void ControllerManager::init_controller(uint8_t can_id, uint8_t motor_id, int controller_type)
+{
     
     int index = ((can_id-1)*NUM_MOTORS_PER_BUS) + (motor_id-1);
 
@@ -23,7 +24,7 @@ void Control::init_controller(uint8_t can_id, uint8_t motor_id, int controller_t
     }
 }
 
-void Control::step(float dt, float reference[STATE_LEN][3], float estimate[STATE_LEN][3], float kinematics[NUM_MOTORS][STATE_LEN], float outputs[NUM_MOTORS]) {
+void ControllerManager::step(float dt, float reference[STATE_LEN][3], float estimate[STATE_LEN][3], float kinematics[NUM_MOTORS][STATE_LEN], float outputs[NUM_MOTORS]) {
     // Iterate through motors
     for (int m = 0; m < NUM_MOTORS; m++) {
         float output = 0;

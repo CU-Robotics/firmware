@@ -27,9 +27,50 @@ constexpr uint16_t CAN_2 = 1;             // CAN 2 (indexable value)
 #define C620_OUTPUT_SCALE  16384
 #define GM6020_OUTPUT_SCALE 30000
 
+/// @brief Returns a 2-byte value given 2 1-byte values
+/// @param highByte higher order byte
+/// @param lowByte lower order byte
+/// @return Constructed 2-byte value in form [high, low]
+uint16_t combine_bytes(uint8_t high, uint8_t low);
+
+
 /// @brief Simple enum to specify types of values able to be read from motors
 enum MotorAttribute {
   ANGLE, SPEED, TORQUE, TEMP
+};
+
+struct CANData
+{
+  uint8_t data[NUM_CAN_BUSES][NUM_MOTORS_PER_BUS][CAN_MESSAGE_SIZE];
+
+  /// @brief Reads and returns value from input array of specified motor
+  /// @param canID ID of the CAN which the motor is on, expects indexable ID value
+  /// @param motorID ID of the individual motor, expects indexable ID value
+  /// @param valueType MotorAttribute enum for what type of value requested
+  /// @return Requested value
+  int get_motor_attribute(uint16_t canID, uint16_t motorID, MotorAttribute valueType)
+  {
+// return correct value depending on valueType enum
+    switch (valueType)
+    {
+    case MotorAttribute::ANGLE:
+      return (uint16_t)(combine_bytes(data[canID][motorID - 1][0], data[canID][motorID - 1][1]));
+      break;
+    case MotorAttribute::SPEED:
+      return (int16_t)(combine_bytes(data[canID][motorID - 1][2], data[canID][motorID - 1][3]));
+      break;
+    case MotorAttribute::TORQUE:
+      return (int16_t)(combine_bytes(data[canID][motorID - 1][4], data[canID][motorID - 1][5]));
+      break;
+    case MotorAttribute::TEMP:
+      return (uint16_t)(data[canID][motorID - 1][6]);
+      break;
+
+    default:
+      return 0;
+      break;
+    }
+  }
 };
 
 /// @brief Manages both CANs on the robot. Able to read from and write to individual or multiple motors on the CANs.
@@ -100,6 +141,8 @@ public:
   /// @brief Print off the values of the output array
   void print_output();
 
+  CANData* get_data() { return &m_input; }
+
 private:
   /// @brief CAN 1 object
   FlexCAN_T4<CAN1, RX_SIZE_256, TX_SIZE_16> m_can1;
@@ -109,15 +152,9 @@ private:
   /// @brief Output array in the format of CAN_message_t's
   CAN_message_t m_output[NUM_CAN_BUSES][NUM_MESSAGE_IDS];
   /// @brief Input array in the format of uint8_t's
-  uint8_t m_input[NUM_CAN_BUSES][NUM_MOTORS_PER_BUS][CAN_MESSAGE_SIZE];
+  CANData m_input;
 
   static rm_CAN *instance;
 };
-
-/// @brief Returns a 2-byte value given 2 1-byte values
-/// @param highByte higher order byte
-/// @param lowByte lower order byte
-/// @return Constructed 2-byte value in form [high, low]
-uint16_t combine_bytes(uint8_t high, uint8_t low);
 
 #endif // CAN_MANAGER_HPP
