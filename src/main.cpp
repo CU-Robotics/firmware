@@ -242,6 +242,8 @@ int main()
     float big_buff[big_buff_size][2];
     int big_buff_head = 0;
 
+    float raw_omega_vector[3] = { 0 };
+
     // Main looppit
     while (true)
     {
@@ -281,7 +283,8 @@ int main()
         }
         float ground_pointing_unitvector_rotated[3];
         __rotate2D3D(ground_pointing_unitvector, ground_pointing_unitvector_rotated, pitch_diff);
-        float raw_omega_vector[3] = { imu.get_gyro_X(),imu.get_gyro_Y() ,imu.get_gyro_Z() };
+        float super_raw_omega_vector[3] = { imu.get_gyro_X(),imu.get_gyro_Y() ,imu.get_gyro_Z() };
+        for (int r = 0; r < 3; r++) raw_omega_vector[r] = super_raw_omega_vector[r];// * 0.8 + super_raw_omega_vector[r] * 0.2;
         float yaw_omega = __vectorProduct(ground_pointing_unitvector_rotated, raw_omega_vector, 3);
         // Read DR16
         bool w_key = dr16.keys.w * 0.5;
@@ -295,13 +298,13 @@ int main()
         float drive_raw[2] = { 0 };
         drive_raw[0] = -dr16.get_l_stick_x() - d_key + a_key;
         drive_raw[1] = -dr16.get_l_stick_y() - w_key + s_key;
-        float s = dr16.get_wheel();// + 0.2 + (dr16.keys.shift ? 0.4 : 0);
+        float s = dr16.get_wheel() + 0.2 + (dr16.keys.shift ? 0.4 : 0);
         float drive_rot[2] = { 0 };
         rotate_2D(drive_raw, drive_rot, yaw_ref + (3.14159 / 4.0));
         float x = drive_rot[0];
         float y = drive_rot[1];
-        float pitch_js = dr16.get_r_stick_y() - (mouse_y * MOUSE_SENSITIVITY * 3.5);
-        float yaw_js = dr16.get_r_stick_x() + (mouse_x * MOUSE_SENSITIVITY);
+        float pitch_js = dr16.get_r_stick_y() - (mouse_y * MOUSE_SENSITIVITY * 2);
+        float yaw_js = dr16.get_r_stick_x() + (mouse_x * MOUSE_SENSITIVITY * 3.0);
 
         // Power limiting
         float power_buffer = ref.data.power_heat.buffer_energy;
@@ -355,28 +358,11 @@ int main()
         // Yaw
         m_id = 4;
         motor_speed = can.get_motor_attribute(CAN_1, m_id, MotorAttribute::SPEED) * 0.05105105105;
-        yaw.setpoint = yaw_js * 300 + (yaw_js * 300 - raw_omega_vector[2] * 25);// 350/17
+        Serial.println(raw_omega_vector[2]);
+        yaw.setpoint = yaw_js*1200 + raw_omega_vector[2]*25;// 350/17
         // Serial.println(yaw.setpoint);
         yaw.measurement = motor_speed;
         output = yaw.filter(0.001, false);
-
-        output = 0.0175;
-        big_buff_head = big_buff_head >= big_buff_size ? 0 : big_buff_head+1;
-        big_buff[big_buff_head][0] = can.get_motor_attribute(CAN_1, m_id, MotorAttribute::SPEED) * 0.05105105105;
-        big_buff[big_buff_head][1] = can.get_motor_attribute(CAN_1, m_id, MotorAttribute::TORQUE) * 0.05105105105;
-
-        float vel_sum = 0;
-        float torque_sum = 0;
-        for (int p = big_buff_head+1; p < big_buff_head+1000; p++) {
-            int idx = p;
-            if (idx >= big_buff_size) idx -= big_buff_size;
-            vel_sum += big_buff[idx][0];
-            torque_sum += big_buff[idx][1];
-        }
-        float vel_avg = vel_sum / 1000.0;
-        float torque_avg = torque_sum / 1000.0;
-        Serial.printf("Average over one second, delayed by 9 seconds:\nspeed: %f    torque: %f\n", vel_avg, torque_avg);
-
         can.write_motor_norm(CAN_1, m_id, C620, output);
         m_id = 5;
         can.write_motor_norm(CAN_1, m_id, C620, output);
