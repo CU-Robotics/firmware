@@ -9,15 +9,17 @@ struct Estimator {
     public:
         Estimator() {};
 
-        void set_values(float values[8]) { memcpy(this->values, values, NUM_SENSOR_VALUES * 4); }
+        //Update the values array for specific estimator
+        void set_values(float values[8]) { memcpy(this->sensor_values, values, NUM_SENSOR_VALUES * 4); }
 
+        //Virtual so they don't ever get called over real estimators
         virtual float step_position(){return 0;}
         virtual float step_velocity(){return 0;}
         virtual float step_acceleration(){return 0;}
 
     protected:
         //[port, offset, ratio, distance]
-        float values[NUM_SENSOR_VALUES];
+        float sensor_values[NUM_SENSOR_VALUES];
 };
 
 struct PitchEstimator : public Estimator {
@@ -27,11 +29,11 @@ struct PitchEstimator : public Estimator {
         CANData *can_data;
         ICM20649 *icm_imu;
     public:
-        PitchEstimator(float values[8], BuffEncoder *b, ICM20649* imu, CANData* data){
+        PitchEstimator(float sensor_values[8], BuffEncoder *b, ICM20649* imu, CANData* data){
             buff_enc = b;
             can_data = data;
-            set_values(values);
-            PITCH_ZERO = this->values[1];
+            set_values(sensor_values);
+            PITCH_ZERO = this->sensor_values[1];
             icm_imu = imu;
         }
         

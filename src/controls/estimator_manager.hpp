@@ -31,15 +31,21 @@ private:
     CANData *can_data;
 
 public:
+    /// @brief initialize sensors and set can_data pointer
+    /// @param data Struct storing all of can data so we don't have to pass around rmCAN itself.
     EstimatorManager(CANData *data);
+
+    /// @brief Free all dynamically allocated memory and end SPI
     ~EstimatorManager();
 
-    /// @brief Populates the corresponding index of the "estimators" array attribute with an estimator object
+    /// @brief Populates the corresponding index of the "estimators" array attribute with an estimator object.
     void init_estimator(int state_id);
 
-    /// @brief Steps through estimators and calculates current state, which is written to the "state" array attribute
+    /// @brief Steps through every estimator and constructs a state array based on current sensor values.
+    /// @param state State array pointer to be updated.
     void step(float state[STATE_LEN][3]);
 
+    /// @brief read all sensor arrays besides can and dr16(they are in main).
     void read_sensors();
 };
 
