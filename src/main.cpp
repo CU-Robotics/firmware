@@ -405,7 +405,8 @@ int main()
         // Flywheel 1
         m_id = 3;
         motor_speed = can.get_motor_attribute(CAN_2, m_id, MotorAttribute::SPEED);
-        flywheel.setpoint = (dr16.get_r_switch() != 2 ? 9000 : 0);
+        // flywheel.setpoint = (dr16.get_r_switch() != 2 ? 9000 : 0);
+        flywheel.setpoint = 9000;
         flywheel.measurement = motor_speed;
         output = flywheel.filter(0.001);
         can.write_motor_norm(CAN_2, m_id, C620, output);
@@ -421,6 +422,10 @@ int main()
         {
 // SAFETY OFF
             can.write();
+        }else {
+            //tf? how did you even get here?
+            Serial.printf("Dr16 status:%d\t l_switch status:%d\n", dr16.is_connected(), dr16.get_l_switch());
+            can.zero();
         }
 
         // LED heartbeat -- linked to loop count to reveal slowdowns and freezes.
