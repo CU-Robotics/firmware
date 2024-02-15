@@ -63,8 +63,9 @@ struct Timer {
         @return
             deltaTime: (float) The time since the last delta call.
         */
-        return DURATION_US(t, ARM_DWT_CYCCNT) / (float)(1E6);
+        float delta = DURATION_US(t, ARM_DWT_CYCCNT) / (float)(1E6);
         start_timer();
+        return delta;
     }
 };
 

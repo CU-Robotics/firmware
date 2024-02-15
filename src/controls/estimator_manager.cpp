@@ -26,10 +26,16 @@ EstimatorManager::EstimatorManager(CANData *data){
 void EstimatorManager::init_estimator(int state_id) {
     switch (state_id)
     {
+    case 3:
+        float values_theta[8];
+        values_theta[1] = 0; // yaw offset
+        values_theta[1] = 1; // pitch offset
+        estimators[3] = new YawEstimator(values_theta, &buff_sensors[1], &icm_sensors[0], can_data); // passes the pitch encoder which doesnt really make sense
+        break;
     case 4:
-        float values[8];
-        values[1] = 1; //pitch offset
-        estimators[4] = new PitchEstimator(values, &buff_sensors[1], &icm_sensors[0], can_data);
+        float values_phi[8];
+        values_phi[1] = 1; // pitch offset
+        estimators[4] = new PitchEstimator(values_phi, &buff_sensors[1], &icm_sensors[0], can_data);
         break;
     default:
         break;
