@@ -45,6 +45,7 @@ int main() {
     // declare any 'global' variables here
     DR16 dr16;
     rm_CAN can;
+    usbHID hid;
 
     // initialize any 'setup' functions here
     dr16.init();
@@ -53,6 +54,9 @@ int main() {
     // main loop
     while (true) {
         dr16.read();
+
+        hid.write();
+        
         if (!dr16.is_connected() || dr16.get_l_switch() == 1) {
             // SAFETY ON
             can.zero();

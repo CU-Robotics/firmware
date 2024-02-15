@@ -5,10 +5,10 @@
 
 #define PACKET_SIZE_BYTES 1024
 
-def union{
+union float_byte {
     float number;
-    byte bytes[4]
-} float_byte;
+    byte bytes[4];
+};
 
 class usbHID {
     public:
@@ -23,10 +23,11 @@ class usbHID {
 
         float get_float(int index);
         void put_float(int index, float f);
+        int next_free();
 
     private:
         byte packet [PACKET_SIZE_BYTES];
-        int packet_count;
+        int next_free_index = 0;
 };
 
 
