@@ -35,7 +35,7 @@ public:
     /// @brief Initialize the sensor with the assigned communication protocol.
     /// @param protocol Which communication protocol to use for this sensor.
     void init(CommunicationProtocol protocol);
-
+    
     /// @copydoc IMUSensor::read()    
     void read() override;
 private:

@@ -15,6 +15,10 @@
 // maximum number of each sensor (arbitrary)
 #define NUM_SENSOR_TYPE 16
 
+#define NUM_IMU_CALIBRATION 50000
+
+#define NUM_ESTIMATORS 1
+
 //x y psi theta phi flywheel_l flywheel_r feeder switcher
 class EstimatorManager {
 private:
@@ -27,6 +31,8 @@ private:
 
     /// @brief Singleton instance
     Estimator* estimators[STATE_LEN] = {nullptr};
+
+    int applied_states[NUM_ESTIMATORS][STATE_LEN];
 
     CANData *can_data;
 
@@ -47,6 +53,10 @@ public:
 
     /// @brief read all sensor arrays besides can and dr16(they are in main).
     void read_sensors();
+
+    void calibrate_imus();
+
+    void assign_states(int as [3][STATE_LEN]);
 };
 
 #endif

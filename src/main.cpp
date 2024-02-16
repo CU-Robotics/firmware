@@ -68,15 +68,26 @@ int main() {
 
     estimator_manager = new EstimatorManager(can_data);
     // controller_manager = new ControllerManager();
+    int assigned_states[NUM_ESTIMATORS][STATE_LEN];
+    for (int i = 0;i < NUM_ESTIMATORS;i++) {
+        for (int j = 0;j < STATE_LEN;j++) {
+            assigned_states[i][j] = 0;
+        }
+    }
+    assigned_states[0][0] = 2;
+    assigned_states[0][1] = 3;
+    assigned_states[0][2] = 4;
 
-    estimator_manager->init_estimator(4);
+    estimator_manager->assign_states(assigned_states);
+    estimator_manager->init_estimator(2);
 
     long long loopc = 0; // Loop counter for heartbeat
     float state[STATE_LEN][3]; // Temp state array
 
+    estimator_manager->calibrate_imus();
+
     // Main loop
     while (true) {
-
         can.read();
         dr16.read();
 
@@ -84,11 +95,12 @@ int main() {
         estimator_manager->read_sensors();
         estimator_manager->step(state);
 
-        Serial.print(state[4][0]);
-        Serial.print(", ");
-        Serial.print(state[4][1]);
-        Serial.print(", ");
-        Serial.println(state[4][2]);
+        // Serial.print(state[2][0]);
+        // Serial.print(", ");
+        // Serial.print(state[2][1]);
+        // Serial.print(", ");
+        // Serial.println(state[2][2]);
+
 
         // Controls code goes here
 

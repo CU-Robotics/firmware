@@ -30,15 +30,21 @@ public:
 
     /// @brief Get the change in gyroscope orientation relative to the x axis
     /// @return gryoscope x in radians/s
-    inline float get_gyro_X() { return gyro_X; };
+    inline float get_gyro_X() { return gyro_X - offset_X; };
 
     /// @brief Get the change in gyroscope orientation relative to the y axis
     /// @return gyroscope y in radians/s
-    inline float get_gyro_Y() { return gyro_Y; };
+    inline float get_gyro_Y() { return gyro_Y - offset_Y; };
 
     /// @brief Get the change in gyroscope orientation relative to the z axis
     /// @return gyroscope z in radians/s
-    inline float get_gyro_Z() { return gyro_Z; };
+    inline float get_gyro_Z() { return gyro_Z - offset_Z; };
+
+    inline void set_offsets(float x, float y, float z){
+        offset_X = x;
+        offset_Y = y;
+        offset_Z = z;
+    }
 
     /// @brief Print out all IMU data to Serial for debugging purposes
     void print();
@@ -71,6 +77,12 @@ protected:
     float gyro_Y = 0;
     /// @brief gyroscope z value
     float gyro_Z = 0;
+
+    float offset_X = 0;
+
+    float offset_Y = 0;
+    
+    float offset_Z = 0;
 
     /// @brief temperature value
     float temperature = 0;

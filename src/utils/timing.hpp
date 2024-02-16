@@ -25,7 +25,7 @@
 
 // Accounts for overflow
 #define UINT_MAX 4294967295
-#define CYCCNT_OVERFLOW(duration) (duration < 0 ? UINT_MAX-duration : duration)
+#define CYCCNT_OVERFLOW(duration) (duration > UINT_MAX*0.25 ? UINT_MAX-duration : duration)
 
 struct Timer {
     uint32_t t = ARM_DWT_CYCCNT;
