@@ -1,3 +1,5 @@
+#include <math.h>
+
 #ifndef VECTOR_MATH_H
 #define VECTOR_MATH_H
 
@@ -30,4 +32,4 @@ void nWeightedVectorAddition(float* a, float* b, float* k1, float* k2, int n, fl
 	}
 }
 
-#endif
+#endif // VECTOR_MATH_H
