@@ -70,15 +70,21 @@ struct GimbalEstimator : public Estimator {
         float yaw_axis_unitvector[3];
         float pitch_axis_unitvector[3];
         float roll_axis_unitvector[3];
-        float yaw_axis_offset[3];
-        float pitch_axis_offset[3];
-        float roll_axis_offset[3];
+        float yaw_axis_global[3];
+        float pitch_axis_global[3];
+        float roll_axis_global[3];
         float current_yaw_velocity = 0;
         float previous_yaw_velocity = 0; 
         float current_pitch_velocity = 0;
         float previous_pitch_velocity = 0; 
         float current_roll_velocity = 0;
         float previous_roll_velocity = 0;
+        float global_yaw_velocity = 0;
+        float global_roll_velocity = 0;
+        float global_pitch_velocity = 0;
+        float global_pitch_angle = 1.92;
+        float global_yaw_angle = 0;
+        float global_roll_angle = 0;
         float dt = 0;
         BuffEncoder *buff_enc_yaw;
         BuffEncoder *buff_enc_pitch;
@@ -118,7 +124,9 @@ struct GimbalEstimator : public Estimator {
             
             // gimbal rotation axis in spherical coordinates in imu refrence frame
             if (gravity_accel_vector[0] == 0) yaw_axis_spherical[1] = 1.57;
-            else {
+            else if (gravity_accel_vector[0] < 0){
+                yaw_axis_spherical[1] = PI+atan(gravity_accel_vector[1]/gravity_accel_vector[0]); // theta
+            }else{
                 yaw_axis_spherical[1] = atan(gravity_accel_vector[1]/gravity_accel_vector[0]); // theta
             }
             yaw_axis_spherical[2] = acos(gravity_accel_vector[2]/__magnitude(gravity_accel_vector,3))+pitch_diff; // phi
@@ -129,7 +137,10 @@ struct GimbalEstimator : public Estimator {
             roll_axis_spherical[1] = yaw_axis_spherical[1]; // theta 
             roll_axis_spherical[2] = yaw_axis_spherical[2]-(PI*0.5); // phi
 
-            // convert spherical to cartesian for imu calcs
+            pitch_axis_spherical[1] = yaw_axis_spherical[1]-(PI*0.5);
+            pitch_axis_spherical[2] = (PI*0.5);
+
+            // convert spherical to cartesian, These unit vectors are axis in the gimbal refrence frame
             yaw_axis_unitvector[0] = yaw_axis_spherical[0]*cos(yaw_axis_spherical[1])*sin(yaw_axis_spherical[2]); 
             yaw_axis_unitvector[1] = yaw_axis_spherical[0]*sin(yaw_axis_spherical[1])*sin(yaw_axis_spherical[2]);
             yaw_axis_unitvector[2] = yaw_axis_spherical[0]*cos(yaw_axis_spherical[2]);
@@ -138,52 +149,61 @@ struct GimbalEstimator : public Estimator {
             roll_axis_unitvector[1] = roll_axis_spherical[0]*sin(roll_axis_spherical[1])*sin(roll_axis_spherical[2]);
             roll_axis_unitvector[2] = roll_axis_spherical[0]*cos(roll_axis_spherical[2]);
 
-            __rotateVector3D(yaw_axis_unitvector,roll_axis_unitvector,(PI*0.5),pitch_axis_unitvector);
-
-            // pitch_axis_unitvector[0] = pitch_axis_spherical[0]*cos(pitch_axis_spherical[1])*sin(pitch_axis_spherical[2]);
+            // pitch_axis_unitvector[0] = pitch_axis_spherical[0]*cos(pitch_axis_spherical[1])*sin(pitch_axis_spherical[2]); 
             // pitch_axis_unitvector[1] = pitch_axis_spherical[0]*sin(pitch_axis_spherical[1])*sin(pitch_axis_spherical[2]);
             // pitch_axis_unitvector[2] = pitch_axis_spherical[0]*cos(pitch_axis_spherical[2]);
 
-            // offset the axis' based on the pitch yaw and roll data
-            __rotateVector3D(roll_axis_unitvector,yaw_axis_unitvector,roll_angle,yaw_axis_offset);
-            __rotateVector3D(roll_axis_unitvector,pitch_axis_unitvector,roll_angle,pitch_axis_offset);
+            __rotateVector3D(yaw_axis_unitvector,roll_axis_unitvector,(PI*0.5),pitch_axis_unitvector);
 
-            __rotateVector3D(pitch_axis_unitvector,yaw_axis_offset,(pitch_angle-angle),yaw_axis_offset);
-            __rotateVector3D(pitch_axis_unitvector,roll_axis_unitvector,(pitch_angle-angle),roll_axis_offset);
+            // offset the axis' based on the pitch yaw and roll data, These vectors give global pitch yaw and roll
+            __rotateVector3D(roll_axis_unitvector,yaw_axis_unitvector,global_roll_angle,yaw_axis_global);
+            __rotateVector3D(roll_axis_unitvector,pitch_axis_unitvector,global_roll_angle,pitch_axis_global);
+
+            __rotateVector3D(pitch_axis_unitvector,yaw_axis_unitvector,(global_pitch_angle-angle),yaw_axis_global);
+            __rotateVector3D(pitch_axis_unitvector,roll_axis_unitvector,(global_pitch_angle-angle),roll_axis_global);
             
             // gets the velocity data from the imu and uses the gravity vector to calculate the yaw velocity
             float raw_omega_vector[3] = { icm_imu->get_gyro_X(),icm_imu->get_gyro_Y() ,icm_imu->get_gyro_Z()};
             // *Note: X is pitch Y is Roll Z is Yaw, when level
             // positive pitch angle is up, positive roll angle is right(robot pov), positive yaw is left(robot pov)
                 
-                // Serial.print(pitch_axis_offset[0]);
+                // Serial.print(pitch_axis_unitvector[0]);
                 // Serial.print(", ");
-                // Serial.print(pitch_axis_offset[1]);
+                // Serial.print(pitch_axis_unitvector[1]);
                 // Serial.print(", ");
-                // Serial.println(pitch_axis_offset[2]);
+                // Serial.println(pitch_axis_unitvector[2]);
 
-                Serial.print(roll_angle);
-                Serial.print(", ");
-                Serial.print(pitch_angle);
-                Serial.print(", ");
-                Serial.println(yaw_angle);
+                // Serial.print(roll_angle);
+                // Serial.print(", ");
+                // Serial.print(pitch_angle);
+                // Serial.print(", ");
+                // Serial.println(yaw_angle);
 
             // update previous to the current value before current is updated
             previous_pitch_velocity = current_pitch_velocity;
             previous_yaw_velocity = current_yaw_velocity;
             previous_roll_velocity = current_roll_velocity;
 
-            // calculate the pitch yaw and roll velocities
+            // calculate the pitch yaw and roll velocities (Gimbal Relative)
             current_pitch_velocity = __vectorProduct(pitch_axis_unitvector,raw_omega_vector, 3);
             current_yaw_velocity = __vectorProduct(yaw_axis_unitvector, raw_omega_vector, 3);
             current_roll_velocity = __vectorProduct(roll_axis_unitvector, raw_omega_vector, 3);
 
+            //calculate the pitch yaw and roll velocities (Global Reference)
+            global_pitch_velocity = __vectorProduct(pitch_axis_global,raw_omega_vector, 3);
+            global_yaw_velocity = __vectorProduct(yaw_axis_global, raw_omega_vector, 3);
+            global_roll_velocity = __vectorProduct(roll_axis_global, raw_omega_vector, 3);
         // position integration
             dt = time.delta();
             if (dt > .002) dt = 0; // first dt loop generates huge time so check for that 
             yaw_angle += -current_yaw_velocity*(dt/7.85);
             pitch_angle += -current_pitch_velocity*(dt/7.85);
             roll_angle += -current_roll_velocity*(dt/7.85);
+
+            global_yaw_angle += -global_yaw_velocity*(dt/7.85);
+            global_pitch_angle += -global_pitch_velocity*(dt/7.85);
+            global_roll_angle += -global_roll_velocity*(dt/7.85);
+
             chassis_angle = yaw_angle - buff_enc_yaw->get_angle();
 
             output[0][0] = chassis_angle;

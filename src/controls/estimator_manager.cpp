@@ -35,9 +35,9 @@ void EstimatorManager::init_estimator(int state_id) {
         values_gimbal[4] = 0; // default roll starting angle (starting point for imu integration)
         values_gimbal[5] = 0; // default chassis pitch angle 
         // Stable gravity vector {x,y,z}
-        values_gimbal[6] = 0.667987; // x
-        values_gimbal[7] = 25.952387; // y
-        values_gimbal[8] = -75.438080; // z
+        values_gimbal[6] = 0.077535; // x
+        values_gimbal[7] = 2.396863; // y
+        values_gimbal[8] = -6.940948; // z
         values_gimbal[9] = 1.91986; // Pitch angle at given gravity vector
         
         estimators[0] = new GimbalEstimator(values_gimbal, &buff_sensors[0], &buff_sensors[1], &icm_sensors[0], can_data, num_states); 
@@ -91,6 +91,19 @@ void EstimatorManager::calibrate_imus(){
     Serial.printf("Calibrated offsets: %f, %f, %f", sum_accel_x/NUM_IMU_CALIBRATION, sum_accel_y/NUM_IMU_CALIBRATION, sum_accel_z/NUM_IMU_CALIBRATION);
     Serial.println();
     icm_sensors[0].set_offsets(sum_x/NUM_IMU_CALIBRATION, sum_y/NUM_IMU_CALIBRATION, sum_z/NUM_IMU_CALIBRATION);
+
+    sum_x = 0;
+    sum_y = 0;
+    sum_z = 0;
+
+    for(int i = 0; i < NUM_IMU_CALIBRATION; i++){  
+        icm_sensors[0].read(); 
+        sum_x += icm_sensors[0].get_gyro_X();
+        sum_y += icm_sensors[0].get_gyro_Y();
+        sum_z += icm_sensors[0].get_gyro_Z();
+    }
+    Serial.printf("Calibrated offsets 2: %f, %f, %f", sum_x/NUM_IMU_CALIBRATION, sum_y/NUM_IMU_CALIBRATION, sum_z/NUM_IMU_CALIBRATION);
+    Serial.println();
 }
 
 void EstimatorManager::assign_states(int as[NUM_ESTIMATORS][STATE_LEN]){
