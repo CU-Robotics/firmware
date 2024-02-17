@@ -92,18 +92,18 @@ void EstimatorManager::calibrate_imus(){
     Serial.println();
     icm_sensors[0].set_offsets(sum_x/NUM_IMU_CALIBRATION, sum_y/NUM_IMU_CALIBRATION, sum_z/NUM_IMU_CALIBRATION);
 
-    sum_x = 0;
-    sum_y = 0;
-    sum_z = 0;
+    // sum_x = 0;
+    // sum_y = 0;
+    // sum_z = 0;
 
-    for(int i = 0; i < NUM_IMU_CALIBRATION; i++){  
-        icm_sensors[0].read(); 
-        sum_x += icm_sensors[0].get_gyro_X();
-        sum_y += icm_sensors[0].get_gyro_Y();
-        sum_z += icm_sensors[0].get_gyro_Z();
-    }
-    Serial.printf("Calibrated offsets 2: %f, %f, %f", sum_x/NUM_IMU_CALIBRATION, sum_y/NUM_IMU_CALIBRATION, sum_z/NUM_IMU_CALIBRATION);
-    Serial.println();
+    // for(int i = 0; i < NUM_IMU_CALIBRATION; i++){  
+    //     icm_sensors[0].read(); 
+    //     sum_x += icm_sensors[0].get_gyro_X();
+    //     sum_y += icm_sensors[0].get_gyro_Y();
+    //     sum_z += icm_sensors[0].get_gyro_Z();
+    // }
+    // Serial.printf("Calibrated offsets 2: %f, %f, %f", sum_x/NUM_IMU_CALIBRATION, sum_y/NUM_IMU_CALIBRATION, sum_z/NUM_IMU_CALIBRATION);
+    // Serial.println();
 }
 
 void EstimatorManager::assign_states(int as[NUM_ESTIMATORS][STATE_LEN]){

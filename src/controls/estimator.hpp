@@ -131,29 +131,39 @@ struct GimbalEstimator : public Estimator {
             }
             yaw_axis_spherical[2] = acos(gravity_accel_vector[2]/__magnitude(gravity_accel_vector,3))+pitch_diff; // phi
 
-            // pitch_axis_spherical[1] = yaw_axis_spherical[1]-(PI*0.5); // theta
-            // pitch_axis_spherical[2] = (PI*0.5); // phi
 
-            roll_axis_spherical[1] = yaw_axis_spherical[1]; // theta 
-            roll_axis_spherical[2] = yaw_axis_spherical[2]-(PI*0.5); // phi
+            // roll_axis_spherical[1] = yaw_axis_spherical[1]; // theta 
+            // roll_axis_spherical[2] = yaw_axis_spherical[2]-(PI*0.5); // phi
 
-            pitch_axis_spherical[1] = yaw_axis_spherical[1]-(PI*0.5);
-            pitch_axis_spherical[2] = (PI*0.5);
+            // pitch_axis_spherical[1] = yaw_axis_spherical[1]-(PI*0.5);
+            // pitch_axis_spherical[2] = (PI*0.5);
+
+
 
             // convert spherical to cartesian, These unit vectors are axis in the gimbal refrence frame
             yaw_axis_unitvector[0] = yaw_axis_spherical[0]*cos(yaw_axis_spherical[1])*sin(yaw_axis_spherical[2]); 
             yaw_axis_unitvector[1] = yaw_axis_spherical[0]*sin(yaw_axis_spherical[1])*sin(yaw_axis_spherical[2]);
             yaw_axis_unitvector[2] = yaw_axis_spherical[0]*cos(yaw_axis_spherical[2]);
 
-            roll_axis_unitvector[0] = roll_axis_spherical[0]*cos(roll_axis_spherical[1])*sin(roll_axis_spherical[2]); 
-            roll_axis_unitvector[1] = roll_axis_spherical[0]*sin(roll_axis_spherical[1])*sin(roll_axis_spherical[2]);
-            roll_axis_unitvector[2] = roll_axis_spherical[0]*cos(roll_axis_spherical[2]);
+            // roll_axis_unitvector[0] = roll_axis_spherical[0]*cos(roll_axis_spherical[1])*sin(roll_axis_spherical[2]); 
+            // roll_axis_unitvector[1] = roll_axis_spherical[0]*sin(roll_axis_spherical[1])*sin(roll_axis_spherical[2]);
+            // roll_axis_unitvector[2] = roll_axis_spherical[0]*cos(roll_axis_spherical[2]);
 
             // pitch_axis_unitvector[0] = pitch_axis_spherical[0]*cos(pitch_axis_spherical[1])*sin(pitch_axis_spherical[2]); 
             // pitch_axis_unitvector[1] = pitch_axis_spherical[0]*sin(pitch_axis_spherical[1])*sin(pitch_axis_spherical[2]);
             // pitch_axis_unitvector[2] = pitch_axis_spherical[0]*cos(pitch_axis_spherical[2]);
+            float mag = sqrt((-2.889366*-2.889366)+(-0.026573*-0.026573)+(-0.023502*-0.023502));
+            pitch_axis_unitvector[0] = -2.889366/mag;
+            pitch_axis_unitvector[1] = -0.026573/mag;
+            pitch_axis_unitvector[2] = -0.023502/mag;
 
-            __rotateVector3D(yaw_axis_unitvector,roll_axis_unitvector,(PI*0.5),pitch_axis_unitvector);
+            __crossProduct(pitch_axis_unitvector,yaw_axis_unitvector,roll_axis_unitvector);
+
+            float magicNum = 0.005; // left yaw increases with 0.8
+            __rotateVector3D(roll_axis_unitvector,yaw_axis_unitvector,magicNum,yaw_axis_unitvector);
+            __rotateVector3D(roll_axis_unitvector,pitch_axis_unitvector,magicNum,pitch_axis_unitvector);
+
+            // __rotateVector3D(yaw_axis_unitvector,roll_axis_unitvector,(PI*0.5),pitch_axis_unitvector);
 
             // offset the axis' based on the pitch yaw and roll data, These vectors give global pitch yaw and roll
             __rotateVector3D(roll_axis_unitvector,yaw_axis_unitvector,global_roll_angle,yaw_axis_global);
@@ -173,11 +183,25 @@ struct GimbalEstimator : public Estimator {
                 // Serial.print(", ");
                 // Serial.println(pitch_axis_unitvector[2]);
 
+                // Serial.printf("info: %f, %f, %f", pitch_axis_unitvector[0], pitch_axis_unitvector[1], pitch_axis_unitvector[2]);
+                // Serial.println();
                 // Serial.print(roll_angle);
                 // Serial.print(", ");
                 // Serial.print(pitch_angle);
                 // Serial.print(", ");
                 // Serial.println(yaw_angle);
+
+                Serial.printf("angles: %f, %f, %f", roll_angle, pitch_angle, yaw_angle);
+                Serial.println();
+
+                float temp1[3];
+                float temp2[3];
+                float temp3[3];
+                __crossProduct(yaw_axis_unitvector,pitch_axis_unitvector,temp1);
+                __crossProduct(yaw_axis_unitvector,roll_axis_unitvector,temp2);
+                __crossProduct(roll_axis_unitvector,pitch_axis_unitvector,temp3);
+                // Serial.printf("cp: %f, %f, %f", __magnitude(temp1,3), __magnitude(temp2,3), __magnitude(temp3,3));
+                // Serial.println();
 
             // update previous to the current value before current is updated
             previous_pitch_velocity = current_pitch_velocity;
