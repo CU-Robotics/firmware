@@ -12,22 +12,24 @@ struct Controller {
         Timer timer;
 
     public:
-        Controller();
+        Controller(){};
 
-        /// @brief Sets this controller's gains
-        void set_gains(float gains[NUM_GAINS]) { memcpy(this->gains, gains, NUM_GAINS); }
+        void set_gains(float _gains[NUM_GAINS]){
+            for(int i = 0; i < NUM_GAINS; i++)
+                gains[i] = _gains[i];
+        }
 
         /// @brief Generates a motor current from a joint reference and estimation
         /// @returns motor output
-        float step(float dt, float reference[3], float estimate[3]);
+        virtual float step(float reference[3], float estimate[3]);
 
         /// @brief Resets integrators/timers
-        void reset() { timer.start_timer(); }
+        virtual void reset() { timer.start_timer(); }
 };
 
 struct NullController : public Controller {
     public:
-        float step() {return 0;}
+        float step(float reference[3], float estimate[3]) {return 0;}
 };
 
 struct PIDPositionController : public Controller {
@@ -35,10 +37,6 @@ struct PIDPositionController : public Controller {
         PIDFilter pid;
 
     public:
-        void set_gains(float gains[NUM_GAINS]) {
-            Controller::set_gains(gains);
-            // memcpy(gains, pid.K, sizeof(pid.K));
-        }
 
         float step(float reference[3], float estimate[3]) {
             float dt = timer.delta();
@@ -60,17 +58,16 @@ struct PIDVelocityController : public Controller {
     private:
         PIDFilter pid;
 
-    public:
-        void set_gains(float gains[NUM_GAINS]) {
-            Controller::set_gains(gains);
-            // memcpy(gains, pid.K, sizeof(pid.K));
-        }
 
+    public:
         float step(float reference[3], float estimate[3]) {
             float dt = timer.delta();
 
             pid.setpoint = reference[1]; // 1st index = position
             pid.measurement = estimate[1];
+            pid.K[0] = gains[0];
+            pid.K[1] = gains[1];
+            pid.K[2] = gains[2];
 
             float output = pid.filter(dt);
             return output;
@@ -115,5 +112,6 @@ struct FullStateFeedbackController : public Controller {
               pid2.sumError = 0.0;
           }
 };
+
 
 #endif // CONTROLLER_H

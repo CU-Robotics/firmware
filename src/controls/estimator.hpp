@@ -50,7 +50,69 @@ struct Estimator {
             output[2] = (input_vector[2]*cos(theta)) + (unit_cross_input[2]*sin(theta)) + (unit_vector[2]*__vectorProduct(unit_vector,input_vector,3)*(1-cos(theta)));
         }
 
-        Timer time;      
+        // CPP program to calculate solutions of linear
+        // equations using cramer's rule
+        
+        // This functions finds the determinant of Matrix
+        double determinantOfMatrix(double mat[3][3])
+        {
+            double ans;
+            ans = mat[0][0] * (mat[1][1] * mat[2][2] - mat[2][1] * mat[1][2])
+                - mat[0][1] * (mat[1][0] * mat[2][2] - mat[1][2] * mat[2][0])
+                + mat[0][2] * (mat[1][0] * mat[2][1] - mat[1][1] * mat[2][0]);
+            return ans;
+        }
+        
+        // This function finds the solution of system of
+        // linear equations using cramer's rule
+        // input is 3x3 coeff matrix with 3x1 solution matrix added to the end
+        void findSolution(double coeff[3][4], float output[3])
+        {
+            // Matrix d using coeff as given in cramer's rule
+            double d[3][3] = {{ coeff[0][0], coeff[0][1], coeff[0][2] },
+                { coeff[1][0], coeff[1][1], coeff[1][2] },
+                { coeff[2][0], coeff[2][1], coeff[2][2] }};
+            // Matrix d1 using coeff as given in cramer's rule
+            double d1[3][3] = {
+                { coeff[0][3], coeff[0][1], coeff[0][2] },
+                { coeff[1][3], coeff[1][1], coeff[1][2] },
+                { coeff[2][3], coeff[2][1], coeff[2][2] },
+            };
+            // Matrix d2 using coeff as given in cramer's rule
+            double d2[3][3] = {
+                { coeff[0][0], coeff[0][3], coeff[0][2] },
+                { coeff[1][0], coeff[1][3], coeff[1][2] },
+                { coeff[2][0], coeff[2][3], coeff[2][2] },
+            };
+            // Matrix d3 using coeff as given in cramer's rule
+            double d3[3][3] = {
+                { coeff[0][0], coeff[0][1], coeff[0][3] },
+                { coeff[1][0], coeff[1][1], coeff[1][3] },
+                { coeff[2][0], coeff[2][1], coeff[2][3] },
+            };
+        
+            // Calculating Determinant of Matrices d, d1, d2, d3
+            double D = determinantOfMatrix(d);
+            double D1 = determinantOfMatrix(d1);
+            double D2 = determinantOfMatrix(d2);
+            double D3 = determinantOfMatrix(d3);
+            
+            // Case 1
+            if (D != 0) {
+                // Coeff have a unique solution
+                output[0] = D1 / D;
+                output[1] = D2 / D;
+                output[2] = D3 / D;
+            }
+            // Case 2
+            else {
+                if (D1 == 0 && D2 == 0 && D3 == 0)
+                    Serial.println("matrix solve bad1");
+                else if (D1 != 0 || D2 != 0 || D3 != 0)
+                    Serial.println("matrix solve bad2");
+            }     
+    }
+    Timer time;   
 };
 
 struct GimbalEstimator : public Estimator {
@@ -91,7 +153,7 @@ struct GimbalEstimator : public Estimator {
         CANData *can_data;
         ICM20649 *icm_imu;
     public:
-        GimbalEstimator(float sensor_values[9], BuffEncoder *b1, BuffEncoder *b2, ICM20649* imu, CANData* data, int n){
+        GimbalEstimator(float sensor_values[10], BuffEncoder *b1, BuffEncoder *b2, ICM20649* imu, CANData* data, int n){
             buff_enc_yaw = b1; // sensor object definitions
             buff_enc_pitch = b2;
             can_data = data;
@@ -131,14 +193,11 @@ struct GimbalEstimator : public Estimator {
             }
             yaw_axis_spherical[2] = acos(gravity_accel_vector[2]/__magnitude(gravity_accel_vector,3))+pitch_diff; // phi
 
-
             // roll_axis_spherical[1] = yaw_axis_spherical[1]; // theta 
             // roll_axis_spherical[2] = yaw_axis_spherical[2]-(PI*0.5); // phi
 
             // pitch_axis_spherical[1] = yaw_axis_spherical[1]-(PI*0.5);
             // pitch_axis_spherical[2] = (PI*0.5);
-
-
 
             // convert spherical to cartesian, These unit vectors are axis in the gimbal refrence frame
             yaw_axis_unitvector[0] = yaw_axis_spherical[0]*cos(yaw_axis_spherical[1])*sin(yaw_axis_spherical[2]); 
@@ -173,7 +232,7 @@ struct GimbalEstimator : public Estimator {
             __rotateVector3D(pitch_axis_unitvector,roll_axis_unitvector,(global_pitch_angle-angle),roll_axis_global);
             
             // gets the velocity data from the imu and uses the gravity vector to calculate the yaw velocity
-            float raw_omega_vector[3] = { icm_imu->get_gyro_X(),icm_imu->get_gyro_Y() ,icm_imu->get_gyro_Z()};
+            float raw_omega_vector[3] = { icm_imu->get_gyro_X(),icm_imu->get_gyro_Y(), icm_imu->get_gyro_Z()};
             // *Note: X is pitch Y is Roll Z is Yaw, when level
             // positive pitch angle is up, positive roll angle is right(robot pov), positive yaw is left(robot pov)
                 
@@ -191,15 +250,15 @@ struct GimbalEstimator : public Estimator {
                 // Serial.print(", ");
                 // Serial.println(yaw_angle);
 
-                Serial.printf("angles: %f, %f, %f", roll_angle, pitch_angle, yaw_angle);
-                Serial.println();
+            // Serial.printf("angles: %f, %f, %f", roll_angle, pitch_angle, yaw_angle);
+            // Serial.println();
 
-                float temp1[3];
-                float temp2[3];
-                float temp3[3];
-                __crossProduct(yaw_axis_unitvector,pitch_axis_unitvector,temp1);
-                __crossProduct(yaw_axis_unitvector,roll_axis_unitvector,temp2);
-                __crossProduct(roll_axis_unitvector,pitch_axis_unitvector,temp3);
+            float temp1[3];
+            float temp2[3];
+            float temp3[3];
+            __crossProduct(yaw_axis_unitvector,pitch_axis_unitvector,temp1);
+            __crossProduct(yaw_axis_unitvector,roll_axis_unitvector,temp2);
+            __crossProduct(roll_axis_unitvector,pitch_axis_unitvector,temp3);
                 // Serial.printf("cp: %f, %f, %f", __magnitude(temp1,3), __magnitude(temp2,3), __magnitude(temp3,3));
                 // Serial.println();
 
@@ -221,7 +280,7 @@ struct GimbalEstimator : public Estimator {
             dt = time.delta();
             if (dt > .002) dt = 0; // first dt loop generates huge time so check for that 
             yaw_angle += -current_yaw_velocity*(dt/7.85);
-            pitch_angle += -current_pitch_velocity*(dt/7.85);
+            pitch_angle += current_pitch_velocity*(dt/7.85);
             roll_angle += -current_roll_velocity*(dt/7.85);
 
             global_yaw_angle += -global_yaw_velocity*(dt/7.85);
@@ -231,8 +290,8 @@ struct GimbalEstimator : public Estimator {
             chassis_angle = yaw_angle - buff_enc_yaw->get_angle();
 
             output[0][0] = chassis_angle;
-            output[0][1] = roll_angle;
-            output[0][2] = current_roll_velocity;
+            output[0][1] = 0;
+            output[0][2] = 0;
             output[1][0] = yaw_angle;
             output[1][1] = current_yaw_velocity;
             output[1][2] = 0;
@@ -242,109 +301,38 @@ struct GimbalEstimator : public Estimator {
         }
 };
 
+struct ChassisEstimator : public Estimator {
+    private:
+    BuffEncoder *buff_enc_yaw;
+    BuffEncoder *buff_enc_pitch;
+    CANData *can_data;
+    ICM20649 *icm_imu;
+    public:
+    ChassisEstimator(float sensor_values[9], BuffEncoder *b1, BuffEncoder *b2, ICM20649* imu, CANData* data, int n) {
+    num_states = n; // number of estimated states
+    buff_enc_yaw = b1; // sensor object definitions
+    buff_enc_pitch = b2;
+    can_data = data;
+    icm_imu = imu;
+    }
 
+    void step_states(float output[STATE_LEN][3]) override{
+        float front_right = can_data->get_motor_attribute(CAN_1,1,MotorAttribute::SPEED);
+        float back_right = can_data->get_motor_attribute(CAN_1,2,MotorAttribute::SPEED);
+        float back_left = can_data->get_motor_attribute(CAN_1,3,MotorAttribute::SPEED);
+        float front_left = can_data->get_motor_attribute(CAN_1,4,MotorAttribute::SPEED);
 
-
-
-
-
-
-
-
-
-
-
-// struct PitchEstimator : public Estimator {
-//     private:
-//         float PITCH_ZERO;
-//         BuffEncoder *buff_enc;
-//         CANData *can_data;
-//         ICM20649 *icm_imu;
-//     public:
-//         PitchEstimator(float sensor_values[8], BuffEncoder *b, ICM20649* imu, CANData* data){
-//             buff_enc = b;
-//             can_data = data;
-//             set_values(sensor_values);
-//             PITCH_ZERO = this->sensor_values[1];
-//             icm_imu = imu;
-//         }
-        
-//         float step_position() override{
-//             float angle = (-buff_enc->get_angle()) + PITCH_ZERO;
-//             while(angle >= PI) angle -= 2 * PI;
-//             while(angle <= -PI) angle += 2 * PI;
-//             return angle;
-//         }
-
-//         float step_velocity()override{
-//             return can_data->get_motor_attribute(CAN_2, 1, MotorAttribute::SPEED);
-//         }
-
-//         float step_acceleration()override{
-//             return icm_imu->get_gyro_Y();
-//         }
-// };
-
-// struct YawEstimator : public Estimator {
-//     private:
-//         float YAW_ZERO;
-//         float PITCH_ZERO;
-//         BuffEncoder *buff_enc;
-//         CANData *can_data;
-//         ICM20649 *icm_imu;
-//         float previous_velocity = 0;
-//         float current_velocity = 0;
-//         // defines the vector for gravity at a given pitch angle
-//         float initial_accel_vector[3] = {0,0,1};
-//         float initial_pitch_angle = 1.57079;
-//     public:
-//         YawEstimator(float values[8], BuffEncoder *b, ICM20649* imu, CANData* data){
-//             buff_enc = b;
-//             can_data = data;
-//             set_values(values);
-//             YAW_ZERO = this->values[1];
-//             PITCH_ZERO = this->values[2];
-//             icm_imu = imu;
-//         }
-        
-//         float step_position() override{
-//         // calulate pitch angle
-//         // *note: this doesnt make sense to do again we should just pass it in
-//             float pitch_angle = (-buff_enc->get_angle()) + PITCH_ZERO;
-//             while(pitch_angle >= PI) pitch_angle -= 2 * PI;
-//             while(pitch_angle <= -PI) pitch_angle += 2 * PI;
-        
-//         // calculates yaw velocity before integrating to find position
-//             // calculates the difference in initial and current pitch angle
-//             float pitch_diff = initial_pitch_angle - pitch_angle;
-//             float ground_pointing_spherical[3] = { 0 };
-
-//             // converts the initial gravity vector into the current gravity vector in spherical coordinates
-//             ground_pointing_spherical[0] = __magnitude(initial_accel_vector, 3);
-//             ground_pointing_spherical[1] = atan(initial_accel_vector[0]/initial_accel_vector[1]);
-//             ground_pointing_spherical[2] = acos(initial_accel_vector[2]/ground_pointing_spherical[0])+pitch_diff;
-
-//             // gets the velocity data from the imu and uses the gravity vector to calculate the yaw velocity
-//             float raw_omega_vector[3] = { icm_imu->get_gyro_X(),icm_imu->get_gyro_Y() ,icm_imu->get_gyro_Z() };
-//             // update previous to the current value before current is updated
-//             previous_velocity = current_velocity;
-//             current_velocity = __vectorProduct(ground_pointing_spherical, raw_omega_vector, 3);
-
-//         // position integration
-//             //
-//             float yaw_angle = 0;
-
-//             return yaw_angle;
-//         }
-
-//         float step_velocity()override{
-            
-//             return current_velocity;
-//         }
-
-//         float step_acceleration()override{
-//             float accel = (current_velocity - previous_velocity)/time.delta();
-//             return accel;
-//         }
-// };
+        output[0][0] = 0; // x pos
+        output[0][1] = 0;
+        output[0][2] = 0;
+        output[1][0] = 0; // y pos
+        output[1][1] = 0;
+        output[1][2] = 0;
+        output[2][0] = 0; // chassis angle
+        output[2][1] = ((front_right/60)*(PI*0.5*50))/200;
+        output[2][2] = 0;
+    }
+};
 #endif
+
+ 

@@ -17,7 +17,7 @@
 
 #define NUM_IMU_CALIBRATION 50000
 
-#define NUM_ESTIMATORS 1
+#define NUM_ESTIMATORS 2
 
 //x y psi theta phi flywheel_l flywheel_r feeder switcher
 class EstimatorManager {
@@ -45,7 +45,7 @@ public:
     ~EstimatorManager();
 
     /// @brief Populates the corresponding index of the "estimators" array attribute with an estimator object.
-    void init_estimator(int state_id);
+    void init_estimator(int state_id,int num_states);
 
     /// @brief Steps through every estimator and constructs a state array based on current sensor values.
     /// @param state State array pointer to be updated.
@@ -56,7 +56,7 @@ public:
 
     void calibrate_imus();
 
-    void assign_states(int as [3][STATE_LEN]);
+    void assign_states(int as [NUM_ESTIMATORS][STATE_LEN]);
 };
 
 #endif

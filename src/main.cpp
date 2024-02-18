@@ -16,7 +16,8 @@ DR16 dr16;
 rm_CAN can;
 Timer loop_timer;
 EstimatorManager *estimator_manager;
-// ControllerManager *controller_manager;
+ControllerManager *controller_manager;
+State state;
 
 // DONT put anything else in this function. It is not a setup function
 void print_logo() {
@@ -58,7 +59,6 @@ int main() {
     // Execute setup functions
     pinMode(13, OUTPUT);
     
-    
     can.init();
     dr16.init();
     
@@ -67,42 +67,88 @@ int main() {
     // controller_manager = Control::get_instance();
 
     estimator_manager = new EstimatorManager(can_data);
-    // controller_manager = new ControllerManager();
+    controller_manager = new ControllerManager();
+
+    float gains_null[NUM_GAINS];
+    float gains_1[NUM_GAINS];
     int assigned_states[NUM_ESTIMATORS][STATE_LEN];
+
+    gains_1[0] = 1; // Kp
+    gains_1[1] = 0; // Ki
+    gains_1[2] = 0; // Kd
+
     for (int i = 0;i < NUM_ESTIMATORS;i++) {
         for (int j = 0;j < STATE_LEN;j++) {
             assigned_states[i][j] = 0;
         }
     }
-    assigned_states[0][0] = 2;
-    assigned_states[0][1] = 3;
-    assigned_states[0][2] = 4;
+    
+    assigned_states[0][0] = 0;
+    assigned_states[0][1] = 1;
+    assigned_states[0][2] = 2;
+
+    assigned_states[1][0] = 2;
+    assigned_states[1][1] = 3;
+    assigned_states[1][2] = 4;
+
+    for (int i = 0;i<NUM_CAN_BUSES;i++) {
+        for (int j = 0;j<NUM_MOTORS_PER_BUS; j++){
+            controller_manager->init_controller(i,j+1,0,gains_null);
+        }
+    }
+
+    controller_manager->init_controller(CAN_1, 1, 2,gains_1);
 
     estimator_manager->assign_states(assigned_states);
-    estimator_manager->init_estimator(2);
+    estimator_manager->init_estimator(1,3);
+    estimator_manager->init_estimator(2,3);
+    estimator_manager->calibrate_imus();
 
     long long loopc = 0; // Loop counter for heartbeat
-    float state[STATE_LEN][3]; // Temp state array
+    float temp_state[STATE_LEN][3]; // Temp state array
+    float temp_reference[STATE_LEN][3];
+    float target_state[STATE_LEN][3];
+    float kinematics[NUM_MOTORS][STATE_LEN];
+    float motor_inputs[NUM_MOTORS];
 
-    estimator_manager->calibrate_imus();
+    for (int i = 0;i<STATE_LEN;i++) {
+        for (int j = 0;j<3;j++) {
+            target_state[i][j] = 0;
+        }
+    }
+
+    for (int i = 0;i<NUM_MOTORS;i++) {
+        for (int j = 0;j<STATE_LEN;j++) {
+            kinematics[i][j] = 0;
+        }
+    }
+
+    kinematics[0][2] = 1;
+    target_state[2][1] = 1; // 1 radian per second chassis spin
 
     // Main loop
     while (true) {
+
         can.read();
         dr16.read();
 
         // Read sensors
         estimator_manager->read_sensors();
-        estimator_manager->step(state);
-
-        // Serial.print(state[2][0]);
-        // Serial.print(", ");
-        // Serial.print(state[2][1]);
-        // Serial.print(", ");
-        // Serial.println(state[2][2]);
-
+        estimator_manager->step(temp_state);
+        // state.set_estimate(temp_state);
+        // state.step_reference(target_state);
+        // state.get_reference(temp_reference);
 
         // Controls code goes here
+        
+        controller_manager->step(target_state, temp_state, kinematics, motor_inputs);
+        Serial.printf("[");
+        for (int i = 0;i<NUM_MOTORS;i++) {
+            Serial.print(motor_inputs[i]);
+            Serial.printf(", ");
+        }
+        Serial.printf("]");
+        Serial.println();
 
         // Write actuators
         if (!dr16.is_connected() || dr16.get_l_switch() == 1)

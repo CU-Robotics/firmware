@@ -22,12 +22,15 @@ EstimatorManager::EstimatorManager(CANData *data){
     can_data = data;
 }
 
-void EstimatorManager::init_estimator(int state_id) {
+void EstimatorManager::init_estimator(int state_id,int num_states) {
     switch (state_id)
     {
+    case 1:
+        float values_chassis[8];
+        estimators[0] = new ChassisEstimator(values_chassis, &buff_sensors[0], &buff_sensors[1], &icm_sensors[0], can_data, num_states); 
+        break;
     case 2: // Gimbal Estimator
-        int num_states = 3; // 3 estimated states in Gimbal Estimator
-        float values_gimbal[8];
+        float values_gimbal[10];
         values_gimbal[0] = 0; // yaw encoder offset
         values_gimbal[1] = 1; // pitch encoder offset
         values_gimbal[2] = 0; // default yaw starting angle (starting point for imu integration)
@@ -40,7 +43,7 @@ void EstimatorManager::init_estimator(int state_id) {
         values_gimbal[8] = -6.940948; // z
         values_gimbal[9] = 1.91986; // Pitch angle at given gravity vector
         
-        estimators[0] = new GimbalEstimator(values_gimbal, &buff_sensors[0], &buff_sensors[1], &icm_sensors[0], can_data, num_states); 
+        estimators[1] = new GimbalEstimator(values_gimbal, &buff_sensors[0], &buff_sensors[1], &icm_sensors[0], can_data, num_states); 
         break;
     default:
         break;
@@ -48,14 +51,20 @@ void EstimatorManager::init_estimator(int state_id) {
 }
 
 void EstimatorManager::step(float outputs[STATE_LEN][3]) {
+    for (int i = 0;i<STATE_LEN;i++) {
+        for (int j = 0;j<3;j++) {
+            outputs[i][j] = 0;
+        }
+    }
+    
     for(int i = 0; i < NUM_ESTIMATORS; i++){
         int num_states = estimators[i]->get_num_states();
         float states[STATE_LEN][3];
         estimators[i]->step_states(states);
         for(int j = 0; j < num_states; j++){
-            outputs[applied_states[i][j]][0] = states[j][0];
-            outputs[applied_states[i][j]][1] = states[j][1];
-            outputs[applied_states[i][j]][2] = states[j][2];
+            outputs[applied_states[i][j]][0] = outputs[applied_states[i][j]][0] + states[j][0];
+            outputs[applied_states[i][j]][1] = outputs[applied_states[i][j]][1] + states[j][1];
+            outputs[applied_states[i][j]][2] = outputs[applied_states[i][j]][2] + states[j][2];
         }
     }
 }
