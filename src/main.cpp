@@ -1,17 +1,21 @@
-#include "utils/timing.h"
-#include "comms/rm_CAN.hpp"
+#include <Arduino.h>
+
+#include "utils/timing.hpp"
+#include "comms/rm_can.hpp"
 #include "sensors/dr16.hpp"
 
+// Loop constants
+#define LOOP_FREQ      1000
+#define HEARTBEAT_FREQ 2
+
+// Declare global objects
 DR16 dr16;
 rm_CAN can;
+Timer loop_timer;
 
-// Runs once
-void setup()
-{
-    Serial.begin(1000000); // the serial monitor is actually always active (for debug use Serial.println & tycmd)
-
-    if (Serial)
-    {
+// DONT put anything else in this function. It is not a setup function
+void print_logo() {
+    if (Serial) {
         Serial.println("TEENSY SERIAL START\n\n");
         Serial.print("\033[1;33m");
         Serial.println("                  .:^!?!^.                        ");
@@ -34,37 +38,49 @@ void setup()
         Serial.println("                   7PY!^^~?PY:                    ");
         Serial.println("                    .!JJJJ?^                      ");
         Serial.print("\033[0m");
-        Serial.println("\n\033[1;92mFW Ver. 2.0.0");
+        Serial.println("\n\033[1;92mFW Ver. 2.1.0");
         Serial.printf("\nLast Built: %s at %s", __DATE__, __TIME__);
-        Serial.printf("\nRun Hash:   %x", ARM_DWT_CYCCNT);
+        Serial.printf("\nRandom Num: %x", ARM_DWT_CYCCNT);
         Serial.println("\033[0m\n");
     }
 }
 
 // Master loop
-int main()
-{ // Basically a schudeling algorithm
-    setup();
+int main() {
+    Serial.begin(1000000); // the serial monitor is actually always active (for debug use Serial.println & tycmd)
+    print_logo();
 
+    // Execute setup functions
+    pinMode(13, OUTPUT);
     dr16.init();
     can.init();
 
-    if (!dr16.is_connected() || dr16.get_l_switch() == 1)
-    {
-        Serial.println("SAFETY: ON");
+    long long loopc = 0; // Loop counter for heartbeat
 
-        can.zero();
-        can.zero_motors();
-    }
-    else
-    {
-        Serial.println("SAFETY: OFF");
-
+    // Main loop
+    while (true) {
+        // Read sensors
+        dr16.read();
         can.read();
 
-        // control code goes here
+        // Controls code goes here
 
-        can.write();
+        // Write actuators
+        if (!dr16.is_connected() || dr16.get_l_switch() == 1) {
+            // SAFETY ON
+            // TODO: Reset all controller integrators here
+            can.zero();
+        } else if (dr16.is_connected() && dr16.get_l_switch() != 1) {
+            // SAFETY OFF
+            can.write();
+        }
+
+        // LED heartbeat -- linked to loop count to reveal slowdowns and freezes.
+        loopc % (int)(1E3/float(HEARTBEAT_FREQ)) < (int)(1E3/float(5*HEARTBEAT_FREQ)) ? digitalWrite(13, HIGH) : digitalWrite(13, LOW);
+        loopc++;
+
+        // Keep the loop running at the desired rate
+        loop_timer.delay_micros((int)(1E6/(float)(LOOP_FREQ)));
     }
 
     return 0;

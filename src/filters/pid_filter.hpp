@@ -15,14 +15,14 @@ struct PIDFilter {
     float filter(float dt) {
         float error = setpoint - measurement;
         sumError += error * dt;
-        float output = (K[0] * error)
-            + (K[1] * sumError)
-            + (K[2] * ((error - prevError) / dt));
-            + (K[3] * feedForward);
+        float output = (K[0] * error) + (K[2] * ((error - prevError) / dt));
+            // + (K[1] * sumError)
+            // + (K[2] * ((error - prevError) / dt));
+            // + (K[3] * feedForward);
         prevError = error;
         if (fabs(output) > 1.0) output /= fabs(output);
         return output;
     }
 };
 
-#endif
+#endif // PID_FILTER_H
