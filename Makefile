@@ -46,6 +46,8 @@ LINKING_FLAGS = -Wl,--gc-sections,--relax $(CPU_FLAGS) -Tteensy4/imxrt1062_t41.l
 # Required base libs for teensy
 BASE_LIBS = -larm_cortexM7lfsp_math -lm -lstdc++
 
+# Detects OS and adds respective paths
+# Darwin is Mac, Linux is Linux
 ifeq ($(UNAME),Darwin)
  ARDUINO_PATH = $(abspath $(HOME)/Library/Arduino15)
  $(info We've detected you are using a Mac! Consult God if this breaks.)
