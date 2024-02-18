@@ -1,5 +1,8 @@
 # Created by Jackson Stepka (Github: Pandabear1125)
 
+# Use uname to detect current OS
+UNAME := $(shell uname -s)
+
 # Teensy core library files
 TEENSY_DIR = teensy4
 TEENSY_INCLUDE = -I$(TEENSY_DIR)
@@ -35,7 +38,7 @@ COMPILE_FLAGS = -Wall -g -O2 $(CPU_FLAGS) $(TEENSY4_FLAGS) -I$(TEENSY_INCLUDE) -
 # C++ specific flags for compiling
 CPP_FLAGS = -std=gnu++14 -felide-constructors -fno-exceptions -fpermissive -fno-rtti -Wno-error=narrowing
 # c++ moment
-CPP_FLAGS += -Wno-trigraphs
+CPP_FLAGS += -Wno-trigraphs -Wno-comment
 
 # Required linker config for teensy related things
 LINKING_FLAGS = -Wl,--gc-sections,--relax $(CPU_FLAGS) -Tteensy4/imxrt1062_t41.ld
@@ -43,11 +46,19 @@ LINKING_FLAGS = -Wl,--gc-sections,--relax $(CPU_FLAGS) -Tteensy4/imxrt1062_t41.l
 # Required base libs for teensy
 BASE_LIBS = -larm_cortexM7lfsp_math -lm -lstdc++
 
-# Compiler for C++ and C
-COMPILER_CPP = ~/.arduino15/packages/teensy/tools/teensy-compile/5.4.1/arm/bin/arm-none-eabi-g++
-COMPILER_C = ~/.arduino15/packages/teensy/tools/teensy-compile/5.4.1/arm/bin/arm-none-eabi-gcc
-# Objcopy program to turn .elf into .hex properly
-OBJCOPY = ~/.arduino15/packages/teensy/tools/teensy-compile/5.4.1/arm/bin/arm-none-eabi-objcopy
+ifeq ($(UNAME),Darwin)
+ ARDUINO_PATH = $(abspath $(HOME)/Library/Arduino15)
+ $(info We've detected you are using a Mac! Consult God if this breaks.)
+endif
+ifeq ($(UNAME),Linux)
+ ARDUINO_PATH = $(abspath $(HOME)/.arduino15)
+ $(info We've detected you're on Linux! Nerd.)
+endif
+
+# Complete compilers
+COMPILER_CPP := $(ARDUINO_PATH)/packages/teensy/tools/teensy-compile/5.4.1/arm/bin/arm-none-eabi-g++
+COMPILER_C := $(ARDUINO_PATH)/packages/teensy/tools/teensy-compile/5.4.1/arm/bin/arm-none-eabi-gcc
+OBJCOPY := $(ARDUINO_PATH)/packages/teensy/tools/teensy-compile/5.4.1/arm/bin/arm-none-eabi-objcopy
 
 # targets are phony to force it to rebuild every time
 .PHONY: build upload monitor kill clean_objs clean_bin clean
@@ -61,7 +72,7 @@ build: clean
 	@$(OBJCOPY) -O ihex -R .eeprom $(PROJECT_NAME).elf $(PROJECT_NAME).hex
 	@chmod +x $(PROJECT_NAME).hex
 	@echo [Cleaning Up]
-	@rm $(PROJECT_NAME).elf -f
+	@rm -f $(PROJECT_NAME).elf 
 
 # builds hex, uploades it, and starts monitoring output
 upload: build
@@ -87,12 +98,12 @@ restart:
 
 # deletes all object files
 clean_objs:
-	@rm *.o -f
+	@rm -f *.o 
 
 # deletes all hex files
 clean_bin:
-	@rm *.hex -f
-	@rm *.elf -f
+	@rm -f *.hex 
+	@rm -f *.elf 
 
 # overall clean target
 clean: clean_objs clean_bin
