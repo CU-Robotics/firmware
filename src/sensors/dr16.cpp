@@ -3,11 +3,11 @@
 DR16::DR16() {}
 
 void DR16::init() {
-	// start Serial5 HardwareSerial with 1
-	Serial5.begin(100000, SERIAL_8E1_RXINV_TXINV);
+	// start Serial8 HardwareSerial with 1
+	Serial8.begin(100000, SERIAL_8E1_RXINV_TXINV);
 	// await any active writing and clear the buffer
-	Serial5.flush();
-	Serial5.clear();
+	Serial8.flush();
+	Serial8.clear();
 
 	// init all input buffers to 0
 	for (int i = 0; i < DR16_PACKET_SIZE; i++) {
@@ -28,13 +28,13 @@ void DR16::read() {
 	// since each packet it sends is 18 bytes, verify that there are exactly 8 bytes in the buffer
 
 	// clear if there are more than 18 bytes, i.e. we missed a previous packet
-	if (Serial5.available() > DR16_PACKET_SIZE) {
-		Serial5.clear();
+	if (Serial8.available() > DR16_PACKET_SIZE) {
+		Serial8.clear();
 		return;
 	}
 
 	// dont read if there are less than 18 bytes, i.e. we caught the packet as it was being written
-	if (Serial5.available() < DR16_PACKET_SIZE) {
+	if (Serial8.available() < DR16_PACKET_SIZE) {
     if (millis() - m_disctTime > 250) {
       m_connected = false;
     }
@@ -48,7 +48,7 @@ void DR16::read() {
   // Serial.println(m_connected);
 
 	// issue read command, fills m_inputRaw with 18 bytes
-	Serial5.readBytes(m_inputRaw, DR16_PACKET_SIZE);
+	Serial8.readBytes(m_inputRaw, DR16_PACKET_SIZE);
 
 	// set channel values, since each channel is packed within each other, and are 11 bits long
 	// some bit shifting is required
@@ -119,7 +119,7 @@ void DR16::read() {
 	}
 
 
-	Serial.printf("%.4d (%.3f)\t%.4d (%.3f)\t%.4d (%.3f)\t%.4d (%.3f)\t%.4d (%.3f)\t%.4d\t%.4d\n", c0, m_input[0], c1, m_input[1], c2, m_input[2], c3, m_input[3], wh, m_input[4], s1, s2);
+	// Serial.printf("%.4d (%.3f)\t%.4d (%.3f)\t%.4d (%.3f)\t%.4d (%.3f)\t%.4d (%.3f)\t%.4d\t%.4d\n", c0, m_input[0], c1, m_input[1], c2, m_input[2], c3, m_input[3], wh, m_input[4], s1, s2);
 	m_prevTime = micros();
 }
 
