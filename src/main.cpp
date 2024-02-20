@@ -48,7 +48,8 @@ void print_logo() {
 
 // Master loop
 int main() {
-    Serial.begin(1000000); // the serial monitor is actually always active (for debug use Serial.println & tycmd)
+	delay(5000);
+	Serial.begin(1000000); // the serial monitor is actually always active (for debug use Serial.println & tycmd)
     print_logo();
 
     // Execute setup functions
@@ -58,39 +59,55 @@ int main() {
 
     long long loopc = 0; // Loop counter for heartbeat
 
-    char buffer[1024];
-
+	char buffer[1024];	
+	memset(buffer, 0, 1024);
+	long packets_sent = 0;
     // Main loop
     while (true) {
         // Read sensors
         dr16.read();
         can.read();
 
-        if (RawHID.available())
-        {
-            int res = RawHID.recv(buffer, UINT16_MAX);
-            Serial.println("Received packet!");
-        }
 
-        // Controls code goes here
 
-        // Write actuators
-        if (!dr16.is_connected() || dr16.get_l_switch() == 1) {
-            // SAFETY ON
-            // TODO: Reset all controller integrators here
-            can.zero();
-        } else if (dr16.is_connected() && dr16.get_l_switch() != 1) {
-            // SAFETY OFF
-            can.write();
-        }
+	// send x amount of packets
+	if (packets_sent < 100000)
+	{
 
-        // LED heartbeat -- linked to loop count to reveal slowdowns and freezes.
-        loopc % (int)(1E3/float(HEARTBEAT_FREQ)) < (int)(1E3/float(5*HEARTBEAT_FREQ)) ? digitalWrite(13, HIGH) : digitalWrite(13, LOW);
-        loopc++;
+		if (RawHID.available())
+		{
+			int bytes_read = RawHID.recv(buffer, UINT16_MAX);
+			if (bytes_read != RAWHID_RX_SIZE)
+				Serial.printf("Failed to read!\n");
+			else 
+			{
+				// write a packet back
+				Serial.printf("Read Packet: %d\n", packets_sent);
+				//for (int i = 0; i < RAWHID_RX_SIZE; i++)
+			//	{
+			//		Serial.printf("%.2x ", buffer[i]);
+			//		if (i % 32 == 0)
+			//			Serial.println();
+			//	}
+			//	Serial.println();
 
-        // Keep the loop running at the desired rate
-        loop_timer.delay_micros((int)(1E6/(float)(LOOP_FREQ)));
-    }
+				int bytes_sent = RawHID.send(buffer, UINT16_MAX);
+				if (bytes_sent != RAWHID_TX_SIZE)
+					Serial.printf("Failed to write!\n");
+				else 
+					packets_sent++;
+			}
+		}
+	}
 
-    return 0;
+
+		// LED heartbeat -- linked to loop count to reveal slowdowns and freezes.
+		loopc % (int)(1E3/float(HEARTBEAT_FREQ)) < (int)(1E3/float(5*HEARTBEAT_FREQ)) ? digitalWrite(13, HIGH) : digitalWrite(13, LOW);
+		loopc++;
+
+		// Keep the loop running at the desired rate
+		// loop_timer.delay_micros((int)(1E6/(float)(LOOP_FREQ)));
+	}
+
+	return 0;
 }
