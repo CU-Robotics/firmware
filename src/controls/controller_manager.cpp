@@ -2,7 +2,6 @@
 
 
 ControllerManager::ControllerManager(){
-    int i = 0;
 }
 
 void ControllerManager::init_controller(uint8_t can_id, uint8_t motor_id, int controller_type, float gains[NUM_GAINS])

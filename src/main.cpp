@@ -135,6 +135,8 @@ int main() {
         // Read sensors
         estimator_manager->read_sensors();
         estimator_manager->step(temp_state);
+
+        
         // state.set_estimate(temp_state);
         // state.step_reference(target_state);
         // state.get_reference(temp_reference);
