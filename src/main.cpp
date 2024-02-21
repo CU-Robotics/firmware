@@ -110,6 +110,7 @@ int main() {
     float target_state[STATE_LEN][3];
     float kinematics[NUM_MOTORS][STATE_LEN];
     float motor_inputs[NUM_MOTORS];
+    int controller_type[STATE_LEN] = {2,2,2,1,1,2,2,2};
 
     for (int i = 0;i<STATE_LEN;i++) {
         for (int j = 0;j<3;j++) {
@@ -143,14 +144,15 @@ int main() {
 
         // Controls code goes here
         
-        controller_manager->step(target_state, temp_state, kinematics, motor_inputs);
+        controller_manager->step(temp_reference, temp_state, kinematics, motor_inputs);
+
+        if (true) { // prints the full motor input vector
         Serial.printf("[");
         for (int i = 0;i<NUM_MOTORS;i++) {
             Serial.print(motor_inputs[i]);
-            Serial.printf(", ");
+            if(i!=NUM_MOTORS-1) Serial.printf(", ");
         }
-        Serial.printf("]");
-        Serial.println();
+        Serial.printf("] \n"); }
 
         // Write actuators
         if (!dr16.is_connected() || dr16.get_l_switch() == 1)
