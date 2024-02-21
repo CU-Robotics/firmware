@@ -5,6 +5,7 @@
 #include "../comms/rm_can.hpp"
 #include "state.hpp"
 
+#define NUM_CONTROLLERS 1
 class ControllerManager {
     private:
         Controller* controllers[NUM_MOTORS];
@@ -16,7 +17,7 @@ class ControllerManager {
         void init_controller(uint8_t can_id, uint8_t motor_id, int controller_type, float gains[NUM_GAINS]);
 
         /// @brief Steps through controllers and calculates output, which is written to the "output" array attribute.
-        void step(float reference[STATE_LEN][3], float estimate[STATE_LEN][3], float kinematics[NUM_MOTORS][STATE_LEN], float outputs[NUM_MOTORS]);
+        void step(float reference[STATE_LEN][3], float estimate[STATE_LEN][3], float outputs[NUM_MOTORS]);
 
         /// @brief Stores motor outputs
         float output[NUM_MOTORS];

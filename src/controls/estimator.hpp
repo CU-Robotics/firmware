@@ -253,31 +253,12 @@ public:
         // *Note: X is pitch Y is Roll Z is Yaw, when level
         // positive pitch angle is up, positive roll angle is right(robot pov), positive yaw is left(robot pov)
 
-        // Serial.print(pitch_axis_unitvector[0]);
-        // Serial.print(", ");
-        // Serial.print(pitch_axis_unitvector[1]);
-        // Serial.print(", ");
-        // Serial.println(pitch_axis_unitvector[2]);
-
-        // Serial.printf("info: %f, %f, %f", pitch_axis_unitvector[0], pitch_axis_unitvector[1], pitch_axis_unitvector[2]);
-        // Serial.println();
-        // Serial.print(roll_angle);
-        // Serial.print(", ");
-        // Serial.print(pitch_angle);
-        // Serial.print(", ");
-        // Serial.println(yaw_angle);
-
-        // Serial.printf("angles: %f, %f, %f", roll_angle, pitch_angle, yaw_angle);
-        // Serial.println();
-
         float temp1[3];
         float temp2[3];
         float temp3[3];
         __crossProduct(yaw_axis_unitvector, pitch_axis_unitvector, temp1);
         __crossProduct(yaw_axis_unitvector, roll_axis_unitvector, temp2);
         __crossProduct(roll_axis_unitvector, pitch_axis_unitvector, temp3);
-        // Serial.printf("cp: %f, %f, %f", __magnitude(temp1,3), __magnitude(temp2,3), __magnitude(temp3,3));
-        // Serial.println();
 
         // update previous to the current value before current is updated
         previous_pitch_velocity = current_pitch_velocity;

@@ -54,9 +54,8 @@ public:
     /// @brief read all sensor arrays besides can and dr16(they are in main).
     void read_sensors();
 
+    /// @brief call read for imu's NUM_IMU_CALIBRATION times and then averages returns to calculate offset.
     void calibrate_imus();
-
-    void assign_states(int as [NUM_ESTIMATORS][STATE_LEN]);
 };
 
 #endif

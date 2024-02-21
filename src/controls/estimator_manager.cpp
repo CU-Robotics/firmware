@@ -58,14 +58,7 @@ void EstimatorManager::step(float outputs[STATE_LEN][3]) {
     }
     
     for(int i = 0; i < NUM_ESTIMATORS; i++){
-        int num_states = estimators[i]->get_num_states();
-        float states[STATE_LEN][3];
-        estimators[i]->step_states(states);
-        for(int j = 0; j < num_states; j++){
-            outputs[applied_states[i][j]][0] = outputs[applied_states[i][j]][0] + states[j][0];
-            outputs[applied_states[i][j]][1] = outputs[applied_states[i][j]][1] + states[j][1];
-            outputs[applied_states[i][j]][2] = outputs[applied_states[i][j]][2] + states[j][2];
-        }
+        estimators[i]->step_states(outputs);
     }
 }
 
