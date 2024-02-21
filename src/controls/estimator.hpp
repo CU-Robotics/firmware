@@ -332,7 +332,7 @@ public:
         output[1][1] = 0;
         output[1][2] = 0;
         output[2][0] = 0; // chassis angle
-        output[2][1] = ((front_right / 60) * (PI * 0.5 * 50)) / 200;
+        output[2][1] = (((front_right*0.10897435897) / 60) * (PI * 2 * .50)) / .1835;
         output[2][2] = 0;
     }
 };

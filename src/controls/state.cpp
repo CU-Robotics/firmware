@@ -13,7 +13,7 @@ void State::step_reference(float ungoverned_reference[STATE_LEN][3], int control
             if (ungoverned_reference[n][p] > reference_limits[n][p][1]) ungoverned_reference[n][p] = reference_limits[n][p][1];
         }
 
-        if(controller_type == 1) { // position based governor
+        if(controller_type[n] == 1) { // position based governor
             float pos_error = ungoverned_reference[n][0] - reference[n][0];
             float vel_error = ungoverned_reference[n][1] - reference[n][1];
             // Set the accel refrence to the max or min based on which direction it needs to go
@@ -33,7 +33,7 @@ void State::step_reference(float ungoverned_reference[STATE_LEN][3], int control
             reference[n][1] += reference[n][2] * dt;
             reference[n][0] += reference[n][1] * dt;
 
-        } else if(controller_type == 2) { // velocity based governor
+        } else if(controller_type[n] == 2) { // velocity based governor
             float vel_error = ungoverned_reference[n][1] - reference[n][1];
             // check which direction the target is and set acceleration
             if(vel_error > 0) reference[n][2] = reference_limits[n][2][1];

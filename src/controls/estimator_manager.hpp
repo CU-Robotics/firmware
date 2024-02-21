@@ -56,6 +56,8 @@ public:
 
     /// @brief call read for imu's NUM_IMU_CALIBRATION times and then averages returns to calculate offset.
     void calibrate_imus();
+
+    void assign_states(int as [NUM_ESTIMATORS][STATE_LEN]);
 };
 
 #endif

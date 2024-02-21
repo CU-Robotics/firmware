@@ -8,7 +8,7 @@
 #include "controls/state.hpp"
 
 // Loop constants
-#define LOOP_FREQ      1000
+#define LOOP_FREQ 1000
 #define HEARTBEAT_FREQ 2
 
 // Declare global objects
@@ -20,8 +20,10 @@ ControllerManager *controller_manager;
 State state;
 
 // DONT put anything else in this function. It is not a setup function
-void print_logo() {
-    if (Serial) {
+void print_logo()
+{
+    if (Serial)
+    {
         Serial.println("TEENSY SERIAL START\n\n");
         Serial.print("\033[1;33m");
         Serial.println("                  .:^!?!^.                        ");
@@ -52,17 +54,18 @@ void print_logo() {
 }
 
 // Master loop
-int main() {
+int main()
+{
     Serial.begin(1000000); // the serial monitor is actually always active (for debug use Serial.println & tycmd)
     print_logo();
 
     // Execute setup functions
     pinMode(13, OUTPUT);
-    
+
     can.init();
     dr16.init();
-    
-    CANData* can_data = can.get_data();
+
+    CANData *can_data = can.get_data();
 
     // controller_manager = Control::get_instance();
 
@@ -72,17 +75,29 @@ int main() {
     float gains_null[NUM_GAINS];
     float gains_1[NUM_GAINS];
     int assigned_states[NUM_ESTIMATORS][STATE_LEN];
+    float set_reference_limits[STATE_LEN][3][2];
 
-    gains_1[0] = 1; // Kp
-    gains_1[1] = 0; // Ki
-    gains_1[2] = 0; // Kd
+    set_reference_limits[2][1][0] = -105.626;
+    set_reference_limits[2][1][1] = 105.626;
 
-    for (int i = 0;i < NUM_ESTIMATORS;i++) {
-        for (int j = 0;j < STATE_LEN;j++) {
+
+    set_reference_limits[2][2][0] = -1;
+    set_reference_limits[2][2][1] = 1;
+
+    state.set_reference_limits(set_reference_limits);
+
+    gains_1[0] = 0.003; // Kp
+    gains_1[1] = 0;   // Ki
+    gains_1[2] = 0;   // Kd
+
+    for (int i = 0; i < NUM_ESTIMATORS; i++)
+    {
+        for (int j = 0; j < STATE_LEN; j++)
+        {
             assigned_states[i][j] = 0;
         }
     }
-    
+
     assigned_states[0][0] = 0;
     assigned_states[0][1] = 1;
     assigned_states[0][2] = 2;
@@ -91,44 +106,61 @@ int main() {
     assigned_states[1][1] = 3;
     assigned_states[1][2] = 4;
 
-    for (int i = 0;i<NUM_CAN_BUSES;i++) {
-        for (int j = 0;j<NUM_MOTORS_PER_BUS; j++){
-            controller_manager->init_controller(i,j+1,0,gains_null);
+    for (int i = 0; i < NUM_CAN_BUSES; i++)
+    {
+        for (int j = 0; j < NUM_MOTORS_PER_BUS; j++)
+        {
+            controller_manager->init_controller(i, j + 1, 0, gains_null);
         }
     }
 
-    controller_manager->init_controller(CAN_1, 1, 2,gains_1);
+    controller_manager->init_controller(CAN_1, 1, 2, gains_1);
+    controller_manager->init_controller(CAN_1, 2, 2, gains_1);
+    controller_manager->init_controller(CAN_1, 3, 2, gains_1);
+    controller_manager->init_controller(CAN_1, 4, 2, gains_1);
 
     estimator_manager->assign_states(assigned_states);
-    estimator_manager->init_estimator(1,3);
-    estimator_manager->init_estimator(2,3);
+
+    estimator_manager->init_estimator(1, 3);
+    estimator_manager->init_estimator(2, 3);
     estimator_manager->calibrate_imus();
 
-    long long loopc = 0; // Loop counter for heartbeat
+    long long loopc = 0;            // Loop counter for heartbeat
     float temp_state[STATE_LEN][3]; // Temp state array
     float temp_reference[STATE_LEN][3];
     float target_state[STATE_LEN][3];
     float kinematics[NUM_MOTORS][STATE_LEN];
     float motor_inputs[NUM_MOTORS];
-    int controller_type[STATE_LEN] = {2,2,2,1,1,2,2,2};
+    int controller_type[STATE_LEN] = {2, 2, 2, 1, 1, 2, 2, 2};
 
-    for (int i = 0;i<STATE_LEN;i++) {
-        for (int j = 0;j<3;j++) {
+    for (int i = 0; i < STATE_LEN; i++)
+    {
+        for (int j = 0; j < 3; j++)
+        {
             target_state[i][j] = 0;
         }
     }
 
-    for (int i = 0;i<NUM_MOTORS;i++) {
-        for (int j = 0;j<STATE_LEN;j++) {
+    for (int i = 0; i < NUM_MOTORS; i++)
+    {
+        for (int j = 0; j < STATE_LEN; j++)
+        {
             kinematics[i][j] = 0;
         }
     }
+    float chassis_angle_to_motor_error = ((.200*9.17647058824)/.0516);
+    kinematics[0][2] = chassis_angle_to_motor_error;    
+    kinematics[1][2] = chassis_angle_to_motor_error;
+    kinematics[2][2] = chassis_angle_to_motor_error;
+    kinematics[3][2] = chassis_angle_to_motor_error;
 
-    kinematics[0][2] = 1;
-    target_state[2][1] = 1; // 1 radian per second chassis spin
+
+    target_state[2][1] = 6;
+    
 
     // Main loop
-    while (true) {
+    while (true)
+    {
 
         can.read();
         dr16.read();
@@ -137,22 +169,34 @@ int main() {
         estimator_manager->read_sensors();
         estimator_manager->step(temp_state);
 
-        
-        // state.set_estimate(temp_state);
-        // state.step_reference(target_state);
-        // state.get_reference(temp_reference);
+        state.set_estimate(temp_state);
+        state.step_reference(target_state, controller_type);
+        state.get_reference(temp_reference);
 
         // Controls code goes here
-        
         controller_manager->step(temp_reference, temp_state, kinematics, motor_inputs);
 
-        if (true) { // prints the full motor input vector
-        Serial.printf("[");
-        for (int i = 0;i<NUM_MOTORS;i++) {
-            Serial.print(motor_inputs[i]);
-            if(i!=NUM_MOTORS-1) Serial.printf(", ");
+        for (int j = 0; j < 2; j++)
+        {
+            for (int i = 0; i < NUM_MOTORS; i++)
+            {
+                can.write_motor_norm(j, i+1, C620, motor_inputs[(j*NUM_MOTORS)+i]);
+            }
         }
-        Serial.printf("] \n"); }
+
+        Serial.println(motor_inputs[0]);
+
+        if (true)
+        { // prints the full motor input vector
+            Serial.printf("[");
+            for (int i = 0; i < NUM_MOTORS; i++)
+            {
+                Serial.print(motor_inputs[i]);
+                if (i != NUM_MOTORS - 1)
+                    Serial.printf(", ");
+            }
+            Serial.printf("] \n");
+        }
 
         // Write actuators
         if (!dr16.is_connected() || dr16.get_l_switch() == 1)
@@ -160,7 +204,9 @@ int main() {
             // SAFETY ON
             // TODO: Reset all controller integrators here
             can.zero();
-        } else if (dr16.is_connected() && dr16.get_l_switch() != 1) {
+        }
+        else if (dr16.is_connected() && dr16.get_l_switch() != 1)
+        {
             // SAFETY OFF
             can.write();
         }

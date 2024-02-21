@@ -9,6 +9,7 @@
 
 struct Controller
 {
+ 
 protected:
     float gains[NUM_GAINS];
     Timer timer;
@@ -24,7 +25,7 @@ public:
 
     /// @brief Generates a motor current from a joint reference and estimation
     /// @returns motor output
-    virtual float step(float reference[3], float estimate[3], float outputs[NUM_MOTORS]);
+    virtual float step(float reference[3], float estimate[3]);
 
     /// @brief Resets integrators/timers
     virtual void reset() { timer.start_timer(); }
@@ -33,109 +34,96 @@ public:
 struct NullController : public Controller
 {
 public:
-    void step(float reference[STATE_LEN][3], float estimate[STATE_LEN][3], float outputs[NUM_MOTORS]) { return 0;}
+    float step(float reference[3], float estimate[3]) { return 0;}
 };
 
-struct ChassisController : public Controller
+struct PIDPositionController : public Controller
 {
 private:
-    PIDFilter p1;
+    PIDFilter pid;
 
 public:
-    void step(float reference[STATE_LEN][3], float estimate[STATE_LEN][3], float outputs[NUM_MOTORS])
+    float step(float reference[3], float estimate[3])
     {
-        //manipulate outputs
+        float dt = timer.delta();
+
+        pid.setpoint = reference[0]; // 0th index = position
+        pid.measurement = estimate[0];
+
+        float output = pid.filter(dt);
+        return output;
+    }
+
+    void reset()
+    {
+        Controller::reset();
+        pid.sumError = 0.0;
     }
 };
 
+struct PIDVelocityController : public Controller
+{
+private:
+    PIDFilter pid;
 
-// struct PIDPositionController : public Controller
-// {
-// private:
-//     PIDFilter pid;
+public:
+    float step(float reference[3], float estimate[3])
+    {
+        float dt = timer.delta();
 
-// public:
-//     float step(float reference[STATE_LEN][3], float estimate[STATE_LEN][3])
-//     {
-//         float dt = timer.delta();
+        pid.setpoint = reference[1]; // 1st index = position
+        pid.measurement = estimate[1];
+        pid.K[0] = gains[0];
+        pid.K[1] = gains[1];
+        pid.K[2] = gains[2];
 
-//         pid.setpoint = reference[0]; // 0th index = position
-//         pid.measurement = estimate[0];
+        float output = pid.filter(dt);
+        return output;
+    }
 
-//         float output = pid.filter(dt);
-//         return output;
-//     }
+    void reset()
+    {
+        Controller::reset();
+        pid.sumError = 0.0;
+    }
+};
 
-//     void reset()
-//     {
-//         Controller::reset();
-//         pid.sumError = 0.0;
-//     }
-// };
+struct FullStateFeedbackController : public Controller
+{
+private:
+    PIDFilter pid1, pid2;
 
-// struct PIDVelocityController : public Controller
-// {
-// private:
-//     PIDFilter pid;
+public:
+    void set_gains(float gains[NUM_GAINS])
+    {
+        Controller::set_gains(gains);
+        //   memcpy(gains[0], pid1.K, sizeof(pid1.K));
+        //   memcpy(gains[3], pid2.K, sizeof(pid2.K));
+    }
 
-// public:
-//     float step(float reference[3], float estimate[3])
-//     {
-//         float dt = timer.delta();
+    float step(float reference[3], float estimate[3])
+    {
+        float dt = timer.delta();
+        float output = 0.0;
 
-//         pid.setpoint = reference[1]; // 1st index = position
-//         pid.measurement = estimate[1];
-//         pid.K[0] = gains[0];
-//         pid.K[1] = gains[1];
-//         pid.K[2] = gains[2];
+        pid1.setpoint = reference[0];
+        pid1.measurement = estimate[0];
 
-//         float output = pid.filter(dt);
-//         return output;
-//     }
+        pid2.setpoint = reference[1];
+        pid2.measurement = estimate[1];
 
-//     void reset()
-//     {
-//         Controller::reset();
-//         pid.sumError = 0.0;
-//     }
-// };
+        output += pid1.filter(dt);
+        output += pid2.filter(dt);
 
-// struct FullStateFeedbackController : public Controller
-// {
-// private:
-//     PIDFilter pid1, pid2;
+        return output;
+    }
 
-// public:
-//     void set_gains(float gains[NUM_GAINS])
-//     {
-//         Controller::set_gains(gains);
-//         //   memcpy(gains[0], pid1.K, sizeof(pid1.K));
-//         //   memcpy(gains[3], pid2.K, sizeof(pid2.K));
-//     }
+    void reset()
+    {
+        Controller::reset();
+        pid1.sumError = 0.0;
+        pid2.sumError = 0.0;
+    }
+};
 
-//     float step(float reference[3], float estimate[3])
-//     {
-//         float dt = timer.delta();
-//         float output = 0.0;
-
-//         pid1.setpoint = reference[0];
-//         pid1.measurement = estimate[0];
-
-//         pid2.setpoint = reference[1];
-//         pid2.measurement = estimate[1];
-
-//         output += pid1.filter(dt);
-//         output += pid2.filter(dt);
-
-//         return output;
-//     }
-
-//     void reset()
-//     {
-//         Controller::reset();
-//         pid1.sumError = 0.0;
-//         pid2.sumError = 0.0;
-//     }
-// };
-
-// #endif // CONTROLLER_H
+#endif // CONTROLLER_H
