@@ -108,14 +108,6 @@ void EstimatorManager::calibrate_imus(){
     // Serial.println();
 }
 
-void EstimatorManager::assign_states(int as[NUM_ESTIMATORS][STATE_LEN]){
-    for(int i = 0; i < NUM_ESTIMATORS; i++){
-        for(int j = 0; j < STATE_LEN; j++){
-            applied_states[i][j] = as[i][j];
-        } 
-    }
-}
-
 EstimatorManager::~EstimatorManager(){
     Serial.println("Ending SPI");
     SPI.end();
