@@ -137,9 +137,10 @@ int main() {
         estimator_manager->read_sensors();
         estimator_manager->step(temp_state);
 
-        state.set_estimate(temp_state);
-        state.step_reference(target_state,controller_type);
-        state.get_reference(temp_reference);
+        
+        // state.set_estimate(temp_state);
+        // state.step_reference(target_state);
+        // state.get_reference(temp_reference);
 
         // Controls code goes here
         

@@ -24,7 +24,7 @@ struct PIDFilter {
         return output;
     }
 
-    set_K(float gains[4]) {
+    void set_K(float gains[4]) {
         for(int i = 0;i < 4; i++) {
             K[i] = gains[i];
         }
