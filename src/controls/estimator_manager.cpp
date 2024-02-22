@@ -1,7 +1,7 @@
 #include "estimator_manager.hpp"
 
-
-EstimatorManager::EstimatorManager(CANData *data){
+EstimatorManager::EstimatorManager(CANData *data)
+{
 
     pinMode(YAW_BUFF_CS, OUTPUT);
     pinMode(PITCH_BUFF_CS, OUTPUT);
@@ -22,78 +22,104 @@ EstimatorManager::EstimatorManager(CANData *data){
     can_data = data;
 }
 
-void EstimatorManager::init_estimator(int state_id,int num_states) {
+void EstimatorManager::init_estimator(int state_id, int num_states)
+{
     switch (state_id)
     {
     case 1:
         float values_chassis[8];
-        estimators[0] = new ChassisEstimator(values_chassis, &buff_sensors[0], &buff_sensors[1], &icm_sensors[0], can_data, num_states); 
+        estimators[0] = new ChassisEstimator(values_chassis, &buff_sensors[0], &buff_sensors[1], &icm_sensors[0], can_data, num_states);
         break;
     case 2: // Gimbal Estimator
         float values_gimbal[10];
-        values_gimbal[0] = 0; // yaw encoder offset
-        values_gimbal[1] = 1; // pitch encoder offset
-        values_gimbal[2] = 0; // default yaw starting angle (starting point for imu integration)
+        values_gimbal[0] = 0;       // yaw encoder offset
+        values_gimbal[1] = 1;       // pitch encoder offset
+        values_gimbal[2] = 0;       // default yaw starting angle (starting point for imu integration)
         values_gimbal[3] = 1.91986; // default pitch starting angle (starting point for imu integration)
-        values_gimbal[4] = 0; // default roll starting angle (starting point for imu integration)
-        values_gimbal[5] = 0; // default chassis pitch angle 
+        values_gimbal[4] = 0;       // default roll starting angle (starting point for imu integration)
+        values_gimbal[5] = 0;       // default chassis pitch angle
         // Stable gravity vector {x,y,z}
-        values_gimbal[6] = 0.077535; // x
-        values_gimbal[7] = 2.396863; // y
+        values_gimbal[6] = 0.077535;  // x
+        values_gimbal[7] = 2.396863;  // y
         values_gimbal[8] = -6.940948; // z
-        values_gimbal[9] = 1.91986; // Pitch angle at given gravity vector
-        
-        estimators[1] = new GimbalEstimator(values_gimbal, &buff_sensors[0], &buff_sensors[1], &icm_sensors[0], can_data, num_states); 
+        values_gimbal[9] = 1.91986;   // Pitch angle at given gravity vector
+
+        estimators[1] = new GimbalEstimator(values_gimbal, &buff_sensors[0], &buff_sensors[1], &icm_sensors[0], can_data, num_states);
         break;
     case 3:
-        estimators[2] = new FlyWheelEstimator(can_data, num_states); 
+        estimators[2] = new FlyWheelEstimator(can_data, num_states);
         break;
     case 4:
-        estimators[3] = new FeederEstimator(can_data, num_states); 
+        estimators[3] = new FeederEstimator(can_data, num_states);
         break;
     case 5:
-        estimators[5] = new LocalEstimator(can_data, num_states); 
+        estimators[4] = new LocalEstimator(can_data, num_states);
         break;
     default:
         break;
     }
 }
 
-void EstimatorManager::step(float global_outputs[STATE_LEN][3], float local_outputs[STATE_LEN][3]) {
-    for (int i = 0;i<STATE_LEN;i++) {
-        for (int j = 0;j<3;j++) {
-            global_outputs[i][j] = 0;
-            local_outputs[i][j] = 0;
-        }
-    }
-
-    for(int i = 0; i < NUM_ESTIMATORS; i++){
+void EstimatorManager::step(float macro_outputs[STATE_LEN][3], float micro_outputs[NUM_MOTORS][MICRO_STATE_LEN])
+{
+    // clear output
+    clear_outputs(macro_outputs, micro_outputs);
+    for (int i = 0; i < NUM_ESTIMATORS; i++)
+    {
         int num_states = estimators[i]->get_num_states();
-        float global_states[STATE_LEN][3];
-        float local_states[STATE_LEN][3];
-        if (!estimators[i]->local_estimator){
-            estimators[i]->step_states(states);
-            for(int j = 0; j < num_states; j++){
-                global_outputs[applied_states[i][j]][0] = global_outputs[applied_states[i][j]][0] + global_states[j][0];
-                global_outputs[applied_states[i][j]][1] = global_outputs[applied_states[i][j]][1] + global_states[j][1];
-                global_outputs[applied_states[i][j]][2] = global_outputs[applied_states[i][j]][2] + global_states[j][2];
+        float macro_states[STATE_LEN][3] = {0};
+        float micro_states[NUM_MOTORS][MICRO_STATE_LEN] = {0};
+        
+        // memset(micro_states, 0, NUM_MOTORS*MICRO_STATE_LEN * 4);
+        if (!estimators[i]->micro_estimator)
+        {
+            estimators[i]->step_states(macro_states);
+            for (int j = 0; j < num_states; j++)
+            {
+                for (int k = 0; k < 3; k++)
+                    macro_outputs[applied_states[i][j]][k] = macro_outputs[applied_states[i][j]][k] + macro_states[j][k];
             }
-        }else {
-            estimators[i]->step_states(states);
-            for(int j = 0; j < num_states; j++) {
-                local_outputs[applied_states[i][j]][0] = local_outputs[applied_states[i][j]][0] + local_states[j][0];
-                local_outputs[applied_states[i][j]][1] = local_outputs[applied_states[i][j]][1] + local_states[j][1];
-                local_outputs[applied_states[i][j]][2] = local_outputs[applied_states[i][j]][2] + local_states[j][2];
+        }
+        else
+        {
+            estimators[i]->step_states(micro_states);
+            // Serial.println(micro_states[9][0]);
+            for (int j = 0; j < num_states; j++)
+            {
+                for (int k = 0; k < MICRO_STATE_LEN; k++){
+                    micro_outputs[applied_states[i][j]][k] = micro_outputs[applied_states[i][j]][k] + micro_states[j][k];
+                }
             }
         }
     }
 }
 
-void EstimatorManager::assign_states(int as[NUM_ESTIMATORS][STATE_LEN]){
-    for(int i = 0; i < NUM_ESTIMATORS; i++){
-        for(int j = 0; j < STATE_LEN; j++){
+void EstimatorManager::clear_outputs(float macro_outputs[STATE_LEN][3], float micro_outputs[NUM_MOTORS][MICRO_STATE_LEN])
+{
+    for (int i = 0; i < STATE_LEN; i++)
+    {
+        for (int j = 0; j < 3; j++)
+        {
+            macro_outputs[i][j] = 0;
+        }
+    }
+    for (int i = 0; i < NUM_MOTORS; i++)
+    {
+        for (int j = 0; j < MICRO_STATE_LEN; j++)
+        {
+            micro_outputs[i][j] = 0;
+        }
+    }
+}
+
+void EstimatorManager::assign_states(int as[NUM_ESTIMATORS][STATE_LEN])
+{
+    for (int i = 0; i < NUM_ESTIMATORS; i++)
+    {
+        for (int j = 0; j < STATE_LEN; j++)
+        {
             applied_states[i][j] = as[i][j];
-        } 
+        }
     }
 }
 
@@ -104,8 +130,9 @@ void EstimatorManager::read_sensors()
     icm_sensors[0].read();
 }
 
-void EstimatorManager::calibrate_imus(){ 
-    Serial.println("Calibrating IMU's...");  
+void EstimatorManager::calibrate_imus()
+{
+    Serial.println("Calibrating IMU's...");
     float sum_x = 0;
     float sum_y = 0;
     float sum_z = 0;
@@ -114,8 +141,9 @@ void EstimatorManager::calibrate_imus(){
     float sum_accel_y = 0;
     float sum_accel_z = 0;
 
-    for(int i = 0; i < NUM_IMU_CALIBRATION; i++){  
-        icm_sensors[0].read(); 
+    for (int i = 0; i < NUM_IMU_CALIBRATION; i++)
+    {
+        icm_sensors[0].read();
         sum_x += icm_sensors[0].get_gyro_X();
         sum_y += icm_sensors[0].get_gyro_Y();
         sum_z += icm_sensors[0].get_gyro_Z();
@@ -125,16 +153,16 @@ void EstimatorManager::calibrate_imus(){
         sum_accel_z += icm_sensors[0].get_accel_Z();
     }
 
-    Serial.printf("Calibrated offsets: %f, %f, %f", sum_accel_x/NUM_IMU_CALIBRATION, sum_accel_y/NUM_IMU_CALIBRATION, sum_accel_z/NUM_IMU_CALIBRATION);
+    Serial.printf("Calibrated offsets: %f, %f, %f", sum_accel_x / NUM_IMU_CALIBRATION, sum_accel_y / NUM_IMU_CALIBRATION, sum_accel_z / NUM_IMU_CALIBRATION);
     Serial.println();
-    icm_sensors[0].set_offsets(sum_x/NUM_IMU_CALIBRATION, sum_y/NUM_IMU_CALIBRATION, sum_z/NUM_IMU_CALIBRATION);
+    icm_sensors[0].set_offsets(sum_x / NUM_IMU_CALIBRATION, sum_y / NUM_IMU_CALIBRATION, sum_z / NUM_IMU_CALIBRATION);
 
     // sum_x = 0;
     // sum_y = 0;
     // sum_z = 0;
 
-    // for(int i = 0; i < NUM_IMU_CALIBRATION; i++){  
-    //     icm_sensors[0].read(); 
+    // for(int i = 0; i < NUM_IMU_CALIBRATION; i++){
+    //     icm_sensors[0].read();
     //     sum_x += icm_sensors[0].get_gyro_X();
     //     sum_y += icm_sensors[0].get_gyro_Y();
     //     sum_z += icm_sensors[0].get_gyro_Z();
@@ -143,13 +171,16 @@ void EstimatorManager::calibrate_imus(){
     // Serial.println();
 }
 
-EstimatorManager::~EstimatorManager(){
+EstimatorManager::~EstimatorManager()
+{
     Serial.println("Ending SPI");
     SPI.end();
     Serial.println("SPI Ended");
 
-    for(int i = 0; i < STATE_LEN;i++) {
-        if(estimators[i] == nullptr) continue;
+    for (int i = 0; i < STATE_LEN; i++)
+    {
+        if (estimators[i] == nullptr)
+            continue;
         delete estimators[i];
     }
 }

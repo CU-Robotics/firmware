@@ -3,12 +3,11 @@
 
 #include "controller.hpp"
 #include "../comms/rm_can.hpp"
-#include "state.hpp"
+#include "../sensors/RefSystem.hpp"
 
-#define NUM_CONTROLLERS 1
 class ControllerManager {
     private:
-        Controller* controllers[NUM_MOTORS];
+        Controller* controllers[NUM_MOTORS][NUM_CONTROLLER_LEVELS];
 
     public:
         ControllerManager();
@@ -18,14 +17,14 @@ class ControllerManager {
         /// @param motor_id motor id (1 indexed. ie motor id 1 = 1)
         /// @param controller_type denotes what kind of controller to initialize (see contoller.hpp)
         /// @param gains gains matrix input (see controller.hpp for what each gain means)
-        void init_controller(uint8_t can_id, uint8_t motor_id, int controller_type, float gains[NUM_GAINS]);
+        void init_controller(uint8_t can_id, uint8_t motor_id, int controller_type, int controller_level, float gains[NUM_GAINS]);
 
         /// @brief Steps through controllers and calculates output, which is written to the "output" array attribute.
         /// @param reference State reference (governed target state)
         /// @param estimate estimated current state
         /// @param kinematics kinematics matrix relating motors to states (Number_of_motors x State_length)
         /// @param outputs generated motor input normalized -1 to 1
-        void step(float reference[STATE_LEN][3], float estimate[STATE_LEN][3], float kinematics_p[NUM_MOTORS][STATE_LEN], float kinematics_v[NUM_MOTORS][STATE_LEN], float outputs[NUM_MOTORS]);
+        void step(float macro_reference[STATE_LEN][3], float macro_estimate[STATE_LEN][3], float micro_estimate[NUM_MOTORS][MICRO_STATE_LEN], float kinematics_p[NUM_MOTORS][STATE_LEN], float kinematics_v[NUM_MOTORS][STATE_LEN], float outputs[NUM_MOTORS]);
 
         /// @brief Stores motor outputs
         float output[NUM_MOTORS];

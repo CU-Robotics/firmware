@@ -4,6 +4,7 @@
 
 #include "../comms/rm_can.hpp"
 #include "state.hpp"
+#include "../sensors/RefSystem.hpp"
 
 #define NUM_SENSOR_VALUES 8
 
@@ -17,10 +18,11 @@ public:
 
     int get_num_states() { return num_states; }
 
-    bool local_estimator = false;
+    bool micro_estimator = false;
 
 protected:
-    /// @brief number of states that an estimator will estimate
+    /// @brief number of states that an estimator will estimate. 
+    /// For the micro estimators its the number micro states to estimate
     int num_states;
 
     // create a timer object for each estimator
@@ -419,13 +421,12 @@ struct FlyWheelEstimator : public Estimator
 
     void step_states(float output[STATE_LEN][3]){
         float flywheel_velocity_l = can_data->get_motor_attribute(CAN_2, 3, MotorAttribute::SPEED);
-        flywheel_velocity_r = (flywheel_velocity_r / 60 ) * 2*PI;
 
-        float flywheel_velocity_r = can_data->get_motor_attribute(CAN_2, 4, MotorAttribute::SPEED);
-        flywheel_velocity_l = (flywheel_velocity_r / 60 ) * 2*PI;
+        flywheel_velocity_l = ((flywheel_velocity_l / 60 ) * 2*PI) * 60;
 
-        outputs[5][1] = flywheel_velocity_l;
-        outputs[6][1] = flywheel_velocity_r;
+        // TODO: needs ref
+        output[0][1] = flywheel_velocity_l;
+        
     }
 };
 
@@ -443,26 +444,30 @@ struct FeederEstimator : public Estimator
     void step_states(float output[STATE_LEN][3]){
         float feeder_velocity = can_data->get_motor_attribute(CAN_2, 5, MotorAttribute::SPEED);
         feeder_velocity = (feeder_velocity / 60 * 36 ) * 2*PI;
-
-        outputs[5][1] = feeder_velocity;
+        // TODO: needs ref
+        output[5][1] = feeder_velocity;
     }
 };
 
 
-struct LocalEstimator{
+struct LocalEstimator : public Estimator{
     private:
     CANData* can_data;
 
     public:
-        LocalEstimator(CANData* c){
-            local_estimator = true;
+        LocalEstimator(CANData* c, int ns){
+            micro_estimator = true;
             can_data = c;
+            num_states = ns;
         }
 
-        void step_states(float output[STATE_LEN][3]){
-            
+        void step_states(float output[NUM_MOTORS][MICRO_STATE_LEN]){
+            for (int i = 0; i < NUM_CAN_BUSES; i++){
+                for(int j = 0; j < NUM_MOTORS_PER_BUS; j++){
+                    output[(i*NUM_MOTORS_PER_BUS)+j][0] = can_data->get_motor_attribute(i, j+1, MotorAttribute::SPEED);
+                }
+            }
         }
-
 };
 
 #endif

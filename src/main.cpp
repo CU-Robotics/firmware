@@ -7,6 +7,9 @@
 #include "controls/controller_manager.hpp"
 #include "controls/state.hpp"
 
+#include "sensors/RefSystem.hpp"
+
+
 // Loop constants
 #define LOOP_FREQ 1000
 #define HEARTBEAT_FREQ 2
@@ -14,6 +17,8 @@
 // Declare global objects
 DR16 dr16;
 rm_CAN can;
+RefSystem ref;
+
 Timer loop_timer;
 EstimatorManager *estimator_manager;
 ControllerManager *controller_manager;
@@ -64,19 +69,16 @@ int main()
 
     can.init();
     dr16.init();
+    ref.init();
 
     CANData *can_data = can.get_data();
 
     estimator_manager = new EstimatorManager(can_data);
     controller_manager = new ControllerManager();
 
-    float gains_null[NUM_GAINS];
-    float gains_chassis[NUM_GAINS];
-    float gains_pitch[NUM_GAINS];
-    float gains_yaw[NUM_GAINS];
-    float gains_flywheel[NUM_GAINS];
-    float gains_feeder[NUM_GAINS];
+    float gains[NUM_MOTORS][NUM_CONTROLLER_LEVELS][NUM_GAINS];
     int assigned_states[NUM_ESTIMATORS][STATE_LEN];
+    int num_states_per_estimator[NUM_ESTIMATORS] = {3,3,1,1,16};
     float set_reference_limits[STATE_LEN][3][2];
 
     //x pos
@@ -114,27 +116,20 @@ int main()
     set_reference_limits[4][1][1] = 70.1181276577;
     set_reference_limits[4][2][0] = -1;
     set_reference_limits[4][2][1] = 1;
-    //flywheel Left
+    //Shooter Ball Speed
     set_reference_limits[5][0][0] = -UINT_MAX;
     set_reference_limits[5][0][1] = UINT_MAX;
-    set_reference_limits[5][1][0] = -969.28;
-    set_reference_limits[5][1][1] = 969.28;
-    set_reference_limits[5][2][0] = -1000;
-    set_reference_limits[5][2][1] = 1000;
-    //flywheel Right
-    set_reference_limits[6][0][0] = -UINT_MAX;
-    set_reference_limits[6][0][1] = UINT_MAX;
-    set_reference_limits[6][1][0] = -969.28;
-    set_reference_limits[6][1][1] = 969.28;
-    set_reference_limits[6][2][0] = -1000;
-    set_reference_limits[6][2][1] = 1000;
-    //feeder
+    set_reference_limits[5][1][0] = 0;
+    set_reference_limits[5][1][1] = 35;
+    set_reference_limits[5][2][0] = -100000;
+    set_reference_limits[5][2][1] = 100000;
+    //Feeder Balls
     set_reference_limits[7][0][0] = -UINT_MAX;
     set_reference_limits[7][0][1] = UINT_MAX;
-    set_reference_limits[7][1][0] = -10;
-    set_reference_limits[7][1][1] = 10;
-    set_reference_limits[7][2][0] = -1;
-    set_reference_limits[7][2][1] = 1;
+    set_reference_limits[7][1][0] = -40;
+    set_reference_limits[7][1][1] = 40;
+    set_reference_limits[7][2][0] = -100000;
+    set_reference_limits[7][2][1] = 100000;
     // barrel switcher
     set_reference_limits[8][0][0] = 0; // i guessed on these make sure to change them
     set_reference_limits[8][0][1] = 40;
@@ -145,31 +140,82 @@ int main()
 
     state.set_reference_limits(set_reference_limits);
 
-    gains_chassis[0] = 0.003; // Kp
-    gains_chassis[1] = 0;   // Ki
-    gains_chassis[2] = 0;   // Kd
+    gains[0][0][0] = 0.003; // Kp
+    gains[0][0][1] = 0;   // Ki
+    gains[0][0][2] = 0;   // Kd
+    gains[0][1][0] = 0.003; // Kp
+    gains[0][1][1] = 0;   // Ki
+    gains[0][1][2] = 0;   // Kd
+   
+    gains[1][0][0] = 0.003; // Kp
+    gains[1][0][1] = 0;   // Ki
+    gains[1][0][2] = 0;   // Kd
+    gains[1][1][0] = 0.003; // Kp
+    gains[1][1][1] = 0;   // Ki
+    gains[1][1][2] = 0;   // Kd
 
-    gains_pitch[0] = 0; // Kp pos
-    gains_pitch[1] = 0;   // Ki
-    gains_pitch[2] = 0;   // Kd
-    gains_pitch[3] = 0; // Kp vel
-    gains_pitch[4] = 0;   // Ki
-    gains_pitch[5] = 0;   // Kd
+    gains[2][0][0] = 0.003; // Kp
+    gains[2][0][1] = 0;   // Ki
+    gains[2][0][2] = 0;   // Kd
+    gains[2][1][0] = 0.003; // Kp
+    gains[2][1][1] = 0;   // Ki
+    gains[2][1][2] = 0;   // Kd
+   
+    gains[3][0][0] = 0.003; // Kp
+    gains[3][0][1] = 0;   // Ki
+    gains[3][0][2] = 0;   // Kd
+    gains[3][1][0] = 0.003; // Kp
+    gains[3][1][1] = 0;   // Ki
+    gains[3][1][2] = 0;   // Kd
 
-    gains_yaw[0] = 0; // Kp pos
-    gains_yaw[1] = 0;   // Ki
-    gains_yaw[2] = 0;   // Kd
-    gains_yaw[3] = 0; // Kp vel
-    gains_yaw[4] = 0;   // Ki
-    gains_yaw[5] = 0;   // Kd
+    gains[4][2][0] = 0; // Kp pos
+    gains[4][2][1] = 0;   // Ki
+    gains[4][2][2] = 0;   // Kd
+    gains[4][2][3] = 0; // Kp vel
+    gains[4][2][4] = 0;   // Ki
+    gains[4][2][5] = 0;   // Kd
 
-    gains_feeder[0] = 0; // Kp
-    gains_feeder[1] = 0;   // Ki
-    gains_feeder[2] = 0;   // Kd
+    gains[5][2][0] = 0; // Kp pos
+    gains[5][2][1] = 0;   // Ki
+    gains[5][2][2] = 0;   // Kd
+    gains[5][2][3] = 0; // Kp vel
+    gains[5][2][4] = 0;   // Ki
+    gains[5][2][5] = 0;   // Kd
 
-    gains_flywheel[0] = 0; // Kp
-    gains_flywheel[1] = 0;   // Ki
-    gains_flywheel[2] = 0;   // Kd
+    gains[8][2][0] = 0; // Kp pos
+    gains[8][2][1] = 0;   // Ki
+    gains[8][2][2] = 0;   // Kd
+    gains[8][2][3] = 0; // Kp vel
+    gains[8][2][4] = 0;   // Ki
+    gains[8][2][5] = 0;   // Kd
+
+    gains[9][2][0] = 0; // Kp pos
+    gains[9][2][1] = 0;   // Ki
+    gains[9][2][2] = 0;   // Kd
+    gains[9][2][3] = 0; // Kp vel
+    gains[9][2][4] = 0;   // Ki
+    gains[9][2][5] = 0;   // Kd
+
+    gains[10][0][0] = 0; // Kp pos
+    gains[10][0][1] = 0;   // Ki
+    gains[10][0][2] = 0;   // Kd
+    gains[10][1][0] = 0; // Kp pos
+    gains[10][1][1] = 0;   // Ki
+    gains[10][1][2] = 0;   // Kd
+    
+    gains[11][0][0] = 0; // Kp pos
+    gains[11][0][1] = 0;   // Ki
+    gains[11][0][2] = 0;   // Kd
+    gains[11][1][0] = 0; // Kp pos
+    gains[11][1][1] = 0;   // Ki
+    gains[11][1][2] = 0;   // Kd
+
+    gains[12][0][0] = 0; // Kp pos
+    gains[12][0][1] = 0;   // Ki
+    gains[12][0][2] = 0;   // Kd
+    gains[12][1][0] = 0; // Kp pos
+    gains[12][1][1] = 0;   // Ki
+    gains[12][1][2] = 0;   // Kd
 
     for (int i = 0; i < NUM_ESTIMATORS; i++)
     {
@@ -187,49 +233,49 @@ int main()
     assigned_states[1][1] = 3;
     assigned_states[1][2] = 4;
 
-    for (int i = 0; i < NUM_CAN_BUSES; i++)
-    {
-        for (int j = 0; j < NUM_MOTORS_PER_BUS; j++)
-        {
-            controller_manager->init_controller(i, j + 1, 0, gains_null);
+    assigned_states[2][0] = 5;
+
+    assigned_states[3][0] = 6;
+    
+    for(int i = 0; i < NUM_MOTORS; i++) assigned_states[4][i] = i; 
+    
+
+    int controller_types[NUM_MOTORS][NUM_CONTROLLER_LEVELS]  = {{4,2,0},{4,2,0},{4,2,0},{4,2,0},{0,0,3},{0,0,3},{0,0,0},{0,0,0},{0,0,3},{0,0,3},{2,2,0},{2,2,0},{2,2,0},{0,0,0},{0,0,0},{0,0,0}};
+
+    for(int i = 0; i < NUM_MOTORS; i++) {
+        for(int j = 0; j < NUM_CONTROLLER_LEVELS; j++) {
+            controller_types[i][j] = 0;
         }
     }
-    // can_1
-    // drive controllers (id 1,2,3,4) (Velocity PID Control)
-    controller_manager->init_controller(CAN_1, 1, 1, gains_chassis);
-    controller_manager->init_controller(CAN_1, 2, 1, gains_chassis);
-    controller_manager->init_controller(CAN_1, 3, 1, gains_chassis);
-    controller_manager->init_controller(CAN_1, 4, 1, gains_chassis);
-    // yaw controllers (id 4,5) (Full State Control)
-    controller_manager->init_controller(CAN_1, 5, 3, gains_yaw);
-    controller_manager->init_controller(CAN_1, 6, 3, gains_yaw);
-    // can_2
-    // pitch controllers (id 1,2) (Full State Control)
-    controller_manager->init_controller(CAN_2, 1, 3, gains_pitch);
-    controller_manager->init_controller(CAN_2, 2, 3, gains_pitch);
-    // flywheel controllers (id 3,4) (Velocity PID Control)
-    controller_manager->init_controller(CAN_2, 3, 2, gains_flywheel);
-    controller_manager->init_controller(CAN_2, 4, 2, gains_flywheel);
-    // feeder controller (id 5) (Velocity PID Control)
-    controller_manager->init_controller(CAN_2, 5, 2, gains_feeder);
-    // barrel switcher (id 6) (Pos PID Control)
-    //controller_manager->init_controller(CAN_2, 6, 1, gains_switcher);
+
+    // intializes all controllers given the controller_types matrix
+    for (int i = 0; i < NUM_CAN_BUSES; i++) {
+        for (int j = 0; j < NUM_MOTORS_PER_BUS; j++) {
+            for (int k = 0; k < NUM_CONTROLLER_LEVELS; k++) {
+                    controller_manager->init_controller(i, j + 1, controller_types[(i*NUM_MOTORS_PER_BUS)+j][k], k, gains[(i*NUM_MOTORS_PER_BUS)+j][k]);
+            }
+        }
+    }
 
     // initalize estimators
     estimator_manager->assign_states(assigned_states);
-    estimator_manager->init_estimator(1, 3);
-    estimator_manager->init_estimator(2, 3);
+
+    for(int i = 0; i < NUM_ESTIMATORS; i++){
+        estimator_manager->init_estimator(i+1, num_states_per_estimator[i]);
+    }
+
     // imu calibration
     estimator_manager->calibrate_imus();
 
     long long loopc = 0;            // Loop counter for heartbeat
     float temp_state[STATE_LEN][3]; // Temp state array
+    float temp_micro_state[NUM_MOTORS][MICRO_STATE_LEN]; // Temp micro state array
     float temp_reference[STATE_LEN][3];
     float target_state[STATE_LEN][3];
     float kinematics_pos[NUM_MOTORS][STATE_LEN];
     float kinematics_vel[NUM_MOTORS][STATE_LEN];
     float motor_inputs[NUM_MOTORS];
-    int controller_type[STATE_LEN] = {2, 2, 2, 1, 1, 2, 2, 2};
+    int governor_type[STATE_LEN] = {2, 2, 2, 1, 1, 2, 2, 2};
 
     for (int i = 0; i < STATE_LEN; i++)
     {
@@ -297,28 +343,26 @@ int main()
     kinematics_vel[3][1] = chassis_angle_to_motor_error;
     kinematics_vel[3][2] = chassis_angle_to_motor_error;
 
-
     // target_state[2][1] = 6;
     target_state[0][0] = 3;
     
-
     // Main loop
     while (true)
     {
-
         can.read();
         dr16.read();
+        // ref.read();
 
         // Read sensors
         estimator_manager->read_sensors();
-        estimator_manager->step(temp_state);
+        estimator_manager->step(temp_state, temp_micro_state);
 
         state.set_estimate(temp_state);
-        state.step_reference(target_state, controller_type);
+        state.step_reference(target_state, governor_type);
         state.get_reference(temp_reference);
 
         // Controls code goes here
-        controller_manager->step(temp_reference, temp_state, kinematics_vel, motor_inputs);
+        controller_manager->step(temp_reference, temp_state, temp_micro_state, kinematics_pos, kinematics_vel, motor_inputs);
 
         for (int j = 0; j < 2; j++)
         {
@@ -327,13 +371,32 @@ int main()
                 // can.write_motor_norm(j, i+1, C620, motor_inputs[(j*NUM_MOTORS)+i]);
             }
         }
-
+    float temp_state[STATE_LEN][3]; // Temp state array
+    
         if (true)
         { // prints the full motor input vector
             Serial.printf("[");
             for (int i = 0; i < NUM_MOTORS; i++)
             {
                 Serial.print(motor_inputs[i]);
+                if (i != NUM_MOTORS - 1)
+                    Serial.printf(", ");
+            }
+            Serial.printf("] \n");
+        }
+
+        if (false)
+        { // prints the full motor input vector
+            Serial.printf("[");
+            for (int i = 0; i < NUM_MOTORS; i++)
+            {
+                Serial.printf("[");
+                for(int j = 0; j < MICRO_STATE_LEN; j++) {
+                    Serial.print(temp_micro_state[i][j]);
+                    if (j != MICRO_STATE_LEN - 1)
+                    Serial.printf(", ");
+                }
+                Serial.printf("]");
                 if (i != NUM_MOTORS - 1)
                     Serial.printf(", ");
             }

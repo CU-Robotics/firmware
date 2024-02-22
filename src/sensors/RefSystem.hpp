@@ -5,6 +5,8 @@
 
 #include "RefSystemPacketDefs.hpp"
 
+
+
 /// @brief Time (in us) between packet writes
 constexpr uint32_t REF_MAX_PACKET_DELAY = 40000;
 /// @brief Maximum number of bytes that is allowed to be sent within a second. Includes Ref header/tail
@@ -142,7 +144,6 @@ private:
     /// @brief Buffer to store frames-in-progress
     uint8_t raw_buffer[REF_MAX_PACKET_SIZE] = { 0 };
     /// @brief Mega-struct to store all ref data that have been read
-    RefData ref_data{};
 
     /// @brief Current sequence number. Used to send packets
     uint8_t seq = 0;
@@ -161,6 +162,9 @@ public:
     /// @brief Current count of bytes sent since last reset
     uint16_t bytes_sent = 0;
 
+    RefData ref_data{};
 };
+
+extern RefSystem ref;
 
 #endif // REF_SYSTEM_HPP
