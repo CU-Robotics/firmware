@@ -49,6 +49,9 @@ public:
 
         pid.setpoint = reference[0]; // 0th index = position
         pid.measurement = estimate[0];
+        pid.K[0] = gains[0];
+        pid.K[1] = gains[1];
+        pid.K[2] = gains[2];
 
         float output = pid.filter(dt);
         return output;
@@ -92,19 +95,18 @@ struct FullStateFeedbackController : public Controller
 {
 private:
     PIDFilter pid1, pid2;
-
 public:
-    void set_gains(float gains[NUM_GAINS])
-    {
-        Controller::set_gains(gains);
-        //   memcpy(gains[0], pid1.K, sizeof(pid1.K));
-        //   memcpy(gains[3], pid2.K, sizeof(pid2.K));
-    }
-
     float step(float reference[3], float estimate[3])
     {
         float dt = timer.delta();
         float output = 0.0;
+
+        pid1.K[0] = gains[0];
+        pid1.K[1] = gains[1];
+        pid1.K[2] = gains[2];
+        pid2.K[0] = gains[3];
+        pid2.K[1] = gains[4];
+        pid2.K[2] = gains[5];
 
         pid1.setpoint = reference[0];
         pid1.measurement = estimate[0];

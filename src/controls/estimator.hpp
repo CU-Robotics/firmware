@@ -17,9 +17,19 @@ public:
 
     int get_num_states() { return num_states; }
 
+    bool local_estimator = false;
+
 protected:
+    /// @brief number of states that an estimator will estimate
     int num_states;
 
+    // create a timer object for each estimator
+    Timer time;
+
+    /// @brief Computes the magnitude of a vector given length n
+    /// @param a Vector to compute the magnitude of
+    /// @param n Length of Vector a
+    /// @return returns the magnitude of a
     float __magnitude(float *a, int n)
     {
         float square_sum = 0;
@@ -31,6 +41,11 @@ protected:
         return square_sum;
     }
 
+    /// @brief Computes the dot product of 2 vectors with a given length (nx1)
+    /// @param a Vector A
+    /// @param b Vector B
+    /// @param n Length of A and B (must be the same length)
+    /// @return returns Dot product solution (scalar)
     float __vectorProduct(float *a, float *b, int n)
     {
         float product = 0;
@@ -41,6 +56,10 @@ protected:
         return product;
     }
 
+    /// @brief Computes the cross product of 2 given vectors of length 3
+    /// @param v_A Vector A (3x1)
+    /// @param v_B Vector B (3x1)
+    /// @param output Cross product output vector (3x1)
     void __crossProduct(float v_A[], float v_B[], float output[])
     {
         output[0] = v_A[1] * v_B[2] - v_A[2] * v_B[1];
@@ -48,6 +67,11 @@ protected:
         output[2] = v_A[0] * v_B[1] - v_A[1] * v_B[0];
     }
 
+    /// @brief Rotates input_vector around the given unit_vector by theta radians
+    /// @param unit_vector Vector to rotate around
+    /// @param input_vector Vector to be rotated
+    /// @param theta Angle to rotate (Rad)
+    /// @param output New rotated vector
     void __rotateVector3D(float unit_vector[], float input_vector[], float theta, float output[])
     {
         float unit_cross_input[3];
@@ -57,69 +81,71 @@ protected:
         output[2] = (input_vector[2] * cos(theta)) + (unit_cross_input[2] * sin(theta)) + (unit_vector[2] * __vectorProduct(unit_vector, input_vector, 3) * (1 - cos(theta)));
     }
 
-    // CPP program to calculate solutions of linear
-    // equations using cramer's rule
-
-    // This functions finds the determinant of Matrix
-    double determinantOfMatrix(double mat[3][3])
+    /// @brief This functions finds the determinant of a 3x3 Matrix
+    float determinantOfMatrix(float mat[3][3])
     {
-        double ans;
+        float ans;
         ans = mat[0][0] * (mat[1][1] * mat[2][2] - mat[2][1] * mat[1][2]) - mat[0][1] * (mat[1][0] * mat[2][2] - mat[1][2] * mat[2][0]) + mat[0][2] * (mat[1][0] * mat[2][1] - mat[1][1] * mat[2][0]);
         return ans;
     }
 
-    // This function finds the solution of system of
-    // linear equations using cramer's rule
-    // input is 3x3 coeff matrix with 3x1 solution matrix added to the end
-    void findSolution(double coeff[3][4], float output[3])
+    /// @brief This function finds the solution of a 3x3 system of linear equations using cramer's rule.
+    /// @param coeff 3x3 coeff matrix for the system with 3x1 solution matrix added to the end
+    /// @param output 3x1 Array for the solutions
+    void solveSystem(float coeff[3][4], float output[3])
     {
         // Matrix d using coeff as given in cramer's rule
-        double d[3][3] = {{coeff[0][0], coeff[0][1], coeff[0][2]},
+        float d[3][3] = {{coeff[0][0], coeff[0][1], coeff[0][2]},
                           {coeff[1][0], coeff[1][1], coeff[1][2]},
                           {coeff[2][0], coeff[2][1], coeff[2][2]}};
         // Matrix d1 using coeff as given in cramer's rule
-        double d1[3][3] = {
+        float d1[3][3] = {
             {coeff[0][3], coeff[0][1], coeff[0][2]},
             {coeff[1][3], coeff[1][1], coeff[1][2]},
             {coeff[2][3], coeff[2][1], coeff[2][2]},
         };
         // Matrix d2 using coeff as given in cramer's rule
-        double d2[3][3] = {
+        float d2[3][3] = {
             {coeff[0][0], coeff[0][3], coeff[0][2]},
             {coeff[1][0], coeff[1][3], coeff[1][2]},
             {coeff[2][0], coeff[2][3], coeff[2][2]},
         };
         // Matrix d3 using coeff as given in cramer's rule
-        double d3[3][3] = {
+        float d3[3][3] = {
             {coeff[0][0], coeff[0][1], coeff[0][3]},
             {coeff[1][0], coeff[1][1], coeff[1][3]},
             {coeff[2][0], coeff[2][1], coeff[2][3]},
         };
 
         // Calculating Determinant of Matrices d, d1, d2, d3
-        double D = determinantOfMatrix(d);
-        double D1 = determinantOfMatrix(d1);
-        double D2 = determinantOfMatrix(d2);
-        double D3 = determinantOfMatrix(d3);
+        float D = determinantOfMatrix(d);
+        float D1 = determinantOfMatrix(d1);
+        float D2 = determinantOfMatrix(d2);
+        float D3 = determinantOfMatrix(d3);
 
         // Case 1
-        if (D != 0)
-        {
+        if (D != 0) {
             // Coeff have a unique solution
             output[0] = D1 / D;
             output[1] = D2 / D;
             output[2] = D3 / D;
         }
         // Case 2
-        else
-        {
-            if (D1 == 0 && D2 == 0 && D3 == 0)
+        else {
+            if (D1 == 0 && D2 == 0 && D3 == 0) {
                 Serial.println("matrix solve bad1");
-            else if (D1 != 0 || D2 != 0 || D3 != 0)
+                output[0] = 0;
+                output[1] = 0;
+                output[2] = 0;
+            }
+            else if (D1 != 0 || D2 != 0 || D3 != 0) {
                 Serial.println("matrix solve bad2");
+                output[0] = 0;
+                output[1] = 0;
+                output[2] = 0;
+            }
         }
     }
-    Timer time;
 };
 
 struct GimbalEstimator : public Estimator
@@ -278,15 +304,16 @@ public:
         dt = time.delta();
         if (dt > .002)
             dt = 0; // first dt loop generates huge time so check for that
-        yaw_angle += -current_yaw_velocity * (dt / 7.85);
-        pitch_angle += current_pitch_velocity * (dt / 7.85);
-        roll_angle += -current_roll_velocity * (dt / 7.85);
+        float imu_vel_offset = 7.9;
+        yaw_angle += -current_yaw_velocity * (dt / imu_vel_offset);
+        pitch_angle += current_pitch_velocity * (dt / imu_vel_offset);
+        roll_angle += -current_roll_velocity * (dt / imu_vel_offset);
 
-        global_yaw_angle += -global_yaw_velocity * (dt / 7.85);
-        global_pitch_angle += -global_pitch_velocity * (dt / 7.85);
-        global_roll_angle += -global_roll_velocity * (dt / 7.85);
+        global_yaw_angle += -global_yaw_velocity * (dt / imu_vel_offset);
+        global_pitch_angle += -global_pitch_velocity * (dt / imu_vel_offset);
+        global_roll_angle += -global_roll_velocity * (dt / imu_vel_offset);
 
-        chassis_angle = yaw_angle - buff_enc_yaw->get_angle();
+        chassis_angle = yaw_angle - (buff_enc_yaw->get_angle()+YAW_ENCODER_OFFSET);
 
         output[0][0] = chassis_angle;
         output[0][1] = 0;
@@ -308,6 +335,7 @@ private:
     CANData *can_data;
     ICM20649 *icm_imu;
 
+    float pos_estimate[3] = {0,0,0};
 public:
     ChassisEstimator(float sensor_values[9], BuffEncoder *b1, BuffEncoder *b2, ICM20649 *imu, CANData *data, int n)
     {
@@ -325,15 +353,116 @@ public:
         float back_left = can_data->get_motor_attribute(CAN_1, 3, MotorAttribute::SPEED);
         float front_left = can_data->get_motor_attribute(CAN_1, 4, MotorAttribute::SPEED);
 
-        output[0][0] = 0; // x pos
-        output[0][1] = 0;
+        // m/s of chassis to motor rpm
+        float x_scale = ((1/(PI*2*0.0516))*60)/0.10897435897;
+        float y_scale = ((1/(PI*2*0.0516))*60)/0.10897435897;
+        // chassis rad/s to motor rpm
+        float psi_scale = ((.1835/(PI*2*0.0516))*60)/0.10897435897;
+        // define coeff matracies for each system we want to solve
+        float coeff_matrix1[3][4] = {{0,x_scale,psi_scale,front_right},{y_scale,0,psi_scale,back_right},{0,-x_scale,psi_scale,back_left}};
+        float coeff_matrix2[3][4] = {{0,x_scale,psi_scale,front_right},{y_scale,0,psi_scale,back_right},{-y_scale,0,psi_scale,front_left}};
+        float coeff_matrix3[3][4] = {{0,x_scale,psi_scale,front_right},{-y_scale,0,psi_scale,front_left},{0,-x_scale,psi_scale,back_left}};
+        float coeff_matrix4[3][4] = {{y_scale,0,psi_scale,back_right},{-y_scale,0,psi_scale,front_left},{0,-x_scale,psi_scale,back_left}};
+
+        // 4 solution sets of x, y, psi
+        float vel_solutions[4][3];
+        solveSystem(coeff_matrix1,vel_solutions[0]);
+        solveSystem(coeff_matrix2,vel_solutions[1]);
+        solveSystem(coeff_matrix3,vel_solutions[2]);
+        solveSystem(coeff_matrix4,vel_solutions[3]);
+
+        if (false)
+            { // prints the estimated state
+                for (int i = 0; i < 4; i++) {
+                Serial.printf("[");
+                for (int j = 0; j < 3; j++)
+                {
+                    Serial.printf("%.3f",vel_solutions[i][j]);
+                    if (j != 3 - 1)
+                        Serial.printf(", ");
+                }
+                Serial.printf("]");
+                }
+                Serial.println();
+            }
+
+        // integrate to find pos
+        float dt = time.delta();
+        if (dt > .002) dt = 0; // first dt loop generates huge time so check for that
+        pos_estimate[0] += vel_solutions[0][0] * dt;
+        pos_estimate[1] += vel_solutions[0][1] * dt;
+        pos_estimate[2] += vel_solutions[0][2] * dt;
+
+        output[0][0] = pos_estimate[0]; // x pos
+        output[0][1] = vel_solutions[0][0];
         output[0][2] = 0;
-        output[1][0] = 0; // y pos
-        output[1][1] = 0;
+        output[1][0] = pos_estimate[1]; // y pos
+        output[1][1] = vel_solutions[0][1];
         output[1][2] = 0;
         output[2][0] = 0; // chassis angle
-        output[2][1] = (((front_right*0.10897435897) / 60) * (PI * 2 * .50)) / .1835;
+        output[2][1] = vel_solutions[0][2];
         output[2][2] = 0;
     }
+
 };
+    
+struct FlyWheelEstimator : public Estimator
+{
+    private:
+     CANData* can_data;
+
+    public:
+    FlyWheelEstimator(CANData *c, int _num_states){
+        can_data = c;
+        num_states = _num_states;
+    }
+
+    void step_states(float output[STATE_LEN][3]){
+        float flywheel_velocity_l = can_data->get_motor_attribute(CAN_2, 3, MotorAttribute::SPEED);
+        flywheel_velocity_r = (flywheel_velocity_r / 60 ) * 2*PI;
+
+        float flywheel_velocity_r = can_data->get_motor_attribute(CAN_2, 4, MotorAttribute::SPEED);
+        flywheel_velocity_l = (flywheel_velocity_r / 60 ) * 2*PI;
+
+        outputs[5][1] = flywheel_velocity_l;
+        outputs[6][1] = flywheel_velocity_r;
+    }
+};
+
+struct FeederEstimator : public Estimator
+{
+    private:
+     CANData* can_data;
+
+    public:
+    FeederEstimator(CANData *c, int _num_states){
+        can_data = c;
+        num_states = _num_states;
+    }
+
+    void step_states(float output[STATE_LEN][3]){
+        float feeder_velocity = can_data->get_motor_attribute(CAN_2, 5, MotorAttribute::SPEED);
+        feeder_velocity = (feeder_velocity / 60 * 36 ) * 2*PI;
+
+        outputs[5][1] = feeder_velocity;
+    }
+};
+
+
+struct LocalEstimator{
+    private:
+    CANData* can_data;
+
+    public:
+        LocalEstimator(CANData* c){
+            local_estimator = true;
+            can_data = c;
+        }
+
+        void step_states(float output[STATE_LEN][3]){
+            
+        }
+
+};
+
 #endif

@@ -67,28 +67,109 @@ int main()
 
     CANData *can_data = can.get_data();
 
-    // controller_manager = Control::get_instance();
-
     estimator_manager = new EstimatorManager(can_data);
     controller_manager = new ControllerManager();
 
     float gains_null[NUM_GAINS];
-    float gains_1[NUM_GAINS];
+    float gains_chassis[NUM_GAINS];
+    float gains_pitch[NUM_GAINS];
+    float gains_yaw[NUM_GAINS];
+    float gains_flywheel[NUM_GAINS];
+    float gains_feeder[NUM_GAINS];
     int assigned_states[NUM_ESTIMATORS][STATE_LEN];
     float set_reference_limits[STATE_LEN][3][2];
 
-    set_reference_limits[2][1][0] = -105.626;
-    set_reference_limits[2][1][1] = 105.626;
-
-
+    //x pos
+    set_reference_limits[0][0][0] = -UINT_MAX;
+    set_reference_limits[0][0][1] = UINT_MAX;
+    set_reference_limits[0][1][0] = -5.37952195918;
+    set_reference_limits[0][1][1] = 5.37952195918;
+    set_reference_limits[0][2][0] = -1;
+    set_reference_limits[0][2][1] = 1;
+    //y pos
+    set_reference_limits[1][0][0] = -UINT_MAX;
+    set_reference_limits[1][0][1] = UINT_MAX;
+    set_reference_limits[1][1][0] = -5.37952195918;
+    set_reference_limits[1][1][1] = 5.37952195918;
+    set_reference_limits[1][2][0] = -1;
+    set_reference_limits[1][2][1] = 1;
+    //chassis angle (psi)
+    set_reference_limits[2][0][0] = -UINT_MAX;
+    set_reference_limits[2][0][1] = UINT_MAX;
+    set_reference_limits[2][1][0] = -29.3917681162;
+    set_reference_limits[2][1][1] = 29.3917681162;
     set_reference_limits[2][2][0] = -1;
     set_reference_limits[2][2][1] = 1;
+    //yaw
+    set_reference_limits[3][0][0] = -UINT_MAX;
+    set_reference_limits[3][0][1] = UINT_MAX;
+    set_reference_limits[3][1][0] = -49.4827627617;
+    set_reference_limits[3][1][1] = 49.4827627617;
+    set_reference_limits[3][2][0] = -1;
+    set_reference_limits[3][2][1] = 1;
+    //pitch
+    set_reference_limits[4][0][0] = 1.92;
+    set_reference_limits[4][0][1] = 0.9;
+    set_reference_limits[4][1][0] = -70.1181276577;
+    set_reference_limits[4][1][1] = 70.1181276577;
+    set_reference_limits[4][2][0] = -1;
+    set_reference_limits[4][2][1] = 1;
+    //flywheel Left
+    set_reference_limits[5][0][0] = -UINT_MAX;
+    set_reference_limits[5][0][1] = UINT_MAX;
+    set_reference_limits[5][1][0] = -969.28;
+    set_reference_limits[5][1][1] = 969.28;
+    set_reference_limits[5][2][0] = -1000;
+    set_reference_limits[5][2][1] = 1000;
+    //flywheel Right
+    set_reference_limits[6][0][0] = -UINT_MAX;
+    set_reference_limits[6][0][1] = UINT_MAX;
+    set_reference_limits[6][1][0] = -969.28;
+    set_reference_limits[6][1][1] = 969.28;
+    set_reference_limits[6][2][0] = -1000;
+    set_reference_limits[6][2][1] = 1000;
+    //feeder
+    set_reference_limits[7][0][0] = -UINT_MAX;
+    set_reference_limits[7][0][1] = UINT_MAX;
+    set_reference_limits[7][1][0] = -10;
+    set_reference_limits[7][1][1] = 10;
+    set_reference_limits[7][2][0] = -1;
+    set_reference_limits[7][2][1] = 1;
+    // barrel switcher
+    set_reference_limits[8][0][0] = 0; // i guessed on these make sure to change them
+    set_reference_limits[8][0][1] = 40;
+    set_reference_limits[8][1][0] = -1;
+    set_reference_limits[8][1][1] = 1;
+    set_reference_limits[8][2][0] = -1;
+    set_reference_limits[8][2][1] = 1;
 
     state.set_reference_limits(set_reference_limits);
 
-    gains_1[0] = 0.003; // Kp
-    gains_1[1] = 0;   // Ki
-    gains_1[2] = 0;   // Kd
+    gains_chassis[0] = 0.003; // Kp
+    gains_chassis[1] = 0;   // Ki
+    gains_chassis[2] = 0;   // Kd
+
+    gains_pitch[0] = 0; // Kp pos
+    gains_pitch[1] = 0;   // Ki
+    gains_pitch[2] = 0;   // Kd
+    gains_pitch[3] = 0; // Kp vel
+    gains_pitch[4] = 0;   // Ki
+    gains_pitch[5] = 0;   // Kd
+
+    gains_yaw[0] = 0; // Kp pos
+    gains_yaw[1] = 0;   // Ki
+    gains_yaw[2] = 0;   // Kd
+    gains_yaw[3] = 0; // Kp vel
+    gains_yaw[4] = 0;   // Ki
+    gains_yaw[5] = 0;   // Kd
+
+    gains_feeder[0] = 0; // Kp
+    gains_feeder[1] = 0;   // Ki
+    gains_feeder[2] = 0;   // Kd
+
+    gains_flywheel[0] = 0; // Kp
+    gains_flywheel[1] = 0;   // Ki
+    gains_flywheel[2] = 0;   // Kd
 
     for (int i = 0; i < NUM_ESTIMATORS; i++)
     {
@@ -113,23 +194,40 @@ int main()
             controller_manager->init_controller(i, j + 1, 0, gains_null);
         }
     }
+    // can_1
+    // drive controllers (id 1,2,3,4) (Velocity PID Control)
+    controller_manager->init_controller(CAN_1, 1, 1, gains_chassis);
+    controller_manager->init_controller(CAN_1, 2, 1, gains_chassis);
+    controller_manager->init_controller(CAN_1, 3, 1, gains_chassis);
+    controller_manager->init_controller(CAN_1, 4, 1, gains_chassis);
+    // yaw controllers (id 4,5) (Full State Control)
+    controller_manager->init_controller(CAN_1, 5, 3, gains_yaw);
+    controller_manager->init_controller(CAN_1, 6, 3, gains_yaw);
+    // can_2
+    // pitch controllers (id 1,2) (Full State Control)
+    controller_manager->init_controller(CAN_2, 1, 3, gains_pitch);
+    controller_manager->init_controller(CAN_2, 2, 3, gains_pitch);
+    // flywheel controllers (id 3,4) (Velocity PID Control)
+    controller_manager->init_controller(CAN_2, 3, 2, gains_flywheel);
+    controller_manager->init_controller(CAN_2, 4, 2, gains_flywheel);
+    // feeder controller (id 5) (Velocity PID Control)
+    controller_manager->init_controller(CAN_2, 5, 2, gains_feeder);
+    // barrel switcher (id 6) (Pos PID Control)
+    //controller_manager->init_controller(CAN_2, 6, 1, gains_switcher);
 
-    controller_manager->init_controller(CAN_1, 1, 2, gains_1);
-    controller_manager->init_controller(CAN_1, 2, 2, gains_1);
-    controller_manager->init_controller(CAN_1, 3, 2, gains_1);
-    controller_manager->init_controller(CAN_1, 4, 2, gains_1);
-
+    // initalize estimators
     estimator_manager->assign_states(assigned_states);
-
     estimator_manager->init_estimator(1, 3);
     estimator_manager->init_estimator(2, 3);
+    // imu calibration
     estimator_manager->calibrate_imus();
 
     long long loopc = 0;            // Loop counter for heartbeat
     float temp_state[STATE_LEN][3]; // Temp state array
     float temp_reference[STATE_LEN][3];
     float target_state[STATE_LEN][3];
-    float kinematics[NUM_MOTORS][STATE_LEN];
+    float kinematics_pos[NUM_MOTORS][STATE_LEN];
+    float kinematics_vel[NUM_MOTORS][STATE_LEN];
     float motor_inputs[NUM_MOTORS];
     int controller_type[STATE_LEN] = {2, 2, 2, 1, 1, 2, 2, 2};
 
@@ -145,17 +243,63 @@ int main()
     {
         for (int j = 0; j < STATE_LEN; j++)
         {
-            kinematics[i][j] = 0;
+            kinematics_pos[i][j] = 0;
+            kinematics_vel[i][j] = 0;
         }
     }
-    float chassis_angle_to_motor_error = ((.200*9.17647058824)/.0516);
-    kinematics[0][2] = chassis_angle_to_motor_error;    
-    kinematics[1][2] = chassis_angle_to_motor_error;
-    kinematics[2][2] = chassis_angle_to_motor_error;
-    kinematics[3][2] = chassis_angle_to_motor_error;
+    float chassis_angle_to_motor_error = ((.1835*9.17647058824)/.0516);
+    float chassis_pos_to_motor_error = ((9.17647058824)/.0516);
+    // motor 1 front right Can_1
+    kinematics_vel[0][0] = chassis_angle_to_motor_error;  
+    kinematics_vel[0][1] = chassis_angle_to_motor_error;  
+    kinematics_vel[0][2] = chassis_angle_to_motor_error; 
+    // motor 2 back right
+    kinematics_vel[1][0] = chassis_angle_to_motor_error;
+    kinematics_vel[1][1] = chassis_angle_to_motor_error;
+    kinematics_vel[1][2] = chassis_angle_to_motor_error;
+    // motor 3 back left
+    kinematics_vel[2][0] = chassis_angle_to_motor_error;
+    kinematics_vel[2][1] = chassis_angle_to_motor_error;
+    kinematics_vel[2][2] = chassis_angle_to_motor_error;
+    // motor 4 front left
+    kinematics_vel[3][0] = chassis_angle_to_motor_error;
+    kinematics_vel[3][1] = chassis_angle_to_motor_error;
+    kinematics_vel[3][2] = chassis_angle_to_motor_error;
+    // motor 5 yaw 1
+    kinematics_vel[0][0] = chassis_angle_to_motor_error;  
+    kinematics_vel[0][1] = chassis_angle_to_motor_error;  
+    // motor 6 yaw 2
+    kinematics_vel[1][1] = chassis_angle_to_motor_error;
+    kinematics_vel[1][2] = chassis_angle_to_motor_error;
+
+    // motor 1 pitch 1 Can_2
+    kinematics_vel[2][0] = chassis_angle_to_motor_error;
+    kinematics_vel[2][1] = chassis_angle_to_motor_error;
+    kinematics_vel[2][2] = chassis_angle_to_motor_error;
+    // motor 2 pitch 2
+    kinematics_vel[3][0] = chassis_angle_to_motor_error;
+    kinematics_vel[3][1] = chassis_angle_to_motor_error;
+    kinematics_vel[3][2] = chassis_angle_to_motor_error;
+    // motor 3 flywheel 1 
+    kinematics_vel[2][0] = chassis_angle_to_motor_error;
+    kinematics_vel[2][1] = chassis_angle_to_motor_error;
+    kinematics_vel[2][2] = chassis_angle_to_motor_error;
+    // motor 2 flywheel 2 
+    kinematics_vel[3][0] = chassis_angle_to_motor_error;
+    kinematics_vel[3][1] = chassis_angle_to_motor_error;
+    kinematics_vel[3][2] = chassis_angle_to_motor_error;
+    // motor 1 feeder
+    kinematics_vel[2][0] = chassis_angle_to_motor_error;
+    kinematics_vel[2][1] = chassis_angle_to_motor_error;
+    kinematics_vel[2][2] = chassis_angle_to_motor_error;
+    // motor 2 switcher
+    kinematics_vel[3][0] = chassis_angle_to_motor_error;
+    kinematics_vel[3][1] = chassis_angle_to_motor_error;
+    kinematics_vel[3][2] = chassis_angle_to_motor_error;
 
 
-    target_state[2][1] = 6;
+    // target_state[2][1] = 6;
+    target_state[0][0] = 3;
     
 
     // Main loop
@@ -174,17 +318,15 @@ int main()
         state.get_reference(temp_reference);
 
         // Controls code goes here
-        controller_manager->step(temp_reference, temp_state, kinematics, motor_inputs);
+        controller_manager->step(temp_reference, temp_state, kinematics_vel, motor_inputs);
 
         for (int j = 0; j < 2; j++)
         {
             for (int i = 0; i < NUM_MOTORS; i++)
             {
-                can.write_motor_norm(j, i+1, C620, motor_inputs[(j*NUM_MOTORS)+i]);
+                // can.write_motor_norm(j, i+1, C620, motor_inputs[(j*NUM_MOTORS)+i]);
             }
         }
-
-        Serial.println(motor_inputs[0]);
 
         if (true)
         { // prints the full motor input vector
@@ -198,7 +340,22 @@ int main()
             Serial.printf("] \n");
         }
 
-        // Write actuators
+        if (false)
+        { // prints the estimated state
+            for (int i = 0; i < STATE_LEN-27; i++) {
+            Serial.printf("[");
+            for (int j = 0; j < 3; j++)
+            {
+                Serial.printf("%.3f",temp_state[i][j]);
+                if (j != 3 - 1)
+                    Serial.printf(", ");
+            }
+            Serial.printf("]");
+            }
+            Serial.println();
+        }
+
+        // Write actuators (Safety Code)
         if (!dr16.is_connected() || dr16.get_l_switch() == 1)
         {
             // SAFETY ON

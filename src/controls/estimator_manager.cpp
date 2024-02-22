@@ -45,25 +45,46 @@ void EstimatorManager::init_estimator(int state_id,int num_states) {
         
         estimators[1] = new GimbalEstimator(values_gimbal, &buff_sensors[0], &buff_sensors[1], &icm_sensors[0], can_data, num_states); 
         break;
+    case 3:
+        estimators[2] = new FlyWheelEstimator(can_data, num_states); 
+        break;
+    case 4:
+        estimators[3] = new FeederEstimator(can_data, num_states); 
+        break;
+    case 5:
+        estimators[5] = new LocalEstimator(can_data, num_states); 
+        break;
     default:
         break;
     }
 }
 
-void EstimatorManager::step(float outputs[STATE_LEN][3]) {
+void EstimatorManager::step(float global_outputs[STATE_LEN][3], float local_outputs[STATE_LEN][3]) {
     for (int i = 0;i<STATE_LEN;i++) {
         for (int j = 0;j<3;j++) {
-            outputs[i][j] = 0;
+            global_outputs[i][j] = 0;
+            local_outputs[i][j] = 0;
         }
     }
+
     for(int i = 0; i < NUM_ESTIMATORS; i++){
         int num_states = estimators[i]->get_num_states();
-        float states[STATE_LEN][3];
-        estimators[i]->step_states(states);
-        for(int j = 0; j < num_states; j++){
-            outputs[applied_states[i][j]][0] = outputs[applied_states[i][j]][0] + states[j][0];
-            outputs[applied_states[i][j]][1] = outputs[applied_states[i][j]][1] + states[j][1];
-            outputs[applied_states[i][j]][2] = outputs[applied_states[i][j]][2] + states[j][2];
+        float global_states[STATE_LEN][3];
+        float local_states[STATE_LEN][3];
+        if (!estimators[i]->local_estimator){
+            estimators[i]->step_states(states);
+            for(int j = 0; j < num_states; j++){
+                global_outputs[applied_states[i][j]][0] = global_outputs[applied_states[i][j]][0] + global_states[j][0];
+                global_outputs[applied_states[i][j]][1] = global_outputs[applied_states[i][j]][1] + global_states[j][1];
+                global_outputs[applied_states[i][j]][2] = global_outputs[applied_states[i][j]][2] + global_states[j][2];
+            }
+        }else {
+            estimators[i]->step_states(states);
+            for(int j = 0; j < num_states; j++) {
+                local_outputs[applied_states[i][j]][0] = local_outputs[applied_states[i][j]][0] + local_states[j][0];
+                local_outputs[applied_states[i][j]][1] = local_outputs[applied_states[i][j]][1] + local_states[j][1];
+                local_outputs[applied_states[i][j]][2] = local_outputs[applied_states[i][j]][2] + local_states[j][2];
+            }
         }
     }
 }

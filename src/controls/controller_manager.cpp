@@ -33,22 +33,20 @@ void ControllerManager::init_controller(uint8_t can_id, uint8_t motor_id, int co
     }
 }
 
-void ControllerManager::step(float reference[STATE_LEN][3], float estimate[STATE_LEN][3], float kinematics[NUM_MOTORS][STATE_LEN], float outputs[NUM_MOTORS]) {
+void ControllerManager::step(float reference[STATE_LEN][3], float estimate[STATE_LEN][3], float kinematics_p[NUM_MOTORS][STATE_LEN], float kinematics_v[NUM_MOTORS][STATE_LEN], float outputs[NUM_MOTORS]) {
     // Iterate through motors
     for (int m = 0; m < NUM_MOTORS; m++) {
         float output = 0;
         for (int j = 0; j < STATE_LEN; j++) {
-            if (kinematics[m][j] == 0) continue;
+            if (kinematics_v[m][j] == 0 && kinematics_p[m][j] == 0) continue;
             float temp_reference[3];
             float temp_estimate[3];
 
-            temp_reference[0] = reference[j][0] * kinematics[m][j];
-            temp_reference[1] = reference[j][1] * kinematics[m][j];
-            temp_reference[2] = reference[j][2] * kinematics[m][j];
+            temp_reference[0] = reference[j][0] * kinematics_p[m][j];
+            temp_estimate[0] = estimate[j][0] * kinematics_p[m][j];
 
-            temp_estimate[0] = estimate[j][0] * kinematics[m][j];
-            temp_estimate[1] = estimate[j][1] * kinematics[m][j];
-            temp_estimate[2] = estimate[j][2] * kinematics[m][j];
+            temp_reference[1] = reference[j][1] * kinematics_v[m][j];
+            temp_estimate[1] = estimate[j][1] * kinematics_v[m][j];
 
             output += controllers[m]->step(temp_reference, temp_estimate);
         }
