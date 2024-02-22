@@ -39,7 +39,7 @@ struct FrameHeader {
     /// @brief size of packet sent by Ref System in bytes
     static const uint8_t packet_size = 5;
 
-    /// @brief Start of Frame byte, should be 0xAF if valid frame
+    /// @brief Start of Frame byte, should be 0xA5 if valid frame
     uint8_t SOF = 0;
     /// @brief length of the FrameData portion of a Frame
     uint16_t data_length = 0;
