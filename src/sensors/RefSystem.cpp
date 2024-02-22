@@ -165,6 +165,10 @@ void RefSystem::write(uint8_t* packet, uint8_t length) {
 }
 
 bool RefSystem::read_frame_header(Frame& frame) {
+    // early return if Serial2 is empty or not full enough
+    if (Serial2.available < FrameHeader::packet_size)
+        return false;
+    
     // read and verify header
     int bytesRead = Serial2.readBytes(raw_buffer, FrameHeader::packet_size);
     if (bytesRead != FrameHeader::packet_size) {
@@ -190,6 +194,10 @@ bool RefSystem::read_frame_header(Frame& frame) {
 }
 
 bool RefSystem::read_frame_command_ID(Frame& frame) {
+    // early return if Serial2 is empty or not full enough
+    if (Serial2.available < 2)
+        return false;
+
     // read and verify command ID
     int bytesRead = Serial2.readBytes(raw_buffer, 2);
     if (bytesRead != 2) {
@@ -212,6 +220,10 @@ bool RefSystem::read_frame_command_ID(Frame& frame) {
 }
 
 bool RefSystem::read_frame_data(Frame& frame) {
+    // early return if Serial2 is empty or not full enough
+    if (Serial2.available < frame.header.data_length)
+        return false;
+    
     // read and verify data
     int bytesRead = Serial2.readBytes(&frame.data.data[0], frame.header.data_length);
     if (bytesRead != frame.header.data_length) {
@@ -224,6 +236,10 @@ bool RefSystem::read_frame_data(Frame& frame) {
 }
 
 bool RefSystem::read_frame_tail(Frame& frame) {
+    // early return if Serial2 is empty or not full enough
+    if (Serial2.available < 2)
+        return false;
+    
     // read and verify tail
     int bytesRead = Serial2.readBytes(raw_buffer, 2);
     if (bytesRead != 2) {
