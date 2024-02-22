@@ -16,90 +16,88 @@ Timer loop_timer;
 
 // DONT put anything else in this function. It is not a setup function
 void print_logo() {
-    if (Serial) {
-        Serial.println("TEENSY SERIAL START\n\n");
-        Serial.print("\033[1;33m");
-        Serial.println("                  .:^!?!^.                        ");
-        Serial.println("           .:~!?JYYYJ?7?Y5Y7!!.                   ");
-        Serial.println("         :?5YJ?!~:.      ^777YP?.                 ");
-        Serial.println("         5G~                  ~YP?:               ");
-        Serial.println("         7P5555Y:               ^YP?:....         ");
-        Serial.println("        ~55J7~^.   ..    .        ^JYYYYYYYYYJJ!. ");
-        Serial.println("        YG^     !Y5555J:^PJ    Y5:      ...::^5G^ ");
-        Serial.println("       :GY    .YG?^..^~ ~GY    5G^ ^!~~^^^!!~7G?  ");
-        Serial.println(" .!JYYY5G!    7BJ       ~GY    5G^ ~??JJJY555GP!  ");
-        Serial.println("^55!^:.^~.    ^PP~   .: ^GP:  ^PP:           :7PY.");
-        Serial.println("YG^            :JP5YY55: ~YP55PY^              ~GJ");
-        Serial.println("?G~      .?7~:   .^~~^.    .^:.                :G5");
-        Serial.println(".5P^     7BYJ5YJ7^.                          .~5P^");
-        Serial.println(" .JPJ!~!JP?  .:~?PP^            .:.    .^!JYY5Y!. ");
-        Serial.println("   :!???!:       5P.         .!Y5YYYJ?Y5Y?!^:.    ");
-        Serial.println("                 7G7        7GY!. .:~!^.          ");
-        Serial.println("                  JG!      :G5                    ");
-        Serial.println("                   7PY!^^~?PY:                    ");
-        Serial.println("                    .!JJJJ?^                      ");
-        Serial.print("\033[0m");
-        Serial.println("\n\033[1;92mFW Ver. 2.1.0");
-        Serial.printf("\nLast Built: %s at %s", __DATE__, __TIME__);
-        Serial.printf("\nRandom Num: %x", ARM_DWT_CYCCNT);
-        Serial.println("\033[0m\n");
-    }
+	if (Serial) {
+		Serial.println("TEENSY SERIAL START\n\n");
+		Serial.print("\033[1;33m");
+		Serial.println("                  .:^!?!^.                        ");
+		Serial.println("           .:~!?JYYYJ?7?Y5Y7!!.                   ");
+		Serial.println("         :?5YJ?!~:.      ^777YP?.                 ");
+		Serial.println("         5G~                  ~YP?:               ");
+		Serial.println("         7P5555Y:               ^YP?:....         ");
+		Serial.println("        ~55J7~^.   ..    .        ^JYYYYYYYYYJJ!. ");
+		Serial.println("        YG^     !Y5555J:^PJ    Y5:      ...::^5G^ ");
+		Serial.println("       :GY    .YG?^..^~ ~GY    5G^ ^!~~^^^!!~7G?  ");
+		Serial.println(" .!JYYY5G!    7BJ       ~GY    5G^ ~??JJJY555GP!  ");
+		Serial.println("^55!^:.^~.    ^PP~   .: ^GP:  ^PP:           :7PY.");
+		Serial.println("YG^            :JP5YY55: ~YP55PY^              ~GJ");
+		Serial.println("?G~      .?7~:   .^~~^.    .^:.                :G5");
+		Serial.println(".5P^     7BYJ5YJ7^.                          .~5P^");
+		Serial.println(" .JPJ!~!JP?  .:~?PP^            .:.    .^!JYY5Y!. ");
+		Serial.println("   :!???!:       5P.         .!Y5YYYJ?Y5Y?!^:.    ");
+		Serial.println("                 7G7        7GY!. .:~!^.          ");
+		Serial.println("                  JG!      :G5                    ");
+		Serial.println("                   7PY!^^~?PY:                    ");
+		Serial.println("                    .!JJJJ?^                      ");
+		Serial.print("\033[0m");
+		Serial.println("\n\033[1;92mFW Ver. 2.1.0");
+		Serial.printf("\nLast Built: %s at %s", __DATE__, __TIME__);
+		Serial.printf("\nRandom Num: %x", ARM_DWT_CYCCNT);
+		Serial.println("\033[0m\n");
+	}
 }
 
 // Master loop
 int main() {
-	delay(5000);
 	Serial.begin(1000000); // the serial monitor is actually always active (for debug use Serial.println & tycmd)
-    print_logo();
+	print_logo();
 
-    // Execute setup functions
-    pinMode(13, OUTPUT);
-    dr16.init();
-    can.init();
+	// Execute setup functions
+	pinMode(13, OUTPUT);
+	dr16.init();
+	can.init();
 
-    long long loopc = 0; // Loop counter for heartbeat
+	long long loopc = 0; // Loop counter for heartbeat
 
 	char buffer[1024];	
+	int* buffer32 = (int*)buffer;
 	memset(buffer, 0, 1024);
-	long packets_sent = 0;
-    // Main loop
-    while (true) {
-        // Read sensors
-        dr16.read();
-        can.read();
+	int missed_packets = 0;
+	int num_read = 0;
+	int num_write = 0;
+	// Main loop
+	while (true) {
+		// Read sensors
+		dr16.read();
+		can.read();
 
-
-
-	// send x amount of packets
-	if (packets_sent < 100000)
-	{
-
-		if (RawHID.available())
+		// send x amount of packets
+		while (RawHID.available())
 		{
-			int bytes_read = RawHID.recv(buffer, UINT16_MAX);
+			int bytes_read = RawHID.recv(buffer, 0);
 			if (bytes_read != RAWHID_RX_SIZE)
 				Serial.printf("Failed to read!\n");
 			else 
 			{
-				// write a packet back
-				Serial.printf("Read Packet: %d\n", packets_sent);
-				//for (int i = 0; i < RAWHID_RX_SIZE; i++)
-			//	{
-			//		Serial.printf("%.2x ", buffer[i]);
-			//		if (i % 32 == 0)
-			//			Serial.println();
-			//	}
-			//	Serial.println();
-
-				int bytes_sent = RawHID.send(buffer, UINT16_MAX);
-				if (bytes_sent != RAWHID_TX_SIZE)
-					Serial.printf("Failed to write!\n");
-				else 
-					packets_sent++;
+				num_read++;
+				Serial.printf("Read Packet: %d\n", num_read);
 			}
-		}
-	}
 
+			int bytes_sent = RawHID.send(buffer, UINT16_MAX);
+			if (bytes_sent != RAWHID_TX_SIZE)
+			{
+				Serial.printf("Failed to write!\n");
+			}
+			else 
+			{
+				num_write++;
+				Serial.printf("Wrote packet! %d %d\n", num_write);
+				break;
+			}
+
+		}
+
+
+		// write a packet back
 
 		// LED heartbeat -- linked to loop count to reveal slowdowns and freezes.
 		loopc % (int)(1E3/float(HEARTBEAT_FREQ)) < (int)(1E3/float(5*HEARTBEAT_FREQ)) ? digitalWrite(13, HIGH) : digitalWrite(13, LOW);
