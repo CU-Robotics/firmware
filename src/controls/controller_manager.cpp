@@ -21,6 +21,7 @@ void ControllerManager::init_controller(uint8_t can_id, uint8_t motor_id, int co
     case 2:
         controllers[index][controller_level] = new PIDVelocityController(controller_level);
         controllers[index][controller_level]->set_gains(gains);
+                Serial.println("init vel pid");
         break;
     case 3:
         controllers[index][controller_level] = new FullStateFeedbackController(controller_level);
@@ -29,6 +30,7 @@ void ControllerManager::init_controller(uint8_t can_id, uint8_t motor_id, int co
     case 4:
         controllers[index][controller_level] = new ChassisPIDVelocityController(controller_level);
         controllers[index][controller_level]->set_gains(gains);
+        Serial.println("init chassis pid");
         break;
     default:
         controllers[index][controller_level] = new NullController();

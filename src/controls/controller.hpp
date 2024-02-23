@@ -159,7 +159,7 @@ public:
     FullStateFeedbackController(int _controller_level)
     {
         controller_level = _controller_level;
-        if (controller_level == 0)
+        if (controller_level == 1)
             Serial.println("FullStateFeedbackController can't be a low level controller");
     }
 
@@ -206,7 +206,7 @@ public:
     ChassisPIDVelocityController(int _controller_level)
     {
         controller_level = _controller_level;
-        if (controller_level != 0)
+        if (controller_level != 1)
             Serial.println("chassisPIDVelocityController must be a low level controller");
     }
     /// @brief dont brick the program if its initialized at the wrong controller level
@@ -218,7 +218,6 @@ public:
     float step(float reference, float estimate[MICRO_STATE_LEN])
     {
         float dt = timer.delta();
-
         pid.setpoint = reference; // 1st index = position
         pid.measurement = estimate[0];
         pid.K[0] = gains[0];

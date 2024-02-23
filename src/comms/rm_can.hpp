@@ -135,7 +135,7 @@ public:
   /// @brief Print off the values of the output array
   void print_output();
 
-  // CANData* get_data() { return &m_input; }
+  CANData* get_data() { return &m_input; }
 
 private:
   /// @brief CAN 1 object
@@ -146,7 +146,8 @@ private:
   /// @brief Output array in the format of CAN_message_t's
   CAN_message_t m_output[NUM_CAN_BUSES][NUM_MESSAGE_IDS];
   /// @brief Input array in the format of uint8_t's
-  uint8_t m_input[NUM_CAN_BUSES][NUM_MOTORS_PER_BUS][CAN_MESSAGE_SIZE];
+  CANData m_input;
+
 };
 
 #endif // CAN_MANAGER_HPP

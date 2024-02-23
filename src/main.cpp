@@ -71,8 +71,7 @@ int main()
     dr16.init();
     ref.init();
 
-    // CANData *can_data = can.get_data();
-    CANData *can_data;
+    CANData *can_data = can.get_data();
 
     estimator_manager = new EstimatorManager(can_data);
     controller_manager = new ControllerManager();
@@ -234,7 +233,7 @@ int main()
     
     for(int i = 0; i < NUM_MOTORS; i++) assigned_states[4][i] = i; 
     
-    int controller_types[NUM_MOTORS][NUM_CONTROLLER_LEVELS]  = {{4,2,0},{4,2,0},{4,2,0},{4,2,0},{0,0,3},{0,0,3},{0,0,0},{0,0,0},{0,0,3},{0,0,3},{2,2,0},{2,2,0},{2,2,0},{0,0,0},{0,0,0},{0,0,0}};
+    int controller_types[NUM_MOTORS][NUM_CONTROLLER_LEVELS]  = {{2,4,0},{2,4,0},{2,4,0},{2,4,0},{0,0,3},{0,0,3},{0,0,0},{0,0,0},{0,0,3},{0,0,3},{2,2,0},{2,2,0},{2,2,0},{0,0,0},{0,0,0},{0,0,0}};
 
     // intializes all controllers given the controller_types matrix
     for (int i = 0; i < NUM_CAN_BUSES; i++) {
@@ -315,8 +314,8 @@ int main()
     kinematics_vel[3][1] = chassis_angle_to_motor_error;
     kinematics_vel[3][2] = chassis_angle_to_motor_error;
 
-    // target_state[2][1] = 6;
-    target_state[0][0] = 3;
+    target_state[2][1] = 3;
+    // target_state[0][0] = 3;
     
     // Main loop
     while (true)
@@ -325,29 +324,26 @@ int main()
         dr16.read();
         ref.read();
 
-        Serial.println(can.get_motor_attribute(CAN_1, 3, MotorAttribute::ANGLE));
-
-        // // Read sensors
-        // estimator_manager->read_sensors();
-        // estimator_manager->step(temp_state, temp_micro_state);
-
-        // state.set_estimate(temp_state);
-        // state.step_reference(target_state, governor_type);
-        // state.get_reference(temp_reference);
-
-        // // Controls code goes here
-        // controller_manager->step(temp_reference, temp_state, temp_micro_state, kinematics_pos, kinematics_vel, motor_inputs);
-
+        // Read sensors
+        estimator_manager->read_sensors();
+        estimator_manager->step(temp_state, temp_micro_state);
+        
+        state.set_estimate(temp_state);
+        state.step_reference(target_state, governor_type);
+        state.get_reference(temp_reference);
+        
+        // Controls code goes here
+        controller_manager->step(temp_reference, temp_state, temp_micro_state, kinematics_pos, kinematics_vel, motor_inputs);
+        
         for (int j = 0; j < 2; j++)
         {
             for (int i = 0; i < NUM_MOTORS_PER_BUS; i++)
             {
-                can.write_motor_norm(j, i+1, C620, motor_inputs[(j*NUM_MOTORS)+i]);
+                can.write_motor_norm(j, i+1, C620, motor_inputs[(j*NUM_MOTORS_PER_BUS)+i]);
             }
         }
-    float temp_state[STATE_LEN][3]; // Temp state array
     
-        if (false)
+        if (true)
         { // prints the full motor input vector
             Serial.printf("[");
             for (int i = 0; i < NUM_MOTORS; i++)
@@ -377,7 +373,7 @@ int main()
             Serial.printf("] \n");
         }
 
-        if (false)
+        if (true)
         { // prints the estimated state
             for (int i = 0; i < STATE_LEN-27; i++) {
             Serial.printf("[");
