@@ -30,14 +30,22 @@ void rm_CAN::init() {
 void rm_CAN::read() {
     // read from CAN 1
     CAN_message_t msg1;
-
+    Serial.println("Reading");
     while (m_can1.read(msg1)) {
         // isolate the ID part of the message id (0x202 becomes 2)
         int id = msg1.id & 0xf;
         id -= 1; // subtract by 1 to allow for array indexing
-        
+
         // fill appropriate buffer
-        for (int i = 0; i < CAN_MESSAGE_SIZE; i++) m_input.data[CAN_1][id][i] = msg1.buf[i];
+        for (int i = 0; i < CAN_MESSAGE_SIZE; i++) {
+            m_input[CAN_1][id][i] = msg1.buf[i];
+            if(id == 2) 
+                Serial.printf("%.2x ", msg1.buf[i]);
+        }
+
+        if(id == 2) Serial.println();
+        
+
     }
 
     // read from CAN 2
@@ -49,7 +57,7 @@ void rm_CAN::read() {
         id -= 1; // subtract by 1 to allow for array indexing
         
         // fill appropriate buffer
-        for (int i = 0; i < CAN_MESSAGE_SIZE; i++) m_input.data[CAN_2][id][i] = msg2.buf[i];
+        for (int i = 0; i < CAN_MESSAGE_SIZE; i++) m_input[CAN_2][id][i] = msg2.buf[i];
     }
 }
 
@@ -87,7 +95,6 @@ void rm_CAN::zero_motors() {
 void rm_CAN::zero() {
     // zero all output messages
     zero_motors();
-
     // write all output messages (now all 0s)
     write();
 }
@@ -99,15 +106,16 @@ void rm_CAN::write_motor(uint16_t canID, uint16_t motorID, int32_t value) {
     //      [4 - 7]  to index 1 (ID: 0x1ff)
     //      [8 - 11] to index 2 (ID: 0x2ff)
     uint8_t messageID = (motorID-1) / 4;
-
     // mID just finds the 'actual' ID based on what index it should be
     uint8_t mID = (motorID-1) % 4;
 
     // set to buffer indexes (mID * 2) and (miD * 2 + 1) corresponding to the
     // expected output by the motors. Explained in motor documentation (page 14-16)
-
     // set big byte to correct index in buffer
+    Serial.println(motorID);
+    Serial.println(messageID);
     m_output[canID][messageID].buf[mID * 2] = (value >> 8) & 0xff;
+    Serial.println((uint16_t)(combine_bytes(m_input[0][2][0], m_input[0][2][1])));
     // set small byte to correct index in buffer
     m_output[canID][messageID].buf[mID * 2 + 1] = value & 0xff;
 }
@@ -132,16 +140,16 @@ int rm_CAN::get_motor_attribute(uint16_t canID, uint16_t motorID, MotorAttribute
     // return correct value depending on valueType enum
     switch (valueType) {
         case MotorAttribute::ANGLE:
-            return (uint16_t)(combine_bytes(m_input.data[canID][motorID-1][0], m_input.data[canID][motorID-1][1]));
+            return (uint16_t)(combine_bytes(m_input[canID][motorID-1][0], m_input[canID][motorID-1][1]));
             break;
         case MotorAttribute::SPEED:
-            return (int16_t)(combine_bytes(m_input.data[canID][motorID-1][2], m_input.data[canID][motorID-1][3]));
+            return (int16_t)(combine_bytes(m_input[canID][motorID-1][2], m_input[canID][motorID-1][3]));
             break;
         case MotorAttribute::TORQUE:
-            return (int16_t)(combine_bytes(m_input.data[canID][motorID-1][4], m_input.data[canID][motorID-1][5]));
+            return (int16_t)(combine_bytes(m_input[canID][motorID-1][4], m_input[canID][motorID-1][5]));
             break;
         case MotorAttribute::TEMP:
-            return (uint16_t)(m_input.data[canID][motorID-1][6]);
+            return (uint16_t)(m_input[canID][motorID-1][6]);
             break;
 
         default:
@@ -152,10 +160,10 @@ int rm_CAN::get_motor_attribute(uint16_t canID, uint16_t motorID, MotorAttribute
 
 void rm_CAN::print_motor(uint16_t canID, uint16_t motorID, bool showFullHex) {
     // strip angle, speed, torque, and temp from input array
-    uint16_t angle = combine_bytes(m_input.data[canID][motorID-1][0], m_input.data[canID][motorID-1][0 + 1]);
-    int16_t speed = combine_bytes(m_input.data[canID][motorID-1][2], m_input.data[canID][motorID-1][2 + 1]);
-    int16_t torque = combine_bytes(m_input.data[canID][motorID-1][4], m_input.data[canID][motorID-1][4 + 1]);
-    uint16_t temp = m_input.data[canID][motorID-1][6];
+    uint16_t angle = combine_bytes(m_input[canID][motorID-1][0], m_input[canID][motorID-1][0 + 1]);
+    int16_t speed = combine_bytes(m_input[canID][motorID-1][2], m_input[canID][motorID-1][2 + 1]);
+    int16_t torque = combine_bytes(m_input[canID][motorID-1][4], m_input[canID][motorID-1][4 + 1]);
+    uint16_t temp = m_input[canID][motorID-1][6];
 
     // speed and torque are interpreted as signed values. all others are unsigned
 

@@ -18,7 +18,7 @@ protected:
     /// @brief defines controller inputs and outputs (0 means Macro_state input, micro_state output)
     /// (1 means Micro_state input, motor_current output) (2 means Macro state input, motor_current output)
     int controller_level;
-
+    float gear_ratio = 0;
 public:
     Controller(){};
 
@@ -53,6 +53,9 @@ private:
     PIDFilter pid;
 
 public:
+    PIDPositionController(int _controller_level) {
+        controller_level = _controller_level;
+    }
     /// @brief step for macro_state input
     /// @param reference macro_reference
     /// @param estimate macro_estimate
@@ -66,8 +69,8 @@ public:
         pid.K[0] = gains[0];
         pid.K[1] = gains[1];
         pid.K[2] = gains[2];
-
-        float output = pid.filter(dt);
+        bool bounded = (controller_level == 2);
+        float output = pid.filter(dt, bounded);
         return output;
     }
     /// @brief step for micro_state input
@@ -84,7 +87,7 @@ public:
         pid.K[1] = gains[1];
         pid.K[2] = gains[2];
 
-        float output = pid.filter(dt);
+        float output = pid.filter(dt, true);
         return output;
     }
 
@@ -101,6 +104,9 @@ private:
     PIDFilter pid;
 
 public:
+    PIDVelocityController(int _controller_level) {
+        controller_level = _controller_level;
+    }
     /// @brief step for macro_state input
     /// @param reference macro_reference
     /// @param estimate macro_estimate
@@ -115,7 +121,8 @@ public:
         pid.K[1] = gains[1];
         pid.K[2] = gains[2];
 
-        float output = pid.filter(dt);
+        bool bounded = (controller_level == 2);
+        float output = pid.filter(dt, bounded);
         return output;
     }
     /// @brief step for micro_state input
@@ -132,7 +139,7 @@ public:
         pid.K[1] = gains[1];
         pid.K[2] = gains[2];
 
-        float output = pid.filter(dt);
+        float output = pid.filter(dt, true);
         return output;
     }
 
@@ -174,8 +181,8 @@ public:
         pid2.setpoint = reference[1];
         pid2.measurement = estimate[1];
 
-        output += pid1.filter(dt);
-        output += pid2.filter(dt);
+        output += pid1.filter(dt, true);
+        output += pid2.filter(dt, true);
 
         return output;
     }
@@ -226,7 +233,7 @@ public:
         if (power_buffer < power_buffer_limit_thresh) {
             power_limit_ratio = constrain(((power_buffer - power_buffer_critical_thresh) / power_buffer_limit_thresh), 0.0, 1.0);
         }
-        float output = pid.filter(dt) * power_limit_ratio;
+        float output = pid.filter(dt, true) * power_limit_ratio;
         return output;
     }
 

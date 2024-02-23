@@ -15,11 +15,11 @@ void ControllerManager::init_controller(uint8_t can_id, uint8_t motor_id, int co
         controllers[index][controller_level]->set_gains(gains);
         break;
     case 1:
-        controllers[index][controller_level] = new PIDPositionController();
+        controllers[index][controller_level] = new PIDPositionController(controller_level);
         controllers[index][controller_level]->set_gains(gains);
         break;
     case 2:
-        controllers[index][controller_level] = new PIDVelocityController();
+        controllers[index][controller_level] = new PIDVelocityController(controller_level);
         controllers[index][controller_level]->set_gains(gains);
         break;
     case 3:

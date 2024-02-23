@@ -12,7 +12,7 @@ struct PIDFilter {
     float measurement;
     float feedForward;
 
-    float filter(float dt) {
+    float filter(float dt, bool bound) {
         float error = setpoint - measurement;
         sumError += error * dt;
         float output = (K[0] * error) + (K[2] * ((error - prevError) / dt));
@@ -20,7 +20,7 @@ struct PIDFilter {
             // + (K[2] * ((error - prevError) / dt));
             // + (K[3] * feedForward);
         prevError = error;
-        if (fabs(output) > 1.0) output /= fabs(output);
+        if (fabs(output) > 1.0 && bound) output /= fabs(output);
         return output;
     }
 

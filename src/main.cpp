@@ -71,15 +71,16 @@ int main()
     dr16.init();
     ref.init();
 
-    CANData *can_data = can.get_data();
+    // CANData *can_data = can.get_data();
+    CANData *can_data;
 
     estimator_manager = new EstimatorManager(can_data);
     controller_manager = new ControllerManager();
 
-    float gains[NUM_MOTORS][NUM_CONTROLLER_LEVELS][NUM_GAINS];
-    int assigned_states[NUM_ESTIMATORS][STATE_LEN];
+    float gains[NUM_MOTORS][NUM_CONTROLLER_LEVELS][NUM_GAINS] = {0};
+    int assigned_states[NUM_ESTIMATORS][STATE_LEN] = {0};
     int num_states_per_estimator[NUM_ESTIMATORS] = {3,3,1,1,16};
-    float set_reference_limits[STATE_LEN][3][2];
+    float set_reference_limits[STATE_LEN][3][2] = {0};
 
     //x pos
     set_reference_limits[0][0][0] = -UINT_MAX;
@@ -140,31 +141,33 @@ int main()
 
     state.set_reference_limits(set_reference_limits);
 
-    gains[0][0][0] = 0.003; // Kp
+    float gain_1 = 0.001;
+
+    gains[0][0][0] = 1; // Kp
     gains[0][0][1] = 0;   // Ki
     gains[0][0][2] = 0;   // Kd
-    gains[0][1][0] = 0.003; // Kp
+    gains[0][1][0] = gain_1; // Kp
     gains[0][1][1] = 0;   // Ki
     gains[0][1][2] = 0;   // Kd
    
-    gains[1][0][0] = 0.003; // Kp
+    gains[1][0][0] = 1; // Kp
     gains[1][0][1] = 0;   // Ki
     gains[1][0][2] = 0;   // Kd
-    gains[1][1][0] = 0.003; // Kp
+    gains[1][1][0] = gain_1; // Kp
     gains[1][1][1] = 0;   // Ki
     gains[1][1][2] = 0;   // Kd
 
-    gains[2][0][0] = 0.003; // Kp
+    gains[2][0][0] = 1; // Kp
     gains[2][0][1] = 0;   // Ki
     gains[2][0][2] = 0;   // Kd
-    gains[2][1][0] = 0.003; // Kp
+    gains[2][1][0] = gain_1; // Kp
     gains[2][1][1] = 0;   // Ki
     gains[2][1][2] = 0;   // Kd
    
-    gains[3][0][0] = 0.003; // Kp
+    gains[3][0][0] = 1; // Kp
     gains[3][0][1] = 0;   // Ki
     gains[3][0][2] = 0;   // Kd
-    gains[3][1][0] = 0.003; // Kp
+    gains[3][1][0] = gain_1; // Kp
     gains[3][1][1] = 0;   // Ki
     gains[3][1][2] = 0;   // Kd
 
@@ -217,14 +220,6 @@ int main()
     gains[12][1][1] = 0;   // Ki
     gains[12][1][2] = 0;   // Kd
 
-    for (int i = 0; i < NUM_ESTIMATORS; i++)
-    {
-        for (int j = 0; j < STATE_LEN; j++)
-        {
-            assigned_states[i][j] = 0;
-        }
-    }
-
     assigned_states[0][0] = 0;
     assigned_states[0][1] = 1;
     assigned_states[0][2] = 2;
@@ -239,14 +234,7 @@ int main()
     
     for(int i = 0; i < NUM_MOTORS; i++) assigned_states[4][i] = i; 
     
-
     int controller_types[NUM_MOTORS][NUM_CONTROLLER_LEVELS]  = {{4,2,0},{4,2,0},{4,2,0},{4,2,0},{0,0,3},{0,0,3},{0,0,0},{0,0,0},{0,0,3},{0,0,3},{2,2,0},{2,2,0},{2,2,0},{0,0,0},{0,0,0},{0,0,0}};
-
-    for(int i = 0; i < NUM_MOTORS; i++) {
-        for(int j = 0; j < NUM_CONTROLLER_LEVELS; j++) {
-            controller_types[i][j] = 0;
-        }
-    }
 
     // intializes all controllers given the controller_types matrix
     for (int i = 0; i < NUM_CAN_BUSES; i++) {
@@ -268,31 +256,15 @@ int main()
     estimator_manager->calibrate_imus();
 
     long long loopc = 0;            // Loop counter for heartbeat
-    float temp_state[STATE_LEN][3]; // Temp state array
-    float temp_micro_state[NUM_MOTORS][MICRO_STATE_LEN]; // Temp micro state array
-    float temp_reference[STATE_LEN][3];
-    float target_state[STATE_LEN][3];
-    float kinematics_pos[NUM_MOTORS][STATE_LEN];
-    float kinematics_vel[NUM_MOTORS][STATE_LEN];
-    float motor_inputs[NUM_MOTORS];
+    float temp_state[STATE_LEN][3] = {0}; // Temp state array
+    float temp_micro_state[NUM_MOTORS][MICRO_STATE_LEN] = {0}; // Temp micro state array
+    float temp_reference[STATE_LEN][3] = {0};
+    float target_state[STATE_LEN][3] = {0};
+    float kinematics_pos[NUM_MOTORS][STATE_LEN] = {0};
+    float kinematics_vel[NUM_MOTORS][STATE_LEN] = {0};
+    float motor_inputs[NUM_MOTORS] = {0};
     int governor_type[STATE_LEN] = {2, 2, 2, 1, 1, 2, 2, 2};
 
-    for (int i = 0; i < STATE_LEN; i++)
-    {
-        for (int j = 0; j < 3; j++)
-        {
-            target_state[i][j] = 0;
-        }
-    }
-
-    for (int i = 0; i < NUM_MOTORS; i++)
-    {
-        for (int j = 0; j < STATE_LEN; j++)
-        {
-            kinematics_pos[i][j] = 0;
-            kinematics_vel[i][j] = 0;
-        }
-    }
     float chassis_angle_to_motor_error = ((.1835*9.17647058824)/.0516);
     float chassis_pos_to_motor_error = ((9.17647058824)/.0516);
     // motor 1 front right Can_1
@@ -351,29 +323,31 @@ int main()
     {
         can.read();
         dr16.read();
-        // ref.read();
+        ref.read();
 
-        // Read sensors
-        estimator_manager->read_sensors();
-        estimator_manager->step(temp_state, temp_micro_state);
+        Serial.println(can.get_motor_attribute(CAN_1, 3, MotorAttribute::ANGLE));
 
-        state.set_estimate(temp_state);
-        state.step_reference(target_state, governor_type);
-        state.get_reference(temp_reference);
+        // // Read sensors
+        // estimator_manager->read_sensors();
+        // estimator_manager->step(temp_state, temp_micro_state);
 
-        // Controls code goes here
-        controller_manager->step(temp_reference, temp_state, temp_micro_state, kinematics_pos, kinematics_vel, motor_inputs);
+        // state.set_estimate(temp_state);
+        // state.step_reference(target_state, governor_type);
+        // state.get_reference(temp_reference);
+
+        // // Controls code goes here
+        // controller_manager->step(temp_reference, temp_state, temp_micro_state, kinematics_pos, kinematics_vel, motor_inputs);
 
         for (int j = 0; j < 2; j++)
         {
-            for (int i = 0; i < NUM_MOTORS; i++)
+            for (int i = 0; i < NUM_MOTORS_PER_BUS; i++)
             {
-                // can.write_motor_norm(j, i+1, C620, motor_inputs[(j*NUM_MOTORS)+i]);
+                can.write_motor_norm(j, i+1, C620, motor_inputs[(j*NUM_MOTORS)+i]);
             }
         }
     float temp_state[STATE_LEN][3]; // Temp state array
     
-        if (true)
+        if (false)
         { // prints the full motor input vector
             Serial.printf("[");
             for (int i = 0; i < NUM_MOTORS; i++)
@@ -386,7 +360,7 @@ int main()
         }
 
         if (false)
-        { // prints the full motor input vector
+        { // prints the full micro estimate
             Serial.printf("[");
             for (int i = 0; i < NUM_MOTORS; i++)
             {
