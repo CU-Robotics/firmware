@@ -59,7 +59,6 @@ void ControllerManager::step(float macro_reference[STATE_LEN][3], float macro_es
 
             temp_macro_reference[1] = macro_reference[j][1] * kinematics_v[m][j];
             temp_macro_estimate[1] = macro_estimate[j][1] * kinematics_v[m][j];
-
             //itterate the high level controllers first
             output += controllers[m][0]->step(temp_macro_reference, temp_macro_estimate);
         }

@@ -304,8 +304,8 @@ public:
         float imu_vel_offset = 8.05;
         // calculate the pitch yaw and roll velocities (Gimbal Relative)
         current_pitch_velocity = __vectorProduct(pitch_axis_unitvector, raw_omega_vector, 3)/imu_vel_offset;
-        current_yaw_velocity = __vectorProduct(yaw_axis_unitvector, raw_omega_vector, 3)/imu_vel_offset;
-        current_roll_velocity = __vectorProduct(roll_axis_unitvector, raw_omega_vector, 3)/imu_vel_offset;
+        current_yaw_velocity = -__vectorProduct(yaw_axis_unitvector, raw_omega_vector, 3)/imu_vel_offset;
+        current_roll_velocity = -__vectorProduct(roll_axis_unitvector, raw_omega_vector, 3)/imu_vel_offset;
 
         // calculate the pitch yaw and roll velocities (Global Reference)
         global_pitch_velocity = __vectorProduct(pitch_axis_global, raw_omega_vector, 3);
@@ -315,9 +315,9 @@ public:
         dt = time.delta();
         if (dt > .002)
             dt = 0; // first dt loop generates huge time so check for that
-        yaw_angle += -current_yaw_velocity * (dt);
+        yaw_angle += current_yaw_velocity * (dt);
         pitch_angle += current_pitch_velocity * (dt);
-        roll_angle += -current_roll_velocity * (dt);
+        roll_angle += current_roll_velocity * (dt);
 
         global_yaw_angle += -global_yaw_velocity * (dt);
         global_pitch_angle += -global_pitch_velocity * (dt);
@@ -400,8 +400,8 @@ struct FlyWheelEstimator : public Estimator
      float projectile_speed_ref;
      float linear_velocity;
 
-     float can_weight;
-     float ref_weight;
+     float can_weight = 1;
+     float ref_weight = 0;
 
     public:
     FlyWheelEstimator(CANData *c, int _num_states){
@@ -412,8 +412,8 @@ struct FlyWheelEstimator : public Estimator
     void step_states(float output[STATE_LEN][3]){
         //can
         float radius = 30 * 0.001; //meters
-        float angular_velocity_l = can_data->get_motor_attribute(CAN_2, 3, MotorAttribute::SPEED) / 60;
-        float angular_velocity_r = can_data->get_motor_attribute(CAN_2, 4, MotorAttribute::SPEED) / 60;
+        float angular_velocity_l = -can_data->get_motor_attribute(CAN_2, 3, MotorAttribute::SPEED)*(2*PI) / 60;
+        float angular_velocity_r = can_data->get_motor_attribute(CAN_2, 4, MotorAttribute::SPEED)*(2*PI) / 60;
         float angular_velocity_avg = (angular_velocity_l + angular_velocity_r)/2;
         linear_velocity = angular_velocity_avg * radius; //m/s
 
@@ -431,9 +431,8 @@ struct FeederEstimator : public Estimator
         float balls_per_second_ref;
         float balls_per_second_can;
 
-        float ref_weight;
-        float can_weight;
-
+        float ref_weight = 0;
+        float can_weight = 1;
 
     public:
     FeederEstimator(CANData *c, int _num_states){
@@ -450,7 +449,8 @@ struct FeederEstimator : public Estimator
         //ref
         balls_per_second_ref = ref.ref_data.launching_event.launching_speed;
 
-        output[0][1] = (balls_per_second_ref * ref_weight) * (balls_per_second_can * can_weight);
+        output[0][1] = (balls_per_second_ref * ref_weight) + (balls_per_second_can * can_weight);
+        Serial.println(output[0][1]);
     }
 };
 

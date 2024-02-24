@@ -121,7 +121,15 @@ public:
 	/// @brief Prints the raw 18-byte packet from the receiver
 	void print_raw();
 
+	int get_mouse_x();
 
+	int get_mouse_y();
+
+	bool get_l_mouse_button();
+	
+	bool get_r_mouse_button();
+
+	uint8_t *get_raw() { return m_inputRaw; }
 
 private:
 	/// @brief Maps the input value to a specified value range
@@ -136,6 +144,12 @@ private:
 	/// @brief A simple check to see if read data is within expected values
 	/// @return True/false whether data is deemed valid or not
 	bool is_data_valid();
+
+	int16_t mouse_x;
+	int16_t mouse_y;
+
+	bool l_mouse_button;
+	bool r_mouse_button;
 
 public:
 

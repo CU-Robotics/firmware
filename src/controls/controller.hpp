@@ -70,7 +70,7 @@ public:
         pid.K[1] = gains[1];
         pid.K[2] = gains[2];
         bool bounded = (controller_level == 2);
-        float output = pid.filter(dt, bounded);
+        float output = pid.filter(dt, bounded, false);
         return output;
     }
     /// @brief step for micro_state input
@@ -87,7 +87,7 @@ public:
         pid.K[1] = gains[1];
         pid.K[2] = gains[2];
 
-        float output = pid.filter(dt, true);
+        float output = pid.filter(dt, true, false);
         return output;
     }
 
@@ -122,7 +122,7 @@ public:
         pid.K[2] = gains[2];
 
         bool bounded = (controller_level == 2);
-        float output = pid.filter(dt, bounded);
+        float output = pid.filter(dt, bounded, false);
         return output;
     }
     /// @brief step for micro_state input
@@ -139,7 +139,7 @@ public:
         pid.K[1] = gains[1];
         pid.K[2] = gains[2];
 
-        float output = pid.filter(dt, true);
+        float output = pid.filter(dt, true, false);
         return output;
     }
 
@@ -175,7 +175,7 @@ public:
         pid.K[3] = reference[1];
 
         bool bounded = (controller_level == 2);
-        float output = pid.filter(dt, bounded);
+        float output = pid.filter(dt, bounded, false);
         return output;
     }
     /// @brief step for micro_state input
@@ -192,7 +192,7 @@ public:
         pid.K[1] = gains[1];
         pid.K[2] = gains[2];
 
-        float output = pid.filter(dt, true);
+        float output = pid.filter(dt, true, false);
         return output;
     }
 
@@ -235,8 +235,8 @@ public:
         pid2.setpoint = reference[1];
         pid2.measurement = estimate[1];
 
-        output += pid1.filter(dt, true);
-        output += pid2.filter(dt, true);
+        output += pid1.filter(dt, true, true); // position wraps
+        output += pid2.filter(dt, true, false); // no wrap for velocity
 
         return output;
     }
@@ -286,7 +286,7 @@ public:
         if (power_buffer < power_buffer_limit_thresh) {
             power_limit_ratio = constrain(((power_buffer - power_buffer_critical_thresh) / power_buffer_limit_thresh), 0.0, 1.0);
         }
-        float output = pid.filter(dt, true) * power_limit_ratio;
+        float output = pid.filter(dt, true, false) * power_limit_ratio;
         return output;
     }
 

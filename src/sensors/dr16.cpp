@@ -59,6 +59,10 @@ void DR16::read() {
 	wh = ((m_inputRaw[17] & 0x7) << 8) | m_inputRaw[16];
 	k1 = m_inputRaw[14];
 	k2 = m_inputRaw[15];
+	mouse_x = (m_inputRaw[7] << 8) | m_inputRaw[6]; 
+	mouse_y = (m_inputRaw[9] << 8) | m_inputRaw[8]; 
+	l_mouse_button = m_inputRaw[12];
+	r_mouse_button = m_inputRaw[13];
 	s1 = (m_inputRaw[5] & 0x30) >> 4;
 	s2 = (m_inputRaw[5] & 0xc0) >> 6;
 
@@ -192,4 +196,20 @@ float DR16::get_r_switch() {
 
 float DR16::get_l_switch() {
 	return m_input[6];
+}
+
+int DR16::get_mouse_y(){
+	return mouse_y;
+}
+
+int DR16::get_mouse_x(){
+	return mouse_x;
+}
+
+bool DR16::get_l_mouse_button(){
+	return l_mouse_button;
+}
+
+bool DR16::get_r_mouse_button() {
+	return r_mouse_button;
 }
