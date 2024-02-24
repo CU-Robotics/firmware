@@ -86,15 +86,15 @@ int main()
     set_reference_limits[0][0][1] = UINT_MAX;
     set_reference_limits[0][1][0] = -5.37952195918;
     set_reference_limits[0][1][1] = 5.37952195918;
-    set_reference_limits[0][2][0] = -3;
-    set_reference_limits[0][2][1] = 3;
+    set_reference_limits[0][2][0] = -7;
+    set_reference_limits[0][2][1] = 7;
     //y pos
     set_reference_limits[1][0][0] = -UINT_MAX;
     set_reference_limits[1][0][1] = UINT_MAX;
     set_reference_limits[1][1][0] = -5.37952195918;
     set_reference_limits[1][1][1] = 5.37952195918;
-    set_reference_limits[1][2][0] = -3;
-    set_reference_limits[1][2][1] = 3;
+    set_reference_limits[1][2][0] = -7;
+    set_reference_limits[1][2][1] = 7;
     //chassis angle (psi)
     set_reference_limits[2][0][0] = -UINT_MAX;
     set_reference_limits[2][0][1] = UINT_MAX;
@@ -107,15 +107,15 @@ int main()
     set_reference_limits[3][0][1] = UINT_MAX;
     set_reference_limits[3][1][0] = -49.4827627617;
     set_reference_limits[3][1][1] = 49.4827627617;
-    set_reference_limits[3][2][0] = -1;
-    set_reference_limits[3][2][1] = 1;
+    set_reference_limits[3][2][0] = -10;
+    set_reference_limits[3][2][1] = 10;
     //pitch
-    set_reference_limits[4][0][0] = 1.92;
-    set_reference_limits[4][0][1] = 0.9;
+    set_reference_limits[4][0][0] = 0.9;
+    set_reference_limits[4][0][1] = 1.92;
     set_reference_limits[4][1][0] = -70.1181276577;
     set_reference_limits[4][1][1] = 70.1181276577;
-    set_reference_limits[4][2][0] = -1;
-    set_reference_limits[4][2][1] = 1;
+    set_reference_limits[4][2][0] = -300;
+    set_reference_limits[4][2][1] = 300;
     //Shooter Ball Speed
     set_reference_limits[5][0][0] = -UINT_MAX;
     set_reference_limits[5][0][1] = UINT_MAX;
@@ -140,63 +140,68 @@ int main()
 
     state.set_reference_limits(set_reference_limits);
 
-    float gain_1 = 0.001;
+    float gain_1 = 0.002;
+    float gain_d = 0.000;
 
     gains[0][0][0] = 1; // Kp
     gains[0][0][1] = 0;   // Ki
     gains[0][0][2] = 0;   // Kd
     gains[0][1][0] = gain_1; // Kp
-    gains[0][1][1] = 0;   // Ki
+    gains[0][1][1] = gain_d;   // Ki
     gains[0][1][2] = 0;   // Kd
    
     gains[1][0][0] = 1; // Kp
     gains[1][0][1] = 0;   // Ki
     gains[1][0][2] = 0;   // Kd
     gains[1][1][0] = gain_1; // Kp
-    gains[1][1][1] = 0;   // Ki
+    gains[1][1][1] = gain_d;   // Ki
     gains[1][1][2] = 0;   // Kd
 
     gains[2][0][0] = 1; // Kp
     gains[2][0][1] = 0;   // Ki
     gains[2][0][2] = 0;   // Kd
     gains[2][1][0] = gain_1; // Kp
-    gains[2][1][1] = 0;   // Ki
+    gains[2][1][1] = gain_d;   // Ki
     gains[2][1][2] = 0;   // Kd
    
     gains[3][0][0] = 1; // Kp
     gains[3][0][1] = 0;   // Ki
     gains[3][0][2] = 0;   // Kd
     gains[3][1][0] = gain_1; // Kp
-    gains[3][1][1] = 0;   // Ki
+    gains[3][1][1] = gain_d;   // Ki
     gains[3][1][2] = 0;   // Kd
 
-    gains[4][2][0] = 0; // Kp pos
+    gains[4][2][0] = 0.1; // Kp pos
     gains[4][2][1] = 0;   // Ki
-    gains[4][2][2] = 0;   // Kd
-    gains[4][2][3] = 0; // Kp vel
-    gains[4][2][4] = 0;   // Ki
-    gains[4][2][5] = 0;   // Kd
+    gains[4][2][2] = 0.01;   // Kd
+    gains[4][2][3] = 0;   // Kd
+    gains[4][2][4] = 0.01; // Kp vel
+    gains[4][2][5] = 0;   // Ki
+    gains[4][2][6] = 0;   // Kd
 
-    gains[5][2][0] = 0; // Kp pos
+    gains[5][2][0] = 0.1; // Kp pos
     gains[5][2][1] = 0;   // Ki
-    gains[5][2][2] = 0;   // Kd
-    gains[5][2][3] = 0; // Kp vel
-    gains[5][2][4] = 0;   // Ki
-    gains[5][2][5] = 0;   // Kd
+    gains[5][2][2] = 0.01;   // Kd
+    gains[5][2][3] = 0;   // Kd
+    gains[5][2][4] = 0.01; // Kp vel
+    gains[5][2][5] = 0;   // Ki
+    gains[5][2][6] = 0;   // Kd
 
-    gains[8][2][0] = 0; // Kp pos
+    gains[8][2][0] = 2.5; // Kp pos
     gains[8][2][1] = 0;   // Ki
     gains[8][2][2] = 0;   // Kd
-    gains[8][2][3] = 0; // Kp vel
-    gains[8][2][4] = 0;   // Ki
-    gains[8][2][5] = 0;   // Kd
+    gains[8][2][3] = -0.19; // feed foward
+    gains[8][2][4] = 0.3; // Kp vel
+    gains[8][2][5] = 0;   // Ki
+    gains[8][2][6] = 0;   // Kd
 
-    gains[9][2][0] = 0; // Kp pos
+    gains[9][2][0] = 2.5; // Kp pos
     gains[9][2][1] = 0;   // Ki
     gains[9][2][2] = 0;   // Kd
-    gains[9][2][3] = 0; // Kp vel
-    gains[9][2][4] = 0;   // Ki
-    gains[9][2][5] = 0;   // Kd
+    gains[9][2][3] = -0.19; // feed foward
+    gains[9][2][4] = 0.3; // Kp vel
+    gains[9][2][5] = 0;   // Ki
+    gains[9][2][6] = 0;   // Kd
 
     gains[10][0][0] = 0; // Kp pos
     gains[10][0][1] = 0;   // Ki
@@ -251,7 +256,8 @@ int main()
 
     // imu calibration
     estimator_manager->calibrate_imus();
-
+    
+    
     long long loopc = 0;            // Loop counter for heartbeat
     float temp_state[STATE_LEN][3] = {0}; // Temp state array
     float temp_micro_state[NUM_MOTORS][MICRO_STATE_LEN] = {0}; // Temp micro state array
@@ -261,57 +267,56 @@ int main()
     float kinematics_vel[NUM_MOTORS][STATE_LEN] = {0};
     float motor_inputs[NUM_MOTORS] = {0};
     int governor_type[STATE_LEN] = {2, 2, 2, 1, 1, 2, 2, 2};
-
+    
     float chassis_angle_to_motor_error = ((.1835*9.17647058824)/.0516);
-    float chassis_pos_to_motor_error = ((9.17647058824)/.0516);
+    float chassis_pos_to_motor_error = ((9.17647058824)/.0516) * 0.507;
     // motor 1 front right Can_1
-    kinematics_vel[0][0] = 0;  
-    kinematics_vel[0][1] = 0;  
     kinematics_vel[0][2] = chassis_angle_to_motor_error; 
     // motor 2 back right
-    kinematics_vel[1][0] = 0;
-    kinematics_vel[1][1] = 0;
     kinematics_vel[1][2] = chassis_angle_to_motor_error;
     // motor 3 back left
-    kinematics_vel[2][0] = 0;
-    kinematics_vel[2][1] = 0;
     kinematics_vel[2][2] = chassis_angle_to_motor_error;
     // motor 4 front left
-    kinematics_vel[3][0] = 0;
-    kinematics_vel[3][1] = 0;
     kinematics_vel[3][2] = chassis_angle_to_motor_error;
     // motor 5 yaw 1
-    kinematics_vel[0][0] = chassis_angle_to_motor_error;  
-    kinematics_vel[0][1] = chassis_angle_to_motor_error;  
+    kinematics_pos[4][3] = -1;  
+    kinematics_vel[4][3] = -1;  
     // motor 6 yaw 2
-    kinematics_vel[1][1] = chassis_angle_to_motor_error;
-    kinematics_vel[1][2] = chassis_angle_to_motor_error;
+    kinematics_pos[5][3] = -1;
+    kinematics_vel[5][3] = -1;
+
+    // // motor 5 yaw 1
+    // kinematics_vel[4][2] = 0.1;  
+
+    // // motor 6 yaw 2
+    // kinematics_vel[5][3] = 0.1;
+
 
     // motor 1 pitch 1 Can_2
-    kinematics_vel[2][0] = chassis_angle_to_motor_error;
-    kinematics_vel[2][1] = chassis_angle_to_motor_error;
-    kinematics_vel[2][2] = chassis_angle_to_motor_error;
+    kinematics_vel[8][4] = 1;
+    kinematics_pos[8][4] = 1;
     // motor 2 pitch 2
-    kinematics_vel[3][0] = chassis_angle_to_motor_error;
-    kinematics_vel[3][1] = chassis_angle_to_motor_error;
-    kinematics_vel[3][2] = chassis_angle_to_motor_error;
+    kinematics_vel[9][4] = -1;
+    kinematics_pos[9][4] = -1;
     // motor 3 flywheel 1 
-    kinematics_vel[2][0] = chassis_angle_to_motor_error;
-    kinematics_vel[2][1] = chassis_angle_to_motor_error;
-    kinematics_vel[2][2] = chassis_angle_to_motor_error;
+    kinematics_vel[10][0] = 0;
+    kinematics_vel[10][1] = 0;
+    kinematics_vel[10][2] = 0;
     // motor 2 flywheel 2 
-    kinematics_vel[3][0] = chassis_angle_to_motor_error;
-    kinematics_vel[3][1] = chassis_angle_to_motor_error;
-    kinematics_vel[3][2] = chassis_angle_to_motor_error;
+    kinematics_vel[11][0] = 0;
+    kinematics_vel[11][1] = 0;
+    kinematics_vel[11][2] = 0;
     // motor 1 feeder
-    kinematics_vel[2][0] = chassis_angle_to_motor_error;
-    kinematics_vel[2][1] = chassis_angle_to_motor_error;
-    kinematics_vel[2][2] = chassis_angle_to_motor_error;
+    kinematics_vel[12][0] = 0;
+    kinematics_vel[12][1] = 0;
+    kinematics_vel[12][2] = 0;
     // motor 2 switcher
-    kinematics_vel[3][0] = chassis_angle_to_motor_error;
-    kinematics_vel[3][1] = chassis_angle_to_motor_error;
-    kinematics_vel[3][2] = chassis_angle_to_motor_error;
+    kinematics_vel[13][0] = 0;
+    kinematics_vel[13][1] = 0;
+    kinematics_vel[13][2] = 0;
     
+    int count_one = 0;
+
     // Main loop
     while (true)
     {
@@ -322,16 +327,29 @@ int main()
         // driver controls
         float chassis_velocity_x = dr16.get_l_stick_y() * 5.4;
         float chassis_velocity_y = -dr16.get_l_stick_x() * 5.4;
+        float chassis_spin = dr16.get_wheel() * 10;
+
+        float pitch_target = (-dr16.get_r_stick_y()*0.3)+1.57;
+        float yaw_target = (-dr16.get_r_stick_x()*.3);
 
         target_state[0][1] = chassis_velocity_x;
         target_state[1][1] = chassis_velocity_y;
-        // target_state[2][1] = 3;
-\
+        target_state[2][1] = chassis_spin;
+        target_state[3][0] = yaw_target;
+        target_state[3][1] = 0;
+        target_state[4][0] = pitch_target;
+        target_state[4][1] = 0;
+
 
         // Read sensors
         estimator_manager->read_sensors();
         estimator_manager->step(temp_state, temp_micro_state);
         
+        if(count_one == 0){
+            state.set_reference(temp_state);
+            count_one++;
+        } 
+
         state.set_estimate(temp_state);
         state.step_reference(target_state, governor_type);
         state.get_reference(temp_reference);
@@ -359,13 +377,13 @@ int main()
             }
         }
     
-        if (false)
+        if (true)
         { // prints the full motor input vector
             Serial.printf("[");
-            for (int i = 0; i < NUM_MOTORS-10; i++)
+            for (int i = 0; i < NUM_MOTORS-5; i++)
             {
                 Serial.print(motor_inputs[i]);
-                if (i != NUM_MOTORS - 11)
+                if (i != NUM_MOTORS - 6)
                     Serial.printf(", ");
             }
             Serial.printf("] \n");
@@ -389,13 +407,13 @@ int main()
             Serial.printf("] \n");
         }
 
-        if (true)
+        if (false)
         { // prints the estimated state
-            for (int i = 0; i < STATE_LEN-29; i++) {
+            for (int i = 3; i < STATE_LEN-26; i++) {
             Serial.printf("[");
             for (int j = 0; j < 3; j++)
             {
-                Serial.printf("%.3f",temp_state[i][j]);
+                Serial.printf("%.3f",temp_reference[i][j]);
                 if (j != 3 - 1)
                     Serial.printf(", ");
             }

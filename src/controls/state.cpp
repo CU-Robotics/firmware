@@ -1,11 +1,19 @@
 #include "state.hpp"
 
+void State::set_reference(float reference[STATE_LEN][3]) {
+    memcpy(this->reference, reference, sizeof(this->reference));
+    Serial.println("Don't use this, bitch 'one time is ok :)'");
+}
+
 void State::get_reference(float reference[STATE_LEN][3]) {
     memcpy(reference, this->reference, sizeof(this->reference));
 }
 
-void State::step_reference(float ungoverned_reference[STATE_LEN][3], int controller_type[STATE_LEN]) {
+void State::step_reference(float ungoverned_reference[STATE_LEN][3], int governor_type[STATE_LEN]) {
+    float threshold = 0.0005;
     float dt = governor_timer.delta();
+    if (dt > .002)
+            dt = 0; // first dt loop generates huge time so check for that
     for (int n = 0; n < STATE_LEN; n++) {
         // Keep new target values within absolute limits
         for (int p = 0; p < 3; p++) {
@@ -13,27 +21,45 @@ void State::step_reference(float ungoverned_reference[STATE_LEN][3], int control
             if (ungoverned_reference[n][p] > reference_limits[n][p][1]) ungoverned_reference[n][p] = reference_limits[n][p][1];
         }
 
-        if(controller_type[n] == 1) { // position based governor
+        if(governor_type[n] == 1) { // position based governor
             float pos_error = ungoverned_reference[n][0] - reference[n][0];
             float vel_error = ungoverned_reference[n][1] - reference[n][1];
             // Set the accel refrence to the max or min based on which direction it needs to go
-            if(pos_error > 0) reference[n][2] = reference_limits[n][2][1];
-            else if(pos_error < 0) reference[n][2] = reference_limits[n][2][0];
-            else reference[n][2] = 0;
+            if(pos_error > threshold) reference[n][2] = reference_limits[n][2][1];
+            else if(pos_error < -threshold) reference[n][2] = reference_limits[n][2][0];
+            else {
+                reference[n][2] = 0;
+                reference[n][1] = ungoverned_reference[n][1];
+                }
 
             if (reference[n][2] != 0) {
-                // check how far it will travel when braking
-                float time_to_deccel = (vel_error)/(-reference[n][2]);
-                float dist_to_deccel = (reference[n][1]*time_to_deccel) + (0.5*reference[n][2]*time_to_deccel*time_to_deccel);
-                // if the minimum stopping distance is greater than the remaining distance start braking
-                if (dist_to_deccel > pos_error) reference[n][2] = -reference[n][2];
+                if(pos_error > 0) {
+                    // check how far it will travel when braking
+                    float dist_to_deccel = (pow(ungoverned_reference[n][1],2)-pow(reference[n][1],2))/(2*(reference_limits[n][2][0]));
+                   
+                    // if the minimum stopping distance is greater than the remaining distance start braking
+                    if (dist_to_deccel > pos_error){
+                        if (vel_error > 0) reference[n][2] = reference_limits[n][2][1];
+                        else reference[n][2] = reference_limits[n][2][0];
+                    } 
+                }
+                else {
+                    // check how far it will travel when braking
+                    float dist_to_deccel = (pow(ungoverned_reference[n][1],2)-pow(reference[n][1],2))/(2*(reference_limits[n][2][1]));
+                
+                    // if the minimum stopping distance is greater than the remaining distance start braking
+                    if (dist_to_deccel < pos_error){
+                        if (vel_error > 0) reference[n][2] = reference_limits[n][2][1];
+                        else reference[n][2] = reference_limits[n][2][0];
+                    } 
+                }
             }
 
             // step the references by higher order reference
             reference[n][1] += reference[n][2] * dt;
             reference[n][0] += reference[n][1] * dt;
 
-        } else if(controller_type[n] == 2) { // velocity based governor
+        } else if(governor_type[n] == 2) { // velocity based governor
             float vel_error = ungoverned_reference[n][1] - reference[n][1];
             // check which direction the target is and set acceleration
             if(vel_error > 0) {

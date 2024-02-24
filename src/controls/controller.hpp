@@ -123,7 +123,6 @@ public:
 
         bool bounded = (controller_level == 2);
         float output = pid.filter(dt, bounded);
-        Serial.println(output);
         return output;
     }
     /// @brief step for micro_state input
@@ -177,7 +176,6 @@ public:
 
         bool bounded = (controller_level == 2);
         float output = pid.filter(dt, bounded);
-        Serial.println(output);
         return output;
     }
     /// @brief step for micro_state input
@@ -226,9 +224,10 @@ public:
         pid1.K[0] = gains[0];
         pid1.K[1] = gains[1];
         pid1.K[2] = gains[2];
-        pid2.K[0] = gains[3];
-        pid2.K[1] = gains[4];
-        pid2.K[2] = gains[5];
+        pid1.K[3] = gains[3] * sin(reference[0]);
+        pid2.K[0] = gains[4];
+        pid2.K[1] = gains[5];
+        pid2.K[2] = gains[6];
 
         pid1.setpoint = reference[0];
         pid1.measurement = estimate[0];
