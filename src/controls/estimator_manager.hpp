@@ -18,7 +18,7 @@
 
 #define NUM_IMU_CALIBRATION 50000
 
-#define NUM_ESTIMATORS 5
+#define NUM_ESTIMATORS 4
 
 // x y psi theta phi flywheel_l flywheel_r feeder switcher
 class EstimatorManager

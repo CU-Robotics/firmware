@@ -78,7 +78,7 @@ int main()
 
     float gains[NUM_MOTORS][NUM_CONTROLLER_LEVELS][NUM_GAINS] = {0};
     int assigned_states[NUM_ESTIMATORS][STATE_LEN] = {0};
-    int num_states_per_estimator[NUM_ESTIMATORS] = {3,3,1,1,16};
+    int num_states_per_estimator[NUM_ESTIMATORS] = {5,1,1,16};
     float set_reference_limits[STATE_LEN][3][2] = {0};
 
     //x pos
@@ -86,15 +86,15 @@ int main()
     set_reference_limits[0][0][1] = UINT_MAX;
     set_reference_limits[0][1][0] = -5.37952195918;
     set_reference_limits[0][1][1] = 5.37952195918;
-    set_reference_limits[0][2][0] = -1;
-    set_reference_limits[0][2][1] = 1;
+    set_reference_limits[0][2][0] = -3;
+    set_reference_limits[0][2][1] = 3;
     //y pos
     set_reference_limits[1][0][0] = -UINT_MAX;
     set_reference_limits[1][0][1] = UINT_MAX;
     set_reference_limits[1][1][0] = -5.37952195918;
     set_reference_limits[1][1][1] = 5.37952195918;
-    set_reference_limits[1][2][0] = -1;
-    set_reference_limits[1][2][1] = 1;
+    set_reference_limits[1][2][0] = -3;
+    set_reference_limits[1][2][1] = 3;
     //chassis angle (psi)
     set_reference_limits[2][0][0] = -UINT_MAX;
     set_reference_limits[2][0][1] = UINT_MAX;
@@ -222,18 +222,16 @@ int main()
     assigned_states[0][0] = 0;
     assigned_states[0][1] = 1;
     assigned_states[0][2] = 2;
+    assigned_states[0][3] = 3;
+    assigned_states[0][4] = 4;
 
-    assigned_states[1][0] = 2;
-    assigned_states[1][1] = 3;
-    assigned_states[1][2] = 4;
+    assigned_states[1][0] = 5;
 
-    assigned_states[2][0] = 5;
-
-    assigned_states[3][0] = 6;
+    assigned_states[2][0] = 6;
     
-    for(int i = 0; i < NUM_MOTORS; i++) assigned_states[4][i] = i; 
+    for(int i = 0; i < NUM_MOTORS; i++) assigned_states[3][i] = i; 
     
-    int controller_types[NUM_MOTORS][NUM_CONTROLLER_LEVELS]  = {{2,4,0},{2,4,0},{2,4,0},{2,4,0},{0,0,3},{0,0,3},{0,0,0},{0,0,0},{0,0,3},{0,0,3},{2,2,0},{2,2,0},{2,2,0},{0,0,0},{0,0,0},{0,0,0}};
+    int controller_types[NUM_MOTORS][NUM_CONTROLLER_LEVELS]  = {{5,4,0},{5,4,0},{5,4,0},{5,4,0},{0,0,3},{0,0,3},{0,0,0},{0,0,0},{0,0,3},{0,0,3},{2,2,0},{2,2,0},{2,2,0},{0,0,0},{0,0,0},{0,0,0}};
 
     // intializes all controllers given the controller_types matrix
     for (int i = 0; i < NUM_CAN_BUSES; i++) {
@@ -267,20 +265,20 @@ int main()
     float chassis_angle_to_motor_error = ((.1835*9.17647058824)/.0516);
     float chassis_pos_to_motor_error = ((9.17647058824)/.0516);
     // motor 1 front right Can_1
-    kinematics_vel[0][0] = chassis_angle_to_motor_error;  
-    kinematics_vel[0][1] = chassis_angle_to_motor_error;  
+    kinematics_vel[0][0] = 0;  
+    kinematics_vel[0][1] = 0;  
     kinematics_vel[0][2] = chassis_angle_to_motor_error; 
     // motor 2 back right
-    kinematics_vel[1][0] = chassis_angle_to_motor_error;
-    kinematics_vel[1][1] = chassis_angle_to_motor_error;
+    kinematics_vel[1][0] = 0;
+    kinematics_vel[1][1] = 0;
     kinematics_vel[1][2] = chassis_angle_to_motor_error;
     // motor 3 back left
-    kinematics_vel[2][0] = chassis_angle_to_motor_error;
-    kinematics_vel[2][1] = chassis_angle_to_motor_error;
+    kinematics_vel[2][0] = 0;
+    kinematics_vel[2][1] = 0;
     kinematics_vel[2][2] = chassis_angle_to_motor_error;
     // motor 4 front left
-    kinematics_vel[3][0] = chassis_angle_to_motor_error;
-    kinematics_vel[3][1] = chassis_angle_to_motor_error;
+    kinematics_vel[3][0] = 0;
+    kinematics_vel[3][1] = 0;
     kinematics_vel[3][2] = chassis_angle_to_motor_error;
     // motor 5 yaw 1
     kinematics_vel[0][0] = chassis_angle_to_motor_error;  
@@ -313,9 +311,6 @@ int main()
     kinematics_vel[3][0] = chassis_angle_to_motor_error;
     kinematics_vel[3][1] = chassis_angle_to_motor_error;
     kinematics_vel[3][2] = chassis_angle_to_motor_error;
-
-    target_state[2][1] = 3;
-    // target_state[0][0] = 3;
     
     // Main loop
     while (true)
@@ -323,6 +318,15 @@ int main()
         can.read();
         dr16.read();
         ref.read();
+        
+        // driver controls
+        float chassis_velocity_x = dr16.get_l_stick_y() * 5.4;
+        float chassis_velocity_y = -dr16.get_l_stick_x() * 5.4;
+
+        target_state[0][1] = chassis_velocity_x;
+        target_state[1][1] = chassis_velocity_y;
+        // target_state[2][1] = 3;
+\
 
         // Read sensors
         estimator_manager->read_sensors();
@@ -333,6 +337,18 @@ int main()
         state.get_reference(temp_reference);
         
         // Controls code goes here
+        kinematics_vel[0][0] = cos(-temp_state[2][0]) * chassis_pos_to_motor_error;  
+        kinematics_vel[0][1] = -sin(-temp_state[2][0]) * chassis_pos_to_motor_error;  
+        // motor 2 back right
+        kinematics_vel[1][0] = -sin(-temp_state[2][0]) * chassis_pos_to_motor_error;
+        kinematics_vel[1][1] = -cos(-temp_state[2][0]) * chassis_pos_to_motor_error;
+        // motor 3 back left
+        kinematics_vel[2][0] = -cos(-temp_state[2][0]) * chassis_pos_to_motor_error;
+        kinematics_vel[2][1] = sin(-temp_state[2][0]) * chassis_pos_to_motor_error;
+        // motor 4 front left
+        kinematics_vel[3][0] = sin(-temp_state[2][0]) * chassis_pos_to_motor_error;
+        kinematics_vel[3][1] = cos(-temp_state[2][0]) * chassis_pos_to_motor_error;
+        
         controller_manager->step(temp_reference, temp_state, temp_micro_state, kinematics_pos, kinematics_vel, motor_inputs);
         
         for (int j = 0; j < 2; j++)
@@ -343,13 +359,13 @@ int main()
             }
         }
     
-        if (true)
+        if (false)
         { // prints the full motor input vector
             Serial.printf("[");
-            for (int i = 0; i < NUM_MOTORS; i++)
+            for (int i = 0; i < NUM_MOTORS-10; i++)
             {
                 Serial.print(motor_inputs[i]);
-                if (i != NUM_MOTORS - 1)
+                if (i != NUM_MOTORS - 11)
                     Serial.printf(", ");
             }
             Serial.printf("] \n");
@@ -375,7 +391,7 @@ int main()
 
         if (true)
         { // prints the estimated state
-            for (int i = 0; i < STATE_LEN-27; i++) {
+            for (int i = 0; i < STATE_LEN-29; i++) {
             Serial.printf("[");
             for (int j = 0; j < 3; j++)
             {

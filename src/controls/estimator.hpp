@@ -189,6 +189,8 @@ private:
     CANData *can_data;
     ICM20649 *icm_imu;
 
+    float pos_estimate[3] = {0,0,0};
+
 public:
     GimbalEstimator(float sensor_values[10], BuffEncoder *b1, BuffEncoder *b2, ICM20649 *imu, CANData *data, int n)
     {
@@ -216,14 +218,20 @@ public:
 
     void step_states(float output[STATE_LEN][3]) override
     {
-        float angle = (-buff_enc_pitch->get_angle()) + PITCH_ENCODER_OFFSET;
-        while (angle >= PI)
-            angle -= 2 * PI;
-        while (angle <= -PI)
-            angle += 2 * PI;
+        float pitch_enc_angle = (-buff_enc_pitch->get_angle()) + PITCH_ENCODER_OFFSET;
+        while (pitch_enc_angle >= PI)
+            pitch_enc_angle -= 2 * PI;
+        while (pitch_enc_angle <= -PI)
+            pitch_enc_angle += 2 * PI;
+
+        float yaw_enc_angle = (buff_enc_yaw->get_angle()) - YAW_ENCODER_OFFSET;
+        while (yaw_enc_angle >= PI)
+            yaw_enc_angle -= 2 * PI;
+        while (yaw_enc_angle <= -PI)
+            yaw_enc_angle += 2 * PI;
         // calculates yaw velocity before integrating to find position
         // calculates the difference in initial and current pitch angle
-        float pitch_diff = gravity_pitch_angle - angle;
+        float pitch_diff = gravity_pitch_angle - pitch_enc_angle;
 
         // gimbal rotation axis in spherical coordinates in imu refrence frame
         if (gravity_accel_vector[0] == 0)
@@ -273,8 +281,8 @@ public:
         __rotateVector3D(roll_axis_unitvector, yaw_axis_unitvector, global_roll_angle, yaw_axis_global);
         __rotateVector3D(roll_axis_unitvector, pitch_axis_unitvector, global_roll_angle, pitch_axis_global);
 
-        __rotateVector3D(pitch_axis_unitvector, yaw_axis_unitvector, (global_pitch_angle - angle), yaw_axis_global);
-        __rotateVector3D(pitch_axis_unitvector, roll_axis_unitvector, (global_pitch_angle - angle), roll_axis_global);
+        __rotateVector3D(pitch_axis_unitvector, yaw_axis_unitvector, (global_pitch_angle - pitch_enc_angle), yaw_axis_global);
+        __rotateVector3D(pitch_axis_unitvector, roll_axis_unitvector, (global_pitch_angle - pitch_enc_angle), roll_axis_global);
 
         // gets the velocity data from the imu and uses the gravity vector to calculate the yaw velocity
         float raw_omega_vector[3] = {icm_imu->get_gyro_X(), icm_imu->get_gyro_Y(), icm_imu->get_gyro_Z()};
@@ -306,7 +314,7 @@ public:
         dt = time.delta();
         if (dt > .002)
             dt = 0; // first dt loop generates huge time so check for that
-        float imu_vel_offset = 7.9;
+        float imu_vel_offset = 8.05;
         yaw_angle += -current_yaw_velocity * (dt / imu_vel_offset);
         pitch_angle += current_pitch_velocity * (dt / imu_vel_offset);
         roll_angle += -current_roll_velocity * (dt / imu_vel_offset);
@@ -315,41 +323,30 @@ public:
         global_pitch_angle += -global_pitch_velocity * (dt / imu_vel_offset);
         global_roll_angle += -global_roll_velocity * (dt / imu_vel_offset);
 
-        chassis_angle = yaw_angle - (buff_enc_yaw->get_angle()+YAW_ENCODER_OFFSET);
+        chassis_angle = yaw_angle - yaw_enc_angle;
+        // -chassis_angle
 
-        output[0][0] = chassis_angle;
-        output[0][1] = 0;
-        output[0][2] = 0;
-        output[1][0] = yaw_angle;
-        output[1][1] = current_yaw_velocity;
-        output[1][2] = 0;
-        output[2][0] = pitch_angle;
-        output[2][1] = current_pitch_velocity;
-        output[2][2] = 0;
-    }
-};
+        while (yaw_angle >= PI)
+            yaw_angle -= 2 * PI;
+        while (yaw_angle <= -PI)
+            yaw_angle += 2 * PI;
+        
+        while (chassis_angle >= PI)
+            chassis_angle -= 2 * PI;
+        while (chassis_angle <= -PI)
+            chassis_angle += 2 * PI;
 
-struct ChassisEstimator : public Estimator
-{
-private:
-    BuffEncoder *buff_enc_yaw;
-    BuffEncoder *buff_enc_pitch;
-    CANData *can_data;
-    ICM20649 *icm_imu;
+        output[2][0] = chassis_angle;
+        // output[2][1] = 0;
+        // output[2][2] = 0;
+        output[3][0] = yaw_angle;
+        output[3][1] = current_yaw_velocity;
+        output[3][2] = 0;
+        output[4][0] = pitch_angle;
+        output[4][1] = current_pitch_velocity;
+        output[4][2] = 0;
 
-    float pos_estimate[3] = {0,0,0};
-public:
-    ChassisEstimator(float sensor_values[9], BuffEncoder *b1, BuffEncoder *b2, ICM20649 *imu, CANData *data, int n)
-    {
-        num_states = n;    // number of estimated states
-        buff_enc_yaw = b1; // sensor object definitions
-        buff_enc_pitch = b2;
-        can_data = data;
-        icm_imu = imu;
-    }
-
-    void step_states(float output[STATE_LEN][3]) override
-    {
+        // chassis estimation
         float front_right = can_data->get_motor_attribute(CAN_1, 1, MotorAttribute::SPEED);
         float back_right = can_data->get_motor_attribute(CAN_1, 2, MotorAttribute::SPEED);
         float back_left = can_data->get_motor_attribute(CAN_1, 3, MotorAttribute::SPEED);
@@ -361,10 +358,10 @@ public:
         // chassis rad/s to motor rpm
         float psi_scale = ((.1835/(PI*2*0.0516))*60)/0.10897435897;
         // define coeff matracies for each system we want to solve
-        float coeff_matrix1[3][4] = {{0,x_scale,psi_scale,front_right},{y_scale,0,psi_scale,back_right},{0,-x_scale,psi_scale,back_left}};
-        float coeff_matrix2[3][4] = {{0,x_scale,psi_scale,front_right},{y_scale,0,psi_scale,back_right},{-y_scale,0,psi_scale,front_left}};
-        float coeff_matrix3[3][4] = {{0,x_scale,psi_scale,front_right},{-y_scale,0,psi_scale,front_left},{0,-x_scale,psi_scale,back_left}};
-        float coeff_matrix4[3][4] = {{y_scale,0,psi_scale,back_right},{-y_scale,0,psi_scale,front_left},{0,-x_scale,psi_scale,back_left}};
+        float coeff_matrix1[3][4] = {{x_scale,0,psi_scale,front_right},{0,-y_scale,psi_scale,back_right},{-x_scale,0,psi_scale,back_left}};
+        float coeff_matrix2[3][4] = {{x_scale,0,psi_scale,front_right},{0,-y_scale,psi_scale,back_right},{0,y_scale,psi_scale,front_left}};
+        float coeff_matrix3[3][4] = {{x_scale,0,psi_scale,front_right},{0,y_scale,psi_scale,front_left},{-x_scale,0,psi_scale,back_left}};
+        float coeff_matrix4[3][4] = {{0,-y_scale,psi_scale,back_right},{0,y_scale,psi_scale,front_left},{-x_scale,0,psi_scale,back_left}};
 
         // 4 solution sets of x, y, psi
         float vel_solutions[4][3];
@@ -373,39 +370,27 @@ public:
         solveSystem(coeff_matrix3,vel_solutions[2]);
         solveSystem(coeff_matrix4,vel_solutions[3]);
 
-        if (false)
-            { // prints the estimated state
-                for (int i = 0; i < 4; i++) {
-                Serial.printf("[");
-                for (int j = 0; j < 3; j++)
-                {
-                    Serial.printf("%.3f",vel_solutions[i][j]);
-                    if (j != 3 - 1)
-                        Serial.printf(", ");
-                }
-                Serial.printf("]");
-                }
-                Serial.println();
-            }
+        float vel_estimate[3];
+
+        vel_estimate[0] = (cos(yaw_enc_angle-yaw_angle) * vel_solutions[0][0] + sin(yaw_enc_angle-yaw_angle) * vel_solutions[0][1]);
+        vel_estimate[1] = (-sin(yaw_enc_angle-yaw_angle) * vel_solutions[0][0] + cos(yaw_enc_angle-yaw_angle) * vel_solutions[0][1]);
+        vel_estimate[2] = vel_solutions[0][2];
 
         // integrate to find pos
-        float dt = time.delta();
-        if (dt > .002) dt = 0; // first dt loop generates huge time so check for that
-        pos_estimate[0] += vel_solutions[0][0] * dt;
-        pos_estimate[1] += vel_solutions[0][1] * dt;
-        pos_estimate[2] += vel_solutions[0][2] * dt;
+        pos_estimate[0] += vel_estimate[0] * dt;
+        pos_estimate[1] += vel_estimate[1] * dt;
+        pos_estimate[2] += vel_estimate[2] * dt;
 
         output[0][0] = pos_estimate[0]; // x pos
-        output[0][1] = vel_solutions[0][0];
+        output[0][1] = vel_estimate[0];
         output[0][2] = 0;
         output[1][0] = pos_estimate[1]; // y pos
-        output[1][1] = vel_solutions[0][1];
+        output[1][1] = vel_estimate[1];
         output[1][2] = 0;
-        output[2][0] = 0; // chassis angle
-        output[2][1] = vel_solutions[0][2];
-        output[2][2] = 0;
+        // output[2][0] = 0; // chassis angle
+        output[2][1] = vel_estimate[2];
+        output[2][2] = yaw_enc_angle;
     }
-
 };
     
 struct FlyWheelEstimator : public Estimator
@@ -464,7 +449,7 @@ struct LocalEstimator : public Estimator{
         void step_states(float output[NUM_MOTORS][MICRO_STATE_LEN]){
             for (int i = 0; i < NUM_CAN_BUSES; i++){
                 for(int j = 0; j < NUM_MOTORS_PER_BUS; j++){
-                    output[(i*NUM_MOTORS_PER_BUS)+j][0] = can_data->get_motor_attribute(i, j+1, MotorAttribute::SPEED);
+                    output[(i*NUM_MOTORS_PER_BUS)+j][0] = (can_data->get_motor_attribute(i, j+1, MotorAttribute::SPEED)/60) * 2 * PI;
                 }
             }
         }

@@ -123,6 +123,61 @@ public:
 
         bool bounded = (controller_level == 2);
         float output = pid.filter(dt, bounded);
+        Serial.println(output);
+        return output;
+    }
+    /// @brief step for micro_state input
+    /// @param reference micro_reference
+    /// @param estimate micro_estimate
+    /// @return Motor output
+    float step(float reference, float estimate[MICRO_STATE_LEN])
+    {
+        float dt = timer.delta();
+
+        pid.setpoint = reference; // 0th index = position
+        pid.measurement = estimate[0];
+        pid.K[0] = gains[0];
+        pid.K[1] = gains[1];
+        pid.K[2] = gains[2];
+
+        float output = pid.filter(dt, true);
+        return output;
+    }
+
+    void reset()
+    {
+        Controller::reset();
+        pid.sumError = 0.0;
+    }
+};
+
+struct PIDFVelocityController : public Controller
+{
+private:
+    PIDFilter pid;
+
+public:
+    PIDFVelocityController(int _controller_level) {
+        controller_level = _controller_level;
+    }
+    /// @brief step for macro_state input
+    /// @param reference macro_reference
+    /// @param estimate macro_estimate
+    /// @return Motor output or micro_reference
+    float step(float reference[3], float estimate[3])
+    {
+        float dt = timer.delta();
+
+        pid.setpoint = reference[1]; // 1st index = position
+        pid.measurement = estimate[1];
+        pid.K[0] = gains[0];
+        pid.K[1] = gains[1];
+        pid.K[2] = gains[2];
+        pid.K[3] = reference[1];
+
+        bool bounded = (controller_level == 2);
+        float output = pid.filter(dt, bounded);
+        Serial.println(output);
         return output;
     }
     /// @brief step for micro_state input

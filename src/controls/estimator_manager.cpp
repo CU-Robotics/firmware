@@ -26,13 +26,9 @@ void EstimatorManager::init_estimator(int state_id, int num_states)
 {
     switch (state_id)
     {
-    case 1:
-        float values_chassis[8];
-        estimators[0] = new ChassisEstimator(values_chassis, &buff_sensors[0], &buff_sensors[1], &icm_sensors[0], can_data, num_states);
-        break;
-    case 2: // Gimbal Estimator
+    case 1: // Gimbal Estimator
         float values_gimbal[10];
-        values_gimbal[0] = 0;       // yaw encoder offset
+        values_gimbal[0] = 4.627;       // yaw encoder offset
         values_gimbal[1] = 1;       // pitch encoder offset
         values_gimbal[2] = 0;       // default yaw starting angle (starting point for imu integration)
         values_gimbal[3] = 1.91986; // default pitch starting angle (starting point for imu integration)
@@ -44,16 +40,16 @@ void EstimatorManager::init_estimator(int state_id, int num_states)
         values_gimbal[8] = -6.940948; // z
         values_gimbal[9] = 1.91986;   // Pitch angle at given gravity vector
 
-        estimators[1] = new GimbalEstimator(values_gimbal, &buff_sensors[0], &buff_sensors[1], &icm_sensors[0], can_data, num_states);
+        estimators[0] = new GimbalEstimator(values_gimbal, &buff_sensors[0], &buff_sensors[1], &icm_sensors[0], can_data, num_states);
+        break;
+    case 2:
+        estimators[1] = new FlyWheelEstimator(can_data, num_states);
         break;
     case 3:
-        estimators[2] = new FlyWheelEstimator(can_data, num_states);
+        estimators[2] = new FeederEstimator(can_data, num_states);
         break;
     case 4:
-        estimators[3] = new FeederEstimator(can_data, num_states);
-        break;
-    case 5:
-        estimators[4] = new LocalEstimator(can_data, num_states);
+        estimators[3] = new LocalEstimator(can_data, num_states);
         break;
     default:
         break;

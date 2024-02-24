@@ -15,7 +15,7 @@ struct PIDFilter {
     float filter(float dt, bool bound) {
         float error = setpoint - measurement;
         sumError += error * dt;
-        float output = (K[0] * error) + (K[2] * ((error - prevError) / dt));
+        float output = (K[0] * error) + (K[2] * ((error - prevError) / dt)) + K[3];
             // + (K[1] * sumError)
             // + (K[2] * ((error - prevError) / dt));
             // + (K[3] * feedForward);
