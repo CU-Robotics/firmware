@@ -1,48 +1,39 @@
 #include "usb_hid.hpp"
 
-usbHID::usbHID(){
-    clear();
-    put_float(0, -1);
+HIDLayer::HIDLayer() {}
+
+void HIDLayer::init() {}
+
+void HIDLayer::ping() {
+	while (usb_rawhid_available()) {
+		if (read()) {
+			write();
+			Serial.printf("Ping: %llu %llu %llu\n", m_packetsRead, m_packetsSent, m_packetsFailed);
+		}
+	}
 }
 
-void usbHID::clear(){
-    for(int i = 0; i < PACKET_SIZE_BYTES; i++) {
-        packet[i] = 0.0;
-    }
-    next_free_index = 0;
+bool HIDLayer::read() {
+	int bytes_read = usb_rawhid_recv(m_incommingPacket, 0);
+	if (bytes_read == PACKET_SIZE) {
+		m_packetsRead++;
+		return true;
+	}
+	else {
+		return false;
+	}
 }
 
-int8_t usbHID::read(){
-   return usb_rawhid_recv(packet, 0);
+bool HIDLayer::write() {
+	int bytes_sent = usb_rawhid_send(m_outgoingPacket, UINT16_MAX);
+	if (bytes_sent == PACKET_SIZE) {
+		m_packetsSent++;
+		return true;
+	}
+	else {
+		m_packetsFailed++;
+		return false;
+	}
 }
 
-int8_t usbHID::write(){
-    return usb_rawhid_send(packet, 0);
-}
 
-void usbHID::put_float(int index, float f){
-    float_byte fb;
-    fb.number = f;
-    
-    packet[index] = fb.bytes[0];
-    packet[index+1] = fb.bytes[1];
-    packet[index+2] = fb.bytes[2];
-    packet[index+3] = fb.bytes[3];
-    
-    next_free_index = index+4;
-}
-
-float usbHID::get_float(int index){
-    float_byte fb;
-
-    fb.bytes[0] = packet[index];
-    fb.bytes[1] = packet[index+1];
-    fb.bytes[2] = packet[index+2];
-    fb.bytes[3] = packet[index+3];
-
-    return fb.number;
-}
-
-int usbHID::next_free(){
-    return (next_free_index > PACKET_SIZE_BYTES ? (int) PACKET_SIZE_BYTES : next_free_index);
-}

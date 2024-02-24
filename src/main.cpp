@@ -1,10 +1,9 @@
 #include <Arduino.h>
-#include <usb_rawhid.h>
 
 #include "utils/timing.hpp"
 #include "comms/rm_can.hpp"
 #include "sensors/dr16.hpp"
-
+#include "comms/usb_hid.hpp"
 // Loop constants
 #define LOOP_FREQ      1000
 #define HEARTBEAT_FREQ 2
@@ -13,6 +12,7 @@
 DR16 dr16;
 rm_CAN can;
 Timer loop_timer;
+HIDLayer comms;
 
 // DONT put anything else in this function. It is not a setup function
 void print_logo() {
@@ -55,6 +55,7 @@ int main() {
 	pinMode(13, OUTPUT);
 	dr16.init();
 	can.init();
+	comms.init();
 
 	long long loopc = 0; // Loop counter for heartbeat
 
@@ -69,13 +70,17 @@ int main() {
 		// Read sensors
 		dr16.read();
 		can.read();
+		comms.ping();
 
 		// send x amount of packets
-		while (RawHID.available())
+		/*while (RawHID.available())
 		{
 			int bytes_read = RawHID.recv(buffer, 0);
 			if (bytes_read != RAWHID_RX_SIZE)
+			{
 				Serial.printf("Failed to read!\n");
+				break;
+			}
 			else 
 			{
 				num_read++;
@@ -94,7 +99,7 @@ int main() {
 				break;
 			}
 
-		}
+		}*/
 
 
 		// write a packet back
