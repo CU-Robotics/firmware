@@ -121,7 +121,7 @@ public:
 	/// @brief Prints the raw 18-byte packet from the receiver
 	void print_raw();
 
-
+	uint8_t* get_raw() {return m_inputRaw;}
 
 private:
 	/// @brief Maps the input value to a specified value range

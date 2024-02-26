@@ -10,7 +10,7 @@
 
 // Declare global objects
 DR16 dr16;
-rm_CAN can;
+//rm_CAN can;
 Timer loop_timer;
 HIDLayer comms;
 
@@ -54,7 +54,7 @@ int main() {
 	// Execute setup functions
 	pinMode(13, OUTPUT);
 	dr16.init();
-	can.init();
+	//can.init();
 	comms.init();
 
 	long long loopc = 0; // Loop counter for heartbeat
@@ -69,40 +69,10 @@ int main() {
 	while (true) {
 		// Read sensors
 		dr16.read();
-		can.read();
+		//can.read();
+		comms.get_outgoing()->set_time(millis());
+		comms.get_outgoing()->set_dr16(dr16.get_raw());
 		comms.ping();
-
-		// send x amount of packets
-		/*while (RawHID.available())
-		{
-			int bytes_read = RawHID.recv(buffer, 0);
-			if (bytes_read != RAWHID_RX_SIZE)
-			{
-				Serial.printf("Failed to read!\n");
-				break;
-			}
-			else 
-			{
-				num_read++;
-				Serial.printf("Read Packet: %d\n", num_read);
-			}
-
-			int bytes_sent = RawHID.send(buffer, UINT16_MAX);
-			if (bytes_sent != RAWHID_TX_SIZE)
-			{
-				Serial.printf("Failed to write!\n");
-			}
-			else 
-			{
-				num_write++;
-				Serial.printf("Wrote packet! %d %d\n", num_write);
-				break;
-			}
-
-		}*/
-
-
-		// write a packet back
 
 		// LED heartbeat -- linked to loop count to reveal slowdowns and freezes.
 		loopc % (int)(1E3/float(HEARTBEAT_FREQ)) < (int)(1E3/float(5*HEARTBEAT_FREQ)) ? digitalWrite(13, HIGH) : digitalWrite(13, LOW);
