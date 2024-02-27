@@ -419,7 +419,7 @@ struct FlyWheelEstimator : public Estimator
 
         //ref
         projectile_speed_ref = ref.ref_data.launching_event.projectile_initial_speed;
-
+        if(projectile_speed_ref != 0) Serial.println(projectile_speed_ref);
         output[0][1] = (projectile_speed_ref * ref_weight) + (linear_velocity * can_weight);
     }
 };
@@ -448,9 +448,9 @@ struct FeederEstimator : public Estimator
 
         //ref
         balls_per_second_ref = ref.ref_data.launching_event.launching_speed;
-
+        if(balls_per_second_ref != 0) Serial.println(balls_per_second_ref);
         output[0][1] = (balls_per_second_ref * ref_weight) + (balls_per_second_can * can_weight);
-        Serial.println(output[0][1]);
+        // Serial.println(output[0][1]);
     }
 };
 

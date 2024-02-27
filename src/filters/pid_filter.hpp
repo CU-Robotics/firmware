@@ -1,4 +1,5 @@
 #include "math.h"
+#include <Arduino.h>
 
 #ifndef PID_FILTER_H
 #define PID_FILTER_H
@@ -16,7 +17,9 @@ struct PIDFilter {
 
     float filter(float dt, bool bound, bool wrap) {
         float error = setpoint - measurement;
-        if (fabs(error) > PI && wrap) error -= 2*PI;
+        if (error > PI && wrap) error -= 2*PI;
+        if (error < -PI && wrap) error += 2*PI;
+        if(wrap) Serial.println(error);
         sumError += error * dt;
         float output = (K[0] * error) + (K[2] * ((error - prevError) / dt)) + K[3];
             // + (K[1] * sumError)

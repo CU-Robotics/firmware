@@ -29,7 +29,7 @@ void EstimatorManager::init_estimator(int state_id, int num_states)
     case 1: // Gimbal Estimator
         float values_gimbal[10];
         values_gimbal[0] = 4.627;       // yaw encoder offset
-        values_gimbal[1] = 1;       // pitch encoder offset
+        values_gimbal[1] = 4.093;       // pitch encoder offset
         values_gimbal[2] = 0;       // default yaw starting angle (starting point for imu integration)
         values_gimbal[3] = 1.91986; // default pitch starting angle (starting point for imu integration)
         values_gimbal[4] = 0;       // default roll starting angle (starting point for imu integration)
