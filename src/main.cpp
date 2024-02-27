@@ -105,7 +105,7 @@ int main() {
     can.init();
 
     int nCS = 37; // 37 or 36 (enc 1, enc 2)
-    int nCAL = 6; // 6 or 5 (enc 1, enc 2)
+    int nCAL = 5; // 5 or 6 (enc 1, enc 2)
     pinMode(nCS, OUTPUT);
     pinMode(nCAL, OUTPUT);
     digitalWrite(nCS, HIGH);
@@ -159,11 +159,11 @@ int main() {
 
             ////
 
-            float motor_speed = can.get_motor_attribute(CAN_2, 4, MotorAttribute::SPEED);
+            float motor_speed = can.get_motor_attribute(CAN_2, 1, MotorAttribute::SPEED);
             calib_motor_pid.setpoint = 4800;
             calib_motor_pid.measurement = motor_speed;
             float output = calib_motor_pid.filter(0.001);
-            can.write_motor_norm(CAN_2, 4, C620, output);
+            can.write_motor_norm(CAN_2, 1, C620, output);
             Serial.printf("CALIBRATING! %f motor rpm      %d calibration mode\n", motor_speed, calib_mode);
             ////
 
