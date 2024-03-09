@@ -57,21 +57,28 @@ int main() {
 	//can.init();
 	comms.init();
 
-	long long loopc = 0; // Loop counter for heartbeat
+	float state[STATE_LEN][3];
+	for (int i = 0; i < STATE_LEN; i++)
+	{
+		for (int j = 0; j < 3; j++)
+		{
+			state[i][j] = i;
+		}
+	}
 
-	char buffer[1024];	
-	int* buffer32 = (int*)buffer;
-	memset(buffer, 0, 1024);
-	int missed_packets = 0;
-	int num_read = 0;
-	int num_write = 0;
+	long long loopc = 0; // Loop counter for heartbeat
+	
 	// Main loop
 	while (true) {
 		// Read sensors
 		dr16.read();
 		//can.read();
-		comms.get_outgoing()->set_time(millis());
+	
+		comms.get_outgoing()->set_time((double)millis());
+		comms.get_outgoing()->set_state(state);
 		comms.get_outgoing()->set_dr16(dr16.get_raw());
+		CommsPacket* packet = comms.get_outgoing();
+
 		comms.ping();
 
 		// LED heartbeat -- linked to loop count to reveal slowdowns and freezes.
