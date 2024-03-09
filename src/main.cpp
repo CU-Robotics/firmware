@@ -66,13 +66,13 @@ int main() {
         // Controls code goes here
 
         // Write actuators
-        if (!dr16.is_connected() || dr16.get_l_switch() == 1) {
-            // SAFETY ON
-            // TODO: Reset all controller integrators here
-            can.zero();
-        } else if (dr16.is_connected() && dr16.get_l_switch() != 1) {
-            // SAFETY OFF
+        if (dr16.is_connected() && (dr16.get_l_switch() == 2 || dr16.get_l_switch() == 3)) {
+        // SAFETY OFF
             can.write();
+        } else {
+             // SAFETY ON
+             // TODO: Reset all controller integrators here
+            can.zero();
         }
 
         // LED heartbeat -- linked to loop count to reveal slowdowns and freezes.
