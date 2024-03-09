@@ -48,8 +48,8 @@
 
 // pitch zero 0.6195919 rad
 // yaw zero   4.99714899 rad
-#define PITCH_ZERO_ANGLE 0.67928569282
-#define YAW_ZERO_ANGLE   4.99714899
+#define PITCH_ZERO_ANGLE 0.949
+#define YAW_ZERO_ANGLE   1.479
 
 #define LOOP_FREQ 1000
 #define HEARTBEAT_FREQ 2
@@ -262,7 +262,7 @@ int main()
 
 
 
-        // Serial.printf("yaw enc: %f     pitch enc: %f\n", yaw_raw, pitch_raw);
+        // Serial.printf("yaw enc: %f     pitch enc: %f\n", yaw_ref, pitch_ref);
         if (!isCal)
         {
             /*initial_accel_vector[0] = imu.get_accel_X();
@@ -358,7 +358,7 @@ int main()
         // Yaw
         m_id = 4;
         motor_speed = can.get_motor_attribute(CAN_1, m_id, MotorAttribute::SPEED) * 0.05105105105;
-        Serial.println(raw_omega_vector[2]);
+        // Serial.println(raw_omega_vector[2]);
         yaw.setpoint = yaw_js*1200 + raw_omega_vector[2]*25;// 350/17
         // Serial.println(yaw.setpoint);
         yaw.measurement = motor_speed;
@@ -376,7 +376,7 @@ int main()
         pitch.setpoint = -pitch_js * 1000;
         pitch.measurement = motor_speed;
         output = pitch.filter(0.001, false) + pitchConstant;
-
+        Serial.println(output);
         // if((pitch_ref > clampHigh && output>0) || (pitch_ref < clampLow && output < 0)){
         //     continue;
         // } else{
@@ -392,7 +392,6 @@ int main()
         feeder.measurement = motor_speed;
         float output = feeder.filter(0.001);
         can.write_motor_norm(CAN_2, m_id, C610, output);
-
 
         // Flywheel 1
         m_id = 2;
@@ -412,19 +411,12 @@ int main()
         can.write_motor_norm(CAN_2, m_id, C620, output);
 
         // Write to actuators
-        if (!dr16.is_connected() || dr16.get_l_switch() == 1)
-        {
-// SAFETY ON
-// TODO: Reset all controller integrators here
-            can.zero();
-        }
-        else if (dr16.is_connected() && dr16.get_l_switch() != 1)
-        {
-// SAFETY OFF
+        if (dr16.is_connected() && (dr16.get_l_switch() == 2 || dr16.get_l_switch() == 3)) {
+            // SAFETY OFF
             can.write();
-        }else {
-            //tf? how did you even get here?
-            Serial.printf("Dr16 status:%d\t l_switch status:%d\n", dr16.is_connected(), dr16.get_l_switch());
+        } else {
+            // SAFETY ON
+            // TODO: Reset all controller integrators here
             can.zero();
         }
 
