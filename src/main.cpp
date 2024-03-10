@@ -3,6 +3,7 @@
 #include "utils/timing.hpp"
 #include "comms/rm_can.hpp"
 #include "sensors/dr16.hpp"
+#include "sensors/buff_encoder.hpp"
 
 // Loop constants
 #define LOOP_FREQ      1000
@@ -12,6 +13,9 @@
 DR16 dr16;
 rm_CAN can;
 Timer loop_timer;
+
+BuffEncoder yaw(YAW_BUFF_CS);
+BuffEncoder pitch(PITCH_BUFF_CS);
 
 // DONT put anything else in this function. It is not a setup function
 void print_logo() {
@@ -51,9 +55,18 @@ int main() {
     print_logo();
 
     // Execute setup functions
-    pinMode(13, OUTPUT);
+    pinMode(13, OUTPUT); 
     dr16.init();
     can.init();
+
+    pinMode(YAW_BUFF_CS, OUTPUT);
+    pinMode(PITCH_BUFF_CS, OUTPUT);
+    digitalWrite(YAW_BUFF_CS, HIGH);
+    digitalWrite(PITCH_BUFF_CS, HIGH);
+    Serial.println("Starting SPI");
+    SPI.begin();
+    Serial.println("SPI Started");
+
 
     long long loopc = 0; // Loop counter for heartbeat
 
@@ -63,6 +76,10 @@ int main() {
         dr16.read();
         can.read();
 
+        float yaw_raw = yaw.read();
+        float pitch_raw = pitch.read();
+
+        Serial.printf("%f %f :)\n", yaw_raw, pitch_raw);
         // Controls code goes here
 
         // Write actuators
