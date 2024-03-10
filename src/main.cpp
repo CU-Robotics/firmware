@@ -49,7 +49,7 @@
 // pitch zero 0.6195919 rad
 // yaw zero   4.99714899 rad
 #define PITCH_ZERO_ANGLE 0.949
-#define YAW_ZERO_ANGLE   1.479
+#define YAW_ZERO_ANGLE   -0.4
 
 #define LOOP_FREQ 1000
 #define HEARTBEAT_FREQ 2
@@ -262,7 +262,7 @@ int main()
 
 
 
-        // Serial.printf("yaw enc: %f     pitch enc: %f\n", yaw_ref, pitch_ref);
+        Serial.printf("yaw enc: %f     pitch enc: %f\n", yaw_ref, yaw_raw);
         if (!isCal)
         {
             /*initial_accel_vector[0] = imu.get_accel_X();
@@ -296,11 +296,11 @@ int main()
         int mouse_y = dr16.get_mouse_y();
 
         float drive_raw[2] = { 0 };
-        drive_raw[0] = -dr16.get_l_stick_x() - d_key + a_key;
-        drive_raw[1] = -dr16.get_l_stick_y() - w_key + s_key;
+        drive_raw[0] = dr16.get_l_stick_y() + w_key - s_key;
+        drive_raw[1] = -dr16.get_l_stick_x() + a_key - d_key;
         float s = dr16.get_wheel() + 0.2 + (dr16.keys.shift ? 0.4 : 0);
         float drive_rot[2] = { 0 };
-        rotate_2D(drive_raw, drive_rot, yaw_ref + (3.14159 / 4.0));
+        rotate_2D(drive_raw, drive_rot, yaw_ref);
         float x = drive_rot[0];
         float y = drive_rot[1];
         float pitch_js = dr16.get_r_stick_y() - (mouse_y * MOUSE_SENSITIVITY * 2);
@@ -326,7 +326,7 @@ int main()
         // Drive 1
         m_id = 0;
         motor_speed = can.get_motor_attribute(CAN_1, m_id, MotorAttribute::SPEED);
-        drive.setpoint = ((-y + x + s) / mmax) * 9000;
+        drive.setpoint = ((x + s) / mmax) * 9000;
         drive.measurement = motor_speed;
         output = drive.filter(0.001) * power_limit_ratio;
         can.write_motor_norm(CAN_1, m_id, C620, output);
@@ -334,7 +334,7 @@ int main()
         // Drive 2
         m_id = 1;
         motor_speed = can.get_motor_attribute(CAN_1, m_id, MotorAttribute::SPEED);
-        drive.setpoint = ((-y - x + s) / mmax) * 9000;
+        drive.setpoint = ((-y + s) / mmax) * 9000;
         drive.measurement = motor_speed;
         output = drive.filter(0.001) * power_limit_ratio;
         can.write_motor_norm(CAN_1, m_id, C620, output);
@@ -342,7 +342,7 @@ int main()
         // Drive 3
         m_id = 2;
         motor_speed = can.get_motor_attribute(CAN_1, m_id, MotorAttribute::SPEED);
-        drive.setpoint = ((y - x + s) / mmax) * 9000;
+        drive.setpoint = ((-x + s) / mmax) * 9000;
         drive.measurement = motor_speed;
         output = drive.filter(0.001) * power_limit_ratio;
         can.write_motor_norm(CAN_1, m_id, C620, output);
@@ -350,7 +350,7 @@ int main()
         // Drive 4
         m_id = 3;
         motor_speed = can.get_motor_attribute(CAN_1, m_id, MotorAttribute::SPEED);
-        drive.setpoint = ((y + x + s) / mmax) * 9000;
+        drive.setpoint = ((y + s) / mmax) * 9000;
         drive.measurement = motor_speed;
         output = drive.filter(0.001) * power_limit_ratio;
         can.write_motor_norm(CAN_1, m_id, C620, output);
@@ -371,12 +371,11 @@ int main()
         m_id = 0;
         float clampLow = 1.309; // 1.4
         float clampHigh = 1.88496; //1.7
-        float pitchConstant = 0.17 * sin(pitch_ref);
+        float pitchConstant = -0.17 * sin(pitch_ref);
         motor_speed = can.get_motor_attribute(CAN_2, m_id, MotorAttribute::SPEED);
         pitch.setpoint = -pitch_js * 1000;
         pitch.measurement = motor_speed;
         output = pitch.filter(0.001, false) + pitchConstant;
-        Serial.println(output);
         // if((pitch_ref > clampHigh && output>0) || (pitch_ref < clampLow && output < 0)){
         //     continue;
         // } else{
@@ -396,7 +395,7 @@ int main()
         // Flywheel 1
         m_id = 2;
         motor_speed = can.get_motor_attribute(CAN_2, m_id, MotorAttribute::SPEED);
-        flywheel.setpoint = -9000;
+        flywheel.setpoint = -5000;
         flywheel.measurement = motor_speed;
         output = flywheel.filter(0.001);
         can.write_motor_norm(CAN_2, m_id, C620, output);
@@ -405,7 +404,7 @@ int main()
         m_id = 3;
         motor_speed = can.get_motor_attribute(CAN_2, m_id, MotorAttribute::SPEED);
         // flywheel.setpoint = (dr16.get_r_switch() != 2 ? 9000 : 0);
-        flywheel.setpoint = 9000;
+        flywheel.setpoint = 5000;
         flywheel.measurement = motor_speed;
         output = flywheel.filter(0.001);
         can.write_motor_norm(CAN_2, m_id, C620, output);
