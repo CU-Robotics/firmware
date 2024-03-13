@@ -20,7 +20,7 @@
 
 #define NUM_ESTIMATORS 4
 
-// x y psi theta phi flywheel_l flywheel_r feeder switcher
+/// @brief 
 class EstimatorManager
 {
 private:

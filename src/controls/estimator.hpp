@@ -8,6 +8,7 @@
 
 #define NUM_SENSOR_VALUES 8
 
+/// @brief Parent estimator struct. All estimators should inherit from this.
 struct Estimator
 {
 public:
@@ -150,6 +151,7 @@ protected:
     }
 };
 
+/// @brief Estimate the yaw, pitch, and chassis heading
 struct GimbalEstimator : public Estimator
 {
 private:

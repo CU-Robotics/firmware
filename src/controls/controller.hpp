@@ -9,14 +9,15 @@
 
 #define NUM_GAINS 12
 #define NUM_CONTROLLER_LEVELS 3
+
+/// @brief Parent controller struct, all controllers should be based off of this.
 struct Controller
 {
-
 protected:
     float gains[NUM_GAINS];
     Timer timer;
     /// @brief defines controller inputs and outputs (0 means Macro_state input, micro_state output)
-    /// (1 means Micro_state input, motor_current output) (2 means Macro state input, motor_current output)
+    /// @note (1 means Micro_state input, motor_current output) (2 means Macro state input, motor_current output)
     int controller_level;
     float gear_ratio = 0;
 public:
@@ -47,6 +48,7 @@ public:
     float step(float reference, float estimate[MICRO_STATE_LEN]) { return 0; }
 };
 
+/// @brief PID controller working on position
 struct PIDPositionController : public Controller
 {
 private:
@@ -98,6 +100,7 @@ public:
     }
 };
 
+/// @brief PID controller working on velocity
 struct PIDVelocityController : public Controller
 {
 private:
@@ -150,6 +153,7 @@ public:
     }
 };
 
+/// @brief PID controller with feedforward capability
 struct PIDFVelocityController : public Controller
 {
 private:
@@ -203,6 +207,7 @@ public:
     }
 };
 
+/// @brief Fullstate controller which works on both position and velocity of a state.
 struct FullStateFeedbackController : public Controller
 {
 private:
@@ -251,6 +256,7 @@ public:
     }
 };
 
+/// @brief Controller for all chassis movement, which includes power limiting
 struct ChassisPIDVelocityController : public Controller
 {
 private:

@@ -6,13 +6,11 @@
 // Maximum state length. Do not change unless you know what you're doing.
 // (the Teensy and Khadas must agree on this value)
 #define STATE_LEN 32
+
 #define MICRO_STATE_LEN 3
 
 class State {
     private:
-        /// @brief Singleton instance
-        static State* instance;
-
         // This is a sample state (it does not represent every robot):
         // {x, y, psi (chassis angle), theta (yaw angle), phi (pitch angle), feed, flywheel}
         // In this example case, as with all other cases, the unused state rows are kept blank.
@@ -33,14 +31,6 @@ class State {
         Timer governor_timer;
 
     public:
-        /// @brief Gives the singleton instance
-        static State* get_instance() {
-            if (instance == NULL) {
-                instance = new State(); 
-                return instance;
-            } else return instance;
-        }
-
         /// @brief Only use one time!!!!!! Use step reference
         void set_reference(float reference[STATE_LEN][3]);
 
