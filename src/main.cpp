@@ -75,9 +75,10 @@ int main() {
 		//can.read();
 	
 		comms.get_outgoing()->set_time((double)millis());
-		comms.get_outgoing()->set_state(state);
-		comms.get_outgoing()->set_dr16(dr16.get_raw());
-		CommsPacket* packet = comms.get_outgoing();
+		comms.get_outgoing()->set_estimated_state(state);
+		SensorData sensor_data;
+		memcpy(sensor_data.raw, dr16.get_raw(), DR16_PACKET_SIZE);
+		comms.get_outgoing()->set_sensor_data(&sensor_data);
 
 		comms.ping();
 

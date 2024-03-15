@@ -2,9 +2,11 @@
 #define USB_HID_HPP
 
 #include "Arduino.h"
-#include "usb_rawhid.h"
-#include "../controls/state.hpp"
-#include "../sensors/dr16.hpp"
+#include "usb_rawhid.h"				// usb_rawhid functions
+#include "../controls/state.hpp"	// STATE_LEN macro
+
+/// @brief Packet size for communication packets
+constexpr unsigned int COMMS_PACKET_SIZE = 1023u;
 
 // TODO: make this dynamic and grabbed from the config packet
 // Khadas -> Teensy
@@ -39,24 +41,23 @@ constexpr unsigned int TEENSY_PACKET_END_OFFSET = 780u;
 constexpr unsigned int SENSOR_DR16_OFFSET = 0u;
 
 /// @brief An encapsulating data struct managing data from all of Teensy's sensors
-struct SensorData
-{
+struct SensorData {
+	/// @brief Default constructor
 	SensorData() = default;
-	SensorData(char* raw_data)
-	{
+	/// @brief Constructs a SensorData struct with a raw byte array of data
+	/// @param raw_data Raw byte array of data
+	SensorData(char* raw_data) {
 		memcpy(raw, raw_data, sizeof(SensorData));
 	}
 
+	/// @brief Raw byte array
 	char raw[300] = { 0 };
-
-	void set_dr16(char* data);
 };
 
 /// @brief An encapsulating data struct managing a HID packet
-struct CommsPacket
-{
+struct CommsPacket {
 	/// @brief The raw array of bytes of a packet
-	char raw[PACKET_SIZE + 1] = { 0 };
+	char raw[COMMS_PACKET_SIZE + 1] = { 0 };
 
 	// common getters
 	/// @brief Get the ID of this packet
@@ -83,15 +84,22 @@ struct CommsPacket
 	void get_ref_draw_data(char** draw_data);
 
 	// teensy setters
+	/// @brief Set the time of this packet
+	/// @param time The time as a double
 	void set_time(double time);
+	/// @brief Set the estimated state for this packet
+	/// @param state The float array of state
 	void set_estimated_state(float state[STATE_LEN][3]);
+	/// @brief Set the sensor data for this packet
+	/// @param sensor_data The sensor data struct reference to use
 	void set_sensor_data(SensorData* sensor_data);
+	/// @brief Set the ref data for this packet
+	/// @todo implement
 	void set_ref_data();
 };
 
 /// @brief The communications layer between Khadas and Teensy
-class HIDLayer
-{
+class HIDLayer {
 public:
 	/// @brief Default constructor
 	HIDLayer();
