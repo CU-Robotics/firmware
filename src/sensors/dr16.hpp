@@ -121,6 +121,8 @@ public:
 	/// @brief Prints the raw 18-byte packet from the receiver
 	void print_raw();
 
+	/// @brief Returns the pointer to the raw input array
+	/// @return The pointer to the raw input array
 	uint8_t* get_raw() {return m_inputRaw;}
 
 private:
