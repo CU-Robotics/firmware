@@ -306,7 +306,7 @@ public:
         previous_yaw_velocity = current_yaw_velocity;
         previous_roll_velocity = current_roll_velocity;
 
-        float imu_vel_offset = 8.05;
+        float imu_vel_offset = 1;
         // calculate the pitch yaw and roll velocities (Gimbal Relative)
         current_pitch_velocity = __vectorProduct(pitch_axis_unitvector, raw_omega_vector, 3)/imu_vel_offset;
         current_yaw_velocity = __vectorProduct(yaw_axis_unitvector, raw_omega_vector, 3)/imu_vel_offset;

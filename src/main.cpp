@@ -441,7 +441,7 @@ int main()
 
         if (true)
         { // prints the estimated state
-            for (int i r= 2; i < STATE_LEN-27; i++) {
+            for (int i = 2; i < STATE_LEN-27; i++) {
             Serial.printf("[");
             for (int j = 0; j < 3; j++)
             {

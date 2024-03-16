@@ -19,6 +19,7 @@ EstimatorManager::EstimatorManager(CANData *data)
     buff_sensors[1].init(PITCH_BUFF_CS);
 
     icm_sensors[0].init(icm_sensors[0].CommunicationProtocol::SPI);
+    icm_sensors[0].set_gyro_range(4000);
     can_data = data;
 }
 
@@ -28,7 +29,7 @@ void EstimatorManager::init_estimator(int state_id, int num_states)
     {
     case 1: // Gimbal Estimator
         float values_gimbal[10];
-        values_gimbal[0] = -0.63;       // yaw encoder offset
+        values_gimbal[0] = 0;       // yaw encoder offset
         values_gimbal[1] = 4.09;       // pitch encoder offset
         values_gimbal[2] = 0;       // default yaw starting angle (starting point for imu integration)
         values_gimbal[3] = 1.91986; // default pitch starting angle (starting point for imu integration)

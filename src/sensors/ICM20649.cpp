@@ -79,3 +79,26 @@ float ICM20649::get_gyro_data_rate()
 // equation from Adafruit ICM20649 example code
     return gyro_rate = 1100 / (1.0 + sensor.getGyroRateDivisor());
 }
+
+void ICM20649::set_gyro_range(int gyro_rate_range)
+{
+    switch(gyro_rate_range){
+        default:
+            sensor.setGyroRange(ICM20649_GYRO_RANGE_500_DPS);
+            break;
+        case (500):
+            sensor.setGyroRange(ICM20649_GYRO_RANGE_500_DPS);
+            break;
+        case (1000):
+            sensor.setGyroRange(ICM20649_GYRO_RANGE_1000_DPS);
+            break;
+        case (2000):
+            sensor.setGyroRange(ICM20649_GYRO_RANGE_2000_DPS);
+            break;
+        case (4000):
+            sensor.setGyroRange(ICM20649_GYRO_RANGE_4000_DPS);
+            break;
+    }
+
+    Serial.println(sensor.getGyroRange());
+}

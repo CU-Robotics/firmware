@@ -38,6 +38,9 @@ public:
     
     /// @copydoc IMUSensor::read()    
     void read() override;
+
+    void set_gyro_range(int gyro_rate_range);
+
 private:
     /// @brief sensor object from adafruit libraries.
     Adafruit_ICM20649 sensor;

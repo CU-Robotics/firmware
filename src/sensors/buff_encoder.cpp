@@ -11,13 +11,16 @@ float BuffEncoder::read()
     data[0] = (MT6835_OP_ANGLE << 4);
     data[1] = MT6835_REG_ANGLE1;
 
+    Serial.println("trying to read");
     // do the SPI transfer
     SPI.beginTransaction(m_settings);
+    Serial.println("Finished read");
     digitalWrite(m_CS, LOW);
     SPI.transfer(data, 6);
     digitalWrite(m_CS, HIGH);
     SPI.endTransaction();
 
+    
     // convert received angle into radians
     int raw_angle = (data[2] << 13) | (data[3] << 5) | (data[4] >> 3);
     float radians = raw_angle / (float)MT6835_CPR * (3.14159265 * 2.0);
