@@ -28,16 +28,16 @@ void EstimatorManager::init_estimator(int state_id, int num_states)
     {
     case 1: // Gimbal Estimator
         float values_gimbal[10];
-        values_gimbal[0] = 4.627;       // yaw encoder offset
-        values_gimbal[1] = 4.093;       // pitch encoder offset
+        values_gimbal[0] = -0.63;       // yaw encoder offset
+        values_gimbal[1] = 4.09;       // pitch encoder offset
         values_gimbal[2] = 0;       // default yaw starting angle (starting point for imu integration)
         values_gimbal[3] = 1.91986; // default pitch starting angle (starting point for imu integration)
         values_gimbal[4] = 0;       // default roll starting angle (starting point for imu integration)
         values_gimbal[5] = 0;       // default chassis pitch angle
         // Stable gravity vector {x,y,z}
-        values_gimbal[6] = 0.077535;  // x
-        values_gimbal[7] = 2.396863;  // y
-        values_gimbal[8] = -6.940948; // z
+        values_gimbal[6] = -0.05664;  // x
+        values_gimbal[7] = 2.057767;  // y
+        values_gimbal[8] = 5.544132; // z
         values_gimbal[9] = 1.91986;   // Pitch angle at given gravity vector
 
         estimators[0] = new GimbalEstimator(values_gimbal, &buff_sensors[0], &buff_sensors[1], &icm_sensors[0], can_data, num_states);
@@ -126,6 +126,9 @@ void EstimatorManager::read_sensors()
     icm_sensors[0].read();
 }
 
+//Calibrated offsets: 0.255322, -0.017980, 0.000764
+//Calibrated offsets: 0.198682, 2.039787, 5.544896
+//Calibrated offsets: 3.045174, 0.027272, 0.010071
 void EstimatorManager::calibrate_imus()
 {
     Serial.println("Calibrating IMU's...");
@@ -149,7 +152,7 @@ void EstimatorManager::calibrate_imus()
         sum_accel_z += icm_sensors[0].get_accel_Z();
     }
 
-    Serial.printf("Calibrated offsets: %f, %f, %f", sum_accel_x / NUM_IMU_CALIBRATION, sum_accel_y / NUM_IMU_CALIBRATION, sum_accel_z / NUM_IMU_CALIBRATION);
+    Serial.printf("Calibrated offsets: %f, %f, %f", sum_x / NUM_IMU_CALIBRATION, sum_y / NUM_IMU_CALIBRATION, sum_z / NUM_IMU_CALIBRATION);
     Serial.println();
     icm_sensors[0].set_offsets(sum_x / NUM_IMU_CALIBRATION, sum_y / NUM_IMU_CALIBRATION, sum_z / NUM_IMU_CALIBRATION);
 

@@ -80,7 +80,6 @@ void State::step_reference(float ungoverned_reference[STATE_LEN][3], int governo
             reference[n][2] = ungoverned_reference[n][2];
             reference[n][1] = ungoverned_reference[n][1];
             reference[n][0] = ungoverned_reference[n][0];
-
         }
 
         for (int p = 0; p < 3; p++) { 

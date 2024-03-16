@@ -439,13 +439,13 @@ int main()
             Serial.printf("] \n");
         }
 
-        if (false)
+        if (true)
         { // prints the estimated state
-            for (int i = 2; i < STATE_LEN-27; i++) {
+            for (int i r= 2; i < STATE_LEN-27; i++) {
             Serial.printf("[");
             for (int j = 0; j < 3; j++)
             {
-                Serial.printf("%.3f",temp_reference[i][j]);
+                Serial.printf("%.3f",temp_state[i][j]);
                 if (j != 3 - 1)
                     Serial.printf(", ");
             }
