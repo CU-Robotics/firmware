@@ -220,7 +220,7 @@ public:
 
     void step_states(float output[STATE_LEN][3]) override
     {
-        float pitch_enc_angle = (-buff_enc_pitch->get_angle()) + PITCH_ENCODER_OFFSET;
+        float pitch_enc_angle = (-buff_enc_pitch->get_angle()) - PITCH_ENCODER_OFFSET;
         while (pitch_enc_angle >= PI)
             pitch_enc_angle -= 2 * PI;
         while (pitch_enc_angle <= -PI)
