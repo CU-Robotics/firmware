@@ -1,13 +1,8 @@
 #include "d200.hpp"
 
 D200LD14P::D200LD14P() {
-  state.buffer_idx = 0;
-  LIDAR_SERIAL.begin(LIDAR_BAUD);
-  start();
-}
-
-LidarDataPacket D200LD14P::get_latest_packet() {
-  return latest_packet;
+  current_packet = 0;
+  LIDAR_SERIAL.begin(D200_BAUD);
 }
 
 uint8_t D200LD14P::calc_checksum(uint8_t *buf, int len) {
@@ -18,86 +13,100 @@ uint8_t D200LD14P::calc_checksum(uint8_t *buf, int len) {
   return crc8;
 }
 
-void D200LD14P::set_speed(uint16_t speed) {
-  uint8_t lsb = speed & 0xff;
-  uint8_t msb = (speed >> 8) & 0xff;
+void D200LD14P::set_speed(float speed) {
+  // convert to deg/s
+  uint16_t speed_deg = constrain((uint16_t) (speed * 180.0 / M_PI), MIN_SPEED, MAX_SPEED);
 
-  uint8_t cmd[CMD_LEN] = { 0x54, 0xa2, 0x04, lsb, msb, 0, 0, 0 };
-  cmd[CMD_LEN - 1] = calc_checksum(cmd, CMD_LEN - 1);
+  uint8_t lsb = speed_deg & 0xff;
+  uint8_t msb = (speed_deg >> 8) & 0xff;
 
-  LIDAR_SERIAL.write(cmd, CMD_LEN);
+  uint8_t cmd[D200_CMD_PACKET_LEN] = { 0x54, 0xa2, 0x04, lsb, msb, 0, 0, 0 };
+  cmd[D200_CMD_PACKET_LEN - 1] = calc_checksum(cmd, D200_CMD_PACKET_LEN - 1);
+
+  LIDAR_SERIAL.write(cmd, D200_CMD_PACKET_LEN);
 }
 
-void D200LD14P::start() {
-  LIDAR_SERIAL.write(START_CMD, CMD_LEN);
+void D200LD14P::start_motor() {
+  LIDAR_SERIAL.write(D200_START_CMD, D200_CMD_PACKET_LEN);
 }
 
-void D200LD14P::stop() {
-  LIDAR_SERIAL.write(STOP_CMD, CMD_LEN);
+void D200LD14P::stop_motor() {
+  LIDAR_SERIAL.write(D200_STOP_CMD, D200_CMD_PACKET_LEN);
 }
 
 void D200LD14P::read() {
-  while (LIDAR_SERIAL.available()) {
-    // if the buffer is full, parse the packet
-    if (state.buffer_idx == PACKET_SIZE) {
-      // verify checksum
-      uint8_t crc8 = state.buffer[PACKET_SIZE - 1];
-      uint8_t calc_crc8 = calc_checksum(state.buffer, PACKET_SIZE - 1);
+  // consume bytes until we reach a start character (only relevant for startup)
+  while (LIDAR_SERIAL.available() && LIDAR_SERIAL.peek() != D200_START_CHAR) {
+    LIDAR_SERIAL.read();
+  }
 
-      if (crc8 == calc_crc8) {
-        // data values are little-endian
-        uint8_t *b = &state.buffer[0];
-        LidarDataPacket *p = &state.latest_packet;
-        
-        p->lidar_speed = (b[3] << 8) | b[2];
-        p->start_angle = (b[5] << 8) | b[4];
+  // read packet by packet
+  while (LIDAR_SERIAL.available() >= D200_DATA_PACKET_LEN) {
+    uint8_t start_char = LIDAR_SERIAL.read();
+    uint8_t frame_char = LIDAR_SERIAL.read();
+    
+    // we either get a data packet or a command packet,
+    // determined by the frame character
+    int packet_len = frame_char == D200_FRAME_CHAR 
+      ? D200_DATA_PACKET_LEN 
+      : D200_CMD_PACKET_LEN;
+    
+    uint8_t buf[packet_len];
 
-        for (int i = 0; i < POINTS_PER_PACKET /* 12 */; i++) {
-          int base = 6 + i * 3;
-          p->points[i].distance = (b[base + 1] << 8) | b[base];
-          p->points[i].distance = b[base + 2];
-        }
+    buf[0] = start_char;
+    buf[1] = frame_char;
+    
+    // read remainder of packet into buffer
+    LIDAR_SERIAL.readBytes(&buf[2], packet_len - 2);
 
-        p->end_angle = (b[43] << 8) | b[42];
-        p->timestamp = (b[45] << 8) | b[44];
-      }
+    // we don't care about command packets as long as
+    // they are removed from the buffer
+    if (frame_char != 0x2c) continue;
 
-      // reset the buffer index to start reading the next packet
-      state.buffer_idx = 0;
-    }
+    // verify checksum
+    uint8_t crc8 = buf[packet_len - 1];
+    uint8_t calc_crc8 = calc_checksum(buf, packet_len - 1);
 
-    // if we are reading the first two bytes of a packet, check for start and frame characters
-    // otherwise, if the buffer is not full, keep filling it
-    int next_byte = LIDAR_SERIAL.read();
-    switch (state.buffer_idx) {
-      case 0:
-        if (next_byte == START_CHAR) {
-          state.buffer[state.buffer_idx++] = next_byte;
-        }
-        break;
-      case 1:
-        if (next_byte == FRAME_CHAR) {
-          state.buffer[state.buffer_idx++] = next_byte;
-        } else {
-          state.buffer_idx = 0;
-        }
-        break;
-      default:
-        state.buffer[state.buffer_idx++] = next_byte;
-        break;
+    if (crc8 != calc_crc8) continue;
+
+    // parse packet
+    current_packet = (current_packet+1) % D200_NUM_PACKETS_CACHED;
+    LidarDataPacket *p = &packets[current_packet];
+
+    // (alignments of values from dev manual: https://files.waveshare.com/upload/9/99/LD14P_Development_Manual.pdf)
+    uint16_t lidar_speed = (buf[3] << 8) | buf[2];
+    uint16_t start_angle = (buf[5] << 8) | buf[4];
+    uint16_t end_angle = (buf[43] << 8) | buf[42];
+    uint16_t timestamp = (buf[45] << 8) | buf[44];
+
+    // convert measurements to SI
+    p->lidar_speed = (float) lidar_speed * M_PI / 180.0; // deg/s -> rad/s
+    p->start_angle = ((float) (start_angle % 36000) / 100.0) * M_PI / 180.0; // 0.01 deg -> rad
+    p->end_angle = ((float) (end_angle % 36000) / 100.0) * M_PI / 180.0; // 0.01 deg -> rad
+    p->timestamp = (float) timestamp / 1000.0; // ms (wraps after 30k) -> s
+    
+    for (int i = 0; i < D200_POINTS_PER_PACKET; i++) {
+      // points start at byte 6, each point is 3 bytes
+      int base = 6 + i * 3;
+      uint16_t distance = (buf[base + 1] << 8) | buf[base];
+
+      // convert measurements to SI
+      p->points[i].distance = (float) distance / 1000.0; // mm -> m
+      p->points[i].intensity = buf[base + 2]; // units are ambiguous (not documented)
     }
   }
 }
 
-void D200LD14P::print() {
+void D200LD14P::print_latest_packet() {
+  LidarDataPacket p = get_latest_packet();
   Serial.println("==D200LD14P PACKET==");
   Serial.print("LiDAR speed: ");
-  Serial.println(latest_packet.lidar_speed);
+  Serial.println(p.lidar_speed);
   Serial.print("start angle: ");
-  Serial.println(latest_packet.start_angle);
+  Serial.println(p.start_angle);
   Serial.println("measurement data: ...");
   Serial.print("end angle: ");
-  Serial.println(latest_packet.end_angle);
+  Serial.println(p.end_angle);
   Serial.print("timestamp: ");
-  Serial.println(latest_packet.timestamp);
+  Serial.println(p.timestamp);
 }
