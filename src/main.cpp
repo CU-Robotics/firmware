@@ -100,15 +100,15 @@ int main()
     set_reference_limits[1][2][0] = -7;
     set_reference_limits[1][2][1] = 7;
     //chassis angle (psi)
-    set_reference_limits[2][0][0] = -UINT_MAX;
-    set_reference_limits[2][0][1] = UINT_MAX;
+    set_reference_limits[2][0][0] = -PI;
+    set_reference_limits[2][0][1] = PI;
     set_reference_limits[2][1][0] = -29.3917681162;
     set_reference_limits[2][1][1] = 29.3917681162;
     set_reference_limits[2][2][0] = -1;
     set_reference_limits[2][2][1] = 1;
     //yaw
-    set_reference_limits[3][0][0] = -UINT_MAX;
-    set_reference_limits[3][0][1] = UINT_MAX;
+    set_reference_limits[3][0][0] = -PI;
+    set_reference_limits[3][0][1] = PI;
     set_reference_limits[3][1][0] = -49.4827627617;
     set_reference_limits[3][1][1] = 49.4827627617;
     set_reference_limits[3][2][0] = -50;
@@ -273,12 +273,12 @@ int main()
     long long loopc = 0;            // Loop counter for heartbeat
     float temp_state[STATE_LEN][3] = {0}; // Temp state array
     float temp_micro_state[NUM_MOTORS][MICRO_STATE_LEN] = {0}; // Temp micro state array
-    float temp_reference[STATE_LEN][3] = {0};
-    float target_state[STATE_LEN][3] = {0};
-    float kinematics_pos[NUM_MOTORS][STATE_LEN] = {0};
-    float kinematics_vel[NUM_MOTORS][STATE_LEN] = {0};
-    float motor_inputs[NUM_MOTORS] = {0};
-    int governor_type[STATE_LEN] = {2, 2, 2, 1, 1, 2, 2, 2};
+    float temp_reference[STATE_LEN][3] = {0}; //Temp governed state
+    float target_state[STATE_LEN][3] = {0}; //Temp ungoverned state
+    float kinematics_pos[NUM_MOTORS][STATE_LEN] = {0}; //Position kinematics 
+    float kinematics_vel[NUM_MOTORS][STATE_LEN] = {0}; //Velocity kinematics
+    float motor_inputs[NUM_MOTORS] = {0}; //Array for storing controller outputs to send to CAN
+    int governor_type[STATE_LEN] = {2, 2, 2, 1, 1, 2, 2, 2}; //Position vs Velcity governor
     
     float chassis_angle_to_motor_error = ((.1835*9.17647058824)/.0516);
     float chassis_pos_to_motor_error = ((9.17647058824)/.0516) * 0.507;
@@ -297,13 +297,6 @@ int main()
     kinematics_pos[5][3] = -1;
     kinematics_vel[5][3] = -1;
 
-    // // motor 5 yaw 1
-    // kinematics_vel[4][2] = 0.1;  
-
-    // // motor 6 yaw 2
-    // kinematics_vel[5][3] = 0.1;
-
-
     // motor 1 pitch 1 Can_2
     kinematics_vel[8][4] = 1;
     kinematics_pos[8][4] = 1;
@@ -320,8 +313,8 @@ int main()
     int count_one = 0;
 
     // dr16 integrator setup
-    int dr16_pos_x = 0;
-    int dr16_pos_y = 0;
+    float dr16_pos_x = 0;
+    float dr16_pos_y = 0;
 
     // Main loop
     while (true) {
@@ -329,24 +322,24 @@ int main()
         dr16.read();
         ref.read();
 
-        // dr16 integrator
-        dr16_pos_x += dr16.get_mouse_y() * 0.001 * control_input_timer.delta();
-        dr16_pos_y += dr16.get_mouse_x() * 0.001 * control_input_timer.delta();
+        float delta = control_input_timer.delta();
 
-        
+        // dr16 integrator
+        dr16_pos_x += dr16.get_mouse_x() * 0.05 * delta;
+        dr16_pos_y += dr16.get_mouse_y() * 0.05 * delta;
 
         // driver controls
         float chassis_velocity_x = dr16.get_l_stick_y() * 5.4
                                  + (dr16.keys.d - dr16.keys.a) * 2.5;
-        float chassis_velocity_y = -dr16.get_l_stick_x() * 5.4;
+        float chassis_velocity_y = -dr16.get_l_stick_x() * 5.4
                                  + (dr16.keys.w - dr16.keys.s) * 2.5;
         float chassis_spin = dr16.get_wheel() * 10;
 
         float pitch_target = 1.57
                            + -dr16.get_r_stick_y() * 0.3
-                           + dr16_pos_x;
+                           + dr16_pos_y;
         float yaw_target = -dr16.get_r_stick_x() * 1.5
-                        + dr16_pos_y;
+                        - dr16_pos_x;
                
         float fly_wheel_target = (dr16.get_r_switch() == 1 || dr16.get_r_switch() == 3) ? 10 : 0; //m/s
         float feeder_target = ((dr16.get_l_mouse_button() && dr16.get_r_switch() != 2) || dr16.get_r_switch() == 1) ? 10 : 0;
@@ -362,10 +355,6 @@ int main()
         target_state[5][1] = fly_wheel_target;
         target_state[6][1] = feeder_target;
 
-        // Serial.println(target_state[3][0]);
-
-
-
         // Read sensors
         estimator_manager->read_sensors();
         estimator_manager->step(temp_state, temp_micro_state);
@@ -377,13 +366,13 @@ int main()
         if(count_one == 0){
             state.set_reference(temp_state);
             count_one++;
-        } 
+        }
 
         state.set_estimate(temp_state);
         state.step_reference(target_state, governor_type);
         state.get_reference(temp_reference);
         
-        // Controls code goes here
+        // Update the kinematics of x,y states
         kinematics_vel[0][0] = cos(-temp_state[2][0]) * chassis_pos_to_motor_error;  
         kinematics_vel[0][1] = -sin(-temp_state[2][0]) * chassis_pos_to_motor_error;  
         // motor 2 back right
@@ -408,36 +397,6 @@ int main()
                     can.write_motor_norm(j, i+1, C610, motor_inputs[(j*NUM_MOTORS_PER_BUS)+i]);
             }
         }
-    
-        if (false)
-        { // prints the full motor input vector
-            Serial.printf("[");
-            for (int i = 4; i < NUM_MOTORS; i++)
-            {
-                Serial.print(motor_inputs[i]);
-                if (i != NUM_MOTORS - 1)
-                    Serial.printf(", ");
-            }
-            Serial.printf("] \n");
-        }
-
-        if (false)
-        { // prints the full micro estimate
-            Serial.printf("[");
-            for (int i = 0; i < NUM_MOTORS; i++)
-            {
-                Serial.printf("[");
-                for(int j = 0; j < MICRO_STATE_LEN; j++) {
-                    Serial.print(temp_micro_state[i][j]);
-                    if (j != MICRO_STATE_LEN - 1)
-                    Serial.printf(", ");
-                }
-                Serial.printf("]");
-                if (i != NUM_MOTORS - 1)
-                    Serial.printf(", ");
-            }
-            Serial.printf("] \n");
-        }
 
         if (true)
         { // prints the estimated state
@@ -445,7 +404,7 @@ int main()
             Serial.printf("[");
             for (int j = 0; j < 3; j++)
             {
-                Serial.printf("%.3f",temp_state[i][j]);
+                Serial.printf("%.3f",temp_reference[i][j]);
                 if (j != 3 - 1)
                     Serial.printf(", ");
             }
@@ -454,8 +413,19 @@ int main()
             Serial.println();
         }
 
-        comms.ping();
+        if (false)
+        { // prints the estimated state
+                    Serial.printf("[");
+            for (int i = 2; i < 8; i++) {
+                Serial.printf("%.3f",motor_inputs[i]);
+                if (i != 8 - 1)
+                    Serial.printf(", ");
+            }
+            Serial.printf("]");
+            Serial.println();
+        }
 
+        comms.ping();
 
         if (dr16.is_connected() && (dr16.get_l_switch() == 2 || dr16.get_l_switch() == 3)) {
             // SAFETY OFF
@@ -475,7 +445,5 @@ int main()
         float dt = stall_timer.delta();
         if (dt > 0.002) Serial.println("loop slow af (this is bad)");
     }
-
-    delete estimator_manager;
     return 0;
 }

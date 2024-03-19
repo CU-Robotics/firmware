@@ -239,10 +239,9 @@ public:
 
         pid2.setpoint = reference[1];
         pid2.measurement = estimate[1];
-    
+
         output += pid1.filter(dt, true, true); // position wraps
         output += pid2.filter(dt, true, false); // no wrap for velocity
-
         return output;
     }
 

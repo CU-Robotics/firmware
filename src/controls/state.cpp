@@ -15,15 +15,27 @@ void State::step_reference(float ungoverned_reference[STATE_LEN][3], int governo
     if (dt > .002)
             dt = 0; // first dt loop generates huge time so check for that
     for (int n = 0; n < STATE_LEN; n++) {
+        bool is_wrap = (((int)(reference_limits[n][0][1]*100) == 314) && ((int)(reference_limits[n][0][0]*100) == -314));
         // Keep new target values within absolute limits
-        for (int p = 0; p < 3; p++) {
-            if (ungoverned_reference[n][p] < reference_limits[n][p][0]) ungoverned_reference[n][p] = reference_limits[n][p][0];
-            if (ungoverned_reference[n][p] > reference_limits[n][p][1]) ungoverned_reference[n][p] = reference_limits[n][p][1];
+        if(is_wrap) {
+            while (ungoverned_reference[n][0] >= PI) ungoverned_reference[n][0] -= 2 * PI;
+            while (ungoverned_reference[n][0] <= -PI) ungoverned_reference[n][0] += 2 * PI;
+            for (int p = 1; p < 3; p++) {
+                if (ungoverned_reference[n][p] < reference_limits[n][p][0]) ungoverned_reference[n][p] = reference_limits[n][p][0];
+                if (ungoverned_reference[n][p] > reference_limits[n][p][1]) ungoverned_reference[n][p] = reference_limits[n][p][1];
+            }
+        }else{
+            for (int p = 0; p < 3; p++) {
+                if (ungoverned_reference[n][p] < reference_limits[n][p][0]) ungoverned_reference[n][p] = reference_limits[n][p][0];
+                if (ungoverned_reference[n][p] > reference_limits[n][p][1]) ungoverned_reference[n][p] = reference_limits[n][p][1];
+            }
         }
 
         if(governor_type[n] == 1) { // position based governor
-            // TODO: Iplement wrap angle 
+            // TODO: Implement wrap angle
             float pos_error = ungoverned_reference[n][0] - reference[n][0];
+            if (pos_error > PI && is_wrap) pos_error -= 2*PI;
+            if (pos_error < -PI && is_wrap) pos_error += 2*PI;
             float vel_error = ungoverned_reference[n][1] - reference[n][1];
             // Set the accel refrence to the max or min based on which direction it needs to go
             if(pos_error > threshold) reference[n][2] = reference_limits[n][2][1];
@@ -31,7 +43,7 @@ void State::step_reference(float ungoverned_reference[STATE_LEN][3], int governo
             else {
                 reference[n][2] = 0;
                 reference[n][1] = ungoverned_reference[n][1];
-                }
+            }
 
             if (reference[n][2] != 0) {
                 if(pos_error > 0) {
@@ -81,11 +93,19 @@ void State::step_reference(float ungoverned_reference[STATE_LEN][3], int governo
             reference[n][1] = ungoverned_reference[n][1];
             reference[n][0] = ungoverned_reference[n][0];
         }
-
-        for (int p = 0; p < 3; p++) { 
-            // Keep values within absolute limits
-            if (reference[n][p] < reference_limits[n][p][0]) reference[n][p] = reference_limits[n][p][0];
-            if (reference[n][p] > reference_limits[n][p][1]) reference[n][p] = reference_limits[n][p][1];
+        if(is_wrap) {
+            while (reference[n][0] >= PI) reference[n][0] -= 2 * PI;
+            while (reference[n][0] <= -PI) reference[n][0] += 2 * PI;
+            for (int p = 1; p < 3; p++) {
+                if (reference[n][p] < reference_limits[n][p][0]) reference[n][p] = reference_limits[n][p][0];
+                if (reference[n][p] > reference_limits[n][p][1]) reference[n][p] = reference_limits[n][p][1];
+            }
+        }else{
+            for (int p = 0; p < 3; p++) { 
+                // Keep values within absolute limits
+                if (reference[n][p] < reference_limits[n][p][0]) reference[n][p] = reference_limits[n][p][0];
+                if (reference[n][p] > reference_limits[n][p][1]) reference[n][p] = reference_limits[n][p][1];
+            }
         }
     }
 }

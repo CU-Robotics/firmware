@@ -11,10 +11,8 @@ float BuffEncoder::read()
     data[0] = (MT6835_OP_ANGLE << 4);
     data[1] = MT6835_REG_ANGLE1;
 
-    Serial.println("trying to read");
     // do the SPI transfer
     SPI.beginTransaction(m_settings);
-    Serial.println("Finished read");
     digitalWrite(m_CS, LOW);
     SPI.transfer(data, 6);
     digitalWrite(m_CS, HIGH);

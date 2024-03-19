@@ -121,14 +121,24 @@ public:
 	/// @brief Prints the raw 18-byte packet from the receiver
 	void print_raw();
 
+	/// @brief Get mouse velocity x
+	/// @return Amount of points since last read
 	int get_mouse_x();
 
+	/// @brief Get mouse velocity y
+	/// @return Amount of points since last read
 	int get_mouse_y();
 
+	/// @brief status of left mouse button
+	/// @return Is left mouse button pressed
 	bool get_l_mouse_button();
 	
+	/// @brief status of right mouse button
+	/// @return Is right mouse button pressed
 	bool get_r_mouse_button();
 
+	/// @brief Get raw 18-byte packet
+	/// @return 18-byte packet
 	uint8_t *get_raw() { return m_inputRaw; }
 
 private:
@@ -145,10 +155,14 @@ private:
 	/// @return True/false whether data is deemed valid or not
 	bool is_data_valid();
 
+	/// @brief Keep track of mouse x velocity
 	int16_t mouse_x;
+	/// @brief Keep track of mouse y velocity
 	int16_t mouse_y;
 
+	/// @brief Keep track of left mouse button status
 	bool l_mouse_button;
+	/// @brief Keep track of right mouse button status
 	bool r_mouse_button;
 
 public:

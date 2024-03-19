@@ -1,4 +1,3 @@
-
 #ifndef ESTIMATORS_H
 #define ESTIMATORS_H
 
@@ -17,8 +16,10 @@ public:
     // Virtual so they don't ever get called over real estimators
     virtual void step_states(float outputs[STATE_LEN][3]);
 
+    /// @brief gets the number of states that an estimator is estimating
     int get_num_states() { return num_states; }
 
+    /// @brief bool that indicates if the estimator is a micro or macro estimator
     bool micro_estimator = false;
 
 protected:
@@ -98,9 +99,11 @@ protected:
     void solveSystem(float coeff[3][4], float output[3])
     {
         // Matrix d using coeff as given in cramer's rule
-        float d[3][3] = {{coeff[0][0], coeff[0][1], coeff[0][2]},
-                          {coeff[1][0], coeff[1][1], coeff[1][2]},
-                          {coeff[2][0], coeff[2][1], coeff[2][2]}};
+        float d[3][3] = {
+            {coeff[0][0], coeff[0][1], coeff[0][2]},
+            {coeff[1][0], coeff[1][1], coeff[1][2]},
+            {coeff[2][0], coeff[2][1], coeff[2][2]}
+        };
         // Matrix d1 using coeff as given in cramer's rule
         float d1[3][3] = {
             {coeff[0][3], coeff[0][1], coeff[0][2]},
@@ -186,6 +189,7 @@ private:
     float global_yaw_angle = 0;
     float global_roll_angle = 0;
     float dt = 0;
+
     BuffEncoder *buff_enc_yaw;
     BuffEncoder *buff_enc_pitch;
     CANData *can_data;
