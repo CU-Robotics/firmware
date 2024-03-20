@@ -105,7 +105,7 @@ int main() {
     can.init();
 
     int nCS = 37; // 37 or 36 (enc 1, enc 2)
-    int nCAL = 6; // 6 or 5 (enc 1, enc 2)
+    int nCAL = 5; // 5 or 6 (enc 1, enc 2)
     pinMode(nCS, OUTPUT);
     pinMode(nCAL, OUTPUT);
     digitalWrite(nCS, HIGH);
