@@ -140,7 +140,7 @@ int main() {
             float degrees = radians * (180/3.14159265);
             ////
             Serial.printf("%d raw      %0.8f degrees      %0.8f radians\n", raw_angle, degrees, radians);
-        } else if (dr16.is_connected() && dr16.get_l_switch() == 3) {
+        } else {//if (dr16.is_connected() && dr16.get_l_switch() == 3) {
             // SAFETY OFF
             digitalWrite(nCAL, HIGH);
 
@@ -159,11 +159,11 @@ int main() {
 
             ////
 
-            float motor_speed = can.get_motor_attribute(CAN_2, 4, MotorAttribute::SPEED);
+            float motor_speed = can.get_motor_attribute(CAN_2, 1, MotorAttribute::SPEED);
             calib_motor_pid.setpoint = 4800;
             calib_motor_pid.measurement = motor_speed;
             float output = calib_motor_pid.filter(0.001);
-            can.write_motor_norm(CAN_2, 4, C620, output);
+            can.write_motor_norm(CAN_2, 1, C620, output);
             Serial.printf("CALIBRATING! %f motor rpm      %d calibration mode\n", motor_speed, calib_mode);
             ////
 
