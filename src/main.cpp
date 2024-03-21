@@ -65,11 +65,7 @@ static SPISettings settings(1000000, MT6835_BITORDER, SPI_MODE3);
 Timer loop_timer;
 
 // PID CONTROLLERS - THIS IS GROSS
-PIDFilter drive;
-PIDFilter feeder;
-PIDFilter flywheel;
-PIDFilter pitch;
-PIDFilter yaw;
+PIDFilter elevator;
 
 void __rotate2D(float* v, float* v_tf, float angle)
 {
@@ -190,8 +186,7 @@ void rotate_2D(float* v, float* v_tf, float angle)
 }
 
 // Master loop
-int main()
-{
+int main() {
     Serial.begin(1000000); // the serial monitor is actually always active (for debug use Serial.println & tycmd)
     print_logo();
 
@@ -199,33 +194,9 @@ int main()
     pinMode(13, OUTPUT);
     dr16.init();
     can.init();
-    ref.init();
-    imu.init(imu.CommunicationProtocol::SPI);
-
-    // Encoder setup
-    int nCS_yaw = 37; // 37 or 36 (enc 1, enc 2)
-    int nCS_pitch = 36; // 37 or 36 (enc 1, enc 2)
-    pinMode(nCS_yaw, OUTPUT);
-    pinMode(nCS_pitch, OUTPUT);
-    pinMode(ICM_CS, OUTPUT);
-    digitalWrite(nCS_yaw, HIGH);
-    digitalWrite(nCS_pitch, HIGH);
-    digitalWrite(ICM_CS, HIGH);
-    Serial.println("Starting SPI");
-    SPI.begin();
-    Serial.println("SPI Started");
 
     // PID Tuning
-    drive.K[0] = 0.0005;
-
-    feeder.K[0] = 0.02;
-    feeder.K[2] = 0.005;
-
-    flywheel.K[0] = 0.0008;
-
-    yaw.K[0] = 0.005;
-
-    pitch.K[0] = 0.0025;
+    elevator.K[0] = 0.00035;
 
     // PID Util Values
     float motor_speed;
@@ -233,193 +204,45 @@ int main()
     float m_id;
 
     long long loopc;
-    float accel_x;
-    float initial_accel_vector[3];
-    float initial_pitch_angle;
-    bool isCal = false;
-
-    int big_buff_size = 10000;
-    float big_buff[big_buff_size][2];
-    int big_buff_head = 0;
-
-    float raw_omega_vector[3] = { 0 };
 
     // Main looppit
-    while (true)
-    {
+    while (true) {
         loopc++;
 
         dr16.read();
         can.read();
-        ref.read();
-        imu.read();
-        // imu.print();
 
-        float yaw_raw = read_enc(nCS_yaw);
-        float yaw_ref = wrap_angle(yaw_raw - YAW_ZERO_ANGLE);
-        float pitch_raw = read_enc(nCS_pitch);
-        float pitch_ref = wrap_angle(pitch_raw - PITCH_ZERO_ANGLE);
-
-
-
-        // Serial.printf("yaw enc: %f     pitch enc: %f\n", yaw_raw, pitch_raw);
-        if (!isCal)
-        {
-            /*initial_accel_vector[0] = imu.get_accel_X();
-            initial_accel_vector[1] = imu.get_accel_Y();
-            initial_accel_vector[2] = imu.get_accel_Z();
-            inital_pitch_angle = pitch_ref; */
-            initial_accel_vector[0] = 0;
-            initial_accel_vector[1] = 0;
-            initial_accel_vector[2] = 1;
-            initial_pitch_angle = 1.57079;
-            isCal = true;
-        }
-        float pitch_diff = initial_pitch_angle - pitch_ref;
-        float ground_pointing_unitvector[3] = { 0 };
-        for (int i = 1;i < 3;i++)
-        {
-            ground_pointing_unitvector[i] = initial_accel_vector[i] / __magnitude(initial_accel_vector, 3);
-        }
-        float ground_pointing_unitvector_rotated[3];
-        __rotate2D3D(ground_pointing_unitvector, ground_pointing_unitvector_rotated, pitch_diff);
-        float super_raw_omega_vector[3] = { imu.get_gyro_X(),imu.get_gyro_Y() ,imu.get_gyro_Z() };
-        for (int r = 0; r < 3; r++) raw_omega_vector[r] = super_raw_omega_vector[r];// * 0.8 + super_raw_omega_vector[r] * 0.2;
-        float yaw_omega = __vectorProduct(ground_pointing_unitvector_rotated, raw_omega_vector, 3);
         // Read DR16
-        bool w_key = dr16.keys.w * 0.5;
-        bool a_key = dr16.keys.a * 0.5;
-        bool s_key = dr16.keys.s * 0.5;
-        bool d_key = dr16.keys.d * 0.5;
+        float r_speed = dr16.get_l_stick_y() * 450 * 36;
+        float l_speed = -dr16.get_l_stick_y() * 450 * 36;
 
-        int mouse_x = dr16.get_mouse_x();
-        int mouse_y = dr16.get_mouse_y();
+        float r_current = dr16.get_r_stick_y();
+        float l_current = -dr16.get_r_stick_y();
 
-        float drive_raw[2] = { 0 };
-        drive_raw[0] = -dr16.get_l_stick_x() - d_key + a_key;
-        drive_raw[1] = -dr16.get_l_stick_y() - w_key + s_key;
-        float s = dr16.get_wheel() + 0.2 + (dr16.keys.shift ? 0.4 : 0);
-        float drive_rot[2] = { 0 };
-        rotate_2D(drive_raw, drive_rot, yaw_ref + (3.14159 / 4.0));
-        float x = drive_rot[0];
-        float y = drive_rot[1];
-        float pitch_js = dr16.get_r_stick_y() - (mouse_y * MOUSE_SENSITIVITY * 2);
-        float yaw_js = dr16.get_r_stick_x() + (mouse_x * MOUSE_SENSITIVITY * 3.0);
-
-        // Power limiting
-        float power_buffer = ref.data.power_heat.buffer_energy;
-        float power_limit_ratio = 1.0;
-        float power_buffer_limit_thresh = 60.0;
-        float power_buffer_critical_thresh = 30.0;
-        if (power_buffer < power_buffer_limit_thresh)
-        {
-            power_limit_ratio = constrain((power_buffer - power_buffer_critical_thresh) / power_buffer_limit_thresh, 0.0, 1.0);
-        }
-
-        float d1 = fabs(-y + x + s);
-        float d2 = fabs(-y - x + s);
-        float d3 = fabs(y - x + s);
-        float d4 = fabs(y + x + s);
-        float mmax = max(max(d1, d2), max(d3, d4));
-        if (mmax < 1) mmax = 1;
-
-        // Drive 1
-        m_id = 0;
-        motor_speed = can.get_motor_attribute(CAN_1, m_id, MotorAttribute::SPEED);
-        drive.setpoint = ((-y + x + s) / mmax) * 9000;
-        drive.measurement = motor_speed;
-        output = drive.filter(0.001) * power_limit_ratio;
-        can.write_motor_norm(CAN_1, m_id, C620, output);
-
-        // Drive 2
+        // Left elevator
         m_id = 1;
-        motor_speed = can.get_motor_attribute(CAN_1, m_id, MotorAttribute::SPEED);
-        drive.setpoint = ((-y - x + s) / mmax) * 9000;
-        drive.measurement = motor_speed;
-        output = drive.filter(0.001) * power_limit_ratio;
-        can.write_motor_norm(CAN_1, m_id, C620, output);
-
-        // Drive 3
-        m_id = 2;
-        motor_speed = can.get_motor_attribute(CAN_1, m_id, MotorAttribute::SPEED);
-        drive.setpoint = ((y - x + s) / mmax) * 9000;
-        drive.measurement = motor_speed;
-        output = drive.filter(0.001) * power_limit_ratio;
-        can.write_motor_norm(CAN_1, m_id, C620, output);
-
-        // Drive 4
-        m_id = 3;
-        motor_speed = can.get_motor_attribute(CAN_1, m_id, MotorAttribute::SPEED);
-        drive.setpoint = ((y + x + s) / mmax) * 9000;
-        drive.measurement = motor_speed;
-        output = drive.filter(0.001) * power_limit_ratio;
-        can.write_motor_norm(CAN_1, m_id, C620, output);
-
-        // Yaw
-        m_id = 4;
-        motor_speed = can.get_motor_attribute(CAN_1, m_id, MotorAttribute::SPEED) * 0.05105105105;
-        Serial.println(raw_omega_vector[2]);
-        yaw.setpoint = yaw_js*1200 + raw_omega_vector[2]*25;// 350/17
-        // Serial.println(yaw.setpoint);
-        yaw.measurement = motor_speed;
-        output = yaw.filter(0.001, false);
-        can.write_motor_norm(CAN_1, m_id, C620, output);
-        m_id = 5;
-        can.write_motor_norm(CAN_1, m_id, C620, output);
-
-        // Pitch
-        m_id = 0;
-        float clampLow = 1.309; // 1.4
-        float clampHigh = 1.88496; //1.7
-        float pitchConstant = 0.17 * sin(pitch_ref);
         motor_speed = can.get_motor_attribute(CAN_2, m_id, MotorAttribute::SPEED);
-        pitch.setpoint = -pitch_js * 1000;
-        pitch.measurement = motor_speed;
-        output = pitch.filter(0.001, false) + pitchConstant;
+        elevator.setpoint = l_speed;
+        elevator.measurement = motor_speed;
+        output = elevator.filter(0.001) + l_current;
+        can.write_motor_norm(CAN_2, m_id, C610, output);
+        Serial.println(motor_speed);
 
-        // if((pitch_ref > clampHigh && output>0) || (pitch_ref < clampLow && output < 0)){
-        //     continue;
-        // } else{
-        can.write_motor_norm(CAN_2, m_id, C620, output);
-        m_id = 1;
-        can.write_motor_norm(CAN_2, m_id, C620, -output);
-        // }
-
-        // Feeder
-        m_id = 4;
-        motor_speed = can.get_motor_attribute(CAN_2, m_id, MotorAttribute::SPEED) / 36.0;
-        feeder.setpoint = ((dr16.get_r_switch() == 1 || dr16.get_l_mouse_button()) ? 100 : 0);
-        feeder.measurement = motor_speed;
-        float output = feeder.filter(0.001);
+        // Right elevator
+        m_id = 2;
+        motor_speed = can.get_motor_attribute(CAN_2, m_id, MotorAttribute::SPEED);
+        elevator.setpoint = r_speed;
+        elevator.measurement = motor_speed;
+        output = elevator.filter(0.001) + r_current;
         can.write_motor_norm(CAN_2, m_id, C610, output);
 
-
-        // Flywheel 1
-        m_id = 2;
-        motor_speed = can.get_motor_attribute(CAN_2, m_id, MotorAttribute::SPEED);
-        flywheel.setpoint = -9000;
-        flywheel.measurement = motor_speed;
-        output = flywheel.filter(0.001);
-        can.write_motor_norm(CAN_2, m_id, C620, output);
-
-        // Flywheel 1
-        m_id = 3;
-        motor_speed = can.get_motor_attribute(CAN_2, m_id, MotorAttribute::SPEED);
-        flywheel.setpoint = (dr16.get_r_switch() != 2 ? 9000 : 0);
-        flywheel.measurement = motor_speed;
-        output = flywheel.filter(0.001);
-        can.write_motor_norm(CAN_2, m_id, C620, output);
-
         // Write to actuators
-        if (!dr16.is_connected() || dr16.get_l_switch() == 1)
-        {
-// SAFETY ON
-// TODO: Reset all controller integrators here
+        if (!dr16.is_connected() || dr16.get_l_switch() == 1) {
+            // SAFETY ON
+            // TODO: Reset all controller integrators here
             can.zero();
-        }
-        else if (dr16.is_connected() && dr16.get_l_switch() != 1)
-        {
-// SAFETY OFF
+        } else if (dr16.is_connected() && dr16.get_l_switch() != 1) {
+            // SAFETY OFF
             can.write();
         }
 
