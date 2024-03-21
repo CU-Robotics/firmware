@@ -79,20 +79,34 @@ void D200LD14P::read() {
     uint16_t end_angle = (buf[43] << 8) | buf[42];
     uint16_t timestamp = (buf[45] << 8) | buf[44];
 
+    // NOTE: no conversion to SI on teensy to save comms bandwidth
+    /*
     // convert measurements to SI
     p->lidar_speed = (float) lidar_speed * M_PI / 180.0; // deg/s -> rad/s
     p->start_angle = ((float) (start_angle % 36000) / 100.0) * M_PI / 180.0; // 0.01 deg -> rad
     p->end_angle = ((float) (end_angle % 36000) / 100.0) * M_PI / 180.0; // 0.01 deg -> rad
     p->timestamp = (float) timestamp / 1000.0; // ms (wraps after 30k) -> s
-    
+    */
+
+    p->lidar_speed = lidar_speed;
+    p->start_angle = start_angle;
+    p->end_angle = end_angle;
+    p->timestamp = timestamp;
+
     for (int i = 0; i < D200_POINTS_PER_PACKET; i++) {
       // points start at byte 6, each point is 3 bytes
       int base = 6 + i * 3;
       uint16_t distance = (buf[base + 1] << 8) | buf[base];
 
+      // NOTE: no conversion to SI on teensy to save comms bandwidth
+      /*
       // convert measurements to SI
       p->points[i].distance = (float) distance / 1000.0; // mm -> m
       p->points[i].intensity = buf[base + 2]; // units are ambiguous (not documented)
+      */
+
+      p->points[i].distance = distance;
+      p->points[i].intensity = buf[base + 2]; // see documentation on intensity
     }
   }
 }

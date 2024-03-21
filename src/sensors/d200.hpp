@@ -75,26 +75,32 @@ const float D200_MIN_SPEED = (float)(2 * 360 + 1) * M_PI / 180.0;
 /// @brief max specified scanning speed (rad/s)
 const float D200_MAX_SPEED = (float)(8 * 360 - 1) * M_PI / 180.0;
 
+/**
+ * @brief struct storing data from lidar data packet. 
+ * NOTE: units are not converted to SI so that LiDAR packets 
+ * can use less bandwidth on comms
+ */
 struct LidarDataPacket {
-  /// @brief speed of lidar module (rad/s)
-  float lidar_speed = 0.0;
+  /// @brief speed of lidar module (deg/s)
+  uint16_t lidar_speed = 0;
   
-  /// @brief start angle of measurements (rad)
-  float start_angle = 0.0;
+  /// @brief start angle of measurements (hundredths of deg)
+  uint16_t start_angle = 0;
   
   /// @brief array of point measurements
   struct {
-    /// @brief distance (m)
-    float distance = 0.0;
-    /// @brief intensity of measurement. units are ambiguous (not documented)
+    /// @brief distance (mm)
+    uint16_t distance;
+
+    /// @brief intensity of measurement. units are ambiguous (not documented), but in general "the higher the intensity, the larger the signal strength value"
     uint8_t intensity = 0;
   } points[D200_POINTS_PER_PACKET];
   
-  /// @brief end angle of measurements (rad)
-  float end_angle = 0.0;
+  /// @brief end angle of measurements (hundredths of deg)
+  uint16_t end_angle = 0;
   
-  /// @brief timestamp of measurements, wraps after 30s (s)
-  float timestamp = 0.0;
+  /// @brief timestamp of measurements, wraps after 30s (ms)
+  uint16_t timestamp = 0;
 };
 
 /// @brief class for LiDAR driver
@@ -125,8 +131,8 @@ class D200LD14P {
     /// @brief constructor and initialization
     D200LD14P();
 
-    /// @brief set the speed of the LiDAR
-    /// @param speed desired speed of LiDAR (rad/s)
+    /// @brief set rotation the speed of the LiDAR
+    /// @param speed desired rotation speed of LiDAR (rad/s)
     void set_speed(float speed);
 
     /// @brief start the LiDAR motor
@@ -146,11 +152,11 @@ class D200LD14P {
     /// @return index of latest packet
     int get_latest_packet_index() { return current_packet; }
 
-    /// @brief get the latest packet
-    /// @return the latest packet
+    /// @brief get the most recently read (complete) packet
+    /// @return the most recently read packet. if no packets have been read, this will return a zero-initialized packet
     LidarDataPacket get_latest_packet() { return packets[current_packet]; }
 
-    /// @brief print the latest packet for debugging purposes
+    /// @brief print the most recently read (complete) packet for debugging purposes
     void print_latest_packet();
 };
 
