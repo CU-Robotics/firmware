@@ -40,6 +40,7 @@ public:
     /// @return gyroscope z in radians/s
     inline float get_gyro_Z() { return gyro_Z - offset_Z; };
 
+    /// @brief Set offsets that we calculate during calibration
     inline void set_offsets(float x, float y, float z){
         offset_X = x;
         offset_Y = y;
@@ -77,11 +78,11 @@ protected:
     float gyro_Y = 0;
     /// @brief gyroscope z value
     float gyro_Z = 0;
-
+    /// @brief offset x value
     float offset_X = 0;
-
+    /// @brief offset y value
     float offset_Y = 0;
-    
+    /// @brief offset z value
     float offset_Z = 0;
 
     /// @brief temperature value

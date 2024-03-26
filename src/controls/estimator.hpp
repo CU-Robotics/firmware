@@ -333,7 +333,7 @@ public:
         global_roll_angle += -global_roll_velocity * (dt);
 
         chassis_angle = yaw_angle - yaw_enc_angle;
-        // -chassis_angle
+
 
         while (yaw_angle >= PI)
             yaw_angle -= 2 * PI;
@@ -428,7 +428,8 @@ struct FlyWheelEstimator : public Estimator
 
         //ref
         projectile_speed_ref = ref.ref_data.launching_event.projectile_initial_speed;
-        if(projectile_speed_ref != 0) Serial.println(projectile_speed_ref);
+
+        //weighted average
         output[0][1] = (projectile_speed_ref * ref_weight) + (linear_velocity * can_weight);
     }
 };
@@ -440,8 +441,8 @@ struct FeederEstimator : public Estimator
         float balls_per_second_ref;
         float balls_per_second_can;
 
-        float ref_weight = 0;
         float can_weight = 1;
+        float ref_weight = 0;
 
     public:
     FeederEstimator(CANData *c, int _num_states){
@@ -457,13 +458,13 @@ struct FeederEstimator : public Estimator
 
         //ref
         balls_per_second_ref = ref.ref_data.launching_event.launching_speed;
-        if(balls_per_second_ref != 0) Serial.println(balls_per_second_ref);
+
         output[0][1] = (balls_per_second_ref * ref_weight) + (balls_per_second_can * can_weight);
-        // Serial.println(output[0][1]);
+
     }
 };
 
-
+//This estimator estimates our "micro" state which is stores all the motor velocities(in rad/s), whereas the other estimators estimate "macro" state which stores robot joints
 struct LocalEstimator : public Estimator{
     private:
         CANData* can_data;
