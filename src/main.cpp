@@ -322,46 +322,63 @@ int main()
         dr16.read();
         ref.read();
 
+        // Do stuff with comms
+        // get the target state before doing control stuff
+        CommsPacket* incoming = comms.get_incommming();
+        incoming->get_target_state(target_state);
+
+        // set the estimated state after doing control stuff
+        comms.get_outgoing()->set_estimated_state(target_state);
+        // set time
+        comms.get_outgoing()->set_time((double)millis());
+
+        // set sensor data (just dr16)
+        SensorData sensor_data;
+        memcpy(sensor_data.raw, dr16.get_raw(), DR16_PACKET_SIZE);
+        comms.get_outgoing()->set_sensor_data(&sensor_data);
+
+        comms.ping();
+
         float delta = control_input_timer.delta();
 
         // dr16 integrator
         dr16_pos_x += dr16.get_mouse_x() * 0.05 * delta;
         dr16_pos_y += dr16.get_mouse_y() * 0.05 * delta;
 
+        target_state[0][1] *= 5;
+        target_state[1][1] *= 5;
+
         // driver controls
-        float chassis_velocity_x = dr16.get_l_stick_y() * 5.4
-                                 + (dr16.keys.d - dr16.keys.a) * 2.5;
-        float chassis_velocity_y = -dr16.get_l_stick_x() * 5.4
-                                 + (dr16.keys.w - dr16.keys.s) * 2.5;
-        float chassis_spin = dr16.get_wheel() * 10;
+        // float chassis_velocity_x = dr16.get_l_stick_y() * 5.4
+        //                          + (dr16.keys.d - dr16.keys.a) * 2.5;
+        // float chassis_velocity_y = -dr16.get_l_stick_x() * 5.4
+        //                          + (dr16.keys.w - dr16.keys.s) * 2.5;
+        // float chassis_spin = dr16.get_wheel() * 10;
 
-        float pitch_target = 1.57
-                           + -dr16.get_r_stick_y() * 0.3
-                           + dr16_pos_y;
-        float yaw_target = -dr16.get_r_stick_x() * 1.5
-                        - dr16_pos_x;
+        // float pitch_target = 1.57
+        //                    + -dr16.get_r_stick_y() * 0.3
+        //                    + dr16_pos_y;
+        // float yaw_target = -dr16.get_r_stick_x() * 1.5
+        //                 - dr16_pos_x;
                
-        float fly_wheel_target = (dr16.get_r_switch() == 1 || dr16.get_r_switch() == 3) ? 10 : 0; //m/s
-        float feeder_target = ((dr16.get_l_mouse_button() && dr16.get_r_switch() != 2) || dr16.get_r_switch() == 1) ? 10 : 0;
+        // float fly_wheel_target = (dr16.get_r_switch() == 1 || dr16.get_r_switch() == 3) ? 10 : 0; //m/s
+        // float feeder_target = ((dr16.get_l_mouse_button() && dr16.get_r_switch() != 2) || dr16.get_r_switch() == 1) ? 10 : 0;
 
-        target_state[0][1] = chassis_velocity_x;
-        target_state[1][1] = chassis_velocity_y;
-        target_state[2][1] = chassis_spin;
-        target_state[3][0] = yaw_target;
-        target_state[3][1] = 0;
-        target_state[4][0] = pitch_target;
-        target_state[4][1] = 0;
+        // target_state[0][1] = chassis_velocity_x;
+        // target_state[1][1] = chassis_velocity_y;
+        // target_state[2][1] = chassis_spin;
+        // target_state[3][0] = yaw_target;
+        // target_state[3][1] = 0;
+        // target_state[4][0] = pitch_target;
+        // target_state[4][1] = 0;
 
-        target_state[5][1] = fly_wheel_target;
-        target_state[6][1] = feeder_target;
+        // target_state[5][1] = fly_wheel_target;
+        // target_state[6][1] = feeder_target;
 
         // Read sensors
         estimator_manager->read_sensors();
         estimator_manager->step(temp_state, temp_micro_state);
 
-        comms.get_outgoing()->set_state(temp_state);
-        comms.get_outgoing()->set_time((double)millis());
-        comms.get_outgoing()->set_dr16(dr16.get_raw());
         
         if(count_one == 0){
             state.set_reference(temp_state);
@@ -425,14 +442,13 @@ int main()
             Serial.println();
         }
 
-        comms.ping();
-
+        // Write actuators
         if (dr16.is_connected() && (dr16.get_l_switch() == 2 || dr16.get_l_switch() == 3)) {
-            // SAFETY OFF
+        // SAFETY OFF
             can.write();
         } else {
-            // SAFETY ON
-            // TODO: Reset all controller integrators here
+             // SAFETY ON
+             // TODO: Reset all controller integrators here
             can.zero();
         }
 
