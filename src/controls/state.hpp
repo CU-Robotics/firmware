@@ -7,11 +7,10 @@
 // (the Teensy and Khadas must agree on this value)
 #define STATE_LEN 24
 
+#define MICRO_STATE_LEN 3
+
 class State {
     private:
-        /// @brief Singleton instance
-        static State* instance;
-
         // This is a sample state (it does not represent every robot):
         // {x, y, psi (chassis angle), theta (yaw angle), phi (pitch angle), feed, flywheel}
         // In this example case, as with all other cases, the unused state rows are kept blank.
@@ -32,21 +31,16 @@ class State {
         Timer governor_timer;
 
     public:
-        /// @brief Gives the singleton instance
-        static State* get_instance() {
-            if (instance == NULL) {
-                instance = new State(); 
-                return instance;
-            } else return instance;
-        }
+        /// @brief Only use one time!!!!!! Use step reference
+        void set_reference(float reference[STATE_LEN][3]);
 
-        /// @brief Gives the instantaneous governed state reference matrix (also known as desired state
+        /// @brief Gives the instantaneous governed state reference matrix (also known as desired state)
         /// @param reference The array to override with the reference matrix; Must be of shape [STATE_LEN][3]
         void get_reference(float reference[STATE_LEN][3]);
 
         /// @brief Steps the reference matrix towards a goal, applying a reference governor to prevent impossible motion
         /// @param ungoverned_reference The desired robot state to step towards in the form of a matrix; Must be of shape [STATE_LEN][3]
-        void step_reference(float ungoverned_reference[STATE_LEN][3]);
+        void step_reference(float ungoverned_reference[STATE_LEN][3], int controller_type[STATE_LEN]);
 
         /// @brief Gives the instantaneous state estimate matrix
         /// @param estimate The array to override with the estimate matrix; Must be of shape [STATE_LEN][3]
