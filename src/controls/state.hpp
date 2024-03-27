@@ -5,7 +5,7 @@
 
 // Maximum state length. Do not change unless you know what you're doing.
 // (the Teensy and Khadas must agree on this value)
-#define STATE_LEN 32
+#define STATE_LEN 24
 
 #define MICRO_STATE_LEN 3
 
