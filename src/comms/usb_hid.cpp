@@ -84,13 +84,14 @@ bool HIDLayer::read() {
 bool HIDLayer::write() {
 	// attempt to write a full packet
 	// this has a timeout, which is set to it's max value
-	int bytes_sent = usb_rawhid_send(m_outgoingPacket.raw, UINT16_MAX);
+	int bytes_sent = usb_rawhid_send(m_outgoingPacket.raw, 0);
 	if (bytes_sent == COMMS_PACKET_SIZE) {
 		// increment total number of packets sent and return success
 		m_packetsSent++;
 		return true;
 	} 
 	else {
+		Serial.println("Comms: failed write");
 		m_packetsFailed++;
 		return false;
 	}
