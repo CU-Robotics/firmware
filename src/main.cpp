@@ -196,7 +196,7 @@ int main() {
     can.init();
 
     // PID Tuning
-    elevator.K[0] = 0.00035;
+    elevator.K[0] = 0.00001;
 
     // PID Util Values
     float motor_speed;
@@ -225,16 +225,16 @@ int main() {
         elevator.setpoint = l_speed;
         elevator.measurement = motor_speed;
         output = elevator.filter(0.001) + l_current;
-        can.write_motor_norm(CAN_2, m_id, C610, output);
-        Serial.println(motor_speed);
-
+        can.write_motor_norm(CAN_1, m_id, C610, output);
+        
         // Right elevator
         m_id = 2;
         motor_speed = can.get_motor_attribute(CAN_2, m_id, MotorAttribute::SPEED);
         elevator.setpoint = r_speed;
         elevator.measurement = motor_speed;
         output = elevator.filter(0.001) + r_current;
-        can.write_motor_norm(CAN_2, m_id, C610, output);
+        can.write_motor_norm(CAN_1, m_id, C610, output);
+        Serial.println(output);
 
         // Write to actuators
         if (!dr16.is_connected() || dr16.get_l_switch() == 1) {
