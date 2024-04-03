@@ -234,8 +234,7 @@ int main() {
         elevator.measurement = motor_speed;
         output = elevator.filter(0.001) + r_current;
         can.write_motor_norm(CAN_1, m_id, C610, output);
-        Serial.println(output);
-
+        
         // Write to actuators
         if (!dr16.is_connected() || dr16.get_l_switch() == 1) {
             // SAFETY ON
