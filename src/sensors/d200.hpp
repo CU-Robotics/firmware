@@ -37,6 +37,9 @@ const uint8_t CRC_TABLE[256] = {
   0x5a, 0x06, 0x4b, 0x9c, 0xd1, 0x7f, 0x32, 0xe5, 0xa8
 };
 
+/// @brief size of each data packet sent over comms
+const int D200_PAYLOAD_SIZE = 45;
+
 /// @brief points per D200 data packet
 const int D200_POINTS_PER_PACKET = 12;
 
@@ -76,7 +79,8 @@ const float D200_MAX_SPEED = (float)(8 * 360 - 1) * M_PI / 180.0;
 /**
  * @brief struct storing data from lidar data packet. 
  * NOTE: units are not converted to SI so that LiDAR packets 
- * can use less bandwidth on comms
+ * can use less bandwidth on comms. Size of packet sent over comms:
+ * 1 (id) + 2 (speed) + 2 (start) + 3 * 12 (points) + 2 (end) + 2 (time) = 45
  */
 struct LidarDataPacket {
   /// @brief speed of lidar module (deg/s)
@@ -122,6 +126,9 @@ class D200LD14P {
     /// @brief serial object to read from
     HardwareSerial *port = nullptr;
 
+    /// @brief assigned ID of this specific module
+    uint8_t id;
+
     /// @brief compute CRC8 checksum for buffer
     /// @param buf pointer to buffer
     /// @param len length of buffer
@@ -130,7 +137,9 @@ class D200LD14P {
 
   public:
     /// @brief constructor and initialization
-    D200LD14P(HardwareSerial *);
+    /// @param serial HardwareSerial object to read/write from
+    /// @param id id of the LiDAR object
+    D200LD14P(HardwareSerial *_port, uint8_t _id);
 
     /// @brief set rotation the speed of the LiDAR
     /// @param speed desired rotation speed of LiDAR (rad/s)
@@ -159,6 +168,13 @@ class D200LD14P {
 
     /// @brief print the most recently read (complete) packet for debugging purposes
     void print_latest_packet();
+
+    /// @brief flush the packet buffer
+    void flush_packet_buffer();
+
+    /// @brief export LiDAR data as byte array for comms
+    /// @param bytes byte array to write LiDAR data into
+    void export_data(uint8_t bytes[D200_NUM_PACKETS_CACHED * D200_PAYLOAD_SIZE]);
 };
 
 #endif // D200_H

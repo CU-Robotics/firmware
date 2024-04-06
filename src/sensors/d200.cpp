@@ -1,7 +1,8 @@
 #include "d200.hpp"
 
-D200LD14P::D200LD14P(HardwareSerial *serial) {
-  port = serial;
+D200LD14P::D200LD14P(HardwareSerial *_port, uint8_t _id) {
+  port = _port;
+  id = _id;
   current_packet = 0;
   port->begin(D200_BAUD);
 }
@@ -109,6 +110,44 @@ void D200LD14P::read() {
       p->points[i].distance = distance;
       p->points[i].intensity = buf[base + 2]; // see documentation on intensity
     }
+  }
+}
+
+void D200LD14P::flush_packet_buffer() {
+  LidarDataPacket zero_packet = {};
+  
+  for (int i = 0; i < D200_NUM_PACKETS_CACHED; i++) {
+    packets[i] = zero_packet;
+  }
+}
+
+void D200LD14P::export_data(uint8_t bytes[D200_NUM_PACKETS_CACHED * D200_PAYLOAD_SIZE]) {
+  // write each packet into byte array
+  for (int i = 0; i < D200_NUM_PACKETS_CACHED; i++) {
+    int offset = i * D200_PAYLOAD_SIZE;
+    LidarDataPacket packet = packets[i];
+
+    bytes[offset + 0] = id;
+    
+    bytes[offset + 1] = packet.lidar_speed & 0xff;
+    bytes[offset + 2] = (packet.lidar_speed >> 8) & 0xff;
+
+    bytes[offset + 3] = packet.start_angle & 0xff;
+    bytes[offset + 4] = (packet.start_angle >> 8) & 0xff;
+
+    for (int j = 0; j < D200_POINTS_PER_PACKET; j++) {
+      int point_offset = offset + 5 + j * 3;
+
+      bytes[point_offset + 0] = packet.points[j].distance & 0xff;
+      bytes[point_offset + 1] = (packet.points[j].distance >> 8) & 0xff;
+      bytes[point_offset + 2] = packet.points[j].intensity;
+    }
+
+    bytes[offset + 41] = packet.end_angle & 0xff;
+    bytes[offset + 42] = (packet.end_angle >> 8) & 0xff;
+    
+    bytes[offset + 43] = packet.timestamp & 0xff;
+    bytes[offset + 44] = (packet.timestamp >> 8) & 0xff;
   }
 }
 
