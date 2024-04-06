@@ -3,6 +3,7 @@
 
 // Arduino library
 #include <Arduino.h>
+#include <HardwareSerial.h>
 
 // development manual
 // https://files.waveshare.com/upload/9/99/LD14P_Development_Manual.pdf
@@ -35,9 +36,6 @@ const uint8_t CRC_TABLE[256] = {
   0x78, 0xd6, 0x9b, 0x4c, 0x01, 0xf4, 0xb9, 0x6e, 0x23, 0x8d, 0xc0, 0x17,
   0x5a, 0x06, 0x4b, 0x9c, 0xd1, 0x7f, 0x32, 0xe5, 0xa8
 };
-
-/// @brief serial port used by LiDAR
-#define LIDAR_SERIAL Serial1
 
 /// @brief points per D200 data packet
 const int D200_POINTS_PER_PACKET = 12;
@@ -121,6 +119,9 @@ class D200LD14P {
     /// @brief index of current packet (wraps)
     int current_packet = 0;
 
+    /// @brief serial object to read from
+    HardwareSerial *port = nullptr;
+
     /// @brief compute CRC8 checksum for buffer
     /// @param buf pointer to buffer
     /// @param len length of buffer
@@ -129,7 +130,7 @@ class D200LD14P {
 
   public:
     /// @brief constructor and initialization
-    D200LD14P();
+    D200LD14P(HardwareSerial *);
 
     /// @brief set rotation the speed of the LiDAR
     /// @param speed desired rotation speed of LiDAR (rad/s)

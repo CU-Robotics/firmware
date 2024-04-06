@@ -1,8 +1,9 @@
 #include "d200.hpp"
 
-D200LD14P::D200LD14P() {
+D200LD14P::D200LD14P(HardwareSerial *serial) {
+  port = serial;
   current_packet = 0;
-  LIDAR_SERIAL.begin(D200_BAUD);
+  port->begin(D200_BAUD);
 }
 
 uint8_t D200LD14P::calc_checksum(uint8_t *buf, int len) {
@@ -23,27 +24,27 @@ void D200LD14P::set_speed(float speed) {
   uint8_t cmd[D200_CMD_PACKET_LEN] = { 0x54, 0xa2, 0x04, lsb, msb, 0, 0, 0 };
   cmd[D200_CMD_PACKET_LEN - 1] = calc_checksum(cmd, D200_CMD_PACKET_LEN - 1);
 
-  LIDAR_SERIAL.write(cmd, D200_CMD_PACKET_LEN);
+  port->write(cmd, D200_CMD_PACKET_LEN);
 }
 
 void D200LD14P::start_motor() {
-  LIDAR_SERIAL.write(D200_START_CMD, D200_CMD_PACKET_LEN);
+  port->write(D200_START_CMD, D200_CMD_PACKET_LEN);
 }
 
 void D200LD14P::stop_motor() {
-  LIDAR_SERIAL.write(D200_STOP_CMD, D200_CMD_PACKET_LEN);
+  port->write(D200_STOP_CMD, D200_CMD_PACKET_LEN);
 }
 
 void D200LD14P::read() {
   // consume bytes until we reach a start character (only relevant for startup)
-  while (LIDAR_SERIAL.available() && LIDAR_SERIAL.peek() != D200_START_CHAR) {
-    LIDAR_SERIAL.read();
+  while (port->available() && port->peek() != D200_START_CHAR) {
+    port->read();
   }
 
   // read packet by packet
-  while (LIDAR_SERIAL.available() >= D200_DATA_PACKET_LEN) {
-    uint8_t start_char = LIDAR_SERIAL.read();
-    uint8_t frame_char = LIDAR_SERIAL.read();
+  while (port->available() >= D200_DATA_PACKET_LEN) {
+    uint8_t start_char = port->read();
+    uint8_t frame_char = port->read();
     
     // we either get a data packet or a command packet,
     // determined by the frame character
@@ -57,7 +58,7 @@ void D200LD14P::read() {
     buf[1] = frame_char;
     
     // read remainder of packet into buffer
-    LIDAR_SERIAL.readBytes(&buf[2], packet_len - 2);
+    port->readBytes(&buf[2], packet_len - 2);
 
     // we don't care about command packets as long as
     // they are removed from the buffer
