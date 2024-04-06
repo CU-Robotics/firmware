@@ -31,6 +31,8 @@ class ControllerManager {
 
         /// @brief get the ratio (between 0 and 1) of power limit. 1 when 60 to 20 and x/20 under 20.
         float powerlimit_ratio();
+
+        int configure(ConfigPacket packet[]);
 };
 
 #endif // CONTROLLER_MANAGER_H

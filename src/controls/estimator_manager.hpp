@@ -68,6 +68,9 @@ public:
     /// @param macro_outputs input 1
     /// @param micro_outputs input 2
     void clear_outputs(float macro_outputs[STATE_LEN][3], float micro_outputs[NUM_MOTORS][MICRO_STATE_LEN]);
+
+    int configure(ConfigPacket packet[]);
 };
+
 
 #endif
