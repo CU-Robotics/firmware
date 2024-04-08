@@ -178,6 +178,7 @@ class D200LD14P {
 
     /// @brief utility for bitcasting float to 32bit unsigned integer
     /// @param f32 float to bitcat to a uint32_t
+    /// @return uint32_t with same bits as passed float
     uint32_t bitcast_float(float f32);
 
     /// @brief compute CRC8 checksum for buffer
@@ -188,8 +189,8 @@ class D200LD14P {
 
   public:
     /// @brief constructor and initialization
-    /// @param serial HardwareSerial object to read/write from
-    /// @param id id of the LiDAR object
+    /// @param _port pointer to HardwareSerial object to read/write from
+    /// @param _id id of the LiDAR object
     D200LD14P(HardwareSerial *_port, uint8_t _id);
 
     /// @brief set rotation the speed of the LiDAR
