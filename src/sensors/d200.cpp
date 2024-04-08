@@ -73,86 +73,119 @@ void D200LD14P::read() {
 
     // parse packet
     current_packet = (current_packet+1) % D200_NUM_PACKETS_CACHED;
-    LidarDataPacket *p = &packets[current_packet];
+    LidarDataPacketSI *p = &packets[current_packet];
 
     // (alignments of values from dev manual: https://files.waveshare.com/upload/9/99/LD14P_Development_Manual.pdf)
     uint16_t lidar_speed = (buf[3] << 8) | buf[2];
     uint16_t start_angle = (buf[5] << 8) | buf[4];
     uint16_t end_angle = (buf[43] << 8) | buf[42];
-    uint16_t timestamp = (buf[45] << 8) | buf[44];
+    uint16_t lidar_timestamp = (buf[45] << 8) | buf[44];
+    
+    // timestamp calibration
+    cal.packets_recv++;
 
-    // NOTE: no conversion to SI on teensy to save comms bandwidth
-    /*
-    // convert measurements to SI
-    p->lidar_speed = (float) lidar_speed * M_PI / 180.0; // deg/s -> rad/s
-    p->start_angle = ((float) (start_angle % 36000) / 100.0) * M_PI / 180.0; // 0.01 deg -> rad
-    p->end_angle = ((float) (end_angle % 36000) / 100.0) * M_PI / 180.0; // 0.01 deg -> rad
-    p->timestamp = (float) timestamp / 1000.0; // ms (wraps after 30k) -> s
-    */
+    if (cal.prev_timestamp > lidar_timestamp) {
+      cal.num_wraps++;
+    }
+    cal.prev_timestamp = lidar_timestamp;
 
-    p->lidar_speed = lidar_speed;
-    p->start_angle = start_angle;
-    p->end_angle = end_angle;
-    p->timestamp = timestamp;
+    // get continuous lidar time by summing wraps
+    int lidar_timestamp_cont = cal.num_wraps * D200_TIMESTAMP_WRAP_LIMIT + lidar_timestamp;
 
-    for (int i = 0; i < D200_POINTS_PER_PACKET; i++) {
-      // points start at byte 6, each point is 3 bytes
-      int base = 6 + i * 3;
-      uint16_t distance = (buf[base + 1] << 8) | buf[base];
+    if (cal.packets_recv <= cal.max_calibration_packets) {
+      int teensy_timestamp = millis();
+      cal.timestamp_delta_sum += (teensy_timestamp - lidar_timestamp_cont);
+    } else {
+      int lidar_timestamp_converted = lidar_timestamp_cont + cal.timestamp_delta_sum / cal.max_calibration_packets;
+      p->timestamp = (float) lidar_timestamp_converted / 1000.0; // ms (wraps after 30k) -> s
+    }
 
-      // NOTE: no conversion to SI on teensy to save comms bandwidth
-      /*
-      // convert measurements to SI
-      p->points[i].distance = (float) distance / 1000.0; // mm -> m
-      p->points[i].intensity = buf[base + 2]; // units are ambiguous (not documented)
-      */
+    // convert measurements to SI. only write to packet if all calibrations are complete
+    if (cal.packets_recv > cal.max_calibration_packets) {
+      p->lidar_speed = (float) lidar_speed * M_PI / 180.0; // deg/s -> rad/s
+      p->start_angle = ((float) (start_angle % 36000) / 100.0) * M_PI / 180.0; // 0.01 deg -> rad
+      p->end_angle = ((float) (end_angle % 36000) / 100.0) * M_PI / 180.0; // 0.01 deg -> rad
+    
+      for (int i = 0; i < D200_POINTS_PER_PACKET; i++) {
+        // points start at byte 6, each point is 3 bytes
+        int base = 6 + i * 3;
+        uint16_t distance = (buf[base + 1] << 8) | buf[base];
 
-      p->points[i].distance = distance;
-      p->points[i].intensity = buf[base + 2]; // see documentation on intensity
+        // convert measurements to SI
+        p->points[i].distance = (float) distance / 1000.0; // mm -> m
+        p->points[i].intensity = buf[base + 2]; // units are ambiguous (not documented)
+      }
     }
   }
 }
 
 void D200LD14P::flush_packet_buffer() {
-  LidarDataPacket zero_packet = {};
+  LidarDataPacketSI zero_packet = {};
   
   for (int i = 0; i < D200_NUM_PACKETS_CACHED; i++) {
     packets[i] = zero_packet;
   }
 }
 
+uint32_t D200LD14P::bitcast_float(float f32) {
+  union {
+    uint32_t u32;
+    float f32;
+  } caster;
+
+  caster.f32 = f32;
+  return caster.u32;
+}
+
 void D200LD14P::export_data(uint8_t bytes[D200_NUM_PACKETS_CACHED * D200_PAYLOAD_SIZE]) {
   // write each packet into byte array
   for (int i = 0; i < D200_NUM_PACKETS_CACHED; i++) {
     int offset = i * D200_PAYLOAD_SIZE;
-    LidarDataPacket packet = packets[i];
+    LidarDataPacketSI packet = packets[i];
+
+    uint32_t lidar_speed = bitcast_float(packet.lidar_speed);
+    uint32_t start_angle = bitcast_float(packet.start_angle);
+    uint32_t end_angle = bitcast_float(packet.end_angle);
+    uint32_t timestamp = bitcast_float(packet.timestamp);
 
     bytes[offset + 0] = id;
     
-    bytes[offset + 1] = packet.lidar_speed & 0xff;
-    bytes[offset + 2] = (packet.lidar_speed >> 8) & 0xff;
+    bytes[offset + 1] = lidar_speed & 0xff;
+    bytes[offset + 2] = (lidar_speed >> 8) & 0xff;
+    bytes[offset + 3] = (lidar_speed >> 16) & 0xff;
+    bytes[offset + 4] = (lidar_speed >> 24) & 0xff;
 
-    bytes[offset + 3] = packet.start_angle & 0xff;
-    bytes[offset + 4] = (packet.start_angle >> 8) & 0xff;
+    bytes[offset + 5] = start_angle & 0xff;
+    bytes[offset + 6] = (start_angle >> 8) & 0xff;
+    bytes[offset + 7] = (start_angle >> 16) & 0xff;
+    bytes[offset + 8] = (start_angle >> 24) & 0xff;
 
     for (int j = 0; j < D200_POINTS_PER_PACKET; j++) {
-      int point_offset = offset + 5 + j * 3;
+      int point_offset = offset + 9 + j * 5;
+      uint32_t distance = bitcast_float(packet.points[j].distance);
 
-      bytes[point_offset + 0] = packet.points[j].distance & 0xff;
-      bytes[point_offset + 1] = (packet.points[j].distance >> 8) & 0xff;
-      bytes[point_offset + 2] = packet.points[j].intensity;
+      bytes[point_offset + 0] = distance & 0xff;
+      bytes[point_offset + 1] = (distance >> 8) & 0xff;
+      bytes[point_offset + 2] = (distance >> 16) & 0xff;
+      bytes[point_offset + 3] = (distance >> 24) & 0xff;
+
+      bytes[point_offset + 4] = packet.points[j].intensity;
     }
 
-    bytes[offset + 41] = packet.end_angle & 0xff;
-    bytes[offset + 42] = (packet.end_angle >> 8) & 0xff;
+    bytes[offset + 69] = end_angle & 0xff;
+    bytes[offset + 70] = (end_angle >> 8) & 0xff;
+    bytes[offset + 71] = (end_angle >> 16) & 0xff;
+    bytes[offset + 72] = (end_angle >> 24) & 0xff;
     
-    bytes[offset + 43] = packet.timestamp & 0xff;
-    bytes[offset + 44] = (packet.timestamp >> 8) & 0xff;
+    bytes[offset + 73] = timestamp & 0xff;
+    bytes[offset + 74] = (timestamp >> 8) & 0xff;
+    bytes[offset + 75] = (timestamp >> 16) & 0xff;
+    bytes[offset + 76] = (timestamp >> 24) & 0xff;
   }
 }
 
 void D200LD14P::print_latest_packet() {
-  LidarDataPacket p = get_latest_packet();
+  LidarDataPacketSI p = get_latest_packet();
   Serial.println("==D200LD14P PACKET==");
   Serial.print("LiDAR speed: ");
   Serial.println(p.lidar_speed);
