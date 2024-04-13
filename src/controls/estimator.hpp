@@ -240,6 +240,8 @@ public:
         // calculates the difference in initial and current pitch angle
         float pitch_diff = gravity_pitch_angle - pitch_enc_angle;
 
+        // Serial.println(pitch_enc_angle);
+
         // gimbal rotation axis in spherical coordinates in imu refrence frame
         if (gravity_accel_vector[0] == 0)
             yaw_axis_spherical[1] = 1.57;
@@ -332,7 +334,8 @@ public:
         global_pitch_angle += -global_pitch_velocity * (dt);
         global_roll_angle += -global_roll_velocity * (dt);
 
-        chassis_angle = yaw_angle - yaw_enc_angle;
+        // chassis_angle = yaw_angle - yaw_enc_angle;
+        chassis_angle = -yaw_enc_angle;
 
 
         while (yaw_angle >= PI)
@@ -351,7 +354,7 @@ public:
         output[3][0] = yaw_angle;
         output[3][1] = current_yaw_velocity;
         output[3][2] = roll_angle;
-        output[4][0] = pitch_angle;
+        output[4][0] = pitch_enc_angle;
         output[4][1] = current_pitch_velocity;
         output[4][2] = pitch_enc_angle;
 

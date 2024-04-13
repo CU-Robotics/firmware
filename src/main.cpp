@@ -104,8 +104,8 @@ int main()
     set_reference_limits[2][0][1] = PI;
     set_reference_limits[2][1][0] = -29.3917681162;
     set_reference_limits[2][1][1] = 29.3917681162;
-    set_reference_limits[2][2][0] = -1;
-    set_reference_limits[2][2][1] = 1;
+    set_reference_limits[2][2][0] = -5;
+    set_reference_limits[2][2][1] = 5;
     //yaw
     set_reference_limits[3][0][0] = -PI;
     set_reference_limits[3][0][1] = PI;
@@ -187,7 +187,7 @@ int main()
     gains[4][2][1] = 0;   // Ki
     gains[4][2][2] = 0;   // Kd
     gains[4][2][3] = 0;   // feed foward
-    gains[4][2][4] = 0.6; // Kp vel
+    gains[4][2][4] = 0.3; // Kp vel
     gains[4][2][5] = 0;   // Ki
     gains[4][2][6] = 0;   // Kd
 
@@ -195,7 +195,7 @@ int main()
     gains[5][2][1] = 0;   // Ki
     gains[5][2][2] = 0;   // Kd
     gains[5][2][3] = 0;   // feed foward
-    gains[5][2][4] = 0.6; // Kp vel
+    gains[5][2][4] = 0.3; // Kp vel
     gains[5][2][5] = 0;   // Ki
     gains[5][2][6] = 0;   // Kd
 
@@ -298,11 +298,11 @@ int main()
     kinematics_vel[5][3] = -1;
 
     // motor 1 pitch 1 Can_2
-    kinematics_vel[8][4] = 1;
-    kinematics_pos[8][4] = 1;
+    kinematics_vel[8][4] = -1;
+    kinematics_pos[8][4] = -1;
     // motor 2 pitch 2
-    kinematics_vel[9][4] = -1;
-    kinematics_pos[9][4] = -1;
+    kinematics_vel[9][4] = 1;
+    kinematics_pos[9][4] = 1;
     // motor 3 flywheel 1 
     kinematics_vel[10][5] = -((1/0.03)*60)/(2*PI);
     // motor 2 flywheel 2 
@@ -349,71 +349,71 @@ int main()
         target_state[1][1] *= 5;
 
         // driver controls
-        // float chassis_velocity_x = dr16.get_l_stick_y() * 5.4
-        //                          + (dr16.keys.d - dr16.keys.a) * 2.5;
-        // float chassis_velocity_y = -dr16.get_l_stick_x() * 5.4
-        //                          + (dr16.keys.w - dr16.keys.s) * 2.5;
-        // float chassis_spin = dr16.get_wheel() * 10;
+        float chassis_velocity_x = -dr16.get_l_stick_y() * 5.4
+                                 + (dr16.keys.d - dr16.keys.a) * 2.5;
+        float chassis_velocity_y = dr16.get_l_stick_x() * 5.4
+                                 + (dr16.keys.w - dr16.keys.s) * 2.5;
+        float chassis_spin = dr16.get_wheel() * 25;
 
-        // float pitch_target = 1.57
-        //                    + -dr16.get_r_stick_y() * 0.3
-        //                    + dr16_pos_y;
-        // float yaw_target = -dr16.get_r_stick_x() * 1.5
-        //                 - dr16_pos_x;
+        float pitch_target = 1.57
+                           + -dr16.get_r_stick_y() * 0.3
+                           + dr16_pos_y;
+        float yaw_target = -dr16.get_r_stick_x() * 1.5
+                        - dr16_pos_x;
                
-        // float fly_wheel_target = (dr16.get_r_switch() == 1 || dr16.get_r_switch() == 3) ? 10 : 0; //m/s
-        // float feeder_target = ((dr16.get_l_mouse_button() && dr16.get_r_switch() != 2) || dr16.get_r_switch() == 1) ? 10 : 0;
+        float fly_wheel_target = (dr16.get_r_switch() == 1 || dr16.get_r_switch() == 3) ? 10 : 0; //m/s
+        float feeder_target = ((dr16.get_l_mouse_button() && dr16.get_r_switch() != 2) || dr16.get_r_switch() == 1) ? 10 : 0;
 
-        // target_state[0][1] = chassis_velocity_x;
-        // target_state[1][1] = chassis_velocity_y;
-        // target_state[2][1] = chassis_spin;
-        // target_state[3][0] = yaw_target;
-        // target_state[3][1] = 0;
-        // target_state[4][0] = pitch_target;
-        // target_state[4][1] = 0;
+        target_state[0][1] = chassis_velocity_x;
+        target_state[1][1] = chassis_velocity_y;
+        target_state[2][1] = chassis_spin;
+        target_state[3][0] = yaw_target;
+        target_state[3][1] = 0;
+        target_state[4][0] = pitch_target;
+        target_state[4][1] = 0;
 
-        // target_state[5][1] = fly_wheel_target;
-        // target_state[6][1] = feeder_target;
+        target_state[5][1] = fly_wheel_target;
+        target_state[6][1] = feeder_target;
 
-        if (dr16.get_r_switch() == 1)
-        {
+        // if (dr16.get_r_switch() == 1)
+        // {
             // driver controls
-            float chassis_velocity_x = dr16.get_l_stick_y() * 5.4
-                                     + (dr16.keys.d - dr16.keys.a) * 2.5;
-            float chassis_velocity_y = -dr16.get_l_stick_x() * 5.4
-                                     + (dr16.keys.w - dr16.keys.s) * 2.5;
-            float chassis_spin = dr16.get_wheel() * 10;
+            // float chassis_velocity_x = dr16.get_l_stick_y() * 5.4
+            //                          + (dr16.keys.d - dr16.keys.a) * 2.5;
+            // float chassis_velocity_y = -dr16.get_l_stick_x() * 5.4
+            //                          + (dr16.keys.w - dr16.keys.s) * 2.5;
+            // float chassis_spin = dr16.get_wheel() * 10;
 
-            float pitch_target = 1.57
-                               + -dr16.get_r_stick_y() * 0.3
-                               + dr16_pos_y;
-            float yaw_target = -dr16.get_r_stick_x() * 1.5
-                            - dr16_pos_x;
+            // float pitch_target = 1.57
+            //                    + -dr16.get_r_stick_y() * 0.3
+            //                    + dr16_pos_y;
+            // float yaw_target = -dr16.get_r_stick_x() * 1.5
+            //                 - dr16_pos_x;
 
             // float fly_wheel_target = (dr16.get_r_switch() == 1 || dr16.get_r_switch() == 3) ? 10 : 0; //m/s
             // float feeder_target = ((dr16.get_l_mouse_button() && dr16.get_r_switch() != 2) || dr16.get_r_switch() == 1) ? 10 : 0;
 
-            target_state[0][1] = chassis_velocity_x;
-            target_state[1][1] = chassis_velocity_y;
-            target_state[2][1] = chassis_spin;
-            target_state[3][0] = yaw_target;
-            target_state[3][1] = 0;
-            target_state[4][0] = pitch_target;
-            target_state[4][1] = 0;
-        }
-        else
-        {
-            float pitch_target = 1.57
-                + -dr16.get_r_stick_y() * 0.3
-                + dr16_pos_y;
-            float yaw_target = -dr16.get_r_stick_x() * 1.5
-                - dr16_pos_x;
+        //     target_state[0][1] = chassis_velocity_x;
+        //     target_state[1][1] = chassis_velocity_y;
+        //     target_state[2][1] = chassis_spin;
+        //     target_state[3][0] = yaw_target;
+        //     target_state[3][1] = 0;
+        //     target_state[4][0] = pitch_target;
+        //     target_state[4][1] = 0;
+        // // }
+        // else
+        // {
+        //     float pitch_target = 1.57
+        //         + -dr16.get_r_stick_y() * 0.3
+        //         + dr16_pos_y;
+        //     float yaw_target = -dr16.get_r_stick_x() * 1.5
+        //         - dr16_pos_x;
 
-            target_state[3][0] = yaw_target;
-            target_state[3][1] = 0;
-            target_state[4][0] = pitch_target;
-            target_state[4][1] = 0;
-        }
+        //     target_state[3][0] = yaw_target;
+        //     target_state[3][1] = 0;
+        //     target_state[4][0] = pitch_target;
+        //     target_state[4][1] = 0;
+        // }
 
         // Read sensors
         estimator_manager->read_sensors();
@@ -455,13 +455,13 @@ int main()
             }
         }
 
-        if (false)
+        if (true)
         { // prints the estimated state
-            for (int i = 2; i < STATE_LEN-27; i++) {
+            for (int i = 2; i < STATE_LEN-18; i++) {
             Serial.printf("[");
             for (int j = 0; j < 3; j++)
             {
-                Serial.printf("%.3f",temp_reference[i][j]);
+                Serial.printf("%.3f",temp_state[i][j]);
                 if (j != 3 - 1)
                     Serial.printf(", ");
             }
@@ -470,10 +470,13 @@ int main()
             Serial.println();
         }
 
+        // Serial.printf("%.3f",temp_state[4][0]);
+        // Serial.println();
+
         if (false)
         { // prints the estimated state
                     Serial.printf("[");
-            for (int i = 2; i < 8; i++) {
+            for (int i = 0; i < 16; i++) {
                 Serial.printf("%.3f",motor_inputs[i]);
                 if (i != 8 - 1)
                     Serial.printf(", ");
