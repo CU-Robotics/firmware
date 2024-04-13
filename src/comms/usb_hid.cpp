@@ -51,9 +51,7 @@ void HIDLayer::ping() {
 		// attempt to read
 		if (read()) {
 			// if we read, attempt to write
-
-			// set the packet to be written's ID
-			m_outgoingPacket.set_id((uint16_t)m_packetsSent);
+			
 			if (!write())
 				Serial.printf("Failed to send ping %llu\n", m_packetsSent);
 		}

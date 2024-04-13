@@ -75,15 +75,15 @@ int main()
     ref.init();
     comms.init();
 
-    CANData *can_data = can.get_data();
+    CANData* can_data = can.get_data();
 
     estimator_manager = new EstimatorManager(can_data);
     controller_manager = new ControllerManager();
 
-    float gains[NUM_MOTORS][NUM_CONTROLLER_LEVELS][NUM_GAINS] = {0};
-    int assigned_states[NUM_ESTIMATORS][STATE_LEN] = {0};
-    int num_states_per_estimator[NUM_ESTIMATORS] = {5,1,1,16};
-    float set_reference_limits[STATE_LEN][3][2] = {0};
+    float gains[NUM_MOTORS][NUM_CONTROLLER_LEVELS][NUM_GAINS] = { 0 };
+    int assigned_states[NUM_ESTIMATORS][STATE_LEN] = { 0 };
+    int num_states_per_estimator[NUM_ESTIMATORS] = { 5,1,1,16 };
+    float set_reference_limits[STATE_LEN][3][2] = { 0 };
 
     //x pos
     set_reference_limits[0][0][0] = -UINT_MAX;
@@ -155,7 +155,7 @@ int main()
     gains[0][1][2] = 0;   // Kd
     gains[0][1][3] = 60;   // power limit limit
     gains[0][1][4] = 30;   // power limit critical
-   
+
     gains[1][0][0] = 1; // Kp
     gains[1][0][1] = 0;   // Ki
     gains[1][0][2] = 0;   // Kd
@@ -173,7 +173,7 @@ int main()
     gains[2][1][2] = 0;   // Kd
     gains[2][1][3] = 60;   // power limit limit
     gains[2][1][4] = 30;   // power limit critical
-   
+
     gains[3][0][0] = 1; // Kp
     gains[3][0][1] = 0;   // Ki
     gains[3][0][2] = 0;   // Kd
@@ -221,7 +221,7 @@ int main()
     gains[10][1][0] = 0.001; // Kp pos
     gains[10][1][1] = 0;   // Ki
     gains[10][1][2] = 0;   // Kd
-    
+
     gains[11][0][0] = 1; // Kp pos
     gains[11][0][1] = 0;   // Ki
     gains[11][0][2] = 0;   // Kd
@@ -245,16 +245,19 @@ int main()
     assigned_states[1][0] = 5;
 
     assigned_states[2][0] = 6;
-    
-    for(int i = 0; i < NUM_MOTORS; i++) assigned_states[3][i] = i; 
-    
-    int controller_types[NUM_MOTORS][NUM_CONTROLLER_LEVELS]  = {{5,4,0},{5,4,0},{5,4,0},{5,4,0},{0,0,3},{0,0,3},{0,0,0},{0,0,0},{0,0,3},{0,0,3},{5,2,0},{5,2,0},{5,2,0},{0,0,0},{0,0,0},{0,0,0}};
+
+    for (int i = 0; i < NUM_MOTORS; i++) assigned_states[3][i] = i;
+
+    int controller_types[NUM_MOTORS][NUM_CONTROLLER_LEVELS] = { {5,4,0},{5,4,0},{5,4,0},{5,4,0},{0,0,3},{0,0,3},{0,0,0},{0,0,0},{0,0,3},{0,0,3},{5,2,0},{5,2,0},{5,2,0},{0,0,0},{0,0,0},{0,0,0} };
 
     // intializes all controllers given the controller_types matrix
-    for (int i = 0; i < NUM_CAN_BUSES; i++) {
-        for (int j = 0; j < NUM_MOTORS_PER_BUS; j++) {
-            for (int k = 0; k < NUM_CONTROLLER_LEVELS; k++) {
-                    controller_manager->init_controller(i, j + 1, controller_types[(i*NUM_MOTORS_PER_BUS)+j][k], k, gains[(i*NUM_MOTORS_PER_BUS)+j][k]);
+    for (int i = 0; i < NUM_CAN_BUSES; i++)
+    {
+        for (int j = 0; j < NUM_MOTORS_PER_BUS; j++)
+        {
+            for (int k = 0; k < NUM_CONTROLLER_LEVELS; k++)
+            {
+                controller_manager->init_controller(i, j + 1, controller_types[(i * NUM_MOTORS_PER_BUS) + j][k], k, gains[(i * NUM_MOTORS_PER_BUS) + j][k]);
             }
         }
     }
@@ -262,28 +265,29 @@ int main()
     // initalize estimators
     estimator_manager->assign_states(assigned_states);
 
-    for(int i = 0; i < NUM_ESTIMATORS; i++){
-        estimator_manager->init_estimator(i+1, num_states_per_estimator[i]);
+    for (int i = 0; i < NUM_ESTIMATORS; i++)
+    {
+        estimator_manager->init_estimator(i + 1, num_states_per_estimator[i]);
     }
 
     // imu calibration
     estimator_manager->calibrate_imus();
-    
-    
+
+
     long long loopc = 0;            // Loop counter for heartbeat
-    float temp_state[STATE_LEN][3] = {0}; // Temp state array
-    float temp_micro_state[NUM_MOTORS][MICRO_STATE_LEN] = {0}; // Temp micro state array
-    float temp_reference[STATE_LEN][3] = {0}; //Temp governed state
-    float target_state[STATE_LEN][3] = {0}; //Temp ungoverned state
-    float kinematics_pos[NUM_MOTORS][STATE_LEN] = {0}; //Position kinematics 
-    float kinematics_vel[NUM_MOTORS][STATE_LEN] = {0}; //Velocity kinematics
-    float motor_inputs[NUM_MOTORS] = {0}; //Array for storing controller outputs to send to CAN
-    int governor_type[STATE_LEN] = {2, 2, 2, 1, 1, 2, 2, 2}; //Position vs Velcity governor
-    
-    float chassis_angle_to_motor_error = ((.1835*9.17647058824)/.0516);
-    float chassis_pos_to_motor_error = ((9.17647058824)/.0516) * 0.507;
+    float temp_state[STATE_LEN][3] = { 0 }; // Temp state array
+    float temp_micro_state[NUM_MOTORS][MICRO_STATE_LEN] = { 0 }; // Temp micro state array
+    float temp_reference[STATE_LEN][3] = { 0 }; //Temp governed state
+    float target_state[STATE_LEN][3] = { 0 }; //Temp ungoverned state
+    float kinematics_pos[NUM_MOTORS][STATE_LEN] = { 0 }; //Position kinematics 
+    float kinematics_vel[NUM_MOTORS][STATE_LEN] = { 0 }; //Velocity kinematics
+    float motor_inputs[NUM_MOTORS] = { 0 }; //Array for storing controller outputs to send to CAN
+    int governor_type[STATE_LEN] = { 2, 2, 2, 1, 1, 2, 2, 2 }; //Position vs Velcity governor
+
+    float chassis_angle_to_motor_error = ((.1835 * 9.17647058824) / .0516);
+    float chassis_pos_to_motor_error = ((9.17647058824) / .0516) * 0.507;
     // motor 1 front right Can_1
-    kinematics_vel[0][2] = chassis_angle_to_motor_error; 
+    kinematics_vel[0][2] = chassis_angle_to_motor_error;
     // motor 2 back right
     kinematics_vel[1][2] = chassis_angle_to_motor_error;
     // motor 3 back left
@@ -291,8 +295,8 @@ int main()
     // motor 4 front left
     kinematics_vel[3][2] = chassis_angle_to_motor_error;
     // motor 5 yaw 1
-    kinematics_pos[4][3] = -1;  
-    kinematics_vel[4][3] = -1;  
+    kinematics_pos[4][3] = -1;
+    kinematics_vel[4][3] = -1;
     // motor 6 yaw 2
     kinematics_pos[5][3] = -1;
     kinematics_vel[5][3] = -1;
@@ -304,17 +308,23 @@ int main()
     kinematics_vel[9][4] = -1;
     kinematics_pos[9][4] = -1;
     // motor 3 flywheel 1 
-    kinematics_vel[10][5] = -((1/0.03)*60)/(2*PI);
+    kinematics_vel[10][5] = -((1 / 0.03) * 60) / (2 * PI);
     // motor 2 flywheel 2 
-    kinematics_vel[11][5] = ((1/0.03)*60)/(2*PI);
+    kinematics_vel[11][5] = ((1 / 0.03) * 60) / (2 * PI);
     // motor 1 feeder
-    kinematics_vel[12][6] = (1.0/8.0) * (36*60);
-    
+    kinematics_vel[12][6] = (1.0 / 8.0) * (36 * 60);
+
     int count_one = 0;
 
     // dr16 integrator setup
     float dr16_pos_x = 0;
     float dr16_pos_y = 0;
+
+    bool configured = false;
+    int curr_section = 0;
+    int curr_subsection = 0;
+
+    int packet_subsection_sizes[25] = { 0 };
 
     // Main loop
     while (true) {
@@ -323,21 +333,42 @@ int main()
         ref.read();
 
         // Do stuff with comms
-        // get the target state before doing control stuff
-        CommsPacket* incoming = comms.get_incommming();
-        incoming->get_target_state(target_state);
 
-        // set the estimated state after doing control stuff
-        comms.get_outgoing()->set_estimated_state(target_state);
-        // set time
-        comms.get_outgoing()->set_time((double)millis());
+        CommsPacket* incomming = comms.get_incommming();
+        CommsPacket* outgoing = comms.get_outgoing();
 
-        // set sensor data (just dr16)
-        SensorData sensor_data;
-        memcpy(sensor_data.raw, dr16.get_raw(), DR16_PACKET_SIZE);
-        comms.get_outgoing()->set_sensor_data(&sensor_data);
+        if (!configured)
+        {
+            if (incomming->raw[3] != 1)
+                goto done;
+
+            // this is the packet we want
+            if (incomming->raw[1] == curr_section && incomming->raw[2] == curr_subsection)
+            {
+                Serial.printf("Got packet %d %d %d %d\n", curr_section, curr_subsection, *reinterpret_cast<uint16_t*>(incomming->raw + 4), *reinterpret_cast<uint16_t*>(incomming->raw + 6));
+
+                if (incomming->raw[1] == 0)
+                {
+                    memcpy(packet_subsection_sizes, incomming->raw + 8, 100);
+                }
+
+                curr_section++;
+            }
+
+        done:
+            // else request the current packet
+            outgoing->raw[0] = 0xFF;
+            outgoing->raw[1] = curr_section;
+            outgoing->raw[2] = curr_subsection;
+            // set this packet as a config packet
+            outgoing->raw[4] = 1;
+        }
+
+    
 
         comms.ping();
+
+        // comms.print();
 
         float delta = control_input_timer.delta();
 
