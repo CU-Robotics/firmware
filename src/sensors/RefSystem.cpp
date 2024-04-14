@@ -166,8 +166,16 @@ void RefSystem::write(uint8_t* packet, uint8_t length) {
 
 bool RefSystem::read_frame_header(Frame& frame) {
     // early return if Serial2 is empty or not full enough
-    if (Serial2.available() < FrameHeader::packet_size)
+    // Serial.println(Serial2.available());
+    
+    if (Serial2.available() < FrameHeader::packet_size) {
         return false;
+    }
+    
+    if (Serial2.peek() != 0xA5) {
+        Serial2.read();
+        return false;
+    }
     
     // read and verify header
     int bytesRead = Serial2.readBytes(raw_buffer, FrameHeader::packet_size);
@@ -179,8 +187,10 @@ bool RefSystem::read_frame_header(Frame& frame) {
 
     // set read data
     frame.header.SOF = raw_buffer[0];
-    if (frame.header.SOF != 0xA5)
+    if (frame.header.SOF != 0xA5) {
+        Serial.println("Not a valid frame");
         return false;
+    }
     
     frame.header.data_length = (raw_buffer[2] << 8) | raw_buffer[1];
     frame.header.sequence = raw_buffer[3];

@@ -2,12 +2,16 @@
 
 #include "utils/timing.hpp"
 #include "comms/rm_can.hpp"
+
+#include "sensors/RefSystem.hpp"
 #include "sensors/dr16.hpp"
 // declare any 'global' variables here
 DR16 dr16;
-rm_CAN can;
+// rm_CAN can;
 
 Timer loop_timer;
+
+RefSystem ref;
 
 // DONT put anything else in this function. It is not a setup function
 void print_logo() {
@@ -49,24 +53,30 @@ int main() {
     // initialize any 'setup' functions here
     pinMode(13, OUTPUT);
     dr16.init();
-    can.init();
-
+    // can.init();
+    ref.init();
+    
     // main loop
     while (true) {
         dr16.read();
-        can.read();
+        // can.read();
+        ref.read();
+
+
 
         // Controls code goes here
 
-        if (!dr16.is_connected() || dr16.get_l_switch() == 1) {
-            // SAFETY ON
-            can.zero();
-            can.zero_motors();
-        } else if (dr16.is_connected() && dr16.get_l_switch() != 1) {
-            // SAFETY OFF
-            can.write();
+        if (dr16.is_connected() && (dr16.get_l_switch() == 2 || dr16.get_l_switch() == 3))
+        {
+// SAFETY OFF
+            // can.write();
         }
-
+        else
+        {
+              // SAFETY ON
+              // TODO: Reset all controller integrators here
+            // can.zero();
+        }
         // LED heartbeat
         millis() % 500 < 100 ? digitalWrite(13, HIGH) : digitalWrite(13, LOW);
 
