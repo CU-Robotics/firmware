@@ -220,21 +220,21 @@ int main()
     gains[10][0][2] = 0;   // Kd
     gains[10][1][0] = 0.001; // Kp pos
     gains[10][1][1] = 0;   // Ki
-    gains[10][1][2] = 0;   // Kd
+    gains[10][1][2] = 0.0;   // Kd
     
     gains[11][0][0] = 1; // Kp pos
     gains[11][0][1] = 0;   // Ki
     gains[11][0][2] = 0;   // Kd
     gains[11][1][0] = 0.001; // Kp pos
     gains[11][1][1] = 0;   // Ki
-    gains[11][1][2] = 0;   // Kd
+    gains[11][1][2] = 0.0;   // Kd
 
     gains[12][0][0] = 1; // Kp pos
     gains[12][0][1] = 0;   // Ki
     gains[12][0][2] = 0;   // Kd
-    gains[12][1][0] = 0.00025; // Kp pos
+    gains[12][1][0] = 0.0005; // Kp pos
     gains[12][1][1] = 0;   // Ki
-    gains[12][1][2] = 0.000001;   // Kd
+    gains[12][1][2] = 0.00000;   // Kd
 
     assigned_states[0][0] = 0;
     assigned_states[0][1] = 1;
@@ -350,9 +350,9 @@ int main()
 
         // driver controls
         float chassis_velocity_x = -dr16.get_l_stick_y() * 5.4
-                                 + (dr16.keys.d - dr16.keys.a) * 2.5;
+                                 + (-dr16.keys.w + dr16.keys.s) * 2.5;
         float chassis_velocity_y = dr16.get_l_stick_x() * 5.4
-                                 + (dr16.keys.w - dr16.keys.s) * 2.5;
+                                 + (dr16.keys.d - dr16.keys.a) * 2.5;
         float chassis_spin = dr16.get_wheel() * 25;
 
         float pitch_target = 1.57
@@ -363,10 +363,11 @@ int main()
                
         float fly_wheel_target = (dr16.get_r_switch() == 1 || dr16.get_r_switch() == 3) ? 10 : 0; //m/s
         float feeder_target = ((dr16.get_l_mouse_button() && dr16.get_r_switch() != 2) || dr16.get_r_switch() == 1) ? 10 : 0;
+        float default_chassis_spin = (dr16.get_l_switch() == 2 ? 5 : 0);
 
         target_state[0][1] = chassis_velocity_x;
         target_state[1][1] = chassis_velocity_y;
-        target_state[2][1] = chassis_spin;
+        target_state[2][1] = chassis_spin + default_chassis_spin;
         target_state[3][0] = yaw_target;
         target_state[3][1] = 0;
         target_state[4][0] = pitch_target;
