@@ -324,7 +324,10 @@ int main()
     int curr_section = 0;
     int curr_subsection = 0;
 
-    int packet_subsection_sizes[25] = { 0 };
+    // allocate more than necessary
+    uint8_t num_sections;
+    uint8_t packet_subsection_sizes[32] = { 0 };
+    CommsPacket config_packets[32];
 
     // Main loop
     while (true) {
@@ -332,39 +335,70 @@ int main()
         dr16.read();
         ref.read();
 
-        // Do stuff with comms
-
+        // config verification
         CommsPacket* incomming = comms.get_incommming();
         CommsPacket* outgoing = comms.get_outgoing();
-
+        
         if (!configured)
         {
-            if (incomming->raw[3] != 1)
-                goto done;
+            char *raw = incomming->raw;
+            uint8_t sec_id = raw[1];
+            uint8_t subsec_id = raw[2];
+            uint8_t info_bit = raw[3];
 
             // this is the packet we want
-            if (incomming->raw[1] == curr_section && incomming->raw[2] == curr_subsection)
-            {
-                Serial.printf("Got packet %d %d %d %d\n", curr_section, curr_subsection, *reinterpret_cast<uint16_t*>(incomming->raw + 4), *reinterpret_cast<uint16_t*>(incomming->raw + 6));
+            if (sec_id == curr_section && subsec_id == curr_subsection && info_bit == 1) {
+                // received the initial config packet
+                if (sec_id == 0) {
+                    /**
+                    the khadas sends a config packet with its raw data set to a byte
+                    array where each index corresponds to a yaml section, and the value
+                    at that index indicates the number of subsections for the given section
+                    */
+                    num_sections = (raw[5] << 8) | raw[4];
 
-                if (incomming->raw[1] == 0)
-                {
-                    memcpy(packet_subsection_sizes, incomming->raw + 8, 100);
+                    memcpy(
+                        packet_subsection_sizes,
+                        raw + 8, // raw data starts at byte 8 
+                        num_sections);
+
+                    Serial.printf("YAML metadata received:\n");
+                    for (int i = 0; i < num_sections; i++) {
+                        Serial.printf("\tSection %d: %u subsection(s)\n", i, raw[8 + i]);
+                    }
+
+                    // look for next section
+                    curr_section++;
+                } else {
+                    config_packets[sec_id + subsec_id] = *incomming;
+                    Serial.printf("Received YAML configuration packet: (%u, %u)\n", sec_id, subsec_id);
+                    
+                    if (subsec_id + 1 < packet_subsection_sizes[sec_id]) {
+                        // if we haven't received all subsections, request the next one
+                        curr_subsection++;
+                    } else {
+                        // if we've received all subsections, request the next section
+                        curr_section++;
+                        curr_subsection = 0;
+
+                        // or, if we've received all sections, then configuration is complete
+                        if (curr_section >= num_sections) {
+                            configured = true;
+                            Serial.printf("YAML configuration complete\n");
+                        }
+                    }
                 }
-
-                curr_section++;
             }
 
-        done:
-            // else request the current packet
-            outgoing->raw[0] = 0xFF;
-            outgoing->raw[1] = curr_section;
-            outgoing->raw[2] = curr_subsection;
-            // set this packet as a config packet
-            outgoing->raw[4] = 1;
+            // request next packet
+            if (!configured) {
+                outgoing->raw[0] = 0xFF; // necessary filler byte
+                outgoing->raw[1] = curr_section;
+                outgoing->raw[2] = curr_subsection;
+                outgoing->raw[3] = 1; // set info bit
+                outgoing->raw[4] = 7; // send robot ID as data
+            }
         }
-
-    
 
         comms.ping();
 
