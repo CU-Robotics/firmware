@@ -82,6 +82,7 @@ void RefSystem::read() {
             break;
         case POWER_HEAT:
             ref_data.power_heat.initialize_from_data(frame.data);
+            Serial.printf("Received power: %f %u\n", ref_data.power_heat.chassis_power, ref_data.power_heat.buffer_energy);
             break;
         case ROBOT_POSITION:
             ref_data.position.initialize_from_data(frame.data);

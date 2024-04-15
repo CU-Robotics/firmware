@@ -376,6 +376,8 @@ int main()
         target_state[5][1] = fly_wheel_target;
         target_state[6][1] = feeder_target;
 
+        // Serial.printf("Chassis Power: %f W, \t Buffer energy: %u J\n",ref.ref_data.power_heat.chassis_power,ref.ref_data.power_heat.buffer_energy);
+
         // if (dr16.get_r_switch() == 1)
         // {
             // driver controls
@@ -456,7 +458,7 @@ int main()
             }
         }
 
-        if (true)
+        if (false)
         { // prints the estimated state
             for (int i = 2; i < STATE_LEN-18; i++) {
             Serial.printf("[");
