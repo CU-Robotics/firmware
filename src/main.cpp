@@ -324,21 +324,20 @@ int main()
 
         // Do stuff with comms
         // get the target state before doing control stuff
-        CommsPacket* incoming = comms.get_incommming();
-        incoming->get_target_state(target_state);
+        // CommsPacket* incoming = comms.get_incommming();
+        // incoming->get_target_state(target_state);
 
-        // set the estimated state after doing control stuff
-        comms.get_outgoing()->set_estimated_state(target_state);
-        // set time
-        comms.get_outgoing()->set_time((double)millis());
+        // // set the estimated state after doing control stuff
+        // comms.get_outgoing()->set_estimated_state(target_state);
+        // // set time
+        // comms.get_outgoing()->set_time((double)millis());
 
-        // set sensor data (just dr16)
-        SensorData sensor_data;
-        memcpy(sensor_data.raw, dr16.get_raw(), DR16_PACKET_SIZE);
-        comms.get_outgoing()->set_sensor_data(&sensor_data);
+        // // set sensor data (just dr16)
+        // SensorData sensor_data;
+        // memcpy(sensor_data.raw, dr16.get_raw(), DR16_PACKET_SIZE);
+        // comms.get_outgoing()->set_sensor_data(&sensor_data);
 
-        comms.ping();
-
+        // comms.ping();
         float delta = control_input_timer.delta();
 
         // dr16 integrator
@@ -474,7 +473,6 @@ int main()
         }
 
         // Serial.printf("%.3f",temp_state[4][0]);
-        // Serial.println();
 
         if (false)
         { // prints the estimated state

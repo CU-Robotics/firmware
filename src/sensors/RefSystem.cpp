@@ -82,7 +82,7 @@ void RefSystem::read() {
             break;
         case POWER_HEAT:
             ref_data.power_heat.initialize_from_data(frame.data);
-            Serial.printf("Received power: %f %u\n", ref_data.power_heat.chassis_power, ref_data.power_heat.buffer_energy);
+            Serial.printf("%u, %f, %u\n", millis(), ref_data.power_heat.chassis_power, ref_data.power_heat.buffer_energy);
             break;
         case ROBOT_POSITION:
             ref_data.position.initialize_from_data(frame.data);
@@ -170,6 +170,12 @@ bool RefSystem::read_frame_header(Frame& frame) {
     if (Serial2.available() < FrameHeader::packet_size)
         return false;
     
+    if (Serial2.peek() != 0xA5)
+    {
+        Serial2.read();
+        return false;
+    }
+
     // read and verify header
     int bytesRead = Serial2.readBytes(raw_buffer, FrameHeader::packet_size);
     if (bytesRead != FrameHeader::packet_size) {
