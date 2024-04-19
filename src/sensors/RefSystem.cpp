@@ -33,7 +33,6 @@ void RefSystem::read() {
     Frame frame{};
 
     bool success = true;
-
     // read header
     if (success)
         success = read_frame_header(frame);
@@ -169,9 +168,9 @@ bool RefSystem::read_frame_header(Frame& frame) {
     // early return if Serial2 is empty or not full enough
     if (Serial2.available() < FrameHeader::packet_size)
         return false;
-    
+
     // verify that what we are about to read is a header (first byte must be 0xA5)
-    while (Serial2.peek() != 0xA5 || Serial2.peek() != -1) {
+    while (Serial2.peek() != 0xA5 && Serial2.peek() != -1) {
         Serial2.read();
     }
 

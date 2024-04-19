@@ -146,7 +146,7 @@ int main()
 
     float gain_1 = 0.002;
     float gain_d = 0.000;
-
+    //drive pid gains
     gains[0][0][0] = 1; // Kp
     gains[0][0][1] = 0;   // Ki
     gains[0][0][2] = 0;   // Kd
@@ -182,7 +182,7 @@ int main()
     gains[3][1][2] = 0;   // Kd
     gains[3][1][3] = 60;   // power limit limit
     gains[3][1][4] = 30;   // power limit critical
-
+    //Yaw pid gains
     gains[4][2][0] = 4; // Kp pos
     gains[4][2][1] = 0;   // Ki
     gains[4][2][2] = 0;   // Kd
@@ -198,8 +198,8 @@ int main()
     gains[5][2][4] = 0.3; // Kp vel
     gains[5][2][5] = 0;   // Ki
     gains[5][2][6] = 0;   // Kd
-
-    gains[8][2][0] = 2.5; // Kp pos
+    //pitch gains
+    gains[8][2][0] = 8; // Kp pos
     gains[8][2][1] = 0;   // Ki
     gains[8][2][2] = 0;   // Kd
     gains[8][2][3] = -0.19; // feed foward
@@ -207,34 +207,34 @@ int main()
     gains[8][2][5] = 0;   // Ki
     gains[8][2][6] = 0;   // Kd
 
-    gains[9][2][0] = 2.5; // Kp pos
+    gains[9][2][0] = 8; // Kp pos
     gains[9][2][1] = 0;   // Ki
     gains[9][2][2] = 0;   // Kd
     gains[9][2][3] = -0.19; // feed foward
     gains[9][2][4] = 0.3; // Kp vel
     gains[9][2][5] = 0;   // Ki
     gains[9][2][6] = 0;   // Kd
-
-    gains[10][0][0] = 1; // Kp pos
+    //flywheel gains
+    gains[10][0][0] = 0; // Kp pos
     gains[10][0][1] = 0;   // Ki
     gains[10][0][2] = 0;   // Kd
     gains[10][1][0] = 0.001; // Kp pos
     gains[10][1][1] = 0;   // Ki
     gains[10][1][2] = 0.0;   // Kd
     
-    gains[11][0][0] = 1; // Kp pos
+    gains[11][0][0] = 0; // Kp pos
     gains[11][0][1] = 0;   // Ki
     gains[11][0][2] = 0;   // Kd
     gains[11][1][0] = 0.001; // Kp pos
     gains[11][1][1] = 0;   // Ki
     gains[11][1][2] = 0.0;   // Kd
-
-    gains[12][0][0] = 1; // Kp pos
+    //feeder gains
+    gains[12][0][0] = 0; // Kp pos
     gains[12][0][1] = 0;   // Ki
     gains[12][0][2] = 0;   // Kd
-    gains[12][1][0] = 0.0005; // Kp pos
+    gains[12][1][0] = 0.002; // Kp pos
     gains[12][1][1] = 0;   // Ki
-    gains[12][1][2] = 0.00000;   // Kd
+    gains[12][1][2] = 0.00001;   // Kd
 
     assigned_states[0][0] = 0;
     assigned_states[0][1] = 1;
@@ -304,11 +304,11 @@ int main()
     kinematics_vel[9][4] = 1;
     kinematics_pos[9][4] = 1;
     // motor 3 flywheel 1 
-    kinematics_vel[10][5] = -((1/0.03)*60)/(2*PI);
+    kinematics_vel[10][5] = -(1/0.03);
     // motor 2 flywheel 2 
-    kinematics_vel[11][5] = ((1/0.03)*60)/(2*PI);
+    kinematics_vel[11][5] = (1/0.03);
     // motor 1 feeder
-    kinematics_vel[12][6] = (1.0/8.0) * (36*60);
+    kinematics_vel[12][6] = (1.0/(8.0/(2*PI))) * (36);
     
     int count_one = 0;
 
@@ -321,7 +321,6 @@ int main()
         can.read();
         dr16.read();
         ref.read();
-
         // Do stuff with comms
         // get the target state before doing control stuff
         // CommsPacket* incoming = comms.get_incommming();
@@ -360,7 +359,7 @@ int main()
         float yaw_target = -dr16.get_r_stick_x() * 1.5
                         - dr16_pos_x;
                
-        float fly_wheel_target = (dr16.get_r_switch() == 1 || dr16.get_r_switch() == 3) ? 10 : 0; //m/s
+        float fly_wheel_target = (dr16.get_r_switch() == 1 || dr16.get_r_switch() == 3) ? 18 : 0; //m/s
         float feeder_target = ((dr16.get_l_mouse_button() && dr16.get_r_switch() != 2) || dr16.get_r_switch() == 1) ? 10 : 0;
         float default_chassis_spin = (dr16.get_l_switch() == 2 ? 5 : 0);
 
@@ -457,13 +456,28 @@ int main()
             }
         }
 
-        if (false)
+        if (true)
         { // prints the estimated state
-            for (int i = 2; i < STATE_LEN-18; i++) {
+            for (int i = 5; i < STATE_LEN-16; i++) {
             Serial.printf("[");
             for (int j = 0; j < 3; j++)
             {
                 Serial.printf("%.3f",temp_state[i][j]);
+                if (j != 3 - 1)
+                    Serial.printf(", ");
+            }
+            Serial.printf("]");
+            }
+            Serial.println();
+        }
+
+        if (false)
+        { // prints the estimated state
+            for (int i = 10; i < 16-3; i++) {
+            Serial.printf("[");
+            for (int j = 0; j < 3; j++)
+            {
+                Serial.printf("%.3f",temp_micro_state[i][j]);
                 if (j != 3 - 1)
                     Serial.printf(", ");
             }
