@@ -8,6 +8,7 @@
 #include "controls/state.hpp"
 #include "comms/usb_hid.hpp"
 #include "sensors/RefSystem.hpp"
+#include "sensors/TOFSensor.h"
 
 // Loop constants
 #define LOOP_FREQ 1000
@@ -18,6 +19,7 @@ DR16 dr16;
 rm_CAN can;
 RefSystem ref;
 HIDLayer comms;
+TOFSensor tof(&Wire, A1);
 
 Timer loop_timer;
 Timer stall_timer;
@@ -74,8 +76,9 @@ int main()
     dr16.init();
     ref.init();
     comms.init();
-
-    CANData *can_data = can.get_data();
+    tof.init_sensor();
+    
+    CANData* can_data = can.get_data();
 
     estimator_manager = new EstimatorManager(can_data);
     controller_manager = new ControllerManager();
