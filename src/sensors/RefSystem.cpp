@@ -170,11 +170,12 @@ bool RefSystem::read_frame_header(Frame& frame) {
     if (Serial2.available() < FrameHeader::packet_size)
         return false;
     
-    if (Serial2.peek() != 0xA5)
-    {
+    while (Serial2.peek() != 0xA5 || Serial2.peek() != -1) {
         Serial2.read();
-        return false;
     }
+
+    if (Serial2.available() < FrameHeader::packet_size)
+        return false;
 
     // read and verify header
     int bytesRead = Serial2.readBytes(raw_buffer, FrameHeader::packet_size);
