@@ -59,16 +59,16 @@ void HIDLayer::ping() {
 
 void HIDLayer::print_outgoing() {
 	Serial.println("Outgoing packet:");
-	for (unsigned int i = 0; i < COMMS_PACKET_SIZE + 1; i++)
+	for (unsigned int i = 0; i < COMMS_PACKET_SIZE; i++)
 		Serial.printf("%.2x ", m_outgoingPacket.raw[i]);
 
 	Serial.println();
 }
 
-void HIDLayer::print_incomming() {
-	Serial.println("Incomming packet:");
-	for (unsigned int i = 0; i < COMMS_PACKET_SIZE + 1; i++)
-		Serial.printf("%.2x ", m_incommingPacket.raw[i]);
+void HIDLayer::print_incoming() {
+	Serial.println("Incoming packet:");
+	for (unsigned int i = 0; i < COMMS_PACKET_SIZE; i++)
+		Serial.printf("%.2x ", m_incomingPacket.raw[i]);
 
 	Serial.println();
 }
@@ -76,8 +76,9 @@ void HIDLayer::print_incomming() {
 bool HIDLayer::read() {
 	// attempt to read a full packet
 	// this has no timeout
-	int bytes_read = usb_rawhid_recv(m_incommingPacket.raw, 0);
-	if (bytes_read == COMMS_PACKET_SIZE) {
+	int bytes_read = usb_rawhid_recv(m_incomingPacket.raw, 0);
+	if (bytes_read == COMMS_PACKET_SIZE)
+	{
 		// increment total number of packets read and return success
 		m_packetsRead++;
 		return true;

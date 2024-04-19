@@ -57,7 +57,7 @@ struct SensorData {
 /// @brief An encapsulating data struct managing a HID packet
 struct CommsPacket {
 	/// @brief The raw array of bytes of a packet
-	char raw[COMMS_PACKET_SIZE + 1] = { 0 };
+	char raw[COMMS_PACKET_SIZE] = { 0 };
 
 	// common getters
 	/// @brief Get the ID of this packet
@@ -116,14 +116,14 @@ public:
 
 	/// @brief Print the incomming packet
 	/// @note This massively slows the loop down
-	void print_incomming();
+	void print_incoming();
 
 	/// @brief Get the packet comming from Khadas
 	/// @return A pointer to the received Khadas packet
-	inline CommsPacket* get_incommming() { return &m_incommingPacket; }
+	inline CommsPacket* get_incoming_packet() { return &m_incomingPacket; }
 	/// @brief Get the packet to Khadas
 	/// @return A pointer to the packet to be sent to Khadas
-	inline CommsPacket* get_outgoing() { return &m_outgoingPacket; }
+	inline CommsPacket* get_outgoing_packet() { return &m_outgoingPacket; }
 
 private:
 	/// @brief Attempt a read on HID
@@ -135,7 +135,7 @@ private:
 
 private:
 	/// @brief An encapsulating struct around the packet received from Khadas
-	CommsPacket m_incommingPacket{};
+	CommsPacket m_incomingPacket{};
 	/// @brief An encapsulating struct around the packet to be sent to Khadas
 	CommsPacket m_outgoingPacket{};
 	/// @brief An encapsulating struct around all the sensor data to be sent to Khadas
