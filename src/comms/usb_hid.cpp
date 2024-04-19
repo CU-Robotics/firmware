@@ -27,7 +27,7 @@ void CommsPacket::get_target_state(float state[STATE_LEN][3]) {
 void CommsPacket::get_ref_draw_data(char** draw_data) {}
 
 void CommsPacket::set_time(double time) {
-	*reinterpret_cast<double*>(raw + TEENSY_PACKET_TIME_OFFSET) = time;
+	memcpy(raw + TEENSY_PACKET_TIME_OFFSET, &time, sizeof(double));
 }
 
 void CommsPacket::set_estimated_state(float state[STATE_LEN][3]) {

@@ -64,6 +64,8 @@ void print_logo()
 // Master loop
 int main()
 {
+    long long loopc = 0;            // Loop counter for heartbeat
+
     Serial.begin(1000000); // the serial monitor is actually always active (for debug use Serial.println & tycmd)
     print_logo();
 
@@ -269,8 +271,6 @@ int main()
     // imu calibration
     estimator_manager->calibrate_imus();
     
-    
-    long long loopc = 0;            // Loop counter for heartbeat
     float temp_state[STATE_LEN][3] = {0}; // Temp state array
     float temp_micro_state[NUM_MOTORS][MICRO_STATE_LEN] = {0}; // Temp micro state array
     float temp_reference[STATE_LEN][3] = {0}; //Temp governed state
@@ -321,6 +321,14 @@ int main()
         can.read();
         dr16.read();
         ref.read();
+        comms.ping();
+
+        CommsPacket* incoming = comms.get_incoming_packet();
+        CommsPacket* outgoing = comms.get_outgoing_packet();
+
+        // fill in target_state from incoming packet
+        incoming->get_target_state(target_state);
+
 
         float delta = control_input_timer.delta();
 
@@ -359,52 +367,9 @@ int main()
         target_state[5][1] = fly_wheel_target;
         target_state[6][1] = feeder_target;
 
-        // Serial.printf("Chassis Power: %f W, \t Buffer energy: %u J\n",ref.ref_data.power_heat.chassis_power,ref.ref_data.power_heat.buffer_energy);
-
-        // if (dr16.get_r_switch() == 1)
-        // {
-            // driver controls
-            // float chassis_velocity_x = dr16.get_l_stick_y() * 5.4
-            //                          + (dr16.keys.d - dr16.keys.a) * 2.5;
-            // float chassis_velocity_y = -dr16.get_l_stick_x() * 5.4
-            //                          + (dr16.keys.w - dr16.keys.s) * 2.5;
-            // float chassis_spin = dr16.get_wheel() * 10;
-
-            // float pitch_target = 1.57
-            //                    + -dr16.get_r_stick_y() * 0.3
-            //                    + dr16_pos_y;
-            // float yaw_target = -dr16.get_r_stick_x() * 1.5
-            //                 - dr16_pos_x;
-
-            // float fly_wheel_target = (dr16.get_r_switch() == 1 || dr16.get_r_switch() == 3) ? 10 : 0; //m/s
-            // float feeder_target = ((dr16.get_l_mouse_button() && dr16.get_r_switch() != 2) || dr16.get_r_switch() == 1) ? 10 : 0;
-
-        //     target_state[0][1] = chassis_velocity_x;
-        //     target_state[1][1] = chassis_velocity_y;
-        //     target_state[2][1] = chassis_spin;
-        //     target_state[3][0] = yaw_target;
-        //     target_state[3][1] = 0;
-        //     target_state[4][0] = pitch_target;
-        //     target_state[4][1] = 0;
-        // // }
-        // else
-        // {
-        //     float pitch_target = 1.57
-        //         + -dr16.get_r_stick_y() * 0.3
-        //         + dr16_pos_y;
-        //     float yaw_target = -dr16.get_r_stick_x() * 1.5
-        //         - dr16_pos_x;
-
-        //     target_state[3][0] = yaw_target;
-        //     target_state[3][1] = 0;
-        //     target_state[4][0] = pitch_target;
-        //     target_state[4][1] = 0;
-        // }
-
         // Read sensors
         estimator_manager->read_sensors();
         estimator_manager->step(temp_state, temp_micro_state);
-
         
         if(count_one == 0){
             state.set_reference(temp_state);
@@ -429,53 +394,45 @@ int main()
         kinematics_vel[3][1] = cos(-temp_state[2][0]) * chassis_pos_to_motor_error;
         
         controller_manager->step(temp_reference, temp_state, temp_micro_state, kinematics_pos, kinematics_vel, motor_inputs);
-
         
-        for (int j = 0; j < 2; j++)
-        {
-            for (int i = 0; i < NUM_MOTORS_PER_BUS; i++)
-            {
+        for (int j = 0; j < 2; j++) {
+            for (int i = 0; i < NUM_MOTORS_PER_BUS; i++) {
                 can.write_motor_norm(j, i+1, C620, motor_inputs[(j*NUM_MOTORS_PER_BUS)+i]);
                 if (j == 1 && i == 4)
                     can.write_motor_norm(j, i+1, C610, motor_inputs[(j*NUM_MOTORS_PER_BUS)+i]);
             }
         }
 
-        if (true)
-        { // prints the estimated state
+        if (true) { // prints the estimated state
             for (int i = 5; i < STATE_LEN-16; i++) {
-            Serial.printf("[");
-            for (int j = 0; j < 3; j++)
-            {
-                Serial.printf("%.3f",temp_state[i][j]);
-                if (j != 3 - 1)
-                    Serial.printf(", ");
-            }
-            Serial.printf("]");
+                Serial.printf("[");
+                for (int j = 0; j < 3; j++) {
+                    Serial.printf("%.3f",temp_state[i][j]);
+                    if (j != 3 - 1)
+                        Serial.printf(", ");
+                }
+                Serial.printf("]");
             }
             Serial.println();
         }
 
-        if (false)
-        { // prints the estimated state
+        // prints the estimated state
+        if (false) {
             for (int i = 10; i < 16-3; i++) {
-            Serial.printf("[");
-            for (int j = 0; j < 3; j++)
-            {
-                Serial.printf("%.3f",temp_micro_state[i][j]);
-                if (j != 3 - 1)
-                    Serial.printf(", ");
-            }
-            Serial.printf("]");
+                Serial.printf("[");
+                for (int j = 0; j < 3; j++) {
+                    Serial.printf("%.3f",temp_micro_state[i][j]);
+                    if (j != 3 - 1)
+                        Serial.printf(", ");
+                }
+                Serial.printf("]");
             }
             Serial.println();
         }
 
-        // Serial.printf("%.3f",temp_state[4][0]);
-
-        if (false)
-        { // prints the estimated state
-                    Serial.printf("[");
+        // prints the estimated state
+        if (false) { 
+            Serial.printf("[");
             for (int i = 0; i < 16; i++) {
                 Serial.printf("%.3f",motor_inputs[i]);
                 if (i != 8 - 1)
@@ -484,6 +441,18 @@ int main()
             Serial.printf("]");
             Serial.println();
         }
+
+        // construct sensor data packet
+        SensorData sensor_data;
+        // set dr16 raw data
+        memcpy(sensor_data.raw + SENSOR_DR16_OFFSET, dr16.get_raw(), DR16_PACKET_SIZE);
+
+        // set the outgoing packet
+        outgoing->set_id((uint16_t)loopc);
+        outgoing->set_info(0x0000);
+        outgoing->set_time(millis() / 1000.0);
+        // outgoing->set_estimated_state(temp_state);
+        outgoing->set_sensor_data(&sensor_data);
 
         // Write actuators
         if (dr16.is_connected() && (dr16.get_l_switch() == 2 || dr16.get_l_switch() == 3)) {
