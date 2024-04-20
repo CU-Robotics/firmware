@@ -20,7 +20,7 @@
 
 #define NUM_ESTIMATORS 4
 
-/// @brief 
+/// @brief Manage all estimators for macro and micro state
 class EstimatorManager
 {
 private:
