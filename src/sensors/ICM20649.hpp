@@ -39,6 +39,8 @@ public:
     /// @copydoc IMUSensor::read()    
     void read() override;
 
+    /// @brief set teh gyro rate range of the sensor
+    /// @param gyro_rate_range new rate range
     void set_gyro_range(int gyro_rate_range);
 
 private:

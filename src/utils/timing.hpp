@@ -29,6 +29,7 @@
 
 /// @brief Timing object with blocking capability
 struct Timer {
+    /// @brief start time
     uint32_t t = ARM_DWT_CYCCNT;
 
     /// @brief Start time

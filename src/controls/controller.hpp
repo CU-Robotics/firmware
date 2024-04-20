@@ -68,6 +68,8 @@ private:
     PIDFilter pid;
 
 public:
+    /// @brief new position controller
+    /// @param _controller_level controller level, whether it outputs target motor torque or target micro state
     PIDPositionController(int _controller_level) {
         controller_level = _controller_level;
     }
@@ -176,9 +178,12 @@ public:
 struct PIDFVelocityController : public Controller
 {
 private:
+    /// @brief pid filter for calculating controller outputs
     PIDFilter pid;
 
 public:
+    /// @brief new controller
+    /// @param _controller_level controller level, whether it ouputs target motor torque or micro state
     PIDFVelocityController(int _controller_level) {
         controller_level = _controller_level;
     }
@@ -230,8 +235,10 @@ public:
 struct FullStateFeedbackController : public Controller
 {
 private:
-    /// @brief pid filters for calculating controller outputs
-    PIDFilter pid1, pid2;
+    /// @brief pid filter for calculating controller outputs
+    PIDFilter pid1;
+    /// @brief pid filter for calculating controller outputs
+    PIDFilter pid2;
 
 public:
     /// @brief this controller can work on position and velocity at the same time

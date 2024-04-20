@@ -14,7 +14,7 @@ public:
     Estimator(){};
 
     /// @brief step the current state(s) and update the estimate array accordingly
-    /// @param current estimated state array to update with certain estimated states
+    /// @param outputs estimated state array to update with certain estimated states
     virtual void step_states(float outputs[STATE_LEN][3]);
 
     /// @brief gets the number of states that an estimator is estimating

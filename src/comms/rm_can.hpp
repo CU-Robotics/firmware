@@ -113,6 +113,7 @@ public:
   /// @param canID ID of the CAN which the motor is on, expects indexable ID value
   /// @param motorID ID of the individual motor, expects indexable ID value
   /// @param motorID Motor controller type (C610, C620, M3508)
+  /// @param controllerType type of motor controller that this motor uses
   /// @param value A value in the range of [-1.0, 1.0]
   void write_motor_norm(uint16_t canID, uint16_t motorID, uint8_t controllerType, float value);
 
@@ -137,6 +138,8 @@ public:
   /// @brief Print off the values of the output array
   void print_output();
 
+  /// @brief get can data pointer from can
+  /// @return can data pointer
   CANData* get_data() { return &m_input; }
 
 private:

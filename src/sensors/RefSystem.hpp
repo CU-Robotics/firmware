@@ -162,6 +162,7 @@ public:
     /// @brief Current count of bytes sent since last reset
     uint16_t bytes_sent = 0;
 
+    /// @brief struct to store all ref data
     RefData ref_data{};
 };
 
