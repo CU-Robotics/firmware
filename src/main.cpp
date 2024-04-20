@@ -76,7 +76,6 @@ int main()
     dr16.init();
     ref.init();
     comms.init();
-    config.init(7); // initialize with robot ID
 
     CANData* can_data = can.get_data();
 

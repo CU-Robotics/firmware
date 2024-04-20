@@ -10,9 +10,6 @@ const int MAX_CONFIG_PACKETS = 64;
 
 class ConfigLayer {
 private:
-    /// @brief the robot ID
-    int robot_id = -1;
-
     /// @brief array to save config packets
     CommsPacket config_packets[MAX_CONFIG_PACKETS];
 
@@ -20,7 +17,7 @@ private:
     bool configured = false;
 
     /// @brief current YAML section we are seeking
-    int seek_sec = 0;
+    int seek_sec = -1;
 
     /// @brief current YAML subsection we are seeking
     int seek_subsec = 0;
@@ -34,10 +31,6 @@ private:
 public:
     /// @brief default constructor
     ConfigLayer() {}
-
-    /// @brief initialize config layer with robot ID (from ref system)
-    /// @param id the ID of the robot
-    void init(int id) { robot_id = id; }
 
     /// @brief check incoming packet from the comms layer and update outgoing packet accordingly to request next config packet
     /// @param in incoming comms packet
