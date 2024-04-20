@@ -7,7 +7,7 @@ uint16_t CommsPacket::get_id() {
 }
 
 uint16_t CommsPacket::get_info() {
-	return *reinterpret_cast<uint16_t*>(raw + TEENSY_PACKET_INFO_OFFSET);
+	return *reinterpret_cast<uint8_t*>(raw + TEENSY_PACKET_INFO_OFFSET);
 }
 
 void CommsPacket::set_id(uint16_t id) {
@@ -17,7 +17,7 @@ void CommsPacket::set_id(uint16_t id) {
 }
 
 void CommsPacket::set_info(uint16_t info) {
-	*reinterpret_cast<uint16_t*>(raw + TEENSY_PACKET_INFO_OFFSET) = info;
+	*reinterpret_cast<uint8_t*>(raw + TEENSY_PACKET_INFO_OFFSET) = info;
 }
 
 void CommsPacket::get_target_state(float state[STATE_LEN][3]) {
@@ -27,7 +27,7 @@ void CommsPacket::get_target_state(float state[STATE_LEN][3]) {
 void CommsPacket::get_ref_draw_data(char** draw_data) {}
 
 void CommsPacket::set_time(double time) {
-	*reinterpret_cast<double*>(raw + TEENSY_PACKET_TIME_OFFSET) = time;
+	memcpy(raw + TEENSY_PACKET_TIME_OFFSET, &time, sizeof(double));
 }
 
 void CommsPacket::set_estimated_state(float state[STATE_LEN][3]) {
@@ -51,18 +51,24 @@ void HIDLayer::ping() {
 		// attempt to read
 		if (read()) {
 			// if we read, attempt to write
-
-			// set the packet to be written's ID
-			m_outgoingPacket.set_id((uint16_t)m_packetsSent);
 			if (!write())
 				Serial.printf("Failed to send ping %llu\n", m_packetsSent);
 		}
 	}
 }
 
-void HIDLayer::print() {
-	for (unsigned int i = 0; i < COMMS_PACKET_SIZE + 1; i++)
+void HIDLayer::print_outgoing() {
+	Serial.println("Outgoing packet:");
+	for (unsigned int i = 0; i < COMMS_PACKET_SIZE; i++)
 		Serial.printf("%.2x ", m_outgoingPacket.raw[i]);
+
+	Serial.println();
+}
+
+void HIDLayer::print_incoming() {
+	Serial.println("Incoming packet:");
+	for (unsigned int i = 0; i < COMMS_PACKET_SIZE; i++)
+		Serial.printf("%.2x ", m_incomingPacket.raw[i]);
 
 	Serial.println();
 }
@@ -70,27 +76,31 @@ void HIDLayer::print() {
 bool HIDLayer::read() {
 	// attempt to read a full packet
 	// this has no timeout
-	int bytes_read = usb_rawhid_recv(m_incommingPacket.raw, 0);
-	if (bytes_read == COMMS_PACKET_SIZE) {
+	int bytes_read = usb_rawhid_recv(m_incomingPacket.raw, 0);
+	if (bytes_read == COMMS_PACKET_SIZE)
+	{
 		// increment total number of packets read and return success
 		m_packetsRead++;
 		return true;
-	}
-	else {
+	} else {
 		return false;
 	}
 }
 
 bool HIDLayer::write() {
+	// verify that the first byte is set to something (0xff)
+	// prevents a weird comms issue where the whole packet is shifted left by one byte if the first byte is not ever set
+	m_outgoingPacket.raw[0] = 0xff;
+
 	// attempt to write a full packet
 	// this has a timeout, which is set to it's max value
-	int bytes_sent = usb_rawhid_send(m_outgoingPacket.raw, UINT16_MAX);
+	int bytes_sent = usb_rawhid_send(m_outgoingPacket.raw, 0);
 	if (bytes_sent == COMMS_PACKET_SIZE) {
 		// increment total number of packets sent and return success
 		m_packetsSent++;
 		return true;
-	} 
-	else {
+	} else {
+		Serial.println("Comms: failed write");
 		m_packetsFailed++;
 		return false;
 	}

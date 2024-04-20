@@ -11,9 +11,9 @@ constexpr unsigned int COMMS_PACKET_SIZE = 1023u;
 // TODO: make this dynamic and grabbed from the config packet
 // Khadas -> Teensy
 /// @brief The offset of the Packet ID from the base of the Khadas packet
-constexpr unsigned int KHADAS_PACKET_ID_OFFSET = 0u; 	// 2 bytes
+constexpr unsigned int KHADAS_PACKET_ID_OFFSET = 1u; 	// 2 bytes
 /// @brief The offset of the Packet info bits from the base of the Khadas packet
-constexpr unsigned int KHADAS_PACKET_INFO_OFFSET = 2u;	// 2 bytes
+constexpr unsigned int KHADAS_PACKET_INFO_OFFSET = 3u;	// 1 byte
 /// @brief The offset of the Packet target state from the base of the Khadas packet
 constexpr unsigned int KHADAS_PACKET_TSTATE_OFFSET = 4u;	// 288 bytes
 /// @brief The offset of the Packet ref draw data from the base of the Khadas packet
@@ -23,9 +23,9 @@ constexpr unsigned int KHADAS_PACKET_END_OFFSET = 420u;
 
 // Teensy -> Khadas
 /// @brief The offset of the packet ID from the base of the Teesny packet
-constexpr unsigned int TEENSY_PACKET_ID_OFFSET = 0u;	// 2 bytes
+constexpr unsigned int TEENSY_PACKET_ID_OFFSET = 1u;	// 2 bytes
 /// @brief The offset of the packet info bits from the base of the Teesny packet
-constexpr unsigned int TEENSY_PACKET_INFO_OFFSET = 2u;	// 2 bytes
+constexpr unsigned int TEENSY_PACKET_INFO_OFFSET = 3u;	// 1 bytes
 /// @brief The offset of the packet time from the base of the Teesny packet
 constexpr unsigned int TEENSY_PACKET_TIME_OFFSET = 4u;	// 8 bytes
 /// @brief The offset of the packet estimated state from the base of the Teesny packet
@@ -57,7 +57,7 @@ struct SensorData {
 /// @brief An encapsulating data struct managing a HID packet
 struct CommsPacket {
 	/// @brief The raw array of bytes of a packet
-	char raw[COMMS_PACKET_SIZE + 1] = { 0 };
+	char raw[COMMS_PACKET_SIZE] = { 0 };
 
 	// common getters
 	/// @brief Get the ID of this packet
@@ -110,16 +110,20 @@ public:
 	/// @brief Attempt to read and write a packet to Khadas
 	void ping();
 
-	/// @brief Print the entire raw packet
-	/// @note Dont do this (its very laggy)
-	void print();
+	/// @brief Print the outgoing packet
+	/// @note This massively slows the loop down
+	void print_outgoing();
+
+	/// @brief Print the incomming packet
+	/// @note This massively slows the loop down
+	void print_incoming();
 
 	/// @brief Get the packet comming from Khadas
 	/// @return A pointer to the received Khadas packet
-	inline CommsPacket* get_incommming() { return &m_incommingPacket; }
+	inline CommsPacket* get_incoming_packet() { return &m_incomingPacket; }
 	/// @brief Get the packet to Khadas
 	/// @return A pointer to the packet to be sent to Khadas
-	inline CommsPacket* get_outgoing() { return &m_outgoingPacket; }
+	inline CommsPacket* get_outgoing_packet() { return &m_outgoingPacket; }
 
 private:
 	/// @brief Attempt a read on HID
@@ -131,7 +135,7 @@ private:
 
 private:
 	/// @brief An encapsulating struct around the packet received from Khadas
-	CommsPacket m_incommingPacket{};
+	CommsPacket m_incomingPacket{};
 	/// @brief An encapsulating struct around the packet to be sent to Khadas
 	CommsPacket m_outgoingPacket{};
 	/// @brief An encapsulating struct around all the sensor data to be sent to Khadas
