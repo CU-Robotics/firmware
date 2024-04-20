@@ -278,6 +278,7 @@ public:
 struct ChassisPIDVelocityController : public Controller
 {
 private:
+    /// @brief filter for calculating pid controller outputs
     PIDFilter pid;
 
 public:

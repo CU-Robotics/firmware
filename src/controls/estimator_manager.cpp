@@ -23,9 +23,9 @@ EstimatorManager::EstimatorManager(CANData *data)
     can_data = data;
 }
 
-void EstimatorManager::init_estimator(int state_id, int num_states)
+void EstimatorManager::init_estimator(int estimator_id, int num_states)
 {
-    switch (state_id)
+    switch (estimator_id)
     {
     case 1: // Gimbal Estimator
         float values_gimbal[10];

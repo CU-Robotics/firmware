@@ -13,21 +13,21 @@ struct Estimator
 public:
     Estimator(){};
 
-    // Virtual so they don't ever get called over real estimators
+    /// @brief step the current state(s) and update the estimate array accordingly
     virtual void step_states(float outputs[STATE_LEN][3]);
 
     /// @brief gets the number of states that an estimator is estimating
+    /// @return get number of states estimated by this estimator
     int get_num_states() { return num_states; }
 
     /// @brief bool that indicates if the estimator is a micro or macro estimator
     bool micro_estimator = false;
 
 protected:
-    /// @brief number of states that an estimator will estimate. 
-    /// For the micro estimators its the number micro states to estimate
+    /// @brief number of states that an estimator will estimate. For the micro estimators its the number micro states to estimate
     int num_states;
 
-    // create a timer object for each estimator
+    ///@brief create a timer object for each estimator
     Timer time;
 
     /// @brief Computes the magnitude of a vector given length n
@@ -86,6 +86,8 @@ protected:
     }
 
     /// @brief This functions finds the determinant of a 3x3 Matrix
+    ///@param mat matrix to find determinant of
+    ///@return calculated determinant
     float determinantOfMatrix(float mat[3][3])
     {
         float ans;
@@ -450,11 +452,16 @@ struct FeederEstimator : public Estimator
         float ref_weight = 0;
 
     public:
+    /// @brief make new feeder estimator and set can_data pointer and num_states
+    /// @param c can data pointer from EstimatorManager
+    /// @param _num_states number of states this estimator estimates
     FeederEstimator(CANData *c, int _num_states){
         can_data = c;
         num_states = _num_states;
     }
 
+    /// @brief calculate state updates
+    /// @param output updated balls per second of feeder
     void step_states(float output[STATE_LEN][3]){
         //can
         float angular_velocity_motor = can_data->get_motor_attribute(CAN_2, 5, MotorAttribute::SPEED) / 60;
@@ -472,16 +479,22 @@ struct FeederEstimator : public Estimator
 /// @brief This estimator estimates our "micro" state which is stores all the motor velocities(in rad/s), whereas the other estimators estimate "macro" state which stores robot joints
 struct LocalEstimator : public Estimator{
     private:
+        /// @brief can data from EstimatorManager
         CANData* can_data;
 
 
     public:
+        /// @brief Make new local estimator and set can data pointer and num states
+        /// @param c can data pointer from EstimatorManager
+        /// @param ns number of states this estimator estimates
         LocalEstimator(CANData* c, int ns){
             micro_estimator = true;
             can_data = c;
             num_states = ns;
         }
 
+        /// @brief step through each motor and add to micro state
+        /// @param output entire micro state 
         void step_states(float output[NUM_MOTORS][MICRO_STATE_LEN]){
             for (int i = 0; i < NUM_CAN_BUSES; i++){
                 for(int j = 0; j < NUM_MOTORS_PER_BUS; j++){
