@@ -7,6 +7,7 @@
 #include "controls/controller_manager.hpp"
 #include "controls/state.hpp"
 #include "comms/usb_hid.hpp"
+#include "comms/config_layer.hpp"
 #include "sensors/RefSystem.hpp"
 
 // Loop constants
@@ -18,6 +19,7 @@ DR16 dr16;
 rm_CAN can;
 RefSystem ref;
 HIDLayer comms;
+ConfigLayer config;
 
 Timer loop_timer;
 Timer stall_timer;
@@ -74,6 +76,7 @@ int main()
     dr16.init();
     ref.init();
     comms.init();
+    config.init(7); // initialize with robot ID
 
     CANData* can_data = can.get_data();
 
@@ -336,68 +339,10 @@ int main()
         ref.read();
 
         // config verification
-        CommsPacket* incomming = comms.get_incommming();
-        CommsPacket* outgoing = comms.get_outgoing();
-        
-        if (!configured)
-        {
-            char *raw = incomming->raw;
-            uint8_t sec_id = raw[1];
-            uint8_t subsec_id = raw[2];
-            uint8_t info_bit = raw[3];
-
-            // this is the packet we want
-            if (sec_id == curr_section && subsec_id == curr_subsection && info_bit == 1) {
-                // received the initial config packet
-                if (sec_id == 0) {
-                    /**
-                    the khadas sends a config packet with its raw data set to a byte
-                    array where each index corresponds to a yaml section, and the value
-                    at that index indicates the number of subsections for the given section
-                    */
-                    num_sections = (raw[5] << 8) | raw[4];
-
-                    memcpy(
-                        packet_subsection_sizes,
-                        raw + 8, // raw data starts at byte 8 
-                        num_sections);
-
-                    Serial.printf("YAML metadata received:\n");
-                    for (int i = 0; i < num_sections; i++) {
-                        Serial.printf("\tSection %d: %u subsection(s)\n", i, raw[8 + i]);
-                    }
-
-                    // look for next section
-                    curr_section++;
-                } else {
-                    config_packets[sec_id + subsec_id] = *incomming;
-                    Serial.printf("Received YAML configuration packet: (%u, %u)\n", sec_id, subsec_id);
-                    
-                    if (subsec_id + 1 < packet_subsection_sizes[sec_id]) {
-                        // if we haven't received all subsections, request the next one
-                        curr_subsection++;
-                    } else {
-                        // if we've received all subsections, request the next section
-                        curr_section++;
-                        curr_subsection = 0;
-
-                        // or, if we've received all sections, then configuration is complete
-                        if (curr_section >= num_sections) {
-                            configured = true;
-                            Serial.printf("YAML configuration complete\n");
-                        }
-                    }
-                }
-            }
-
-            // request next packet
-            if (!configured) {
-                outgoing->raw[0] = 0xFF; // necessary filler byte
-                outgoing->raw[1] = curr_section;
-                outgoing->raw[2] = curr_subsection;
-                outgoing->raw[3] = 1; // set info bit
-                outgoing->raw[4] = 7; // send robot ID as data
-            }
+        if (!config.is_configured()) {
+            config.process(
+                comms.get_incommming(),
+                comms.get_outgoing());
         }
 
         comms.ping();
