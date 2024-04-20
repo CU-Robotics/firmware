@@ -11,11 +11,11 @@
 /// @brief CS (Chip Select) pin for SPI mode
 #define ICM_CS 10
 /// @brief SDA/MOSI (Serial Data In) (Microcontroller Out Sensor In) pin for software-SPI mode
-#define ICM_MOSI 18
+#define ICM_MOSI 26
 /// @brief AD0/MISO/SD0 (Serial Data Out) (Microcontroller In Sensor Out) pin for software-SPI mode
-#define ICM_MISO 12
+#define ICM_MISO 39
 /// @brief SCL/SCK (SPI Clock) pin for software-SPI mode
-#define ICM_SCK 19
+#define ICM_SCK 27
 
 /// @brief Sensor access for an ICM20649 IMU Sensor. Child of the abstract IMUSensor class.
 /// @note supports I2C and SPI communication. 
@@ -35,9 +35,14 @@ public:
     /// @brief Initialize the sensor with the assigned communication protocol.
     /// @param protocol Which communication protocol to use for this sensor.
     void init(CommunicationProtocol protocol);
-
+    
     /// @copydoc IMUSensor::read()    
     void read() override;
+
+    /// @brief set teh gyro rate range of the sensor
+    /// @param gyro_rate_range new rate range
+    void set_gyro_range(int gyro_rate_range);
+
 private:
     /// @brief sensor object from adafruit libraries.
     Adafruit_ICM20649 sensor;
