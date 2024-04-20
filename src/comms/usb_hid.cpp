@@ -6,7 +6,7 @@ uint16_t CommsPacket::get_id() {
 	return *reinterpret_cast<uint16_t*>(x + TEENSY_PACKET_ID_OFFSET);
 }
 
-uint16_t CommsPacket::get_info() {
+uint8_t CommsPacket::get_info() {
 	return *reinterpret_cast<uint8_t*>(raw + TEENSY_PACKET_INFO_OFFSET);
 }
 
@@ -16,7 +16,7 @@ void CommsPacket::set_id(uint16_t id) {
 	*reinterpret_cast<uint16_t*>(x + TEENSY_PACKET_ID_OFFSET) = id;
 }
 
-void CommsPacket::set_info(uint16_t info) {
+void CommsPacket::set_info(uint8_t info) {
 	*reinterpret_cast<uint8_t*>(raw + TEENSY_PACKET_INFO_OFFSET) = info;
 }
 

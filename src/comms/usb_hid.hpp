@@ -65,7 +65,7 @@ struct CommsPacket {
 	uint16_t get_id();
 	/// @brief Get the info bits of this packet
 	/// @return The packet info bits
-	uint16_t get_info();
+	uint8_t get_info();
 
 	// common setters
 	/// @brief Set the ID of this packet
@@ -73,7 +73,7 @@ struct CommsPacket {
 	void set_id(uint16_t id);
 	/// @brief Set the info bits of this packet
 	/// @param info The packet info bits
-	void set_info(uint16_t info);
+	void set_info(uint8_t info);
 
 	// khadas getters
 	/// @brief Get the target state from this packet
