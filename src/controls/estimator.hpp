@@ -405,6 +405,7 @@ public:
     }
 };
     
+/// @brief Estimate the state of the flywheels as meters/second of balls exiting the barrel.
 struct FlyWheelEstimator : public Estimator
 {
     private:
@@ -437,6 +438,7 @@ struct FlyWheelEstimator : public Estimator
     }
 };
 
+/// @brief Estimate the state of the feeder in balls/s
 struct FeederEstimator : public Estimator
 {
     private:
@@ -467,7 +469,7 @@ struct FeederEstimator : public Estimator
     }
 };
 
-//This estimator estimates our "micro" state which is stores all the motor velocities(in rad/s), whereas the other estimators estimate "macro" state which stores robot joints
+/// @brief This estimator estimates our "micro" state which is stores all the motor velocities(in rad/s), whereas the other estimators estimate "macro" state which stores robot joints
 struct LocalEstimator : public Estimator{
     private:
         CANData* can_data;

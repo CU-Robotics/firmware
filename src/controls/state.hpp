@@ -9,6 +9,7 @@
 
 #define MICRO_STATE_LEN 3
 
+/// @brief Use state estimate and ungoverned reference to generated governed references to be sent to controllers.
 class State {
     private:
         // This is a sample state (it does not represent every robot):

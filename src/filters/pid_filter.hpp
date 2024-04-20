@@ -6,6 +6,7 @@
 
 #define PI 3.1415926535
 
+/// @brief PIDF filter used in controls. Gains are configurable via K
 struct PIDFilter {
     float K[4] = {0.0}; // P, I, D, F
     float sumError;

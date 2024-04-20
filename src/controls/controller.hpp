@@ -40,6 +40,7 @@ public:
     virtual void reset() { timer.start_timer(); }
 };
 
+/// @brief Default controller
 struct NullController : public Controller
 {
 public:
@@ -262,6 +263,8 @@ private:
     PIDFilter pid;
 
 public:
+    /// @brief set controller level and make sure it's a low level controller
+    /// @param _controller_level controller level(if it outputs a torque or a target micro state).
     ChassisPIDVelocityController(int _controller_level)
     {
         controller_level = _controller_level;

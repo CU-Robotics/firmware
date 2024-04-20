@@ -5,11 +5,14 @@
 #include "../comms/rm_can.hpp"
 #include "../sensors/RefSystem.hpp"
 
+/// @brief Manage all controllers
 class ControllerManager {
     private:
+        /// @brief Keep track of the controller used on each motor
         Controller* controllers[NUM_MOTORS][NUM_CONTROLLER_LEVELS];
 
     public:
+        /// @brief default constructor
         ControllerManager();
 
         /// @brief Populates the corresponding index of the "controllers" array attribute with a controller object

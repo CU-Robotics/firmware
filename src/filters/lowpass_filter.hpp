@@ -1,6 +1,7 @@
 #ifndef LOWPASS_FILTER_H
 #define LOWPASS_FILTER_H
 
+/// @brief Filter out short term fluctuations in signals
 class LowpassFilter {
     private:
         float K = 0.4; // default gain
