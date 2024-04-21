@@ -39,7 +39,7 @@ class TOFSensor {
 
   /// @brief function to initialize the sensor, establish connection, begin data collection
   /// @return void
-    void init_sensor() {
+    void init() {
 
       // initalize the wire 
       i2c_bus->begin();
