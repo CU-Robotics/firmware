@@ -43,7 +43,6 @@ public:
     }
 
     /// @brief function to initialize the sensor, establish connection, begin data collection
-    /// @return void
     void init() {
         // initalize the wire 
         i2c_bus->begin();
@@ -66,7 +65,9 @@ public:
 
     /// @brief function to get the distance to the object from the VL53L4CD sensor.
     /// @return distance (mm) from sensor to object at an instant
-    uint16_t read() {
+    /// @note Returns the last read value if there is no new data to read
+    uint16_t read()
+    {
         // variable to hold the results.
         VL53L4CD_Result_t results;
 
