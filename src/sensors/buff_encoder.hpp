@@ -43,8 +43,7 @@ constexpr int YAW_BUFF_CS = 37;
 constexpr int PITCH_BUFF_CS = 36;
 
 /// @brief Driver for the Buff-Encoder
-class BuffEncoder
-{
+class BuffEncoder {
 public:
     /// @brief 
     /// @param 

@@ -21,8 +21,7 @@
 #define NUM_ESTIMATORS 4
 
 /// @brief Manage all estimators for macro and micro state
-class EstimatorManager
-{
+class EstimatorManager {
 private:
     //sensor arrays
 
@@ -34,19 +33,19 @@ private:
     BuffEncoder buff_sensors[NUM_SENSOR_TYPE];
 
     /// @brief array of robot estimators to estimate full robot state
-    Estimator *estimators[STATE_LEN] = {nullptr};
+    Estimator* estimators[STATE_LEN] = { nullptr };
 
     /// @brief matrix that is number_of_estimators by State_length.
     /// the values inside the matrix tell the estimator stepper which states to write to for each estimator
     int applied_states[NUM_ESTIMATORS][STATE_LEN];
 
     /// @brief can data pointer to pass to each estimator so they can use can to estimate state when needed (usually used for micro state).
-    CANData *can_data;
+    CANData* can_data;
 
 public:
     /// @brief initialize sensors and set can_data pointer
     /// @param data Struct storing all of can data so we don't have to pass around rmCAN itself.
-    EstimatorManager(CANData *data);
+    EstimatorManager(CANData* data);
 
     /// @brief Free all dynamically allocated memory and end SPI
     ~EstimatorManager();

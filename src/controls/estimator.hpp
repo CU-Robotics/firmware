@@ -8,8 +8,7 @@
 #define NUM_SENSOR_VALUES 8
 
 /// @brief Parent estimator struct. All estimators should inherit from this.
-struct Estimator
-{
+struct Estimator {
 public:
     Estimator() {};
 
@@ -37,11 +36,9 @@ protected:
     /// @param a Vector to compute the magnitude of
     /// @param n Length of Vector a
     /// @return returns the magnitude of a
-    float __magnitude(float *a, int n)
-    {
+    float __magnitude(float* a, int n) {
         float square_sum = 0;
-        for (int i = 0; i < n; i++)
-        {
+        for (int i = 0; i < n; i++) {
             square_sum += pow(a[i], 2);
         }
         square_sum = sqrt(square_sum);
@@ -53,11 +50,9 @@ protected:
     /// @param b Vector B
     /// @param n Length of A and B (must be the same length)
     /// @return returns Dot product solution (scalar)
-    float __vectorProduct(float *a, float *b, int n)
-    {
+    float __vectorProduct(float* a, float* b, int n) {
         float product = 0;
-        for (int i = 0; i < n; i++)
-        {
+        for (int i = 0; i < n; i++) {
             product += a[i] * b[i];
         }
         return product;
@@ -67,8 +62,7 @@ protected:
     /// @param v_A Vector A (3x1)
     /// @param v_B Vector B (3x1)
     /// @param output Cross product output vector (3x1)
-    void __crossProduct(float v_A[], float v_B[], float output[])
-    {
+    void __crossProduct(float v_A[], float v_B[], float output[]) {
         output[0] = v_A[1] * v_B[2] - v_A[2] * v_B[1];
         output[1] = -(v_A[0] * v_B[2] - v_A[2] * v_B[0]);
         output[2] = v_A[0] * v_B[1] - v_A[1] * v_B[0];
@@ -79,8 +73,7 @@ protected:
     /// @param input_vector Vector to be rotated
     /// @param theta Angle to rotate (Rad)
     /// @param output New rotated vector
-    void __rotateVector3D(float unit_vector[], float input_vector[], float theta, float output[])
-    {
+    void __rotateVector3D(float unit_vector[], float input_vector[], float theta, float output[]) {
         float unit_cross_input[3];
         __crossProduct(unit_vector, input_vector, unit_cross_input);
         output[0] = (input_vector[0] * cos(theta)) + (unit_cross_input[0] * sin(theta)) + (unit_vector[0] * __vectorProduct(unit_vector, input_vector, 3) * (1 - cos(theta)));
@@ -91,8 +84,7 @@ protected:
     /// @brief This functions finds the determinant of a 3x3 Matrix
     ///@param mat matrix to find determinant of
     ///@return calculated determinant
-    float determinantOfMatrix(float mat[3][3])
-    {
+    float determinantOfMatrix(float mat[3][3]) {
         float ans;
         ans = mat[0][0] * (mat[1][1] * mat[2][2] - mat[2][1] * mat[1][2]) - mat[0][1] * (mat[1][0] * mat[2][2] - mat[1][2] * mat[2][0]) + mat[0][2] * (mat[1][0] * mat[2][1] - mat[1][1] * mat[2][0]);
         return ans;
@@ -101,8 +93,7 @@ protected:
     /// @brief This function finds the solution of a 3x3 system of linear equations using cramer's rule.
     /// @param coeff 3x3 coeff matrix for the system with 3x1 solution matrix added to the end
     /// @param output 3x1 Array for the solutions
-    void solveSystem(float coeff[3][4], float output[3])
-    {
+    void solveSystem(float coeff[3][4], float output[3]) {
         // Matrix d using coeff as given in cramer's rule
         float d[3][3] = {
             {coeff[0][0], coeff[0][1], coeff[0][2]},
@@ -148,8 +139,7 @@ protected:
                 output[0] = 0;
                 output[1] = 0;
                 output[2] = 0;
-            }
-            else if (D1 != 0 || D2 != 0 || D3 != 0) {
+            } else if (D1 != 0 || D2 != 0 || D3 != 0) {
                 Serial.println("matrix solve bad2");
                 output[0] = 0;
                 output[1] = 0;
@@ -160,8 +150,7 @@ protected:
 };
 
 /// @brief Estimate the yaw, pitch, and chassis heading
-struct GimbalEstimator : public Estimator
-{
+struct GimbalEstimator : public Estimator {
 private:
     /// @brief yaw encoder offset for 0 radians
     float YAW_ENCODER_OFFSET; // input variables
@@ -225,18 +214,18 @@ private:
     float global_roll_angle = 0;
     /// @brief delta time
     float dt = 0;
-    
+
     /// @brief buff encoder on the yaw
-    BuffEncoder *buff_enc_yaw;
+    BuffEncoder* buff_enc_yaw;
     /// @brief buff encoder on the pitch
-    BuffEncoder *buff_enc_pitch;
+    BuffEncoder* buff_enc_pitch;
     /// @brief can data pointer from EstimatorManager
-    CANData *can_data;
+    CANData* can_data;
     /// @brief icm imu
-    ICM20649 *icm_imu;
+    ICM20649* icm_imu;
 
     /// @brief position estimate to store position after integrating used for chassis odometry
-    float pos_estimate[3] = {0,0,0};
+    float pos_estimate[3] = { 0,0,0 };
 
 public:
     /// @brief estimate the state of the gimbal
@@ -246,8 +235,7 @@ public:
     /// @param imu icm encoder
     /// @param data can data from Estimator Manager
     /// @param n num states this estimator estimates
-    GimbalEstimator(float sensor_values[10], BuffEncoder *b1, BuffEncoder *b2, ICM20649 *imu, CANData *data, int n)
-    {
+    GimbalEstimator(float sensor_values[10], BuffEncoder* b1, BuffEncoder* b2, ICM20649* imu, CANData* data, int n) {
         buff_enc_yaw = b1; // sensor object definitions
         buff_enc_pitch = b2;
         can_data = data;
@@ -271,11 +259,10 @@ public:
     }
 
     ~GimbalEstimator() {};
-
+  
     /// @brief calculate estimated states and add to output array
     /// @param output output array to add estimated states to
-    void step_states(float output[STATE_LEN][3]) override
-    {
+    void step_states(float output[STATE_LEN][3]) override {
         float pitch_enc_angle = (-buff_enc_pitch->get_angle()) - PITCH_ENCODER_OFFSET;
         while (pitch_enc_angle >= PI)
             pitch_enc_angle -= 2 * PI;
@@ -297,12 +284,9 @@ public:
         // gimbal rotation axis in spherical coordinates in imu refrence frame
         if (gravity_accel_vector[0] == 0)
             yaw_axis_spherical[1] = 1.57;
-        else if (gravity_accel_vector[0] < 0)
-        {
+        else if (gravity_accel_vector[0] < 0) {
             yaw_axis_spherical[1] = PI + atan(gravity_accel_vector[1] / gravity_accel_vector[0]); // theta
-        }
-        else
-        {
+        } else {
             yaw_axis_spherical[1] = atan(gravity_accel_vector[1] / gravity_accel_vector[0]); // theta
         }
         yaw_axis_spherical[2] = acos(gravity_accel_vector[2] / __magnitude(gravity_accel_vector, 3)) - pitch_diff; // phi
@@ -348,7 +332,7 @@ public:
         // __rotateVector3D(pitch_axis_unitvector, roll_axis_unitvector, (global_pitch_angle - pitch_enc_angle), roll_axis_global);
 
         // gets the velocity data from the imu and uses the gravity vector to calculate the yaw velocity
-        float raw_omega_vector[3] = {icm_imu->get_gyro_X(), icm_imu->get_gyro_Y(), icm_imu->get_gyro_Z()};
+        float raw_omega_vector[3] = { icm_imu->get_gyro_X(), icm_imu->get_gyro_Y(), icm_imu->get_gyro_Z() };
         // *Note: X is pitch Y is Roll Z is Yaw, when level
         // positive pitch angle is up, positive roll angle is right(robot pov), positive yaw is left(robot pov)
 
@@ -366,9 +350,9 @@ public:
 
         float imu_vel_offset = 1;
         // calculate the pitch yaw and roll velocities (Gimbal Relative)
-        current_pitch_velocity = __vectorProduct(pitch_axis_unitvector, raw_omega_vector, 3)/imu_vel_offset;
-        current_yaw_velocity = __vectorProduct(yaw_axis_unitvector, raw_omega_vector, 3)/imu_vel_offset;
-        current_roll_velocity = -__vectorProduct(roll_axis_unitvector, raw_omega_vector, 3)/imu_vel_offset;
+        current_pitch_velocity = __vectorProduct(pitch_axis_unitvector, raw_omega_vector, 3) / imu_vel_offset;
+        current_yaw_velocity = __vectorProduct(yaw_axis_unitvector, raw_omega_vector, 3) / imu_vel_offset;
+        current_roll_velocity = -__vectorProduct(roll_axis_unitvector, raw_omega_vector, 3) / imu_vel_offset;
 
         // calculate the pitch yaw and roll velocities (Global Reference)
         global_pitch_velocity = __vectorProduct(pitch_axis_global, raw_omega_vector, 3);
@@ -394,7 +378,7 @@ public:
             yaw_angle -= 2 * PI;
         while (yaw_angle <= -PI)
             yaw_angle += 2 * PI;
-        
+
         while (chassis_angle >= PI)
             chassis_angle -= 2 * PI;
         while (chassis_angle <= -PI)
@@ -417,27 +401,27 @@ public:
         float front_left = can_data->get_motor_attribute(CAN_1, 4, MotorAttribute::SPEED);
 
         // m/s of chassis to motor rpm
-        float x_scale = ((1/(PI*2*0.0516))*60)/0.10897435897;
-        float y_scale = ((1/(PI*2*0.0516))*60)/0.10897435897;
+        float x_scale = ((1 / (PI * 2 * 0.0516)) * 60) / 0.10897435897;
+        float y_scale = ((1 / (PI * 2 * 0.0516)) * 60) / 0.10897435897;
         // chassis rad/s to motor rpm
-        float psi_scale = ((.1835/(PI*2*0.0516))*60)/0.10897435897;
+        float psi_scale = ((.1835 / (PI * 2 * 0.0516)) * 60) / 0.10897435897;
         // define coeff matracies for each system we want to solve
-        float coeff_matrix1[3][4] = {{x_scale,0,psi_scale,front_right},{0,-y_scale,psi_scale,back_right},{-x_scale,0,psi_scale,back_left}};
-        float coeff_matrix2[3][4] = {{x_scale,0,psi_scale,front_right},{0,-y_scale,psi_scale,back_right},{0,y_scale,psi_scale,front_left}};
-        float coeff_matrix3[3][4] = {{x_scale,0,psi_scale,front_right},{0,y_scale,psi_scale,front_left},{-x_scale,0,psi_scale,back_left}};
-        float coeff_matrix4[3][4] = {{0,-y_scale,psi_scale,back_right},{0,y_scale,psi_scale,front_left},{-x_scale,0,psi_scale,back_left}};
+        float coeff_matrix1[3][4] = { {x_scale,0,psi_scale,front_right},{0,-y_scale,psi_scale,back_right},{-x_scale,0,psi_scale,back_left} };
+        float coeff_matrix2[3][4] = { {x_scale,0,psi_scale,front_right},{0,-y_scale,psi_scale,back_right},{0,y_scale,psi_scale,front_left} };
+        float coeff_matrix3[3][4] = { {x_scale,0,psi_scale,front_right},{0,y_scale,psi_scale,front_left},{-x_scale,0,psi_scale,back_left} };
+        float coeff_matrix4[3][4] = { {0,-y_scale,psi_scale,back_right},{0,y_scale,psi_scale,front_left},{-x_scale,0,psi_scale,back_left} };
 
         // 4 solution sets of x, y, psi
         float vel_solutions[4][3];
-        solveSystem(coeff_matrix1,vel_solutions[0]);
-        solveSystem(coeff_matrix2,vel_solutions[1]);
-        solveSystem(coeff_matrix3,vel_solutions[2]);
-        solveSystem(coeff_matrix4,vel_solutions[3]);
+        solveSystem(coeff_matrix1, vel_solutions[0]);
+        solveSystem(coeff_matrix2, vel_solutions[1]);
+        solveSystem(coeff_matrix3, vel_solutions[2]);
+        solveSystem(coeff_matrix4, vel_solutions[3]);
 
         float vel_estimate[3];
 
-        vel_estimate[0] = (cos(yaw_enc_angle-yaw_angle) * vel_solutions[0][0] + sin(yaw_enc_angle-yaw_angle) * vel_solutions[0][1]);
-        vel_estimate[1] = (-sin(yaw_enc_angle-yaw_angle) * vel_solutions[0][0] + cos(yaw_enc_angle-yaw_angle) * vel_solutions[0][1]);
+        vel_estimate[0] = (cos(yaw_enc_angle - yaw_angle) * vel_solutions[0][0] + sin(yaw_enc_angle - yaw_angle) * vel_solutions[0][1]);
+        vel_estimate[1] = (-sin(yaw_enc_angle - yaw_angle) * vel_solutions[0][0] + cos(yaw_enc_angle - yaw_angle) * vel_solutions[0][1]);
         vel_estimate[2] = vel_solutions[0][2];
 
         // integrate to find pos
@@ -456,77 +440,75 @@ public:
         output[2][2] = yaw_enc_angle;
     }
 };
-    
+
 /// @brief Estimate the state of the flywheels as meters/second of balls exiting the barrel.
-struct FlyWheelEstimator : public Estimator
-{
-    private:
-        /// @brief can data pointer from EstimatorManager
-        CANData* can_data;
-        /// @brief calculated flywheel state from ref
-        float projectile_speed_ref;
+struct FlyWheelEstimator : public Estimator {
+private:
+    /// @brief can data pointer from EstimatorManager
+    CANData* can_data;
+    /// @brief calculated flywheel state from ref
+    float projectile_speed_ref;
+  
+    /// @brief calculated flywheel state from can
+    float linear_velocity;
+    /// @brief can weight for weighted average
+    float can_weight = 1;
 
-        /// @brief calculated flywheel state from can
-        float linear_velocity;
-        /// @brief can weight for weighted average
-        float can_weight = 1;
+    /// @brief ref weight for weighted average
+    float ref_weight = 0;
 
-        /// @brief ref weight for weighted average
-        float ref_weight = 0;
+public:
+    /// @brief make new flywheel estimator and set can data pointer and num states
+    /// @param c can data pointer from EstimatorManager
+    /// @param _num_states number of states estimated
+    FlyWheelEstimator(CANData* c, int _num_states) {
+        can_data = c;
+        num_states = _num_states;
+    }
+  
+    ~FlyWheelEstimator() {};
 
-    public:
-        /// @brief make new flywheel estimator and set can data pointer and num states
-        /// @param c can data pointer from EstimatorManager
-        /// @param _num_states number of states estimated
-        FlyWheelEstimator(CANData *c, int _num_states){
-            can_data = c;
-            num_states = _num_states;
-        }
+    /// @brief generate estimated states and replace in output array
+    /// @param output array to be updated with the calculated states
+    void step_states(float output[STATE_LEN][3]) {
+        //can
+        float radius = 30 * 0.001; //meters
+        float angular_velocity_l = -can_data->get_motor_attribute(CAN_2, 3, MotorAttribute::SPEED) * (2 * PI) / 60;
+        float angular_velocity_r = can_data->get_motor_attribute(CAN_2, 4, MotorAttribute::SPEED) * (2 * PI) / 60;
+        float angular_velocity_avg = (angular_velocity_l + angular_velocity_r) / 2;
+        linear_velocity = angular_velocity_avg * radius; //m/s
 
-        ~FlyWheelEstimator() {};
+        //ref
+        projectile_speed_ref = ref.ref_data.launching_event.projectile_initial_speed;
 
-        /// @brief generate estimated states and replace in output array
-        /// @param output array to be updated with the calculated states
-        void step_states(float output[STATE_LEN][3]){
-            //can
-            float radius = 30 * 0.001; //meters
-            float angular_velocity_l = -can_data->get_motor_attribute(CAN_2, 3, MotorAttribute::SPEED)*(2*PI) / 60;
-            float angular_velocity_r = can_data->get_motor_attribute(CAN_2, 4, MotorAttribute::SPEED)*(2*PI) / 60;
-            float angular_velocity_avg = (angular_velocity_l + angular_velocity_r)/2;
-            linear_velocity = angular_velocity_avg * radius; //m/s
-
-            //ref
-            projectile_speed_ref = ref.ref_data.launching_event.projectile_initial_speed;
-
-            //weighted average
-            output[0][1] = (projectile_speed_ref * ref_weight) + (linear_velocity * can_weight);
-        }
+        //weighted average
+        output[0][1] = (projectile_speed_ref * ref_weight) + (linear_velocity * can_weight);
+    }
 };
 
 /// @brief Estimate the state of the feeder in balls/s
-struct FeederEstimator : public Estimator
-{
-    private:
-        /// @brief can data pointer from EstimatorManager
-        CANData* can_data;
-        
-        /// @brief balls per second calculated from ref
-        float balls_per_second_ref;
-        
-        /// @brief balls per second calculated from can
-        float balls_per_second_can;
+struct FeederEstimator : public Estimator {
+private:
+    /// @brief can data pointer from EstimatorManager
+    CANData* can_data;
 
-        /// @brief can weight for weighted average
-        float can_weight = 1;
+    /// @brief balls per second calculated from ref
+    float balls_per_second_ref;
 
-        /// @brief ref weight for weighted average
-        float ref_weight = 0;
+    /// @brief balls per second calculated from can
+    float balls_per_second_can;
 
-    public:
+    /// @brief can weight for weighted average
+    float can_weight = 1;
+
+    /// @brief ref weight for weighted average
+    float ref_weight = 0;
+
+public:
     /// @brief make new feeder estimator and set can_data pointer and num_states
     /// @param c can data pointer from EstimatorManager
     /// @param _num_states number of states this estimator estimates
-    FeederEstimator(CANData *c, int _num_states){
+    FeederEstimator(CANData* c, int _num_states) {
         can_data = c;
         num_states = _num_states;
     }
@@ -535,7 +517,7 @@ struct FeederEstimator : public Estimator
 
     /// @brief calculate state updates
     /// @param output updated balls per second of feeder
-    void step_states(float output[STATE_LEN][3]){
+    void step_states(float output[STATE_LEN][3]) {
         //can
         float angular_velocity_motor = can_data->get_motor_attribute(CAN_2, 5, MotorAttribute::SPEED) / 60;
         float angular_velocity_feeder = angular_velocity_motor / 36;
@@ -550,31 +532,31 @@ struct FeederEstimator : public Estimator
 };
 
 /// @brief This estimator estimates our "micro" state which is stores all the motor velocities(in rad/s), whereas the other estimators estimate "macro" state which stores robot joints
-struct LocalEstimator : public Estimator{
-    private:
-        /// @brief can data from EstimatorManager
-        CANData* can_data;
+struct LocalEstimator : public Estimator {
+private:
+    /// @brief can data from EstimatorManager
+    CANData* can_data;
 
 
-    public:
-        /// @brief Make new local estimator and set can data pointer and num states
-        /// @param c can data pointer from EstimatorManager
-        /// @param ns number of states this estimator estimates
-        LocalEstimator(CANData* c, int ns){
-            micro_estimator = true;
-            can_data = c;
-            num_states = ns;
-        }
+public:
+    /// @brief Make new local estimator and set can data pointer and num states
+    /// @param c can data pointer from EstimatorManager
+    /// @param ns number of states this estimator estimates
+    LocalEstimator(CANData* c, int ns) {
+        micro_estimator = true;
+        can_data = c;
+        num_states = ns;
+    }
 
-        /// @brief step through each motor and add to micro state
-        /// @param output entire micro state 
-        void step_states(float output[NUM_MOTORS][MICRO_STATE_LEN]){
-            for (int i = 0; i < NUM_CAN_BUSES; i++){
-                for(int j = 0; j < NUM_MOTORS_PER_BUS; j++){
-                    output[(i*NUM_MOTORS_PER_BUS)+j][0] = (can_data->get_motor_attribute(i, j+1, MotorAttribute::SPEED)/60) * 2 * PI;
-                }
+    /// @brief step through each motor and add to micro state
+    /// @param output entire micro state 
+    void step_states(float output[NUM_MOTORS][MICRO_STATE_LEN]) {
+        for (int i = 0; i < NUM_CAN_BUSES; i++) {
+            for (int j = 0; j < NUM_MOTORS_PER_BUS; j++) {
+                output[(i * NUM_MOTORS_PER_BUS) + j][0] = (can_data->get_motor_attribute(i, j + 1, MotorAttribute::SPEED) / 60) * 2 * PI;
             }
         }
+    }
 };
 
 #endif
