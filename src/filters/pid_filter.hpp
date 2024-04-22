@@ -4,8 +4,6 @@
 #ifndef PID_FILTER_H
 #define PID_FILTER_H
 
-#define PI 3.1415926535
-
 /// @brief PIDF filter used in controls. Gains are configurable via K
 struct PIDFilter {
     /// @brief gains
