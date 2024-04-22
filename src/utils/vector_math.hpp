@@ -11,8 +11,8 @@ void rotate2D(float* v, float* v_tf, float angle) {
 float vectorProduct(float* a, float* b, int n) {
 	int product = 0;
 	for (int i = 0; i < n; i++) {
-        product += a[i] * b[i];
-    }
+		product += a[i] * b[i];
+	}
 	return product;
 }
 

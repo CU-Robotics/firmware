@@ -35,19 +35,19 @@ void DR16::read() {
 
 	// dont read if there are less than 18 bytes, i.e. we caught the packet as it was being written
 	if (Serial8.available() < DR16_PACKET_SIZE) {
-    if (millis() - m_disctTime > 250) {
-      m_connected = false;
-    }
+		if (millis() - m_disctTime > 250) {
+			m_connected = false;
+		}
 		return;
 	}
 
-  // Serial.println(m_disctTime);
-  m_disctTime = millis();
-  m_connected = true;
-  // Serial.print("CONNCETD: ");
-  // Serial.println(m_connected);
+	// Serial.println(m_disctTime);
+	m_disctTime = millis();
+	m_connected = true;
+	// Serial.print("CONNCETD: ");
+	// Serial.println(m_connected);
 
-	// issue read command, fills m_inputRaw with 18 bytes
+	  // issue read command, fills m_inputRaw with 18 bytes
 	Serial8.readBytes(m_inputRaw, DR16_PACKET_SIZE);
 
 	// set channel values, since each channel is packed within each other, and are 11 bits long
@@ -59,14 +59,14 @@ void DR16::read() {
 	wh = ((m_inputRaw[17] & 0x7) << 8) | m_inputRaw[16];
 	k1 = m_inputRaw[14];
 	k2 = m_inputRaw[15];
-	mouse_x = (m_inputRaw[7] << 8) | m_inputRaw[6]; 
-	mouse_y = (m_inputRaw[9] << 8) | m_inputRaw[8]; 
+	mouse_x = (m_inputRaw[7] << 8) | m_inputRaw[6];
+	mouse_y = (m_inputRaw[9] << 8) | m_inputRaw[8];
 	l_mouse_button = m_inputRaw[12];
 	r_mouse_button = m_inputRaw[13];
 	s1 = (m_inputRaw[5] & 0x30) >> 4;
 	s2 = (m_inputRaw[5] & 0xc0) >> 6;
 
-  // set these split values into the seperated raw input array
+	// set these split values into the seperated raw input array
 	m_inputRawSeperated[0] = c0;
 	m_inputRawSeperated[1] = c1;
 	m_inputRawSeperated[2] = c2;
@@ -112,8 +112,7 @@ void DR16::read() {
 		keys.c = (k1 >> 5) & 0x01;
 		keys.v = (k1 >> 6) & 0x01;
 		keys.b = (k1 >> 7) & 0x01;
-	}
-	else {
+	} else {
 		uint32_t dt = micros() - m_prevTime;
 		m_failTime += dt;
 		if (m_failTime > DR16_FAIL_STATE_TIMEOUT)
@@ -128,7 +127,7 @@ void DR16::read() {
 }
 
 void DR16::zero() {
-  // zero input buffer
+	// zero input buffer
 	for (int i = 0; i < DR16_INPUT_VALUE_COUNT; i++) {
 		m_input[i] = 0;
 	}
@@ -160,8 +159,8 @@ float DR16::bounded_map(int value, int in_low, int in_high, int out_low, int out
 }
 
 bool DR16::is_data_valid() {
-  // go through all values in raw seperated input and compare them against maximum and minimum values
-  // the - 2 is to exclude switch values
+	// go through all values in raw seperated input and compare them against maximum and minimum values
+	// the - 2 is to exclude switch values
 	for (int i = 0; i < DR16_INPUT_VALUE_COUNT - 2; i++) {
 		if (m_inputRawSeperated[i] < DR16_CONTROLLER_INPUT_LOW || m_inputRawSeperated[i] > DR16_CONTROLLER_INPUT_HIGH)
 			return false;
@@ -198,15 +197,15 @@ float DR16::get_l_switch() {
 	return m_input[6];
 }
 
-int DR16::get_mouse_y(){
+int DR16::get_mouse_y() {
 	return mouse_y;
 }
 
-int DR16::get_mouse_x(){
+int DR16::get_mouse_x() {
 	return mouse_x;
 }
 
-bool DR16::get_l_mouse_button(){
+bool DR16::get_l_mouse_button() {
 	return l_mouse_button;
 }
 
