@@ -39,9 +39,10 @@ enum MotorAttribute {
   ANGLE, SPEED, TORQUE, TEMP
 };
 
-//The purpose of this struct is to be able to pass updated CAN data around without having to pass a rm_CAN object pointer which can be finnicky.
+/// @brief The purpose of this struct is to be able to pass updated CAN data around without having to pass a rm_CAN object pointer which can be finnicky.
 struct CANData
 {
+  /// @brief actual stored motor data to be sent around
   uint8_t data[NUM_CAN_BUSES][NUM_MOTORS_PER_BUS][CAN_MESSAGE_SIZE];
 
   /// @brief Reads and returns value from input array of specified motor
@@ -111,7 +112,7 @@ public:
   /// @note Does not issue a Write command to the CANs
   /// @param canID ID of the CAN which the motor is on, expects indexable ID value
   /// @param motorID ID of the individual motor, expects indexable ID value
-  /// @param motorID Motor controller type (C610, C620, M3508)
+  /// @param controllerType type of motor controller that this motor uses
   /// @param value A value in the range of [-1.0, 1.0]
   void write_motor_norm(uint16_t canID, uint16_t motorID, uint8_t controllerType, float value);
 
@@ -136,6 +137,8 @@ public:
   /// @brief Print off the values of the output array
   void print_output();
 
+  /// @brief get can data pointer from can
+  /// @return can data pointer
   CANData* get_data() { return &m_input; }
 
 private:

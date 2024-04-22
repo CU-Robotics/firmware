@@ -23,14 +23,14 @@ EstimatorManager::EstimatorManager(CANData *data)
     can_data = data;
 }
 
-void EstimatorManager::init_estimator(int state_id, int num_states)
+void EstimatorManager::init_estimator(int estimator_id, int num_states)
 {
-    switch (state_id)
+    switch (estimator_id)
     {
     case 1: // Gimbal Estimator
         float values_gimbal[10];
         values_gimbal[0] = -1.462;       // yaw encoder offset
-        values_gimbal[1] = -1.9599;       // pitch encoder offset
+        values_gimbal[1] = -2.154;       // pitch encoder offset
         values_gimbal[2] = 0;       // default yaw starting angle (starting point for imu integration)
         values_gimbal[3] = 1.91986; // default pitch starting angle (starting point for imu integration)
         values_gimbal[4] = 0;       // default roll starting angle (starting point for imu integration)

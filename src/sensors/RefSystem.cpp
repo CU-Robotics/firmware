@@ -30,10 +30,16 @@ void RefSystem::init() {
 }
 
 void RefSystem::read() {
+    // Dont read if there is not enough data for a full packet
+    // This prevents ref from just reading sections of headers, but not the rest of the packet
+    // this is a stop-gap solution, should be re-written to be more robust
+    if (Serial2.available() < 255)
+        return;
+
     Frame frame{};
 
     bool success = true;
-
+    
     // read header
     if (success)
         success = read_frame_header(frame);
@@ -82,7 +88,6 @@ void RefSystem::read() {
             break;
         case POWER_HEAT:
             ref_data.power_heat.initialize_from_data(frame.data);
-            Serial.printf("Received power: %f %u\n", ref_data.power_heat.chassis_power, ref_data.power_heat.buffer_energy);
             break;
         case ROBOT_POSITION:
             ref_data.position.initialize_from_data(frame.data);
@@ -169,7 +174,16 @@ bool RefSystem::read_frame_header(Frame& frame) {
     // early return if Serial2 is empty or not full enough
     if (Serial2.available() < FrameHeader::packet_size)
         return false;
-    
+
+    // verify that what we are about to read is a header (first byte must be 0xA5)
+    while (Serial2.peek() != 0xA5 && Serial2.peek() != -1) {
+        Serial2.read();
+    }
+
+    // early return if Serial2 is empty or not full enough
+    if (Serial2.available() < FrameHeader::packet_size)
+        return false;
+
     // read and verify header
     int bytesRead = Serial2.readBytes(raw_buffer, FrameHeader::packet_size);
     if (bytesRead != FrameHeader::packet_size) {

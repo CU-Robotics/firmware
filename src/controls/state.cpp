@@ -75,16 +75,19 @@ void State::step_reference(float ungoverned_reference[STATE_LEN][3], int governo
         } else if(governor_type[n] == 2) { // velocity based governor
             float vel_error = ungoverned_reference[n][1] - reference[n][1];
             // check which direction the target is and set acceleration
-            if(vel_error > 0) {
+            // if the velocity error is less the max acceleration 
+            if(vel_error > (reference_limits[n][2][1]*dt)) {
                 if(vel_error*reference[n][1] > 0) reference[n][2] = reference_limits[n][2][1];
                 else reference[n][2] = reference_limits[n][2][1];
             }
-            else if(vel_error < 0) {
+            else if(vel_error < (reference_limits[n][2][0]*dt)) {
                 if(vel_error*reference[n][1] > 0) reference[n][2] = reference_limits[n][2][0];
                 else reference[n][2] = reference_limits[n][2][0];
             }
-            else reference[n][2] = 0;
-
+            else { 
+            reference[n][1] = ungoverned_reference[n][1];
+            reference[n][2] = 0;
+            }
             // step the reference by the higher order reference
             reference[n][1] += reference[n][2] * dt;
 

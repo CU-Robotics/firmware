@@ -54,6 +54,8 @@ public:
     /// @param cs The Chip Select pin
     BuffEncoder(int cs) : m_CS(cs) {};
 
+    /// @brief initialize sensor with new cs(if needed)
+    /// @param cs input Chip Select pin
     void init(int cs) { m_CS = cs; }
 
     /// @brief Read via SPI the current angle of the encoder

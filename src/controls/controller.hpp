@@ -14,15 +14,22 @@
 struct Controller
 {
 protected:
+    /// @brief gains for a specific controller
     float gains[NUM_GAINS];
+    /// @brief Timer object so we can use dt in controllers
     Timer timer;
     /// @brief defines controller inputs and outputs (0 means Macro_state input, micro_state output)
     /// @note (1 means Micro_state input, motor_current output) (2 means Macro state input, motor_current output)
     int controller_level;
+
+    /// @brief ratio to help with between motors and joints
     float gear_ratio = 0;
 public:
+    /// @brief default constructor
     Controller(){};
 
+    /// @brief set the gains for this specific controller
+    /// @param _gains gains array of length NUM_GAINS
     void set_gains(float _gains[NUM_GAINS])
     {
         for (int i = 0; i < NUM_GAINS; i++)
@@ -30,9 +37,13 @@ public:
     }
 
     /// @brief Generates an output from a state reference and estimation
+    /// @param reference target reference
+    /// @param estimate current macro state estimate
     /// @returns motor_current or Micro_state depending on controller_level
     virtual float step(float reference[3], float estimate[3]);
     /// @brief Generates an output from a state reference and estimation
+    /// @param reference target reference
+    /// @param estimate current micro state estimate
     /// @returns motor_current 
     virtual float step(float reference, float estimate[MICRO_STATE_LEN]);
 
@@ -40,6 +51,7 @@ public:
     virtual void reset() { timer.start_timer(); }
 };
 
+/// @brief Default controller
 struct NullController : public Controller
 {
 public:
@@ -52,9 +64,12 @@ public:
 struct PIDPositionController : public Controller
 {
 private:
+    /// @brief filter for calculating pid ouput
     PIDFilter pid;
 
 public:
+    /// @brief new position controller
+    /// @param _controller_level controller level, whether it outputs target motor torque or target micro state
     PIDPositionController(int _controller_level) {
         controller_level = _controller_level;
     }
@@ -93,6 +108,7 @@ public:
         return output;
     }
 
+    /// @brief reset controller which 0's integrators
     void reset()
     {
         Controller::reset();
@@ -104,9 +120,13 @@ public:
 struct PIDVelocityController : public Controller
 {
 private:
+    /// @brief filter for calculating pid ouput
     PIDFilter pid;
 
 public:
+    
+    /// @brief Set controller level
+    /// @param _controller_level Controller level, whether it outputs a target motor torque or a micro/macro state
     PIDVelocityController(int _controller_level) {
         controller_level = _controller_level;
     }
@@ -146,6 +166,7 @@ public:
         return output;
     }
 
+    /// @brief reset controller which 0's integrators
     void reset()
     {
         Controller::reset();
@@ -157,9 +178,12 @@ public:
 struct PIDFVelocityController : public Controller
 {
 private:
+    /// @brief pid filter for calculating controller outputs
     PIDFilter pid;
 
 public:
+    /// @brief new controller
+    /// @param _controller_level controller level, whether it ouputs target motor torque or micro state
     PIDFVelocityController(int _controller_level) {
         controller_level = _controller_level;
     }
@@ -211,9 +235,14 @@ public:
 struct FullStateFeedbackController : public Controller
 {
 private:
-    PIDFilter pid1, pid2;
+    /// @brief pid filter for calculating controller outputs
+    PIDFilter pid1;
+    /// @brief pid filter for calculating controller outputs
+    PIDFilter pid2;
 
 public:
+    /// @brief this controller can work on position and velocity at the same time
+    /// @param _controller_level controller level, which cannot be a low level controller
     FullStateFeedbackController(int _controller_level)
     {
         controller_level = _controller_level;
@@ -259,16 +288,22 @@ public:
 struct ChassisPIDVelocityController : public Controller
 {
 private:
+    /// @brief filter for calculating pid controller outputs
     PIDFilter pid;
 
 public:
+    /// @brief set controller level and make sure it's a low level controller
+    /// @param _controller_level controller level(if it outputs a torque or a target micro state).
     ChassisPIDVelocityController(int _controller_level)
     {
         controller_level = _controller_level;
         if (controller_level != 1)
             Serial.println("chassisPIDVelocityController must be a low level controller");
     }
-    /// @brief dont brick the program if its initialized at the wrong controller level
+    /// @brief don't do anything if we get a macro state
+    /// @param reference reference
+    /// @param estimate estimate
+    /// @return 0
     float step(float reference[3], float estimate[3]) { return 0; }
     /// @brief takes in a micro_reference of wheel velocity
     /// @param reference reference

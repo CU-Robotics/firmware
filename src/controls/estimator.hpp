@@ -13,21 +13,22 @@ struct Estimator
 public:
     Estimator(){};
 
-    // Virtual so they don't ever get called over real estimators
+    /// @brief step the current state(s) and update the estimate array accordingly
+    /// @param outputs estimated state array to update with certain estimated states
     virtual void step_states(float outputs[STATE_LEN][3]);
 
     /// @brief gets the number of states that an estimator is estimating
+    /// @return get number of states estimated by this estimator
     int get_num_states() { return num_states; }
 
     /// @brief bool that indicates if the estimator is a micro or macro estimator
     bool micro_estimator = false;
 
 protected:
-    /// @brief number of states that an estimator will estimate. 
-    /// For the micro estimators its the number micro states to estimate
+    /// @brief number of states that an estimator will estimate. For the micro estimators its the number micro states to estimate
     int num_states;
 
-    // create a timer object for each estimator
+    ///@brief create a timer object for each estimator
     Timer time;
 
     /// @brief Computes the magnitude of a vector given length n
@@ -86,6 +87,8 @@ protected:
     }
 
     /// @brief This functions finds the determinant of a 3x3 Matrix
+    ///@param mat matrix to find determinant of
+    ///@return calculated determinant
     float determinantOfMatrix(float mat[3][3])
     {
         float ans;
@@ -158,46 +161,89 @@ protected:
 struct GimbalEstimator : public Estimator
 {
 private:
+    /// @brief yaw encoder offset for 0 radians
     float YAW_ENCODER_OFFSET; // input variables
+    /// @brief yaw encoder offset for 0 radians
     float PITCH_ENCODER_OFFSET;
+    /// @brief calculated pitch angle
     float pitch_angle;
+    /// @brief calculated yaw angle
     float yaw_angle;
+    /// @brief calculated roll angle
     float roll_angle;
+    /// @brief calculated chassis angle
     float chassis_angle;
+    /// @brief calculated chassis pitch angle
     float chasis_pitch_angle;
+    /// @brief gravity acceleration vector
     float gravity_accel_vector[3];
+    /// @brief gravity pitch angle
     float gravity_pitch_angle;
+    /// @brief yaw axis in spherical coords
     float yaw_axis_spherical[3];
+    /// @brief pitch axis in spherical coords
     float pitch_axis_spherical[3];
+    /// @brief roll axis in spherical coords
     float roll_axis_spherical[3];
+    /// @brief yaw axis unit vector
     float yaw_axis_unitvector[3];
+    /// @brief pitch axis unit vector
     float pitch_axis_unitvector[3];
+    /// @brief roll axis unit vector
     float roll_axis_unitvector[3];
+    /// @brief global relative yaw
     float yaw_axis_global[3];
+    /// @brief global relative pitch
     float pitch_axis_global[3];
+    /// @brief global relative roll
     float roll_axis_global[3];
+    /// @brief current calculated yaw velocity
     float current_yaw_velocity = 0;
+    /// @brief previous calculated yaw velocity
     float previous_yaw_velocity = 0;
+    /// @brief current calculated pitch velocity
     float current_pitch_velocity = 0;
+    /// @brief previous calculated pitch velocity
     float previous_pitch_velocity = 0;
+    /// @brief current calculated roll velocity
     float current_roll_velocity = 0;
+    /// @brief previous calculated roll velocity
     float previous_roll_velocity = 0;
+    /// @brief global relative yaw velocity
     float global_yaw_velocity = 0;
+    /// @brief global relative roll velocity
     float global_roll_velocity = 0;
+    /// @brief global relative pitch velocity
     float global_pitch_velocity = 0;
+    /// @brief global pitch angle
     float global_pitch_angle = 1.92;
+    /// @brief global yaw angle
     float global_yaw_angle = 0;
+    /// @brief global roll angle
     float global_roll_angle = 0;
+    /// @brief delta time
     float dt = 0;
-
+    
+    /// @brief buff encoder on the yaw
     BuffEncoder *buff_enc_yaw;
+    /// @brief buff encoder on the pitch
     BuffEncoder *buff_enc_pitch;
+    /// @brief can data pointer from EstimatorManager
     CANData *can_data;
+    /// @brief icm imu
     ICM20649 *icm_imu;
 
+    /// @brief position estimate to store position after integrating used for chassis odometry
     float pos_estimate[3] = {0,0,0};
 
 public:
+    /// @brief estimate the state of the gimbal
+    /// @param sensor_values inputted sensor values from EstimatorManager
+    /// @param b1 buff encoder 1
+    /// @param b2 buff encoder 2
+    /// @param imu icm encoder
+    /// @param data can data from Estimator Manager
+    /// @param n num states this estimator estimates
     GimbalEstimator(float sensor_values[10], BuffEncoder *b1, BuffEncoder *b2, ICM20649 *imu, CANData *data, int n)
     {
         buff_enc_yaw = b1; // sensor object definitions
@@ -221,7 +267,9 @@ public:
         pitch_axis_spherical[0] = 1; // rho (1 for a spherical)
         roll_axis_spherical[0] = 1;  // rho (1 for a spherical)
     }
-
+    
+    /// @brief calculate estimated states and add to output array
+    /// @param output output array to add estimated states to
     void step_states(float output[STATE_LEN][3]) override
     {
         float pitch_enc_angle = (-buff_enc_pitch->get_angle()) - PITCH_ENCODER_OFFSET;
@@ -405,54 +453,80 @@ public:
     }
 };
     
+/// @brief Estimate the state of the flywheels as meters/second of balls exiting the barrel.
 struct FlyWheelEstimator : public Estimator
 {
     private:
-     CANData* can_data;
-     float projectile_speed_ref;
-     float linear_velocity;
-
-     float can_weight = 1;
-     float ref_weight = 0;
-
-    public:
-    FlyWheelEstimator(CANData *c, int _num_states){
-        can_data = c;
-        num_states = _num_states;
-    }
-
-    void step_states(float output[STATE_LEN][3]){
-        //can
-        float radius = 30 * 0.001; //meters
-        float angular_velocity_l = -can_data->get_motor_attribute(CAN_2, 3, MotorAttribute::SPEED)*(2*PI) / 60;
-        float angular_velocity_r = can_data->get_motor_attribute(CAN_2, 4, MotorAttribute::SPEED)*(2*PI) / 60;
-        float angular_velocity_avg = (angular_velocity_l + angular_velocity_r)/2;
-        linear_velocity = angular_velocity_avg * radius; //m/s
-
-        //ref
-        projectile_speed_ref = ref.ref_data.launching_event.projectile_initial_speed;
-
-        //weighted average
-        output[0][1] = (projectile_speed_ref * ref_weight) + (linear_velocity * can_weight);
-    }
-};
-
-struct FeederEstimator : public Estimator
-{
-    private:
+        /// @brief can data pointer from EstimatorManager
         CANData* can_data;
-        float balls_per_second_ref;
-        float balls_per_second_can;
+        /// @brief calculated flywheel state from ref
+        float projectile_speed_ref;
 
+        /// @brief calculated flywheel state from can
+        float linear_velocity;
+        /// @brief can weight for weighted average
         float can_weight = 1;
+
+        /// @brief ref weight for weighted average
         float ref_weight = 0;
 
     public:
+        /// @brief make new flywheel estimator and set can data pointer and num states
+        /// @param c can data pointer from EstimatorManager
+        /// @param _num_states number of states estimated
+        FlyWheelEstimator(CANData *c, int _num_states){
+            can_data = c;
+            num_states = _num_states;
+        }
+
+        /// @brief generate estimated states and replace in output array
+        /// @param output array to be updated with the calculated states
+        void step_states(float output[STATE_LEN][3]){
+            //can
+            float radius = 30 * 0.001; //meters
+            float angular_velocity_l = -can_data->get_motor_attribute(CAN_2, 3, MotorAttribute::SPEED)*(2*PI) / 60;
+            float angular_velocity_r = can_data->get_motor_attribute(CAN_2, 4, MotorAttribute::SPEED)*(2*PI) / 60;
+            float angular_velocity_avg = (angular_velocity_l + angular_velocity_r)/2;
+            linear_velocity = angular_velocity_avg * radius; //m/s
+
+            //ref
+            projectile_speed_ref = ref.ref_data.launching_event.projectile_initial_speed;
+
+            //weighted average
+            output[0][1] = (projectile_speed_ref * ref_weight) + (linear_velocity * can_weight);
+        }
+};
+
+/// @brief Estimate the state of the feeder in balls/s
+struct FeederEstimator : public Estimator
+{
+    private:
+        /// @brief can data pointer from EstimatorManager
+        CANData* can_data;
+        
+        /// @brief balls per second calculated from ref
+        float balls_per_second_ref;
+        
+        /// @brief balls per second calculated from can
+        float balls_per_second_can;
+
+        /// @brief can weight for weighted average
+        float can_weight = 1;
+
+        /// @brief ref weight for weighted average
+        float ref_weight = 0;
+
+    public:
+    /// @brief make new feeder estimator and set can_data pointer and num_states
+    /// @param c can data pointer from EstimatorManager
+    /// @param _num_states number of states this estimator estimates
     FeederEstimator(CANData *c, int _num_states){
         can_data = c;
         num_states = _num_states;
     }
 
+    /// @brief calculate state updates
+    /// @param output updated balls per second of feeder
     void step_states(float output[STATE_LEN][3]){
         //can
         float angular_velocity_motor = can_data->get_motor_attribute(CAN_2, 5, MotorAttribute::SPEED) / 60;
@@ -467,19 +541,25 @@ struct FeederEstimator : public Estimator
     }
 };
 
-//This estimator estimates our "micro" state which is stores all the motor velocities(in rad/s), whereas the other estimators estimate "macro" state which stores robot joints
+/// @brief This estimator estimates our "micro" state which is stores all the motor velocities(in rad/s), whereas the other estimators estimate "macro" state which stores robot joints
 struct LocalEstimator : public Estimator{
     private:
+        /// @brief can data from EstimatorManager
         CANData* can_data;
 
 
     public:
+        /// @brief Make new local estimator and set can data pointer and num states
+        /// @param c can data pointer from EstimatorManager
+        /// @param ns number of states this estimator estimates
         LocalEstimator(CANData* c, int ns){
             micro_estimator = true;
             can_data = c;
             num_states = ns;
         }
 
+        /// @brief step through each motor and add to micro state
+        /// @param output entire micro state 
         void step_states(float output[NUM_MOTORS][MICRO_STATE_LEN]){
             for (int i = 0; i < NUM_CAN_BUSES; i++){
                 for(int j = 0; j < NUM_MOTORS_PER_BUS; j++){
