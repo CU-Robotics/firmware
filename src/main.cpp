@@ -8,6 +8,7 @@
 #include "controls/state.hpp"
 #include "comms/usb_hid.hpp"
 #include "sensors/RefSystem.hpp"
+#include "sensors/TOFSensor.hpp"
 
 // Loop constants
 #define LOOP_FREQ 1000
