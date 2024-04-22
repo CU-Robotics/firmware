@@ -8,7 +8,7 @@
 #include "controls/state.hpp"
 #include "comms/usb_hid.hpp"
 #include "sensors/RefSystem.hpp"
-#include "sensors/TOFSensor.h"
+#include "sensors/TOFSensor.hpp"
 
 // Loop constants
 #define LOOP_FREQ 1000
@@ -19,7 +19,7 @@ DR16 dr16;
 rm_CAN can;
 RefSystem ref;
 HIDLayer comms;
-TOFSensor tof(&Wire, A1);
+TOFSensor tof;
 
 Timer loop_timer;
 Timer stall_timer;
@@ -76,7 +76,7 @@ int main()
     dr16.init();
     ref.init();
     comms.init();
-    tof.init_sensor();
+    tof.init();
     
     CANData* can_data = can.get_data();
 
@@ -324,6 +324,10 @@ int main()
         can.read();
         dr16.read();
         ref.read();
+
+        auto start = micros();
+        Serial.println(tof.read());
+        Serial.println(micros()-start);
 
         // Do stuff with comms
         // get the target state before doing control stuff
