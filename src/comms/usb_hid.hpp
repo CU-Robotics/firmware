@@ -20,28 +20,6 @@ constexpr unsigned int KHADAS_PACKET_TSTATE_OFFSET = 4u;	// 288 bytes
 constexpr unsigned int KHADAS_PACKET_REF_OFFSET = 292u;	// 128 bytes
 /// @brief The offset to the end of the Khadas packet
 constexpr unsigned int KHADAS_PACKET_END_OFFSET = 420u;
-#ifndef USB_HID_HPP
-#define USB_HID_HPP
-
-#include "Arduino.h"
-#include "usb_rawhid.h"				// usb_rawhid functions
-#include "../controls/state.hpp"	// STATE_LEN macro
-
-/// @brief Packet size for communication packets
-constexpr unsigned int COMMS_PACKET_SIZE = 1023u;
-
-// TODO: make this dynamic and grabbed from the config packet
-// Khadas -> Teensy
-/// @brief The offset of the Packet ID from the base of the Khadas packet
-constexpr unsigned int KHADAS_PACKET_ID_OFFSET = 1u; 	// 2 bytes
-/// @brief The offset of the Packet info bits from the base of the Khadas packet
-constexpr unsigned int KHADAS_PACKET_INFO_OFFSET = 3u;	// 1 byte
-/// @brief The offset of the Packet target state from the base of the Khadas packet
-constexpr unsigned int KHADAS_PACKET_TSTATE_OFFSET = 4u;	// 288 bytes
-/// @brief The offset of the Packet ref draw data from the base of the Khadas packet
-constexpr unsigned int KHADAS_PACKET_REF_OFFSET = 292u;	// 128 bytes
-/// @brief The offset to the end of the Khadas packet
-constexpr unsigned int KHADAS_PACKET_END_OFFSET = 420u;
 
 // Teensy -> Khadas
 /// @brief The offset of the packet ID from the base of the Teesny packet
