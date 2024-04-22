@@ -15,11 +15,13 @@ private:
 	int ticks;
 	/// @brief measure of current angle in radians [0, 2pi)
 	float radians;
-	
+  
 public:
 	/// @brief Construct a new rev_encoder object
 	/// @param encoder_pin the pin number that the encoders signal pin is plugged into
-	RevEncoder(uint8_t encoder_pin);
+	/// @param baudrate the desired baudrate for the encoder
+	RevEncoder(uint8_t encoder_pin, int baudrate);
+
 	/// @brief updates ticks and radians to the current angle 
 	void read();
 	/// @brief get the last angle of the encoder in ticks

@@ -1,15 +1,11 @@
 #include "controller_manager.hpp"
 
-ControllerManager::ControllerManager()
-{
-}
+ControllerManager::ControllerManager() {}
 
-void ControllerManager::init_controller(uint8_t can_id, uint8_t motor_id, int controller_type, int controller_level, float gains[NUM_GAINS])
-{
+void ControllerManager::init_controller(uint8_t can_id, uint8_t motor_id, int controller_type, int controller_level, float gains[NUM_GAINS]) {
     int index = ((can_id)*NUM_MOTORS_PER_BUS) + (motor_id - 1);
 
-    switch (controller_type)
-    {
+    switch (controller_type) {
     case 0:
         controllers[index][controller_level] = new NullController();
         controllers[index][controller_level]->set_gains(gains);
@@ -44,7 +40,7 @@ void ControllerManager::init_controller(uint8_t can_id, uint8_t motor_id, int co
 void ControllerManager::step(float macro_reference[STATE_LEN][3], float macro_estimate[STATE_LEN][3], float micro_estimate[NUM_MOTORS][MICRO_STATE_LEN], float kinematics_p[NUM_MOTORS][STATE_LEN], float kinematics_v[NUM_MOTORS][STATE_LEN], float outputs[NUM_MOTORS]) {
     // clear the outputs array before updating
     for (int i = 0;i < NUM_MOTORS;i++) outputs[i] = 0;
-     
+
     float micro_reference[STATE_LEN];
     // Iterate through controller level 0
     for (int m = 0; m < NUM_MOTORS; m++) {
@@ -63,7 +59,6 @@ void ControllerManager::step(float macro_reference[STATE_LEN][3], float macro_es
             output += controllers[m][0]->step(temp_macro_reference, temp_macro_estimate);
         }
         micro_reference[m] = output;
-        // if(m==12) Serial.println(micro_reference[m]);
     }
 
 

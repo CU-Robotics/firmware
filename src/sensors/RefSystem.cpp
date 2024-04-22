@@ -1,7 +1,6 @@
 #include "RefSystem.hpp"
 
-uint8_t generateCRC8(uint8_t* data, uint32_t len)
-{
+uint8_t generateCRC8(uint8_t* data, uint32_t len) {
     uint8_t CRC8 = 0xFF;
     while (len-- > 0) {
         uint8_t curr = CRC8 ^ (*data++);
@@ -39,7 +38,7 @@ void RefSystem::read() {
     Frame frame{};
 
     bool success = true;
-    
+
     // read header
     if (success)
         success = read_frame_header(frame);
@@ -165,8 +164,7 @@ void RefSystem::write(uint8_t* packet, uint8_t length) {
     if (Serial2.write(packet, length) == length) {
         packets_sent++;
         bytes_sent += length;
-    }
-    else
+    } else
         Serial.println("Failed to write");
 }
 
@@ -238,7 +236,7 @@ bool RefSystem::read_frame_data(Frame& frame) {
     // early return if Serial2 is empty or not full enough
     if (Serial2.available() < frame.header.data_length)
         return false;
-    
+
     // read and verify data
     int bytesRead = Serial2.readBytes(&frame.data.data[0], frame.header.data_length);
     if (bytesRead != frame.header.data_length) {
@@ -254,7 +252,7 @@ bool RefSystem::read_frame_tail(Frame& frame) {
     // early return if Serial2 is empty or not full enough
     if (Serial2.available() < 2)
         return false;
-    
+
     // read and verify tail
     int bytesRead = Serial2.readBytes(raw_buffer, 2);
     if (bytesRead != 2) {

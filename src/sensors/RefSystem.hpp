@@ -5,8 +5,6 @@
 
 #include "RefSystemPacketDefs.hpp"
 
-
-
 /// @brief Time (in us) between packet writes
 constexpr uint32_t REF_MAX_PACKET_DELAY = 40000;
 /// @brief Maximum number of bytes that is allowed to be sent within a second. Includes Ref header/tail

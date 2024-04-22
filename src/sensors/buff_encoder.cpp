@@ -2,9 +2,8 @@
 
 const SPISettings BuffEncoder::m_settings = SPISettings(1000000, MT6835_BITORDER, SPI_MODE3);
 
-float BuffEncoder::read()
-{
-    
+float BuffEncoder::read() {
+
     uint8_t data[6] = { 0 }; // transact 48 bits
 
     // set the operation
@@ -18,7 +17,7 @@ float BuffEncoder::read()
     digitalWrite(m_CS, HIGH);
     SPI.endTransaction();
 
-    
+
     // convert received angle into radians
     int raw_angle = (data[2] << 13) | (data[3] << 5) | (data[4] >> 3);
     float radians = raw_angle / (float)MT6835_CPR * (3.14159265 * 2.0);
