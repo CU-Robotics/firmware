@@ -63,7 +63,7 @@ void ControllerManager::step(float macro_reference[STATE_LEN][3], float macro_es
             output += controllers[m][0]->step(temp_macro_reference, temp_macro_estimate);
         }
         micro_reference[m] = output;
-        if(m==12) Serial.println(micro_reference[m]);
+        // if(m==12) Serial.println(micro_reference[m]);
     }
 
 
