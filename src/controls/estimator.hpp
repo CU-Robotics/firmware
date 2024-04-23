@@ -523,6 +523,37 @@ public:
     }
 };
 
+/// @brief Estimate the state of the switcher in millimeters
+struct SwitcherEstimator : public Estimator {
+private:
+    /// @brief can data pointer from EstimatorManager
+    CANData* can_data;
+
+    /// @brief TOF sensor pointer from EstimatorManager
+    TOFSensor* time_of_flight;
+
+    /// @brief distance of the barrel from the right side of the shooter
+    float distance_from_right = 0;
+public:
+    /// @brief make new barrel switcher estimator and set can_data pointer and num_states
+    /// @param c can data pointer from EstimatorManager
+    /// @param _num_states number of states this estimator estimates
+    /// @param tof time of flight sensor object
+    SwitcherEstimator(CANData* c,TOFSensor* tof, int _num_states) {
+        can_data = c;
+        num_states = _num_states;
+        time_of_flight = tof;
+    }
+
+    /// @brief calculate state updates
+    /// @param output updated balls per second of feeder
+    void step_states(float output[STATE_LEN][3]) {
+        //read tof sensor (millimeters)
+        distance_from_right = (float)(time_of_flight->read());
+        output[0][0] = distance_from_right;
+    }
+};
+
 /// @brief This estimator estimates our "micro" state which is stores all the motor velocities(in rad/s), whereas the other estimators estimate "macro" state which stores robot joints
 struct LocalEstimator : public Estimator {
 private:

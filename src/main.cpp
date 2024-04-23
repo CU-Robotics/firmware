@@ -89,7 +89,7 @@ int main() {
     //which states each estimator estimates
     int assigned_states[NUM_ESTIMATORS][STATE_LEN] = { 0 };
     //number of states each estimator estimates
-    int num_states_per_estimator[NUM_ESTIMATORS] = { 5,1,1,16 };
+    int num_states_per_estimator[NUM_ESTIMATORS] = { 5,1,1,16,1 };
 
 
     //reference limits of our reference governor. Used to turn an ungoverned reference into a governed reference to send to ControllerManager

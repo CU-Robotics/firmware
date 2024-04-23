@@ -314,4 +314,46 @@ public:
     }
 };
 
+struct SwitcherController : public Controller {
+private:
+    /// @brief filter for calculating pid controller outputs
+    PIDFilter pid;
+public:
+    /// @brief set controller level and make sure it's not low level
+    /// @param _controller_level controller level(if it outputs a torque or a target micro state).
+    SwitcherController(int _controller_level) {
+        controller_level = _controller_level;
+        if (controller_level == 1)
+            Serial.println("SwitcherController must not be a low level controller");
+    }
+    /// @brief don't do anything if we get a macro state
+    /// @param reference reference
+    /// @param estimate estimate
+    /// @return 0
+    float step(float reference[3], float estimate[3]) { 
+        float dt = timer.delta();
+        pid.setpoint = reference; // 1st index = position
+        pid.measurement = estimate[0];
+        pid.K[0] = gains[0];
+        pid.K[1] = gains[1];
+        pid.K[2] = gains[2];
+        // Feed forward to push the switcher into the wall constantly with a small force
+        pid.K[3] = gains[3]*reference[0];
+       
+        float output = pid.filter(dt, true, false);
+        return output;
+    }
+
+
+    /// @brief dont do anything if we get a micro_reference
+    /// @param reference reference
+    /// @param estimate estimate
+    float step(float reference, float estimate[MICRO_STATE_LEN]) {return 0;}
+
+    void reset() {
+        Controller::reset();
+        pid.sumError = 0.0;
+    }
+};
+
 #endif // CONTROLLER_H

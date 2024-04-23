@@ -7,6 +7,7 @@
 #include "../sensors/IMUSensor.hpp"
 #include "../sensors/LSM6DSOX.hpp"
 #include "../sensors/rev_encoder.hpp"
+#include "../sensors/TOFSensor.hpp"
 #include "../sensors/buff_encoder.hpp"
 #include "../sensors/RefSystem.hpp"
 #include "estimator.hpp"
@@ -18,7 +19,12 @@
 
 #define NUM_IMU_CALIBRATION 50000
 
-#define NUM_ESTIMATORS 4
+#define NUM_ESTIMATORS 5
+
+// Rev encoder pins
+#define REV_ENC_PIN1 2;
+#define REV_ENC_PIN2 3;
+#define REV_ENC_PIN3 4;
 
 /// @brief Manage all estimators for macro and micro state
 class EstimatorManager {
@@ -31,6 +37,10 @@ private:
     LSM6DSOX lsm_sensors[NUM_SENSOR_TYPE];
     /// @brief array to store robot buff encoders
     BuffEncoder buff_sensors[NUM_SENSOR_TYPE];
+    /// @brief array to store robot rev encoders
+    RevEncoder rev_sensors[NUM_SENSOR_TYPE];
+    /// @brief array to store tof sensors
+    TOFSensor tof_sensors[NUM_SENSOR_TYPE];
 
     /// @brief array of robot estimators to estimate full robot state
     Estimator* estimators[STATE_LEN] = { nullptr };
