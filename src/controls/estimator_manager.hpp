@@ -22,9 +22,9 @@
 #define NUM_ESTIMATORS 5
 
 // Rev encoder pins
-#define REV_ENC_PIN1 2;
-#define REV_ENC_PIN2 3;
-#define REV_ENC_PIN3 4;
+#define REV_ENC_PIN1 2
+#define REV_ENC_PIN2 3
+#define REV_ENC_PIN3 4
 
 /// @brief Manage all estimators for macro and micro state
 class EstimatorManager {

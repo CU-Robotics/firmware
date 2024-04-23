@@ -56,7 +56,10 @@ void EstimatorManager::init_estimator(int estimator_id, int num_states) {
         estimators[3] = new LocalEstimator(can_data, num_states);
         break;
     case 5:
-        estimators[2] = new SwitcherEstimator(can_data, &tof_sensors[0],num_states);
+        float values_switcher[2];
+        values_switcher[0] = 45.0;
+        values_switcher[1] = 23.0;
+        estimators[4] = new SwitcherEstimator(values_switcher, can_data, &tof_sensors[0],num_states);
         break;
     default:
         break;

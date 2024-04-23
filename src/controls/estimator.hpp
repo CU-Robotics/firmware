@@ -532,25 +532,33 @@ private:
     /// @brief TOF sensor pointer from EstimatorManager
     TOFSensor* time_of_flight;
 
-    /// @brief distance of the barrel from the right side of the shooter
-    float distance_from_right = 0;
+    /// @brief can weight for weighted average
+    float tof_sensor_offset = 0;
+
+    /// @brief used to scale the tof sensor data to -1 to 1
+    float tof_scale = 0;
 public:
     /// @brief make new barrel switcher estimator and set can_data pointer and num_states
     /// @param c can data pointer from EstimatorManager
     /// @param _num_states number of states this estimator estimates
     /// @param tof time of flight sensor object
-    SwitcherEstimator(CANData* c,TOFSensor* tof, int _num_states) {
+    SwitcherEstimator(float values[2],CANData* c,TOFSensor* tof, int _num_states) {
         can_data = c;
         num_states = _num_states;
         time_of_flight = tof;
+        tof_sensor_offset = values[0];
+        tof_scale = values[1];
     }
 
     /// @brief calculate state updates
     /// @param output updated balls per second of feeder
     void step_states(float output[STATE_LEN][3]) {
         //read tof sensor (millimeters)
-        distance_from_right = (float)(time_of_flight->read());
+        float distance_from_right = ((float)(time_of_flight->read()) - tof_sensor_offset)/tof_scale;
+        float angular_velocity_motor = -((((can_data->get_motor_attribute(CAN_2, 6, MotorAttribute::SPEED) / 60)*(2*PI))/36.0)*(5.1))/tof_scale;
         output[0][0] = distance_from_right;
+        output[0][1] = angular_velocity_motor;
+
     }
 };
 

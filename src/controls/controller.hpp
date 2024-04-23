@@ -316,8 +316,10 @@ public:
 
 struct SwitcherController : public Controller {
 private:
-    /// @brief filter for calculating pid controller outputs
-    PIDFilter pid;
+    /// @brief filter for calculating pid position controller outputs
+    PIDFilter pidp;
+    /// @brief filter for calculating pid velocity controller outputs
+    PIDFilter pidv;
 public:
     /// @brief set controller level and make sure it's not low level
     /// @param _controller_level controller level(if it outputs a torque or a target micro state).
@@ -332,15 +334,26 @@ public:
     /// @return 0
     float step(float reference[3], float estimate[3]) { 
         float dt = timer.delta();
-        pid.setpoint = reference; // 1st index = position
-        pid.measurement = estimate[0];
-        pid.K[0] = gains[0];
-        pid.K[1] = gains[1];
-        pid.K[2] = gains[2];
+        pidp.setpoint = reference[0]; // 1st index = position
+        pidp.measurement = estimate[0];
+
+        pidp.K[0] = gains[0];
+        pidp.K[1] = gains[1];
+        pidp.K[2] = gains[2];
         // Feed forward to push the switcher into the wall constantly with a small force
-        pid.K[3] = gains[3]*reference[0];
-       
-        float output = pid.filter(dt, true, false);
+        if(reference[0] > .95) pidp.K[3] = gains[3];
+        else if(reference[0] < -.95) pidp.K[3] = -gains[3];
+        else pidp.K[3] = 0;
+
+        pidv.setpoint = reference[1]; 
+        pidv.measurement = estimate[1];
+
+        pidv.K[0] = gains[4];
+        pidv.K[1] = gains[5];
+        pidv.K[2] = gains[6];
+        float outputp = pidp.filter(dt, true, false);
+        float outputv = pidv.filter(dt, true, false);
+        float output = outputp + outputv;
         return output;
     }
 
@@ -352,7 +365,7 @@ public:
 
     void reset() {
         Controller::reset();
-        pid.sumError = 0.0;
+        pidp.sumError = 0.0;
     }
 };
 
