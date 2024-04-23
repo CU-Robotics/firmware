@@ -71,7 +71,7 @@ public:
 	/// @brief Attempts to read a full packet from the receiver. This function shouldn't be ran more than 100kHz
 	void read();
 
-  /// @brief Zeros the normalized input array
+	/// @brief Zeros the normalized input array
 	void zero();
 
 public:
@@ -79,9 +79,9 @@ public:
 	/// @return Failure status
 	uint8_t is_fail() { return m_fail; }
 
-  	/// @brief Returns a the current connection status for the dr16 controller
-  	/// @return true for connected false for not connected
-  	bool is_connected() { return m_connected; }
+	/// @brief Returns a the current connection status for the dr16 controller
+	/// @return true for connected false for not connected
+	bool is_connected() { return m_connected; }
 
 	/// @brief Get the 7 float length input buffer. These values are normalized [-1, 1]
 	/// @return float buffer
@@ -132,14 +132,14 @@ public:
 	/// @brief status of left mouse button
 	/// @return Is left mouse button pressed
 	bool get_l_mouse_button();
-	
+
 	/// @brief status of right mouse button
 	/// @return Is right mouse button pressed
 	bool get_r_mouse_button();
 
 	/// @brief Get raw 18-byte packet
 	/// @return 18-byte packet
-	uint8_t *get_raw() { return m_inputRaw; }
+	uint8_t* get_raw() { return m_inputRaw; }
 
 private:
 	/// @brief Maps the input value to a specified value range

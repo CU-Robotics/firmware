@@ -13,58 +13,57 @@ void State::step_reference(float ungoverned_reference[STATE_LEN][3], int governo
     float threshold = 0.0005;
     float dt = governor_timer.delta();
     if (dt > .002)
-            dt = 0; // first dt loop generates huge time so check for that
+        dt = 0; // first dt loop generates huge time so check for that
     for (int n = 0; n < STATE_LEN; n++) {
-        bool is_wrap = (((int)(reference_limits[n][0][1]*100) == 314) && ((int)(reference_limits[n][0][0]*100) == -314));
+        bool is_wrap = (((int)(reference_limits[n][0][1] * 100) == 314) && ((int)(reference_limits[n][0][0] * 100) == -314));
         // Keep new target values within absolute limits
-        if(is_wrap) {
+        if (is_wrap) {
             while (ungoverned_reference[n][0] >= PI) ungoverned_reference[n][0] -= 2 * PI;
             while (ungoverned_reference[n][0] <= -PI) ungoverned_reference[n][0] += 2 * PI;
             for (int p = 1; p < 3; p++) {
                 if (ungoverned_reference[n][p] < reference_limits[n][p][0]) ungoverned_reference[n][p] = reference_limits[n][p][0];
                 if (ungoverned_reference[n][p] > reference_limits[n][p][1]) ungoverned_reference[n][p] = reference_limits[n][p][1];
             }
-        }else{
+        } else {
             for (int p = 0; p < 3; p++) {
                 if (ungoverned_reference[n][p] < reference_limits[n][p][0]) ungoverned_reference[n][p] = reference_limits[n][p][0];
                 if (ungoverned_reference[n][p] > reference_limits[n][p][1]) ungoverned_reference[n][p] = reference_limits[n][p][1];
             }
         }
 
-        if(governor_type[n] == 1) { // position based governor
+        if (governor_type[n] == 1) { // position based governor
             // TODO: Implement wrap angle
             float pos_error = ungoverned_reference[n][0] - reference[n][0];
-            if (pos_error > PI && is_wrap) pos_error -= 2*PI;
-            if (pos_error < -PI && is_wrap) pos_error += 2*PI;
+            if (pos_error > PI && is_wrap) pos_error -= 2 * PI;
+            if (pos_error < -PI && is_wrap) pos_error += 2 * PI;
             float vel_error = ungoverned_reference[n][1] - reference[n][1];
             // Set the accel refrence to the max or min based on which direction it needs to go
-            if(pos_error > threshold) reference[n][2] = reference_limits[n][2][1];
-            else if(pos_error < -threshold) reference[n][2] = reference_limits[n][2][0];
+            if (pos_error > threshold) reference[n][2] = reference_limits[n][2][1];
+            else if (pos_error < -threshold) reference[n][2] = reference_limits[n][2][0];
             else {
                 reference[n][2] = 0;
                 reference[n][1] = ungoverned_reference[n][1];
             }
 
             if (reference[n][2] != 0) {
-                if(pos_error > 0) {
+                if (pos_error > 0) {
                     // check how far it will travel when braking
-                    float dist_to_deccel = (pow(ungoverned_reference[n][1],2)-pow(reference[n][1],2))/(2*(reference_limits[n][2][0]));
-                   
+                    float dist_to_deccel = (pow(ungoverned_reference[n][1], 2) - pow(reference[n][1], 2)) / (2 * (reference_limits[n][2][0]));
+
                     // if the minimum stopping distance is greater than the remaining distance start braking
-                    if (dist_to_deccel > pos_error){
+                    if (dist_to_deccel > pos_error) {
                         if (vel_error > 0) reference[n][2] = reference_limits[n][2][1];
                         else reference[n][2] = reference_limits[n][2][0];
-                    } 
-                }
-                else {
+                    }
+                } else {
                     // check how far it will travel when braking
-                    float dist_to_deccel = (pow(ungoverned_reference[n][1],2)-pow(reference[n][1],2))/(2*(reference_limits[n][2][1]));
-                
+                    float dist_to_deccel = (pow(ungoverned_reference[n][1], 2) - pow(reference[n][1], 2)) / (2 * (reference_limits[n][2][1]));
+
                     // if the minimum stopping distance is greater than the remaining distance start braking
-                    if (dist_to_deccel < pos_error){
+                    if (dist_to_deccel < pos_error) {
                         if (vel_error > 0) reference[n][2] = reference_limits[n][2][1];
                         else reference[n][2] = reference_limits[n][2][0];
-                    } 
+                    }
                 }
             }
 
@@ -72,21 +71,19 @@ void State::step_reference(float ungoverned_reference[STATE_LEN][3], int governo
             reference[n][1] += reference[n][2] * dt;
             reference[n][0] += reference[n][1] * dt;
 
-        } else if(governor_type[n] == 2) { // velocity based governor
+        } else if (governor_type[n] == 2) { // velocity based governor
             float vel_error = ungoverned_reference[n][1] - reference[n][1];
             // check which direction the target is and set acceleration
             // if the velocity error is less the max acceleration 
-            if(vel_error > (reference_limits[n][2][1]*dt)) {
-                if(vel_error*reference[n][1] > 0) reference[n][2] = reference_limits[n][2][1];
+            if (vel_error > (reference_limits[n][2][1] * dt)) {
+                if (vel_error * reference[n][1] > 0) reference[n][2] = reference_limits[n][2][1];
                 else reference[n][2] = reference_limits[n][2][1];
-            }
-            else if(vel_error < (reference_limits[n][2][0]*dt)) {
-                if(vel_error*reference[n][1] > 0) reference[n][2] = reference_limits[n][2][0];
+            } else if (vel_error < (reference_limits[n][2][0] * dt)) {
+                if (vel_error * reference[n][1] > 0) reference[n][2] = reference_limits[n][2][0];
                 else reference[n][2] = reference_limits[n][2][0];
-            }
-            else { 
-            reference[n][1] = ungoverned_reference[n][1];
-            reference[n][2] = 0;
+            } else {
+                reference[n][1] = ungoverned_reference[n][1];
+                reference[n][2] = 0;
             }
             // step the reference by the higher order reference
             reference[n][1] += reference[n][2] * dt;
@@ -96,15 +93,15 @@ void State::step_reference(float ungoverned_reference[STATE_LEN][3], int governo
             reference[n][1] = ungoverned_reference[n][1];
             reference[n][0] = ungoverned_reference[n][0];
         }
-        if(is_wrap) {
+        if (is_wrap) {
             while (reference[n][0] >= PI) reference[n][0] -= 2 * PI;
             while (reference[n][0] <= -PI) reference[n][0] += 2 * PI;
             for (int p = 1; p < 3; p++) {
                 if (reference[n][p] < reference_limits[n][p][0]) reference[n][p] = reference_limits[n][p][0];
                 if (reference[n][p] > reference_limits[n][p][1]) reference[n][p] = reference_limits[n][p][1];
             }
-        }else{
-            for (int p = 0; p < 3; p++) { 
+        } else {
+            for (int p = 0; p < 3; p++) {
                 // Keep values within absolute limits
                 if (reference[n][p] < reference_limits[n][p][0]) reference[n][p] = reference_limits[n][p][0];
                 if (reference[n][p] > reference_limits[n][p][1]) reference[n][p] = reference_limits[n][p][1];
