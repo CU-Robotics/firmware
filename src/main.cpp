@@ -88,68 +88,68 @@ int main() {
     //which states each estimator estimates
     int assigned_states[NUM_ESTIMATORS][STATE_LEN] = { 0 };
     //number of states each estimator estimates
-    int num_states_per_estimator[NUM_ESTIMATORS] = { 5,1,1,16 };
+    int num_states_per_estimator[NUM_ESTIMATORS] = { 5,1,1,16,1 };
 
 
     //reference limits of our reference governor. Used to turn an ungoverned reference into a governed reference to send to ControllerManager
     float set_reference_limits[STATE_LEN][3][2] = { 0 };
 
-    //x pos
+    //x pos (meters)
     set_reference_limits[0][0][0] = -UINT_MAX;
     set_reference_limits[0][0][1] = UINT_MAX;
     set_reference_limits[0][1][0] = -5.37952195918;
     set_reference_limits[0][1][1] = 5.37952195918;
     set_reference_limits[0][2][0] = -7;
     set_reference_limits[0][2][1] = 7;
-    //y pos
+    //y pos (meters)
     set_reference_limits[1][0][0] = -UINT_MAX;
     set_reference_limits[1][0][1] = UINT_MAX;
     set_reference_limits[1][1][0] = -5.37952195918;
     set_reference_limits[1][1][1] = 5.37952195918;
     set_reference_limits[1][2][0] = -7;
     set_reference_limits[1][2][1] = 7;
-    //chassis angle (psi)
+    //chassis angle (psi) (radians)
     set_reference_limits[2][0][0] = -PI;
     set_reference_limits[2][0][1] = PI;
     set_reference_limits[2][1][0] = -29.3917681162;
     set_reference_limits[2][1][1] = 29.3917681162;
     set_reference_limits[2][2][0] = -5;
     set_reference_limits[2][2][1] = 5;
-    //yaw
+    //yaw (radians)
     set_reference_limits[3][0][0] = -PI;
     set_reference_limits[3][0][1] = PI;
     set_reference_limits[3][1][0] = -49.4827627617;
     set_reference_limits[3][1][1] = 49.4827627617;
     set_reference_limits[3][2][0] = -50;
     set_reference_limits[3][2][1] = 50;
-    //pitch
+    //pitch (radians)
     set_reference_limits[4][0][0] = 0.9;
     set_reference_limits[4][0][1] = 1.92;
     set_reference_limits[4][1][0] = -70.1181276577;
     set_reference_limits[4][1][1] = 70.1181276577;
     set_reference_limits[4][2][0] = -300;
     set_reference_limits[4][2][1] = 300;
-    //Shooter Ball Speed
+    //Shooter Ball Speed (m/s)
     set_reference_limits[5][0][0] = -UINT_MAX;
     set_reference_limits[5][0][1] = UINT_MAX;
     set_reference_limits[5][1][0] = 0;
     set_reference_limits[5][1][1] = 35;
     set_reference_limits[5][2][0] = -100;
     set_reference_limits[5][2][1] = 100;
-    //Feeder Balls
+    //Feeder Balls (balls/s)
     set_reference_limits[6][0][0] = -UINT_MAX;
     set_reference_limits[6][0][1] = UINT_MAX;
     set_reference_limits[6][1][0] = 0;
     set_reference_limits[6][1][1] = 40;
     set_reference_limits[6][2][0] = -100;
     set_reference_limits[6][2][1] = 100;
-    // barrel switcher
-    set_reference_limits[7][0][0] = 0; // i guessed on these make sure to change them
-    set_reference_limits[7][0][1] = 40;
-    set_reference_limits[7][1][0] = -1;
-    set_reference_limits[7][1][1] = 1;
-    set_reference_limits[7][2][0] = -1;
-    set_reference_limits[7][2][1] = 1;
+    // barrel switcher (scalar pos)
+    set_reference_limits[7][0][0] = -1; // -1 is barrel switched right and 1 is barrel switched left
+    set_reference_limits[7][0][1] = 1;
+    set_reference_limits[7][1][0] = -8; 
+    set_reference_limits[7][1][1] = 8;
+    set_reference_limits[7][2][0] = -30; 
+    set_reference_limits[7][2][1] = 30;
 
     //set reference limits in the reference governor
     state.set_reference_limits(set_reference_limits);
@@ -247,6 +247,14 @@ int main() {
     gains[12][1][0] = 0.002; // Kp pos
     gains[12][1][1] = 0;   // Ki
     gains[12][1][2] = 0.00001;   // Kd
+    //switcher gains
+    gains[13][2][0] = 0.15; // Kp pos
+    gains[13][2][1] = 0;   // Ki
+    gains[13][2][2] = 0;   // Kd
+    gains[13][2][3] = 0.07; // Feed forward
+    gains[13][2][4] = 0.1; // Kp vel
+    gains[13][2][5] = 0;   // Ki
+    gains[13][2][6] = 0;   // Kd
 
     //assign states to estimators
     assigned_states[0][0] = 0;
@@ -256,10 +264,11 @@ int main() {
     assigned_states[0][4] = 4;
     assigned_states[1][0] = 5;
     assigned_states[2][0] = 6;
+    assigned_states[4][0] = 7;
     for (int i = 0; i < NUM_MOTORS; i++) assigned_states[3][i] = i;
 
     //assign controller types to each controller
-    int controller_types[NUM_MOTORS][NUM_CONTROLLER_LEVELS] = { {5,4,0},{5,4,0},{5,4,0},{5,4,0},{0,0,3},{0,0,3},{0,0,0},{0,0,0},{0,0,3},{0,0,3},{5,2,0},{5,2,0},{5,2,0},{0,0,0},{0,0,0},{0,0,0} };
+    int controller_types[NUM_MOTORS][NUM_CONTROLLER_LEVELS] = { {5,4,0},{5,4,0},{5,4,0},{5,4,0},{0,0,3},{0,0,3},{0,0,0},{0,0,0},{0,0,3},{0,0,3},{5,2,0},{5,2,0},{5,2,0},{0,0,6},{0,0,0},{0,0,0} };
 
     // intializes all controllers given the controller_types matrix
     for (int i = 0; i < NUM_CAN_BUSES; i++) {
@@ -283,10 +292,10 @@ int main() {
     float temp_micro_state[NUM_MOTORS][MICRO_STATE_LEN] = { 0 }; // Temp micro state array
     float temp_reference[STATE_LEN][3] = { 0 }; //Temp governed state
     float target_state[STATE_LEN][3] = { 0 }; //Temp ungoverned state
-    float kinematics_pos[NUM_MOTORS][STATE_LEN] = { 0 }; //Position kinematics 
+    float kinematics_pos[NUM_MOTORS][STATE_LEN] = { 0 }; //Position kinematics
     float kinematics_vel[NUM_MOTORS][STATE_LEN] = { 0 }; //Velocity kinematics
     float motor_inputs[NUM_MOTORS] = { 0 }; //Array for storing controller outputs to send to CAN
-    int governor_type[STATE_LEN] = { 2, 2, 2, 1, 1, 2, 2, 2 }; //Position vs Velcity governor
+    int governor_type[STATE_LEN] = { 2, 2, 2, 1, 1, 2, 2, 1 }; //Position vs Velcity governor
 
     //kinematics and conversions
     float chassis_angle_to_motor_error = ((.1835 * 9.17647058824) / .0516);
@@ -314,10 +323,13 @@ int main() {
     kinematics_pos[9][4] = 1;
     // motor 3 flywheel 1 
     kinematics_vel[10][5] = -(1 / 0.03);
-    // motor 2 flywheel 2 
+    // motor 4 flywheel 2 
     kinematics_vel[11][5] = (1 / 0.03);
-    // motor 1 feeder
+    // motor 5 feeder
     kinematics_vel[12][6] = (1.0 / (8.0 / (2 * PI))) * (36);
+    // motor 6 switcher
+    kinematics_pos[13][7] = -1;
+    kinematics_vel[13][7] = -1;
 
     int count_one = 0;
 
@@ -328,7 +340,6 @@ int main() {
         dr16.read();
         ref.read();
         comms.ping();
-
         //get packets
         CommsPacket* incoming = comms.get_incoming_packet();
         CommsPacket* outgoing = comms.get_outgoing_packet();
@@ -343,17 +354,19 @@ int main() {
         float fly_wheel_target = (dr16.get_r_switch() == 1 || dr16.get_r_switch() == 3) ? 18 : 0; //m/s
         float feeder_target = ((dr16.get_l_mouse_button() && dr16.get_r_switch() != 2) || dr16.get_r_switch() == 1) ? 10 : 0;
 
-
         target_state[5][1] = fly_wheel_target;
         target_state[6][1] = feeder_target;
-
+        target_state[7][0] = -1;
+        
         // Read sensors
         estimator_manager->read_sensors();
+
         //step estimates and construct estimated state
         estimator_manager->step(temp_state, temp_micro_state);
 
         //if first loop set target state to estimated state
         if (count_one == 0) {
+            temp_state[7][0] = 0;
             state.set_reference(temp_state);
             count_one++;
         }
@@ -408,7 +421,7 @@ int main() {
             // TODO: Reset all controller integrators here
             can.zero();
         }
-
+        
         // LED heartbeat -- linked to loop count to reveal slowdowns and freezes.
         loopc % (int)(1E3 / float(HEARTBEAT_FREQ)) < (int)(1E3 / float(5 * HEARTBEAT_FREQ)) ? digitalWrite(13, HIGH) : digitalWrite(13, LOW);
         loopc++;
