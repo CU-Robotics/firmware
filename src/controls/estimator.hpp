@@ -12,6 +12,8 @@ struct Estimator {
 public:
     Estimator() {};
 
+    virtual ~Estimator() {};
+
     /// @brief step the current state(s) and update the estimate array accordingly
     /// @param outputs estimated state array to update with certain estimated states
     virtual void step_states(float outputs[STATE_LEN][3]);
@@ -256,6 +258,8 @@ public:
         roll_axis_spherical[0] = 1;  // rho (1 for a spherical)
     }
 
+    ~GimbalEstimator() {};
+  
     /// @brief calculate estimated states and add to output array
     /// @param output output array to add estimated states to
     void step_states(float output[STATE_LEN][3]) override {
@@ -444,7 +448,7 @@ private:
     CANData* can_data;
     /// @brief calculated flywheel state from ref
     float projectile_speed_ref;
-
+  
     /// @brief calculated flywheel state from can
     float linear_velocity;
     /// @brief can weight for weighted average
@@ -461,6 +465,8 @@ public:
         can_data = c;
         num_states = _num_states;
     }
+  
+    ~FlyWheelEstimator() {};
 
     /// @brief generate estimated states and replace in output array
     /// @param output array to be updated with the calculated states
@@ -506,6 +512,8 @@ public:
         can_data = c;
         num_states = _num_states;
     }
+
+    ~FeederEstimator() {};
 
     /// @brief calculate state updates
     /// @param output updated balls per second of feeder

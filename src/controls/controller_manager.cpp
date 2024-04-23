@@ -64,7 +64,6 @@ void ControllerManager::step(float macro_reference[STATE_LEN][3], float macro_es
 
     // Iterate through controller level 1
     for (int m = 0; m < NUM_MOTORS; m++) {
-        float output = 0;
         float temp_micro_reference;
         float temp_micro_estimate[MICRO_STATE_LEN];
         temp_micro_reference = micro_reference[m];

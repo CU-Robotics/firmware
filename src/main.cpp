@@ -22,7 +22,6 @@ HIDLayer comms;
 
 Timer loop_timer;
 Timer stall_timer;
-Timer control_input_timer;
 
 EstimatorManager* estimator_manager;
 ControllerManager* controller_manager;
@@ -322,10 +321,6 @@ int main() {
 
     int count_one = 0;
 
-    // dr16 integrator setup
-    float dr16_pos_x = 0;
-    float dr16_pos_y = 0;
-
     // Main loop
     while (true) {
         //read everything
@@ -343,9 +338,6 @@ int main() {
 
         // fill in target_state from incoming packet
         incoming->get_target_state(target_state);
-
-        //delta time
-        float delta = control_input_timer.delta();
 
         //will move to hive
         float fly_wheel_target = (dr16.get_r_switch() == 1 || dr16.get_r_switch() == 3) ? 18 : 0; //m/s

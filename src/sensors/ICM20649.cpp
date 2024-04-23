@@ -11,12 +11,15 @@ void ICM20649::init(CommunicationProtocol protocol) {
     // begin sensor depending on selected protocol
     switch (protocol) {
     case I2C:
+    {
         // start I2C communication
         if (!sensor.begin_I2C()) {
             Serial.println("Failed to begin I2C");
         }
         break;
+    }
     case SPI:
+    {
         // start SPI communication
         int a = sensor.begin_SPI(ICM_CS, ICM_SCK, ICM_MISO, ICM_MOSI);
         Serial.println(a);
@@ -24,10 +27,13 @@ void ICM20649::init(CommunicationProtocol protocol) {
             Serial.println("Failed to begin SPI");
         }
         break;
+    }
     default:
+    {
         // any other value is unexpected and will not allow the sensor to function.
         assert(false && "Invalid ICM20649 protocol selected! Expects only I2C or SPI.");
         break;
+    }
     }
 
     // set data ranges
