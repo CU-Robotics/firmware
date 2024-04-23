@@ -218,6 +218,8 @@ private:
     float prev_rev_raw[3] = {0};
     /// @brief total radians travelled by each rev encoder
     float total_rev[3] = {0};
+    /// @brief rev encoder difference
+    float rev_diff[3] = {0};
     /// @brief delta time
     float dt = 0;
 
@@ -407,9 +409,10 @@ public:
 
         for(int i = 0; i < 3; i++){
             curr_rev_raw[i] = rev_enc[i]->get_angle_radians();
-            if ((curr_rev_raw[i]-prev_rev_raw[i]) > PI) total_rev[i] = ((curr_rev_raw[i]-prev_rev_raw[i])-(2*PI))+total_rev[i];
-            else if ((curr_rev_raw[i]-prev_rev_raw[i]) < -PI) total_rev[i] = ((curr_rev_raw[i]-prev_rev_raw[i])+(2*PI))+total_rev[i];
-            else total_rev[i] = (curr_rev_raw[i]-prev_rev_raw[i])+total_rev[i];
+            if ((curr_rev_raw[i]-prev_rev_raw[i]) > PI) rev_diff[i] = ((curr_rev_raw[i]-prev_rev_raw[i])-(2*PI));
+            else if ((curr_rev_raw[i]-prev_rev_raw[i]) < -PI) rev_diff[i] = ((curr_rev_raw[i]-prev_rev_raw[i])+(2*PI));
+            else rev_diff[i] = (curr_rev_raw[i]-prev_rev_raw[i]);
+            total_rev[i] = rev_diff[i]+total_rev[i];
             prev_rev_raw[i] = curr_rev_raw[i];
         }
 
