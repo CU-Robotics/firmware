@@ -314,6 +314,7 @@ public:
     }
 };
 
+/// @brief Controller for the switcher, which is a fullstate controller with feedforward
 struct SwitcherController : public Controller {
 private:
     /// @brief filter for calculating pid position controller outputs
@@ -361,6 +362,7 @@ public:
     /// @brief dont do anything if we get a micro_reference
     /// @param reference reference
     /// @param estimate estimate
+    /// @return 0
     float step(float reference, float estimate[MICRO_STATE_LEN]) {return 0;}
 
     void reset() {

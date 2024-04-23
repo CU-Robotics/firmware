@@ -542,6 +542,7 @@ public:
     /// @param c can data pointer from EstimatorManager
     /// @param _num_states number of states this estimator estimates
     /// @param tof time of flight sensor object
+    /// @param values array of values to set tof sensor offset and scale
     SwitcherEstimator(float values[2],CANData* c,TOFSensor* tof, int _num_states) {
         can_data = c;
         num_states = _num_states;

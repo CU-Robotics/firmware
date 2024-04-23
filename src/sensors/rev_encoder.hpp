@@ -24,6 +24,7 @@ public:
 	/// @param encoder_pin the pin number that the encoders signal pin is plugged into
 	RevEncoder(uint8_t encoder_pin);
 
+	/// @brief initialize the encoder with the correct pin
 	void init(uint8_t encoder_pin);
 
 	/// @brief updates ticks and radians to the current angle 
