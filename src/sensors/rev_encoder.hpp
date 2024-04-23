@@ -15,7 +15,8 @@ private:
 	int ticks;
 	/// @brief measure of current angle in radians [0, 2pi)
 	float radians;
-  
+	/// @brief the starting value of the encoder in radians
+	float starting_value = 0;
 public:
 	/// @brief Construct a new rev_encoder object without initializing the encoder
 	RevEncoder() {};
@@ -26,7 +27,7 @@ public:
 
 	/// @brief initialize the encoder with the correct pin
 	/// @param encoder_pin the pin number that the encoders signal pin is plugged into
-	void init(uint8_t encoder_pin);
+	void init(uint8_t encoder_pin, bool is_relative);
 
 	/// @brief updates ticks and radians to the current angle 
 	void read();

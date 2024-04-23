@@ -6,10 +6,17 @@ RevEncoder::RevEncoder(uint8_t encoder_pin) {
     freq.begin(this->in_pin, FREQMEASUREMULTI_MARK_ONLY);
 }
 
-void RevEncoder::init(uint8_t encoder_pin) {
+void RevEncoder::init(uint8_t encoder_pin, bool is_relative) {
     this->in_pin = encoder_pin;
     pinMode(this->in_pin, INPUT);  // Set the pin used to measure the encoder to be an input
     freq.begin(this->in_pin, FREQMEASUREMULTI_MARK_ONLY);
+    if(is_relative){
+        for(int i=0;i<500;i++){
+            this->read();
+            delayMicroseconds(5);
+        }
+        starting_value = this->radians;
+    }
 }
 
 void RevEncoder::read() {
@@ -29,5 +36,5 @@ float RevEncoder::get_angle_ticks() {
 }
 
 float RevEncoder::get_angle_radians() {
-    return this->radians;
+    return (this->radians-starting_value);
 }

@@ -212,6 +212,12 @@ private:
     float global_yaw_angle = 0;
     /// @brief global roll angle
     float global_roll_angle = 0;
+    /// @brief current rev encoder raw value
+    float curr_rev_raw[3] = {0};
+    /// @brief previous rev encoder raw value
+    float prev_rev_raw[3] = {0};
+    /// @brief total radians travelled by each rev encoder
+    float total_rev[3] = {0};
     /// @brief delta time
     float dt = 0;
 
@@ -219,6 +225,8 @@ private:
     BuffEncoder* buff_enc_yaw;
     /// @brief buff encoder on the pitch
     BuffEncoder* buff_enc_pitch;
+    /// @brief Odom encoder 1
+    RevEncoder* rev_enc[3];
     /// @brief can data pointer from EstimatorManager
     CANData* can_data;
     /// @brief icm imu
@@ -235,9 +243,12 @@ public:
     /// @param imu icm encoder
     /// @param data can data from Estimator Manager
     /// @param n num states this estimator estimates
-    GimbalEstimator(float sensor_values[10], BuffEncoder* b1, BuffEncoder* b2, ICM20649* imu, CANData* data, int n) {
+    GimbalEstimator(float sensor_values[10],RevEncoder* r1, RevEncoder* r2, RevEncoder* r3, BuffEncoder* b1, BuffEncoder* b2, ICM20649* imu, CANData* data, int n) {
         buff_enc_yaw = b1; // sensor object definitions
         buff_enc_pitch = b2;
+        rev_enc[0] = r1;
+        rev_enc[1] = r2;
+        rev_enc[2] = r3;
         can_data = data;
         icm_imu = imu;
         num_states = n; // number of estimated states
@@ -393,6 +404,14 @@ public:
         output[4][0] = pitch_enc_angle;
         output[4][1] = current_pitch_velocity;
         output[4][2] = pitch_enc_angle;
+
+        for(int i = 0; i < 3; i++){
+            curr_rev_raw[i] = rev_enc[i]->get_angle_radians();
+            if ((curr_rev_raw[i]-prev_rev_raw[i]) > PI) total_rev[i] = ((curr_rev_raw[i]-prev_rev_raw[i])-(2*PI))+total_rev[i];
+            else if ((curr_rev_raw[i]-prev_rev_raw[i]) < -PI) total_rev[i] = ((curr_rev_raw[i]-prev_rev_raw[i])+(2*PI))+total_rev[i];
+            else total_rev[i] = (curr_rev_raw[i]-prev_rev_raw[i])+total_rev[i];
+            prev_rev_raw[i] = curr_rev_raw[i];
+        }
 
         // chassis estimation
         float front_right = can_data->get_motor_attribute(CAN_1, 1, MotorAttribute::SPEED);
