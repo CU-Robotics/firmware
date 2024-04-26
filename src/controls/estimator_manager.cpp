@@ -31,7 +31,7 @@ EstimatorManager::EstimatorManager(CANData* data) {
 void EstimatorManager::init_estimator(int estimator_id, int num_states) {
     switch (estimator_id) {
     case 1: // Gimbal Estimator
-        float values_gimbal[10];
+        float values_gimbal[11];
         values_gimbal[0] = -1.462;       // yaw encoder offset
         values_gimbal[1] = -2.154;       // pitch encoder offset
         values_gimbal[2] = 0;       // default yaw starting angle (starting point for imu integration)
@@ -43,7 +43,7 @@ void EstimatorManager::init_estimator(int estimator_id, int num_states) {
         values_gimbal[7] = 2.057767;  // y
         values_gimbal[8] = 5.544132; // z
         values_gimbal[9] = 1.91986;   // Pitch angle at given gravity vector
-
+        values_gimbal[10] = 0.034925; // odom wheel radius
         estimators[0] = new GimbalEstimator(values_gimbal,&rev_sensors[0],&rev_sensors[1],&rev_sensors[2], &buff_sensors[0], &buff_sensors[1], &icm_sensors[0], can_data, num_states);
         break;
     case 2:
