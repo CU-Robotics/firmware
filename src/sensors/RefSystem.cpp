@@ -1,7 +1,6 @@
 #include "RefSystem.hpp"
 
-uint8_t generateCRC8(uint8_t* data, uint32_t len)
-{
+uint8_t generateCRC8(uint8_t* data, uint32_t len) {
     uint8_t CRC8 = 0xFF;
     while (len-- > 0) {
         uint8_t curr = CRC8 ^ (*data++);
@@ -30,6 +29,12 @@ void RefSystem::init() {
 }
 
 void RefSystem::read() {
+    // Dont read if there is not enough data for a full packet
+    // This prevents ref from just reading sections of headers, but not the rest of the packet
+    // this is a stop-gap solution, should be re-written to be more robust
+    if (Serial2.available() < 255)
+        return;
+
     Frame frame{};
 
     bool success = true;
@@ -159,24 +164,24 @@ void RefSystem::write(uint8_t* packet, uint8_t length) {
     if (Serial2.write(packet, length) == length) {
         packets_sent++;
         bytes_sent += length;
-    }
-    else
+    } else
         Serial.println("Failed to write");
 }
 
 bool RefSystem::read_frame_header(Frame& frame) {
     // early return if Serial2 is empty or not full enough
-    // Serial.println(Serial2.available());
-    
-    if (Serial2.available() < FrameHeader::packet_size) {
+    if (Serial2.available() < FrameHeader::packet_size)
         return false;
-    }
-    
-    if (Serial2.peek() != 0xA5) {
+
+    // verify that what we are about to read is a header (first byte must be 0xA5)
+    while (Serial2.peek() != 0xA5 && Serial2.peek() != -1) {
         Serial2.read();
-        return false;
     }
-    
+
+    // early return if Serial2 is empty or not full enough
+    if (Serial2.available() < FrameHeader::packet_size)
+        return false;
+  
     // read and verify header
     int bytesRead = Serial2.readBytes(raw_buffer, FrameHeader::packet_size);
     if (bytesRead != FrameHeader::packet_size) {
@@ -198,7 +203,7 @@ bool RefSystem::read_frame_header(Frame& frame) {
 
     // verify the CRC is correct
     if (frame.header.CRC != generateCRC8(raw_buffer, 4)) {
-        Serial.println("Header failed CRC");
+        // Serial.println("Header failed CRC");
         packets_failed++;
         return false;
     }
@@ -236,7 +241,7 @@ bool RefSystem::read_frame_data(Frame& frame) {
     // early return if Serial2 is empty or not full enough
     if (Serial2.available() < frame.header.data_length)
         return false;
-    
+
     // read and verify data
     int bytesRead = Serial2.readBytes(&frame.data.data[0], frame.header.data_length);
     if (bytesRead != frame.header.data_length) {
@@ -252,7 +257,7 @@ bool RefSystem::read_frame_tail(Frame& frame) {
     // early return if Serial2 is empty or not full enough
     if (Serial2.available() < 2)
         return false;
-    
+
     // read and verify tail
     int bytesRead = Serial2.readBytes(raw_buffer, 2);
     if (bytesRead != 2) {

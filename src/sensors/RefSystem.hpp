@@ -142,7 +142,6 @@ private:
     /// @brief Buffer to store frames-in-progress
     uint8_t raw_buffer[REF_MAX_PACKET_SIZE] = { 0 };
     /// @brief Mega-struct to store all ref data that have been read
-    RefData ref_data{};
 
     /// @brief Current sequence number. Used to send packets
     uint8_t seq = 0;
@@ -161,6 +160,10 @@ public:
     /// @brief Current count of bytes sent since last reset
     uint16_t bytes_sent = 0;
 
+    /// @brief struct to store all ref data
+    RefData ref_data{};
 };
+
+extern RefSystem ref;
 
 #endif // REF_SYSTEM_HPP
