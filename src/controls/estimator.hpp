@@ -240,8 +240,15 @@ private:
     float odom_axis_offset_x;
     /// @brief odom pod offset from the center of the robot
     float odom_axis_offset_y;
+    /// @brief odom pod angle offset radians
+    float odom_angle_offset = 0.1745; // 10 degrees
+    // float odom_angle_offset = 0;
     /// @brief odom wheel radius
     float odom_wheel_radius;
+    /// @brief initial chassis angle
+    float initial_chassis_angle = 0;
+    /// @brief counts one time to set the starting chassis angle
+    int count1 = 0;
     /// @brief delta time
     float dt = 0;
 
@@ -267,7 +274,7 @@ public:
     /// @param imu icm encoder
     /// @param data can data from Estimator Manager
     /// @param n num states this estimator estimates
-    GimbalEstimator(float sensor_values[11],RevEncoder* r1, RevEncoder* r2, RevEncoder* r3, BuffEncoder* b1, BuffEncoder* b2, ICM20649* imu, CANData* data, int n) {
+    GimbalEstimator(float sensor_values[13],RevEncoder* r1, RevEncoder* r2, RevEncoder* r3, BuffEncoder* b1, BuffEncoder* b2, ICM20649* imu, CANData* data, int n) {
         buff_enc_yaw = b1; // sensor object definitions
         buff_enc_pitch = b2;
         rev_enc[0] = r1;
@@ -410,7 +417,11 @@ public:
 
         // chassis_angle = yaw_angle - yaw_enc_angle;
         chassis_angle = -yaw_enc_angle;
-
+        if(count1 == 0){
+            initial_chassis_angle = chassis_angle;
+            prev_chassis_angle = chassis_angle;
+            count1++;
+        }
 
         while (yaw_angle >= PI)
             yaw_angle -= 2 * PI;
@@ -441,22 +452,20 @@ public:
             odom_pos_diff[i] = rev_diff[i]*odom_wheel_radius;
             total_odom_pos[i] = odom_pos_diff[i]+total_odom_pos[i];
         }
-
-        chassis_angle = total_odom_pos[0] - total_odom_pos[1]; //wrong probably
-        float d_chassis_heading = -(chassis_angle - prev_chassis_angle);
+        chassis_angle = -(total_odom_pos[0] + total_odom_pos[2])/(2*odom_axis_offset_x)+initial_chassis_angle;  
+        float d_chassis_heading = (chassis_angle - prev_chassis_angle);
         prev_chassis_angle = chassis_angle;
-
         if (d_chassis_heading == 0) {
-            pos_estimate[0] += ((odom_pos_diff[0])*sin(chassis_angle)) - ((odom_pos_diff[1])*cos(chassis_angle));
-            pos_estimate[1] += ((odom_pos_diff[0])*cos(chassis_angle)) + ((odom_pos_diff[1])*sin(chassis_angle));
+            pos_estimate[0] += ((odom_pos_diff[0])*cos(chassis_angle+odom_angle_offset)) - ((odom_pos_diff[1])*sin(chassis_angle+odom_angle_offset));
+            pos_estimate[1] += ((odom_pos_diff[0])*sin(chassis_angle+odom_angle_offset)) + ((odom_pos_diff[1])*cos(chassis_angle+odom_angle_offset));
         } else {
-            pos_estimate[0] += (2 * sin(d_chassis_heading*0.5) * ((odom_pos_diff[1]/d_chassis_heading) + odom_axis_offset_y) * sin(-chassis_angle + (d_chassis_heading*0.5)))
-                - (2 * sin(d_chassis_heading*0.5) * ((odom_pos_diff[0]/d_chassis_heading) + odom_axis_offset_x) * cos(-chassis_angle + (d_chassis_heading*0.5)));
-
-            pos_estimate[1] += (2 * sin(d_chassis_heading*0.5) * ((odom_pos_diff[1]/d_chassis_heading) + odom_axis_offset_y) * cos(-chassis_angle + (d_chassis_heading*0.5)))
-                + (2 * sin(d_chassis_heading*0.5) * ((odom_pos_diff[0]/d_chassis_heading) + odom_axis_offset_x) * sin(-chassis_angle + (d_chassis_heading*0.5)));
+            float pod1_relative = 2 * sin(d_chassis_heading*0.5) * ((odom_pos_diff[0]/d_chassis_heading) + odom_axis_offset_x); //relative motion of the first pod
+            float pod2_relative = 2 * sin(d_chassis_heading*0.5) * ((odom_pos_diff[1]/d_chassis_heading) + odom_axis_offset_y); //relative motion of the second pod
+            pos_estimate[0] += pod1_relative *cos((chassis_angle + odom_angle_offset) + (d_chassis_heading*0.5))
+                - pod2_relative * sin((chassis_angle + odom_angle_offset) + (d_chassis_heading*0.5));
+            pos_estimate[1] += pod1_relative *sin((chassis_angle + odom_angle_offset) + (d_chassis_heading*0.5))
+                + pod2_relative * cos((chassis_angle + odom_angle_offset) + (d_chassis_heading*0.5));
         }
-
         // // chassis estimation
         // float front_right = can_data->get_motor_attribute(CAN_1, 1, MotorAttribute::SPEED);
         // float back_right = can_data->get_motor_attribute(CAN_1, 2, MotorAttribute::SPEED);
