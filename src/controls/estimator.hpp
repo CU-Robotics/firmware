@@ -269,6 +269,9 @@ private:
 public:
     /// @brief estimate the state of the gimbal
     /// @param sensor_values inputted sensor values from EstimatorManager
+    /// @param r1 rev encoder 1
+    /// @param r2 rev encoder 2
+    /// @param r3 rev encoder 3
     /// @param b1 buff encoder 1
     /// @param b2 buff encoder 2
     /// @param imu icm encoder

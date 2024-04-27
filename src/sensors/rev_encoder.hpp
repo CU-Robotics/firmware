@@ -27,6 +27,7 @@ public:
 
 	/// @brief initialize the encoder with the correct pin
 	/// @param encoder_pin the pin number that the encoders signal pin is plugged into
+	/// @param is_relative if the encoder is relative or absolute
 	void init(uint8_t encoder_pin, bool is_relative);
 
 	/// @brief updates ticks and radians to the current angle 
