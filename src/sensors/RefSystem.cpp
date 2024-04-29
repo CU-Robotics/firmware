@@ -57,72 +57,104 @@ void RefSystem::read() {
 
     // process data
     if (success) {
+        Serial.printf("Received frame with ID: %04X\n", frame.commandID);
+
         if (frame.commandID == 0x0301)
             packets_received++;
 
-        switch (frame.commandID) {
-        case GAME_STATUS:
-            ref_data.game_status.initialize_from_data(frame.data);
+        FrameType type = static_cast<FrameType>(frame.commandID);
+        switch (type) {
+        case FrameType::GAME_STATUS:
+            ref_data.game_status.set_data(frame.data);
             break;
-        case GAME_RESULT:
-            ref_data.game_result.initialize_from_data(frame.data);
+        case FrameType::GAME_RESULT:
+            ref_data.game_result.set_data(frame.data);
             break;
-        case ROBOT_HEALTH:
-            ref_data.robot_health.initialize_from_data(frame.data);
+        case FrameType::GAME_ROBOT_HP:
+            ref_data.game_robot_hp.set_data(frame.data);
             break;
-        case SITE_EVENT:
-            ref_data.site_event.initialize_from_data(frame.data);
+        case FrameType::EVENT_DATA:
+            ref_data.event_data.set_data(frame.data);
             break;
-        case PROJECTILE_SUPPLIER:
-            ref_data.proj_supplier.initialize_from_data(frame.data);
+        case FrameType::PROJECTILE_SUPPLIER_STATUS:
+            ref_data.projectile_supplier_status.set_data(frame.data);
             break;
-        case REFEREE_WARNING:
-            ref_data.ref_warning.initialize_from_data(frame.data);
+        case FrameType::REFEREE_WARNING:
+            ref_data.referee_warning.set_data(frame.data);
             break;
-        case DART_LAUNCH:
-            ref_data.dart_launch.initialize_from_data(frame.data);
+        case FrameType::DART_STATUS:
+            ref_data.dart_status.set_data(frame.data);
             break;
-        case ROBOT_PERFORMANCE:
-            ref_data.robot_performance.initialize_from_data(frame.data);
+        case FrameType::ROBOT_PERFORMANCE:
+            ref_data.robot_performance.set_data(frame.data);
+            ref_data.robot_performance.print();
             break;
-        case POWER_HEAT:
-            ref_data.power_heat.initialize_from_data(frame.data);
+        case FrameType::ROBOT_POWER_HEAT:
+            ref_data.robot_power_heat.set_data(frame.data);
+            ref_data.robot_power_heat.print();
             break;
-        case ROBOT_POSITION:
-            ref_data.position.initialize_from_data(frame.data);
+        case FrameType::ROBOT_POSITION:
+            ref_data.robot_position.set_data(frame.data);
+            ref_data.robot_position.print();
             break;
-        case ROBOT_BUFF:
-            ref_data.robot_buff.initialize_from_data(frame.data);
+        case FrameType::ROBOT_BUFF:
+            ref_data.robot_buff.set_data(frame.data);
             break;
-        case AIR_SUPPORT_TIME:
-            ref_data.air_support_time.initialize_from_data(frame.data);
+        case FrameType::AIR_SUPPORT_STATUS:
+            ref_data.air_support_status.set_data(frame.data);
             break;
-        case DAMAGE_STATUS:
-            ref_data.damage_status.initialize_from_data(frame.data);
+        case FrameType::DAMAGE_STATUS:
+            ref_data.damage_status.set_data(frame.data);
+            ref_data.damage_status.print();
             break;
-        case LAUNCHING_EVENT:
-            ref_data.launching_event.initialize_from_data(frame.data);
+        case FrameType::LAUNCHING_STATUS:
+            ref_data.launching_status.set_data(frame.data);
             break;
-        case PROJECTILE_ALLOWANCE:
-            ref_data.proj_allowance.initialize_from_data(frame.data);
+        case FrameType::PROJECTILE_ALLOWANCE:
+            ref_data.projectile_allowance.set_data(frame.data);
             break;
-        case RFID:
-            ref_data.rfid.initialize_from_data(frame.data);
+        case FrameType::RFID_STATUS:
+            ref_data.rfid_status.set_data(frame.data);
             break;
-        case DART_COMMAND:
-            ref_data.dart_command.initialize_from_data(frame.data);
+        case FrameType::DART_COMMAND:
+            ref_data.dart_command.set_data(frame.data);
             break;
-        case GROUND_ROBOT_POSITION:
-            ref_data.ground_positions.initialize_from_data(frame.data);
+        case FrameType::GROUND_ROBOT_POSITIONS:
+            ref_data.ground_robot_positions.set_data(frame.data);
             break;
-        case RADAR_PROGRESS:
-            ref_data.radar_progress.initialize_from_data(frame.data);
+        case FrameType::RADAR_PROGRESS:
+            ref_data.radar_progress.set_data(frame.data);
             break;
-        case INTER_ROBOT_COMM:
-            ref_data.inter_robot_comms[inter_robot_comm_index].initialize_from_data(frame);
-            inter_robot_comm_index++;
-            if (inter_robot_comm_index >= REF_MAX_COMM_BUFFER_SIZE)
-                inter_robot_comm_index = 0;
+        case FrameType::SENTRY_DECISION:
+            ref_data.sentry_decision.set_data(frame.data);
+            break;
+        case FrameType::RADAR_DECISION:
+            ref_data.radar_decision.set_data(frame.data);
+            break;
+        case FrameType::ROBOT_INTERACTION:
+            // ref_data.robot_interaction.set_data(frame.data);
+            // todo: implement before china
+            break;
+        case FrameType::CUSTOM_CONTROLLER_ROBOT:
+            ref_data.custom_controller_robot.set_data(frame.data);
+            break;
+        case FrameType::SMALL_MAP_COMMAND:
+            ref_data.small_map_command.set_data(frame.data);
+            break;
+        case FrameType::KBM_INTERACTION:
+            ref_data.kbm_interaction.set_data(frame.data);
+            break;
+        case FrameType::SMALL_MAP_RADAR_POSITION:
+            ref_data.small_map_radar_position.set_data(frame.data);
+            break;
+        case FrameType::CUSTOM_CONTROLLER_CLIENT:
+            ref_data.custom_controller_client.set_data(frame.data);
+            break;
+        case FrameType::SMALL_MAP_SENTRY_COMMAND:
+            ref_data.small_map_sentry_command.set_data(frame.data);
+            break;
+        case FrameType::SMALL_MAP_ROBOT_DATA:
+            ref_data.small_map_robot_data.set_data(frame.data);
             break;
         default:
             break;

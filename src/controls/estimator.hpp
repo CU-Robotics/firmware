@@ -479,7 +479,7 @@ public:
         linear_velocity = angular_velocity_avg * radius; //m/s
 
         //ref
-        projectile_speed_ref = ref.ref_data.launching_event.projectile_initial_speed;
+        projectile_speed_ref = ref.ref_data.launching_status.initial_speed;
 
         //weighted average
         output[0][1] = (projectile_speed_ref * ref_weight) + (linear_velocity * can_weight);
@@ -524,7 +524,7 @@ public:
         balls_per_second_can = angular_velocity_feeder * 8;
 
         //ref
-        balls_per_second_ref = ref.ref_data.launching_event.launching_speed;
+        balls_per_second_ref = ref.ref_data.launching_status.launching_frequency;
 
         output[0][1] = (balls_per_second_ref * ref_weight) + (balls_per_second_can * can_weight);
 

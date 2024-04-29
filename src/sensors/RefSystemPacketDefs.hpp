@@ -13,19 +13,19 @@ constexpr uint16_t REF_MAX_COMMAND_ID = 0x0308;
 /// @brief Base enum maping the ref structs to their ID
 enum FrameType {
     /// @brief Competition status data
-    COMPETITION_STATUS = 0x0001,
+    GAME_STATUS = 0x0001,
     /// @brief Competition result data
-    COMPETITION_RESULT = 0x0002,
+    GAME_RESULT = 0x0002,
     /// @brief Robot health data
-    ROBOT_HEALTH = 0x0003,
+    GAME_ROBOT_HP = 0x0003,
     /// @brief Site event data
-    SITE_EVENT = 0x0101,
+    EVENT_DATA = 0x0101,
     /// @brief Action identifier data of the Official Projectile Supplier
-    PROJECTILE_STATUS = 0x0102,
+    PROJECTILE_SUPPLIER_STATUS = 0x0102,
     /// @brief Referee warning data
     REFEREE_WARNING = 0x0104,
     /// @brief Dart launching data
-    DART_LAUNCH = 0x0105,
+    DART_STATUS = 0x0105,
     /// @brief Robot performance system data
     ROBOT_PERFORMANCE = 0x0201,
     /// @brief Real-time chassis power and barrel heat data
@@ -35,24 +35,24 @@ enum FrameType {
     /// @brief Robot buff data
     ROBOT_BUFF = 0x0204,
     /// @brief Air support time data
-    AIR_SUPPORT = 0x0205,
+    AIR_SUPPORT_STATUS = 0x0205,
     /// @brief Damage status data
     DAMAGE_STATUS = 0x0206,
     /// @brief Real-time launching data
     LAUNCHING_STATUS = 0x0207,
     /// @brief Projectile allowance data
     PROJECTILE_ALLOWANCE = 0x0208,
-    /// @brief Robot RFID module status
+    /// @brief RFID status data
     RFID_STATUS = 0x0209,
-    /// @brief Dart player's client command data
+    /// @brief Dart command data
     DART_COMMAND = 0x020A,
-    /// @brief Ground Robot position data
-    ROBOT_POSITION = 0x020B,
-    /// @brief Radar-marked progress data
+    /// @brief Ground robot positions data
+    GROUND_ROBOT_POSITIONS = 0x020B,
+    /// @brief Radar progress data
     RADAR_PROGRESS = 0x020C,
-    /// @brief Decision-making data of Sentry Robot
+    /// @brief Sentry decision data
     SENTRY_DECISION = 0x020D,
-    /// @brief Decision-making data of Radar Robot
+    /// @brief Radar decision data
     RADAR_DECISION = 0x020E,
     /// @brief Robot interaction data
     ROBOT_INTERACTION = 0x0301,
@@ -63,13 +63,13 @@ enum FrameType {
     /// @brief Keyboard, mouse, and remote control data
     KBM_INTERACTION = 0x0304,
     /// @brief Radar data received by player clients' Small Maps
-    SMALL_MAP_RADAR = 0x0305,
+    SMALL_MAP_RADAR_POSITION = 0x0305,
     /// @brief Data about the interaction between the Custom Controller and player clients
     CUSTOM_CONTROLLER_CLIENT = 0x0306,
     /// @brief Sentry data received by player clients' Small Maps
-    SMALL_MAP_SENTRY = 0x0307,
-    /// @brief Robot data received by player clients' Small Map,
-    SMALL_MAP_ROBOTS = 0x0308
+    SMALL_MAP_SENTRY_COMMAND = 0x0307,
+    /// @brief Robot data received by player clients' Small Map
+    SMALL_MAP_ROBOT_DATA = 0x0308
 };
 
 /// @brief Struct for the Frame header portion
@@ -139,7 +139,7 @@ struct Frame {
 /// @note ID: 0x0001
 struct GameStatus {
     /// @brief Size of the GameStatus packet in bytes
-    static const uint8_t packet_size = 0;
+    static const uint8_t packet_size = 11;
     
     /// @brief Competition type \n
     /// @brief 1: RMUC. 2: RMUT. 3: RMUA. 4: RMUL 3v3. 5: RUML 1v1.
@@ -167,7 +167,21 @@ struct GameStatus {
         competition_type = data[0] & 0x0F;
         current_stage = (data[0] >> 4) & 0x0F;
         round_time_remaining = (data[2] << 8) | data[1];
-        unix_time = (data[10] << 56) | (data[9] << 48) | (data[8] << 40) | (data[7] << 32) | (data[6] << 24) | (data[5] << 16) | (data[4] << 8) | data[3];
+        unix_time |= data[10];
+        unix_time <<= 8;
+        unix_time |= data[9];
+        unix_time <<= 8;
+        unix_time |= data[8];
+        unix_time <<= 8;
+        unix_time |= data[7];
+        unix_time <<= 8;
+        unix_time |= data[6];
+        unix_time <<= 8;
+        unix_time |= data[5];
+        unix_time <<= 8;
+        unix_time |= data[4];
+        unix_time <<= 8;
+        unix_time |= data[3];
     }
 };
 
@@ -176,7 +190,7 @@ struct GameStatus {
 /// @note ID: 0x0002
 struct GameResult {
     /// @brief Size of the GameResult packet in bytes
-    static const uint8_t packet_size = 0;
+    static const uint8_t packet_size = 1;
 
     /// @brief Winner
     /// @brief 0: Draw. 1: Red team wins. 2: Blue team wins.
@@ -200,7 +214,7 @@ struct GameResult {
 /// @note ID: 0x0003
 struct GameRobotHP {
     /// @brief Size of the GameRobotHP packet in bytes
-    static const uint8_t packet_size = 0;
+    static const uint8_t packet_size = 32;
 
     /// @brief Red team's robot HPs
     /// @brief 0: Robot 1. 1: Robot 2. 2: Robot 3. 3: Robot 4. 4: Robot 5. 5: Robot 7. 6: Outpost. 7: Base.
@@ -238,7 +252,7 @@ struct GameRobotHP {
 /// @note ID: 0x0101
 struct EventData {
     /// @brief Size of the EventData packet in bytes
-    static const uint8_t packet_size = 0;
+    static const uint8_t packet_size = 4;
 
     /// @brief Site event type
     /// @todo Fill this out before china
@@ -262,7 +276,7 @@ struct EventData {
 /// @note ID: 0x0102
 struct ProjectileSupplierStatus {
     /// @brief Size of the ProjectileSupplierStatus packet in bytes
-    static const uint8_t packet_size = 0;
+    static const uint8_t packet_size = 4;
 
     /// @brief Reserved
     uint8_t reserved = 0;
@@ -297,7 +311,7 @@ struct ProjectileSupplierStatus {
 /// @note ID: 0x0104
 struct RefereeWarning {
     /// @brief Size of the RefereeWarning packet in bytes
-    static const uint8_t packet_size = 0;
+    static const uint8_t packet_size = 3;
 
     /// @brief Level of penalty that was last received by the own side.
     /// @brief 1: Both teams received yellow card. 2: Yellow card. 3: Red card. 4: Forfeiture.
@@ -331,7 +345,7 @@ struct RefereeWarning {
 /// @note ID: 0x0105
 struct DartStatus {
     /// @brief Size of the DartStatus packet in bytes
-    static const uint8_t packet_size = 0;
+    static const uint8_t packet_size = 3;
 
     /// @brief Time remaining for the dart to be launched in seconds
     uint8_t time_remaining = 0;
@@ -372,7 +386,7 @@ struct DartStatus {
 /// @note ID: 0x0201
 struct RobotPerformance {
     /// @brief Size of the RobotPerformance packet in bytes
-    static const uint8_t packet_size = 0;
+    static const uint8_t packet_size = 13;
 
     /// @brief ID of the robot
     uint8_t robot_ID = 0;
@@ -434,7 +448,7 @@ struct RobotPerformance {
 /// @note ID: 0x0202
 struct RobotPowerHeat {
     /// @brief Size of the RobotPower packet in bytes
-    static const uint8_t packet_size = 0;
+    static const uint8_t packet_size = 16;
 
     /// @brief Output voltage of the chassis port in the Power Management Module; unit: mV
     uint16_t chassis_voltage_output = 0;
@@ -468,7 +482,10 @@ struct RobotPowerHeat {
     void set_data(FrameData data) {
         chassis_voltage_output = (data[1] << 8) | data[0];
         chassis_current_output = (data[3] << 8) | data[2];
-        chassis_power = (data[7] << 24) | (data[6] << 16) | (data[5] << 8) | data[4];
+
+        uint32_t chassis_power_raw = (data[7] << 24) | (data[6] << 16) | (data[5] << 8) | data[4];
+        memcpy(&chassis_power, &chassis_power_raw, sizeof(chassis_power));
+        
         buffer_energy = (data[9] << 8) | data[8];
         barrel_heat_1_17mm = (data[11] << 8) | data[10];
         barrel_heat_2_17mm = (data[13] << 8) | data[12];
@@ -481,7 +498,7 @@ struct RobotPowerHeat {
 /// @note ID: 0x0203
 struct RobotPosition {
     /// @brief Size of the RobotPosition packet in bytes
-    static const uint8_t packet_size = 0;
+    static const uint8_t packet_size = 16;
 
     /// @brief The x-coordinate of the robot's position; unit: m.
     float x = 0.f;
@@ -501,9 +518,12 @@ struct RobotPosition {
     /// @brief Fills in this struct with the data from a FrameData object
     /// @param data FrameData object to extract data from
     void set_data(FrameData data) {
-        x = (data[3] << 24) | (data[2] << 16) | (data[1] << 8) | data[0];
-        y = (data[7] << 24) | (data[6] << 16) | (data[5] << 8) | data[4];
-        angle = (data[11] << 24) | (data[10] << 16) | (data[9] << 8) | data[8];
+        uint32_t x_raw = (data[3] << 24) | (data[2] << 16) | (data[1] << 8) | data[0];
+        memcpy(&x, &x_raw, sizeof(x));
+        uint32_t y_raw = (data[7] << 24) | (data[6] << 16) | (data[5] << 8) | data[4];
+        memcpy(&y, &y_raw, sizeof(y));
+        uint32_t angle_raw = (data[11] << 24) | (data[10] << 16) | (data[9] << 8) | data[8];
+        memcpy(&angle, &angle_raw, sizeof(angle));
     }
 };
 
@@ -512,7 +532,7 @@ struct RobotPosition {
 /// @note ID: 0x0204
 struct RobotBuff {
     /// @brief Size of the RobotBuff packet in bytes
-    static const uint8_t packet_size = 0;
+    static const uint8_t packet_size = 6;
 
     /// @brief Robot's HP recovery buff (in percentage; a value of 10 indicates that HP recovery per second is 10% of the maximum HP.)
     uint8_t hp_recovery = 0;
@@ -551,7 +571,7 @@ struct RobotBuff {
 /// @note ID: 0x0205
 struct AirSupportStatus {
     /// @brief Size of the AirSupportStatus packet in bytes
-    static const uint8_t packet_size = 0;
+    static const uint8_t packet_size = 2;
 
     /// @brief Aerial Robot's status
     /// @brief 0: Cooling. 1: Cooling finished. 2: Active.
@@ -580,7 +600,7 @@ struct AirSupportStatus {
 /// @note ID: 0x0206
 struct DamageStatus {
     /// @brief Size of the DamageStatus packet in bytes
-    static const uint8_t packet_size = 0;
+    static const uint8_t packet_size = 1;
 
     /// @brief ID of the armor plate that was hit
     /// @note This is only valid if the damage was from projectiles, collisions, going offline, or Speed Monitor Module going offline.
@@ -609,7 +629,7 @@ struct DamageStatus {
 /// @note ID: 0x0207
 struct LaunchingStatus {
     /// @brief Size of the LaunchingStatus packet in bytes
-    static const uint8_t packet_size = 0;
+    static const uint8_t packet_size = 7;
 
     /// @brief Type of the projectile
     /// @brief 1: 17mm. 2: 42mm.
@@ -637,7 +657,8 @@ struct LaunchingStatus {
         projectile_type = data[0];
         launching_mechanism = data[1];
         launching_frequency = data[2];
-        initial_speed = (data[6] << 24) | (data[5] << 16) | (data[4] << 8) | data[3];
+        uint32_t initial_speed_raw = (data[6] << 24) | (data[5] << 16) | (data[4] << 8) | data[3];
+        memcpy(&initial_speed, &initial_speed_raw, sizeof(initial_speed));
     }
 };
 
@@ -646,7 +667,7 @@ struct LaunchingStatus {
 /// @note ID: 0x0208
 struct ProjectileAllowance {
     /// @brief Size of the ProjectileAllowance packet in bytes
-    static const uint8_t packet_size = 0;
+    static const uint8_t packet_size = 6;
 
     /// @brief Number of 17mm projectiles remaining
     uint16_t num_17mm = 0;
@@ -677,7 +698,7 @@ struct ProjectileAllowance {
 /// @note ID: 0x0209
 struct RFIDStatus {
     /// @brief Size of the RFIDStatus packet in bytes
-    static const uint8_t packet_size = 0;
+    static const uint8_t packet_size = 4;
 
     // Meaning of bit value 0 or 1: whether the Buff Point's RFID card is detected.
 
@@ -760,7 +781,7 @@ struct RFIDStatus {
 /// @note ID: 0x020A
 struct DartCommand {
     /// @brief Size of the DartCommand packet in bytes
-    static const uint8_t packet_size = 0;
+    static const uint8_t packet_size = 6;
 
     /// @brief Status of the Launching Status
     /// @brief 0: Opened. 1: Closed. 2: Opening/Closing
@@ -794,9 +815,9 @@ struct DartCommand {
 /// @brief Ground Robot position data
 /// @note transmitted at a fixed frequency of 1 Hz to our Sentry
 /// @note ID: 0x020B
-struct RobotPosition {
+struct GroundRobotPositions {
     /// @brief Size of the RobotPosition packet in bytes
-    static const uint8_t packet_size = 0;
+    static const uint8_t packet_size = 40;
 
     /// @brief The x-axis coordinate of the own side's Hero Robot; unit: m.
     float hero_x = 0.f;
@@ -837,16 +858,26 @@ struct RobotPosition {
     /// @brief Fills in this struct with the data from a FrameData object
     /// @param data FrameData object to extract data from
     void set_data(FrameData data) {
-        hero_x = (data[3] << 24) | (data[2] << 16) | (data[1] << 8) | data[0];
-        hero_y = (data[7] << 24) | (data[6] << 16) | (data[5] << 8) | data[4];
-        engineer_x = (data[11] << 24) | (data[10] << 16) | (data[9] << 8) | data[8];
-        engineer_y = (data[15] << 24) | (data[14] << 16) | (data[13] << 8) | data[12];
-        standard_3_x = (data[19] << 24) | (data[18] << 16) | (data[17] << 8) | data[16];
-        standard_3_y = (data[23] << 24) | (data[22] << 16) | (data[21] << 8) | data[20];
-        standard_4_x = (data[27] << 24) | (data[26] << 16) | (data[25] << 8) | data[24];
-        standard_4_y = (data[31] << 24) | (data[30] << 16) | (data[29] << 8) | data[28];
-        standard_5_x = (data[35] << 24) | (data[34] << 16) | (data[33] << 8) | data[32];
-        standard_5_y = (data[39] << 24) | (data[38] << 16) | (data[37] << 8) | data[36];
+        uint32_t hero_x_raw = (data[3] << 24) | (data[2] << 16) | (data[1] << 8) | data[0];
+        memcpy(&hero_x, &hero_x_raw, sizeof(hero_x));
+        uint32_t hero_y_raw = (data[7] << 24) | (data[6] << 16) | (data[5] << 8) | data[4];
+        memcpy(&hero_y, &hero_y_raw, sizeof(hero_y));
+        uint32_t engineer_x_raw = (data[11] << 24) | (data[10] << 16) | (data[9] << 8) | data[8];
+        memcpy(&engineer_x, &engineer_x_raw, sizeof(engineer_x));
+        uint32_t engineer_y_raw = (data[15] << 24) | (data[14] << 16) | (data[13] << 8) | data[12];
+        memcpy(&engineer_y, &engineer_y_raw, sizeof(engineer_y));
+        uint32_t standard_3_x_raw = (data[19] << 24) | (data[18] << 16) | (data[17] << 8) | data[16];
+        memcpy(&standard_3_x, &standard_3_x_raw, sizeof(standard_3_x));
+        uint32_t standard_3_y_raw = (data[23] << 24) | (data[22] << 16) | (data[21] << 8) | data[20];
+        memcpy(&standard_3_y, &standard_3_y_raw, sizeof(standard_3_y));
+        uint32_t standard_4_x_raw = (data[27] << 24) | (data[26] << 16) | (data[25] << 8) | data[24];
+        memcpy(&standard_4_x, &standard_4_x_raw, sizeof(standard_4_x));
+        uint32_t standard_4_y_raw = (data[31] << 24) | (data[30] << 16) | (data[29] << 8) | data[28];
+        memcpy(&standard_4_y, &standard_4_y_raw, sizeof(standard_4_y));
+        uint32_t standard_5_x_raw = (data[35] << 24) | (data[34] << 16) | (data[33] << 8) | data[32];
+        memcpy(&standard_5_x, &standard_5_x_raw, sizeof(standard_5_x));
+        uint32_t standard_5_y_raw = (data[39] << 24) | (data[38] << 16) | (data[37] << 8) | data[36];
+        memcpy(&standard_5_y, &standard_5_y_raw, sizeof(standard_5_y));
     }    
 };
 
@@ -855,7 +886,7 @@ struct RobotPosition {
 /// @note ID: 0x020C
 struct RadarProgress {
     /// @brief Size of the RadarProgress packet in bytes
-    static const uint8_t packet_size = 0;
+    static const uint8_t packet_size = 6;
 
     /// @brief Marked progress of the opponent's Hero Robot. 0-120
     uint8_t hero = 0;
@@ -898,7 +929,7 @@ struct RadarProgress {
 /// @note ID: 0x020D
 struct SentryDecision {
     /// @brief Size of the SentryDecision packet in bytes
-    static const uint8_t packet_size = 0;
+    static const uint8_t packet_size = 4;
 
     /// @todo implement before china
     uint32_t sentry_info = 0;
@@ -921,7 +952,7 @@ struct SentryDecision {
 /// @note ID: 0x020E
 struct RadarDecision {
     /// @brief Size of the RadarDecision packet in bytes
-    static const uint8_t packet_size = 0;
+    static const uint8_t packet_size = 1;
 
     /// @todo implement before china
     uint8_t radar_info = 0;
@@ -944,7 +975,7 @@ struct RadarDecision {
 /// @note ID: 0x0301
 struct RobotInteraction {
     /// @brief Size of the RobotInteraction packet in bytes
-    static const uint8_t packet_size = 0;
+    static const uint8_t packet_size = 128;
 
     /// @brief ID that is specified by user. Not critical to REF
     uint16_t content_id = 0;
@@ -987,7 +1018,7 @@ struct RobotInteraction {
 /// @note ID: 0x0302
 struct CustomControllerRobot {
     /// @brief Size of the ControllerRobots packet in bytes
-    static const uint8_t packet_size = 0;
+    static const uint8_t packet_size = 30;
 
     /// @brief Custom data
     uint8_t data[30] = { 0 };
@@ -1014,7 +1045,7 @@ struct CustomControllerRobot {
 /// @note ID: 0x0303
 struct SmallMapCommand {
     /// @brief Size of the SmallMapCommand packet in bytes
-    static const uint8_t packet_size = 0;
+    static const uint8_t packet_size = 15;
 
     /// @brief The x-axis coordinate of the target position; unit: m.
     /// @note When the target robot ID is sent, the value is 0.
@@ -1044,8 +1075,10 @@ struct SmallMapCommand {
     /// @brief Fills in this struct with the data from a FrameData object
     /// @param data FrameData object to extract data from
     void set_data(FrameData data) {
-        target_position_x = (data[3] << 24) | (data[2] << 16) | (data[1] << 8) | data[0];
-        target_position_y = (data[7] << 24) | (data[6] << 16) | (data[5] << 8) | data[4];
+        uint32_t target_position_x_raw = (data[3] << 24) | (data[2] << 16) | (data[1] << 8) | data[0];
+        memcpy(&target_position_x, &target_position_x_raw, sizeof(target_position_x));
+        uint32_t target_position_y_raw = (data[7] << 24) | (data[6] << 16) | (data[5] << 8) | data[4];
+        memcpy(&target_position_y, &target_position_y_raw, sizeof(target_position_y));
         cmd_keyboard = data[8];
         target_robot_id = data[9];
         cmd_source = data[10];
@@ -1057,7 +1090,7 @@ struct SmallMapCommand {
 /// @note ID: 0x0304
 struct KBMInteraction {
     /// @brief Size of the KBMInteraction packet in bytes
-    static const uint8_t packet_size = 0;
+    static const uint8_t packet_size = 12;
 
     /// @brief x-axis moving speed of the mouse. A negative value indicates a left movement.
     int16_t mouse_speed_x = 0;
@@ -1164,7 +1197,7 @@ struct KBMInteraction {
 /// @note ID: 0x0305
 struct SmallMapRadarPosition {
     /// @brief Size of the SmallMapRadarPosition packet in bytes
-    static const uint8_t packet_size = 0;
+    static const uint8_t packet_size = 10;
 
     /// @brief The target robot's ID.
     uint16_t target_ID = 0;
@@ -1185,8 +1218,10 @@ struct SmallMapRadarPosition {
     /// @param data FrameData object to extract data from
     void set_data(FrameData data) {
         target_ID = (data[1] << 8) | data[0];
-        target_x = (data[5] << 24) | (data[4] << 16) | (data[3] << 8) | data[2];
-        target_y = (data[9] << 24) | (data[8] << 16) | (data[7] << 8) | data[6];
+        uint32_t target_x_raw = (data[5] << 24) | (data[4] << 16) | (data[3] << 8) | data[2];
+        memcpy(&target_x, &target_x_raw, sizeof(target_x));
+        uint32_t target_y_raw = (data[9] << 24) | (data[8] << 16) | (data[7] << 8) | data[6];
+        memcpy(&target_y, &target_y_raw, sizeof(target_y));
     }
 };
 
@@ -1195,7 +1230,7 @@ struct SmallMapRadarPosition {
 /// @note ID: 0x0306
 struct CustomControllerClient {
     /// @brief Size of the ControllerClient packet in bytes
-    static const uint8_t packet_size = 0;
+    static const uint8_t packet_size = 8;
 
     /// @brief value of Key 1
     uint8_t key_1 = 0;
@@ -1244,7 +1279,7 @@ struct CustomControllerClient {
 /// @note ID: 0x0307
 struct SmallMapSentryCommand {
     /// @brief Size of the SmallMapSentryPosition packet in bytes
-    static const uint8_t packet_size = 0;
+    static const uint8_t packet_size = 103;
 
     /// @brief Specific command sent to the sentry
     /// @brief 1: Go to target point to attack. 2: Go to target point to defend. 3: Go to target point;
@@ -1298,7 +1333,7 @@ struct SmallMapSentryCommand {
 /// @note ID: 0x0308
 struct SmallMapRobotData {
     /// @brief Size of the SmallMapRobotPosition packet in bytes
-    static const uint8_t packet_size = 0;
+    static const uint8_t packet_size = 34;
 
     /// @brief Sender ID
     uint16_t sender_ID = 0;

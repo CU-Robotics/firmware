@@ -65,37 +65,70 @@ const uint16_t CRC16Lookup[256] = {
     0x3de3, 0x2c6a, 0x1ef1, 0x0f78
 };
 
-/// @cond Doxygen_Suppress
-
 /// @brief Encompassing all read-able packet structs of the Ref System
 struct RefData {
+    /// @brief Competition status data
     GameStatus game_status{};
+    /// @brief Competition result data
     GameResult game_result{};
-    RobotHealth robot_health{};
-    SiteEvent site_event{};
-    ProjectileSupplier proj_supplier{};
-    RefereeWarning ref_warning{};
-    DartLaunch dart_launch{};
+    /// @brief Robot health data
+    GameRobotHP game_robot_hp{};
+    /// @brief Site event data
+    EventData event_data{};
+    /// @brief Action identifier data of the Official Projectile Supplier
+    ProjectileSupplierStatus projectile_supplier_status{};
+    /// @brief Referee warning data
+    RefereeWarning referee_warning{};
+    /// @brief Dart launching data
+    DartStatus dart_status{};
+    /// @brief Robot performance system data
     RobotPerformance robot_performance{};
-    PowerHeat power_heat{};
-    RobotPosition position{};
+    /// @brief Real-time chassis power and barrel heat data
+    RobotPowerHeat robot_power_heat{};
+    /// @brief Robot position data
+    RobotPosition robot_position{};
+    /// @brief Robot buff data
     RobotBuff robot_buff{};
-    AirSupportTime air_support_time{};
+    /// @brief Air support time data
+    AirSupportStatus air_support_status{};
+    /// @brief Damage status data
     DamageStatus damage_status{};
-    LaunchingEvent launching_event{};
-    ProjectileAllowance proj_allowance{};
-    RFIDData rfid{};
+    /// @brief Real-time launching data
+    LaunchingStatus launching_status{};
+    /// @brief Projectile allowance data
+    ProjectileAllowance projectile_allowance{};
+    /// @brief RFID status data
+    RFIDStatus rfid_status{};
+    /// @brief Dart command data
     DartCommand dart_command{};
-    GroundRobotPosition ground_positions{};
+    /// @brief Ground robot positions data
+    GroundRobotPositions ground_robot_positions{};
+    /// @brief Radar progress data
     RadarProgress radar_progress{};
-    // robot comm buffer implemented as a circular queue, it will overwrite its own data if not read from
-    InterRobotComm inter_robot_comms[REF_MAX_COMM_BUFFER_SIZE];
+    /// @brief Sentry decision data
+    SentryDecision sentry_decision{};
+    /// @brief Radar decision data
+    RadarDecision radar_decision{};
+    /// @brief Robot interaction data
+    RobotInteraction robot_interaction{};
+    /// @brief Data about the interaction between the Custom Controller and robots
+    CustomControllerRobot custom_controller_robot{};
+    /// @brief Player client's small map interaction data
+    SmallMapCommand small_map_command{};
+    /// @brief Keyboard, mouse, and remote control data
+    KBMInteraction kbm_interaction{};
+    /// @brief Radar data received by player clients' Small Maps
+    SmallMapRadarPosition small_map_radar_position{};
+    /// @brief Data about the interaction between the Custom Controller and player clients
+    CustomControllerClient custom_controller_client{};
+    /// @brief Sentry data received by player clients' Small Maps
+    SmallMapSentryCommand small_map_sentry_command{};
+    /// @brief Robot data received by player clients' Small Map
+    SmallMapRobotData small_map_robot_data{};
 };
 
-/// @endcond
-
 /// @brief Wrapper class to send and receive packets from the Referee System
-/// @see https://rm-static.djicdn.com/tem/71710/RoboMaster%20Referee%20System%20Serial%20Port%20Protocol%20Appendix%20V1.5%EF%BC%8820230717%EF%BC%89.pdf
+/// @see https://rm-static.djicdn.com/tem/17348/RoboMaster%20Referee%20System%20Serial%20Port%20Protocol%20Appendix%20V1.6.1%EF%BC%8820240126%EF%BC%89.pdf
 class RefSystem {
 public:
     /// @brief Default constructor. Set to do nothing
