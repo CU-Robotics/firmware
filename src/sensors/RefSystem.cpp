@@ -69,6 +69,7 @@ void RefSystem::read() {
             packets_received++;
 
         FrameType type = static_cast<FrameType>(frame.commandID);
+        
         switch (type) {
         case FrameType::GAME_STATUS:
             ref_data.game_status.set_data(frame.data);
