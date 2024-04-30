@@ -174,13 +174,12 @@ private:
 private:
     /// @brief Buffer to store frames-in-progress
     uint8_t raw_buffer[REF_MAX_PACKET_SIZE] = { 0 };
-    /// @brief Mega-struct to store all ref data that have been read
+
+    /// @brief Index into the raw_buffer
+    uint8_t buffer_index = 0;
 
     /// @brief Current sequence number. Used to send packets
     uint8_t seq = 0;
-
-    /// @brief Current index to the inter_robot_comm buffer
-    uint8_t inter_robot_comm_index = 0;
 
 public:
     /// @brief Number of inter-robot packets sent

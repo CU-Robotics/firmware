@@ -39,6 +39,12 @@ void RefSystem::read() {
 
     bool success = true;
 
+    // reset buffer
+    memset(raw_buffer, 0, REF_MAX_PACKET_SIZE);
+
+    // reset buffer index
+    buffer_index = 0;
+
     // read header
     if (success)
         success = read_frame_header(frame);
@@ -57,7 +63,7 @@ void RefSystem::read() {
 
     // process data
     if (success) {
-        Serial.printf("Received frame with ID: %04X\n", frame.commandID);
+        // Serial.printf("Received frame with ID: %04X\n", frame.commandID);
 
         if (frame.commandID == 0x0301)
             packets_received++;
@@ -87,15 +93,12 @@ void RefSystem::read() {
             break;
         case FrameType::ROBOT_PERFORMANCE:
             ref_data.robot_performance.set_data(frame.data);
-            ref_data.robot_performance.print();
             break;
         case FrameType::ROBOT_POWER_HEAT:
             ref_data.robot_power_heat.set_data(frame.data);
-            ref_data.robot_power_heat.print();
             break;
         case FrameType::ROBOT_POSITION:
             ref_data.robot_position.set_data(frame.data);
-            ref_data.robot_position.print();
             break;
         case FrameType::ROBOT_BUFF:
             ref_data.robot_buff.set_data(frame.data);
@@ -105,7 +108,6 @@ void RefSystem::read() {
             break;
         case FrameType::DAMAGE_STATUS:
             ref_data.damage_status.set_data(frame.data);
-            ref_data.damage_status.print();
             break;
         case FrameType::LAUNCHING_STATUS:
             ref_data.launching_status.set_data(frame.data);
@@ -157,6 +159,7 @@ void RefSystem::read() {
             ref_data.small_map_robot_data.set_data(frame.data);
             break;
         default:
+            Serial.println("Unknown Frame Type");
             break;
         }
     }
@@ -213,32 +216,36 @@ bool RefSystem::read_frame_header(Frame& frame) {
     // early return if Serial2 is empty or not full enough
     if (Serial2.available() < FrameHeader::packet_size)
         return false;
-  
+
     // read and verify header
-    int bytesRead = Serial2.readBytes(raw_buffer, FrameHeader::packet_size);
-    if (bytesRead != FrameHeader::packet_size) {
+    int bytes_read = Serial2.readBytes(raw_buffer, FrameHeader::packet_size);
+    if (bytes_read != FrameHeader::packet_size) {
         Serial.println("Couldnt read enough bytes for Header");
         packets_failed++;
         return false;
     }
 
     // set read data
-    frame.header.SOF = raw_buffer[0];
+    frame.header.SOF = raw_buffer[buffer_index + 0];
     if (frame.header.SOF != 0xA5) {
         Serial.println("Not a valid frame");
         return false;
     }
     
-    frame.header.data_length = (raw_buffer[2] << 8) | raw_buffer[1];
-    frame.header.sequence = raw_buffer[3];
-    frame.header.CRC = raw_buffer[4];
+    frame.header.data_length = (raw_buffer[buffer_index + 2] << 8) | raw_buffer[buffer_index + 1];
+    frame.header.sequence = raw_buffer[buffer_index + 3];
+    frame.header.CRC = raw_buffer[buffer_index + 4];
+
 
     // verify the CRC is correct
     if (frame.header.CRC != generateCRC8(raw_buffer, 4)) {
-        // Serial.println("Header failed CRC");
+        Serial.println("Header failed CRC");
         packets_failed++;
         return false;
     }
+
+    // increment buffer index
+    buffer_index = bytes_read;
 
     return true;
 }
@@ -249,15 +256,15 @@ bool RefSystem::read_frame_command_ID(Frame& frame) {
         return false;
 
     // read and verify command ID
-    int bytesRead = Serial2.readBytes(raw_buffer, 2);
-    if (bytesRead != 2) {
+    int bytes_read = Serial2.readBytes(raw_buffer + buffer_index, 2);
+    if (bytes_read != 2) {
         Serial.println("Couldnt read enough bytes for ID");
         packets_failed++;
         return false;
     }
 
     // assign read ID
-    frame.commandID = (raw_buffer[1] << 8) | raw_buffer[0];
+    frame.commandID = (raw_buffer[buffer_index + 1] << 8) | raw_buffer[buffer_index + 0];
 
     // sanity check, verify the ID is valid
     if (frame.commandID > REF_MAX_COMMAND_ID) {
@@ -265,6 +272,9 @@ bool RefSystem::read_frame_command_ID(Frame& frame) {
         packets_failed++;
         return false;
     }
+
+    // increment buffer index
+    buffer_index += bytes_read;
 
     return true;
 }
@@ -275,12 +285,18 @@ bool RefSystem::read_frame_data(Frame& frame) {
         return false;
 
     // read and verify data
-    int bytesRead = Serial2.readBytes(&frame.data.data[0], frame.header.data_length);
-    if (bytesRead != frame.header.data_length) {
+    int bytes_read = Serial2.readBytes(raw_buffer + buffer_index, frame.header.data_length);
+    if (bytes_read != frame.header.data_length) {
         Serial.println("Couldnt read enough bytes for Data");
         packets_failed++;
         return false;
     }
+
+    // set read data
+    memcpy(frame.data.data, raw_buffer + buffer_index, bytes_read);
+
+    // increment buffer index
+    buffer_index += bytes_read;
 
     return true;
 }
@@ -291,15 +307,24 @@ bool RefSystem::read_frame_tail(Frame& frame) {
         return false;
 
     // read and verify tail
-    int bytesRead = Serial2.readBytes(raw_buffer, 2);
-    if (bytesRead != 2) {
+    int bytes_read = Serial2.readBytes(raw_buffer + buffer_index, 2);
+    if (bytes_read != 2) {
         Serial.println("Couldnt read enough bytes for CRC");
         packets_failed++;
         return false;
     }
 
     // store CRC
-    frame.CRC = (raw_buffer[1] << 8) | raw_buffer[0];
+    frame.CRC = (raw_buffer[buffer_index + 1] << 8) | raw_buffer[buffer_index + 0];
+
+    if (frame.CRC != generateCRC16(raw_buffer, buffer_index)) {
+        Serial.println("Tail failed CRC");
+        packets_failed++;
+        return false;
+    }
+
+    // increment buffer index
+    buffer_index = bytes_read;
 
     return true;
 }
