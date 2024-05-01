@@ -181,6 +181,7 @@ public:
 
     /// @brief Generate a byte array for all ref data to be sent over comms
     /// @param output_array Byte array to store the data
+    /// @note Only sends some packets, not all
     void get_data_for_comms(uint8_t output_array[180]);
 
 private:
