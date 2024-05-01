@@ -12,6 +12,39 @@ constexpr uint32_t REF_MAX_BAUD_RATE = 3720;
 /// @brief Maximum number of inter robot packets should be able to be stored.
 constexpr uint32_t REF_MAX_COMM_BUFFER_SIZE = 5;
 
+/// @brief Game Staus packet offset for comms
+constexpr uint32_t REF_COMMS_GAME_STATUS_OFFSET = 0;
+/// @brief Game Result packet offset for comms
+constexpr uint32_t REF_COMMS_GAME_RESULT_OFFSET = 11;
+/// @brief Game Robot HP packet offset for comms
+constexpr uint32_t REF_COMMS_GAME_ROBOT_HP = 12;
+/// @brief Event Data packet offset for comms
+constexpr uint32_t REF_COMMS_EVENT_DATE = 44;
+/// @brief Projectile Supplier Status packet offset for comms
+constexpr uint32_t REF_COMMS_PROJECTILE_SUPPLIER_STATUS = 48;
+/// @brief Referee Warning packet offset for comms
+constexpr uint32_t REF_COMMS_REFEREE_WARNING = 52;
+/// @brief Dart Status packet offset for comms
+constexpr uint32_t REF_COMMS_ROBOT_PERFORMANCE = 55;
+/// @brief Robot Power Heat packet offset for comms
+constexpr uint32_t REF_COMMS_ROBOT_POWER_HEAT = 68;
+/// @brief Robot Position packet offset for comms
+constexpr uint32_t REF_COMMS_ROBOT_POSITION = 84;
+/// @brief Robot Buff packet offset for comms
+constexpr uint32_t REF_COMMS_ROBOT_BUFF = 100;
+/// @brief Damage Status packet offset for comms
+constexpr uint32_t REF_COMMS_DAMAGE_STATUS = 106;
+/// @brief Launching Status packet offset for comms
+constexpr uint32_t REF_COMMS_LAUNCHING_STATUS = 107;
+/// @brief Projectile Allowance packet offset for comms
+constexpr uint32_t REF_COMMS_PROJECTILE_ALLOWANCE = 114;
+/// @brief RFID Status packet offset for comms
+constexpr uint32_t REF_COMMS_RFID_STATUS = 120;
+/// @brief KBM Interaction packet offset for comms
+constexpr uint32_t REF_COMMS_KBM_INTERACTION = 124;
+/// @brief End of the Ref Data packet for comms
+constexpr uint32_t REF_COMMS_END = 136;
+
 /// @brief Generates a 1-byte CRC
 /// @param data data array
 /// @param length size of the data array
@@ -145,6 +178,10 @@ public:
     /// @param length The total size of the packet, including header/tail
     /// @note Re-computes the CRC, so no need to do it yourself
     void write(uint8_t* packet, uint8_t length);
+
+    /// @brief Generate a byte array for all ref data to be sent over comms
+    /// @param output_array Byte array to store the data
+    void get_data_for_comms(uint8_t output_array[180]);
 
 private:
     /// @brief Helper function: Reads and stores frame header

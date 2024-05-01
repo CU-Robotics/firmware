@@ -352,30 +352,30 @@ int main() {
         // fill in target_state from incoming packet
         incoming->get_target_state(target_state);
 
-        //will move to hive
-        float chassis_velocity_x = -dr16.get_l_stick_y() * 5.4
-                                 + (-dr16.keys.w + dr16.keys.s) * 2.5;
-        float chassis_velocity_y = dr16.get_l_stick_x() * 5.4
-                                 + (dr16.keys.d - dr16.keys.a) * 2.5;
-        float chassis_spin = dr16.get_wheel() * 25;
+        // //will move to hive
+        // float chassis_velocity_x = -dr16.get_l_stick_y() * 5.4
+        //                          + (-dr16.keys.w + dr16.keys.s) * 2.5;
+        // float chassis_velocity_y = dr16.get_l_stick_x() * 5.4
+        //                          + (dr16.keys.d - dr16.keys.a) * 2.5;
+        // float chassis_spin = dr16.get_wheel() * 25;
 
-        float pitch_target = 1.57
-                           + -dr16.get_r_stick_y() * 0.3;
-        float yaw_target = -dr16.get_r_stick_x() * 1.5;
-        float fly_wheel_target = (dr16.get_r_switch() == 1 || dr16.get_r_switch() == 3) ? 18 : 0; //m/s
-        float feeder_target = ((dr16.get_l_mouse_button() && dr16.get_r_switch() != 2) || dr16.get_r_switch() == 1) ? 10 : 0;
+        // float pitch_target = 1.57
+        //                    + -dr16.get_r_stick_y() * 0.3;
+        // float yaw_target = -dr16.get_r_stick_x() * 1.5;
+        // float fly_wheel_target = (dr16.get_r_switch() == 1 || dr16.get_r_switch() == 3) ? 18 : 0; //m/s
+        // float feeder_target = ((dr16.get_l_mouse_button() && dr16.get_r_switch() != 2) || dr16.get_r_switch() == 1) ? 10 : 0;
 
-        target_state[0][1] = chassis_velocity_x;
-        target_state[1][1] = chassis_velocity_y;
-        target_state[2][1] = chassis_spin;
-        target_state[3][0] = yaw_target;
-        target_state[3][1] = 0;
-        target_state[4][0] = pitch_target;
-        target_state[4][1] = 0;
+        // target_state[0][1] = chassis_velocity_x;
+        // target_state[1][1] = chassis_velocity_y;
+        // target_state[2][1] = chassis_spin;
+        // target_state[3][0] = yaw_target;
+        // target_state[3][1] = 0;
+        // target_state[4][0] = pitch_target;
+        // target_state[4][1] = 0;
 
-        target_state[5][1] = fly_wheel_target;
-        target_state[6][1] = feeder_target;
-        target_state[7][0] = -1;
+        // target_state[5][1] = fly_wheel_target;
+        // target_state[6][1] = feeder_target;
+        // target_state[7][0] = -1;
         
         // Read sensors
         estimator_manager->read_sensors();

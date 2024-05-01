@@ -18,7 +18,7 @@ uint16_t generateCRC16(uint8_t* data, uint32_t len) {
     return CRC16;
 }
 
-RefSystem::RefSystem() {}
+RefSystem::RefSystem() { }
 
 void RefSystem::init() {
     // clear and start Serial2
@@ -35,7 +35,7 @@ void RefSystem::read() {
     if (Serial2.available() < 255)
         return;
 
-    Frame frame{};
+    Frame frame {};
 
     bool success = true;
 
@@ -63,13 +63,13 @@ void RefSystem::read() {
 
     // process data
     if (success) {
-        // Serial.printf("Received frame with ID: %04X\n", frame.commandID);
+        Serial.printf("Received frame with ID: %04X\n", frame.commandID);
 
         if (frame.commandID == 0x0301)
             packets_received++;
 
         FrameType type = static_cast<FrameType>(frame.commandID);
-        
+
         switch (type) {
         case FrameType::GAME_STATUS:
             ref_data.game_status.set_data(frame.data);
@@ -204,6 +204,24 @@ void RefSystem::write(uint8_t* packet, uint8_t length) {
         Serial.println("Failed to write");
 }
 
+void RefSystem::get_data_for_comms(uint8_t output_array[180]) {
+    memcpy(output_array + REF_COMMS_GAME_STATUS_OFFSET, ref_data.game_status.raw, ref_data.game_status.packet_size);
+    memcpy(output_array + REF_COMMS_GAME_RESULT_OFFSET, ref_data.game_result.raw, ref_data.game_result.packet_size);
+    memcpy(output_array + REF_COMMS_GAME_ROBOT_HP, ref_data.game_robot_hp.raw, ref_data.game_robot_hp.packet_size);
+    memcpy(output_array + REF_COMMS_EVENT_DATE, ref_data.event_data.raw, ref_data.event_data.packet_size);
+    memcpy(output_array + REF_COMMS_PROJECTILE_SUPPLIER_STATUS, ref_data.projectile_supplier_status.raw, ref_data.projectile_supplier_status.packet_size);
+    memcpy(output_array + REF_COMMS_REFEREE_WARNING, ref_data.referee_warning.raw, ref_data.referee_warning.packet_size);
+    memcpy(output_array + REF_COMMS_ROBOT_PERFORMANCE, ref_data.robot_performance.raw, ref_data.robot_performance.packet_size);
+    memcpy(output_array + REF_COMMS_ROBOT_POWER_HEAT, ref_data.robot_power_heat.raw, ref_data.robot_power_heat.packet_size);
+    memcpy(output_array + REF_COMMS_ROBOT_POSITION, ref_data.robot_position.raw, ref_data.robot_position.packet_size);
+    memcpy(output_array + REF_COMMS_ROBOT_BUFF, ref_data.robot_buff.raw, ref_data.robot_buff.packet_size);
+    memcpy(output_array + REF_COMMS_DAMAGE_STATUS, ref_data.damage_status.raw, ref_data.damage_status.packet_size);
+    memcpy(output_array + REF_COMMS_LAUNCHING_STATUS, ref_data.launching_status.raw, ref_data.launching_status.packet_size);
+    memcpy(output_array + REF_COMMS_PROJECTILE_ALLOWANCE, ref_data.projectile_allowance.raw, ref_data.projectile_allowance.packet_size);
+    memcpy(output_array + REF_COMMS_RFID_STATUS, ref_data.rfid_status.raw, ref_data.rfid_status.packet_size);
+    memcpy(output_array + REF_COMMS_KBM_INTERACTION, ref_data.kbm_interaction.raw, ref_data.kbm_interaction.packet_size);
+}
+
 bool RefSystem::read_frame_header(Frame& frame) {
     // early return if Serial2 is empty or not full enough
     if (Serial2.available() < FrameHeader::packet_size)
@@ -232,7 +250,7 @@ bool RefSystem::read_frame_header(Frame& frame) {
         Serial.println("Not a valid frame");
         return false;
     }
-    
+
     frame.header.data_length = (raw_buffer[buffer_index + 2] << 8) | raw_buffer[buffer_index + 1];
     frame.header.sequence = raw_buffer[buffer_index + 3];
     frame.header.CRC = raw_buffer[buffer_index + 4];

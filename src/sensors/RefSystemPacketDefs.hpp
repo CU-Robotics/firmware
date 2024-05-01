@@ -140,6 +140,10 @@ struct Frame {
 struct GameStatus {
     /// @brief Size of the GameStatus packet in bytes
     static const uint8_t packet_size = 11;
+
+    /// @brief The raw byte array of data received from ref
+    /// @note this is only the FrameData data rather than the whole ref packet
+    uint8_t raw[REF_MAX_PACKET_SIZE] = {0};
     
     /// @brief Competition type \n
     /// @brief 1: RMUC. 2: RMUT. 3: RMUA. 4: RMUL 3v3. 5: RUML 1v1.
@@ -164,6 +168,7 @@ struct GameStatus {
     /// @brief Fills in this struct with the data from a FrameData object
     /// @param data FrameData object to extract data from
     void set_data(FrameData data) {
+        memcpy(raw, data.data, packet_size);
         competition_type = data[0] & 0x0F;
         current_stage = (data[0] >> 4) & 0x0F;
         round_time_remaining = (data[2] << 8) | data[1];
@@ -192,6 +197,10 @@ struct GameResult {
     /// @brief Size of the GameResult packet in bytes
     static const uint8_t packet_size = 1;
 
+    /// @brief The raw byte array of data received from ref
+    /// @note this is only the FrameData data rather than the whole ref packet
+    uint8_t raw[REF_MAX_PACKET_SIZE] = {0};
+
     /// @brief Winner
     /// @brief 0: Draw. 1: Red team wins. 2: Blue team wins.
     uint8_t winner = 0;
@@ -205,6 +214,7 @@ struct GameResult {
     /// @brief Fills in this struct with the data from a FrameData object
     /// @param data FrameData object to extract data from
     void set_data(FrameData data) {
+        memcpy(raw, data.data, packet_size);
         winner = data[0];
     }
 };
@@ -215,6 +225,10 @@ struct GameResult {
 struct GameRobotHP {
     /// @brief Size of the GameRobotHP packet in bytes
     static const uint8_t packet_size = 32;
+
+    /// @brief The raw byte array of data received from ref
+    /// @note this is only the FrameData data rather than the whole ref packet
+    uint8_t raw[REF_MAX_PACKET_SIZE] = {0};
 
     /// @brief Red team's robot HPs
     /// @brief 0: Robot 1. 1: Robot 2. 2: Robot 3. 3: Robot 4. 4: Robot 5. 5: Robot 7. 6: Outpost. 7: Base.
@@ -240,6 +254,7 @@ struct GameRobotHP {
     /// @brief Fills in this struct with the data from a FrameData object
     /// @param data FrameData object to extract data from
     void set_data(FrameData data) {
+        memcpy(raw, data.data, packet_size);
         for (int i = 0; i < 8; i++) {
             red_team_HP[i] = (data[2 * i + 1] << 8) | data[2 * i];
             blue_team_HP[i] = (data[16 + 2 * i + 1] << 8) | data[16 + 2 * i];
@@ -254,6 +269,10 @@ struct EventData {
     /// @brief Size of the EventData packet in bytes
     static const uint8_t packet_size = 4;
 
+    /// @brief The raw byte array of data received from ref
+    /// @note this is only the FrameData data rather than the whole ref packet
+    uint8_t raw[REF_MAX_PACKET_SIZE] = {0};
+
     /// @brief Site event type
     /// @todo Fill this out before china
     uint32_t site_event_data = 0;
@@ -267,6 +286,7 @@ struct EventData {
     /// @brief Fills in this struct with the data from a FrameData object
     /// @param data FrameData object to extract data from
     void set_data(FrameData data) {
+        memcpy(raw, data.data, packet_size);
         site_event_data = (data[3] << 24) | (data[2] << 16) | (data[1] << 8) | data[0];
     }
 };
@@ -277,6 +297,10 @@ struct EventData {
 struct ProjectileSupplierStatus {
     /// @brief Size of the ProjectileSupplierStatus packet in bytes
     static const uint8_t packet_size = 4;
+
+    /// @brief The raw byte array of data received from ref
+    /// @note this is only the FrameData data rather than the whole ref packet
+    uint8_t raw[REF_MAX_PACKET_SIZE] = {0};
 
     /// @brief Reserved
     uint8_t reserved = 0;
@@ -299,6 +323,7 @@ struct ProjectileSupplierStatus {
     /// @brief Fills in this struct with the data from a FrameData object
     /// @param data FrameData object to extract data from
     void set_data(FrameData data) {
+        memcpy(raw, data.data, packet_size);
         reserved = data[0];
         reloading_robot_ID = data[1];
         supplier_status = data[2];
@@ -312,6 +337,10 @@ struct ProjectileSupplierStatus {
 struct RefereeWarning {
     /// @brief Size of the RefereeWarning packet in bytes
     static const uint8_t packet_size = 3;
+
+    /// @brief The raw byte array of data received from ref
+    /// @note this is only the FrameData data rather than the whole ref packet
+    uint8_t raw[REF_MAX_PACKET_SIZE] = {0};
 
     /// @brief Level of penalty that was last received by the own side.
     /// @brief 1: Both teams received yellow card. 2: Yellow card. 3: Red card. 4: Forfeiture.
@@ -334,6 +363,7 @@ struct RefereeWarning {
     /// @brief Fills in this struct with the data from a FrameData object
     /// @param data FrameData object to extract data from
     void set_data(FrameData data) {
+        memcpy(raw, data.data, packet_size);
         last_received_severity = data[0];
         last_received_robot_ID = data[1];
         last_num_violations = data[2];
@@ -346,6 +376,10 @@ struct RefereeWarning {
 struct DartStatus {
     /// @brief Size of the DartStatus packet in bytes
     static const uint8_t packet_size = 3;
+
+    /// @brief The raw byte array of data received from ref
+    /// @note this is only the FrameData data rather than the whole ref packet
+    uint8_t raw[REF_MAX_PACKET_SIZE] = {0};
 
     /// @brief Time remaining for the dart to be launched in seconds
     uint8_t time_remaining = 0;
@@ -373,6 +407,7 @@ struct DartStatus {
     /// @brief Fills in this struct with the data from a FrameData object
     /// @param data FrameData object to extract data from
     void set_data(FrameData data) {
+        memcpy(raw, data.data, packet_size);
         time_remaining = data[0];
         target_last_hit = (data[1] & 0x03);
         num_recent_hits = (data[1] >> 2) & 0x07;
@@ -387,6 +422,10 @@ struct DartStatus {
 struct RobotPerformance {
     /// @brief Size of the RobotPerformance packet in bytes
     static const uint8_t packet_size = 13;
+
+    /// @brief The raw byte array of data received from ref
+    /// @note this is only the FrameData data rather than the whole ref packet
+    uint8_t raw[REF_MAX_PACKET_SIZE] = {0};
 
     /// @brief ID of the robot
     uint8_t robot_ID = 0;
@@ -429,6 +468,7 @@ struct RobotPerformance {
     /// @brief Fills in this struct with the data from a FrameData object
     /// @param data FrameData object to extract data from
     void set_data(FrameData data) {
+        memcpy(raw, data.data, packet_size);
         robot_ID = data[0];
         robot_level = data[1];
         current_HP = (data[3] << 8) | data[2];
@@ -449,6 +489,10 @@ struct RobotPerformance {
 struct RobotPowerHeat {
     /// @brief Size of the RobotPower packet in bytes
     static const uint8_t packet_size = 16;
+
+    /// @brief The raw byte array of data received from ref
+    /// @note this is only the FrameData data rather than the whole ref packet
+    uint8_t raw[REF_MAX_PACKET_SIZE] = {0};
 
     /// @brief Output voltage of the chassis port in the Power Management Module; unit: mV
     uint16_t chassis_voltage_output = 0;
@@ -480,6 +524,7 @@ struct RobotPowerHeat {
     /// @brief Fills in this struct with the data from a FrameData object
     /// @param data FrameData object to extract data from
     void set_data(FrameData data) {
+        memcpy(raw, data.data, packet_size);
         chassis_voltage_output = (data[1] << 8) | data[0];
         chassis_current_output = (data[3] << 8) | data[2];
 
@@ -500,6 +545,10 @@ struct RobotPosition {
     /// @brief Size of the RobotPosition packet in bytes
     static const uint8_t packet_size = 16;
 
+    /// @brief The raw byte array of data received from ref
+    /// @note this is only the FrameData data rather than the whole ref packet
+    uint8_t raw[REF_MAX_PACKET_SIZE] = {0};
+
     /// @brief The x-coordinate of the robot's position; unit: m.
     float x = 0.f;
     /// @brief The y-coordinate of the robot's position; unit: m.
@@ -518,6 +567,8 @@ struct RobotPosition {
     /// @brief Fills in this struct with the data from a FrameData object
     /// @param data FrameData object to extract data from
     void set_data(FrameData data) {
+        memcpy(raw, data.data, packet_size);
+
         uint32_t x_raw = (data[3] << 24) | (data[2] << 16) | (data[1] << 8) | data[0];
         memcpy(&x, &x_raw, sizeof(x));
         uint32_t y_raw = (data[7] << 24) | (data[6] << 16) | (data[5] << 8) | data[4];
@@ -533,6 +584,10 @@ struct RobotPosition {
 struct RobotBuff {
     /// @brief Size of the RobotBuff packet in bytes
     static const uint8_t packet_size = 6;
+
+    /// @brief The raw byte array of data received from ref
+    /// @note this is only the FrameData data rather than the whole ref packet
+    uint8_t raw[REF_MAX_PACKET_SIZE] = {0};
 
     /// @brief Robot's HP recovery buff (in percentage; a value of 10 indicates that HP recovery per second is 10% of the maximum HP.)
     uint8_t hp_recovery = 0;
@@ -558,6 +613,7 @@ struct RobotBuff {
     /// @brief Fills in this struct with the data from a FrameData object
     /// @param data FrameData object to extract data from
     void set_data(FrameData data) {
+        memcpy(raw, data.data, packet_size);
         hp_recovery = data[0];
         heat_cooling = data[1];
         defence = data[2];
@@ -572,6 +628,10 @@ struct RobotBuff {
 struct AirSupportStatus {
     /// @brief Size of the AirSupportStatus packet in bytes
     static const uint8_t packet_size = 2;
+
+    /// @brief The raw byte array of data received from ref
+    /// @note this is only the FrameData data rather than the whole ref packet
+    uint8_t raw[REF_MAX_PACKET_SIZE] = {0};
 
     /// @brief Aerial Robot's status
     /// @brief 0: Cooling. 1: Cooling finished. 2: Active.
@@ -590,6 +650,7 @@ struct AirSupportStatus {
     /// @brief Fills in this struct with the data from a FrameData object
     /// @param data FrameData object to extract data from
     void set_data(FrameData data) {
+        memcpy(raw, data.data, packet_size);
         status = data[0];
         time_remaining = data[1];
     }
@@ -601,6 +662,10 @@ struct AirSupportStatus {
 struct DamageStatus {
     /// @brief Size of the DamageStatus packet in bytes
     static const uint8_t packet_size = 1;
+
+    /// @brief The raw byte array of data received from ref
+    /// @note this is only the FrameData data rather than the whole ref packet
+    uint8_t raw[REF_MAX_PACKET_SIZE] = {0};
 
     /// @brief ID of the armor plate that was hit
     /// @note This is only valid if the damage was from projectiles, collisions, going offline, or Speed Monitor Module going offline.
@@ -619,6 +684,7 @@ struct DamageStatus {
     /// @brief Fills in this struct with the data from a FrameData object
     /// @param data FrameData object to extract data from
     void set_data(FrameData data) {
+        memcpy(raw, data.data, packet_size);
         armor_plate_ID = data[0] & 0x0F;
         damage_type = (data[0] >> 4) & 0x0F;
     }
@@ -630,6 +696,10 @@ struct DamageStatus {
 struct LaunchingStatus {
     /// @brief Size of the LaunchingStatus packet in bytes
     static const uint8_t packet_size = 7;
+
+    /// @brief The raw byte array of data received from ref
+    /// @note this is only the FrameData data rather than the whole ref packet
+    uint8_t raw[REF_MAX_PACKET_SIZE] = {0};
 
     /// @brief Type of the projectile
     /// @brief 1: 17mm. 2: 42mm.
@@ -654,6 +724,7 @@ struct LaunchingStatus {
     /// @brief Fills in this struct with the data from a FrameData object
     /// @param data FrameData object to extract data from
     void set_data(FrameData data) {
+        memcpy(raw, data.data, packet_size);
         projectile_type = data[0];
         launching_mechanism = data[1];
         launching_frequency = data[2];
@@ -668,6 +739,10 @@ struct LaunchingStatus {
 struct ProjectileAllowance {
     /// @brief Size of the ProjectileAllowance packet in bytes
     static const uint8_t packet_size = 6;
+
+    /// @brief The raw byte array of data received from ref
+    /// @note this is only the FrameData data rather than the whole ref packet
+    uint8_t raw[REF_MAX_PACKET_SIZE] = {0};
 
     /// @brief Number of 17mm projectiles remaining
     uint16_t num_17mm = 0;
@@ -687,6 +762,7 @@ struct ProjectileAllowance {
     /// @brief Fills in this struct with the data from a FrameData object
     /// @param data FrameData object to extract data from
     void set_data(FrameData data) {
+        memcpy(raw, data.data, packet_size);
         num_17mm = (data[1] << 8) | data[0];
         num_42mm = (data[3] << 8) | data[2];
         num_gold = (data[5] << 8) | data[4];
@@ -699,6 +775,10 @@ struct ProjectileAllowance {
 struct RFIDStatus {
     /// @brief Size of the RFIDStatus packet in bytes
     static const uint8_t packet_size = 4;
+
+    /// @brief The raw byte array of data received from ref
+    /// @note this is only the FrameData data rather than the whole ref packet
+    uint8_t raw[REF_MAX_PACKET_SIZE] = {0};
 
     // Meaning of bit value 0 or 1: whether the Buff Point's RFID card is detected.
 
@@ -752,6 +832,7 @@ struct RFIDStatus {
     /// @brief Fills in this struct with the data from a FrameData object
     /// @param data FrameData object to extract data from
     void set_data(FrameData data) {
+        memcpy(raw, data.data, packet_size);
         our_base_buff_point = data[0] & 0x01;
         our_ring_buff_point = (data[0] >> 1) & 0x01;
         their_ring_buff_point = (data[0] >> 2) & 0x01;
@@ -783,6 +864,10 @@ struct DartCommand {
     /// @brief Size of the DartCommand packet in bytes
     static const uint8_t packet_size = 6;
 
+    /// @brief The raw byte array of data received from ref
+    /// @note this is only the FrameData data rather than the whole ref packet
+    uint8_t raw[REF_MAX_PACKET_SIZE] = {0};
+
     /// @brief Status of the Launching Status
     /// @brief 0: Opened. 1: Closed. 2: Opening/Closing
     uint8_t status = 0;
@@ -805,6 +890,7 @@ struct DartCommand {
     /// @brief Fills in this struct with the data from a FrameData object
     /// @param data FrameData object to extract data from
     void set_data(FrameData data) {
+        memcpy(raw, data.data, packet_size);
         status = data[0];
         reserved = data[1];
         time_remaining_on_target_change = (data[3] << 8) | data[2];
@@ -818,6 +904,10 @@ struct DartCommand {
 struct GroundRobotPositions {
     /// @brief Size of the RobotPosition packet in bytes
     static const uint8_t packet_size = 40;
+
+    /// @brief The raw byte array of data received from ref
+    /// @note this is only the FrameData data rather than the whole ref packet
+    uint8_t raw[REF_MAX_PACKET_SIZE] = {0};
 
     /// @brief The x-axis coordinate of the own side's Hero Robot; unit: m.
     float hero_x = 0.f;
@@ -858,6 +948,8 @@ struct GroundRobotPositions {
     /// @brief Fills in this struct with the data from a FrameData object
     /// @param data FrameData object to extract data from
     void set_data(FrameData data) {
+        memcpy(raw, data.data, packet_size);
+
         uint32_t hero_x_raw = (data[3] << 24) | (data[2] << 16) | (data[1] << 8) | data[0];
         memcpy(&hero_x, &hero_x_raw, sizeof(hero_x));
         uint32_t hero_y_raw = (data[7] << 24) | (data[6] << 16) | (data[5] << 8) | data[4];
@@ -888,6 +980,10 @@ struct RadarProgress {
     /// @brief Size of the RadarProgress packet in bytes
     static const uint8_t packet_size = 6;
 
+    /// @brief The raw byte array of data received from ref
+    /// @note this is only the FrameData data rather than the whole ref packet
+    uint8_t raw[REF_MAX_PACKET_SIZE] = {0};
+
     /// @brief Marked progress of the opponent's Hero Robot. 0-120
     uint8_t hero = 0;
     /// @brief Marked progress of the opponent's Engineer Robot. 0-120
@@ -915,6 +1011,7 @@ struct RadarProgress {
     /// @brief Fills in this struct with the data from a FrameData object
     /// @param data FrameData object to extract data from
     void set_data(FrameData data) {
+        memcpy(raw, data.data, packet_size);
         hero = data[0];
         engineer = data[1];
         standard_3 = data[2];
@@ -931,6 +1028,10 @@ struct SentryDecision {
     /// @brief Size of the SentryDecision packet in bytes
     static const uint8_t packet_size = 4;
 
+    /// @brief The raw byte array of data received from ref
+    /// @note this is only the FrameData data rather than the whole ref packet
+    uint8_t raw[REF_MAX_PACKET_SIZE] = {0};
+
     /// @todo implement before china
     uint32_t sentry_info = 0;
 
@@ -943,6 +1044,7 @@ struct SentryDecision {
     /// @brief Fills in this struct with the data from a FrameData object
     /// @param data FrameData object to extract data from
     void set_data(FrameData data) {
+        memcpy(raw, data.data, packet_size);
         sentry_info = (data[3] << 24) | (data[2] << 16) | (data[1] << 8) | data[0];
     }
 };
@@ -953,6 +1055,10 @@ struct SentryDecision {
 struct RadarDecision {
     /// @brief Size of the RadarDecision packet in bytes
     static const uint8_t packet_size = 1;
+
+    /// @brief The raw byte array of data received from ref
+    /// @note this is only the FrameData data rather than the whole ref packet
+    uint8_t raw[REF_MAX_PACKET_SIZE] = {0};
 
     /// @todo implement before china
     uint8_t radar_info = 0;
@@ -966,6 +1072,7 @@ struct RadarDecision {
     /// @brief Fills in this struct with the data from a FrameData object
     /// @param data FrameData object to extract data from
     void set_data(FrameData data) {
+        memcpy(raw, data.data, packet_size);
         radar_info = data[0];
     }
 };
@@ -976,6 +1083,10 @@ struct RadarDecision {
 struct RobotInteraction {
     /// @brief Size of the RobotInteraction packet in bytes
     static const uint8_t packet_size = 128;
+
+    /// @brief The raw byte array of data received from ref
+    /// @note this is only the FrameData data rather than the whole ref packet
+    uint8_t raw[REF_MAX_PACKET_SIZE] = {0};
 
     /// @brief ID that is specified by user. Not critical to REF
     uint16_t content_id = 0;
@@ -1020,6 +1131,10 @@ struct CustomControllerRobot {
     /// @brief Size of the ControllerRobots packet in bytes
     static const uint8_t packet_size = 30;
 
+    /// @brief The raw byte array of data received from ref
+    /// @note this is only the FrameData data rather than the whole ref packet
+    uint8_t raw[REF_MAX_PACKET_SIZE] = {0};
+
     /// @brief Custom data
     uint8_t data[30] = { 0 };
 
@@ -1034,6 +1149,7 @@ struct CustomControllerRobot {
     /// @brief Fills in this struct with the data from a FrameData object
     /// @param data FrameData object to extract data from
     void set_data(FrameData data) {
+        memcpy(raw, data.data, packet_size);
         for (uint8_t i = 0; i < 30; i++) {
             this->data[i] = data[i];
         }
@@ -1046,6 +1162,10 @@ struct CustomControllerRobot {
 struct SmallMapCommand {
     /// @brief Size of the SmallMapCommand packet in bytes
     static const uint8_t packet_size = 15;
+
+    /// @brief The raw byte array of data received from ref
+    /// @note this is only the FrameData data rather than the whole ref packet
+    uint8_t raw[REF_MAX_PACKET_SIZE] = {0};
 
     /// @brief The x-axis coordinate of the target position; unit: m.
     /// @note When the target robot ID is sent, the value is 0.
@@ -1075,6 +1195,7 @@ struct SmallMapCommand {
     /// @brief Fills in this struct with the data from a FrameData object
     /// @param data FrameData object to extract data from
     void set_data(FrameData data) {
+        memcpy(raw, data.data, packet_size);
         uint32_t target_position_x_raw = (data[3] << 24) | (data[2] << 16) | (data[1] << 8) | data[0];
         memcpy(&target_position_x, &target_position_x_raw, sizeof(target_position_x));
         uint32_t target_position_y_raw = (data[7] << 24) | (data[6] << 16) | (data[5] << 8) | data[4];
@@ -1091,6 +1212,10 @@ struct SmallMapCommand {
 struct KBMInteraction {
     /// @brief Size of the KBMInteraction packet in bytes
     static const uint8_t packet_size = 12;
+
+    /// @brief The raw byte array of data received from ref
+    /// @note this is only the FrameData data rather than the whole ref packet
+    uint8_t raw[REF_MAX_PACKET_SIZE] = {0};
 
     /// @brief x-axis moving speed of the mouse. A negative value indicates a left movement.
     int16_t mouse_speed_x = 0;
@@ -1167,6 +1292,7 @@ struct KBMInteraction {
     /// @brief Fills in this struct with the data from a FrameData object
     /// @param data FrameData object to extract data from
     void set_data(FrameData data) {
+        memcpy(raw, data.data, packet_size);
         mouse_speed_x = (data[1] << 8) | data[0];
         mouse_speed_y = (data[3] << 8) | data[2];
         scroll_speed = (data[5] << 8) | data[4];
@@ -1199,6 +1325,10 @@ struct SmallMapRadarPosition {
     /// @brief Size of the SmallMapRadarPosition packet in bytes
     static const uint8_t packet_size = 10;
 
+    /// @brief The raw byte array of data received from ref
+    /// @note this is only the FrameData data rather than the whole ref packet
+    uint8_t raw[REF_MAX_PACKET_SIZE] = {0};
+
     /// @brief The target robot's ID.
     uint16_t target_ID = 0;
     /// @brief The x-axis coordinate of the target robot; unit: m.
@@ -1217,6 +1347,7 @@ struct SmallMapRadarPosition {
     /// @brief Fills in this struct with the data from a FrameData object
     /// @param data FrameData object to extract data from
     void set_data(FrameData data) {
+        memcpy(raw, data.data, packet_size);
         target_ID = (data[1] << 8) | data[0];
         uint32_t target_x_raw = (data[5] << 24) | (data[4] << 16) | (data[3] << 8) | data[2];
         memcpy(&target_x, &target_x_raw, sizeof(target_x));
@@ -1231,6 +1362,10 @@ struct SmallMapRadarPosition {
 struct CustomControllerClient {
     /// @brief Size of the ControllerClient packet in bytes
     static const uint8_t packet_size = 8;
+
+    /// @brief The raw byte array of data received from ref
+    /// @note this is only the FrameData data rather than the whole ref packet
+    uint8_t raw[REF_MAX_PACKET_SIZE] = {0};
 
     /// @brief value of Key 1
     uint8_t key_1 = 0;
@@ -1264,6 +1399,7 @@ struct CustomControllerClient {
     /// @brief Fills in this struct with the data from a FrameData object
     /// @param data FrameData object to extract data from
     void set_data(FrameData data) {
+        memcpy(raw, data.data, packet_size);
         key_1 = data[0];
         key_2 = data[1];
         mouse_x = (data[3] << 8) | data[2];
@@ -1280,6 +1416,10 @@ struct CustomControllerClient {
 struct SmallMapSentryCommand {
     /// @brief Size of the SmallMapSentryPosition packet in bytes
     static const uint8_t packet_size = 103;
+
+    /// @brief The raw byte array of data received from ref
+    /// @note this is only the FrameData data rather than the whole ref packet
+    uint8_t raw[REF_MAX_PACKET_SIZE] = {0};
 
     /// @brief Specific command sent to the sentry
     /// @brief 1: Go to target point to attack. 2: Go to target point to defend. 3: Go to target point;
@@ -1315,6 +1455,7 @@ struct SmallMapSentryCommand {
     /// @brief Fills in this struct with the data from a FrameData object
     /// @param data FrameData object to extract data from
     void set_data(FrameData data) {
+        memcpy(raw, data.data, packet_size);
         command = data[0];
         start_x = (data[2] << 8) | data[1];
         start_y = (data[4] << 8) | data[3];
@@ -1334,6 +1475,10 @@ struct SmallMapSentryCommand {
 struct SmallMapRobotData {
     /// @brief Size of the SmallMapRobotPosition packet in bytes
     static const uint8_t packet_size = 34;
+
+    /// @brief The raw byte array of data received from ref
+    /// @note this is only the FrameData data rather than the whole ref packet
+    uint8_t raw[REF_MAX_PACKET_SIZE] = {0};
 
     /// @brief Sender ID
     uint16_t sender_ID = 0;
@@ -1356,6 +1501,7 @@ struct SmallMapRobotData {
     /// @brief Fills in this struct with the data from a FrameData object
     /// @param data FrameData object to extract data from
     void set_data(FrameData data) {
+        memcpy(raw, data.data, packet_size);
         sender_ID = (data[1] << 8) | data[0];
         receiver_ID = (data[3] << 8) | data[2];
         for (uint8_t i = 0; i < 30; i++) {
