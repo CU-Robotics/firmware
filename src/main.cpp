@@ -2,6 +2,8 @@
 
 #include "utils/timing.hpp"
 #include "comms/rm_can.hpp"
+
+#include "sensors/RefSystem.hpp"
 #include "sensors/dr16.hpp"
 #include "controls/estimator_manager.hpp"
 #include "controls/controller_manager.hpp"
@@ -333,8 +335,13 @@ int main() {
     kinematics_vel[13][7] = -1;
 
     int count_one = 0;
+
     float dr16_pos_x = 0;
     float dr16_pos_y = 0;
+
+    float vtm_pos_x = 0;
+    float vtm_pos_y = 0;
+
     // Main loop
     while (true) {
         //read everything
@@ -342,25 +349,36 @@ int main() {
         dr16.read();
         ref.read();
         comms.ping();
+        
         //get packets
         CommsPacket* incoming = comms.get_incoming_packet();
         CommsPacket* outgoing = comms.get_outgoing_packet();
 
         //manual controls outside hive
         float delta = control_input_timer.delta();
-
-        // dr16 integrator
         dr16_pos_x += dr16.get_mouse_x() * 0.05 * delta;
         dr16_pos_y += dr16.get_mouse_y() * 0.05 * delta;
 
-        float chassis_velocity_x = -dr16.get_l_stick_y() * 5.4 + (-dr16.keys.w + dr16.keys.s) * 2.5;
-        float chassis_velocity_y = dr16.get_l_stick_x() * 5.4 + (dr16.keys.d - dr16.keys.a) * 2.5;
-        float chassis_spin = dr16.get_wheel() * 25;
-        float pitch_target = 1.57 + -dr16.get_r_stick_y() * 0.3 + dr16_pos_y;
-        float yaw_target = -dr16.get_r_stick_x() * 1.5 - dr16_pos_x;
+        vtm_pos_x += ref.ref_data.kbm_interaction.mouse_speed_x * 0.05 * delta;
+        vtm_pos_y += ref.ref_data.kbm_interaction.mouse_speed_y * 0.05 * delta;
 
+        float chassis_velocity_x = -dr16.get_l_stick_y() * 5.4
+                                 + (-ref.ref_data.kbm_interaction.key_w + ref.ref_data.kbm_interaction.key_s) * 2.5
+                                 + (-dr16.keys.w + dr16.keys.s) * 2.5;
+        float chassis_velocity_y = dr16.get_l_stick_x() * 5.4
+                                 + (ref.ref_data.kbm_interaction.key_d - ref.ref_data.kbm_interaction.key_a) * 2.5
+                                 + (dr16.keys.d - dr16.keys.a) * 2.5;
+        float chassis_spin = dr16.get_wheel() * 25;
+
+        float pitch_target = 1.57
+                            + -dr16.get_r_stick_y() * 0.3
+                            + dr16_pos_y
+                            + vtm_pos_y;
+        float yaw_target = -dr16.get_r_stick_x() * 1.5
+                            - dr16_pos_x
+                            - vtm_pos_x;
         float fly_wheel_target = (dr16.get_r_switch() == 1 || dr16.get_r_switch() == 3) ? 18 : 0; //m/s
-        float feeder_target = ((dr16.get_l_mouse_button() && dr16.get_r_switch() != 2) || dr16.get_r_switch() == 1) ? 10 : 0;
+        float feeder_target = (((dr16.get_l_mouse_button() || ref.ref_data.kbm_interaction.button_left) && dr16.get_r_switch() != 2) || dr16.get_r_switch() == 1) ? 10 : 0;
 
         target_state[0][1] = chassis_velocity_x;
         target_state[1][1] = chassis_velocity_y;
@@ -369,14 +387,11 @@ int main() {
         target_state[3][1] = 0;
         target_state[4][0] = pitch_target;
         target_state[4][1] = 0;
+
         target_state[5][1] = fly_wheel_target;
         target_state[6][1] = feeder_target;
         target_state[7][0] = -1;
 
-        //set estimated state in outgoing packet
-        outgoing->set_estimated_state(temp_state);
-
-        // fill in target_state from incoming packet
         if(dr16.get_l_switch() == 2) incoming->get_target_state(target_state);
         
         // Read sensors

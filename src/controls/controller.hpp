@@ -297,7 +297,7 @@ public:
         pid.K[2] = gains[2];
 
         // Power limiting
-        float power_buffer = ref.ref_data.power_heat.buffer_energy;
+        float power_buffer = ref.ref_data.robot_power_heat.buffer_energy;
         float power_limit_ratio = 1.0;
         float power_buffer_limit_thresh = gains[3];
         float power_buffer_critical_thresh = gains[4];
