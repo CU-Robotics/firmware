@@ -75,6 +75,7 @@ build: clean
 	@chmod +x $(PROJECT_NAME).hex
 	@echo [Cleaning Up]
 	@rm -f $(PROJECT_NAME).elf 
+	@git config --local core.hooksPath .githooks
 
 # builds hex, uploades it, and starts monitoring output
 upload: build

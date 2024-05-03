@@ -172,20 +172,28 @@ private:
     float gravity_pitch_angle;
     /// @brief yaw axis in spherical coords
     float yaw_axis_spherical[3];
+
     /// @brief pitch axis in spherical coords
     float pitch_axis_spherical[3];
+
     /// @brief roll axis in spherical coords
     float roll_axis_spherical[3];
+
     /// @brief yaw axis unit vector
     float yaw_axis_unitvector[3];
+
     /// @brief pitch axis unit vector
     float pitch_axis_unitvector[3];
+
     /// @brief roll axis unit vector
     float roll_axis_unitvector[3];
+
     /// @brief global relative yaw
     float yaw_axis_global[3];
+
     /// @brief global relative pitch
     float pitch_axis_global[3];
+
     /// @brief global relative roll
     float roll_axis_global[3];
     /// @brief current calculated yaw velocity
@@ -212,6 +220,35 @@ private:
     float global_yaw_angle = 0;
     /// @brief global roll angle
     float global_roll_angle = 0;
+    /// @brief current rev encoder raw value
+    float curr_rev_raw[3] = {0};
+
+    /// @brief previous rev encoder raw value
+    float prev_rev_raw[3] = {0};
+
+    /// @brief total meters travelled by each odom wheel
+    float total_odom_pos[3] = {0};
+
+    /// @brief rev encoder difference
+    float rev_diff[3] = {0};
+
+    /// @brief odom pos difference
+    float odom_pos_diff[3] = {0};
+    /// @brief previous chassis angle
+    float prev_chassis_angle = 0;
+    /// @brief odom pod offset from the center of the robot
+    float odom_axis_offset_x;
+    /// @brief odom pod offset from the center of the robot
+    float odom_axis_offset_y;
+    /// @brief odom pod angle offset radians
+    float odom_angle_offset = 0.1745; // 10 degrees
+    // float odom_angle_offset = 0;
+    /// @brief odom wheel radius
+    float odom_wheel_radius;
+    /// @brief initial chassis angle
+    float initial_chassis_angle = 0;
+    /// @brief counts one time to set the starting chassis angle
+    int count1 = 0;
     /// @brief delta time
     float dt = 0;
 
@@ -219,6 +256,8 @@ private:
     BuffEncoder* buff_enc_yaw;
     /// @brief buff encoder on the pitch
     BuffEncoder* buff_enc_pitch;
+    /// @brief Odom encoder values
+    RevEncoder* rev_enc[3];
     /// @brief can data pointer from EstimatorManager
     CANData* can_data;
     /// @brief icm imu
@@ -230,14 +269,20 @@ private:
 public:
     /// @brief estimate the state of the gimbal
     /// @param sensor_values inputted sensor values from EstimatorManager
+    /// @param r1 rev encoder 1
+    /// @param r2 rev encoder 2
+    /// @param r3 rev encoder 3
     /// @param b1 buff encoder 1
     /// @param b2 buff encoder 2
     /// @param imu icm encoder
     /// @param data can data from Estimator Manager
     /// @param n num states this estimator estimates
-    GimbalEstimator(float sensor_values[10], BuffEncoder* b1, BuffEncoder* b2, ICM20649* imu, CANData* data, int n) {
+    GimbalEstimator(float sensor_values[13],RevEncoder* r1, RevEncoder* r2, RevEncoder* r3, BuffEncoder* b1, BuffEncoder* b2, ICM20649* imu, CANData* data, int n) {
         buff_enc_yaw = b1; // sensor object definitions
         buff_enc_pitch = b2;
+        rev_enc[0] = r1;
+        rev_enc[1] = r2;
+        rev_enc[2] = r3;
         can_data = data;
         icm_imu = imu;
         num_states = n; // number of estimated states
@@ -252,6 +297,9 @@ public:
         gravity_accel_vector[1] = sensor_values[7];
         gravity_accel_vector[2] = sensor_values[8];
         gravity_pitch_angle = sensor_values[9];
+        odom_wheel_radius = sensor_values[10];
+        odom_axis_offset_x = sensor_values[11];
+        odom_axis_offset_y = sensor_values[12];
         // definitions for spherical coordinates of new axis in the imu refrence frame
         yaw_axis_spherical[0] = 1;   // rho (1 for a spherical)
         pitch_axis_spherical[0] = 1; // rho (1 for a spherical)
@@ -372,7 +420,11 @@ public:
 
         // chassis_angle = yaw_angle - yaw_enc_angle;
         chassis_angle = -yaw_enc_angle;
-
+        if(count1 == 0){
+            initial_chassis_angle = chassis_angle;
+            prev_chassis_angle = chassis_angle;
+            count1++;
+        }
 
         while (yaw_angle >= PI)
             yaw_angle -= 2 * PI;
@@ -384,7 +436,7 @@ public:
         while (chassis_angle <= -PI)
             chassis_angle += 2 * PI;
 
-        output[2][0] = chassis_angle;
+        // output[2][0] = chassis_angle;
         // output[2][1] = 0;
         // output[2][2] = 0;
         output[3][0] = yaw_angle;
@@ -394,49 +446,72 @@ public:
         output[4][1] = current_pitch_velocity;
         output[4][2] = pitch_enc_angle;
 
-        // chassis estimation
-        float front_right = can_data->get_motor_attribute(CAN_1, 1, MotorAttribute::SPEED);
-        float back_right = can_data->get_motor_attribute(CAN_1, 2, MotorAttribute::SPEED);
-        float back_left = can_data->get_motor_attribute(CAN_1, 3, MotorAttribute::SPEED);
-        float front_left = can_data->get_motor_attribute(CAN_1, 4, MotorAttribute::SPEED);
+        for(int i = 0; i < 3; i++){
+            curr_rev_raw[i] = rev_enc[i]->get_angle_radians();
+            if ((curr_rev_raw[i]-prev_rev_raw[i]) > PI) rev_diff[i] = ((curr_rev_raw[i]-prev_rev_raw[i])-(2*PI));
+            else if ((curr_rev_raw[i]-prev_rev_raw[i]) < -PI) rev_diff[i] = ((curr_rev_raw[i]-prev_rev_raw[i])+(2*PI));
+            else rev_diff[i] = (curr_rev_raw[i]-prev_rev_raw[i]);
+            prev_rev_raw[i] = curr_rev_raw[i];
+            odom_pos_diff[i] = rev_diff[i]*odom_wheel_radius;
+            total_odom_pos[i] = odom_pos_diff[i]+total_odom_pos[i];
+        }
+        chassis_angle = -(total_odom_pos[0] + total_odom_pos[2])/(2*odom_axis_offset_x)+initial_chassis_angle;  
+        float d_chassis_heading = (chassis_angle - prev_chassis_angle);
+        prev_chassis_angle = chassis_angle;
+        if (d_chassis_heading == 0) {
+            pos_estimate[0] += ((odom_pos_diff[0])*cos(chassis_angle+odom_angle_offset)) - ((odom_pos_diff[1])*sin(chassis_angle+odom_angle_offset));
+            pos_estimate[1] += ((odom_pos_diff[0])*sin(chassis_angle+odom_angle_offset)) + ((odom_pos_diff[1])*cos(chassis_angle+odom_angle_offset));
+        } else {
+            float pod1_relative = 2 * sin(d_chassis_heading*0.5) * ((odom_pos_diff[0]/d_chassis_heading) + odom_axis_offset_x); //relative motion of the first pod
+            float pod2_relative = 2 * sin(d_chassis_heading*0.5) * ((odom_pos_diff[1]/d_chassis_heading) + odom_axis_offset_y); //relative motion of the second pod
+            pos_estimate[0] += pod1_relative *cos((chassis_angle + odom_angle_offset) + (d_chassis_heading*0.5))
+                - pod2_relative * sin((chassis_angle + odom_angle_offset) + (d_chassis_heading*0.5));
+            pos_estimate[1] += pod1_relative *sin((chassis_angle + odom_angle_offset) + (d_chassis_heading*0.5))
+                + pod2_relative * cos((chassis_angle + odom_angle_offset) + (d_chassis_heading*0.5));
+        }
+        // // chassis estimation
+        // float front_right = can_data->get_motor_attribute(CAN_1, 1, MotorAttribute::SPEED);
+        // float back_right = can_data->get_motor_attribute(CAN_1, 2, MotorAttribute::SPEED);
+        // float back_left = can_data->get_motor_attribute(CAN_1, 3, MotorAttribute::SPEED);
+        // float front_left = can_data->get_motor_attribute(CAN_1, 4, MotorAttribute::SPEED);
 
-        // m/s of chassis to motor rpm
-        float x_scale = ((1 / (PI * 2 * 0.0516)) * 60) / 0.10897435897;
-        float y_scale = ((1 / (PI * 2 * 0.0516)) * 60) / 0.10897435897;
-        // chassis rad/s to motor rpm
-        float psi_scale = ((.1835 / (PI * 2 * 0.0516)) * 60) / 0.10897435897;
-        // define coeff matracies for each system we want to solve
-        float coeff_matrix1[3][4] = { {x_scale,0,psi_scale,front_right},{0,-y_scale,psi_scale,back_right},{-x_scale,0,psi_scale,back_left} };
-        float coeff_matrix2[3][4] = { {x_scale,0,psi_scale,front_right},{0,-y_scale,psi_scale,back_right},{0,y_scale,psi_scale,front_left} };
-        float coeff_matrix3[3][4] = { {x_scale,0,psi_scale,front_right},{0,y_scale,psi_scale,front_left},{-x_scale,0,psi_scale,back_left} };
-        float coeff_matrix4[3][4] = { {0,-y_scale,psi_scale,back_right},{0,y_scale,psi_scale,front_left},{-x_scale,0,psi_scale,back_left} };
+        // // m/s of chassis to motor rpm
+        // float x_scale = ((1 / (PI * 2 * 0.0516)) * 60) / 0.10897435897;
+        // float y_scale = ((1 / (PI * 2 * 0.0516)) * 60) / 0.10897435897;
+        // // chassis rad/s to motor rpm
+        // float psi_scale = ((.1835 / (PI * 2 * 0.0516)) * 60) / 0.10897435897;
+        // // define coeff matracies for each system we want to solve
+        // float coeff_matrix1[3][4] = { {x_scale,0,psi_scale,front_right},{0,-y_scale,psi_scale,back_right},{-x_scale,0,psi_scale,back_left} };
+        // float coeff_matrix2[3][4] = { {x_scale,0,psi_scale,front_right},{0,-y_scale,psi_scale,back_right},{0,y_scale,psi_scale,front_left} };
+        // float coeff_matrix3[3][4] = { {x_scale,0,psi_scale,front_right},{0,y_scale,psi_scale,front_left},{-x_scale,0,psi_scale,back_left} };
+        // float coeff_matrix4[3][4] = { {0,-y_scale,psi_scale,back_right},{0,y_scale,psi_scale,front_left},{-x_scale,0,psi_scale,back_left} };
 
-        // 4 solution sets of x, y, psi
-        float vel_solutions[4][3];
-        solveSystem(coeff_matrix1, vel_solutions[0]);
-        solveSystem(coeff_matrix2, vel_solutions[1]);
-        solveSystem(coeff_matrix3, vel_solutions[2]);
-        solveSystem(coeff_matrix4, vel_solutions[3]);
+        // // 4 solution sets of x, y, psi
+        // float vel_solutions[4][3];
+        // solveSystem(coeff_matrix1, vel_solutions[0]);
+        // solveSystem(coeff_matrix2, vel_solutions[1]);
+        // solveSystem(coeff_matrix3, vel_solutions[2]);
+        // solveSystem(coeff_matrix4, vel_solutions[3]);
 
-        float vel_estimate[3];
+        // float vel_estimate[3];
 
-        vel_estimate[0] = (cos(yaw_enc_angle - yaw_angle) * vel_solutions[0][0] + sin(yaw_enc_angle - yaw_angle) * vel_solutions[0][1]);
-        vel_estimate[1] = (-sin(yaw_enc_angle - yaw_angle) * vel_solutions[0][0] + cos(yaw_enc_angle - yaw_angle) * vel_solutions[0][1]);
-        vel_estimate[2] = vel_solutions[0][2];
+        // vel_estimate[0] = (cos(yaw_enc_angle - yaw_angle) * vel_solutions[0][0] + sin(yaw_enc_angle - yaw_angle) * vel_solutions[0][1]);
+        // vel_estimate[1] = (-sin(yaw_enc_angle - yaw_angle) * vel_solutions[0][0] + cos(yaw_enc_angle - yaw_angle) * vel_solutions[0][1]);
+        // vel_estimate[2] = vel_solutions[0][2];
 
         // integrate to find pos
-        pos_estimate[0] += vel_estimate[0] * dt;
-        pos_estimate[1] += vel_estimate[1] * dt;
-        pos_estimate[2] += vel_estimate[2] * dt;
+        // pos_estimate[0] += vel_estimate[0] * dt;
+        // pos_estimate[1] += vel_estimate[1] * dt;
+        // pos_estimate[2] += vel_estimate[2] * dt;
 
         output[0][0] = pos_estimate[0]; // x pos
-        output[0][1] = vel_estimate[0];
+        // output[0][1] = vel_estimate[0];
         output[0][2] = 0;
         output[1][0] = pos_estimate[1]; // y pos
-        output[1][1] = vel_estimate[1];
+        // output[1][1] = vel_estimate[1];
         output[1][2] = 0;
-        // output[2][0] = 0; // chassis angle
-        output[2][1] = vel_estimate[2];
+        output[2][0] = chassis_angle; // chassis angle
+        // output[2][1] = vel_estimate[2];
         output[2][2] = yaw_enc_angle;
     }
 };

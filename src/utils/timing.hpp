@@ -56,6 +56,14 @@ struct Timer {
         start_timer();
         return delta;
     }
+
+    /// @brief delta of clock in microseconds
+    /// @return deltaTime: (float) The time since the last delta call.
+    float delta_micros() {
+        float delta = DURATION_US(t, ARM_DWT_CYCCNT);
+        start_timer();
+        return delta;
+    }
 };
 
 #endif // TIMING_H

@@ -20,9 +20,9 @@ EstimatorManager::EstimatorManager(CANData* data) {
     icm_sensors[0].init(icm_sensors[0].CommunicationProtocol::SPI);
     icm_sensors[0].set_gyro_range(4000);
 
-    rev_sensors[0].init(REV_ENC_PIN1);
-    rev_sensors[1].init(REV_ENC_PIN2);
-    rev_sensors[2].init(REV_ENC_PIN3);
+    rev_sensors[0].init(REV_ENC_PIN1,true);
+    rev_sensors[1].init(REV_ENC_PIN2,true);
+    rev_sensors[2].init(REV_ENC_PIN3,true);
     
     tof_sensors[0].init();
     can_data = data;
@@ -31,8 +31,8 @@ EstimatorManager::EstimatorManager(CANData* data) {
 void EstimatorManager::init_estimator(int estimator_id, int num_states) {
     switch (estimator_id) {
     case 1: // Gimbal Estimator
-        float values_gimbal[10];
-        values_gimbal[0] = -1.462;       // yaw encoder offset
+        float values_gimbal[13];
+        values_gimbal[0] = -0.1;       // yaw encoder offset
         values_gimbal[1] = -2.154;       // pitch encoder offset
         values_gimbal[2] = 0;       // default yaw starting angle (starting point for imu integration)
         values_gimbal[3] = 1.91986; // default pitch starting angle (starting point for imu integration)
@@ -43,8 +43,10 @@ void EstimatorManager::init_estimator(int estimator_id, int num_states) {
         values_gimbal[7] = 2.057767;  // y
         values_gimbal[8] = 5.544132; // z
         values_gimbal[9] = 1.91986;   // Pitch angle at given gravity vector
-
-        estimators[0] = new GimbalEstimator(values_gimbal, &buff_sensors[0], &buff_sensors[1], &icm_sensors[0], can_data, num_states);
+        values_gimbal[10] = 0.034925; // odom wheel radius
+        values_gimbal[11] = .08035; // odom wheel offset x
+        values_gimbal[12] = .08035; // odom wheel offset y
+        estimators[0] = new GimbalEstimator(values_gimbal,&rev_sensors[0],&rev_sensors[1],&rev_sensors[2], &buff_sensors[0], &buff_sensors[1], &icm_sensors[0], can_data, num_states);
         break;
     case 2:
         estimators[1] = new FlyWheelEstimator(can_data, num_states);
@@ -118,6 +120,9 @@ void EstimatorManager::read_sensors() {
     buff_sensors[0].read();
     buff_sensors[1].read();
     icm_sensors[0].read();
+    rev_sensors[0].read();
+    rev_sensors[1].read();
+    rev_sensors[2].read();
 }
 
 //Calibrated offsets: 0.255322, -0.017980, 0.000764
