@@ -45,6 +45,11 @@ constexpr uint32_t REF_COMMS_KBM_INTERACTION = 124;
 /// @brief End of the Ref Data packet for comms
 constexpr uint32_t REF_COMMS_END = 136;
 
+/// @brief The serial line for the MCM
+#define MCM_SERIAL (Serial2)
+/// @brief The serial line for the VTM
+#define VTM_SERIAL (Serial7)
+
 /// @brief Generates a 1-byte CRC
 /// @param data data array
 /// @param length size of the data array
@@ -170,7 +175,7 @@ public:
     /// @brief Initializes the RefSystem. Sets up the Serial connection
     void init();
 
-    /// @brief Read from the Serial buffer the next packet and store it
+    /// @brief Reads the incoming data from the Referee System and sets the data into ref_data
     void read();
 
     /// @brief Send a pre-constructed packet to Ref
@@ -186,38 +191,87 @@ public:
 
 private:
     /// @brief Helper function: Reads and stores frame header
+    /// @param serial Serial port to read from
     /// @param frame Frame reference to fill
+    /// @param raw_buffer Buffer to read to
+    /// @param buffer_index Index into the buffer
     /// @return Whether the read was successful or not
-    bool read_frame_header(Frame& frame);
+    bool read_frame_header(HardwareSerial* serial, uint8_t raw_buffer[REF_MAX_PACKET_SIZE * 2], uint16_t& buffer_index, Frame& frame);
 
     /// @brief Helper function: Reads and stores frame command ID
+    /// @param serial Serial port to read from
     /// @param frame Frame reference to fill
+    /// @param raw_buffer Buffer to read to
+    /// @param buffer_index Index into the buffer    
     /// @return Whether the read was successful or not
-    bool read_frame_command_ID(Frame& frame);
+    bool read_frame_command_ID(HardwareSerial* serial, uint8_t raw_buffer[REF_MAX_PACKET_SIZE * 2], uint16_t& buffer_index, Frame& frame);
 
     /// @brief Helper function: Reads and stores frame data
+    /// @param serial Serial port to read from
     /// @param frame Frame reference to fill
+    /// @param raw_buffer Buffer to read to
+    /// @param buffer_index Index into the buffer    
     /// @return Whether the read was successful or not
-    bool read_frame_data(Frame& frame);
+    bool read_frame_data(HardwareSerial* serial, uint8_t raw_buffer[REF_MAX_PACKET_SIZE * 2], uint16_t& buffer_index, Frame& frame);
 
     /// @brief Helper function: Reads and stores frame tail
+    /// @param serial Serial port to read from
     /// @param frame Frame reference to fill
+    /// @param raw_buffer Buffer to read to
+    /// @param buffer_index Index into the buffer    
     /// @return Whether the read was successful or not
-    bool read_frame_tail(Frame& frame);
+    bool read_frame_tail(HardwareSerial* serial, uint8_t raw_buffer[REF_MAX_PACKET_SIZE * 2], uint16_t& buffer_index, Frame& frame);
+
+    /// @brief Helper function: sets the data in a frame to the ref_data struct
+    /// @param frame Frame to read from
+    /// @param raw_buffer Buffer to read from
+    void set_ref_data(Frame& frame, uint8_t raw_buffer[REF_MAX_PACKET_SIZE * 2]);
 
     /// @brief Get the current outgoing sequence. Used in sending frames
     /// @return The next sequence
     inline uint8_t get_seq() noexcept { seq++;  return seq; }
 
 private:
-    /// @brief Buffer to store frames-in-progress
-    uint8_t raw_buffer[REF_MAX_PACKET_SIZE] = { 0 };
-
-    /// @brief Index into the raw_buffer
-    uint8_t buffer_index = 0;
-
     /// @brief Current sequence number. Used to send packets
     uint8_t seq = 0;
+    
+    // VTM
+
+    /// @brief Buffer to store frames-in-progress (for vtm packets)
+    /// @note This is * 2 to allow buffer space for the largest frame
+    uint8_t vtm_raw_buffer[REF_MAX_PACKET_SIZE * 2] = { 0 };
+
+    /// @brief Index into the raw_buffer (for vtm packets)
+    uint16_t vtm_buffer_index = 0;
+
+    /// @brief Whether the header has been successfully read (for vtm packets)
+    bool vtm_header_read = false;
+    /// @brief Whether the command ID has been successfully read (for vtm packets)
+    bool vtm_command_ID_read = false;
+    /// @brief Whether the data has been successfully read (for vtm packets)
+    bool vtm_data_read = false;
+
+    /// @brief Current frame being read (for vtm packets)
+    Frame vtm_curr_frame{};
+
+    // MCM
+
+    /// @brief Buffer to store frames-in-progress (for mcm packets)
+    /// @note This is * 2 to allow buffer space for the largest frame
+    uint8_t mcm_raw_buffer[REF_MAX_PACKET_SIZE * 2] = { 0 };
+
+    /// @brief Index into the raw_buffer (for mcm packets)
+    uint16_t mcm_buffer_index = 0;
+
+    /// @brief Whether the header has been successfully read (for mcm packets)
+    bool mcm_header_read = false;
+    /// @brief Whether the command ID has been successfully read (for mcm packets)
+    bool mcm_command_ID_read = false;
+    /// @brief Whether the data has been successfully read (for mcm packets)
+    bool mcm_data_read = false;
+
+    /// @brief Current frame being read (for mcm packets)
+    Frame mcm_curr_frame{};
 
 public:
     /// @brief Number of inter-robot packets sent

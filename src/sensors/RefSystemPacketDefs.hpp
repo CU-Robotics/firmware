@@ -1106,7 +1106,6 @@ struct RobotInteraction {
             Serial.printf("%x ", data[i]);
         }
         Serial.println();
-
     }
 
     /// @brief Fills in this struct with the data from a Frame object
