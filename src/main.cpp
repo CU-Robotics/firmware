@@ -2,15 +2,13 @@
 
 #include "utils/timing.hpp"
 #include "comms/rm_can.hpp"
-
-#include "sensors/RefSystem.hpp"
 #include "sensors/dr16.hpp"
 #include "controls/estimator_manager.hpp"
 #include "controls/controller_manager.hpp"
 #include "controls/state.hpp"
 #include "comms/usb_hid.hpp"
 #include "sensors/RefSystem.hpp"
-#include "sensors/TOFSensor.hpp"
+#include "sensors/d200.hpp"
 
 // Loop constants
 #define LOOP_FREQ 1000
@@ -21,6 +19,8 @@ DR16 dr16;
 rm_CAN can;
 RefSystem ref;
 HIDLayer comms;
+D200LD14P lidar1(&Serial4, 0);
+D200LD14P lidar2(&Serial5, 1);
 
 Timer loop_timer;
 Timer stall_timer;
@@ -441,6 +441,11 @@ int main() {
         SensorData sensor_data;
         // set dr16 raw data
         memcpy(sensor_data.raw + SENSOR_DR16_OFFSET, dr16.get_raw(), DR16_PACKET_SIZE);
+        uint8_t lidar_data[D200_NUM_PACKETS_CACHED * D200_PAYLOAD_SIZE] = { 0 };
+        lidar1.export_data(lidar_data);
+        memcpy(sensor_data.raw + SENSOR_LIDAR1_OFFSET, lidar_data, D200_NUM_PACKETS_CACHED * D200_PAYLOAD_SIZE);
+        lidar2.export_data(lidar_data);
+        memcpy(sensor_data.raw + SENSOR_LIDAR2_OFFSET, lidar_data, D200_NUM_PACKETS_CACHED * D200_PAYLOAD_SIZE);
 
         // set the outgoing packet
         outgoing->set_id((uint16_t)loopc);

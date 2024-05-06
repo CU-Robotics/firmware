@@ -31,14 +31,20 @@ constexpr unsigned int TEENSY_PACKET_TIME_OFFSET = 4u;	// 8 bytes
 /// @brief The offset of the packet estimated state from the base of the Teesny packet
 constexpr unsigned int TEENSY_PACKET_ESTATE_OFFSET = 12u;	// 288 bytes
 /// @brief The offset of the packet sensor data from the base of the Teesny packet
-constexpr unsigned int TEENSY_PACKET_SENSOR_OFFSET = 300u;	// 300 bytes
+constexpr unsigned int TEENSY_PACKET_SENSOR_OFFSET = 300u;	// 400 bytes
 /// @brief The offset of the packet ref data from the base of the Teesny packet
-constexpr unsigned int TEENSY_PACKET_REF_OFFSET = 600u;	// 180 bytes
+constexpr unsigned int TEENSY_PACKET_REF_OFFSET = 700u;	// 180 bytes
 /// @brief The offset to the end of the Teensy packet
-constexpr unsigned int TEENSY_PACKET_END_OFFSET = 780u;
+constexpr unsigned int TEENSY_PACKET_END_OFFSET = 880u;
+
+// todo: update hive's offsets
 
 /// @brief The offset to dr16 data from the sensor data section
 constexpr unsigned int SENSOR_DR16_OFFSET = 0u;
+/// @brief The offset to the lidar1 data from the sensor data section
+constexpr unsigned int SENSOR_LIDAR1_OFFSET = 18u;
+/// @brief The offset to the lidar2 data from the sensor data section
+constexpr unsigned int SENSOR_LIDAR2_OFFSET = 172u;
 
 /// @brief An encapsulating data struct managing data from all of Teensy's sensors
 struct SensorData {
