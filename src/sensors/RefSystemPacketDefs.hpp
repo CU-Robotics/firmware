@@ -1572,4 +1572,37 @@ struct RefData {
     SmallMapRobotData small_map_robot_data{};
 };
 
+/// @brief Game Staus packet offset for comms
+constexpr uint32_t REF_COMMS_GAME_STATUS_OFFSET = 0;
+/// @brief Game Result packet offset for comms
+constexpr uint32_t REF_COMMS_GAME_RESULT_OFFSET = 11;
+/// @brief Game Robot HP packet offset for comms
+constexpr uint32_t REF_COMMS_GAME_ROBOT_HP_OFFSET = 12;
+/// @brief Event Data packet offset for comms
+constexpr uint32_t REF_COMMS_EVENT_DATE_OFFSET = 44;
+/// @brief Projectile Supplier Status packet offset for comms
+constexpr uint32_t REF_COMMS_PROJECTILE_SUPPLIER_STATUS_OFFSET = 48;
+/// @brief Referee Warning packet offset for comms
+constexpr uint32_t REF_COMMS_REFEREE_WARNING_OFFSET = 52;
+/// @brief Dart Status packet offset for comms
+constexpr uint32_t REF_COMMS_ROBOT_PERFORMANCE_OFFSET = 55;
+/// @brief Robot Power Heat packet offset for comms
+constexpr uint32_t REF_COMMS_ROBOT_POWER_HEAT_OFFSET = 68;
+/// @brief Robot Position packet offset for comms
+constexpr uint32_t REF_COMMS_ROBOT_POSITION_OFFSET = 84;
+/// @brief Robot Buff packet offset for comms
+constexpr uint32_t REF_COMMS_ROBOT_BUFF_OFFSET = 100;
+/// @brief Damage Status packet offset for comms
+constexpr uint32_t REF_COMMS_DAMAGE_STATUS_OFFSET = 106;
+/// @brief Launching Status packet offset for comms
+constexpr uint32_t REF_COMMS_LAUNCHING_STATUS_OFFSET = 107;
+/// @brief Projectile Allowance packet offset for comms
+constexpr uint32_t REF_COMMS_PROJECTILE_ALLOWANCE_OFFSET = 114;
+/// @brief RFID Status packet offset for comms
+constexpr uint32_t REF_COMMS_RFID_STATUS_OFFSET = 120;
+/// @brief KBM Interaction packet offset for comms
+constexpr uint32_t REF_COMMS_KBM_INTERACTION_OFFSET = 124;
+/// @brief End of the Ref Data packet for comms
+constexpr uint32_t REF_COMMS_END_OFFSET = 136;
+
 #endif // REF_SYSTEM_PACKET_DEFINITIONS_HPP
