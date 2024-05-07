@@ -37,8 +37,6 @@ constexpr unsigned int TEENSY_PACKET_REF_OFFSET = 700u;	// 180 bytes
 /// @brief The offset to the end of the Teensy packet
 constexpr unsigned int TEENSY_PACKET_END_OFFSET = 880u;
 
-// todo: update hive's offsets
-
 /// @brief The offset to dr16 data from the sensor data section
 constexpr unsigned int SENSOR_DR16_OFFSET = 0u;
 /// @brief The offset to the lidar1 data from the sensor data section
@@ -57,7 +55,7 @@ struct SensorData {
 	}
 
 	/// @brief Raw byte array
-	char raw[300] = { 0 };
+	char raw[400] = { 0 };
 };
 
 /// @brief An encapsulating data struct managing a HID packet
@@ -100,8 +98,7 @@ struct CommsPacket {
 	/// @param sensor_data The sensor data struct reference to use
 	void set_sensor_data(SensorData* sensor_data);
 	/// @brief Set the ref data for this packet
-	/// @todo implement
-	void set_ref_data();
+	void set_ref_data(uint8_t ref_data[180]);
 };
 
 /// @brief The communications layer between Khadas and Teensy
