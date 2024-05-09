@@ -98,6 +98,7 @@ struct CommsPacket {
 	/// @param sensor_data The sensor data struct reference to use
 	void set_sensor_data(SensorData* sensor_data);
 	/// @brief Set the ref data for this packet
+	/// @param ref_data The ref data byte array
 	void set_ref_data(uint8_t ref_data[180]);
 };
 
