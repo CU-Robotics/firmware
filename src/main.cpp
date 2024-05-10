@@ -329,22 +329,34 @@ int main()
     // allocate more than necessary
     uint8_t num_sections;
     uint8_t packet_subsection_sizes[32] = { 0 };
-    CommsPacket config_packets[32];
+    CommsPacket config_packets[MAX_CONFIG_PACKETS];
+
 
     // Main loop
     while (true) {
         can.read();
         dr16.read();
         ref.read();
+        
+        //handle read/write
+        comms.ping();
 
+        Serial.println("Starting configuration")
         // config verification
         if (!config.is_configured()) {
             config.process(
                 comms.get_incommming(),
                 comms.get_outgoing());
+
+            Serial.println("Configuring...");
+            continue;
         }
 
-        comms.ping();
+        if(!configured){
+            
+        }
+        
+        
 
         // comms.print();
 
