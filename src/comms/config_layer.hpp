@@ -3,7 +3,6 @@
 
 #include "usb_hid.hpp"
 #include "../controls/state.hpp"
-
 #define CONFIG_LAYER_DEBUG
 
 /// @brief arbitrary cap on config packets that can be received (make sure it's enough)
@@ -58,7 +57,7 @@ struct Config {
     float kinematics_v[NUM_MOTORS][STATE_LEN];
 
     float num_states_per_estimator[NUM_ESTIMATORS];
-    float assigned_states[NUM_ESTIMATORS][NUM_STATES];
+    float assigned_states[NUM_ESTIMATORS][STATE_LEN];
     float gains[NUM_MOTORS][NUM_CONTROLLER_LEVELS][NUM_GAINS] = { 0 };
     int assigned_states[NUM_ESTIMATORS][STATE_LEN] = { 0 };
     int num_states_per_estimator[NUM_ESTIMATORS] = { 0 };
