@@ -35,10 +35,12 @@ public:
     /// @brief Initialize the sensor with the assigned communication protocol.
     /// @param protocol Which communication protocol to use for this sensor.
     void init(CommunicationProtocol protocol);
-    
+
     /// @copydoc IMUSensor::read()    
     void read() override;
 
+    /// @brief set teh gyro rate range of the sensor
+    /// @param gyro_rate_range new rate range
     void set_gyro_range(int gyro_rate_range);
 
 private:
@@ -53,10 +55,10 @@ private:
     float get_gyro_data_rate();
 
     /// @brief approximate acceleration data rate (Hz) calculated from divisor. 
-    float accel_rate; 
+    float accel_rate;
 
     /// @brief approximate gyroscope data rate (Hz) calculated from divisor.
-    float gyro_rate; 
+    float gyro_rate;
 
     /// @brief The selected communication protocol
     CommunicationProtocol protocol;

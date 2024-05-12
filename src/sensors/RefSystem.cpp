@@ -1,7 +1,6 @@
 #include "RefSystem.hpp"
 
-uint8_t generateCRC8(uint8_t* data, uint32_t len)
-{
+uint8_t generateCRC8(uint8_t* data, uint32_t len) {
     uint8_t CRC8 = 0xFF;
     while (len-- > 0) {
         uint8_t curr = CRC8 ^ (*data++);
@@ -19,109 +18,96 @@ uint16_t generateCRC16(uint8_t* data, uint32_t len) {
     return CRC16;
 }
 
-RefSystem::RefSystem() {}
+RefSystem::RefSystem() { }
 
 void RefSystem::init() {
-    // clear and start Serial2
-    Serial2.clear();
-    Serial2.begin(112500);
-    Serial2.flush();
-    Serial2.clear();
+    // clear and start the MCM serial
+    MCM_SERIAL.clear();
+    MCM_SERIAL.begin(112500);
+    MCM_SERIAL.flush();
+    MCM_SERIAL.clear();
+
+    // clear and start the VTM serial
+    VTM_SERIAL.clear();
+    VTM_SERIAL.begin(112500);
+    VTM_SERIAL.flush();
+    VTM_SERIAL.clear();
 }
 
 void RefSystem::read() {
-    Frame frame{};
+    bool mcm_success = true;
+    bool vtm_success = true;
 
-    bool success = true;
+    // reset buffer and index if we are reading a new packet
+    if (!mcm_header_read) {
+        memset(mcm_raw_buffer, 0, REF_MAX_PACKET_SIZE);
+        mcm_buffer_index = 0;
+    }
+    if (!vtm_header_read) {
+        memset(vtm_raw_buffer, 0, REF_MAX_PACKET_SIZE);
+        vtm_buffer_index = 0;
+    }
 
-    // read header
-    if (success)
-        success = read_frame_header(frame);
+    // read header if we haven't already
+    // mcm
+    if (mcm_success && !mcm_header_read) {
+        mcm_success = read_frame_header(&MCM_SERIAL, mcm_raw_buffer, mcm_buffer_index, mcm_curr_frame);
+        mcm_header_read = mcm_success;
+    }
+    // vtm
+    if (vtm_success && !vtm_header_read) {
+        vtm_success = read_frame_header(&VTM_SERIAL, vtm_raw_buffer, vtm_buffer_index, vtm_curr_frame);
+        vtm_header_read = vtm_success;
+    }
 
-    // read ID
-    if (success)
-        success = read_frame_command_ID(frame);
+    // read ID if we haven't already
+    // mcm
+    if (mcm_success && !mcm_command_ID_read) {
+        mcm_success = read_frame_command_ID(&MCM_SERIAL, mcm_raw_buffer, mcm_buffer_index, mcm_curr_frame);
+        mcm_command_ID_read = mcm_success;
+    }
+    // vtm
+    if (vtm_success && !vtm_command_ID_read) {
+        vtm_success = read_frame_command_ID(&VTM_SERIAL, vtm_raw_buffer, vtm_buffer_index, vtm_curr_frame);
+        vtm_command_ID_read = vtm_success;
+    }
 
-    // read data
-    if (success)
-        success = read_frame_data(frame);
+    // read data if we haven't already
+    // mcm
+    if (mcm_success && !mcm_data_read) {
+        mcm_success = read_frame_data(&MCM_SERIAL, mcm_raw_buffer, mcm_buffer_index, mcm_curr_frame);
+        mcm_data_read = mcm_success;
+    }
+    // vtm
+    if (vtm_success && !vtm_data_read) {
+        vtm_success = read_frame_data(&VTM_SERIAL, vtm_raw_buffer, vtm_buffer_index, vtm_curr_frame);
+        vtm_data_read = vtm_success;
+    }
 
-    // read tail
-    if (success)
-        success = read_frame_tail(frame);
+    // read tail if all other parts of the frame have been read
+    // mcm
+    if (mcm_success)
+        mcm_success = read_frame_tail(&MCM_SERIAL, mcm_raw_buffer, mcm_buffer_index, mcm_curr_frame);
+    // vtm
+    if (vtm_success)
+        vtm_success = read_frame_tail(&VTM_SERIAL, vtm_raw_buffer, vtm_buffer_index, vtm_curr_frame);
 
     // process data
-    if (success) {
-        if (frame.commandID == 0x0301)
-            packets_received++;
-
-        switch (frame.commandID) {
-        case GAME_STATUS:
-            ref_data.game_status.initialize_from_data(frame.data);
-            break;
-        case GAME_RESULT:
-            ref_data.game_result.initialize_from_data(frame.data);
-            break;
-        case ROBOT_HEALTH:
-            ref_data.robot_health.initialize_from_data(frame.data);
-            break;
-        case SITE_EVENT:
-            ref_data.site_event.initialize_from_data(frame.data);
-            break;
-        case PROJECTILE_SUPPLIER:
-            ref_data.proj_supplier.initialize_from_data(frame.data);
-            break;
-        case REFEREE_WARNING:
-            ref_data.ref_warning.initialize_from_data(frame.data);
-            break;
-        case DART_LAUNCH:
-            ref_data.dart_launch.initialize_from_data(frame.data);
-            break;
-        case ROBOT_PERFORMANCE:
-            ref_data.robot_performance.initialize_from_data(frame.data);
-            break;
-        case POWER_HEAT:
-            ref_data.power_heat.initialize_from_data(frame.data);
-            break;
-        case ROBOT_POSITION:
-            ref_data.position.initialize_from_data(frame.data);
-            break;
-        case ROBOT_BUFF:
-            ref_data.robot_buff.initialize_from_data(frame.data);
-            break;
-        case AIR_SUPPORT_TIME:
-            ref_data.air_support_time.initialize_from_data(frame.data);
-            break;
-        case DAMAGE_STATUS:
-            ref_data.damage_status.initialize_from_data(frame.data);
-            break;
-        case LAUNCHING_EVENT:
-            ref_data.launching_event.initialize_from_data(frame.data);
-            break;
-        case PROJECTILE_ALLOWANCE:
-            ref_data.proj_allowance.initialize_from_data(frame.data);
-            break;
-        case RFID:
-            ref_data.rfid.initialize_from_data(frame.data);
-            break;
-        case DART_COMMAND:
-            ref_data.dart_command.initialize_from_data(frame.data);
-            break;
-        case GROUND_ROBOT_POSITION:
-            ref_data.ground_positions.initialize_from_data(frame.data);
-            break;
-        case RADAR_PROGRESS:
-            ref_data.radar_progress.initialize_from_data(frame.data);
-            break;
-        case INTER_ROBOT_COMM:
-            ref_data.inter_robot_comms[inter_robot_comm_index].initialize_from_data(frame);
-            inter_robot_comm_index++;
-            if (inter_robot_comm_index >= REF_MAX_COMM_BUFFER_SIZE)
-                inter_robot_comm_index = 0;
-            break;
-        default:
-            break;
-        }
+    // mcm
+    if (mcm_success) {
+        set_ref_data(mcm_curr_frame, mcm_raw_buffer);
+        // reset flags
+        mcm_header_read = false;
+        mcm_command_ID_read = false;
+        mcm_data_read = false;
+    }
+    // vtm
+    if (vtm_success) {
+        set_ref_data(vtm_curr_frame, vtm_raw_buffer);
+        // reset flags
+        vtm_header_read = false;
+        vtm_command_ID_read = false;
+        vtm_data_read = false;
     }
 }
 
@@ -156,58 +142,93 @@ void RefSystem::write(uint8_t* packet, uint8_t length) {
     packet[14 + data_length] = (footerCRC >> 8);        // set CRC
 
     // Serial.println("Attempting to send msg");
-    if (Serial2.write(packet, length) == length) {
+    if (Serial7.write(packet, length) == length) {
         packets_sent++;
         bytes_sent += length;
-    }
-    else
+    } else
         Serial.println("Failed to write");
 }
 
-bool RefSystem::read_frame_header(Frame& frame) {
-    // early return if Serial2 is empty or not full enough
-    if (Serial2.available() < FrameHeader::packet_size)
+void RefSystem::get_data_for_comms(uint8_t output_array[180]) {
+    // copys select packets into the output array
+    memcpy(output_array + REF_COMMS_GAME_STATUS_OFFSET, ref_data.game_status.raw, ref_data.game_status.packet_size);
+    memcpy(output_array + REF_COMMS_GAME_RESULT_OFFSET, ref_data.game_result.raw, ref_data.game_result.packet_size);
+    memcpy(output_array + REF_COMMS_GAME_ROBOT_HP, ref_data.game_robot_hp.raw, ref_data.game_robot_hp.packet_size);
+    memcpy(output_array + REF_COMMS_EVENT_DATE, ref_data.event_data.raw, ref_data.event_data.packet_size);
+    memcpy(output_array + REF_COMMS_PROJECTILE_SUPPLIER_STATUS, ref_data.projectile_supplier_status.raw, ref_data.projectile_supplier_status.packet_size);
+    memcpy(output_array + REF_COMMS_REFEREE_WARNING, ref_data.referee_warning.raw, ref_data.referee_warning.packet_size);
+    memcpy(output_array + REF_COMMS_ROBOT_PERFORMANCE, ref_data.robot_performance.raw, ref_data.robot_performance.packet_size);
+    memcpy(output_array + REF_COMMS_ROBOT_POWER_HEAT, ref_data.robot_power_heat.raw, ref_data.robot_power_heat.packet_size);
+    memcpy(output_array + REF_COMMS_ROBOT_POSITION, ref_data.robot_position.raw, ref_data.robot_position.packet_size);
+    memcpy(output_array + REF_COMMS_ROBOT_BUFF, ref_data.robot_buff.raw, ref_data.robot_buff.packet_size);
+    memcpy(output_array + REF_COMMS_DAMAGE_STATUS, ref_data.damage_status.raw, ref_data.damage_status.packet_size);
+    memcpy(output_array + REF_COMMS_LAUNCHING_STATUS, ref_data.launching_status.raw, ref_data.launching_status.packet_size);
+    memcpy(output_array + REF_COMMS_PROJECTILE_ALLOWANCE, ref_data.projectile_allowance.raw, ref_data.projectile_allowance.packet_size);
+    memcpy(output_array + REF_COMMS_RFID_STATUS, ref_data.rfid_status.raw, ref_data.rfid_status.packet_size);
+    memcpy(output_array + REF_COMMS_KBM_INTERACTION, ref_data.kbm_interaction.raw, ref_data.kbm_interaction.packet_size);
+}
+
+bool RefSystem::read_frame_header(HardwareSerial* serial, uint8_t raw_buffer[REF_MAX_PACKET_SIZE * 2], uint16_t& buffer_index, Frame& frame) {
+    // early return if serial is empty or not full enough
+    if (serial->available() < FrameHeader::packet_size)
         return false;
-    
+
+    // verify that what we are about to read is a header (first byte must be 0xA5)
+    while (serial->peek() != 0xA5 && serial->peek() != -1) {
+        serial->read();
+    }
+
+    // early return if serial is empty or not full enough
+    if (serial->available() < FrameHeader::packet_size)
+        return false;
+
     // read and verify header
-    int bytesRead = Serial2.readBytes(raw_buffer, FrameHeader::packet_size);
-    if (bytesRead != FrameHeader::packet_size) {
+    int bytes_read = serial->readBytes(raw_buffer, FrameHeader::packet_size);
+    if (bytes_read != FrameHeader::packet_size) {
         Serial.println("Couldnt read enough bytes for Header");
         packets_failed++;
         return false;
     }
 
     // set read data
-    frame.header.SOF = raw_buffer[0];
-    frame.header.data_length = (raw_buffer[2] << 8) | raw_buffer[1];
-    frame.header.sequence = raw_buffer[3];
-    frame.header.CRC = raw_buffer[4];
+    frame.header.SOF = raw_buffer[buffer_index + 0];
+    if (frame.header.SOF != 0xA5) {
+        Serial.println("Not a valid frame");
+        return false;
+    }
+
+    frame.header.data_length = (raw_buffer[buffer_index + 2] << 8) | raw_buffer[buffer_index + 1];
+    frame.header.sequence = raw_buffer[buffer_index + 3];
+    frame.header.CRC = raw_buffer[buffer_index + 4];
 
     // verify the CRC is correct
     if (frame.header.CRC != generateCRC8(raw_buffer, 4)) {
-        // Serial.println("Header failed CRC");
+        Serial.println("Header failed CRC");
         packets_failed++;
         return false;
     }
 
+    // increment buffer index
+    buffer_index = bytes_read;
+
     return true;
 }
 
-bool RefSystem::read_frame_command_ID(Frame& frame) {
-    // early return if Serial2 is empty or not full enough
-    if (Serial2.available() < 2)
+bool RefSystem::read_frame_command_ID(HardwareSerial* serial, uint8_t raw_buffer[REF_MAX_PACKET_SIZE * 2], uint16_t& buffer_index, Frame& frame) {
+    // early return if serial is empty or not full enough
+    if (serial->available() < 2)
         return false;
 
     // read and verify command ID
-    int bytesRead = Serial2.readBytes(raw_buffer, 2);
-    if (bytesRead != 2) {
+    int bytes_read = serial->readBytes(raw_buffer + buffer_index, 2);
+    if (bytes_read != 2) {
         Serial.println("Couldnt read enough bytes for ID");
         packets_failed++;
         return false;
     }
 
     // assign read ID
-    frame.commandID = (raw_buffer[1] << 8) | raw_buffer[0];
+    frame.commandID = (raw_buffer[buffer_index + 1] << 8) | raw_buffer[buffer_index + 0];
 
     // sanity check, verify the ID is valid
     if (frame.commandID > REF_MAX_COMMAND_ID) {
@@ -216,40 +237,172 @@ bool RefSystem::read_frame_command_ID(Frame& frame) {
         return false;
     }
 
+    // increment buffer index
+    buffer_index += bytes_read;
+
     return true;
 }
 
-bool RefSystem::read_frame_data(Frame& frame) {
-    // early return if Serial2 is empty or not full enough
-    if (Serial2.available() < frame.header.data_length)
+bool RefSystem::read_frame_data(HardwareSerial* serial, uint8_t raw_buffer[REF_MAX_PACKET_SIZE * 2], uint16_t& buffer_index, Frame& frame) {
+    // early return if serial is empty or not full enough
+    if (serial->available() < frame.header.data_length)
         return false;
-    
+
     // read and verify data
-    int bytesRead = Serial2.readBytes(&frame.data.data[0], frame.header.data_length);
-    if (bytesRead != frame.header.data_length) {
+    int bytes_read = serial->readBytes(raw_buffer + buffer_index, frame.header.data_length);
+    if (bytes_read != frame.header.data_length) {
         Serial.println("Couldnt read enough bytes for Data");
         packets_failed++;
         return false;
     }
 
+    // set read data
+    memcpy(frame.data.data, raw_buffer + buffer_index, bytes_read);
+
+    // increment buffer index
+    buffer_index += bytes_read;
+
     return true;
 }
 
-bool RefSystem::read_frame_tail(Frame& frame) {
-    // early return if Serial2 is empty or not full enough
-    if (Serial2.available() < 2)
+bool RefSystem::read_frame_tail(HardwareSerial* serial, uint8_t raw_buffer[REF_MAX_PACKET_SIZE * 2], uint16_t& buffer_index, Frame& frame) {
+    // early return if serial is empty or not full enough
+    if (serial->available() < 2)
         return false;
-    
+
     // read and verify tail
-    int bytesRead = Serial2.readBytes(raw_buffer, 2);
-    if (bytesRead != 2) {
+    int bytes_read = serial->readBytes(raw_buffer + buffer_index, 2);
+    if (bytes_read != 2) {
         Serial.println("Couldnt read enough bytes for CRC");
         packets_failed++;
         return false;
     }
 
     // store CRC
-    frame.CRC = (raw_buffer[1] << 8) | raw_buffer[0];
+    frame.CRC = (raw_buffer[buffer_index + 1] << 8) | raw_buffer[buffer_index + 0];
+
+    if (frame.CRC != generateCRC16(raw_buffer, buffer_index)) {
+        Serial.println("Tail failed CRC");
+        packets_failed++;
+        return false;
+    }
+
+    // increment buffer index
+    buffer_index = bytes_read;
 
     return true;
+}
+
+void RefSystem::set_ref_data(Frame& frame, uint8_t raw_buffer[REF_MAX_PACKET_SIZE * 2]) {
+    Serial.printf("Received frame with ID: %04X\n", *reinterpret_cast<uint16_t*>(raw_buffer + 5));
+
+    // Copy the header
+    frame.header.SOF = raw_buffer[0];
+    frame.header.data_length = (raw_buffer[2] << 8) | raw_buffer[1];
+    frame.header.sequence = raw_buffer[3];
+    frame.header.CRC = raw_buffer[4];
+    // copy the command ID
+    frame.commandID = (raw_buffer[6] << 8) | raw_buffer[5];
+    // copy the data
+    memcpy(frame.data.data, raw_buffer + 7, frame.header.data_length);
+    // copy the CRC
+    frame.CRC = (raw_buffer[7 + frame.header.data_length] << 8) | raw_buffer[6 + frame.header.data_length];
+
+    // grab the type
+    FrameType type = static_cast<FrameType>(frame.commandID);
+
+    switch (type) {
+    case FrameType::GAME_STATUS:
+        ref_data.game_status.set_data(frame.data);
+        break;
+    case FrameType::GAME_RESULT:
+        ref_data.game_result.set_data(frame.data);
+        break;
+    case FrameType::GAME_ROBOT_HP:
+        ref_data.game_robot_hp.set_data(frame.data);
+        break;
+    case FrameType::EVENT_DATA:
+        ref_data.event_data.set_data(frame.data);
+        break;
+    case FrameType::PROJECTILE_SUPPLIER_STATUS:
+        ref_data.projectile_supplier_status.set_data(frame.data);
+        break;
+    case FrameType::REFEREE_WARNING:
+        ref_data.referee_warning.set_data(frame.data);
+        break;
+    case FrameType::DART_STATUS:
+        ref_data.dart_status.set_data(frame.data);
+        break;
+    case FrameType::ROBOT_PERFORMANCE:
+        ref_data.robot_performance.set_data(frame.data);
+        break;
+    case FrameType::ROBOT_POWER_HEAT:
+        ref_data.robot_power_heat.set_data(frame.data);
+        break;
+    case FrameType::ROBOT_POSITION:
+        ref_data.robot_position.set_data(frame.data);
+        break;
+    case FrameType::ROBOT_BUFF:
+        ref_data.robot_buff.set_data(frame.data);
+        break;
+    case FrameType::AIR_SUPPORT_STATUS:
+        ref_data.air_support_status.set_data(frame.data);
+        break;
+    case FrameType::DAMAGE_STATUS:
+        ref_data.damage_status.set_data(frame.data);
+        break;
+    case FrameType::LAUNCHING_STATUS:
+        ref_data.launching_status.set_data(frame.data);
+        break;
+    case FrameType::PROJECTILE_ALLOWANCE:
+        ref_data.projectile_allowance.set_data(frame.data);
+        break;
+    case FrameType::RFID_STATUS:
+        ref_data.rfid_status.set_data(frame.data);
+        break;
+    case FrameType::DART_COMMAND:
+        ref_data.dart_command.set_data(frame.data);
+        break;
+    case FrameType::GROUND_ROBOT_POSITIONS:
+        ref_data.ground_robot_positions.set_data(frame.data);
+        break;
+    case FrameType::RADAR_PROGRESS:
+        ref_data.radar_progress.set_data(frame.data);
+        break;
+    case FrameType::SENTRY_DECISION:
+        ref_data.sentry_decision.set_data(frame.data);
+        break;
+    case FrameType::RADAR_DECISION:
+        ref_data.radar_decision.set_data(frame.data);
+        break;
+    case FrameType::ROBOT_INTERACTION:
+        // ref_data.robot_interaction.set_data(frame.data);
+        // todo: implement before china
+        break;
+    case FrameType::CUSTOM_CONTROLLER_ROBOT:
+        ref_data.custom_controller_robot.set_data(frame.data);
+        break;
+    case FrameType::SMALL_MAP_COMMAND:
+        ref_data.small_map_command.set_data(frame.data);
+        break;
+    case FrameType::KBM_INTERACTION:
+        ref_data.kbm_interaction.set_data(frame.data);
+        // ref_data.kbm_interaction.print();
+        break;
+    case FrameType::SMALL_MAP_RADAR_POSITION:
+        ref_data.small_map_radar_position.set_data(frame.data);
+        break;
+    case FrameType::CUSTOM_CONTROLLER_CLIENT:
+        ref_data.custom_controller_client.set_data(frame.data);
+        break;
+    case FrameType::SMALL_MAP_SENTRY_COMMAND:
+        ref_data.small_map_sentry_command.set_data(frame.data);
+        break;
+    case FrameType::SMALL_MAP_ROBOT_DATA:
+        ref_data.small_map_robot_data.set_data(frame.data);
+        break;
+    default:
+        Serial.println("Unknown Frame Type");
+        break;
+    }
 }

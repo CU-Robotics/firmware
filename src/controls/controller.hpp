@@ -11,28 +11,37 @@
 #define NUM_CONTROLLER_LEVELS 3
 
 /// @brief Parent controller struct, all controllers should be based off of this.
-struct Controller
-{
+struct Controller {
 protected:
+    /// @brief gains for a specific controller
     float gains[NUM_GAINS];
+    /// @brief Timer object so we can use dt in controllers
     Timer timer;
     /// @brief defines controller inputs and outputs (0 means Macro_state input, micro_state output)
     /// @note (1 means Micro_state input, motor_current output) (2 means Macro state input, motor_current output)
     int controller_level;
+
+    /// @brief ratio to help with between motors and joints
     float gear_ratio = 0;
 public:
-    Controller(){};
+    /// @brief default constructor
+    Controller() {};
 
-    void set_gains(float _gains[NUM_GAINS])
-    {
+    /// @brief set the gains for this specific controller
+    /// @param _gains gains array of length NUM_GAINS
+    void set_gains(float _gains[NUM_GAINS]) {
         for (int i = 0; i < NUM_GAINS; i++)
             gains[i] = _gains[i];
     }
 
     /// @brief Generates an output from a state reference and estimation
+    /// @param reference target reference
+    /// @param estimate current macro state estimate
     /// @returns motor_current or Micro_state depending on controller_level
     virtual float step(float reference[3], float estimate[3]);
     /// @brief Generates an output from a state reference and estimation
+    /// @param reference target reference
+    /// @param estimate current micro state estimate
     /// @returns motor_current 
     virtual float step(float reference, float estimate[MICRO_STATE_LEN]);
 
@@ -40,8 +49,8 @@ public:
     virtual void reset() { timer.start_timer(); }
 };
 
-struct NullController : public Controller
-{
+/// @brief Default controller
+struct NullController : public Controller {
 public:
     float step(float reference[3], float estimate[3]) { return 0; }
 
@@ -49,12 +58,14 @@ public:
 };
 
 /// @brief PID controller working on position
-struct PIDPositionController : public Controller
-{
+struct PIDPositionController : public Controller {
 private:
+    /// @brief filter for calculating pid ouput
     PIDFilter pid;
 
 public:
+    /// @brief new position controller
+    /// @param _controller_level controller level, whether it outputs target motor torque or target micro state
     PIDPositionController(int _controller_level) {
         controller_level = _controller_level;
     }
@@ -62,8 +73,7 @@ public:
     /// @param reference macro_reference
     /// @param estimate macro_estimate
     /// @return Motor output or micro_reference
-    float step(float reference[3], float estimate[3])
-    {
+    float step(float reference[3], float estimate[3]) {
         float dt = timer.delta();
 
         pid.setpoint = reference[0]; // 0th index = position
@@ -79,8 +89,7 @@ public:
     /// @param reference micro_reference
     /// @param estimate micro_estimate
     /// @return Motor output
-    float step(float reference, float estimate[MICRO_STATE_LEN])
-    {
+    float step(float reference, float estimate[MICRO_STATE_LEN]) {
         float dt = timer.delta();
 
         pid.setpoint = reference; // 0th index = position
@@ -93,20 +102,23 @@ public:
         return output;
     }
 
-    void reset()
-    {
+    /// @brief reset controller which 0's integrators
+    void reset() {
         Controller::reset();
         pid.sumError = 0.0;
     }
 };
 
 /// @brief PID controller working on velocity
-struct PIDVelocityController : public Controller
-{
+struct PIDVelocityController : public Controller {
 private:
+    /// @brief filter for calculating pid ouput
     PIDFilter pid;
 
 public:
+
+    /// @brief Set controller level
+    /// @param _controller_level Controller level, whether it outputs a target motor torque or a micro/macro state
     PIDVelocityController(int _controller_level) {
         controller_level = _controller_level;
     }
@@ -114,8 +126,7 @@ public:
     /// @param reference macro_reference
     /// @param estimate macro_estimate
     /// @return Motor output or micro_reference
-    float step(float reference[3], float estimate[3])
-    {
+    float step(float reference[3], float estimate[3]) {
         float dt = timer.delta();
 
         pid.setpoint = reference[1]; // 1st index = position
@@ -132,8 +143,7 @@ public:
     /// @param reference micro_reference
     /// @param estimate micro_estimate
     /// @return Motor output
-    float step(float reference, float estimate[MICRO_STATE_LEN])
-    {
+    float step(float reference, float estimate[MICRO_STATE_LEN]) {
         float dt = timer.delta();
 
         pid.setpoint = reference; // 0th index = position
@@ -146,20 +156,22 @@ public:
         return output;
     }
 
-    void reset()
-    {
+    /// @brief reset controller which 0's integrators
+    void reset() {
         Controller::reset();
         pid.sumError = 0.0;
     }
 };
 
 /// @brief PID controller with feedforward capability
-struct PIDFVelocityController : public Controller
-{
+struct PIDFVelocityController : public Controller {
 private:
+    /// @brief pid filter for calculating controller outputs
     PIDFilter pid;
 
 public:
+    /// @brief new controller
+    /// @param _controller_level controller level, whether it ouputs target motor torque or micro state
     PIDFVelocityController(int _controller_level) {
         controller_level = _controller_level;
     }
@@ -167,8 +179,7 @@ public:
     /// @param reference macro_reference
     /// @param estimate macro_estimate
     /// @return Motor output or micro_reference
-    float step(float reference[3], float estimate[3])
-    {
+    float step(float reference[3], float estimate[3]) {
         float dt = timer.delta();
 
         pid.setpoint = reference[1]; // 1st index = position
@@ -186,8 +197,7 @@ public:
     /// @param reference micro_reference
     /// @param estimate micro_estimate
     /// @return Motor output
-    float step(float reference, float estimate[MICRO_STATE_LEN])
-    {
+    float step(float reference, float estimate[MICRO_STATE_LEN]) {
         float dt = timer.delta();
 
         pid.setpoint = reference; // 0th index = position
@@ -200,29 +210,30 @@ public:
         return output;
     }
 
-    void reset()
-    {
+    void reset() {
         Controller::reset();
         pid.sumError = 0.0;
     }
 };
 
 /// @brief Fullstate controller which works on both position and velocity of a state.
-struct FullStateFeedbackController : public Controller
-{
+struct FullStateFeedbackController : public Controller {
 private:
-    PIDFilter pid1, pid2;
+    /// @brief pid filter for calculating controller outputs
+    PIDFilter pid1;
+    /// @brief pid filter for calculating controller outputs
+    PIDFilter pid2;
 
 public:
-    FullStateFeedbackController(int _controller_level)
-    {
+    /// @brief this controller can work on position and velocity at the same time
+    /// @param _controller_level controller level, which cannot be a low level controller
+    FullStateFeedbackController(int _controller_level) {
         controller_level = _controller_level;
         if (controller_level == 1)
             Serial.println("FullStateFeedbackController can't be a low level controller");
     }
 
-    float step(float reference[3], float estimate[3])
-    {
+    float step(float reference[3], float estimate[3]) {
         float dt = timer.delta();
         float output = 0.0;
 
@@ -247,8 +258,7 @@ public:
 
     float step(float reference, float estimate[MICRO_STATE_LEN]) { return 0; }
 
-    void reset()
-    {
+    void reset() {
         Controller::reset();
         pid1.sumError = 0.0;
         pid2.sumError = 0.0;
@@ -256,26 +266,29 @@ public:
 };
 
 /// @brief Controller for all chassis movement, which includes power limiting
-struct ChassisPIDVelocityController : public Controller
-{
+struct ChassisPIDVelocityController : public Controller {
 private:
+    /// @brief filter for calculating pid controller outputs
     PIDFilter pid;
 
 public:
-    ChassisPIDVelocityController(int _controller_level)
-    {
+    /// @brief set controller level and make sure it's a low level controller
+    /// @param _controller_level controller level(if it outputs a torque or a target micro state).
+    ChassisPIDVelocityController(int _controller_level) {
         controller_level = _controller_level;
         if (controller_level != 1)
             Serial.println("chassisPIDVelocityController must be a low level controller");
     }
-    /// @brief dont brick the program if its initialized at the wrong controller level
+    /// @brief don't do anything if we get a macro state
+    /// @param reference reference
+    /// @param estimate estimate
+    /// @return 0
     float step(float reference[3], float estimate[3]) { return 0; }
     /// @brief takes in a micro_reference of wheel velocity
     /// @param reference reference
     /// @param estimate estimate
     /// @return outputs motor current
-    float step(float reference, float estimate[MICRO_STATE_LEN])
-    {
+    float step(float reference, float estimate[MICRO_STATE_LEN]) {
         float dt = timer.delta();
         pid.setpoint = reference; // 1st index = position
         pid.measurement = estimate[0];
@@ -284,7 +297,7 @@ public:
         pid.K[2] = gains[2];
 
         // Power limiting
-        float power_buffer = ref.ref_data.power_heat.buffer_energy;
+        float power_buffer = ref.ref_data.robot_power_heat.buffer_energy;
         float power_limit_ratio = 1.0;
         float power_buffer_limit_thresh = gains[3];
         float power_buffer_critical_thresh = gains[4];
@@ -295,10 +308,66 @@ public:
         return output;
     }
 
-    void reset()
-    {
+    void reset() {
         Controller::reset();
         pid.sumError = 0.0;
+    }
+};
+
+/// @brief Controller for the switcher, which is a fullstate controller with feedforward
+struct SwitcherController : public Controller {
+private:
+    /// @brief filter for calculating pid position controller outputs
+    PIDFilter pidp;
+    /// @brief filter for calculating pid velocity controller outputs
+    PIDFilter pidv;
+public:
+    /// @brief set controller level and make sure it's not low level
+    /// @param _controller_level controller level(if it outputs a torque or a target micro state).
+    SwitcherController(int _controller_level) {
+        controller_level = _controller_level;
+        if (controller_level == 1)
+            Serial.println("SwitcherController must not be a low level controller");
+    }
+    /// @brief don't do anything if we get a macro state
+    /// @param reference reference
+    /// @param estimate estimate
+    /// @return 0
+    float step(float reference[3], float estimate[3]) { 
+        float dt = timer.delta();
+        pidp.setpoint = reference[0]; // 1st index = position
+        pidp.measurement = estimate[0];
+
+        pidp.K[0] = gains[0];
+        pidp.K[1] = gains[1];
+        pidp.K[2] = gains[2];
+        // Feed forward to push the switcher into the wall constantly with a small force
+        if(reference[0] > .95) pidp.K[3] = gains[3];
+        else if(reference[0] < -.95) pidp.K[3] = -gains[3];
+        else pidp.K[3] = 0;
+
+        pidv.setpoint = reference[1]; 
+        pidv.measurement = estimate[1];
+
+        pidv.K[0] = gains[4];
+        pidv.K[1] = gains[5];
+        pidv.K[2] = gains[6];
+        float outputp = pidp.filter(dt, true, false);
+        float outputv = pidv.filter(dt, true, false);
+        float output = outputp + outputv;
+        return output;
+    }
+
+
+    /// @brief dont do anything if we get a micro_reference
+    /// @param reference reference
+    /// @param estimate estimate
+    /// @return 0
+    float step(float reference, float estimate[MICRO_STATE_LEN]) {return 0;}
+
+    void reset() {
+        Controller::reset();
+        pidp.sumError = 0.0;
     }
 };
 

@@ -43,8 +43,7 @@ constexpr int YAW_BUFF_CS = 37;
 constexpr int PITCH_BUFF_CS = 36;
 
 /// @brief Driver for the Buff-Encoder
-class BuffEncoder
-{
+class BuffEncoder {
 public:
     /// @brief 
     /// @param 
@@ -54,6 +53,8 @@ public:
     /// @param cs The Chip Select pin
     BuffEncoder(int cs) : m_CS(cs) {};
 
+    /// @brief initialize sensor with new cs(if needed)
+    /// @param cs input Chip Select pin
     void init(int cs) { m_CS = cs; }
 
     /// @brief Read via SPI the current angle of the encoder

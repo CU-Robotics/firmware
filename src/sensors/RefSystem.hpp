@@ -5,14 +5,50 @@
 
 #include "RefSystemPacketDefs.hpp"
 
-
-
 /// @brief Time (in us) between packet writes
 constexpr uint32_t REF_MAX_PACKET_DELAY = 40000;
 /// @brief Maximum number of bytes that is allowed to be sent within a second. Includes Ref header/tail
 constexpr uint32_t REF_MAX_BAUD_RATE = 3720;
 /// @brief Maximum number of inter robot packets should be able to be stored.
 constexpr uint32_t REF_MAX_COMM_BUFFER_SIZE = 5;
+
+/// @brief Game Staus packet offset for comms
+constexpr uint32_t REF_COMMS_GAME_STATUS_OFFSET = 0;
+/// @brief Game Result packet offset for comms
+constexpr uint32_t REF_COMMS_GAME_RESULT_OFFSET = 11;
+/// @brief Game Robot HP packet offset for comms
+constexpr uint32_t REF_COMMS_GAME_ROBOT_HP = 12;
+/// @brief Event Data packet offset for comms
+constexpr uint32_t REF_COMMS_EVENT_DATE = 44;
+/// @brief Projectile Supplier Status packet offset for comms
+constexpr uint32_t REF_COMMS_PROJECTILE_SUPPLIER_STATUS = 48;
+/// @brief Referee Warning packet offset for comms
+constexpr uint32_t REF_COMMS_REFEREE_WARNING = 52;
+/// @brief Dart Status packet offset for comms
+constexpr uint32_t REF_COMMS_ROBOT_PERFORMANCE = 55;
+/// @brief Robot Power Heat packet offset for comms
+constexpr uint32_t REF_COMMS_ROBOT_POWER_HEAT = 68;
+/// @brief Robot Position packet offset for comms
+constexpr uint32_t REF_COMMS_ROBOT_POSITION = 84;
+/// @brief Robot Buff packet offset for comms
+constexpr uint32_t REF_COMMS_ROBOT_BUFF = 100;
+/// @brief Damage Status packet offset for comms
+constexpr uint32_t REF_COMMS_DAMAGE_STATUS = 106;
+/// @brief Launching Status packet offset for comms
+constexpr uint32_t REF_COMMS_LAUNCHING_STATUS = 107;
+/// @brief Projectile Allowance packet offset for comms
+constexpr uint32_t REF_COMMS_PROJECTILE_ALLOWANCE = 114;
+/// @brief RFID Status packet offset for comms
+constexpr uint32_t REF_COMMS_RFID_STATUS = 120;
+/// @brief KBM Interaction packet offset for comms
+constexpr uint32_t REF_COMMS_KBM_INTERACTION = 124;
+/// @brief End of the Ref Data packet for comms
+constexpr uint32_t REF_COMMS_END = 136;
+
+/// @brief The serial line for the MCM
+#define MCM_SERIAL (Serial2)
+/// @brief The serial line for the VTM
+#define VTM_SERIAL (Serial7)
 
 /// @brief Generates a 1-byte CRC
 /// @param data data array
@@ -67,37 +103,70 @@ const uint16_t CRC16Lookup[256] = {
     0x3de3, 0x2c6a, 0x1ef1, 0x0f78
 };
 
-/// @cond Doxygen_Suppress
-
 /// @brief Encompassing all read-able packet structs of the Ref System
 struct RefData {
+    /// @brief Competition status data
     GameStatus game_status{};
+    /// @brief Competition result data
     GameResult game_result{};
-    RobotHealth robot_health{};
-    SiteEvent site_event{};
-    ProjectileSupplier proj_supplier{};
-    RefereeWarning ref_warning{};
-    DartLaunch dart_launch{};
+    /// @brief Robot health data
+    GameRobotHP game_robot_hp{};
+    /// @brief Site event data
+    EventData event_data{};
+    /// @brief Action identifier data of the Official Projectile Supplier
+    ProjectileSupplierStatus projectile_supplier_status{};
+    /// @brief Referee warning data
+    RefereeWarning referee_warning{};
+    /// @brief Dart launching data
+    DartStatus dart_status{};
+    /// @brief Robot performance system data
     RobotPerformance robot_performance{};
-    PowerHeat power_heat{};
-    RobotPosition position{};
+    /// @brief Real-time chassis power and barrel heat data
+    RobotPowerHeat robot_power_heat{};
+    /// @brief Robot position data
+    RobotPosition robot_position{};
+    /// @brief Robot buff data
     RobotBuff robot_buff{};
-    AirSupportTime air_support_time{};
+    /// @brief Air support time data
+    AirSupportStatus air_support_status{};
+    /// @brief Damage status data
     DamageStatus damage_status{};
-    LaunchingEvent launching_event{};
-    ProjectileAllowance proj_allowance{};
-    RFIDData rfid{};
+    /// @brief Real-time launching data
+    LaunchingStatus launching_status{};
+    /// @brief Projectile allowance data
+    ProjectileAllowance projectile_allowance{};
+    /// @brief RFID status data
+    RFIDStatus rfid_status{};
+    /// @brief Dart command data
     DartCommand dart_command{};
-    GroundRobotPosition ground_positions{};
+    /// @brief Ground robot positions data
+    GroundRobotPositions ground_robot_positions{};
+    /// @brief Radar progress data
     RadarProgress radar_progress{};
-    // robot comm buffer implemented as a circular queue, it will overwrite its own data if not read from
-    InterRobotComm inter_robot_comms[REF_MAX_COMM_BUFFER_SIZE];
+    /// @brief Sentry decision data
+    SentryDecision sentry_decision{};
+    /// @brief Radar decision data
+    RadarDecision radar_decision{};
+    /// @brief Robot interaction data
+    RobotInteraction robot_interaction{};
+    /// @brief Data about the interaction between the Custom Controller and robots
+    CustomControllerRobot custom_controller_robot{};
+    /// @brief Player client's small map interaction data
+    SmallMapCommand small_map_command{};
+    /// @brief Keyboard, mouse, and remote control data
+    KBMInteraction kbm_interaction{};
+    /// @brief Radar data received by player clients' Small Maps
+    SmallMapRadarPosition small_map_radar_position{};
+    /// @brief Data about the interaction between the Custom Controller and player clients
+    CustomControllerClient custom_controller_client{};
+    /// @brief Sentry data received by player clients' Small Maps
+    SmallMapSentryCommand small_map_sentry_command{};
+    /// @brief Robot data received by player clients' Small Map
+    SmallMapRobotData small_map_robot_data{};
 };
 
-/// @endcond
-
 /// @brief Wrapper class to send and receive packets from the Referee System
-/// @see https://rm-static.djicdn.com/tem/71710/RoboMaster%20Referee%20System%20Serial%20Port%20Protocol%20Appendix%20V1.5%EF%BC%8820230717%EF%BC%89.pdf
+/// @see https://rm-static.djicdn.com/tem/17348/RoboMaster%20Referee%20System%20Serial%20Port%20Protocol%20Appendix%20V1.6.1%EF%BC%8820240126%EF%BC%89.pdf
 class RefSystem {
 public:
     /// @brief Default constructor. Set to do nothing
@@ -106,7 +175,7 @@ public:
     /// @brief Initializes the RefSystem. Sets up the Serial connection
     void init();
 
-    /// @brief Read from the Serial buffer the next packet and store it
+    /// @brief Reads the incoming data from the Referee System and sets the data into ref_data
     void read();
 
     /// @brief Send a pre-constructed packet to Ref
@@ -115,41 +184,94 @@ public:
     /// @note Re-computes the CRC, so no need to do it yourself
     void write(uint8_t* packet, uint8_t length);
 
+    /// @brief Generate a byte array for all ref data to be sent over comms
+    /// @param output_array Byte array to store the data
+    /// @note Only sends some packets, not all
+    void get_data_for_comms(uint8_t output_array[180]);
+
 private:
     /// @brief Helper function: Reads and stores frame header
+    /// @param serial Serial port to read from
     /// @param frame Frame reference to fill
+    /// @param raw_buffer Buffer to read to
+    /// @param buffer_index Index into the buffer
     /// @return Whether the read was successful or not
-    bool read_frame_header(Frame& frame);
+    bool read_frame_header(HardwareSerial* serial, uint8_t raw_buffer[REF_MAX_PACKET_SIZE * 2], uint16_t& buffer_index, Frame& frame);
 
     /// @brief Helper function: Reads and stores frame command ID
+    /// @param serial Serial port to read from
     /// @param frame Frame reference to fill
+    /// @param raw_buffer Buffer to read to
+    /// @param buffer_index Index into the buffer    
     /// @return Whether the read was successful or not
-    bool read_frame_command_ID(Frame& frame);
+    bool read_frame_command_ID(HardwareSerial* serial, uint8_t raw_buffer[REF_MAX_PACKET_SIZE * 2], uint16_t& buffer_index, Frame& frame);
 
     /// @brief Helper function: Reads and stores frame data
+    /// @param serial Serial port to read from
     /// @param frame Frame reference to fill
+    /// @param raw_buffer Buffer to read to
+    /// @param buffer_index Index into the buffer    
     /// @return Whether the read was successful or not
-    bool read_frame_data(Frame& frame);
+    bool read_frame_data(HardwareSerial* serial, uint8_t raw_buffer[REF_MAX_PACKET_SIZE * 2], uint16_t& buffer_index, Frame& frame);
 
     /// @brief Helper function: Reads and stores frame tail
+    /// @param serial Serial port to read from
     /// @param frame Frame reference to fill
+    /// @param raw_buffer Buffer to read to
+    /// @param buffer_index Index into the buffer    
     /// @return Whether the read was successful or not
-    bool read_frame_tail(Frame& frame);
+    bool read_frame_tail(HardwareSerial* serial, uint8_t raw_buffer[REF_MAX_PACKET_SIZE * 2], uint16_t& buffer_index, Frame& frame);
+
+    /// @brief Helper function: sets the data in a frame to the ref_data struct
+    /// @param frame Frame to read from
+    /// @param raw_buffer Buffer to read from
+    void set_ref_data(Frame& frame, uint8_t raw_buffer[REF_MAX_PACKET_SIZE * 2]);
 
     /// @brief Get the current outgoing sequence. Used in sending frames
     /// @return The next sequence
     inline uint8_t get_seq() noexcept { seq++;  return seq; }
 
 private:
-    /// @brief Buffer to store frames-in-progress
-    uint8_t raw_buffer[REF_MAX_PACKET_SIZE] = { 0 };
-    /// @brief Mega-struct to store all ref data that have been read
-
     /// @brief Current sequence number. Used to send packets
     uint8_t seq = 0;
+    
+    // VTM
 
-    /// @brief Current index to the inter_robot_comm buffer
-    uint8_t inter_robot_comm_index = 0;
+    /// @brief Buffer to store frames-in-progress (for vtm packets)
+    /// @note This is * 2 to allow buffer space for the largest frame
+    uint8_t vtm_raw_buffer[REF_MAX_PACKET_SIZE * 2] = { 0 };
+
+    /// @brief Index into the raw_buffer (for vtm packets)
+    uint16_t vtm_buffer_index = 0;
+
+    /// @brief Whether the header has been successfully read (for vtm packets)
+    bool vtm_header_read = false;
+    /// @brief Whether the command ID has been successfully read (for vtm packets)
+    bool vtm_command_ID_read = false;
+    /// @brief Whether the data has been successfully read (for vtm packets)
+    bool vtm_data_read = false;
+
+    /// @brief Current frame being read (for vtm packets)
+    Frame vtm_curr_frame{};
+
+    // MCM
+
+    /// @brief Buffer to store frames-in-progress (for mcm packets)
+    /// @note This is * 2 to allow buffer space for the largest frame
+    uint8_t mcm_raw_buffer[REF_MAX_PACKET_SIZE * 2] = { 0 };
+
+    /// @brief Index into the raw_buffer (for mcm packets)
+    uint16_t mcm_buffer_index = 0;
+
+    /// @brief Whether the header has been successfully read (for mcm packets)
+    bool mcm_header_read = false;
+    /// @brief Whether the command ID has been successfully read (for mcm packets)
+    bool mcm_command_ID_read = false;
+    /// @brief Whether the data has been successfully read (for mcm packets)
+    bool mcm_data_read = false;
+
+    /// @brief Current frame being read (for mcm packets)
+    Frame mcm_curr_frame{};
 
 public:
     /// @brief Number of inter-robot packets sent
@@ -162,6 +284,7 @@ public:
     /// @brief Current count of bytes sent since last reset
     uint16_t bytes_sent = 0;
 
+    /// @brief struct to store all ref data
     RefData ref_data{};
 };
 

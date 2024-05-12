@@ -41,7 +41,10 @@ public:
     inline float get_gyro_Z() { return gyro_Z - offset_Z; };
 
     /// @brief Set offsets that we calculate during calibration
-    inline void set_offsets(float x, float y, float z){
+    /// @param x offset in x
+    /// @param y offset in y
+    /// @param z offset in z
+    inline void set_offsets(float x, float y, float z) {
         offset_X = x;
         offset_Y = y;
         offset_Z = z;
