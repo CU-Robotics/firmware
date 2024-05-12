@@ -341,7 +341,6 @@ int main()
         //handle read/write
         comms.ping();
 
-        Serial.println("Starting configuration")
         // config verification
         if (!config.is_configured()) {
             config.process(
@@ -352,11 +351,9 @@ int main()
             continue;
         }
 
-        if(!configured){
-            
-        }
-        
-        
+        config.get_config_packets(config_packets);
+        Serial.println(config_packets[0].get_info());
+        Serial.println("Configured!");
 
         // comms.print();
 

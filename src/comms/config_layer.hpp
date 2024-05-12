@@ -3,10 +3,40 @@
 
 #include "usb_hid.hpp"
 #include "../controls/state.hpp"
+#include "../controls/controller_manager.hpp"
+#include "../controls/estimator_manager.hpp"
+#include <map>
+#include <string>
 #define CONFIG_LAYER_DEBUG
 
 /// @brief arbitrary cap on config packets that can be received (make sure it's enough)
 const int MAX_CONFIG_PACKETS = 64;
+
+/// @brief map section names to YAML section IDs
+static const std::map<std::string, int> yaml_section_id_mappings = {
+    {"robot", 0},
+    {"num_motors", 1},
+    {"num_estimators", 2},
+    {"num_gains", 3},
+    {"num_controller_levels", 4},
+    {"encoder_offsets", 5},
+    {"yaw_axis_vector", 6},
+    {"pitch_axis_vector", 7},
+    {"defualt_gimbal_starting_angles", 8},
+    {"defualt_chassis_starting_angles", 9},
+    {"length_of_barrel_from_pitch_axis", 10},
+    {"height_of_pitch_axis", 11},
+    {"height_of_camera_above_barrel", 12},
+    {"num_sensors", 13},
+    {"estimators", 14},
+    {"kinematics_p", 15},
+    {"kinematics_v", 16},
+    {"reference_limits", 17},
+    {"controller_types", 18},
+    {"gains", 19},
+    {"num_states_per_estimator", 20},
+    {"assigned_states", 21}
+};
 
 class ConfigLayer {
 private:
@@ -50,45 +80,54 @@ struct Config {
     float num_motors;
     float num_gains;
     float num_controller_levels;
-    float num_sensors;
     float encoder_offsets[16];  
     float num_sensors[16];
     float kinematics_p[NUM_MOTORS][STATE_LEN];
     float kinematics_v[NUM_MOTORS][STATE_LEN];
 
-    float num_states_per_estimator[NUM_ESTIMATORS];
-    float assigned_states[NUM_ESTIMATORS][STATE_LEN];
-    float gains[NUM_MOTORS][NUM_CONTROLLER_LEVELS][NUM_GAINS] = { 0 };
-    int assigned_states[NUM_ESTIMATORS][STATE_LEN] = { 0 };
-    int num_states_per_estimator[NUM_ESTIMATORS] = { 0 };
-    float set_reference_limits[STATE_LEN][3][2] = { 0 };
+    float gains[NUM_MOTORS][NUM_CONTROLLER_LEVELS][NUM_GAINS];;
+    int assigned_states[NUM_ESTIMATORS][STATE_LEN];
+    int num_states_per_estimator[NUM_ESTIMATORS];
+    float set_reference_limits[STATE_LEN][3][2];
 
 
-    /// @brief map section names to YAML section IDs
-    static const std::map<std::string, int> yaml_section_id_mappings = {
-        {"robot", 0},
-        {"num_motors", 1},
-        {"num_gains", 2},
-        {"num_controller_levels", 3},
-        {"num_sensors", 4},
-        {"estimators", 5},
-        {"kinematics_p", 6},
-        {"kinematics_v", 7},
-        {"reference_limits", 8},
-        {"estimator_states", 9},
-        {"controller_types", 10},
-        {"gains", 11},
-        {"num_states_per_estimator", 12},
-        {"assigned_states", 13} 
-    };
 
     void fill_data(CommsPacket packets[MAX_CONFIG_PACKETS]) {
         int index = yaml_section_id_mappings.at("num_motors");
         CommsPacket packet = packets[index];
-        memcpy(&num_motors, packet.raw, sizeof(float));
+
+        for(int i = 0; i < MAX_CONFIG_PACKETS; i++){
+            if(packets[i].raw[1] == yaml_section_id_mappings.at("num_gains")){
+                memcpy(&num_gains, packets[i].raw, sizeof(float));
+            }
+            if(packets[i].raw[1] == yaml_section_id_mappings.at("num_controller_levels")){
+                memcpy(&num_controller_levels, packets[i].raw, sizeof(float));
+            }
+            if(packets[i].raw[1] == yaml_section_id_mappings.at("num_sensors")){
+                memcpy(&num_sensors, packets[i].raw, sizeof(float));
+            }
+            if(packets[i].raw[1] == yaml_section_id_mappings.at("kinematics_p")){
+                memcpy(kinematics_p, packets[i].raw, sizeof(kinematics_p));
+            }
+            if(packets[i].raw[1] == yaml_section_id_mappings.at("kinematics_v")){
+                memcpy(kinematics_v, packets[i].raw, sizeof(kinematics_v));
+            }
+            if(packets[i].raw[1] == yaml_section_id_mappings.at("gains")){
+                memcpy(gains, packets[i].raw, sizeof(gains));
+            }
+            if(packets[i].raw[1] == yaml_section_id_mappings.at("assigned_states")){
+                memcpy(assigned_states, packets[i].raw, sizeof(assigned_states));
+            }
+            if(packets[i].raw[1] == yaml_section_id_mappings.at("num_states_per_estimator")){
+                memcpy(num_states_per_estimator, packets[i].raw, sizeof(num_states_per_estimator));
+            }
+            if(packets[i].raw[1] == yaml_section_id_mappings.at("reference_limits")){
+                memcpy(set_reference_limits, packets[i].raw, sizeof(set_reference_limits));
+            }
+        }
     }
 
 
-}
+};
 
 #endif
