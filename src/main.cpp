@@ -22,7 +22,8 @@ DR16 dr16;
 rm_CAN can;
 RefSystem ref;
 HIDLayer comms;
-ConfigLayer config;
+ConfigLayer config_layer;
+Config config;
 
 Timer loop_timer;
 Timer stall_timer;
@@ -93,7 +94,7 @@ int main() {
     //which states each estimator estimates
     int assigned_states[NUM_ESTIMATORS][STATE_LEN] = { 0 };
     //number of states each estimator estimates
-    int num_states_per_estimator[NUM_ESTIMATORS] = { 5,1,1,16,1 };
+    float num_states_per_estimator[NUM_ESTIMATORS] = { 5,1,1,16,1 };
     //reference limits of our reference governor. Used to turn an ungoverned reference into a governed reference to send to ControllerManager
     float set_reference_limits[STATE_LEN][3][2] = { 0 };
 
@@ -294,7 +295,7 @@ int main() {
     // initalize estimators
     estimator_manager->assign_states(assigned_states);
     for (int i = 0; i < NUM_ESTIMATORS; i++) {
-        estimator_manager->init_estimator(i + 1, num_states_per_estimator[i]);
+        estimator_manager->init_estimator(i + 1, (int) num_states_per_estimator[i]);
     }
 
     // imu calibration
@@ -362,8 +363,9 @@ int main() {
 
     // allocate more than necessary
     uint8_t num_sections;
-    uint8_t packet_subsection_sizes[32] = { 0 };
+    uint8_t packet_subsection_sizes[MAX_CONFIG_PACKETS] = { 0 };
     CommsPacket config_packets[MAX_CONFIG_PACKETS];
+    // Config config
 
     int vtm_pos_x = 0;
     int vtm_pos_y = 0;
@@ -383,18 +385,50 @@ int main() {
         CommsPacket* outgoing = comms.get_outgoing_packet();
 
         // config verification
-        if (!config.is_configured()) {
-            config.process(
+        if (!config_layer.is_configured()) {
+            config_layer.process(
                 incoming,
                 outgoing);
 
-            Serial.println("Configuring...");
+            // Serial.println("Configuring...");
             continue;
         }
 
-        config.get_config_packets(config_packets);
-        Serial.println(config_packets[3].get_id());
-        Serial.println("Configured!");
+        // config.print(0);
+        float num_gains = -100;
+
+        config_layer.get_config_packets(config_packets, packet_subsection_sizes);
+        config.fill_data(config_packets, packet_subsection_sizes);
+        config.print();
+
+
+        // Serial.println(*reinterpret_cast<uint16_t*>(&config_packets[0].raw[10]));
+        // memcpy(gains, config_packets[19].raw + 8, sizeof(float) * NUM_MOTORS * NUM_CONTROLLER_LEVELS * NUM_GAINS);
+
+        // memcpy(&num_gains, config_packets[3].raw+8, sizeof(float));
+        // memcpy(num_states_per_estimator, config_packets[20].raw + 8, sizeof(float) * NUM_ESTIMATORS);
+
+        // Serial.println(num_gains);
+
+
+
+        // for(int i = 0; i < NUM_ESTIMATORS; i++) {
+        //     Serial.println(num_states_per_estimator[i]);
+        // }
+        // Serial.printf("GAINS 0: %f\n", gains[0][0][1]);
+        // for(int i = 0; i < NUM_MOTORS; i++) {
+        //     for(int j = 0; j < NUM_CONTROLLER_LEVELS; j++) {
+        //         for(int k = 0; k < NUM_GAINS; k++) {
+        //             Serial.print(gains[i][j][k]);
+        //             Serial.print(" ");
+        //         }
+        //         Serial.println();
+        //     }
+        // }
+        // Serial.println(gains[0][0][0]);
+
+        
+        // Serial.println("Configured!");
 
         // comms.print();
 
