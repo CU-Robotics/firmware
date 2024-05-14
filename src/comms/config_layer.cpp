@@ -32,7 +32,8 @@ void ConfigLayer::process(CommsPacket *in, CommsPacket *out) {
             // look for the next YAML section
             seek_sec++;
         } else {
-            config_packets[sec_id + subsec_id] = *in;
+            config_packets[index] = *in;
+            index++;
         
         #ifdef CONFIG_LAYER_DEBUG
             Serial.printf("Received YAML configuration packet: (%u, %u)\n", sec_id, subsec_id);
@@ -44,14 +45,13 @@ void ConfigLayer::process(CommsPacket *in, CommsPacket *out) {
                 seek_subsec++;
             } else {
                 // if all subsections have been received, request the next section
-                seek_sec++;
                 seek_subsec = 0;
+                seek_sec++;
 
                 // or, if all sections have been received, configuration is complete
                 // add one because sections are zero-indexed
-                if (seek_sec + 1 >= num_sec) {
+                if (seek_sec + 1 > num_sec) {
                     configured = true;
-                
                 #ifdef CONFIG_LAYER_DEBUG
                     Serial.printf("YAML configuration complete\n");
                 #endif
@@ -67,5 +67,7 @@ void ConfigLayer::process(CommsPacket *in, CommsPacket *out) {
         out_raw[1] = seek_sec;
         out_raw[2] = seek_subsec;
         out_raw[3] = 1; // set info bit
+
+        // Serial.printf("Requesting YAML configuration packet: (%u, %u)\n", seek_sec, seek_subsec);
     }
 }

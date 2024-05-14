@@ -1,9 +1,9 @@
 #include "usb_hid.hpp"
 
-uint16_t CommsPacket::get_id() {
+uint8_t CommsPacket::get_id() {
     // c++ moment
     char* x = raw;
-    return *reinterpret_cast<uint16_t*>(x + TEENSY_PACKET_ID_OFFSET);
+    return *reinterpret_cast<uint8_t*>(x + TEENSY_PACKET_ID_OFFSET);
 }
 
 uint8_t CommsPacket::get_info() {

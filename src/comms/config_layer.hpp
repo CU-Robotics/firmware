@@ -56,7 +56,9 @@ private:
     uint16_t num_sec;
 
     /// @brief array to store number of subsections per YAML section
-    uint8_t subsec_sizes[MAX_CONFIG_PACKETS] = { 0 };
+    uint8_t subsec_sizes[MAX_CONFIG_PACKETS] = { 0 }; 
+
+    int index = 0;
 
 public:
     /// @brief default constructor
@@ -98,84 +100,107 @@ struct Config {
     float controller_types[NUM_MOTORS][NUM_CONTROLLER_LEVELS];
 
     void fill_data(CommsPacket packets[MAX_CONFIG_PACKETS], uint8_t sizes[MAX_CONFIG_PACKETS]) {
+        int j = 0;
 
         for(int i = 0; i < MAX_CONFIG_PACKETS; i++){
-            if(packets[i].get_id() == yaml_section_id_mappings.at("num_gains")){
+            uint8_t id = packets[i].get_id();
+            uint8_t subsec_id = *reinterpret_cast<uint8_t*>(packets[i].raw + 2);
+            uint16_t sub_size = *reinterpret_cast<uint16_t*>(packets[i].raw + 6);
+
+            if(subsec_id == 0) index = 0;
+
+            if(id == yaml_section_id_mappings.at("num_gains")){
                 memcpy(&num_gains, packets[i].raw + 8, sizeof(float));
             }
-            if(packets[i].get_id() == yaml_section_id_mappings.at("num_controller_levels")){
+            if(id == yaml_section_id_mappings.at("num_controller_levels")){
                 memcpy(&num_controller_levels, packets[i].raw + 8, sizeof(float));
             }
-            if(packets[i].get_id() == yaml_section_id_mappings.at("num_sensors")){
+            if(id == yaml_section_id_mappings.at("num_sensors")){
                 memcpy(&num_sensors, packets[i].raw + 8, sizeof(float));
             }
-            if(packets[i].get_id() == yaml_section_id_mappings.at("kinematics_p")){
-                memcpy(kinematics_p, packets[i].raw + 8, sizeof(kinematics_p));
+            if(id == yaml_section_id_mappings.at("kinematics_p")){
+                size_t linear_index = index / sizeof(float);
+                size_t i1 = linear_index / STATE_LEN;
+                size_t i2 = linear_index % STATE_LEN;
+                memcpy(&kinematics_p[i1][i2], packets[i].raw + 8, sub_size);
+                index+=sub_size;
             }
-            if(packets[i].get_id() == yaml_section_id_mappings.at("kinematics_v")){
-                memcpy(kinematics_v, packets[i].raw + 8, sizeof(kinematics_v));
+            if(id == yaml_section_id_mappings.at("kinematics_v")){
+                size_t linear_index = index / sizeof(float);
+                size_t i1 = linear_index / STATE_LEN;
+                size_t i2 = linear_index % STATE_LEN;
+                memcpy(&kinematics_v[i1][i2], packets[i].raw + 8, sub_size);
+                index+=sub_size;
+
             }
-            if(packets[i].get_id() == yaml_section_id_mappings.at("gains")) {   
-                memcpy(gains, packets[i].raw + 8, sizeof(gains));
+            if(id == yaml_section_id_mappings.at("gains")) {
+
+                size_t linear_index = index / sizeof(float); 
+                size_t i1 = linear_index / (NUM_CONTROLLER_LEVELS * NUM_GAINS);
+                size_t i2 = (linear_index % (NUM_CONTROLLER_LEVELS * NUM_GAINS)) / NUM_GAINS;
+                size_t i3 = (linear_index % (NUM_CONTROLLER_LEVELS * NUM_GAINS)) % NUM_GAINS;
+                memcpy(&gains[i1][i2][i3], packets[i].raw + 8, sub_size);
+                // Serial.println(index/sizeof(float));
+                index+=sub_size;
             }
-            if(packets[i].get_id() == yaml_section_id_mappings.at("assigned_states")){
+            if(id == yaml_section_id_mappings.at("assigned_states")){
                 memcpy(assigned_states, packets[i].raw + 8, sizeof(assigned_states));
             }
-            if(packets[i].get_id() == yaml_section_id_mappings.at("num_states_per_estimator")){
+            if(id == yaml_section_id_mappings.at("num_states_per_estimator")){
                 memcpy(num_states_per_estimator, packets[i].raw + 8, sizeof(num_states_per_estimator));
             }
-            if(packets[i].get_id() == yaml_section_id_mappings.at("reference_limits")){
-                memcpy(set_reference_limits, packets[i].raw + 8, sizeof(set_reference_limits));
+            if(id == yaml_section_id_mappings.at("reference_limits")){
+                size_t linear_index = index / sizeof(float);
+                size_t i1 = linear_index / (STATE_LEN * 3 * 2);
+                size_t i2 = (linear_index % (STATE_LEN * 3 * 2)) / (3 * 2);
+                size_t i3 = (linear_index % (STATE_LEN * 3 * 2)) % (3 * 2);
+                memcpy(&set_reference_limits[i1][i2][i3], packets[i].raw + 8, sizeof(set_reference_limits));
+                index+=sub_size;
+                Serial.printf("indices: %d, %d, %d\n", i1, i2, i3);
             }
-            if(packets[i].get_id() == yaml_section_id_mappings.at("yaw_axis_vector")){
+            if(id == yaml_section_id_mappings.at("yaw_axis_vector")){
                 memcpy(yaw_axis_vector, packets[i].raw + 8, sizeof(yaw_axis_vector));
             }
-            if(packets[i].get_id() == yaml_section_id_mappings.at("pitch_axis_vector")){
+            if(id == yaml_section_id_mappings.at("pitch_axis_vector")){
                 memcpy(pitch_axis_vector, packets[i].raw + 8, sizeof(pitch_axis_vector));
             }
-            if(packets[i].get_id() == yaml_section_id_mappings.at("defualt_gimbal_starting_angles")){
+            if(id == yaml_section_id_mappings.at("defualt_gimbal_starting_angles")){
                 memcpy(defualt_gimbal_starting_angles, packets[i].raw + 8, sizeof(defualt_gimbal_starting_angles));
             }
-            if(packets[i].get_id() == yaml_section_id_mappings.at("defualt_chassis_starting_angles")){
+            if(id == yaml_section_id_mappings.at("defualt_chassis_starting_angles")){
                 memcpy(defualt_chassis_starting_angles, packets[i].raw + 8, sizeof(defualt_chassis_starting_angles));
             }
-            if(packets[i].get_id() == yaml_section_id_mappings.at("controller_types")){
+            if(id == yaml_section_id_mappings.at("controller_types")){
                 memcpy(controller_types, packets[i].raw + 8, sizeof(controller_types));
             }
         }
+
+        // Serial.println(j);
     }
 
     void print() {
         Serial.println("Config data:");
         // for(int i = 0; i < NUM_MOTORS; i++){
         //     for(int j = 0; j < STATE_LEN; j++){
-        //         Serial.printf("kinematics_p[%d][%d]: %f\n", i, j, kinematics_p[i][j]);
+        //         Serial.printf("kinematics_v[%d][%d]: %f\n", i, j, kinematics_v[i][j]);
         //     }
         // }
 
-        for(int i = 0; i < NUM_MOTORS; i++){
-            for(int j = 0; j < NUM_CONTROLLER_LEVELS; j++){
-                for(int k = 0; k < NUM_GAINS; k++){
-                    Serial.printf("gains[%d][%d][%d]: %f\n", i, j, k, gains[i][j][k]);
+        //Reference limits:
+
+        for(int i = 0; i < STATE_LEN; i++){
+            for(int j = 0; j < 3; j++){
+                for(int k = 0; k < 2; k++){
+                    Serial.printf("set_reference_limits[%d][%d][%d]: %f\n", i, j, k, set_reference_limits[i][j][k]);
                 }
             }
         }
+
     }
 
     private: 
-        int gains_index = 0;
-        int assigned_states_index = 0;
-        int num_states_per_estimator_index = 0;
-        int set_reference_limits_index = 0;
-        int yaw_axis_vector_index = 0;
-        int pitch_axis_vector_index = 0;
-        int defualt_gimbal_starting_angles_index = 0;
-        int defualt_chassis_starting_angles_index = 0;
-        int controller_types_index = 0;
-        int kinematics_p_index = 0;
-        int kinematics_v_index = 0;
-        int num_sensors_index = 0;
-        int encoder_offsets_index = 0;
+        uint16_t index = 0;
+
 };
 
 #endif

@@ -62,7 +62,7 @@ struct CommsPacket {
 	// common getters
 	/// @brief Get the ID of this packet
 	/// @return Packet ID
-	uint16_t get_id();
+	uint8_t get_id();
 	/// @brief Get the info bits of this packet
 	/// @return The packet info bits
 	uint8_t get_info();

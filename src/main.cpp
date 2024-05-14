@@ -389,8 +389,6 @@ int main() {
             config_layer.process(
                 incoming,
                 outgoing);
-
-            // Serial.println("Configuring...");
             continue;
         }
 
