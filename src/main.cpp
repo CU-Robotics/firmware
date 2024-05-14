@@ -28,6 +28,7 @@ Config config;
 Timer loop_timer;
 Timer stall_timer;
 Timer control_input_timer;
+Timer config_timer;
 
 EstimatorManager* estimator_manager;
 ControllerManager* controller_manager;
@@ -356,6 +357,8 @@ int main() {
 
     float dr16_pos_x = 0;
     float dr16_pos_y = 0;
+    int vtm_pos_x = 0;
+    int vtm_pos_y = 0;
 
     bool configured = false;
     int curr_section = 0;
@@ -366,10 +369,15 @@ int main() {
     uint8_t packet_subsection_sizes[MAX_CONFIG_PACKETS] = { 0 };
     CommsPacket config_packets[MAX_CONFIG_PACKETS];
     // Config config
-
-    int vtm_pos_x = 0;
-    int vtm_pos_y = 0;
-
+    
+    int config_time = 0;
+    Serial.println("Configuring...");
+    while(!config_layer.is_configured()) {
+        comms.ping();
+        config_layer.process(comms.get_incoming_packet(), comms.get_outgoing_packet());
+    }
+    config.fill_data(config_packets, packet_subsection_sizes);
+    Serial.println("Configured!");
 
     // Main loop
     while (true) {
@@ -383,52 +391,6 @@ int main() {
 
         CommsPacket* incoming = comms.get_incoming_packet();
         CommsPacket* outgoing = comms.get_outgoing_packet();
-
-        // config verification
-        if (!config_layer.is_configured()) {
-            config_layer.process(
-                incoming,
-                outgoing);
-            continue;
-        }
-
-        // config.print(0);
-        float num_gains = -100;
-
-        config_layer.get_config_packets(config_packets, packet_subsection_sizes);
-        config.fill_data(config_packets, packet_subsection_sizes);
-        config.print();
-
-
-        // Serial.println(*reinterpret_cast<uint16_t*>(&config_packets[0].raw[10]));
-        // memcpy(gains, config_packets[19].raw + 8, sizeof(float) * NUM_MOTORS * NUM_CONTROLLER_LEVELS * NUM_GAINS);
-
-        // memcpy(&num_gains, config_packets[3].raw+8, sizeof(float));
-        // memcpy(num_states_per_estimator, config_packets[20].raw + 8, sizeof(float) * NUM_ESTIMATORS);
-
-        // Serial.println(num_gains);
-
-
-
-        // for(int i = 0; i < NUM_ESTIMATORS; i++) {
-        //     Serial.println(num_states_per_estimator[i]);
-        // }
-        // Serial.printf("GAINS 0: %f\n", gains[0][0][1]);
-        // for(int i = 0; i < NUM_MOTORS; i++) {
-        //     for(int j = 0; j < NUM_CONTROLLER_LEVELS; j++) {
-        //         for(int k = 0; k < NUM_GAINS; k++) {
-        //             Serial.print(gains[i][j][k]);
-        //             Serial.print(" ");
-        //         }
-        //         Serial.println();
-        //     }
-        // }
-        // Serial.println(gains[0][0][0]);
-
-        
-        // Serial.println("Configured!");
-
-        // comms.print();
 
         float delta = control_input_timer.delta();
         dr16_pos_x += dr16.get_mouse_x() * 0.05 * delta;
@@ -524,7 +486,7 @@ int main() {
         outgoing->set_sensor_data(&sensor_data);
 
         //  SAFETY MODE
-        if (dr16.is_connected() && (dr16.get_l_switch() == 2 || dr16.get_l_switch() == 3)) {
+        if (dr16.is_connected() && (dr16.get_l_switch() == 2 || dr16.get_l_switch() == 3) && config_layer.is_configured()) {
             // SAFETY OFF
             can.write();
         } else {
@@ -536,6 +498,8 @@ int main() {
         // LED heartbeat -- linked to loop count to reveal slowdowns and freezes.
         loopc % (int)(1E3 / float(HEARTBEAT_FREQ)) < (int)(1E3 / float(5 * HEARTBEAT_FREQ)) ? digitalWrite(13, HIGH) : digitalWrite(13, LOW);
         loopc++;
+
+        // config_layer.is_configured() ? digitalWrite(13, HIGH) : digitalWrite(13, LOW);
 
         // Keep the loop running at the desired rate
         //loop_timer.delay_micros((int)(1E6 / (float)(LOOP_FREQ)));
