@@ -4,7 +4,8 @@
 #include "usb_hid.hpp"
 #include "../controls/state.hpp"
 #include "../controls/controller_manager.hpp"
-#include "../controls/estimator_manager.hpp"
+// #include "../controls/estimator_manager.hpp"
+
 #include <map>
 #include <string>
 #define CONFIG_LAYER_DEBUG
@@ -15,28 +16,30 @@ const int MAX_CONFIG_PACKETS = 64;
 /// @brief map section names to YAML section IDs
 static const std::map<std::string, u_int8_t> yaml_section_id_mappings = {
     {"robot", 0},
-    {"num_motors", 1},
-    {"num_estimators", 2},
-    {"num_gains", 3},
-    {"num_controller_levels", 4},
-    {"encoder_offsets", 5},
-    {"yaw_axis_vector", 6},
-    {"pitch_axis_vector", 7},
-    {"defualt_gimbal_starting_angles", 8},
-    {"defualt_chassis_starting_angles", 9},
-    {"length_of_barrel_from_pitch_axis", 10},
-    {"height_of_pitch_axis", 11},
-    {"height_of_camera_above_barrel", 12},
-    {"num_sensors", 13},
-    {"estimators", 14},
-    {"kinematics_p", 15},
-    {"kinematics_v", 16},
-    {"reference_limits", 17},
-    {"controller_types", 18},
-    {"gains", 19},
-    {"num_states_per_estimator", 20},
-    {"assigned_states", 21}
+    {"pitch_angle_at_yaw_imu_calibration", 1},
+    {"encoder_offsets", 2},
+    {"yaw_axis_vector", 3},
+    {"pitch_axis_vector", 4},
+    {"default_gimbal_starting_angles", 5},
+    {"default_chassis_starting_angles", 6},
+    {"length_of_barrel_from_pitch_axis", 7},
+    {"height_of_pitch_axis", 8},
+    {"height_of_camera_above_barrel", 9},
+    {"num_sensors", 10},
+    {"estimators", 11},
+    {"kinematics_p", 12},
+    {"kinematics_v", 13},
+    {"reference_limits", 14},
+    {"controller_types", 15},
+    {"gains", 16},
+    {"num_states_per_estimator", 17},
+    {"assigned_states", 18},
+    {"switcher_values", 19},
+    {"chassis_drive_conversion_factors", 20},
+    {"governor_types", 21},
+    {"odom_values", 22}
 };
+
 
 class ConfigLayer {
 private:
@@ -93,15 +96,20 @@ struct Config {
     float num_states_per_estimator[NUM_ESTIMATORS];
     float set_reference_limits[STATE_LEN][3][2];
 
-    float yaw_axis_vector[2];
-    float pitch_axis_vector[2];
-    float defualt_gimbal_starting_angles[2];
-    float defualt_chassis_starting_angles[2];
+    float estimators[NUM_ESTIMATORS];
+
+    float yaw_axis_vector[3];
+    float pitch_axis_vector[3];
+    float default_gimbal_starting_angles[3];
+    float default_chassis_starting_angles[3];
     float controller_types[NUM_MOTORS][NUM_CONTROLLER_LEVELS];
+    float chassis_drive_conversion_factors[2];
+    float pitch_angle_at_yaw_imu_calibration;
+    float governor_types[STATE_LEN];
+    float odom_values[3];
+    float switcher_values[2];
 
     void fill_data(CommsPacket packets[MAX_CONFIG_PACKETS], uint8_t sizes[MAX_CONFIG_PACKETS]) {
-        int j = 0;
-
         for(int i = 0; i < MAX_CONFIG_PACKETS; i++){
             uint8_t id = packets[i].get_id();
             uint8_t subsec_id = *reinterpret_cast<uint8_t*>(packets[i].raw + 2);
@@ -109,15 +117,6 @@ struct Config {
 
             if(subsec_id == 0) index = 0;
 
-            if(id == yaml_section_id_mappings.at("num_gains")){
-                memcpy(&num_gains, packets[i].raw + 8, sizeof(float));
-            }
-            if(id == yaml_section_id_mappings.at("num_controller_levels")){
-                memcpy(&num_controller_levels, packets[i].raw + 8, sizeof(float));
-            }
-            if(id == yaml_section_id_mappings.at("num_sensors")){
-                memcpy(&num_sensors, packets[i].raw + 8, sizeof(float));
-            }
             if(id == yaml_section_id_mappings.at("kinematics_p")){
                 size_t linear_index = index / sizeof(float);
                 size_t i1 = linear_index / STATE_LEN;
@@ -131,10 +130,8 @@ struct Config {
                 size_t i2 = linear_index % STATE_LEN;
                 memcpy(&kinematics_v[i1][i2], packets[i].raw + 8, sub_size);
                 index+=sub_size;
-
             }
             if(id == yaml_section_id_mappings.at("gains")) {
-
                 size_t linear_index = index / sizeof(float); 
                 size_t i1 = linear_index / (NUM_CONTROLLER_LEVELS * NUM_GAINS);
                 size_t i2 = (linear_index % (NUM_CONTROLLER_LEVELS * NUM_GAINS)) / NUM_GAINS;
@@ -144,34 +141,52 @@ struct Config {
                 index+=sub_size;
             }
             if(id == yaml_section_id_mappings.at("assigned_states")){
-                memcpy(assigned_states, packets[i].raw + 8, sizeof(assigned_states));
+                memcpy(assigned_states, packets[i].raw + 8, sub_size);
             }
             if(id == yaml_section_id_mappings.at("num_states_per_estimator")){
-                memcpy(num_states_per_estimator, packets[i].raw + 8, sizeof(num_states_per_estimator));
+                memcpy(num_states_per_estimator, packets[i].raw + 8, sub_size);
             }
             if(id == yaml_section_id_mappings.at("reference_limits")){
                 size_t linear_index = index / sizeof(float);
                 size_t i1 = linear_index / (STATE_LEN * 3 * 2);
                 size_t i2 = (linear_index % (STATE_LEN * 3 * 2)) / (3 * 2);
                 size_t i3 = (linear_index % (STATE_LEN * 3 * 2)) % (3 * 2);
-                memcpy(&set_reference_limits[i1][i2][i3], packets[i].raw + 8, sizeof(set_reference_limits));
+                memcpy(&set_reference_limits[i1][i2][i3], packets[i].raw + 8, sub_size);
                 index+=sub_size;
                 Serial.printf("indices: %d, %d, %d\n", i1, i2, i3);
             }
             if(id == yaml_section_id_mappings.at("yaw_axis_vector")){
-                memcpy(yaw_axis_vector, packets[i].raw + 8, sizeof(yaw_axis_vector));
+                memcpy(yaw_axis_vector, packets[i].raw + 8,sub_size);
             }
             if(id == yaml_section_id_mappings.at("pitch_axis_vector")){
-                memcpy(pitch_axis_vector, packets[i].raw + 8, sizeof(pitch_axis_vector));
+                memcpy(pitch_axis_vector, packets[i].raw + 8, sub_size);
             }
-            if(id == yaml_section_id_mappings.at("defualt_gimbal_starting_angles")){
-                memcpy(defualt_gimbal_starting_angles, packets[i].raw + 8, sizeof(defualt_gimbal_starting_angles));
+            if(id == yaml_section_id_mappings.at("default_gimbal_starting_angles")){
+                memcpy(default_gimbal_starting_angles, packets[i].raw + 8, sub_size);
             }
-            if(id == yaml_section_id_mappings.at("defualt_chassis_starting_angles")){
-                memcpy(defualt_chassis_starting_angles, packets[i].raw + 8, sizeof(defualt_chassis_starting_angles));
+            if(id == yaml_section_id_mappings.at("default_chassis_starting_angles")){
+                memcpy(default_chassis_starting_angles, packets[i].raw + 8, sub_size);
             }
             if(id == yaml_section_id_mappings.at("controller_types")){
-                memcpy(controller_types, packets[i].raw + 8, sizeof(controller_types));
+                memcpy(controller_types, packets[i].raw + 8, sub_size);
+            }
+            if(id == yaml_section_id_mappings.at("pitch_angle_at_yaw_imu_calibration")){
+                memcpy(&pitch_angle_at_yaw_imu_calibration, packets[i].raw + 8, sub_size);
+            }
+            if(id==yaml_section_id_mappings.at("governor_types")){
+                memcpy(governor_types, packets[i].raw + 8, sub_size);
+            }
+            if(id==yaml_section_id_mappings.at("chassis_drive_conversion_factors")){
+                memcpy(chassis_drive_conversion_factors, packets[i].raw + 8, sub_size);
+            }
+            if(id==yaml_section_id_mappings.at("estimators")){
+                memcpy(estimators, packets[i].raw + 8, sub_size);
+            }
+            if(id==yaml_section_id_mappings.at("odom_values")){
+                memcpy(odom_values, packets[i].raw + 8, sub_size);
+            }
+            if(id==yaml_section_id_mappings.at("switcher_values")){
+                memcpy(switcher_values, packets[i].raw + 8, sub_size);
             }
         }
 
@@ -180,13 +195,6 @@ struct Config {
 
     void print() {
         Serial.println("Config data:");
-        // for(int i = 0; i < NUM_MOTORS; i++){
-        //     for(int j = 0; j < STATE_LEN; j++){
-        //         Serial.printf("kinematics_v[%d][%d]: %f\n", i, j, kinematics_v[i][j]);
-        //     }
-        // }
-
-        //Reference limits:
 
         for(int i = 0; i < STATE_LEN; i++){
             for(int j = 0; j < 3; j++){

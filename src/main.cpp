@@ -28,7 +28,6 @@ Config config;
 Timer loop_timer;
 Timer stall_timer;
 Timer control_input_timer;
-Timer config_timer;
 
 EstimatorManager* estimator_manager;
 ControllerManager* controller_manager;
@@ -85,201 +84,51 @@ int main() {
     //can data pointer so we don't pass around rm_CAN object
     CANData* can_data = can.get_data();
 
+    uint8_t packet_subsection_sizes[MAX_CONFIG_PACKETS] = { 0 };
+    CommsPacket config_packets[MAX_CONFIG_PACKETS];
+    // Config config
+    
+    Serial.println("Configuring...");
+    while(!config_layer.is_configured()) {
+        comms.ping();
+        config_layer.process(comms.get_incoming_packet(), comms.get_outgoing_packet());
+    }
+    config.fill_data(config_packets, packet_subsection_sizes);
+    Serial.println("Configured!");
+
     //estimate micro and macro state
-    estimator_manager = new EstimatorManager(can_data);
+    estimator_manager = new EstimatorManager(can_data, config);
     //generate controller outputs based on governed references and estimated state
     controller_manager = new ControllerManager();
 
     //gains for each motor and controller
     float gains[NUM_MOTORS][NUM_CONTROLLER_LEVELS][NUM_GAINS] = { 0 };
+    memcpy(gains, config.gains, sizeof(config.gains));
     //which states each estimator estimates
-    int assigned_states[NUM_ESTIMATORS][STATE_LEN] = { 0 };
+    float assigned_states[NUM_ESTIMATORS][STATE_LEN] = { 0 };
+    memcpy(assigned_states, config.assigned_states, sizeof(config.assigned_states));
     //number of states each estimator estimates
-    float num_states_per_estimator[NUM_ESTIMATORS] = { 5,1,1,16,1 };
+    float num_states_per_estimator[NUM_ESTIMATORS] = { 0 };
+    memcpy(num_states_per_estimator, config.num_states_per_estimator, sizeof(config.num_states_per_estimator));
     //reference limits of our reference governor. Used to turn an ungoverned reference into a governed reference to send to ControllerManager
     float set_reference_limits[STATE_LEN][3][2] = { 0 };
+    memcpy(set_reference_limits, config.set_reference_limits, sizeof(config.set_reference_limits));
 
+    float governor_types[STATE_LEN] = { 0 }; //Position vs Velcity governor
+    memcpy(governor_types, config.governor_types, sizeof(config.governor_types));
 
-    //x pos (meters)
-    set_reference_limits[0][0][0] = -UINT_MAX;
-    set_reference_limits[0][0][1] = UINT_MAX;
-    set_reference_limits[0][1][0] = -5.37952195918;
-    set_reference_limits[0][1][1] = 5.37952195918;
-    set_reference_limits[0][2][0] = -7;
-    set_reference_limits[0][2][1] = 7;
-    //y pos (meters)
-    set_reference_limits[1][0][0] = -UINT_MAX;
-    set_reference_limits[1][0][1] = UINT_MAX;
-    set_reference_limits[1][1][0] = -5.37952195918;
-    set_reference_limits[1][1][1] = 5.37952195918;
-    set_reference_limits[1][2][0] = -7;
-    set_reference_limits[1][2][1] = 7;
-    //chassis angle (psi) (radians)
-    set_reference_limits[2][0][0] = -PI;
-    set_reference_limits[2][0][1] = PI;
-    set_reference_limits[2][1][0] = -29.3917681162;
-    set_reference_limits[2][1][1] = 29.3917681162;
-    set_reference_limits[2][2][0] = -5;
-    set_reference_limits[2][2][1] = 5;
-    //yaw (radians)
-    set_reference_limits[3][0][0] = -PI;
-    set_reference_limits[3][0][1] = PI;
-    set_reference_limits[3][1][0] = -49.4827627617;
-    set_reference_limits[3][1][1] = 49.4827627617;
-    set_reference_limits[3][2][0] = -50;
-    set_reference_limits[3][2][1] = 50;
-    //pitch (radians)
-    set_reference_limits[4][0][0] = 0.9;
-    set_reference_limits[4][0][1] = 1.92;
-    set_reference_limits[4][1][0] = -70.1181276577;
-    set_reference_limits[4][1][1] = 70.1181276577;
-    set_reference_limits[4][2][0] = -300;
-    set_reference_limits[4][2][1] = 300;
-    //Shooter Ball Speed (m/s)
-    set_reference_limits[5][0][0] = -UINT_MAX;
-    set_reference_limits[5][0][1] = UINT_MAX;
-    set_reference_limits[5][1][0] = 0;
-    set_reference_limits[5][1][1] = 35;
-    set_reference_limits[5][2][0] = -100;
-    set_reference_limits[5][2][1] = 100;
-    //Feeder Balls (balls/s)
-    set_reference_limits[6][0][0] = -UINT_MAX;
-    set_reference_limits[6][0][1] = UINT_MAX;
-    set_reference_limits[6][1][0] = 0;
-    set_reference_limits[6][1][1] = 40;
-    set_reference_limits[6][2][0] = -100;
-    set_reference_limits[6][2][1] = 100;
-    // barrel switcher (scalar pos)
-    set_reference_limits[7][0][0] = -1; // -1 is barrel switched right and 1 is barrel switched left
-    set_reference_limits[7][0][1] = 1;
-    set_reference_limits[7][1][0] = -8; 
-    set_reference_limits[7][1][1] = 8;
-    set_reference_limits[7][2][0] = -30; 
-    set_reference_limits[7][2][1] = 30;
+    float kinematics_pos[NUM_MOTORS][STATE_LEN] = { 0 }; //Position kinematics 
+    memcpy(kinematics_pos, config.kinematics_p, sizeof(config.kinematics_p));
+    float kinematics_vel[NUM_MOTORS][STATE_LEN] = { 0 }; //Velocity kinematics
+    memcpy(kinematics_vel, config.kinematics_v, sizeof(config.kinematics_v));
+    
+    float controller_types[NUM_MOTORS][NUM_CONTROLLER_LEVELS] = { 0 };
+    memcpy(controller_types, config.controller_types, sizeof(config.controller_types));
+    
+    float chassis_pos_to_motor_error = config.chassis_drive_conversion_factors[1];
 
     //set reference limits in the reference governor
     state.set_reference_limits(set_reference_limits);
-
-    //hardcode motor gains for now
-
-    float gain_1 = 0.002;
-    float gain_d = 0.000;
-    //drive pid gains
-    gains[0][0][0] = 1; // Kp
-    gains[0][0][1] = 0;   // Ki
-    gains[0][0][2] = 0;   // Kd
-    gains[0][1][0] = gain_1; // Kp
-    gains[0][1][1] = gain_d;   // Ki
-    gains[0][1][2] = 0;   // Kd
-    gains[0][1][3] = 60;   // power limit limit
-    gains[0][1][4] = 30;   // power limit critical
-
-
-    gains[1][0][0] = 1; // Kp
-    gains[1][0][1] = 0;   // Ki
-    gains[1][0][2] = 0;   // Kd
-    gains[1][1][0] = gain_1; // Kp
-    gains[1][1][1] = gain_d;   // Ki
-    gains[1][1][2] = 0;   // Kd
-    gains[1][1][3] = 60;   // power limit limit
-    gains[1][1][4] = 30;   // power limit critical
-
-    gains[2][0][0] = 1; // Kp
-    gains[2][0][1] = 0;   // Ki
-    gains[2][0][2] = 0;   // Kd
-    gains[2][1][0] = gain_1; // Kp
-    gains[2][1][1] = gain_d;   // Ki
-    gains[2][1][2] = 0;   // Kd
-    gains[2][1][3] = 60;   // power limit limit
-    gains[2][1][4] = 30;   // power limit critical
-
-
-    gains[3][0][0] = 1; // Kp
-    gains[3][0][1] = 0;   // Ki
-    gains[3][0][2] = 0;   // Kd
-    gains[3][1][0] = gain_1; // Kp
-    gains[3][1][1] = gain_d;   // Ki
-    gains[3][1][2] = 0;   // Kd
-    gains[3][1][3] = 60;   // power limit limit
-    gains[3][1][4] = 30;   // power limit critical
-    //Yaw pid gains
-    gains[4][2][0] = 4; // Kp pos
-    gains[4][2][1] = 0;   // Ki
-    gains[4][2][2] = 0;   // Kd
-    gains[4][2][3] = 0;   // feed foward
-    gains[4][2][4] = 0.3; // Kp vel
-    gains[4][2][5] = 0;   // Ki
-    gains[4][2][6] = 0;   // Kd
-
-    gains[5][2][0] = 4; // Kp pos
-    gains[5][2][1] = 0;   // Ki
-    gains[5][2][2] = 0;   // Kd
-    gains[5][2][3] = 0;   // feed foward
-    gains[5][2][4] = 0.3; // Kp vel
-    gains[5][2][5] = 0;   // Ki
-    gains[5][2][6] = 0;   // Kd
-    //pitch gains
-    gains[8][2][0] = 8; // Kp pos
-    gains[8][2][1] = 0;   // Ki
-    gains[8][2][2] = 0;   // Kd
-    gains[8][2][3] = -0.19; // feed foward
-    gains[8][2][4] = 0.3; // Kp vel
-    gains[8][2][5] = 0;   // Ki
-    gains[8][2][6] = 0;   // Kd
-
-    gains[9][2][0] = 8; // Kp pos
-    gains[9][2][1] = 0;   // Ki
-    gains[9][2][2] = 0;   // Kd
-    gains[9][2][3] = -0.19; // feed foward
-    gains[9][2][4] = 0.3; // Kp vel
-    gains[9][2][5] = 0;   // Ki
-    gains[9][2][6] = 0;   // Kd
-    //flywheel gains
-    gains[10][0][0] = 0; // Kp pos
-    gains[10][0][1] = 0;   // Ki
-    gains[10][0][2] = 0;   // Kd
-    gains[10][1][0] = 0.001; // Kp pos
-    gains[10][1][1] = 0;   // Ki
-    gains[10][1][2] = 0.0;   // Kd
-
-    gains[11][0][0] = 0; // Kp pos
-    gains[10][1][2] = 0;   // Kd
-
-    gains[11][0][0] = 1; // Kp pos
-    gains[11][0][1] = 0;   // Ki
-    gains[11][0][2] = 0;   // Kd
-    gains[11][1][0] = 0.001; // Kp pos
-    gains[11][1][1] = 0;   // Ki
-    gains[11][1][2] = 0.0;   // Kd
-    //feeder gains
-    gains[12][0][0] = 0; // Kp pos
-    gains[12][0][1] = 0;   // Ki
-    gains[12][0][2] = 0;   // Kd
-    gains[12][1][0] = 0.002; // Kp pos
-    gains[12][1][1] = 0;   // Ki
-    gains[12][1][2] = 0.00001;   // Kd
-    //switcher gains
-    gains[13][2][0] = 0.15; // Kp pos
-    gains[13][2][1] = 0;   // Ki
-    gains[13][2][2] = 0;   // Kd
-    gains[13][2][3] = 0.07; // Feed forward
-    gains[13][2][4] = 0.1; // Kp vel
-    gains[13][2][5] = 0;   // Ki
-    gains[13][2][6] = 0;   // Kd
-
-    //assign states to estimators
-    assigned_states[0][0] = 0;
-    assigned_states[0][1] = 1;
-    assigned_states[0][2] = 2;
-    assigned_states[0][3] = 3;
-    assigned_states[0][4] = 4;
-    assigned_states[1][0] = 5;
-    assigned_states[2][0] = 6;
-    assigned_states[4][0] = 7;
-    for (int i = 0; i < NUM_MOTORS; i++) assigned_states[3][i] = i;
-
-
-    int controller_types[NUM_MOTORS][NUM_CONTROLLER_LEVELS] = { {5,4,0},{5,4,0},{5,4,0},{5,4,0},{0,0,3},{0,0,3},{0,0,0},{0,0,0},{0,0,3},{0,0,3},{5,2,0},{5,2,0},{5,2,0},{0,0,0},{0,0,0},{0,0,0} };
 
     // intializes all controllers given the controller_types matrix
     for (int i = 0; i < NUM_CAN_BUSES; i++)
@@ -295,89 +144,28 @@ int main() {
 
     // initalize estimators
     estimator_manager->assign_states(assigned_states);
-    for (int i = 0; i < NUM_ESTIMATORS; i++) {
-        estimator_manager->init_estimator(i + 1, (int) num_states_per_estimator[i]);
+   
+    for(int i = 0; i < NUM_ESTIMATORS; i++){
+        if(config.estimators[i] != 0){
+            estimator_manager->init_estimator(config.estimators[i], (int) num_states_per_estimator[i]);
+        }
     }
 
     // imu calibration
     estimator_manager->calibrate_imus();
 
+    // variables for use in main
     float temp_state[STATE_LEN][3] = { 0 }; // Temp state array
     float temp_micro_state[NUM_MOTORS][MICRO_STATE_LEN] = { 0 }; // Temp micro state array
     float temp_reference[STATE_LEN][3] = { 0 }; //Temp governed state
     float target_state[STATE_LEN][3] = { 0 }; //Temp ungoverned state
-    float kinematics_pos[NUM_MOTORS][STATE_LEN] = { 0 }; //Position kinematics 
-    float kinematics_vel[NUM_MOTORS][STATE_LEN] = { 0 }; //Velocity kinematics
     float motor_inputs[NUM_MOTORS] = { 0 }; //Array for storing controller outputs to send to CAN
-    int governor_type[STATE_LEN] = { 2, 2, 2, 1, 1, 2, 2, 2 }; //Position vs Velcity governor
-
-    float chassis_angle_to_motor_error = ((.1835 * 9.17647058824) / .0516);
-    float chassis_pos_to_motor_error = ((9.17647058824) / .0516) * 0.507;
-    // motor 1 front right Can_1
-    kinematics_vel[0][2] = chassis_angle_to_motor_error;
-    kinematics_vel[0][2] = chassis_angle_to_motor_error;
-    // motor 2 back right
-    kinematics_vel[1][2] = chassis_angle_to_motor_error;
-    // motor 3 back left
-    kinematics_vel[2][2] = chassis_angle_to_motor_error;
-    // motor 4 front left
-    kinematics_vel[3][2] = chassis_angle_to_motor_error;
-    // motor 5 yaw 1
-    kinematics_pos[4][3] = -1;
-    kinematics_vel[4][3] = -1;
-    kinematics_pos[4][3] = -1;
-    kinematics_vel[4][3] = -1;
-    // motor 6 yaw 2
-    kinematics_pos[5][3] = -1;
-    kinematics_vel[5][3] = -1;
-
-    // motor 1 pitch 1 Can_2
-    kinematics_vel[8][4] = -1;
-    kinematics_pos[8][4] = -1;
-    // motor 2 pitch 2
-    kinematics_vel[9][4] = 1;
-    kinematics_pos[9][4] = 1;
-    // motor 3 flywheel 1 
-    kinematics_vel[10][5] = -(1 / 0.03);
-    // motor 4 flywheel 2 
-    kinematics_vel[11][5] = (1 / 0.03);
-    // motor 5 feeder
-    kinematics_vel[12][6] = (1.0 / (8.0 / (2 * PI))) * (36);
-    // motor 6 switcher
-    kinematics_pos[13][7] = -1;
-    kinematics_vel[13][7] = -1;
-
-    kinematics_vel[10][5] = -((1 / 0.03) * 60) / (2 * PI);
-    // motor 2 flywheel 2 
-    kinematics_vel[11][5] = ((1 / 0.03) * 60) / (2 * PI);
-    // motor 1 feeder
-    kinematics_vel[12][6] = (1.0 / 8.0) * (36 * 60);
-
-    int count_one = 0;
 
     float dr16_pos_x = 0;
     float dr16_pos_y = 0;
     int vtm_pos_x = 0;
     int vtm_pos_y = 0;
-
-    bool configured = false;
-    int curr_section = 0;
-    int curr_subsection = 0;
-
-    // allocate more than necessary
-    uint8_t num_sections;
-    uint8_t packet_subsection_sizes[MAX_CONFIG_PACKETS] = { 0 };
-    CommsPacket config_packets[MAX_CONFIG_PACKETS];
-    // Config config
-    
-    int config_time = 0;
-    Serial.println("Configuring...");
-    while(!config_layer.is_configured()) {
-        comms.ping();
-        config_layer.process(comms.get_incoming_packet(), comms.get_outgoing_packet());
-    }
-    config.fill_data(config_packets, packet_subsection_sizes);
-    Serial.println("Configured!");
+    int count_one = 0;
 
     // Main loop
     while (true) {
@@ -392,6 +180,7 @@ int main() {
         CommsPacket* incoming = comms.get_incoming_packet();
         CommsPacket* outgoing = comms.get_outgoing_packet();
 
+        //manual controls on firmware
         float delta = control_input_timer.delta();
         dr16_pos_x += dr16.get_mouse_x() * 0.05 * delta;
         dr16_pos_y += dr16.get_mouse_y() * 0.05 * delta;
@@ -429,6 +218,7 @@ int main() {
         target_state[6][1] = feeder_target;
         target_state[7][0] = -1;
 
+        // if the left switch is all the way down use Hive controls
         if(dr16.get_l_switch() == 2) incoming->get_target_state(target_state);
         
         // Read sensors
@@ -446,7 +236,7 @@ int main() {
 
         //reference govern
         state.set_estimate(temp_state);
-        state.step_reference(target_state, governor_type);
+        state.step_reference(target_state, governor_types);
         state.get_reference(temp_reference);
 
         // Update the kinematics of x,y states, as the kinematics change when chassis angle changes

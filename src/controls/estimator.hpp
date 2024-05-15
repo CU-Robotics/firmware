@@ -4,6 +4,7 @@
 #include "../comms/rm_can.hpp"
 #include "state.hpp"
 #include "../sensors/RefSystem.hpp"
+#include "../comms/config_layer.hpp"
 
 #define NUM_SENSOR_VALUES 8
 
@@ -165,11 +166,15 @@ private:
     /// @brief calculated chassis angle
     float chassis_angle;
     /// @brief calculated chassis pitch angle
-    float chasis_pitch_angle;
-    /// @brief gravity acceleration vector
-    float gravity_accel_vector[3];
+    float chassis_pitch_angle;
+    /// @brief yaw imu vector
+    float imu_yaw_axis_vector[3];
+
+    /// @brief pitch imu vector
+    float imu_pitch_axis_vector[3];
+
     /// @brief gravity pitch angle
-    float gravity_pitch_angle;
+    float starting_pitch_angle;
     /// @brief yaw axis in spherical coords
     float yaw_axis_spherical[3];
 
@@ -268,7 +273,7 @@ private:
 
 public:
     /// @brief estimate the state of the gimbal
-    /// @param sensor_values inputted sensor values from EstimatorManager
+    /// @param config_data inputted sensor values from khadas yaml
     /// @param r1 rev encoder 1
     /// @param r2 rev encoder 2
     /// @param r3 rev encoder 3
@@ -277,7 +282,7 @@ public:
     /// @param imu icm encoder
     /// @param data can data from Estimator Manager
     /// @param n num states this estimator estimates
-    GimbalEstimator(float sensor_values[13],RevEncoder* r1, RevEncoder* r2, RevEncoder* r3, BuffEncoder* b1, BuffEncoder* b2, ICM20649* imu, CANData* data, int n) {
+    GimbalEstimator(Config config_data, RevEncoder* r1, RevEncoder* r2, RevEncoder* r3, BuffEncoder* b1, BuffEncoder* b2, ICM20649* imu, CANData* data, int n) {
         buff_enc_yaw = b1; // sensor object definitions
         buff_enc_pitch = b2;
         rev_enc[0] = r1;
@@ -286,20 +291,23 @@ public:
         can_data = data;
         icm_imu = imu;
         num_states = n; // number of estimated states
-        PITCH_ENCODER_OFFSET = sensor_values[1];
-        YAW_ENCODER_OFFSET = sensor_values[0];
-        pitch_angle = sensor_values[3];
-        yaw_angle = sensor_values[2];
-        roll_angle = sensor_values[4];
-        chasis_pitch_angle = sensor_values[5];
+        YAW_ENCODER_OFFSET = config_data.encoder_offsets[0];
+        PITCH_ENCODER_OFFSET = config_data.encoder_offsets[1];
+        yaw_angle = config_data.default_gimbal_starting_angles[0];
+        pitch_angle = config_data.default_gimbal_starting_angles[1];
+        roll_angle = config_data.default_gimbal_starting_angles[2];
+        chassis_pitch_angle = config_data.default_chassis_starting_angles[1];
         chassis_angle = 0;
-        gravity_accel_vector[0] = sensor_values[6];
-        gravity_accel_vector[1] = sensor_values[7];
-        gravity_accel_vector[2] = sensor_values[8];
-        gravity_pitch_angle = sensor_values[9];
-        odom_wheel_radius = sensor_values[10];
-        odom_axis_offset_x = sensor_values[11];
-        odom_axis_offset_y = sensor_values[12];
+        imu_yaw_axis_vector[0] = config_data.yaw_axis_vector[0];
+        imu_yaw_axis_vector[1] = config_data.yaw_axis_vector[1];
+        imu_yaw_axis_vector[2] = config_data.yaw_axis_vector[2];
+        imu_pitch_axis_vector[0] = config_data.pitch_axis_vector[0];
+        imu_pitch_axis_vector[1] = config_data.pitch_axis_vector[1];
+        imu_pitch_axis_vector[2] = config_data.pitch_axis_vector[2];
+        starting_pitch_angle = config_data.pitch_angle_at_yaw_imu_calibration;
+        odom_wheel_radius = config_data.odom_values[0];
+        odom_axis_offset_x = config_data.odom_values[1];
+        odom_axis_offset_y = config_data.odom_values[2];
         // definitions for spherical coordinates of new axis in the imu refrence frame
         yaw_axis_spherical[0] = 1;   // rho (1 for a spherical)
         pitch_axis_spherical[0] = 1; // rho (1 for a spherical)
@@ -325,19 +333,19 @@ public:
 
         // calculates yaw velocity before integrating to find position
         // calculates the difference in initial and current pitch angle
-        float pitch_diff = gravity_pitch_angle - pitch_enc_angle;
+        float pitch_diff = starting_pitch_angle - pitch_enc_angle;
 
         // Serial.println(pitch_enc_angle);
 
         // gimbal rotation axis in spherical coordinates in imu refrence frame
-        if (gravity_accel_vector[0] == 0)
+        if (imu_yaw_axis_vector[0] == 0)
             yaw_axis_spherical[1] = 1.57;
-        else if (gravity_accel_vector[0] < 0) {
-            yaw_axis_spherical[1] = PI + atan(gravity_accel_vector[1] / gravity_accel_vector[0]); // theta
+        else if (imu_yaw_axis_vector[0] < 0) {
+            yaw_axis_spherical[1] = PI + atan(imu_yaw_axis_vector[1] / imu_yaw_axis_vector[0]); // theta
         } else {
-            yaw_axis_spherical[1] = atan(gravity_accel_vector[1] / gravity_accel_vector[0]); // theta
+            yaw_axis_spherical[1] = atan(imu_yaw_axis_vector[1] / imu_yaw_axis_vector[0]); // theta
         }
-        yaw_axis_spherical[2] = acos(gravity_accel_vector[2] / __magnitude(gravity_accel_vector, 3)) - pitch_diff; // phi
+        yaw_axis_spherical[2] = acos(imu_yaw_axis_vector[2] / __magnitude(imu_yaw_axis_vector, 3)) - pitch_diff; // phi
 
         // roll_axis_spherical[1] = yaw_axis_spherical[1]; // theta
         // roll_axis_spherical[2] = yaw_axis_spherical[2]-(PI*0.5); // phi
@@ -359,10 +367,10 @@ public:
         // pitch_axis_unitvector[0] = pitch_axis_spherical[0]*cos(pitch_axis_spherical[1])*sin(pitch_axis_spherical[2]);
         // pitch_axis_unitvector[1] = pitch_axis_spherical[0]*sin(pitch_axis_spherical[1])*sin(pitch_axis_spherical[2]);
         // pitch_axis_unitvector[2] = pitch_axis_spherical[0]*cos(pitch_axis_spherical[2]);
-        float mag = sqrt((2.789852 * 2.789852) + (0.045252 * 0.045252) + (0.009307 * 0.009307));
-        pitch_axis_unitvector[0] = 2.789852 / mag;
-        pitch_axis_unitvector[1] = 0.045252 / mag;
-        pitch_axis_unitvector[2] = 0.009307 / mag;
+        float mag = sqrt(pow(imu_pitch_axis_vector[0],2) + pow(imu_pitch_axis_vector[1],2) + pow(imu_pitch_axis_vector[2],2));
+        pitch_axis_unitvector[0] = imu_pitch_axis_vector[0] / mag;
+        pitch_axis_unitvector[1] = imu_pitch_axis_vector[1] / mag;
+        pitch_axis_unitvector[2] = imu_pitch_axis_vector[2] / mag;
 
         __crossProduct(pitch_axis_unitvector, yaw_axis_unitvector, roll_axis_unitvector);
 
@@ -615,7 +623,7 @@ private:
     /// @brief TOF sensor pointer from EstimatorManager
     TOFSensor* time_of_flight;
 
-    /// @brief can weight for weighted average
+    /// @brief time of flight sensor offset
     float tof_sensor_offset = 0;
 
     /// @brief used to scale the tof sensor data to -1 to 1
@@ -626,12 +634,12 @@ public:
     /// @param _num_states number of states this estimator estimates
     /// @param tof time of flight sensor object
     /// @param values array of values to set tof sensor offset and scale
-    SwitcherEstimator(float values[2],CANData* c,TOFSensor* tof, int _num_states) {
+    SwitcherEstimator(Config config,CANData* c,TOFSensor* tof, int _num_states) {
         can_data = c;
         num_states = _num_states;
         time_of_flight = tof;
-        tof_sensor_offset = values[0];
-        tof_scale = values[1];
+        tof_sensor_offset = config.switcher_values[0];
+        tof_scale = config.switcher_values[1];
     }
 
     /// @brief calculate state updates

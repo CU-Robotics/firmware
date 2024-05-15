@@ -9,6 +9,8 @@
 
 #define MICRO_STATE_LEN 3
 
+#define NUM_ESTIMATORS 16
+
 /// @brief Use state estimate and ungoverned reference to generated governed references to be sent to controllers.
 class State {
 private:
@@ -43,7 +45,7 @@ public:
     /// @brief Steps the reference matrix towards a goal, applying a reference governor to prevent impossible motion
     /// @param ungoverned_reference The desired robot state to step towards in the form of a matrix; Must be of shape [STATE_LEN][3]
     /// @param governor_type position based governor (1) or velocity based governor (2)
-    void step_reference(float ungoverned_reference[STATE_LEN][3], int governor_type[STATE_LEN]);
+    void step_reference(float ungoverned_reference[STATE_LEN][3], float governor_type[STATE_LEN]);
 
     /// @brief Gives the instantaneous state estimate matrix
     /// @param estimate The array to override with the estimate matrix; Must be of shape [STATE_LEN][3]
