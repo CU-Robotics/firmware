@@ -293,6 +293,7 @@ int main() {
         outgoing->set_info(0x0000);
         outgoing->set_time(millis() / 1000.0);
         outgoing->set_sensor_data(&sensor_data);
+        outgoing->set_estimated_state(temp_state);
 
         //  SAFETY MODE
         if (dr16.is_connected() && (dr16.get_l_switch() == 2 || dr16.get_l_switch() == 3) && config_layer.is_configured()) {
