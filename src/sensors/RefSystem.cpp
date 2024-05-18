@@ -282,7 +282,7 @@ bool RefSystem::read_frame_tail(HardwareSerial* serial, uint8_t raw_buffer[REF_M
     frame.CRC = (raw_buffer[buffer_index + 1] << 8) | raw_buffer[buffer_index + 0];
 
     if (frame.CRC != generateCRC16(raw_buffer, buffer_index)) {
-        Serial.println("Tail failed CRC");
+        // Serial.println("Tail failed CRC");
         packets_failed++;
         return false;
     }
