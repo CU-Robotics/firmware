@@ -35,7 +35,7 @@ static const std::map<std::string, u_int8_t> yaml_section_id_mappings = {
     {"num_states_per_estimator", 17},
     {"assigned_states", 18},
     {"switcher_values", 19},
-    {"chassis_drive_conversion_factors", 20},
+    {"drive_conversion_factors", 20},
     {"governor_types", 21},
     {"odom_values", 22}
 };
@@ -103,7 +103,7 @@ struct Config {
     float default_gimbal_starting_angles[3];
     float default_chassis_starting_angles[3];
     float controller_types[NUM_MOTORS][NUM_CONTROLLER_LEVELS];
-    float chassis_drive_conversion_factors[2];
+    float drive_conversion_factors[2];
     float pitch_angle_at_yaw_imu_calibration;
     float governor_types[STATE_LEN];
     float odom_values[3];
@@ -116,6 +116,9 @@ struct Config {
             uint16_t sub_size = *reinterpret_cast<uint16_t*>(packets[i].raw + 6);
 
             if(subsec_id == 0) index = 0;
+
+            Serial.printf("id: %d, subsec_id: %d, sub_size: %d\n", id, subsec_id, sub_size);
+            Serial.println();
 
             if(id == yaml_section_id_mappings.at("kinematics_p")){
                 size_t linear_index = index / sizeof(float);
@@ -141,7 +144,11 @@ struct Config {
                 index+=sub_size;
             }
             if(id == yaml_section_id_mappings.at("assigned_states")){
-                memcpy(assigned_states, packets[i].raw + 8, sub_size);
+                size_t linear_index = index / sizeof(float);
+                size_t i1 = linear_index / STATE_LEN;
+                size_t i2 = linear_index % STATE_LEN;
+                memcpy(&assigned_states[i1][i2], packets[i].raw + 8, sub_size);
+                index+=sub_size;
             }
             if(id == yaml_section_id_mappings.at("num_states_per_estimator")){
                 memcpy(num_states_per_estimator, packets[i].raw + 8, sub_size);
@@ -176,11 +183,13 @@ struct Config {
             if(id==yaml_section_id_mappings.at("governor_types")){
                 memcpy(governor_types, packets[i].raw + 8, sub_size);
             }
-            if(id==yaml_section_id_mappings.at("chassis_drive_conversion_factors")){
-                memcpy(chassis_drive_conversion_factors, packets[i].raw + 8, sub_size);
+            if(id==yaml_section_id_mappings.at("drive_conversion_factors")){
+                memcpy(drive_conversion_factors, packets[i].raw + 8, sub_size);
             }
             if(id==yaml_section_id_mappings.at("estimators")){
                 memcpy(estimators, packets[i].raw + 8, sub_size);
+                Serial.println(sub_size);
+                Serial.println(estimators[0]);
             }
             if(id==yaml_section_id_mappings.at("odom_values")){
                 memcpy(odom_values, packets[i].raw + 8, sub_size);
@@ -188,9 +197,24 @@ struct Config {
             if(id==yaml_section_id_mappings.at("switcher_values")){
                 memcpy(switcher_values, packets[i].raw + 8, sub_size);
             }
+            if(id==yaml_section_id_mappings.at("num_sensors")){
+                memcpy(&num_sensors, packets[i].raw + 8, sub_size);
+            }
+            if(id==yaml_section_id_mappings.at("encoder_offsets")){
+                memcpy(encoder_offsets, packets[i].raw + 8, sub_size);
+            }
         }
 
-        // Serial.println(j);
+        // for(int i = 0; i < NUM_ESTIMATORS; i++){
+        //     Serial.println(estimators[i]);
+        // }
+        for(int i = 0; i < NUM_MOTORS; i++){
+            for(int j = 0; j < STATE_LEN; j++){
+                Serial.print(kinematics_v[i][j]);
+                Serial.print("\t");
+            }
+        Serial.println();
+    }
     }
 
     void print() {

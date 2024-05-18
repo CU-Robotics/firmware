@@ -93,6 +93,7 @@ int main() {
         comms.ping();
         config_layer.process(comms.get_incoming_packet(), comms.get_outgoing_packet());
     }
+    config_layer.get_config_packets(config_packets, packet_subsection_sizes);
     config.fill_data(config_packets, packet_subsection_sizes);
     Serial.println("Configured!");
 
@@ -125,7 +126,15 @@ int main() {
     float controller_types[NUM_MOTORS][NUM_CONTROLLER_LEVELS] = { 0 };
     memcpy(controller_types, config.controller_types, sizeof(config.controller_types));
     
-    float chassis_pos_to_motor_error = config.chassis_drive_conversion_factors[1];
+    float chassis_pos_to_motor_error = config.drive_conversion_factors[1];
+
+    // for(int i = 0; i < NUM_ESTIMATORS; i++){
+    //     for(int j = 0; j < 9; j++){
+    //         Serial.print(assigned_states[i][j]);
+    //         Serial.print("\t");
+    //     }
+    //     Serial.println();
+    // }
 
     //set reference limits in the reference governor
     state.set_reference_limits(set_reference_limits);
@@ -146,6 +155,8 @@ int main() {
     estimator_manager->assign_states(assigned_states);
    
     for(int i = 0; i < NUM_ESTIMATORS; i++){
+        Serial.printf("Init Estimator %d\n", config.estimators[i]);
+
         if(config.estimators[i] != 0){
             estimator_manager->init_estimator(config.estimators[i], (int) num_states_per_estimator[i]);
         }
@@ -256,6 +267,14 @@ int main() {
         controller_manager->step(temp_reference, temp_state, temp_micro_state, kinematics_pos, kinematics_vel, motor_inputs);
 
         //write to motors
+        // Serial.println("Motors:");
+
+        // for(int i = 0; i < 16; i++){
+        //     Serial.printf("%f, ", motor_inputs[i]);
+        //     if(i == 7) Serial.println();
+        // }
+
+
         for (int j = 0; j < 2; j++) {
             for (int i = 0; i < NUM_MOTORS_PER_BUS; i++) {
                 can.write_motor_norm(j, i + 1, C620, motor_inputs[(j * NUM_MOTORS_PER_BUS) + i]);
@@ -284,6 +303,16 @@ int main() {
             // TODO: Reset all controller integrators here
             can.zero();
         }
+
+        for(int i = 0; i < 6; i++){
+            for(int j = 0; j < 3; j++){
+                Serial.print(temp_state[i][0]);
+                Serial.print(", ");
+            }
+        }
+
+        Serial.println();
+        Serial.println();
         
         // LED heartbeat -- linked to loop count to reveal slowdowns and freezes.
         loopc % (int)(1E3 / float(HEARTBEAT_FREQ)) < (int)(1E3 / float(5 * HEARTBEAT_FREQ)) ? digitalWrite(13, HIGH) : digitalWrite(13, LOW);

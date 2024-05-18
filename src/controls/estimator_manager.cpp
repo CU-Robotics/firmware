@@ -38,21 +38,7 @@ EstimatorManager::EstimatorManager(CANData* data, Config c_data) {
 
 void EstimatorManager::init_estimator(int estimator_id, int num_states) {
     switch (estimator_id) {
-    case 1: // Gimbal Estimator
-        // values_gimbal[0] = -0.1;       // yaw encoder offset
-        // values_gimbal[1] = -2.154;       // pitch encoder offset
-        // values_gimbal[2] = 0;       // default yaw starting angle (starting point for imu integration)
-        // values_gimbal[3] = 1.91986; // default pitch starting angle (starting point for imu integration)
-        // values_gimbal[4] = 0;       // default roll starting angle (starting point for imu integration)
-        // values_gimbal[5] = 0;       // default chassis pitch angle
-        // // Stable gravity vector {x,y,z}
-        // values_gimbal[6] = -0.05664;  // x
-        // values_gimbal[7] = 2.057767;  // y
-        // values_gimbal[8] = 5.544132; // z
-        // values_gimbal[9] = 1.91986;   // Pitch angle at given gravity vector
-        // values_gimbal[10] = 0.034925; // odom wheel radius
-        // values_gimbal[11] = .08035; // odom wheel offset x
-        // values_gimbal[12] = .08035; // odom wheel offset y
+    case 1: 
         estimators[num_estimators] = new GimbalEstimator(config_data,&rev_sensors[0],&rev_sensors[1],&rev_sensors[2], &buff_sensors[0], &buff_sensors[1], &icm_sensors[0], can_data, num_states);
         break;
     case 2:
@@ -77,6 +63,16 @@ void EstimatorManager::init_estimator(int estimator_id, int num_states) {
 void EstimatorManager::step(float macro_outputs[STATE_LEN][3], float micro_outputs[NUM_MOTORS][MICRO_STATE_LEN]) {
     // clear output
     clear_outputs(macro_outputs, micro_outputs);
+
+    // for(int i = 0; i < NUM_ESTIMATORS; i++){
+    //     for(int j = 0; j < 9; j++){
+    //         Serial.print(applied_states[i][j]);
+    //         Serial.print("\t");
+    //     }
+    //     Serial.println();
+    // }
+
+    // Serial.printf("Num estimators: %d\n", num_estimators);
     for (int i = 0; i < num_estimators; i++) {
         int num_states = estimators[i]->get_num_states();
         float macro_states[STATE_LEN][3] = { 0 };

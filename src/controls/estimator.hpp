@@ -293,6 +293,7 @@ public:
         num_states = n; // number of estimated states
         YAW_ENCODER_OFFSET = config_data.encoder_offsets[0];
         PITCH_ENCODER_OFFSET = config_data.encoder_offsets[1];
+
         yaw_angle = config_data.default_gimbal_starting_angles[0];
         pitch_angle = config_data.default_gimbal_starting_angles[1];
         roll_angle = config_data.default_gimbal_starting_angles[2];
@@ -319,6 +320,8 @@ public:
     /// @brief calculate estimated states and add to output array
     /// @param output output array to add estimated states to
     void step_states(float output[STATE_LEN][3]) override {
+        // Serial.printf("Pitch encoder offset: %f\n" ,PITCH_ENCODER_OFFSET);
+
         float pitch_enc_angle = (-buff_enc_pitch->get_angle()) - PITCH_ENCODER_OFFSET;
         while (pitch_enc_angle >= PI)
             pitch_enc_angle -= 2 * PI;
