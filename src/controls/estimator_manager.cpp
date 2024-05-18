@@ -41,6 +41,7 @@ void EstimatorManager::init_estimator(int estimator_id, int num_states) {
     case 1: 
         estimators[num_estimators] = new GimbalEstimator(config_data,&rev_sensors[0],&rev_sensors[1],&rev_sensors[2], &buff_sensors[0], &buff_sensors[1], &icm_sensors[0], can_data, num_states);
         break;
+
     case 2:
         estimators[num_estimators] = new FlyWheelEstimator(can_data, num_states);
         break;
