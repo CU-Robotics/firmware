@@ -633,10 +633,10 @@ private:
     float tof_scale = 0;
 public:
     /// @brief make new barrel switcher estimator and set can_data pointer and num_states
+    /// @param config config data from yaml
     /// @param c can data pointer from EstimatorManager
     /// @param _num_states number of states this estimator estimates
     /// @param tof time of flight sensor object
-    /// @param values array of values to set tof sensor offset and scale
     SwitcherEstimator(Config config,CANData* c,TOFSensor* tof, int _num_states) {
         can_data = c;
         num_states = _num_states;

@@ -306,7 +306,7 @@ int main() {
         // Keep the loop running at the desired rate
         //loop_timer.delay_micros((int)(1E6 / (float)(LOOP_FREQ)));
         float dt = stall_timer.delta();
-        if (dt > 0.002) Serial.println("loop slow af (this is bad)");
+        if (dt > 0.002) Serial.printf("Slow loop with dt: %f\n", dt);
     }
     return 0;
 }

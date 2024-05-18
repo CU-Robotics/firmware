@@ -39,7 +39,7 @@ static const std::map<std::string, u_int8_t> yaml_section_id_mappings = {
     {"odom_values", 22}
 };
 
-
+/// @brief Handle seeking and reading configuration packets coming from khadas
 class ConfigLayer {
 private:
     /// @brief array to save config packets
@@ -60,6 +60,7 @@ private:
     /// @brief array to store number of subsections per YAML section
     uint8_t subsec_sizes[MAX_CONFIG_PACKETS] = { 0 }; 
 
+    /// @brief size counter
     int index = 0;
 
 public:
@@ -75,6 +76,9 @@ public:
     /// @return the configured flag
     bool is_configured() { return configured; }
 
+    /// @brief get config and size arrays
+    /// @param packets return array of packets
+    /// @param sizes return array of sizes
     void get_config_packets(CommsPacket packets[MAX_CONFIG_PACKETS], uint8_t sizes[MAX_CONFIG_PACKETS]){
         memcpy(packets, config_packets, sizeof(CommsPacket) * MAX_CONFIG_PACKETS);
         memcpy(sizes, subsec_sizes, sizeof(uint8_t) * MAX_CONFIG_PACKETS);

@@ -61,6 +61,7 @@ private:
 public:
     /// @brief initialize sensors and set can_data pointer
     /// @param data Struct storing all of can data so we don't have to pass around rmCAN itself.
+    /// @param c_data Struct storing all of the config data.
     EstimatorManager(CANData* data, Config c_data);
 
     /// @brief Free all dynamically allocated memory and end SPI
