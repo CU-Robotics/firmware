@@ -64,21 +64,11 @@ void EstimatorManager::step(float macro_outputs[STATE_LEN][3], float micro_outpu
     // clear output
     clear_outputs(macro_outputs, micro_outputs);
 
-    // for(int i = 0; i < NUM_ESTIMATORS; i++){
-    //     for(int j = 0; j < 9; j++){
-    //         Serial.print(applied_states[i][j]);
-    //         Serial.print("\t");
-    //     }
-    //     Serial.println();
-    // }
-
-    // Serial.printf("Num estimators: %d\n", num_estimators);
     for (int i = 0; i < num_estimators; i++) {
         int num_states = estimators[i]->get_num_states();
         float macro_states[STATE_LEN][3] = { 0 };
         float micro_states[NUM_MOTORS][MICRO_STATE_LEN] = { 0 };
 
-        // memset(micro_states, 0, NUM_MOTORS*MICRO_STATE_LEN * 4);
         if (!estimators[i]->micro_estimator) {
             estimators[i]->step_states(macro_states);
             for (int j = 0; j < num_states; j++) {
@@ -87,7 +77,6 @@ void EstimatorManager::step(float macro_outputs[STATE_LEN][3], float micro_outpu
             }
         } else {
             estimators[i]->step_states(micro_states);
-            // Serial.println(micro_states[9][0]);
             for (int j = 0; j < num_states; j++) {
                 for (int k = 0; k < MICRO_STATE_LEN; k++) {
                     micro_outputs[applied_states[i][j]][k] = micro_outputs[applied_states[i][j]][k] + micro_states[j][k];

@@ -128,14 +128,6 @@ int main() {
     
     float chassis_pos_to_motor_error = config.drive_conversion_factors[1];
 
-    // for(int i = 0; i < NUM_ESTIMATORS; i++){
-    //     for(int j = 0; j < 9; j++){
-    //         Serial.print(assigned_states[i][j]);
-    //         Serial.print("\t");
-    //     }
-    //     Serial.println();
-    // }
-
     //set reference limits in the reference governor
     state.set_reference_limits(set_reference_limits);
 
@@ -266,14 +258,6 @@ int main() {
         //generate motor outputs from controls
         controller_manager->step(temp_reference, temp_state, temp_micro_state, kinematics_pos, kinematics_vel, motor_inputs);
 
-        //write to motors
-        // Serial.println("Motors:");
-
-        // for(int i = 0; i < 16; i++){
-        //     Serial.printf("%f, ", motor_inputs[i]);
-        //     if(i == 7) Serial.println();
-        // }
-
 
         for (int j = 0; j < 2; j++) {
             for (int i = 0; i < NUM_MOTORS_PER_BUS; i++) {
@@ -317,8 +301,6 @@ int main() {
         // LED heartbeat -- linked to loop count to reveal slowdowns and freezes.
         loopc % (int)(1E3 / float(HEARTBEAT_FREQ)) < (int)(1E3 / float(5 * HEARTBEAT_FREQ)) ? digitalWrite(13, HIGH) : digitalWrite(13, LOW);
         loopc++;
-
-        // config_layer.is_configured() ? digitalWrite(13, HIGH) : digitalWrite(13, LOW);
 
         // Keep the loop running at the desired rate
         //loop_timer.delay_micros((int)(1E6 / (float)(LOOP_FREQ)));

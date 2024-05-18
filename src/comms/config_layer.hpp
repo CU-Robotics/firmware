@@ -4,7 +4,6 @@
 #include "usb_hid.hpp"
 #include "../controls/state.hpp"
 #include "../controls/controller_manager.hpp"
-// #include "../controls/estimator_manager.hpp"
 
 #include <map>
 #include <string>
@@ -82,33 +81,61 @@ public:
     }
 };
 
+/// @brief struct to hold configuration data
 struct Config {
+    //check yaml for more details on values
+
+    /// @brief number of motors
     float num_motors;
+    /// @brief number of gains
     float num_gains;
+    /// @brief number of controller levels
     float num_controller_levels;
-    float encoder_offsets[16];  
+    /// @brief Encoder offsets for each encoder
+    float encoder_offsets[16]; 
+    /// @brief number of sensors 
     float num_sensors[16];
+    /// @brief position kinematics matrix
     float kinematics_p[NUM_MOTORS][STATE_LEN];
+    /// @brief velocity kinematics matrix
     float kinematics_v[NUM_MOTORS][STATE_LEN];
 
+    /// @brief gains matrix
     float gains[NUM_MOTORS][NUM_CONTROLLER_LEVELS][NUM_GAINS];
+    /// @brief assigned states matrix
     float assigned_states[NUM_ESTIMATORS][STATE_LEN];
+    /// @brief number of states per estimator
     float num_states_per_estimator[NUM_ESTIMATORS];
+    /// @brief reference limits matrix
     float set_reference_limits[STATE_LEN][3][2];
 
+    /// @brief governor types
     float estimators[NUM_ESTIMATORS];
 
+    /// @brief gyro readings of imu when you spin yaw
     float yaw_axis_vector[3];
+    /// @brief gyro readings of imu when you spin pitch
     float pitch_axis_vector[3];
+    /// @brief default gimbal starting angles
     float default_gimbal_starting_angles[3];
+    /// @brief default chassis starting angles
     float default_chassis_starting_angles[3];
+    /// @brief controller types
     float controller_types[NUM_MOTORS][NUM_CONTROLLER_LEVELS];
+    /// @brief values for chassis kinematics/dynamics
     float drive_conversion_factors[2];
+    /// @brief what pitch angle we have when the the imu calibrates
     float pitch_angle_at_yaw_imu_calibration;
+    /// @brief governor types
     float governor_types[STATE_LEN];
+    /// @brief odom placement values
     float odom_values[3];
+    /// @brief switcher placement values
     float switcher_values[2];
 
+    /// @brief fill all config data from packets
+    /// @param packets CommsPacket array filled with data from yaml
+    /// @param sizes Number of sections for each section
     void fill_data(CommsPacket packets[MAX_CONFIG_PACKETS], uint8_t sizes[MAX_CONFIG_PACKETS]) {
         for(int i = 0; i < MAX_CONFIG_PACKETS; i++){
             uint8_t id = packets[i].get_id();
@@ -204,33 +231,10 @@ struct Config {
                 memcpy(encoder_offsets, packets[i].raw + 8, sub_size);
             }
         }
-
-        // for(int i = 0; i < NUM_ESTIMATORS; i++){
-        //     Serial.println(estimators[i]);
-        // }
-        for(int i = 0; i < NUM_MOTORS; i++){
-            for(int j = 0; j < STATE_LEN; j++){
-                Serial.print(kinematics_v[i][j]);
-                Serial.print("\t");
-            }
-        Serial.println();
-    }
-    }
-
-    void print() {
-        Serial.println("Config data:");
-
-        for(int i = 0; i < STATE_LEN; i++){
-            for(int j = 0; j < 3; j++){
-                for(int k = 0; k < 2; k++){
-                    Serial.printf("set_reference_limits[%d][%d][%d]: %f\n", i, j, k, set_reference_limits[i][j][k]);
-                }
-            }
-        }
-
     }
 
     private: 
+        /// @brief keep track of past index for when there are multiple packets for a section
         uint16_t index = 0;
 
 };
