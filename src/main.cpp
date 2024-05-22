@@ -151,7 +151,7 @@ int main() {
         Serial.printf("Init Estimator %f\n", config.estimators[i]);
 
         if(config.estimators[i] != 0){
-            estimator_manager->init_estimator((int) config.estimators[i], (int) num_states_per_estimator[i]);
+            estimator_manager->init_estimator(config.estimators[i], (int) num_states_per_estimator[i]);
         }
     }
 
