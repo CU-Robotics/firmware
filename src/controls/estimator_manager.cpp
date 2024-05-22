@@ -54,6 +54,9 @@ void EstimatorManager::init_estimator(int estimator_id, int num_states) {
     case 5:
         estimators[num_estimators] = new SwitcherEstimator(config_data, can_data, &tof_sensors[0],num_states);
         break;
+    case 6:
+        estimators[num_estimators] = new GimbalEstimatorNoOdom(config_data, &buff_sensors[0], &buff_sensors[1], &icm_sensors[0], can_data, num_states);
+        break;
     default:
         break;
     }
@@ -109,12 +112,18 @@ void EstimatorManager::assign_states(float as[NUM_ESTIMATORS][STATE_LEN]) {
 }
 
 void EstimatorManager::read_sensors() {
-    buff_sensors[0].read();
-    buff_sensors[1].read();
-    icm_sensors[0].read();
-    rev_sensors[0].read();
-    rev_sensors[1].read();
-    rev_sensors[2].read();
+    //buff enc loop
+    for(int i = 0;i < config_data.num_sensors[0];i++){
+        buff_sensors[i].read();
+    }
+    //imu loop
+    for(int i = 0;i < config_data.num_sensors[1];i++){
+        icm_sensors[i].read();
+    }
+    //rev enc loop
+    for(int i = 0;i < config_data.num_sensors[2];i++){
+        rev_sensors[i].read();
+    }
 }
 
 void EstimatorManager::calibrate_imus() {

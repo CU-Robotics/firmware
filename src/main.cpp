@@ -296,8 +296,8 @@ int main() {
             }
         }
 
-        Serial.println();
-        Serial.println();
+        // Serial.println();
+        // Serial.println();
         
         // LED heartbeat -- linked to loop count to reveal slowdowns and freezes.
         loopc % (int)(1E3 / float(HEARTBEAT_FREQ)) < (int)(1E3 / float(5 * HEARTBEAT_FREQ)) ? digitalWrite(13, HIGH) : digitalWrite(13, LOW);
