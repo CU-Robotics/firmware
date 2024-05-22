@@ -146,11 +146,12 @@ int main() {
     // initalize estimators
     estimator_manager->assign_states(assigned_states);
    
+
     for(int i = 0; i < NUM_ESTIMATORS; i++){
-        Serial.printf("Init Estimator %d\n", config.estimators[i]);
+        Serial.printf("Init Estimator %f\n", config.estimators[i]);
 
         if(config.estimators[i] != 0){
-            estimator_manager->init_estimator(config.estimators[i], (int) num_states_per_estimator[i]);
+            estimator_manager->init_estimator((int) config.estimators[i], (int) num_states_per_estimator[i]);
         }
     }
 
@@ -289,16 +290,15 @@ int main() {
             can.zero();
         }
 
-        for(int i = 0; i < 6; i++){
-            for(int j = 0; j < 3; j++){
-                Serial.print(temp_state[i][0]);
-                Serial.print(", ");
-            }
-        }
+        // for (int i = 3; i < 5; i++) {
+        //     Serial.printf("[");
+        //     for (int j = 0; j < 2; j++) {
+        //         Serial.printf("%f ,", temp_state[i][j]);
+        //     }
+        //     Serial.print("] ");
+        // }
+        // Serial.println();
 
-        // Serial.println();
-        // Serial.println();
-        
         // LED heartbeat -- linked to loop count to reveal slowdowns and freezes.
         loopc % (int)(1E3 / float(HEARTBEAT_FREQ)) < (int)(1E3 / float(5 * HEARTBEAT_FREQ)) ? digitalWrite(13, HIGH) : digitalWrite(13, LOW);
         loopc++;

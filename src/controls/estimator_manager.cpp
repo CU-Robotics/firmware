@@ -13,20 +13,29 @@ EstimatorManager::EstimatorManager(CANData* data, Config c_data) {
     SPI.begin();
     Serial.println("SPI Started");
 
+        Serial.printf("num buff enc: %f\n", c_data.num_sensors[0]);
+
     //buff enc loop
     for(int i = 0;i < c_data.num_sensors[0];i++){
         //yaw buff enc - 1 is the same value as the pitch enc
         buff_sensors[i].init(YAW_BUFF_CS-i);
     }
     //imu loop
-    for(int i = 0;i < c_data.num_sensors[1];i++){
+    Serial.printf("num icm imus: %f\n", c_data.num_sensors[1]);
+    for(int i = 0; i < c_data.num_sensors[1];i++){
         icm_sensors[i].init(icm_sensors[i].CommunicationProtocol::SPI);
         icm_sensors[i].set_gyro_range(4000);
     }
+
+    // icm_sensors[0].init(icm_sensors[0].CommunicationProtocol::SPI);
+    // icm_sensors[0].set_gyro_range(4000);
+
+    Serial.printf("num rev enc: %f\n", c_data.num_sensors[2]);
     //rev enc loop
     for(int i = 0;i < c_data.num_sensors[2];i++){
         rev_sensors[i].init(REV_ENC_PIN1+i,true);
     }
+    Serial.printf("num tof sensors: %f\n", c_data.num_sensors[3]);
     //time of flight sensor loop
     for(int i = 0;i < c_data.num_sensors[3];i++){
         tof_sensors[i].init();
@@ -55,6 +64,7 @@ void EstimatorManager::init_estimator(int estimator_id, int num_states) {
         estimators[num_estimators] = new SwitcherEstimator(config_data, can_data, &tof_sensors[0],num_states);
         break;
     case 6:
+    
         estimators[num_estimators] = new GimbalEstimatorNoOdom(config_data, &buff_sensors[0], &buff_sensors[1], &icm_sensors[0], can_data, num_states);
         break;
     default:

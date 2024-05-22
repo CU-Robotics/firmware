@@ -419,7 +419,7 @@ public:
         global_roll_velocity = __vectorProduct(roll_axis_global, raw_omega_vector, 3);
         // position integration
         dt = time.delta();
-        if (dt > .002)
+        if (dt > .1)
             dt = 0; // first dt loop generates huge time so check for that
         yaw_angle += current_yaw_velocity * (dt);
         pitch_angle += current_pitch_velocity * (dt);
@@ -762,6 +762,7 @@ public:
 
         // gets the velocity data from the imu and uses the gravity vector to calculate the yaw velocity
         float raw_omega_vector[3] = { icm_imu->get_gyro_X(), icm_imu->get_gyro_Y(), icm_imu->get_gyro_Z() };
+        // Serial.printf("X: %f, Y: %f, Z: %f\n", raw_omega_vector[0], raw_omega_vector[1], raw_omega_vector[2]);
         // *Note: X is pitch Y is Roll Z is Yaw, when level
         // positive pitch angle is up, positive roll angle is right(robot pov), positive yaw is left(robot pov)
 

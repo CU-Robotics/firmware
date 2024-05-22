@@ -220,7 +220,9 @@ struct Config {
             if(id==yaml_section_id_mappings.at("estimators")){
                 memcpy(estimators, packets[i].raw + 8, sub_size);
                 Serial.println(sub_size);
-                Serial.println(estimators[0]);
+                for(int i = 0; i < NUM_ESTIMATORS; i++){
+                    Serial.println(estimators[i]);
+                }
             }
             if(id==yaml_section_id_mappings.at("odom_values")){
                 memcpy(odom_values, packets[i].raw + 8, sub_size);
