@@ -122,18 +122,25 @@ void EstimatorManager::assign_states(float as[NUM_ESTIMATORS][STATE_LEN]) {
 }
 
 void EstimatorManager::read_sensors() {
-    //buff enc loop
-    for(int i = 0;i < config_data.num_sensors[0];i++){
-        buff_sensors[i].read();
-    }
-    //imu loop
-    for(int i = 0;i < config_data.num_sensors[1];i++){
-        icm_sensors[i].read();
-    }
-    //rev enc loop
-    for(int i = 0;i < config_data.num_sensors[2];i++){
-        rev_sensors[i].read();
-    }
+    // //buff enc loop
+    // for(int i = 0;i < config_data.num_sensors[0];i++){
+    //     buff_sensors[i].read();
+    // }
+    // //imu loop
+    // for(int i = 0;i < config_data.num_sensors[1];i++){
+    //     icm_sensors[i].read();
+    // }
+    // //rev enc loop
+    // for(int i = 0;i < config_data.num_sensors[2];i++){
+    //     rev_sensors[i].read();
+    // }
+
+    buff_sensors[0].read();
+    buff_sensors[1].read();
+    icm_sensors[0].read();
+    rev_sensors[0].read();
+    rev_sensors[1].read();
+    rev_sensors[2].read();
 }
 
 void EstimatorManager::calibrate_imus() {
