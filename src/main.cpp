@@ -290,14 +290,14 @@ int main() {
             can.zero();
         }
 
-        // for (int i = 3; i < 5; i++) {
-        //     Serial.printf("[");
-        //     for (int j = 0; j < 2; j++) {
-        //         Serial.printf("%f ,", temp_state[i][j]);
-        //     }
-        //     Serial.print("] ");
-        // }
-        // Serial.println();
+        for (int i = 3; i < 5; i++) {
+            Serial.printf("[");
+            for (int j = 0; j < 2; j++) {
+                Serial.printf("%f ,", temp_state[i][j]);
+            }
+            Serial.print("] ");
+        }
+        Serial.println();
 
         // LED heartbeat -- linked to loop count to reveal slowdowns and freezes.
         loopc % (int)(1E3 / float(HEARTBEAT_FREQ)) < (int)(1E3 / float(5 * HEARTBEAT_FREQ)) ? digitalWrite(13, HIGH) : digitalWrite(13, LOW);
