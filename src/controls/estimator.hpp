@@ -419,8 +419,15 @@ public:
         global_roll_velocity = __vectorProduct(roll_axis_global, raw_omega_vector, 3);
         // position integration
         dt = time.delta();
-        if (dt > .002)
-            dt = 0; // first dt loop generates huge time so check for that
+        
+        // chassis_angle = yaw_angle - yaw_enc_angle;
+        chassis_angle = -yaw_enc_angle;
+        if(count1 == 0){
+            initial_chassis_angle = chassis_angle;
+            prev_chassis_angle = chassis_angle;
+            count1++;
+            dt = 0;
+        }
         yaw_angle += current_yaw_velocity * (dt);
         pitch_angle += current_pitch_velocity * (dt);
         roll_angle += current_roll_velocity * (dt);
@@ -429,13 +436,6 @@ public:
         global_pitch_angle += -global_pitch_velocity * (dt);
         global_roll_angle += -global_roll_velocity * (dt);
 
-        // chassis_angle = yaw_angle - yaw_enc_angle;
-        chassis_angle = -yaw_enc_angle;
-        if(count1 == 0){
-            initial_chassis_angle = chassis_angle;
-            prev_chassis_angle = chassis_angle;
-            count1++;
-        }
 
         while (yaw_angle >= PI)
             yaw_angle -= 2 * PI;

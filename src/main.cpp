@@ -289,11 +289,12 @@ int main() {
             can.zero();
         }
 
-        for(int i = 0; i < 6; i++){
-            for(int j = 0; j < 3; j++){
-                Serial.print(temp_state[i][0]);
-                Serial.print(", ");
+        for (int i = 3; i < 5; i++) {
+            Serial.printf("[");
+            for (int j = 0; j < 2; j++) {
+                Serial.printf("%f ,", temp_state[i][j]);
             }
+            Serial.print("] ");
         }
 
         Serial.println();
@@ -304,7 +305,7 @@ int main() {
         loopc++;
 
         // Keep the loop running at the desired rate
-        //loop_timer.delay_micros((int)(1E6 / (float)(LOOP_FREQ)));
+        loop_timer.delay_micros((int)(1E6 / (float)(LOOP_FREQ)));
         float dt = stall_timer.delta();
         if (dt > 0.002) Serial.printf("Slow loop with dt: %f\n", dt);
     }
