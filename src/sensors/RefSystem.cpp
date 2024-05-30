@@ -282,7 +282,7 @@ bool RefSystem::read_frame_tail(HardwareSerial* serial, uint8_t raw_buffer[REF_M
     frame.CRC = (raw_buffer[buffer_index + 1] << 8) | raw_buffer[buffer_index + 0];
 
     if (frame.CRC != generateCRC16(raw_buffer, buffer_index)) {
-        Serial.println("Tail failed CRC");
+        // Serial.println("Tail failed CRC");
         packets_failed++;
         return false;
     }
@@ -294,7 +294,7 @@ bool RefSystem::read_frame_tail(HardwareSerial* serial, uint8_t raw_buffer[REF_M
 }
 
 void RefSystem::set_ref_data(Frame& frame, uint8_t raw_buffer[REF_MAX_PACKET_SIZE * 2]) {
-    Serial.printf("Received frame with ID: %04X\n", *reinterpret_cast<uint16_t*>(raw_buffer + 5));
+    // Serial.printf("Received frame with ID: %04X\n", *reinterpret_cast<uint16_t*>(raw_buffer + 5));
 
     // Copy the header
     frame.header.SOF = raw_buffer[0];

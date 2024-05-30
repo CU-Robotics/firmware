@@ -9,7 +9,7 @@ void State::get_reference(float reference[STATE_LEN][3]) {
     memcpy(reference, this->reference, sizeof(this->reference));
 }
 
-void State::step_reference(float ungoverned_reference[STATE_LEN][3], int governor_type[STATE_LEN]) {
+void State::step_reference(float ungoverned_reference[STATE_LEN][3], float governor_type[STATE_LEN]) {
     float threshold = 0.0005;
     float dt = governor_timer.delta();
     if (dt > .002)
@@ -31,7 +31,7 @@ void State::step_reference(float ungoverned_reference[STATE_LEN][3], int governo
             }
         }
 
-        if (governor_type[n] == 1) { // position based governor
+        if ((int) governor_type[n] == 1) { // position based governor
             // TODO: Implement wrap angle
             float pos_error = ungoverned_reference[n][0] - reference[n][0];
             if (pos_error > PI && is_wrap) pos_error -= 2 * PI;
@@ -71,7 +71,7 @@ void State::step_reference(float ungoverned_reference[STATE_LEN][3], int governo
             reference[n][1] += reference[n][2] * dt;
             reference[n][0] += reference[n][1] * dt;
 
-        } else if (governor_type[n] == 2) { // velocity based governor
+        } else if ((int) governor_type[n] == 2) { // velocity based governor
             float vel_error = ungoverned_reference[n][1] - reference[n][1];
             // check which direction the target is and set acceleration
             // if the velocity error is less the max acceleration 
