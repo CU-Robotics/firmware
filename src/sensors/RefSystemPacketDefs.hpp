@@ -1510,4 +1510,99 @@ struct SmallMapRobotData {
     }
 };
 
+/// @brief Encompassing all read-able packet structs of the Ref System
+struct RefData {
+    /// @brief Competition status data
+    GameStatus game_status{};
+    /// @brief Competition result data
+    GameResult game_result{};
+    /// @brief Robot health data
+    GameRobotHP game_robot_hp{};
+    /// @brief Site event data
+    EventData event_data{};
+    /// @brief Action identifier data of the Official Projectile Supplier
+    ProjectileSupplierStatus projectile_supplier_status{};
+    /// @brief Referee warning data
+    RefereeWarning referee_warning{};
+    /// @brief Dart launching data
+    DartStatus dart_status{};
+    /// @brief Robot performance system data
+    RobotPerformance robot_performance{};
+    /// @brief Real-time chassis power and barrel heat data
+    RobotPowerHeat robot_power_heat{};
+    /// @brief Robot position data
+    RobotPosition robot_position{};
+    /// @brief Robot buff data
+    RobotBuff robot_buff{};
+    /// @brief Air support time data
+    AirSupportStatus air_support_status{};
+    /// @brief Damage status data
+    DamageStatus damage_status{};
+    /// @brief Real-time launching data
+    LaunchingStatus launching_status{};
+    /// @brief Projectile allowance data
+    ProjectileAllowance projectile_allowance{};
+    /// @brief RFID status data
+    RFIDStatus rfid_status{};
+    /// @brief Dart command data
+    DartCommand dart_command{};
+    /// @brief Ground robot positions data
+    GroundRobotPositions ground_robot_positions{};
+    /// @brief Radar progress data
+    RadarProgress radar_progress{};
+    /// @brief Sentry decision data
+    SentryDecision sentry_decision{};
+    /// @brief Radar decision data
+    RadarDecision radar_decision{};
+    /// @brief Robot interaction data
+    RobotInteraction robot_interaction{};
+    /// @brief Data about the interaction between the Custom Controller and robots
+    CustomControllerRobot custom_controller_robot{};
+    /// @brief Player client's small map interaction data
+    SmallMapCommand small_map_command{};
+    /// @brief Keyboard, mouse, and remote control data
+    KBMInteraction kbm_interaction{};
+    /// @brief Radar data received by player clients' Small Maps
+    SmallMapRadarPosition small_map_radar_position{};
+    /// @brief Data about the interaction between the Custom Controller and player clients
+    CustomControllerClient custom_controller_client{};
+    /// @brief Sentry data received by player clients' Small Maps
+    SmallMapSentryCommand small_map_sentry_command{};
+    /// @brief Robot data received by player clients' Small Map
+    SmallMapRobotData small_map_robot_data{};
+};
+
+/// @brief Game Staus packet offset for comms
+constexpr uint32_t REF_COMMS_GAME_STATUS_OFFSET = 0;
+/// @brief Game Result packet offset for comms
+constexpr uint32_t REF_COMMS_GAME_RESULT_OFFSET = 11;
+/// @brief Game Robot HP packet offset for comms
+constexpr uint32_t REF_COMMS_GAME_ROBOT_HP_OFFSET = 12;
+/// @brief Event Data packet offset for comms
+constexpr uint32_t REF_COMMS_EVENT_DATE_OFFSET = 44;
+/// @brief Projectile Supplier Status packet offset for comms
+constexpr uint32_t REF_COMMS_PROJECTILE_SUPPLIER_STATUS_OFFSET = 48;
+/// @brief Referee Warning packet offset for comms
+constexpr uint32_t REF_COMMS_REFEREE_WARNING_OFFSET = 52;
+/// @brief Dart Status packet offset for comms
+constexpr uint32_t REF_COMMS_ROBOT_PERFORMANCE_OFFSET = 55;
+/// @brief Robot Power Heat packet offset for comms
+constexpr uint32_t REF_COMMS_ROBOT_POWER_HEAT_OFFSET = 68;
+/// @brief Robot Position packet offset for comms
+constexpr uint32_t REF_COMMS_ROBOT_POSITION_OFFSET = 84;
+/// @brief Robot Buff packet offset for comms
+constexpr uint32_t REF_COMMS_ROBOT_BUFF_OFFSET = 100;
+/// @brief Damage Status packet offset for comms
+constexpr uint32_t REF_COMMS_DAMAGE_STATUS_OFFSET = 106;
+/// @brief Launching Status packet offset for comms
+constexpr uint32_t REF_COMMS_LAUNCHING_STATUS_OFFSET = 107;
+/// @brief Projectile Allowance packet offset for comms
+constexpr uint32_t REF_COMMS_PROJECTILE_ALLOWANCE_OFFSET = 114;
+/// @brief RFID Status packet offset for comms
+constexpr uint32_t REF_COMMS_RFID_STATUS_OFFSET = 120;
+/// @brief KBM Interaction packet offset for comms
+constexpr uint32_t REF_COMMS_KBM_INTERACTION_OFFSET = 124;
+/// @brief End of the Ref Data packet for comms
+constexpr uint32_t REF_COMMS_END_OFFSET = 136;
+
 #endif // REF_SYSTEM_PACKET_DEFINITIONS_HPP

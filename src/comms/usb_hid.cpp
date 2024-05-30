@@ -38,8 +38,9 @@ void CommsPacket::set_sensor_data(SensorData* sensor_data) {
     memcpy(raw + TEENSY_PACKET_SENSOR_OFFSET, sensor_data->raw, sizeof(SensorData));
 }
 
-void CommsPacket::set_ref_data() {}
-
+void CommsPacket::set_ref_data(uint8_t ref_data[180]) {
+    memcpy(raw + TEENSY_PACKET_REF_OFFSET, ref_data, 180);
+}
 
 HIDLayer::HIDLayer() {}
 
