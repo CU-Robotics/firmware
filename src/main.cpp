@@ -250,17 +250,17 @@ int main() {
         state.get_reference(temp_reference);
 
         // Update the kinematics of x,y states, as the kinematics change when chassis angle changes
-        kinematics_vel[0][0] = cos(temp_state[2][2]) * chassis_pos_to_motor_error;
-        kinematics_vel[0][1] = -sin(temp_state[2][2]) * chassis_pos_to_motor_error;
+        kinematics_vel[0][0] = cos(-temp_state[2][0]) * chassis_pos_to_motor_error;
+        kinematics_vel[0][1] = -sin(-temp_state[2][0]) * chassis_pos_to_motor_error;
         // motor 2 back right
-        kinematics_vel[1][0] = -sin(temp_state[2][2]) * chassis_pos_to_motor_error;
-        kinematics_vel[1][1] = -cos(temp_state[2][2]) * chassis_pos_to_motor_error;
+        kinematics_vel[1][0] = -sin(-temp_state[2][0]) * chassis_pos_to_motor_error;
+        kinematics_vel[1][1] = -cos(-temp_state[2][0]) * chassis_pos_to_motor_error;
         // motor 3 back left
-        kinematics_vel[2][0] = -cos(temp_state[2][2]) * chassis_pos_to_motor_error;
-        kinematics_vel[2][1] = sin(temp_state[2][2]) * chassis_pos_to_motor_error;
+        kinematics_vel[2][0] = -cos(-temp_state[2][0]) * chassis_pos_to_motor_error;
+        kinematics_vel[2][1] = sin(-temp_state[2][0]) * chassis_pos_to_motor_error;
         // motor 4 front left
-        kinematics_vel[3][0] = sin(temp_state[2][2]) * chassis_pos_to_motor_error;
-        kinematics_vel[3][1] = cos(temp_state[2][2]) * chassis_pos_to_motor_error;
+        kinematics_vel[3][0] = sin(-temp_state[2][0]) * chassis_pos_to_motor_error;
+        kinematics_vel[3][1] = cos(-temp_state[2][0]) * chassis_pos_to_motor_error;
         //generate motor outputs from controls
         controller_manager->step(temp_reference, temp_state, temp_micro_state, kinematics_pos, kinematics_vel, motor_inputs);
 
