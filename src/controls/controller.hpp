@@ -272,10 +272,6 @@ private:
     /// @brief filter for calculating pid controller outputs
     PIDFilter pid;
 
-    float buffer_energy = 0;
-    float max_power = 60;
-    float last_ref_power = 0;
-
 public:
     /// @brief set controller level and make sure it's a low level controller
     /// @param _controller_level controller level(if it outputs a torque or a target micro state).
@@ -300,28 +296,8 @@ public:
         pid.K[0] = gains[0];
         pid.K[1] = gains[1];
         pid.K[2] = gains[2];
-
-        max_power = ref.ref_data.robot_performance.chassis_power_limit;
-        float power_draw = current_sensor.get_current() * 24;
-
-        buffer_energy += (max_power - power_draw) * dt;
-        buffer_energy = constrain(buffer_energy, 0, 60);
-
         float power_buffer = ref.ref_data.robot_power_heat.buffer_energy;
-        float ref_power = ref.ref_data.robot_power_heat.chassis_power;
-
-        Serial.printf("ref power: %f, power draw: %f, ref buffer: %f, dt: %f\n", ref_power, power_draw, power_buffer, dt);
-
-        if(last_ref_power == ref_power) {
-            // power_buffer = buffer_energy;
-        } else {
-            buffer_energy = power_buffer;
-        }
-        last_ref_power = ref_power;
-
         
-
-
         // Power limiting
         
         float power_limit_ratio = 1.0;
