@@ -117,6 +117,14 @@ void RefSystem::read() {
     }
     // vtm
 
+    if (vtm_success) {
+        set_ref_data(vtm_curr_frame, vtm_raw_buffer);
+        // reset flags
+        vtm_header_read = false;
+        vtm_command_ID_read = false;
+        vtm_data_read = false;
+    }
+
 }
 
 void RefSystem::write(uint8_t* packet, uint8_t length) {
