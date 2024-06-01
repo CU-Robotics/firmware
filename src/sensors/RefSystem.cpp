@@ -38,6 +38,15 @@ void RefSystem::read() {
     bool mcm_success = true;
     bool vtm_success = true;
 
+    if(failed_tail_reads > 10) {
+        failed_tail_reads = 0;
+        mcm_header_read = false;
+        mcm_command_ID_read = false;
+        mcm_data_read = false;
+        vtm_header_read = false;
+        vtm_command_ID_read = false;
+        vtm_data_read = false;
+    }
     // reset buffer and index if we are reading a new packet
     if (!mcm_header_read) {
         memset(mcm_raw_buffer, 0, REF_MAX_PACKET_SIZE);
@@ -77,6 +86,7 @@ void RefSystem::read() {
     if (mcm_success && !mcm_data_read) {
         mcm_success = read_frame_data(&MCM_SERIAL, mcm_raw_buffer, mcm_buffer_index, mcm_curr_frame);
         mcm_data_read = mcm_success;
+
     }
     // vtm
     if (vtm_success && !vtm_data_read) {
@@ -86,8 +96,12 @@ void RefSystem::read() {
 
     // read tail if all other parts of the frame have been read
     // mcm
-    if (mcm_success)
+    if (mcm_success){
         mcm_success = read_frame_tail(&MCM_SERIAL, mcm_raw_buffer, mcm_buffer_index, mcm_curr_frame);
+        if(!mcm_success) {
+            failed_tail_reads++;
+        } else failed_tail_reads = 0;
+    }
     // vtm
     if (vtm_success)
         vtm_success = read_frame_tail(&VTM_SERIAL, vtm_raw_buffer, vtm_buffer_index, vtm_curr_frame);
@@ -102,6 +116,7 @@ void RefSystem::read() {
         mcm_data_read = false;
     }
     // vtm
+
     if (vtm_success) {
         set_ref_data(vtm_curr_frame, vtm_raw_buffer);
         // reset flags
@@ -109,6 +124,7 @@ void RefSystem::read() {
         vtm_command_ID_read = false;
         vtm_data_read = false;
     }
+
 }
 
 void RefSystem::write(uint8_t* packet, uint8_t length) {
@@ -282,10 +298,11 @@ bool RefSystem::read_frame_tail(HardwareSerial* serial, uint8_t raw_buffer[REF_M
     frame.CRC = (raw_buffer[buffer_index + 1] << 8) | raw_buffer[buffer_index + 0];
 
     if (frame.CRC != generateCRC16(raw_buffer, buffer_index)) {
-        // Serial.println("Tail failed CRC");
+        Serial.println("Tail failed CRC");
         packets_failed++;
         return false;
     }
+
 
     // increment buffer index
     buffer_index = bytes_read;

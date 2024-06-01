@@ -21,6 +21,9 @@ public:
     /// @brief Reads the current from the ACS712 sensor
     /// @return The current read from the sensor in mA
     float read();
+    /// @brief gets the last read current (lowpass filtered) from the sensor
+    /// @return float current
+    inline float get_current() { return current; }
 
 private:
     /// @brief The pin to read current from
@@ -31,6 +34,13 @@ private:
 
     /// @brief The sensitivity of the sensor, taken from the datasheet
     const float m_sensitivity = 0.066f;
+
+    /// @brief The current read from the sensor
+    float current = 0;
+    /// @brief The old current read from the sensor
+    float old_current = 0;
 };
+
+extern ACS712 current_sensor;
 
 #endif // ACS712_CURRENT_SENSOR_HPP

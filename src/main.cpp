@@ -10,6 +10,7 @@
 #include "comms/config_layer.hpp"
 #include "sensors/RefSystem.hpp"
 #include "sensors/d200.hpp"
+#include "sensors/ACS712.hpp"
 
 // Loop constants
 #define LOOP_FREQ 1000
@@ -23,6 +24,8 @@ HIDLayer comms;
 
 D200LD14P lidar1(&Serial4, 0);
 D200LD14P lidar2(&Serial5, 1);
+
+ACS712 current_sensor;
 
 ConfigLayer config_layer;
 Config config;
@@ -178,6 +181,8 @@ int main() {
         can.read();
         dr16.read();
         ref.read();
+        current_sensor.read();
+
         
         //handle read/write
         comms.ping();
@@ -256,7 +261,6 @@ int main() {
         // motor 4 front left
         kinematics_vel[3][0] = sin(-temp_state[2][0]) * chassis_pos_to_motor_error;
         kinematics_vel[3][1] = cos(-temp_state[2][0]) * chassis_pos_to_motor_error;
-
         //generate motor outputs from controls
         controller_manager->step(temp_reference, temp_state, temp_micro_state, kinematics_pos, kinematics_vel, motor_inputs);
 
@@ -269,6 +273,7 @@ int main() {
             }
         }
 
+        // Serial.printf("Current: %f\n", val);
         // construct sensor data packet
         SensorData sensor_data;
         // set dr16 raw data
@@ -302,16 +307,16 @@ int main() {
             can.zero();
         }
 
-        for (int i = 3; i < 5; i++) {
-            Serial.printf("[");
-            for (int j = 0; j < 2; j++) {
-                Serial.printf("%f ,", temp_state[i][j]);
-            }
-            Serial.print("] ");
-        }
+        // for (int i = 3; i < 5; i++) {
+        //     Serial.printf("[");
+        //     for (int j = 0; j < 2; j++) {
+        //         Serial.printf("%f ,", temp_state[i][j]);
+        //     }
+        //     Serial.print("] ");
+        // }
 
-        Serial.println();
-        Serial.println();
+        // Serial.println();
+        // Serial.println();
         
         // LED heartbeat -- linked to loop count to reveal slowdowns and freezes.
         loopc % (int)(1E3 / float(HEARTBEAT_FREQ)) < (int)(1E3 / float(5 * HEARTBEAT_FREQ)) ? digitalWrite(13, HIGH) : digitalWrite(13, LOW);

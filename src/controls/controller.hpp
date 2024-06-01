@@ -6,6 +6,7 @@
 #include "../comms/rm_can.hpp"
 #include "../sensors/RefSystem.hpp"
 #include "state.hpp"
+#include "../sensors/ACS712.hpp"
 
 #define NUM_GAINS 12
 #define NUM_CONTROLLER_LEVELS 3
@@ -284,7 +285,7 @@ public:
     /// @param estimate estimate
     /// @return 0
     float step(float reference[3], float estimate[3]) { return 0; }
-    /// @brief takes in a micro_reference of wheel velocity
+    /// @brief take s in a micro_reference of wheel velocity
     /// @param reference reference
     /// @param estimate estimate
     /// @return outputs motor current
@@ -295,9 +296,10 @@ public:
         pid.K[0] = gains[0];
         pid.K[1] = gains[1];
         pid.K[2] = gains[2];
-
-        // Power limiting
         float power_buffer = ref.ref_data.robot_power_heat.buffer_energy;
+        
+        // Power limiting
+        
         float power_limit_ratio = 1.0;
         float power_buffer_limit_thresh = gains[3];
         float power_buffer_critical_thresh = gains[4];
