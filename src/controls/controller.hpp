@@ -6,6 +6,7 @@
 #include "../comms/rm_can.hpp"
 #include "../sensors/RefSystem.hpp"
 #include "state.hpp"
+#include "../sensors/ACS712.hpp"
 
 #define NUM_GAINS 12
 #define NUM_CONTROLLER_LEVELS 3
@@ -271,6 +272,10 @@ private:
     /// @brief filter for calculating pid controller outputs
     PIDFilter pid;
 
+    float buffer_energy = 0;
+    float max_power = 60;
+    float last_ref_power = 0;
+
 public:
     /// @brief set controller level and make sure it's a low level controller
     /// @param _controller_level controller level(if it outputs a torque or a target micro state).
@@ -284,7 +289,7 @@ public:
     /// @param estimate estimate
     /// @return 0
     float step(float reference[3], float estimate[3]) { return 0; }
-    /// @brief takes in a micro_reference of wheel velocity
+    /// @brief take s in a micro_reference of wheel velocity
     /// @param reference reference
     /// @param estimate estimate
     /// @return outputs motor current
@@ -296,8 +301,29 @@ public:
         pid.K[1] = gains[1];
         pid.K[2] = gains[2];
 
-        // Power limiting
+        max_power = ref.ref_data.robot_performance.chassis_power_limit;
+        float power_draw = current_sensor.get_current() * 24;
+
+        buffer_energy += (max_power - power_draw) * dt;
+        buffer_energy = constrain(buffer_energy, 0, 60);
+
         float power_buffer = ref.ref_data.robot_power_heat.buffer_energy;
+        float ref_power = ref.ref_data.robot_power_heat.chassis_power;
+
+        Serial.printf("ref power: %f, power draw: %f, ref buffer: %f, dt: %f\n", ref_power, power_draw, power_buffer, dt);
+
+        if(last_ref_power == ref_power) {
+            // power_buffer = buffer_energy;
+        } else {
+            buffer_energy = power_buffer;
+        }
+        last_ref_power = ref_power;
+
+        
+
+
+        // Power limiting
+        
         float power_limit_ratio = 1.0;
         float power_buffer_limit_thresh = gains[3];
         float power_buffer_critical_thresh = gains[4];

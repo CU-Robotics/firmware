@@ -186,6 +186,9 @@ public:
     /// @brief Number of packets that failed to be read properly
     uint32_t packets_failed = 0;
 
+    /// @brief Number of failed tail reads
+    uint32_t failed_tail_reads = 0;
+
     /// @brief Current count of bytes sent since last reset
     uint16_t bytes_sent = 0;
 
