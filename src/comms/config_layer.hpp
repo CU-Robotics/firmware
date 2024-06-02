@@ -36,7 +36,8 @@ static const std::map<std::string, u_int8_t> yaml_section_id_mappings = {
     {"switcher_values", 19},
     {"drive_conversion_factors", 20},
     {"governor_types", 21},
-    {"odom_values", 22}
+    {"odom_values", 22},
+    {"encoder_pins", 23}
 };
 
 /// @brief Handle seeking and reading configuration packets coming from khadas
@@ -136,6 +137,8 @@ struct Config {
     float odom_values[3];
     /// @brief switcher placement values
     float switcher_values[2];
+    /// @brief pin numbers on the teensy for the encoders
+    float encoder_pins[2];
 
     /// @brief fill all config data from packets
     /// @param packets CommsPacket array filled with data from yaml
@@ -233,6 +236,9 @@ struct Config {
             }
             if(id==yaml_section_id_mappings.at("encoder_offsets")){
                 memcpy(encoder_offsets, packets[i].raw + 8, sub_size);
+            }
+            if(id==yaml_section_id_mappings.at("encoder_pins")){
+                memcpy(encoder_pins, packets[i].raw + 8, sub_size);
             }
         }
     }
