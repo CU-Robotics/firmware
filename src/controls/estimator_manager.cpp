@@ -1,12 +1,12 @@
 #include "estimator_manager.hpp"
 
 EstimatorManager::EstimatorManager(CANData* data, Config c_data) {
-    pinMode(YAW_BUFF_CS, OUTPUT);
-    pinMode(PITCH_BUFF_CS, OUTPUT);
-    pinMode(ICM_CS, OUTPUT);
+    for (int i = 0;i < c_data.num_sensors[0];i++) {
+        pinMode(c_data.encoder_pins[i], OUTPUT);
+        digitalWrite(c_data.encoder_pins[i], HIGH);
+    }
 
-    digitalWrite(YAW_BUFF_CS, HIGH);
-    digitalWrite(PITCH_BUFF_CS, HIGH);
+    pinMode(ICM_CS, OUTPUT);
     digitalWrite(ICM_CS, HIGH);
 
     Serial.println("Starting SPI");
@@ -15,8 +15,7 @@ EstimatorManager::EstimatorManager(CANData* data, Config c_data) {
 
     //buff enc loop
     for(int i = 0;i < c_data.num_sensors[0];i++){
-        //yaw buff enc - 1 is the same value as the pitch enc
-        buff_sensors[i].init(YAW_BUFF_CS-i);
+        buff_sensors[i].init(c_data.encoder_pins[i]);
     }
     //imu loop
     for(int i = 0;i < c_data.num_sensors[1];i++){
