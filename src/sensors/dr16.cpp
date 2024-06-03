@@ -89,8 +89,11 @@ void DR16::read() {
 		m_input[3] = bounded_map(c3, DR16_CONTROLLER_INPUT_LOW, DR16_CONTROLLER_INPUT_HIGH, -1000, 1000) / 1000.f;
 
 		// wheel
-		m_input[4] = bounded_map(wh, DR16_CONTROLLER_INPUT_LOW, DR16_CONTROLLER_INPUT_HIGH, -1000, 1000) / 1000.f;
-
+		if (wh == 0) { //One of the controllers has a broken wheen
+			m_input[4] = 0;
+		} else {
+			m_input[4] = bounded_map(wh, DR16_CONTROLLER_INPUT_LOW, DR16_CONTROLLER_INPUT_HIGH, -1000, 1000) / 1000.f;
+		}
 		// switches
 		m_input[5] = (float)s1;
 		m_input[6] = (float)s2;
@@ -164,8 +167,12 @@ bool DR16::is_data_valid() {
 	// go through all values in raw seperated input and compare them against maximum and minimum values
 	// the - 2 is to exclude switch values
 	for (int i = 0; i < DR16_INPUT_VALUE_COUNT - 2; i++) {
-		if (m_inputRawSeperated[i] < DR16_CONTROLLER_INPUT_LOW || m_inputRawSeperated[i] > DR16_CONTROLLER_INPUT_HIGH)
+		if (m_inputRawSeperated[i] < DR16_CONTROLLER_INPUT_LOW || m_inputRawSeperated[i] > DR16_CONTROLLER_INPUT_HIGH){
+			if (i == 4 && m_inputRawSeperated[i] == 0) { //One of the controllers has a broken wheel so we can make an exception for that
+				continue;
+			} 
 			return false;
+		}
 	}
 
 	return true;
