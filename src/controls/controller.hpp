@@ -357,9 +357,61 @@ public:
         float outputp = pidp.filter(dt, true, false);
         float outputv = pidv.filter(dt, true, false);
         float output = outputp + outputv;
+        
         return output;
     }
 
+
+    /// @brief dont do anything if we get a micro_reference
+    /// @param reference reference
+    /// @param estimate estimate
+    /// @return 0
+    float step(float reference, float estimate[MICRO_STATE_LEN]) {return 0;}
+
+    void reset() {
+        Controller::reset();
+        pidp.sumError = 0.0;
+    }
+};
+
+struct ChassisFullStateFeedbackController : public Controller {
+private:
+    /// @brief filter for calculating pid position controller outputs
+    PIDFilter pidp;
+    /// @brief filter for calculating pid velocity controller outputs
+    PIDFilter pidv;
+public:
+    /// @brief set controller level and make sure it's not low level
+    /// @param _controller_level controller level(if it outputs a torque or a target micro state).
+    ChassisFullStateFeedbackController(int _controller_level) {
+        controller_level = _controller_level;
+        if (controller_level == 1)
+            Serial.println("ChassisFullStateFeedbackController must not be a low level controller");
+    }
+    /// @brief don't do anything if we get a macro state
+    /// @param reference reference
+    /// @param estimate estimate
+    /// @return 0
+    float step(float reference[3], float estimate[3]) { 
+        float dt = timer.delta();
+        pidp.setpoint = reference[0]; // 1st index = position
+        pidp.measurement = estimate[0];
+
+        pidp.K[0] = gains[0];
+        pidp.K[1] = gains[1];
+        pidp.K[2] = gains[2];
+
+        pidv.setpoint = reference[1]; 
+        pidv.measurement = estimate[1];
+
+        pidv.K[0] = gains[4];
+        pidv.K[1] = gains[5];
+        pidv.K[2] = gains[6];
+        float outputp = pidp.filter(dt, true, false);
+        float outputv = pidv.filter(dt, true, false);
+        float output = constrain(outputp + outputv, -1.0, 1.0);
+        return output;
+    }
 
     /// @brief dont do anything if we get a micro_reference
     /// @param reference reference

@@ -250,17 +250,17 @@ int main() {
         state.get_reference(temp_reference);
 
         // Update the kinematics of x,y states, as the kinematics change when chassis angle changes
-        kinematics_vel[0][0] = cos(-temp_state[2][0]) * chassis_pos_to_motor_error;
-        kinematics_vel[0][1] = -sin(-temp_state[2][0]) * chassis_pos_to_motor_error;
+        kinematics_vel[0][0] = -cos(-temp_state[2][0]) * chassis_pos_to_motor_error;
+        kinematics_vel[0][1] = sin(-temp_state[2][0]) * chassis_pos_to_motor_error;
         // motor 2 back right
-        kinematics_vel[1][0] = -sin(-temp_state[2][0]) * chassis_pos_to_motor_error;
-        kinematics_vel[1][1] = -cos(-temp_state[2][0]) * chassis_pos_to_motor_error;
+        kinematics_vel[1][0] = sin(-temp_state[2][0]) * chassis_pos_to_motor_error;
+        kinematics_vel[1][1] = cos(-temp_state[2][0]) * chassis_pos_to_motor_error;
         // motor 3 back left
-        kinematics_vel[2][0] = -cos(-temp_state[2][0]) * chassis_pos_to_motor_error;
-        kinematics_vel[2][1] = sin(-temp_state[2][0]) * chassis_pos_to_motor_error;
+        kinematics_vel[2][0] = cos(-temp_state[2][0]) * chassis_pos_to_motor_error;
+        kinematics_vel[2][1] = -sin(-temp_state[2][0]) * chassis_pos_to_motor_error;
         // motor 4 front left
-        kinematics_vel[3][0] = sin(-temp_state[2][0]) * chassis_pos_to_motor_error;
-        kinematics_vel[3][1] = cos(-temp_state[2][0]) * chassis_pos_to_motor_error;
+        kinematics_vel[3][0] = -sin(-temp_state[2][0]) * chassis_pos_to_motor_error;
+        kinematics_vel[3][1] = -cos(-temp_state[2][0]) * chassis_pos_to_motor_error;
         //generate motor outputs from controls
         controller_manager->step(temp_reference, temp_state, temp_micro_state, kinematics_pos, kinematics_vel, motor_inputs);
 
@@ -307,16 +307,14 @@ int main() {
             can.zero();
         }
 
-        // for (int i = 3; i < 5; i++) {
-        //     Serial.printf("[");
-        //     for (int j = 0; j < 2; j++) {
-        //         Serial.printf("%f ,", temp_state[i][j]);
-        //     }
-        //     Serial.print("] ");
-        // }
-
-        // Serial.println();
-        // Serial.println();
+        for (int i = 0; i < 5; i++) {
+            Serial.printf("[");
+            for (int j = 0; j < 2; j++) {
+                Serial.printf("%f ,", temp_state[i][j]);
+            }
+            Serial.print("] ");
+        }
+        Serial.println();
         
         // LED heartbeat -- linked to loop count to reveal slowdowns and freezes.
         loopc % (int)(1E3 / float(HEARTBEAT_FREQ)) < (int)(1E3 / float(5 * HEARTBEAT_FREQ)) ? digitalWrite(13, HIGH) : digitalWrite(13, LOW);

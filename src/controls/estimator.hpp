@@ -271,6 +271,9 @@ private:
     /// @brief position estimate to store position after integrating used for chassis odometry
     float pos_estimate[3] = { 0,0,0 };
 
+    /// @brief previous pose to store the previous pose for chassis odometry
+    float previous_pos[3] = { 0,0,0 };
+
 public:
     /// @brief estimate the state of the gimbal
     /// @param config_data inputted sensor values from khadas yaml
@@ -466,8 +469,11 @@ public:
             odom_pos_diff[i] = rev_diff[i]*odom_wheel_radius;
             total_odom_pos[i] = odom_pos_diff[i]+total_odom_pos[i];
         }
-        chassis_angle = -(total_odom_pos[0] + total_odom_pos[2])/(2*odom_axis_offset_x)+initial_chassis_angle;  
+        chassis_angle = yaw_angle - yaw_enc_angle;
+        // chassis_angle = -(total_odom_pos[0] + total_odom_pos[2])/(2*odom_axis_offset_x)+initial_chassis_angle;  
         float d_chassis_heading = (chassis_angle - prev_chassis_angle);
+        if(d_chassis_heading > PI) d_chassis_heading -= 2*PI;
+        else if(d_chassis_heading < -PI) d_chassis_heading += 2*PI;
         prev_chassis_angle = chassis_angle;
         if (d_chassis_heading == 0) {
             pos_estimate[0] += ((odom_pos_diff[0])*cos(chassis_angle+odom_angle_offset)) - ((odom_pos_diff[1])*sin(chassis_angle+odom_angle_offset));
@@ -480,6 +486,7 @@ public:
             pos_estimate[1] += pod1_relative *sin((chassis_angle + odom_angle_offset) + (d_chassis_heading*0.5))
                 + pod2_relative * cos((chassis_angle + odom_angle_offset) + (d_chassis_heading*0.5));
         }
+        
         // // chassis estimation
         // float front_right = can_data->get_motor_attribute(CAN_1, 1, MotorAttribute::SPEED);
         // float back_right = can_data->get_motor_attribute(CAN_1, 2, MotorAttribute::SPEED);
@@ -516,14 +523,17 @@ public:
         // pos_estimate[2] += vel_estimate[2] * dt;
 
         output[0][0] = pos_estimate[0]; // x pos
-        // output[0][1] = vel_estimate[0];
+        output[0][1] = (pos_estimate[0]-previous_pos[0])/dt;
         output[0][2] = 0;
         output[1][0] = pos_estimate[1]; // y pos
-        // output[1][1] = vel_estimate[1];
+        output[1][1] = (pos_estimate[1]-previous_pos[1])/dt;
         output[1][2] = 0;
         output[2][0] = chassis_angle; // chassis angle
-        // output[2][1] = vel_estimate[2];
+        output[2][1] = d_chassis_heading/dt;
         output[2][2] = yaw_enc_angle;
+        
+        previous_pos[0] = pos_estimate[0];
+        previous_pos[1] = pos_estimate[1];
     }
 };
 
