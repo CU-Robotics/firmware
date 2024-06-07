@@ -404,12 +404,19 @@ public:
         pidv.setpoint = reference[1]; 
         pidv.measurement = estimate[1];
 
+        // Serial.printf("setpoint: %f, measurement: %f\n", pidv.setpoint, pidv.measurement);
         pidv.K[0] = gains[4];
         pidv.K[1] = gains[5];
         pidv.K[2] = gains[6];
-        float outputp = pidp.filter(dt, true, false);
-        float outputv = pidv.filter(dt, true, false);
-        float output = constrain(outputp + outputv, -1.0, 1.0);
+        // Serial.printf("gains: %f, %f, %f\n", gains[0], gains[1], gains[2]);
+        float outputp = pidp.filter(dt, false, false);
+        float outputv = pidv.filter(dt, false, false);
+        // Serial.printf("outputp: %f, outputv: %f\n", outputp, outputv);
+        
+
+        float output = outputp + outputv;
+
+        // Serial.printf("output: %f\n", output);
         return output;
     }
 
