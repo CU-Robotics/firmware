@@ -182,7 +182,8 @@ int main() {
         dr16.read();
         ref.read();
         current_sensor.read();
-
+        lidar1.read();
+        lidar2.read();
         
         //handle read/write
         comms.ping();
