@@ -282,9 +282,13 @@ int main() {
         // set lidars
         uint8_t lidar_data[D200_NUM_PACKETS_CACHED * D200_PAYLOAD_SIZE] = { 0 };
         lidar1.export_data(lidar_data);
+        float l1_start_angle = *(float*)(lidar_data + 5);
+        float l1_end_angle = *(float*) (lidar_data + 69);
+        Serial.printf("lidar start and end: %f, %f\n", l1_start_angle, l1_end_angle);
         memcpy(sensor_data.raw + SENSOR_LIDAR1_OFFSET, lidar_data, D200_NUM_PACKETS_CACHED * D200_PAYLOAD_SIZE);
         lidar2.export_data(lidar_data);
         memcpy(sensor_data.raw + SENSOR_LIDAR2_OFFSET, lidar_data, D200_NUM_PACKETS_CACHED * D200_PAYLOAD_SIZE);
+
         
         // construct ref data packet
         uint8_t ref_data_raw[180] = { 0 };
@@ -330,3 +334,5 @@ int main() {
     }
     return 0;
 }
+
+
