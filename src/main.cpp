@@ -183,7 +183,8 @@ int main() {
         dr16.read();
         ref.read();
         current_sensor.read();
-
+        lidar1.read();
+        lidar2.read();
         
         //handle read/write
         comms.ping();
@@ -314,9 +315,11 @@ int main() {
         // set lidars
         uint8_t lidar_data[D200_NUM_PACKETS_CACHED * D200_PAYLOAD_SIZE] = { 0 };
         lidar1.export_data(lidar_data);
+        
         memcpy(sensor_data.raw + SENSOR_LIDAR1_OFFSET, lidar_data, D200_NUM_PACKETS_CACHED * D200_PAYLOAD_SIZE);
         lidar2.export_data(lidar_data);
         memcpy(sensor_data.raw + SENSOR_LIDAR2_OFFSET, lidar_data, D200_NUM_PACKETS_CACHED * D200_PAYLOAD_SIZE);
+
         
         // construct ref data packet
         uint8_t ref_data_raw[180] = { 0 };
@@ -359,3 +362,5 @@ int main() {
     }
     return 0;
 }
+
+
