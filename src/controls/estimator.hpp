@@ -17,7 +17,7 @@ public:
 
     /// @brief step the current state(s) and update the estimate array accordingly
     /// @param outputs estimated state array to update with certain estimated states
-    virtual void step_states(float outputs[STATE_LEN][3]);
+    virtual void step_states(float outputs[STATE_LEN][3], float curr_state[STATE_LEN][3], int override);
 
     /// @brief gets the number of states that an estimator is estimating
     /// @return get number of states estimated by this estimator
@@ -322,7 +322,7 @@ public:
   
     /// @brief calculate estimated states and add to output array
     /// @param output output array to add estimated states to
-    void step_states(float output[STATE_LEN][3]) override {
+    void step_states(float output[STATE_LEN][3], float curr_state[STATE_LEN][3], int override) override {
         // Serial.printf("Pitch encoder offset: %f\n" ,PITCH_ENCODER_OFFSET);
 
         float pitch_enc_angle = (-buff_enc_pitch->get_angle()) - PITCH_ENCODER_OFFSET;
@@ -431,6 +431,7 @@ public:
             count1++;
             dt = 0;
         }
+        if(override == 1)yaw_angle = curr_state[3][0];
         yaw_angle += current_yaw_velocity * (dt);
         pitch_angle += current_pitch_velocity * (dt);
         roll_angle += current_roll_velocity * (dt);
@@ -438,7 +439,6 @@ public:
         global_yaw_angle += -global_yaw_velocity * (dt);
         global_pitch_angle += -global_pitch_velocity * (dt);
         global_roll_angle += -global_roll_velocity * (dt);
-
 
         while (yaw_angle >= PI)
             yaw_angle -= 2 * PI;
@@ -469,12 +469,19 @@ public:
             odom_pos_diff[i] = rev_diff[i]*odom_wheel_radius;
             total_odom_pos[i] = odom_pos_diff[i]+total_odom_pos[i];
         }
+
         chassis_angle = yaw_angle - yaw_enc_angle;
         // chassis_angle = -(total_odom_pos[0] + total_odom_pos[2])/(2*odom_axis_offset_x)+initial_chassis_angle;  
         float d_chassis_heading = (chassis_angle - prev_chassis_angle);
         if(d_chassis_heading > PI) d_chassis_heading -= 2*PI;
         else if(d_chassis_heading < -PI) d_chassis_heading += 2*PI;
         prev_chassis_angle = chassis_angle;
+        if(override == 1) {
+            pos_estimate[0] = curr_state[0][0];
+            pos_estimate[1] = curr_state[1][0];
+            previous_pos[0] = curr_state[0][0];
+            previous_pos[1] = curr_state[1][0];
+        }
         if (d_chassis_heading == 0) {
             pos_estimate[0] += ((odom_pos_diff[0])*cos(chassis_angle+odom_angle_offset)) - ((odom_pos_diff[1])*sin(chassis_angle+odom_angle_offset));
             pos_estimate[1] += ((odom_pos_diff[0])*sin(chassis_angle+odom_angle_offset)) + ((odom_pos_diff[1])*cos(chassis_angle+odom_angle_offset));
@@ -522,6 +529,8 @@ public:
         // pos_estimate[1] += vel_estimate[1] * dt;
         // pos_estimate[2] += vel_estimate[2] * dt;
 
+        
+
         output[0][0] = pos_estimate[0]; // x pos
         output[0][1] = (pos_estimate[0]-previous_pos[0])/dt;
         output[0][2] = 0;
@@ -531,6 +540,8 @@ public:
         output[2][0] = chassis_angle; // chassis angle
         output[2][1] = d_chassis_heading/dt;
         output[2][2] = yaw_enc_angle;
+
+        
         
         previous_pos[0] = pos_estimate[0];
         previous_pos[1] = pos_estimate[1];
@@ -699,7 +710,7 @@ public:
   
     /// @brief calculate estimated states and add to output array
     /// @param output output array to add estimated states to
-    void step_states(float output[STATE_LEN][3]) override {
+    void step_states(float output[STATE_LEN][3], float curr_state[STATE_LEN][3], int override) override {
         // Serial.printf("Pitch encoder offset: %f\n" ,PITCH_ENCODER_OFFSET);
 
         float pitch_enc_angle = (-buff_enc_pitch->get_angle()) - PITCH_ENCODER_OFFSET;
@@ -917,7 +928,7 @@ public:
 
     /// @brief generate estimated states and replace in output array
     /// @param output array to be updated with the calculated states
-    void step_states(float output[STATE_LEN][3]) {
+    void step_states(float output[STATE_LEN][3], float curr_state[STATE_LEN][3], int override) {
         //can
         float radius = 30 * 0.001; //meters
         float angular_velocity_l = -can_data->get_motor_attribute(CAN_2, 3, MotorAttribute::SPEED) * (2 * PI) / 60;
@@ -964,7 +975,7 @@ public:
 
     /// @brief calculate state updates
     /// @param output updated balls per second of feeder
-    void step_states(float output[STATE_LEN][3]) {
+    void step_states(float output[STATE_LEN][3], float curr_state[STATE_LEN][3], int override) {
         //can
         float angular_velocity_motor = can_data->get_motor_attribute(CAN_2, 5, MotorAttribute::SPEED) / 60;
         float angular_velocity_feeder = angular_velocity_motor / 36;
@@ -1008,7 +1019,7 @@ public:
 
     /// @brief calculate state updates
     /// @param output updated balls per second of feeder
-    void step_states(float output[STATE_LEN][3]) {
+    void step_states(float output[STATE_LEN][3], float curr_state[STATE_LEN][3], int override) {
         //read tof sensor (millimeters)
         float distance_from_right = ((float)(time_of_flight->read()) - tof_sensor_offset)/tof_scale;
         float angular_velocity_motor = -((((can_data->get_motor_attribute(CAN_2, 6, MotorAttribute::SPEED) / 60)*(2*PI))/36.0)*(5.1))/tof_scale;
@@ -1037,7 +1048,7 @@ public:
 
     /// @brief step through each motor and add to micro state
     /// @param output entire micro state 
-    void step_states(float output[NUM_MOTORS][MICRO_STATE_LEN]) {
+    void step_states(float output[NUM_MOTORS][MICRO_STATE_LEN], float curr_state[NUM_MOTORS][MICRO_STATE_LEN], int override) {
         for (int i = 0; i < NUM_CAN_BUSES; i++) {
             for (int j = 0; j < NUM_MOTORS_PER_BUS; j++) {
                 output[(i * NUM_MOTORS_PER_BUS) + j][0] = (can_data->get_motor_attribute(i, j + 1, MotorAttribute::SPEED) / 60) * 2 * PI;

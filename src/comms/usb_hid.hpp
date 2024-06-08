@@ -18,7 +18,7 @@ constexpr unsigned int KHADAS_PACKET_INFO_OFFSET = 3u;	// 1 byte
 constexpr unsigned int KHADAS_PACKET_TSTATE_OFFSET = 4u;	// 288 bytes
 /// @brief The offset of the Packet ref draw data from the base of the Khadas packet
 constexpr unsigned int KHADAS_PACKET_REF_OFFSET = 292u;	// 128 bytes
-/// @brief The offset for the request bit if hive sent an override state
+/// @brief The offset for the request byte if hive sent an override state
 constexpr unsigned int KHADAS_PACKET_HIVE_OVERRIDE_STATE_REQUEST_OFFSET = 420u; // 1 byte
 /// @brief The offset of the override state from hive
 constexpr unsigned int KHADAS_PACKET_HIVE_OVERRIDE_STATE_OFFSET = 421u; // 288 bytes

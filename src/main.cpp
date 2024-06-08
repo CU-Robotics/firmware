@@ -242,29 +242,18 @@ int main() {
         estimator_manager->read_sensors();
 
         //step estimates and construct estimated state
-        estimator_manager->step(temp_state, temp_micro_state);
         
-        Serial.printf("here\n");
+        
         if(incoming->get_hive_override_request() == 1) {
             incoming->get_hive_override_state(hive_state_offset);
             for(int i = 0; i < STATE_LEN; i++) {
                 for(int j = 0; j < 3; j++) {
-                    if(hive_state_offset[i][j] != 0.0) hive_state_offset[i][j] = hive_state_offset[i][j] - temp_state[i][j];
+                    temp_state[i][j] = hive_state_offset[i][j];
                 }
             }
-            
-            Serial.printf("Override request recieved: %d\n", incoming->get_hive_override_request());            
         }
-        Serial.printf("here1\n");
 
-
-        for(int i = 0; i < STATE_LEN; i++) {
-            for(int j = 0; j < 3; j++) {
-                temp_state[i][j] = temp_state[i][j] + hive_state_offset[i][j];
-                if(temp_state[3][0] > PI) temp_state[3][0] -= 2 * PI;
-                if(temp_state[3][0] < -PI) temp_state[3][0] += 2 * PI;
-            }
-        }
+        estimator_manager->step(temp_state, temp_micro_state, incoming->get_hive_override_request());
 
         Serial.printf("her4e\n");
 
