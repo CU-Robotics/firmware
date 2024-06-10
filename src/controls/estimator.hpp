@@ -1003,6 +1003,18 @@ private:
 
     /// @brief used to scale the tof sensor data to -1 to 1
     float tof_scale = 0;
+
+    /// @brief last motor angle
+    float last_motor_angle = 0;
+
+    /// @brief total motor angle
+    float total_motor_angle = 0;
+
+    /// @brief delta time
+    float dt = 0;
+
+    /// @brief count to check if dt is valid
+    int count = 0;
 public:
     /// @brief make new barrel switcher estimator and set can_data pointer and num_states
     /// @param config config data from yaml
@@ -1020,12 +1032,27 @@ public:
     /// @brief calculate state updates
     /// @param output updated balls per second of feeder
     void step_states(float output[STATE_LEN][3], float curr_state[STATE_LEN][3], int override) {
+        dt = time.delta();
         //read tof sensor (millimeters)
-        float distance_from_right = ((float)(time_of_flight->read()) - tof_sensor_offset)/tof_scale;
+        float tof_distance = ((float)(time_of_flight->read()) - tof_sensor_offset)/tof_scale;
         float angular_velocity_motor = -((((can_data->get_motor_attribute(CAN_2, 6, MotorAttribute::SPEED) / 60)*(2*PI))/36.0)*(5.1))/tof_scale;
+        total_motor_angle += (can_data->get_motor_attribute(CAN_2, 6, MotorAttribute::SPEED) * (2*PI/60.0))*dt;
+        float rad_per_switch = 315;
+        if(total_motor_angle > rad_per_switch){
+            total_motor_angle = rad_per_switch;
+        }
+        if(total_motor_angle < 0){
+            total_motor_angle = 0;
+        }
+        float distance_from_right = -(total_motor_angle-(rad_per_switch/2.0))/(rad_per_switch/2.0);
+        if(count < 10){
+            dt = 0;
+            distance_from_right = tof_distance;
+            count++;
+        }
+        // distance_from_right = distance_from_right*0.99 + tof_distance*0.01;
         output[0][0] = distance_from_right;
         output[0][1] = angular_velocity_motor;
-
     }
 };
 

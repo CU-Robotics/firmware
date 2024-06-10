@@ -167,14 +167,18 @@ int main() {
     float temp_micro_state[NUM_MOTORS][MICRO_STATE_LEN] = { 0 }; // Temp micro state array
     float temp_reference[STATE_LEN][3] = { 0 }; //Temp governed state
     float target_state[STATE_LEN][3] = { 0 }; //Temp ungoverned state
-    float hive_state_offset[STATE_LEN][3] = {}; //Hive offset state
+    float hive_state_offset[STATE_LEN][3] = { 0 }; //Hive offset state
     float motor_inputs[NUM_MOTORS] = { 0 }; //Array for storing controller outputs to send to CAN
 
     float dr16_pos_x = 0;
     float dr16_pos_y = 0;
+    float pos_offset_x = 0;
+    float pos_offset_y = 0;
     int vtm_pos_x = 0;
     int vtm_pos_y = 0;
     int count_one = 0;
+
+    bool hive_toggle = false;
 
     // Main loop
     while (true) {
@@ -206,8 +210,8 @@ int main() {
         // float chassis_velocity_y = dr16.get_l_stick_x() * 5.4
         //                          + (ref.ref_data.kbm_interaction.key_d - ref.ref_data.kbm_interaction.key_a) * 2.5
         //                          + (dr16.keys.d - dr16.keys.a) * 2.5;
-        float chassis_pos_x = dr16.get_l_stick_x() * 2;
-        float chassis_pos_y = dr16.get_l_stick_y() * 2;
+        float chassis_pos_x = dr16.get_l_stick_x() * 2 + pos_offset_x;
+        float chassis_pos_y = dr16.get_l_stick_y() * 2 + pos_offset_y;
 
         float chassis_spin = dr16.get_wheel() * 25;
 
@@ -231,13 +235,27 @@ int main() {
         target_state[4][0] = pitch_target;
         target_state[4][1] = 0;
 
-        target_state[5][1] = fly_wheel_target;
-        target_state[6][1] = feeder_target;
-        target_state[7][0] = -1;
+        // target_state[5][1] = fly_wheel_target;
+        // target_state[6][1] = feeder_target;
+        target_state[7][0] = dr16.get_r_switch() == 2 ? 1 : -1;
 
         // if the left switch is all the way down use Hive controls
-        if(dr16.get_l_switch() == 2) incoming->get_target_state(target_state);
-
+        if(dr16.get_l_switch() == 2) {
+            incoming->get_target_state(target_state);
+            // if you just switched to hive controls, set the reference to the current state
+            if(hive_toggle){
+                state.set_reference(temp_state);
+                hive_toggle = false;
+            } 
+        }
+        // when in teensy control mode reset hive toggle
+        if(dr16.get_l_switch() == 3) {
+            if(!hive_toggle){
+                pos_offset_x = temp_state[0][0];
+                pos_offset_y = temp_state[1][0];
+            }
+            hive_toggle = true;
+        }
         
         // Read sensors
         estimator_manager->read_sensors();
@@ -255,9 +273,6 @@ int main() {
         }
 
         estimator_manager->step(temp_state, temp_micro_state, incoming->get_hive_override_request());
-
-        Serial.printf("her4e\n");
-
 
         //if first loop set target state to estimated state
         if (count_one == 0) {
