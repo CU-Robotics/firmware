@@ -177,6 +177,10 @@ int main() {
     int vtm_pos_x = 0;
     int vtm_pos_y = 0;
     int count_one = 0;
+    float chassis_velocity_x = 0;
+    float chassis_velocity_y = 0;
+    float chassis_pos_x = 0;
+    float chassis_pos_y = 0;
 
     bool hive_toggle = false;
 
@@ -203,16 +207,17 @@ int main() {
 
         vtm_pos_x += ref.ref_data.kbm_interaction.mouse_speed_x * 0.05 * delta;
         vtm_pos_y += ref.ref_data.kbm_interaction.mouse_speed_y * 0.05 * delta;
-
-        // float chassis_velocity_x = -dr16.get_l_stick_y() * 5.4
-        //                          + (-ref.ref_data.kbm_interaction.key_w + ref.ref_data.kbm_interaction.key_s) * 2.5
-        //                          + (-dr16.keys.w + dr16.keys.s) * 2.5;
-        // float chassis_velocity_y = dr16.get_l_stick_x() * 5.4
-        //                          + (ref.ref_data.kbm_interaction.key_d - ref.ref_data.kbm_interaction.key_a) * 2.5
-        //                          + (dr16.keys.d - dr16.keys.a) * 2.5;
-        float chassis_pos_x = dr16.get_l_stick_x() * 2 + pos_offset_x;
-        float chassis_pos_y = dr16.get_l_stick_y() * 2 + pos_offset_y;
-
+        if(config.governor_types[0] == 2){
+            chassis_velocity_x = -dr16.get_l_stick_y() * 5.4
+                                    + (-ref.ref_data.kbm_interaction.key_w + ref.ref_data.kbm_interaction.key_s) * 2.5
+                                    + (-dr16.keys.w + dr16.keys.s) * 2.5;
+            chassis_velocity_y = dr16.get_l_stick_x() * 5.4
+                                    + (ref.ref_data.kbm_interaction.key_d - ref.ref_data.kbm_interaction.key_a) * 2.5
+                                    + (dr16.keys.d - dr16.keys.a) * 2.5;
+        } else if (config.governor_types[0] == 1){
+            chassis_pos_x = dr16.get_l_stick_x() * 2 + pos_offset_x;
+            chassis_pos_y = dr16.get_l_stick_y() * 2 + pos_offset_y;
+        }
         float chassis_spin = dr16.get_wheel() * 25;
 
         float pitch_target = 1.57
@@ -226,9 +231,9 @@ int main() {
         float feeder_target = (((dr16.get_l_mouse_button() || ref.ref_data.kbm_interaction.button_left) && dr16.get_r_switch() != 2) || dr16.get_r_switch() == 1) ? 10 : 0;
 
         target_state[0][0] = chassis_pos_x;
-        // target_state[0][1] = chassis_velocity_x;
+        target_state[0][1] = chassis_velocity_x;
         target_state[1][0] = chassis_pos_y;
-        // target_state[1][1] = chassis_velocity_y;
+        target_state[1][1] = chassis_velocity_y;
         target_state[2][1] = chassis_spin;
         target_state[3][0] = yaw_target;
         target_state[3][1] = 0;
@@ -353,35 +358,34 @@ int main() {
         if (dr16.is_connected() && (dr16.get_l_switch() == 2 || dr16.get_l_switch() == 3) && config_layer.is_configured()) {
             // SAFETY OFF
             can.write();
-            Serial.print("estimate:");
-            for (int i = 2; i < 4; i++) {
-                Serial.printf("[");
-                for (int j = 0; j < 3; j++) {
-                    Serial.printf("%f ,", temp_state[i][j]);
-                }
-                Serial.print("] ");
-            }
-            Serial.print("\nreference: ");
-            for (int i = 2; i < 4; i++) {
-                Serial.printf("[");
-                for (int j = 0; j < 3; j++) {
-                    Serial.printf("%f ,", temp_reference[i][j]);
-                }
-                Serial.print("] ");
-            }
-            Serial.print("\nmotor inputs: ");
-            for (int i = 4; i < 6; i++) {
-                    Serial.printf("%f ,", motor_inputs[i]);
-            }
-            Serial.println();
         } else {
             // SAFETY ON
             // TODO: Reset all controller integrators here
             can.zero();
         }
 
-        
-        
+        // Serial.print("estimate:");
+        //     for (int i = 2; i < 4; i++) {
+        //         Serial.printf("[");
+        //         for (int j = 0; j < 3; j++) {
+        //             Serial.printf("%f ,", temp_state[i][j]);
+        //         }
+        //         Serial.print("] ");
+        //     }
+        //     Serial.print("\nreference: ");
+        //     for (int i = 2; i < 4; i++) {
+        //         Serial.printf("[");
+        //         for (int j = 0; j < 3; j++) {
+        //             Serial.printf("%f ,", temp_reference[i][j]);
+        //         }
+        //         Serial.print("] ");
+        //     }
+        //     Serial.print("\nmotor inputs: ");
+        //     for (int i = 4; i < 6; i++) {
+        //             Serial.printf("%f ,", motor_inputs[i]);
+        //     }
+        //     Serial.println();
+
         // LED heartbeat -- linked to loop count to reveal slowdowns and freezes.
         loopc % (int)(1E3 / float(HEARTBEAT_FREQ)) < (int)(1E3 / float(5 * HEARTBEAT_FREQ)) ? digitalWrite(13, HIGH) : digitalWrite(13, LOW);
         loopc++;
