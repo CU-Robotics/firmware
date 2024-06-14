@@ -1,0 +1,4 @@
+<map id="rm_CAN" name="rm_CAN">
+<area shape="rect" id="node1" title="Manages both CANs on the robot. Able to read from and write to individual or multiple motors on the C..." alt="" coords="8,95,80,121"/>
+<area shape="rect" id="node2" href="$structCANData.html" title="The purpose of this struct is to be able to pass updated CAN data around without having to pass a rm_..." alt="" coords="5,5,83,32"/>
+</map>

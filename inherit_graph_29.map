@@ -1,0 +1,5 @@
+<map id="Graphical Class Hierarchy" name="Graphical Class Hierarchy">
+<area shape="rect" id="node1" href="$classIMUSensor.html" title="Abstract parent class for all IMUSensors, which give acceleration and gyroscope data." alt="" coords="5,31,93,57"/>
+<area shape="rect" id="node2" href="$classICM20649.html" title="Sensor access for an ICM20649 IMU Sensor. Child of the abstract IMUSensor class." alt="" coords="148,5,229,32"/>
+<area shape="rect" id="node3" href="$classLSM6DSOX.html" title="Sensor access for an LSM6DSOX IMU Sensor. Child of the abstract IMUSensor class." alt="" coords="141,56,236,83"/>
+</map>

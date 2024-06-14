@@ -1,0 +1,10 @@
+<map id="GimbalEstimator" name="GimbalEstimator">
+<area shape="rect" id="node1" title="Estimate the yaw, pitch, and chassis heading." alt="" coords="213,199,331,225"/>
+<area shape="rect" id="node2" href="$structEstimator.html" title="Parent estimator struct. All estimators should inherit from this." alt="" coords="5,95,83,121"/>
+<area shape="rect" id="node3" href="$structTimer.html" title="Timing object with blocking capability." alt="" coords="17,5,71,32"/>
+<area shape="rect" id="node4" href="$classBuffEncoder.html" title="Driver for the Buff&#45;Encoder." alt="" coords="107,95,199,121"/>
+<area shape="rect" id="node5" href="$classICM20649.html" title="Sensor access for an ICM20649 IMU Sensor. Child of the abstract IMUSensor class." alt="" coords="223,95,305,121"/>
+<area shape="rect" id="node6" href="$classIMUSensor.html" title="Abstract parent class for all IMUSensors, which give acceleration and gyroscope data." alt="" coords="220,5,308,32"/>
+<area shape="rect" id="node7" href="$structCANData.html" title="The purpose of this struct is to be able to pass updated CAN data around without having to pass a rm_..." alt="" coords="329,95,407,121"/>
+<area shape="rect" id="node8" href="$classRevEncoder.html" title="the class for the Rev Through Bore Encoder(www.revrobotics.com/rev&#45;11&#45;1271/)" alt="" coords="431,95,523,121"/>
+</map>

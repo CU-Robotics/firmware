@@ -1,0 +1,5 @@
+<map id="ControllerManager" name="ControllerManager">
+<area shape="rect" id="node1" title="Manage all controllers." alt="" coords="5,184,132,211"/>
+<area shape="rect" id="node2" href="$structController.html" title="Parent controller struct, all controllers should be based off of this." alt="" coords="30,95,107,121"/>
+<area shape="rect" id="node3" href="$structTimer.html" title="Timing object with blocking capability." alt="" coords="41,5,96,32"/>
+</map>
