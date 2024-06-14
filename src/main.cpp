@@ -167,13 +167,22 @@ int main() {
     float temp_micro_state[NUM_MOTORS][MICRO_STATE_LEN] = { 0 }; // Temp micro state array
     float temp_reference[STATE_LEN][3] = { 0 }; //Temp governed state
     float target_state[STATE_LEN][3] = { 0 }; //Temp ungoverned state
+    float hive_state_offset[STATE_LEN][3] = { 0 }; //Hive offset state
     float motor_inputs[NUM_MOTORS] = { 0 }; //Array for storing controller outputs to send to CAN
 
     float dr16_pos_x = 0;
     float dr16_pos_y = 0;
+    float pos_offset_x = 0;
+    float pos_offset_y = 0;
     int vtm_pos_x = 0;
     int vtm_pos_y = 0;
     int count_one = 0;
+    float chassis_velocity_x = 0;
+    float chassis_velocity_y = 0;
+    float chassis_pos_x = 0;
+    float chassis_pos_y = 0;
+
+    bool hive_toggle = false;
 
     // Main loop
     while (true) {
@@ -198,13 +207,17 @@ int main() {
 
         vtm_pos_x += ref.ref_data.kbm_interaction.mouse_speed_x * 0.05 * delta;
         vtm_pos_y += ref.ref_data.kbm_interaction.mouse_speed_y * 0.05 * delta;
-
-        float chassis_velocity_x = -dr16.get_l_stick_y() * 5.4
-                                 + (-ref.ref_data.kbm_interaction.key_w + ref.ref_data.kbm_interaction.key_s) * 2.5
-                                 + (-dr16.keys.w + dr16.keys.s) * 2.5;
-        float chassis_velocity_y = dr16.get_l_stick_x() * 5.4
-                                 + (ref.ref_data.kbm_interaction.key_d - ref.ref_data.kbm_interaction.key_a) * 2.5
-                                 + (dr16.keys.d - dr16.keys.a) * 2.5;
+        if(config.governor_types[0] == 2){
+            chassis_velocity_x = -dr16.get_l_stick_y() * 5.4
+                                    + (-ref.ref_data.kbm_interaction.key_w + ref.ref_data.kbm_interaction.key_s) * 2.5
+                                    + (-dr16.keys.w + dr16.keys.s) * 2.5;
+            chassis_velocity_y = dr16.get_l_stick_x() * 5.4
+                                    + (ref.ref_data.kbm_interaction.key_d - ref.ref_data.kbm_interaction.key_a) * 2.5
+                                    + (dr16.keys.d - dr16.keys.a) * 2.5;
+        } else if (config.governor_types[0] == 1){
+            chassis_pos_x = dr16.get_l_stick_x() * 2 + pos_offset_x;
+            chassis_pos_y = dr16.get_l_stick_y() * 2 + pos_offset_y;
+        }
         float chassis_spin = dr16.get_wheel() * 25;
 
         float pitch_target = 1.57
@@ -217,7 +230,9 @@ int main() {
         float fly_wheel_target = (dr16.get_r_switch() == 1 || dr16.get_r_switch() == 3) ? 18 : 0; //m/s
         float feeder_target = (((dr16.get_l_mouse_button() || ref.ref_data.kbm_interaction.button_left) && dr16.get_r_switch() != 2) || dr16.get_r_switch() == 1) ? 10 : 0;
 
+        target_state[0][0] = chassis_pos_x;
         target_state[0][1] = chassis_velocity_x;
+        target_state[1][0] = chassis_pos_y;
         target_state[1][1] = chassis_velocity_y;
         target_state[2][1] = chassis_spin;
         target_state[3][0] = yaw_target;
@@ -227,17 +242,45 @@ int main() {
 
         target_state[5][1] = fly_wheel_target;
         target_state[6][1] = feeder_target;
-        target_state[7][0] = -1;
+        // target_state[7][0] = dr16.get_r_switch() == 2 ? 1 : -1;
+        target_state[7][0] = 1;
 
         // if the left switch is all the way down use Hive controls
-        if(dr16.get_l_switch() == 2) incoming->get_target_state(target_state);
+        if(dr16.get_l_switch() == 2) {
+            incoming->get_target_state(target_state);
+            // if you just switched to hive controls, set the reference to the current state
+            if(hive_toggle){
+                state.set_reference(temp_state);
+                hive_toggle = false;
+            } 
+        }
+        // when in teensy control mode reset hive toggle
+        if(dr16.get_l_switch() == 3) {
+            if(!hive_toggle){
+                pos_offset_x = temp_state[0][0];
+                pos_offset_y = temp_state[1][0];
+            }
+            hive_toggle = true;
+        }
         
         // Read sensors
         estimator_manager->read_sensors();
 
         //step estimates and construct estimated state
-        estimator_manager->step(temp_state, temp_micro_state);
+        // Serial.printf("step\n");
+        
+        if(incoming->get_hive_override_request() == 1) {
+            incoming->get_hive_override_state(hive_state_offset);
+            for(int i = 0; i < STATE_LEN; i++) {
+                for(int j = 0; j < 3; j++) {
+                    temp_state[i][j] = hive_state_offset[i][j];
+                    // Serial.printf("override: %d, %d\n", i, j);
+                }
+            }
+        }
 
+        estimator_manager->step(temp_state, temp_micro_state, incoming->get_hive_override_request());
+        // Serial.printf("estimated\n");
         //if first loop set target state to estimated state
         if (count_one == 0) {
             temp_state[7][0] = 0;
@@ -251,20 +294,32 @@ int main() {
         state.get_reference(temp_reference);
 
         // Update the kinematics of x,y states, as the kinematics change when chassis angle changes
-        kinematics_vel[0][0] = cos(-temp_state[2][0]) * chassis_pos_to_motor_error;
-        kinematics_vel[0][1] = -sin(-temp_state[2][0]) * chassis_pos_to_motor_error;
+        kinematics_vel[0][0] = -sin(temp_state[2][0]) * chassis_pos_to_motor_error;
+        kinematics_vel[0][1] = cos(temp_state[2][0]) * chassis_pos_to_motor_error;
         // motor 2 back right
-        kinematics_vel[1][0] = -sin(-temp_state[2][0]) * chassis_pos_to_motor_error;
-        kinematics_vel[1][1] = -cos(-temp_state[2][0]) * chassis_pos_to_motor_error;
+        kinematics_vel[1][0] = cos(temp_state[2][0]) * chassis_pos_to_motor_error;
+        kinematics_vel[1][1] = sin(temp_state[2][0]) * chassis_pos_to_motor_error;
         // motor 3 back left
-        kinematics_vel[2][0] = -cos(-temp_state[2][0]) * chassis_pos_to_motor_error;
-        kinematics_vel[2][1] = sin(-temp_state[2][0]) * chassis_pos_to_motor_error;
+        kinematics_vel[2][0] = sin(temp_state[2][0]) * chassis_pos_to_motor_error;
+        kinematics_vel[2][1] = -cos(temp_state[2][0]) * chassis_pos_to_motor_error;
         // motor 4 front left
-        kinematics_vel[3][0] = sin(-temp_state[2][0]) * chassis_pos_to_motor_error;
-        kinematics_vel[3][1] = cos(-temp_state[2][0]) * chassis_pos_to_motor_error;
+        kinematics_vel[3][0] = -cos(temp_state[2][0]) * chassis_pos_to_motor_error;
+        kinematics_vel[3][1] = -sin(temp_state[2][0]) * chassis_pos_to_motor_error;
+
+        // Update the kinematics of x,y states, as the kinematics change when chassis angle changes
+        kinematics_pos[0][0] = -sin(temp_state[2][0]) * chassis_pos_to_motor_error;
+        kinematics_pos[0][1] = cos(temp_state[2][0]) * chassis_pos_to_motor_error;
+        // motor 2 back right
+        kinematics_pos[1][0] = cos(temp_state[2][0]) * chassis_pos_to_motor_error;
+        kinematics_pos[1][1] = sin(temp_state[2][0]) * chassis_pos_to_motor_error;
+        // motor 3 back left
+        kinematics_pos[2][0] = sin(temp_state[2][0]) * chassis_pos_to_motor_error;
+        kinematics_pos[2][1] = -cos(temp_state[2][0]) * chassis_pos_to_motor_error;
+        // motor 4 front left
+        kinematics_pos[3][0] = -cos(temp_state[2][0]) * chassis_pos_to_motor_error;
+        kinematics_pos[3][1] = -sin(temp_state[2][0]) * chassis_pos_to_motor_error;
         //generate motor outputs from controls
         controller_manager->step(temp_reference, temp_state, temp_micro_state, kinematics_pos, kinematics_vel, motor_inputs);
-
 
         for (int j = 0; j < 2; j++) {
             for (int i = 0; i < NUM_MOTORS_PER_BUS; i++) {
@@ -299,7 +354,6 @@ int main() {
         outgoing->set_sensor_data(&sensor_data);
         outgoing->set_ref_data(ref_data_raw);
         outgoing->set_estimated_state(temp_state);
-
         //  SAFETY MODE
         if (dr16.is_connected() && (dr16.get_l_switch() == 2 || dr16.get_l_switch() == 3) && config_layer.is_configured()) {
             // SAFETY OFF
@@ -310,17 +364,28 @@ int main() {
             can.zero();
         }
 
-        // for (int i = 3; i < 5; i++) {
-        //     Serial.printf("[");
-        //     for (int j = 0; j < 2; j++) {
-        //         Serial.printf("%f ,", temp_state[i][j]);
+        // Serial.print("estimate:");
+        //     for (int i = 2; i < 4; i++) {
+        //         Serial.printf("[");
+        //         for (int j = 0; j < 3; j++) {
+        //             Serial.printf("%f ,", temp_state[i][j]);
+        //         }
+        //         Serial.print("] ");
         //     }
-        //     Serial.print("] ");
-        // }
+        //     Serial.print("\nreference: ");
+        //     for (int i = 2; i < 4; i++) {
+        //         Serial.printf("[");
+        //         for (int j = 0; j < 3; j++) {
+        //             Serial.printf("%f ,", temp_reference[i][j]);
+        //         }
+        //         Serial.print("] ");
+        //     }
+        //     Serial.print("\nmotor inputs: ");
+        //     for (int i = 4; i < 6; i++) {
+        //             Serial.printf("%f ,", motor_inputs[i]);
+        //     }
+        //     Serial.println();
 
-        // Serial.println();
-        // Serial.println();
-        
         // LED heartbeat -- linked to loop count to reveal slowdowns and freezes.
         loopc % (int)(1E3 / float(HEARTBEAT_FREQ)) < (int)(1E3 / float(5 * HEARTBEAT_FREQ)) ? digitalWrite(13, HIGH) : digitalWrite(13, LOW);
         loopc++;

@@ -33,6 +33,9 @@ private:
     /// @brief Timer for the reference governor
     Timer governor_timer;
 
+    /// @brief counter so dt isnt big in the first loop
+    int count = 0;
+
 public:
     /// @brief Only use one time!!!!!! Use step reference
     /// @param reference start reference at the beginning(should equal current estimate)

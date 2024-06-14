@@ -34,6 +34,10 @@ void ControllerManager::init_controller(uint8_t can_id, uint8_t motor_id, int co
         controllers[index][controller_level] = new SwitcherController(controller_level);
         controllers[index][controller_level]->set_gains(gains);
         break;
+    case 7:
+        controllers[index][controller_level] = new ChassisFullStateFeedbackController(controller_level);
+        controllers[index][controller_level]->set_gains(gains);
+        break;
     default:
         controllers[index][controller_level] = new NullController();
         controllers[index][controller_level]->set_gains(gains);

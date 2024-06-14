@@ -63,8 +63,10 @@ void EstimatorManager::init_estimator(int estimator_id, int num_states) {
     num_estimators++;
 }
 
-void EstimatorManager::step(float macro_outputs[STATE_LEN][3], float micro_outputs[NUM_MOTORS][MICRO_STATE_LEN]) {
+void EstimatorManager::step(float macro_outputs[STATE_LEN][3], float micro_outputs[NUM_MOTORS][MICRO_STATE_LEN], int override) {
     // clear output
+    float curr_state[STATE_LEN][3] = {0};
+    memcpy(curr_state, macro_outputs, sizeof(curr_state));
     clear_outputs(macro_outputs, micro_outputs);
 
     for (int i = 0; i < num_estimators; i++) {
@@ -73,13 +75,14 @@ void EstimatorManager::step(float macro_outputs[STATE_LEN][3], float micro_outpu
         float micro_states[NUM_MOTORS][MICRO_STATE_LEN] = { 0 };
 
         if (!estimators[i]->micro_estimator) {
-            estimators[i]->step_states(macro_states);
+            
+            estimators[i]->step_states(macro_states, curr_state, override);
             for (int j = 0; j < num_states; j++) {
                 for (int k = 0; k < 3; k++)
                     macro_outputs[applied_states[i][j]][k] = macro_outputs[applied_states[i][j]][k] + macro_states[j][k];
             }
         } else {
-            estimators[i]->step_states(micro_states);
+            estimators[i]->step_states(micro_states, curr_state, override);
             for (int j = 0; j < num_states; j++) {
                 for (int k = 0; k < MICRO_STATE_LEN; k++) {
                     micro_outputs[applied_states[i][j]][k] = micro_outputs[applied_states[i][j]][k] + micro_states[j][k];

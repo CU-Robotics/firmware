@@ -18,8 +18,13 @@ constexpr unsigned int KHADAS_PACKET_INFO_OFFSET = 3u;	// 1 byte
 constexpr unsigned int KHADAS_PACKET_TSTATE_OFFSET = 4u;	// 288 bytes
 /// @brief The offset of the Packet ref draw data from the base of the Khadas packet
 constexpr unsigned int KHADAS_PACKET_REF_OFFSET = 292u;	// 128 bytes
+/// @brief The offset for the request byte if hive sent an override state
+constexpr unsigned int KHADAS_PACKET_HIVE_OVERRIDE_STATE_REQUEST_OFFSET = 420u; // 1 byte
+/// @brief The offset of the override state from hive
+constexpr unsigned int KHADAS_PACKET_HIVE_OVERRIDE_STATE_OFFSET = 421u; // 288 bytes
 /// @brief The offset to the end of the Khadas packet
-constexpr unsigned int KHADAS_PACKET_END_OFFSET = 420u;
+constexpr unsigned int KHADAS_PACKET_END_OFFSET = 709u;
+
 
 // Teensy -> Khadas
 /// @brief The offset of the packet ID from the base of the Teesny packet
@@ -86,6 +91,14 @@ struct CommsPacket {
 	/// @brief Get the ref draw data from this packet
 	/// @param draw_data The char array to put the data into
 	void get_ref_draw_data(char** draw_data);
+
+	/// @brief Get the hive override request bit
+	/// @return The request bit
+	uint8_t get_hive_override_request();
+
+	/// @brief Get the hive override state
+	/// @param state The float array to put the state into
+	void get_hive_override_state(float state[STATE_LEN][3]);
 
 	// teensy setters
 	/// @brief Set the time of this packet

@@ -17,7 +17,9 @@ public:
 
     /// @brief step the current state(s) and update the estimate array accordingly
     /// @param outputs estimated state array to update with certain estimated states
-    virtual void step_states(float outputs[STATE_LEN][3]);
+    /// @param curr_state current state array to update with new state
+    /// @param override true if we want to override the current state with the new state
+    virtual void step_states(float outputs[STATE_LEN][3], float curr_state[STATE_LEN][3], int override);
 
     /// @brief gets the number of states that an estimator is estimating
     /// @return get number of states estimated by this estimator
@@ -271,6 +273,9 @@ private:
     /// @brief position estimate to store position after integrating used for chassis odometry
     float pos_estimate[3] = { 0,0,0 };
 
+    /// @brief previous pose to store the previous pose for chassis odometry
+    float previous_pos[3] = { 0,0,0 };
+
 public:
     /// @brief estimate the state of the gimbal
     /// @param config_data inputted sensor values from khadas yaml
@@ -319,7 +324,9 @@ public:
   
     /// @brief calculate estimated states and add to output array
     /// @param output output array to add estimated states to
-    void step_states(float output[STATE_LEN][3]) override {
+    /// @param curr_state current state array to update with new state
+    /// @param override true if we want to override the current state with the new state
+    void step_states(float output[STATE_LEN][3], float curr_state[STATE_LEN][3], int override) override {
         // Serial.printf("Pitch encoder offset: %f\n" ,PITCH_ENCODER_OFFSET);
 
         float pitch_enc_angle = (-buff_enc_pitch->get_angle()) - PITCH_ENCODER_OFFSET;
@@ -428,6 +435,7 @@ public:
             count1++;
             dt = 0;
         }
+        if(override == 1)yaw_angle = curr_state[3][0];
         yaw_angle += current_yaw_velocity * (dt);
         pitch_angle += current_pitch_velocity * (dt);
         roll_angle += current_roll_velocity * (dt);
@@ -435,7 +443,6 @@ public:
         global_yaw_angle += -global_yaw_velocity * (dt);
         global_pitch_angle += -global_pitch_velocity * (dt);
         global_roll_angle += -global_roll_velocity * (dt);
-
 
         while (yaw_angle >= PI)
             yaw_angle -= 2 * PI;
@@ -466,9 +473,19 @@ public:
             odom_pos_diff[i] = rev_diff[i]*odom_wheel_radius;
             total_odom_pos[i] = odom_pos_diff[i]+total_odom_pos[i];
         }
-        chassis_angle = -(total_odom_pos[0] + total_odom_pos[2])/(2*odom_axis_offset_x)+initial_chassis_angle;  
+
+        chassis_angle = yaw_angle - yaw_enc_angle;
+        // chassis_angle = -(total_odom_pos[0] + total_odom_pos[2])/(2*odom_axis_offset_x)+initial_chassis_angle;  
         float d_chassis_heading = (chassis_angle - prev_chassis_angle);
+        if(d_chassis_heading > PI) d_chassis_heading -= 2*PI;
+        else if(d_chassis_heading < -PI) d_chassis_heading += 2*PI;
         prev_chassis_angle = chassis_angle;
+        if(override == 1) {
+            pos_estimate[0] = curr_state[0][0];
+            pos_estimate[1] = curr_state[1][0];
+            previous_pos[0] = curr_state[0][0];
+            previous_pos[1] = curr_state[1][0];
+        }
         if (d_chassis_heading == 0) {
             pos_estimate[0] += ((odom_pos_diff[0])*cos(chassis_angle+odom_angle_offset)) - ((odom_pos_diff[1])*sin(chassis_angle+odom_angle_offset));
             pos_estimate[1] += ((odom_pos_diff[0])*sin(chassis_angle+odom_angle_offset)) + ((odom_pos_diff[1])*cos(chassis_angle+odom_angle_offset));
@@ -480,6 +497,7 @@ public:
             pos_estimate[1] += pod1_relative *sin((chassis_angle + odom_angle_offset) + (d_chassis_heading*0.5))
                 + pod2_relative * cos((chassis_angle + odom_angle_offset) + (d_chassis_heading*0.5));
         }
+        
         // // chassis estimation
         // float front_right = can_data->get_motor_attribute(CAN_1, 1, MotorAttribute::SPEED);
         // float back_right = can_data->get_motor_attribute(CAN_1, 2, MotorAttribute::SPEED);
@@ -515,15 +533,22 @@ public:
         // pos_estimate[1] += vel_estimate[1] * dt;
         // pos_estimate[2] += vel_estimate[2] * dt;
 
+        
+
         output[0][0] = pos_estimate[0]; // x pos
-        // output[0][1] = vel_estimate[0];
+        output[0][1] = (pos_estimate[0]-previous_pos[0])/dt;
         output[0][2] = 0;
         output[1][0] = pos_estimate[1]; // y pos
-        // output[1][1] = vel_estimate[1];
+        output[1][1] = (pos_estimate[1]-previous_pos[1])/dt;
         output[1][2] = 0;
         output[2][0] = chassis_angle; // chassis angle
-        // output[2][1] = vel_estimate[2];
+        output[2][1] = d_chassis_heading/dt;
         output[2][2] = yaw_enc_angle;
+
+        
+        
+        previous_pos[0] = pos_estimate[0];
+        previous_pos[1] = pos_estimate[1];
     }
 };
 
@@ -689,7 +714,9 @@ public:
   
     /// @brief calculate estimated states and add to output array
     /// @param output output array to add estimated states to
-    void step_states(float output[STATE_LEN][3]) override {
+    /// @param curr_state current state of the system
+    /// @param override override the current state
+    void step_states(float output[STATE_LEN][3], float curr_state[STATE_LEN][3], int override) override {
         // Serial.printf("Pitch encoder offset: %f\n" ,PITCH_ENCODER_OFFSET);
 
         float pitch_enc_angle = (-buff_enc_pitch->get_angle()) - PITCH_ENCODER_OFFSET;
@@ -907,7 +934,9 @@ public:
 
     /// @brief generate estimated states and replace in output array
     /// @param output array to be updated with the calculated states
-    void step_states(float output[STATE_LEN][3]) {
+    /// @param curr_state current state of the flywheel
+    /// @param override override flag
+    void step_states(float output[STATE_LEN][3], float curr_state[STATE_LEN][3], int override) {
         //can
         float radius = 30 * 0.001; //meters
         float angular_velocity_l = -can_data->get_motor_attribute(CAN_2, 3, MotorAttribute::SPEED) * (2 * PI) / 60;
@@ -954,7 +983,9 @@ public:
 
     /// @brief calculate state updates
     /// @param output updated balls per second of feeder
-    void step_states(float output[STATE_LEN][3]) {
+    /// @param curr_state current state of the feeder
+    /// @param override override flag
+    void step_states(float output[STATE_LEN][3], float curr_state[STATE_LEN][3], int override) {
         //can
         float angular_velocity_motor = can_data->get_motor_attribute(CAN_2, 5, MotorAttribute::SPEED) / 60;
         float angular_velocity_feeder = angular_velocity_motor / 36;
@@ -982,6 +1013,18 @@ private:
 
     /// @brief used to scale the tof sensor data to -1 to 1
     float tof_scale = 0;
+
+    /// @brief last motor angle
+    float last_motor_angle = 0;
+
+    /// @brief total motor angle
+    float total_motor_angle = 0;
+
+    /// @brief delta time
+    float dt = 0;
+
+    /// @brief count to check if dt is valid
+    int count = 0;
 public:
     /// @brief make new barrel switcher estimator and set can_data pointer and num_states
     /// @param config config data from yaml
@@ -998,13 +1041,31 @@ public:
 
     /// @brief calculate state updates
     /// @param output updated balls per second of feeder
-    void step_states(float output[STATE_LEN][3]) {
+    /// @param curr_state current state of the barrel switcher
+    /// @param override override flag
+    void step_states(float output[STATE_LEN][3], float curr_state[STATE_LEN][3], int override) {
+        dt = time.delta();
         //read tof sensor (millimeters)
-        float distance_from_right = ((float)(time_of_flight->read()) - tof_sensor_offset)/tof_scale;
+        float tof_distance = ((float)(time_of_flight->read()) - tof_sensor_offset)/tof_scale;
         float angular_velocity_motor = -((((can_data->get_motor_attribute(CAN_2, 6, MotorAttribute::SPEED) / 60)*(2*PI))/36.0)*(5.1))/tof_scale;
-        output[0][0] = distance_from_right;
+        total_motor_angle += (can_data->get_motor_attribute(CAN_2, 6, MotorAttribute::SPEED) * (2*PI/60.0))*dt;
+        // float rad_per_switch = 315;
+        // if(total_motor_angle > rad_per_switch){
+        //     total_motor_angle = rad_per_switch;
+        // }
+        // if(total_motor_angle < 0){
+        //     total_motor_angle = 0;
+        // }
+        // float distance_from_right = -(total_motor_angle-(rad_per_switch/2.0))/(rad_per_switch/2.0);
+        // if(count < 10){
+        //     dt = 0;
+        //     distance_from_right = tof_distance;
+        //     count++;
+        // }
+        // distance_from_right = distance_from_right*0.99 + tof_distance*0.01;
+        output[0][0] = tof_distance;
+        Serial.printf("tof: %f\n",tof_distance);
         output[0][1] = angular_velocity_motor;
-
     }
 };
 
@@ -1027,7 +1088,9 @@ public:
 
     /// @brief step through each motor and add to micro state
     /// @param output entire micro state 
-    void step_states(float output[NUM_MOTORS][MICRO_STATE_LEN]) {
+    /// @param curr_state current micro state
+    /// @param override override flag
+    void step_states(float output[NUM_MOTORS][MICRO_STATE_LEN], float curr_state[NUM_MOTORS][MICRO_STATE_LEN], int override) {
         for (int i = 0; i < NUM_CAN_BUSES; i++) {
             for (int j = 0; j < NUM_MOTORS_PER_BUS; j++) {
                 output[(i * NUM_MOTORS_PER_BUS) + j][0] = (can_data->get_motor_attribute(i, j + 1, MotorAttribute::SPEED) / 60) * 2 * PI;

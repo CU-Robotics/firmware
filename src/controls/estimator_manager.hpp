@@ -75,7 +75,8 @@ public:
     /// @brief Steps through every estimator and constructs a state array based on current sensor values.
     /// @param state macro state array pointer to be updated.
     /// @param micro_state micro state array pointer to be updated.
-    void step(float state[STATE_LEN][3], float micro_state[NUM_MOTORS][MICRO_STATE_LEN]);
+    /// @param override true if we want to override the current state with the new state.
+    void step(float state[STATE_LEN][3], float micro_state[NUM_MOTORS][MICRO_STATE_LEN], int override);
 
     /// @brief read all sensor arrays besides can and dr16(they are in main).
     void read_sensors();

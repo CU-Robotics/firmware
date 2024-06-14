@@ -24,6 +24,14 @@ void CommsPacket::get_target_state(float state[STATE_LEN][3]) {
     memcpy(state, raw + KHADAS_PACKET_TSTATE_OFFSET, sizeof(float) * STATE_LEN * 3);
 }
 
+uint8_t CommsPacket::get_hive_override_request() {
+    return *reinterpret_cast<uint8_t*>(raw + KHADAS_PACKET_HIVE_OVERRIDE_STATE_REQUEST_OFFSET);
+}
+
+void CommsPacket::get_hive_override_state(float state[STATE_LEN][3]) {
+    memcpy(state, raw + KHADAS_PACKET_HIVE_OVERRIDE_STATE_OFFSET, sizeof(float) * STATE_LEN * 3);
+}
+
 void CommsPacket::get_ref_draw_data(char** draw_data) {}
 
 void CommsPacket::set_time(double time) {
