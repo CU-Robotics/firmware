@@ -235,9 +235,10 @@ int main() {
         target_state[4][0] = pitch_target;
         target_state[4][1] = 0;
 
-        // target_state[5][1] = fly_wheel_target;
-        // target_state[6][1] = feeder_target;
-        target_state[7][0] = dr16.get_r_switch() == 2 ? 1 : -1;
+        target_state[5][1] = fly_wheel_target;
+        target_state[6][1] = feeder_target;
+        // target_state[7][0] = dr16.get_r_switch() == 2 ? 1 : -1;
+        target_state[7][0] = 1;
 
         // if the left switch is all the way down use Hive controls
         if(dr16.get_l_switch() == 2) {

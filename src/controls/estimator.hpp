@@ -1037,21 +1037,22 @@ public:
         float tof_distance = ((float)(time_of_flight->read()) - tof_sensor_offset)/tof_scale;
         float angular_velocity_motor = -((((can_data->get_motor_attribute(CAN_2, 6, MotorAttribute::SPEED) / 60)*(2*PI))/36.0)*(5.1))/tof_scale;
         total_motor_angle += (can_data->get_motor_attribute(CAN_2, 6, MotorAttribute::SPEED) * (2*PI/60.0))*dt;
-        float rad_per_switch = 315;
-        if(total_motor_angle > rad_per_switch){
-            total_motor_angle = rad_per_switch;
-        }
-        if(total_motor_angle < 0){
-            total_motor_angle = 0;
-        }
-        float distance_from_right = -(total_motor_angle-(rad_per_switch/2.0))/(rad_per_switch/2.0);
-        if(count < 10){
-            dt = 0;
-            distance_from_right = tof_distance;
-            count++;
-        }
+        // float rad_per_switch = 315;
+        // if(total_motor_angle > rad_per_switch){
+        //     total_motor_angle = rad_per_switch;
+        // }
+        // if(total_motor_angle < 0){
+        //     total_motor_angle = 0;
+        // }
+        // float distance_from_right = -(total_motor_angle-(rad_per_switch/2.0))/(rad_per_switch/2.0);
+        // if(count < 10){
+        //     dt = 0;
+        //     distance_from_right = tof_distance;
+        //     count++;
+        // }
         // distance_from_right = distance_from_right*0.99 + tof_distance*0.01;
-        output[0][0] = distance_from_right;
+        output[0][0] = tof_distance;
+        Serial.printf("tof: %f\n",tof_distance);
         output[0][1] = angular_velocity_motor;
     }
 };

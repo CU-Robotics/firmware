@@ -341,13 +341,13 @@ public:
         pidp.K[0] = gains[0];
         pidp.K[1] = gains[1];
         pidp.K[2] = gains[2];
+        pidp.K[3] = 0;
 
         pidv.K[0] = gains[4];
         pidv.K[1] = gains[5];
         pidv.K[2] = gains[6];
-        pidp.K[3] = 0;
-        Serial.printf("Pushing into wall: %f, %f\n", estimate[0], reference[0]);
-        // Feed forward to push the switcher into the wall constantly with a small force
+        // Serial.printf("Pushing into wall: %f, %f\n", estimate[0], reference[0]);
+        // // Feed forward to push the switcher into the wall constantly with a small force
         if(estimate[0] > gains[7] && reference[0] > -gains[7] && !(reference[0] < gains[7])) {
             pidp.K[3] = gains[3];
             pidp.K[0] = 0;
@@ -359,6 +359,14 @@ public:
         } else {
             pidp.K[3] = 0;
         }
+
+        // if(reference[0] > 0){
+        //     pidp.K[3] = gains[3];
+        // } else if(reference[0] < 0){
+        //     pidp.K[3] = -gains[3];
+        // } else {
+        //     pidp.K[3] = 0;
+        // }
 
         pidp.setpoint = reference[0]; // 1st index = position
         pidp.measurement = estimate[0];
