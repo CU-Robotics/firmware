@@ -262,20 +262,20 @@ int main() {
         estimator_manager->read_sensors();
 
         //step estimates and construct estimated state
-        Serial.printf("step\n");
+        // Serial.printf("step\n");
         
         if(incoming->get_hive_override_request() == 1) {
             incoming->get_hive_override_state(hive_state_offset);
             for(int i = 0; i < STATE_LEN; i++) {
                 for(int j = 0; j < 3; j++) {
                     temp_state[i][j] = hive_state_offset[i][j];
-                    Serial.printf("override: %d, %d\n", i, j);
+                    // Serial.printf("override: %d, %d\n", i, j);
                 }
             }
         }
 
         estimator_manager->step(temp_state, temp_micro_state, incoming->get_hive_override_request());
-        Serial.printf("estimated\n");
+        // Serial.printf("estimated\n");
         //if first loop set target state to estimated state
         if (count_one == 0) {
             temp_state[7][0] = 0;
@@ -353,20 +353,34 @@ int main() {
         if (dr16.is_connected() && (dr16.get_l_switch() == 2 || dr16.get_l_switch() == 3) && config_layer.is_configured()) {
             // SAFETY OFF
             can.write();
+            Serial.print("estimate:");
+            for (int i = 2; i < 4; i++) {
+                Serial.printf("[");
+                for (int j = 0; j < 3; j++) {
+                    Serial.printf("%f ,", temp_state[i][j]);
+                }
+                Serial.print("] ");
+            }
+            Serial.print("\nreference: ");
+            for (int i = 2; i < 4; i++) {
+                Serial.printf("[");
+                for (int j = 0; j < 3; j++) {
+                    Serial.printf("%f ,", temp_reference[i][j]);
+                }
+                Serial.print("] ");
+            }
+            Serial.print("\nmotor inputs: ");
+            for (int i = 4; i < 6; i++) {
+                    Serial.printf("%f ,", motor_inputs[i]);
+            }
+            Serial.println();
         } else {
             // SAFETY ON
             // TODO: Reset all controller integrators here
             can.zero();
         }
 
-        // for (int i = 0; i < 5; i++) {
-        //     Serial.printf("[");
-        //     for (int j = 0; j < 2; j++) {
-        //         Serial.printf("%f ,", temp_state[i][j]);
-        //     }
-        //     Serial.print("] ");
-        // }
-        // Serial.println();
+        
         
         // LED heartbeat -- linked to loop count to reveal slowdowns and freezes.
         loopc % (int)(1E3 / float(HEARTBEAT_FREQ)) < (int)(1E3 / float(5 * HEARTBEAT_FREQ)) ? digitalWrite(13, HIGH) : digitalWrite(13, LOW);

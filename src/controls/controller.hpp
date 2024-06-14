@@ -254,6 +254,7 @@ public:
 
         output += pid1.filter(dt, true, true); // position wraps
         output += pid2.filter(dt, true, false); // no wrap for velocity
+        output = constrain(output, -1.0, 1.0);
         return output;
     }
 
