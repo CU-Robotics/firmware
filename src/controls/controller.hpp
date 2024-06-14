@@ -395,6 +395,7 @@ public:
     }
 };
 
+/// @brief Position controller for the chassis
 struct ChassisFullStateFeedbackController : public Controller {
 private:
     /// @brief filter for calculating pid position controller outputs

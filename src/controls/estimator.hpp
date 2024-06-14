@@ -322,6 +322,8 @@ public:
   
     /// @brief calculate estimated states and add to output array
     /// @param output output array to add estimated states to
+    /// @param curr_state current state array to update with new state
+    /// @param override true if we want to override the current state with the new state
     void step_states(float output[STATE_LEN][3], float curr_state[STATE_LEN][3], int override) override {
         // Serial.printf("Pitch encoder offset: %f\n" ,PITCH_ENCODER_OFFSET);
 
@@ -710,6 +712,8 @@ public:
   
     /// @brief calculate estimated states and add to output array
     /// @param output output array to add estimated states to
+    /// @param curr_state current state of the system
+    /// @param override override the current state
     void step_states(float output[STATE_LEN][3], float curr_state[STATE_LEN][3], int override) override {
         // Serial.printf("Pitch encoder offset: %f\n" ,PITCH_ENCODER_OFFSET);
 
@@ -928,6 +932,8 @@ public:
 
     /// @brief generate estimated states and replace in output array
     /// @param output array to be updated with the calculated states
+    /// @param curr_state current state of the flywheel
+    /// @param override override flag
     void step_states(float output[STATE_LEN][3], float curr_state[STATE_LEN][3], int override) {
         //can
         float radius = 30 * 0.001; //meters
@@ -975,6 +981,8 @@ public:
 
     /// @brief calculate state updates
     /// @param output updated balls per second of feeder
+    /// @param curr_state current state of the feeder
+    /// @param override override flag
     void step_states(float output[STATE_LEN][3], float curr_state[STATE_LEN][3], int override) {
         //can
         float angular_velocity_motor = can_data->get_motor_attribute(CAN_2, 5, MotorAttribute::SPEED) / 60;
@@ -1031,6 +1039,8 @@ public:
 
     /// @brief calculate state updates
     /// @param output updated balls per second of feeder
+    /// @param curr_state current state of the barrel switcher
+    /// @param override override flag
     void step_states(float output[STATE_LEN][3], float curr_state[STATE_LEN][3], int override) {
         dt = time.delta();
         //read tof sensor (millimeters)
@@ -1076,6 +1086,8 @@ public:
 
     /// @brief step through each motor and add to micro state
     /// @param output entire micro state 
+    /// @param curr_state current micro state
+    /// @param override override flag
     void step_states(float output[NUM_MOTORS][MICRO_STATE_LEN], float curr_state[NUM_MOTORS][MICRO_STATE_LEN], int override) {
         for (int i = 0; i < NUM_CAN_BUSES; i++) {
             for (int j = 0; j < NUM_MOTORS_PER_BUS; j++) {
