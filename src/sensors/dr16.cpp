@@ -62,7 +62,8 @@ void DR16::read() {
 	// k2 = m_inputRaw[15];
   
 	mouse_x = (m_inputRaw[7] << 8) | m_inputRaw[6]; 
-	mouse_y = (m_inputRaw[9] << 8) | m_inputRaw[8]; 
+	mouse_y = (m_inputRaw[9] << 8) | m_inputRaw[8];
+	mouse_scroll = (m_inputRaw[11] << 8) | m_inputRaw[10]; 
 	l_mouse_button = m_inputRaw[12];
 	r_mouse_button = m_inputRaw[13];
 	s1 = (m_inputRaw[5] & 0x30) >> 4;
@@ -207,6 +208,10 @@ int DR16::get_mouse_x() {
 	return mouse_x;
 }
 
+int DR16::get_mouse_scroll() {
+	return mouse_scroll;
+}
+
 bool DR16::get_l_mouse_button() {
 	return l_mouse_button;
 }
@@ -214,3 +219,4 @@ bool DR16::get_l_mouse_button() {
 bool DR16::get_r_mouse_button() {
 	return r_mouse_button;
 }
+

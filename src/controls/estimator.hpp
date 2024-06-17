@@ -1064,7 +1064,6 @@ public:
         // }
         // distance_from_right = distance_from_right*0.99 + tof_distance*0.01;
         output[0][0] = tof_distance;
-        Serial.printf("tof: %f\n",tof_distance);
         output[0][1] = angular_velocity_motor;
     }
 };

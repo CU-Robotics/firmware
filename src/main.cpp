@@ -181,8 +181,11 @@ int main() {
     float chassis_velocity_y = 0;
     float chassis_pos_x = 0;
     float chassis_pos_y = 0;
+    float auto_aim_yaw = 0;
+    float auto_aim_pitch = 0;
 
     bool hive_toggle = false;
+    bool auto_aiming = false;
 
     // Main loop
     while (true) {
@@ -218,16 +221,16 @@ int main() {
             chassis_pos_x = dr16.get_l_stick_x() * 2 + pos_offset_x;
             chassis_pos_y = dr16.get_l_stick_y() * 2 + pos_offset_y;
         }
-        float chassis_spin = dr16.get_wheel() * 25;
+        float chassis_spin = dr16.get_wheel() * 25 + 2;
 
         float pitch_target = 1.57
                             + -dr16.get_r_stick_y() * 0.3
-                            + dr16_pos_y
-                            + vtm_pos_y;
+                            + dr16_pos_y;
+                            // + vtm_pos_y;
         float yaw_target = -dr16.get_r_stick_x() * 1.5
-                            - dr16_pos_x
-                            - vtm_pos_x;
-        float fly_wheel_target = (dr16.get_r_switch() == 1 || dr16.get_r_switch() == 3) ? 18 : 0; //m/s
+                            - dr16_pos_x;
+                            // - vtm_pos_x;
+        float fly_wheel_target = (dr16.get_r_switch() == 1 || dr16.get_r_switch() == 3) ? 25 : 0; //m/s
         float feeder_target = (((dr16.get_l_mouse_button() || ref.ref_data.kbm_interaction.button_left) && dr16.get_r_switch() != 2) || dr16.get_r_switch() == 1) ? 10 : 0;
 
         target_state[0][0] = chassis_pos_x;
@@ -242,17 +245,34 @@ int main() {
 
         target_state[5][1] = fly_wheel_target;
         target_state[6][1] = feeder_target;
-        // target_state[7][0] = dr16.get_r_switch() == 2 ? 1 : -1;
         target_state[7][0] = 1;
+        if(dr16.get_mouse_scroll() > 0){
+            target_state[8][0] =  1;
+        } else if(dr16.get_mouse_scroll() < 0){
+            target_state[8][0] = -1;
+        }
 
         // if the left switch is all the way down use Hive controls
         if(dr16.get_l_switch() == 2) {
-            incoming->get_target_state(target_state);
+            if(dr16.get_r_mouse_button() == 1){
+                incoming->get_target_state(target_state);
+                auto_aim_yaw = target_state[3][0];
+                auto_aim_pitch = target_state[4][0];
+                auto_aiming = true;
+            }
             // if you just switched to hive controls, set the reference to the current state
             if(hive_toggle){
                 state.set_reference(temp_state);
                 hive_toggle = false;
             } 
+        }
+
+        if(auto_aiming){
+            if(dr16.get_r_mouse_button() == 0){
+                dr16_pos_x = -auto_aim_yaw;
+                dr16_pos_y = auto_aim_pitch - 1.57;
+                auto_aiming = false;
+            }
         }
         // when in teensy control mode reset hive toggle
         if(dr16.get_l_switch() == 3) {
@@ -342,7 +362,6 @@ int main() {
         lidar2.export_data(lidar_data);
         memcpy(sensor_data.raw + SENSOR_LIDAR2_OFFSET, lidar_data, D200_NUM_PACKETS_CACHED * D200_PAYLOAD_SIZE);
 
-        
         // construct ref data packet
         uint8_t ref_data_raw[180] = { 0 };
         ref.get_data_for_comms(ref_data_raw);
@@ -364,27 +383,27 @@ int main() {
             can.zero();
         }
 
-        // Serial.print("estimate:");
-        //     for (int i = 2; i < 4; i++) {
-        //         Serial.printf("[");
-        //         for (int j = 0; j < 3; j++) {
-        //             Serial.printf("%f ,", temp_state[i][j]);
-        //         }
-        //         Serial.print("] ");
-        //     }
-        //     Serial.print("\nreference: ");
-        //     for (int i = 2; i < 4; i++) {
-        //         Serial.printf("[");
-        //         for (int j = 0; j < 3; j++) {
-        //             Serial.printf("%f ,", temp_reference[i][j]);
-        //         }
-        //         Serial.print("] ");
-        //     }
-        //     Serial.print("\nmotor inputs: ");
-        //     for (int i = 4; i < 6; i++) {
-        //             Serial.printf("%f ,", motor_inputs[i]);
-        //     }
-        //     Serial.println();
+        Serial.print("\nestimate:");
+            for (int i = 8; i < 9; i++) {
+                Serial.printf("[");
+                for (int j = 0; j < 3; j++) {
+                    Serial.printf("%f ,", temp_state[i][j]);
+                }
+                Serial.print("] ");
+            }
+            Serial.print("reference: ");
+            for (int i = 8; i < 9; i++) {
+                Serial.printf("[");
+                for (int j = 0; j < 3; j++) {
+                    Serial.printf("%f ,", temp_reference[i][j]);
+                }
+                Serial.print("] ");
+            }
+            Serial.print("motor inputs: ");
+            for (int i = 13; i < 15; i++) {
+                    Serial.printf("%f ,", motor_inputs[i]);
+            }
+            // Serial.println();
 
         // LED heartbeat -- linked to loop count to reveal slowdowns and freezes.
         loopc % (int)(1E3 / float(HEARTBEAT_FREQ)) < (int)(1E3 / float(5 * HEARTBEAT_FREQ)) ? digitalWrite(13, HIGH) : digitalWrite(13, LOW);
