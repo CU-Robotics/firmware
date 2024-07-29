@@ -49,14 +49,6 @@
 
 class VL53L4CD {
   public:
-    // BEGIN MODIFIED CODE
-    /// @brief Default constructor
-    VL53L4CD() : dev_i2c(nullptr), xshut(-1)
-    {
-      dev = 0x52;
-    }
-    /// END MODIFIED CODE
-
     /** Constructor
      * @param[in] i2c device I2C to be used for communication
      * @param[in] xshut_pin pin to be used as component LPn
