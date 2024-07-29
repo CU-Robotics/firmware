@@ -37,6 +37,7 @@
 #include "core_id.h"
 #include "WString.h"
 #include "Printable.h"
+#include "printf.h"
 
 #define DEC 10
 #define HEX 16
