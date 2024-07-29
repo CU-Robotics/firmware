@@ -13,8 +13,11 @@ TEENSY_LIB = teensy4
 
 # Used external libraries
 LIBRARY_DIR = libraries
-# this is where you add your new library to, add it's path with a '-I' attached to the front
-LIBRARY_INCLUDE = -Ilibraries/Adafruit_BusIO -Ilibraries/Adafruit_ICM20X -Ilibraries/Adafruit_LIS3MDL -Ilibraries/Adafruit_LSM6DS -Ilibraries/Adafruit_Sensor -Ilibraries/FlexCAN_T4 -Ilibraries/FreqMeasureMulti -Ilibraries/SPI -Ilibraries/unity -Ilibraries/Wire -Ilibraries/VL53L4CD
+LIBRARY_SOURCE_C = $(shell find $(LIBRARY_DIR) -name "*.c") 
+LIBRARY_SOURCE_CPP = $(shell find $(LIBRARY_DIR) -name "*.cpp")
+
+LIBRARY_INCLUDE = -Ilibraries/Adafruit_BusIO -Ilibraries/Adafruit_ICM20X -Ilibraries/Adafruit_LIS3MDL -Ilibraries/Adafruit_LSM6DS -Ilibraries/Adafruit_Sensor -Ilibraries/FlexCAN_T4 -Ilibraries/FreqMeasureMulti -Ilibraries/SPI -Ilibraries/unity -Ilibraries/Wire -Ilibraries/VL53L4CD -Ilibraries/SD -Ilibraries/SdFat -Ilibraries/SdFat/src
+
 # name of the output lib file
 LIBRARY_LIB_NAME = liblibs.a
 # lib file name stripped of initial 'lib' and '.a'
@@ -28,8 +31,7 @@ PROJECT_INCLUDE = src
 PROJECT_NAME = firmware
 
 # Teensy41 compiler flags
-TEENSY4_FLAGS = -DF_CPU=600000000 -DUSB_RAWHID -DLAYOUT_US_ENGLISH -D__IMXRT1062__ -DTEENSYDUINO=157 -DARDUINO_TEENSY41
-
+TEENSY4_FLAGS = -DF_CPU=600000000 -DUSB_RAWHID -DLAYOUT_US_ENGLISH -D__IMXRT1062__ -DTEENSYDUINO=157 -DARDUINO_TEENSY41 -DARDUINO=200
 # CPU flags to tailor the code for the Teensy processor
 CPU_FLAGS = -mcpu=cortex-m7 -mfloat-abi=hard -mfpu=fpv5-d16 -mthumb
 
@@ -63,7 +65,7 @@ COMPILER_C := $(ARDUINO_PATH)/packages/teensy/tools/teensy-compile/5.4.1/arm/bin
 OBJCOPY := $(ARDUINO_PATH)/packages/teensy/tools/teensy-compile/5.4.1/arm/bin/arm-none-eabi-objcopy
 
 # targets are phony to force it to rebuild every time
-.PHONY: build upload monitor kill clean_objs clean_bin clean
+.PHONY: build upload monitor kill restart clean clean_objs clean_bin rebuild_libs lib_all lib_teensy lib_libs clean_libs
 .DEFAULT_GOAL = build
 
 # builds source, links with libraries, and constructs the .hex to be uploaded
@@ -111,3 +113,31 @@ clean_bin:
 # overall clean target
 clean: clean_objs clean_bin
 
+rebuild_libs: clean_libs lib_all
+
+lib_all: lib_teensy lib_libs
+
+lib_teensy:
+	@echo [Building Teensy Core CPP]
+	@$(COMPILER_CPP) $(COMPILE_FLAGS) $(CPP_FLAGS) -c $(TEENSY_DIR)/*.cpp $(TEENSY_INCLUDE)
+	@echo [Building Teensy Core C]
+	@$(COMPILER_C) $(COMPILE_FLAGS) -c $(TEENSY_DIR)/*.c $(TEENSY_INCLUDE)
+	@echo [Assembling Static Library]
+	@ar rcs $(TEENSY_LIB_NAME) *.o
+	@echo [$(TEENSY_LIB_NAME) Created in $(PROJECT_DIR)]
+	@rm *.o -f
+	@echo [Cleaning Up]
+
+lib_libs: 
+	@echo [Building Libraries C]
+	@$(COMPILER_C) $(COMPILE_FLAGS) -c $(LIBRARY_SOURCE_C) $(LIBRARY_INCLUDE) $(TEENSY_INCLUDE)
+	@echo [Building Libraries CPP]
+	@$(COMPILER_CPP) $(COMPILE_FLAGS) $(CPP_FLAGS) -c $(LIBRARY_SOURCE_CPP) $(LIBRARY_INCLUDE) $(TEENSY_INCLUDE) 
+	@echo [Assembling Static Library]
+	@ar rcs $(LIBRARY_LIB_NAME) *.o
+	@echo [$(LIBRARY_LIB_NAME) Created in $(PROJECT_DIR)]
+	@rm *.o -f
+	@echo [Cleaning Up]
+
+clean_libs:
+	@rm *.a -f
