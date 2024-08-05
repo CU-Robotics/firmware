@@ -9,7 +9,7 @@ You can find our documentation guidelines at [docs/README](docs/README.md), and 
 ## Installation
 To begin, clone the repository:
 ```bash
-git clone https://gitlab.com/cu-robotics/firmware.git
+git clone https://github.com/cu-robotics/firmware.git
 ```
 
 Then, install dependencies:
@@ -20,11 +20,7 @@ git config --local core.hooksPath .githooks
 ```
 
 If the files `liblibs.a` and `libsteensy4.a` do not exist in the core directory, follow these steps.
- * Checkout the branch `lib-source`
- * Run `make`
- * Store the resulting library files `liblibs.a` and `libteensy4.a` to some tempory location outside of the repository
- * Return to your old branch (or `main`)
- * Copy those library files into the core directory
+ * Run `make lib_all`
 
 ## Usage
 
