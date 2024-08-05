@@ -1,0 +1,5 @@
+<map id="HIDLayer" name="HIDLayer">
+<area shape="rect" id="node1" title="The communications layer between Khadas and Teensy." alt="" coords="93,109,170,136"/>
+<area shape="rect" id="node2" href="$structCommsPacket.html" title="An encapsulating data struct managing a HID packet." alt="" coords="5,5,113,32"/>
+<area shape="rect" id="node3" href="$structSensorData.html" title="An encapsulating data struct managing data from all of Teensy&#39;s sensors." alt="" coords="159,5,250,32"/>
+</map>

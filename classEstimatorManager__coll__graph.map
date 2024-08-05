@@ -1,0 +1,13 @@
+<map id="EstimatorManager" name="EstimatorManager">
+<area shape="rect" id="node1" title="Manage all estimators for macro and micro state." alt="" coords="341,184,467,211"/>
+<area shape="rect" id="node2" href="$structConfig.html" title="struct to hold configuration data" alt="" coords="5,95,64,121"/>
+<area shape="rect" id="node3" href="$classBuffEncoder.html" title="Driver for the Buff&#45;Encoder." alt="" coords="89,95,181,121"/>
+<area shape="rect" id="node4" href="$structCANData.html" title="The purpose of this struct is to be able to pass updated CAN data around without having to pass a rm_..." alt="" coords="205,95,283,121"/>
+<area shape="rect" id="node5" href="$classICM20649.html" title="Sensor access for an ICM20649 IMU Sensor. Child of the abstract IMUSensor class." alt="" coords="307,95,389,121"/>
+<area shape="rect" id="node6" href="$classIMUSensor.html" title="Abstract parent class for all IMUSensors, which give acceleration and gyroscope data." alt="" coords="351,5,439,32"/>
+<area shape="rect" id="node9" href="$classLSM6DSOX.html" title="Sensor access for an LSM6DSOX IMU Sensor. Child of the abstract IMUSensor class." alt="" coords="413,95,507,121"/>
+<area shape="rect" id="node7" href="$classRevEncoder.html" title="the class for the Rev Through Bore Encoder(www.revrobotics.com/rev&#45;11&#45;1271/)" alt="" coords="531,95,623,121"/>
+<area shape="rect" id="node8" href="$classTOFSensor.html" title="A time of flight sensor to measure distance in millimeters." alt="" coords="647,95,737,121"/>
+<area shape="rect" id="node10" href="$structEstimator.html" title="Parent estimator struct. All estimators should inherit from this." alt="" coords="761,95,839,121"/>
+<area shape="rect" id="node11" href="$structTimer.html" title="Timing object with blocking capability." alt="" coords="773,5,827,32"/>
+</map>

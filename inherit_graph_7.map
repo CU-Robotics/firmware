@@ -1,0 +1,11 @@
+<map id="Graphical Class Hierarchy" name="Graphical Class Hierarchy">
+<area shape="rect" id="node1" href="$structController.html" title="Parent controller struct, all controllers should be based off of this." alt="" coords="5,198,83,225"/>
+<area shape="rect" id="node2" href="$structChassisFullStateFeedbackController.html" title="Position controller for the chassis." alt="" coords="137,5,316,47"/>
+<area shape="rect" id="node3" href="$structChassisPIDVelocityController.html" title="Controller for all chassis movement, which includes power limiting." alt="" coords="131,71,323,98"/>
+<area shape="rect" id="node4" href="$structFullStateFeedbackController.html" title="Fullstate controller which works on both position and velocity of a state." alt="" coords="133,122,320,149"/>
+<area shape="rect" id="node5" href="$structNullController.html" title="Default controller." alt="" coords="177,173,277,199"/>
+<area shape="rect" id="node6" href="$structPIDFVelocityController.html" title="PID controller with feedforward capability." alt="" coords="150,223,303,250"/>
+<area shape="rect" id="node7" href="$structPIDPositionController.html" title="PID controller working on position." alt="" coords="153,274,300,301"/>
+<area shape="rect" id="node8" href="$structPIDVelocityController.html" title="PID controller working on velocity." alt="" coords="154,325,299,351"/>
+<area shape="rect" id="node9" href="$structSwitcherController.html" title="Controller for the switcher, which is a fullstate controller with feedforward." alt="" coords="163,375,291,402"/>
+</map>

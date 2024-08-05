@@ -1,0 +1,7 @@
+<map id="SwitcherEstimator" name="SwitcherEstimator">
+<area shape="rect" id="node1" title="Estimate the state of the switcher in millimeters." alt="" coords="81,184,209,211"/>
+<area shape="rect" id="node2" href="$structEstimator.html" title="Parent estimator struct. All estimators should inherit from this." alt="" coords="5,95,83,121"/>
+<area shape="rect" id="node3" href="$structTimer.html" title="Timing object with blocking capability." alt="" coords="17,5,71,32"/>
+<area shape="rect" id="node4" href="$structCANData.html" title="The purpose of this struct is to be able to pass updated CAN data around without having to pass a rm_..." alt="" coords="107,95,184,121"/>
+<area shape="rect" id="node5" href="$classTOFSensor.html" title="A time of flight sensor to measure distance in millimeters." alt="" coords="209,95,298,121"/>
+</map>
