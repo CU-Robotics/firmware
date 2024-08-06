@@ -50,3 +50,6 @@ This repo follows the CU Robotics code standard:
 - `patch` branches are named `patch-[patchname]` and contain bugfixes and/or minor adjustments. Unit and integration testing is a soft requirement.
 - All software is required to pass formatting and build tests before being merged into a `production` branch.
 - Other branch-based style questions are answered in the [style guide](docs/README.md).
+
+## Licensing
+This repository uses the MIT License, which covers the code and tools written for our robot firmware. See separate copyright/licensing information for the external libraries used in the repo (in the libaries/ and teensy4/ directories).
