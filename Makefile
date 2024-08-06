@@ -16,7 +16,7 @@ LIBRARY_DIR = libraries
 LIBRARY_SOURCE_C = $(shell find $(LIBRARY_DIR) -name "*.c") 
 LIBRARY_SOURCE_CPP = $(shell find $(LIBRARY_DIR) -name "*.cpp")
 
-LIBRARY_INCLUDE = -Ilibraries/Adafruit_BusIO -Ilibraries/Adafruit_ICM20X -Ilibraries/Adafruit_LIS3MDL -Ilibraries/Adafruit_LSM6DS -Ilibraries/Adafruit_Sensor -Ilibraries/FlexCAN_T4 -Ilibraries/FreqMeasureMulti -Ilibraries/SPI -Ilibraries/unity -Ilibraries/Wire -Ilibraries/VL53L4CD -Ilibraries/SD -Ilibraries/SdFat -Ilibraries/SdFat/src
+LIBRARY_INCLUDE = -Ilibraries/Adafruit_BusIO -Ilibraries/Adafruit_ICM20X -Ilibraries/Adafruit_LIS3MDL -Ilibraries/Adafruit_LSM6DS -Ilibraries/Adafruit_Sensor -Ilibraries/FlexCAN_T4 -Ilibraries/FreqMeasureMulti -Ilibraries/SPI -Ilibraries/unity -Ilibraries/Wire -Ilibraries/VL53L4CD -Ilibraries/SD -Ilibraries/SdFat -Ilibraries/SdFat/src -Ilibraries/FastLED-3.7.0/src
 
 # name of the output lib file
 LIBRARY_LIB_NAME = liblibs.a
