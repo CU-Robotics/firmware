@@ -11,7 +11,6 @@
 #include "sensors/RefSystem.hpp"
 #include "sensors/d200.hpp"
 #include "sensors/ACS712.hpp"
-#include <FastLED.h>
 
 // Loop constants
 #define LOOP_FREQ 1000
@@ -22,8 +21,6 @@ DR16 dr16;
 rm_CAN can;
 RefSystem ref;
 HIDLayer comms;
-
-CFastLED led_perhaps;
 
 D200LD14P lidar1(&Serial4, 0);
 D200LD14P lidar2(&Serial5, 1);
