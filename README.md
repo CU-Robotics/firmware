@@ -9,7 +9,7 @@ You can find our documentation guidelines at [docs/README](docs/README.md), and 
 ## Installation
 To begin, clone the repository:
 ```bash
-git clone https://gitlab.com/cu-robotics/firmware.git
+git clone https://github.com/cu-robotics/firmware.git
 ```
 
 Then, install dependencies:
@@ -20,11 +20,7 @@ git config --local core.hooksPath .githooks
 ```
 
 If the files `liblibs.a` and `libsteensy4.a` do not exist in the core directory, follow these steps.
- * Checkout the branch `lib-source`
- * Run `make`
- * Store the resulting library files `liblibs.a` and `libteensy4.a` to some tempory location outside of the repository
- * Return to your old branch (or `main`)
- * Copy those library files into the core directory
+ * Run `make lib_all`
 
 ## Usage
 
@@ -54,3 +50,6 @@ This repo follows the CU Robotics code standard:
 - `patch` branches are named `patch-[patchname]` and contain bugfixes and/or minor adjustments. Unit and integration testing is a soft requirement.
 - All software is required to pass formatting and build tests before being merged into a `production` branch.
 - Other branch-based style questions are answered in the [style guide](docs/README.md).
+
+## Licensing
+This repository uses the MIT License, which covers the code and tools written for our robot firmware. See separate copyright/licensing information for the external libraries used in the repo (in the libaries/ and teensy4/ directories).
