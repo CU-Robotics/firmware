@@ -1,5 +1,7 @@
 #include <Arduino.h>
 
+#include "git_info.h"
+
 #include "utils/timing.hpp"
 #include "comms/rm_can.hpp"
 #include "sensors/dr16.hpp"
@@ -65,6 +67,9 @@ void print_logo() {
         Serial.print("\033[0m");
         Serial.println("\n\033[1;92mFW Ver. 2.1.0");
         Serial.printf("\nLast Built: %s at %s", __DATE__, __TIME__);
+		Serial.printf("\nGit Hash: %s", GIT_COMMIT_HASH);
+		Serial.printf("\nGit Branch: %s", GIT_BRANCH);
+		Serial.printf("\nCommit Message: %s", GIT_COMMIT_MSG);
         Serial.printf("\nRandom Num: %x", ARM_DWT_CYCCNT);
         Serial.println("\033[0m\n");
     }

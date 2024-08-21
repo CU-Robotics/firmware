@@ -64,12 +64,14 @@ COMPILER_CPP := $(ARDUINO_PATH)/packages/teensy/tools/teensy-compile/5.4.1/arm/b
 COMPILER_C := $(ARDUINO_PATH)/packages/teensy/tools/teensy-compile/5.4.1/arm/bin/arm-none-eabi-gcc
 OBJCOPY := $(ARDUINO_PATH)/packages/teensy/tools/teensy-compile/5.4.1/arm/bin/arm-none-eabi-objcopy
 
+GIT_SCRAPER = ./tools/git_scraper.cpp
+
 # targets are phony to force it to rebuild every time
 .PHONY: build upload monitor kill restart clean clean_objs clean_bin rebuild_libs lib_all lib_teensy lib_libs clean_libs
 .DEFAULT_GOAL = build
 
 # builds source, links with libraries, and constructs the .hex to be uploaded
-build: clean
+build: clean git_scraper
 	@echo [Building Source]
 	@$(COMPILER_CPP) $(COMPILE_FLAGS) $(CPP_FLAGS) $(PROJECT_SOURCE) $(LIBRARY_LIB_NAME) $(TEENSY_LIB_NAME) $(LIBRARY_INCLUDE) $(TEENSY_INCLUDE) $(LINKING_FLAGS) -o $(PROJECT_NAME).elf
 	@echo [Constructing $(PROJECT_NAME).hex]
@@ -100,6 +102,11 @@ kill:
 restart:
 	@echo [Attempting to Restart Firmware]
 	@tycmd reset
+
+git_scraper:
+	@g++ $(GIT_SCRAPER) -o ./tools/git_scraper
+	@./tools/git_scraper
+	@rm ./tools/git_scraper
 
 # deletes all object files
 clean_objs:

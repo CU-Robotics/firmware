@@ -7,3 +7,5 @@ build/*
 /docs/latex
 # Don't commit doxygen warnings log
 /docs/doxygen_warnings.txt
+# Ignore the git_info file
+src/git_info.h
