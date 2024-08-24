@@ -2,8 +2,13 @@
 
 #include <Arduino.h>
 
+// QNEthernet has warnings that are not fixable (-Wattributes)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wattributes"
 #include <QNEthernet.h>
 namespace qn = qindesign::network;
+#pragma GCC diagnostic pop
+
 
 #include "ethernet_data.hpp"
 
