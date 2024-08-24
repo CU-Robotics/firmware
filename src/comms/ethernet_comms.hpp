@@ -3,12 +3,12 @@
 #include <Arduino.h>
 
 // QNEthernet has warnings that are not fixable (-Wattributes)
+// This is a useful warning so we dont want to permanently disable it
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wattributes"
 #include <QNEthernet.h>
 namespace qn = qindesign::network;
 #pragma GCC diagnostic pop
-
 
 #include "ethernet_data.hpp"
 
