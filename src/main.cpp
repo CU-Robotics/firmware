@@ -14,6 +14,8 @@
 #include "sensors/d200.hpp"
 #include "sensors/ACS712.hpp"
 
+#include <TeensyDebug.h>
+
 // Loop constants
 #define LOOP_FREQ 1000
 #define HEARTBEAT_FREQ 2
@@ -79,8 +81,10 @@ void print_logo() {
 int main() {
     long long loopc = 0; // Loop counter for heartbeat
 
-    Serial.begin(1000000); // the serial monitor is actually always active (for debug use Serial.println & tycmd)
-    print_logo();
+    Serial.begin(115200); // the serial monitor is actually always active (for debug use Serial.println & tycmd)
+	debug.begin(SerialUSB1);
+
+	print_logo();
 
     // Execute setup functions
     pinMode(13, OUTPUT);
