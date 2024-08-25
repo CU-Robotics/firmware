@@ -9,7 +9,7 @@
 *.hex
 
 # Ignore the libraries
-liblibs.a
+*.a
 
 # Ignore any tools/ directory artifacts
 tools/*.txt
