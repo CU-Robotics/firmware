@@ -81,12 +81,9 @@ typedef struct audio_block_struct {
 class AudioConnection
 {
 public:
-	AudioConnection();
-	AudioConnection(AudioStream &source, AudioStream &destination)
-		: AudioConnection() { connect(source,destination); }
+	AudioConnection(AudioStream &source, AudioStream &destination);
 	AudioConnection(AudioStream &source, unsigned char sourceOutput,
-		AudioStream &destination, unsigned char destinationInput)
-		: AudioConnection() { connect(source,sourceOutput, destination,destinationInput); }
+		AudioStream &destination, unsigned char destinationInput);
 	friend class AudioStream;
 	~AudioConnection(); 
 	int disconnect(void);

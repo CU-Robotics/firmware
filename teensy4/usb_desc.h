@@ -121,7 +121,7 @@ let me know?  http://forum.pjrc.com/forums/4-Suggestions-amp-Bug-Reports
   #define EP0_SIZE		64
   #define NUM_ENDPOINTS		4
   #define NUM_USB_BUFFERS	12
-  #define NUM_INTERFACE		3
+  #define NUM_INTERFACE		2
   #define CDC_IAD_DESCRIPTOR    1       // Serial
   #define CDC_STATUS_INTERFACE	0
   #define CDC_DATA_INTERFACE	1
@@ -133,7 +133,7 @@ let me know?  http://forum.pjrc.com/forums/4-Suggestions-amp-Bug-Reports
   #define CDC_TX_SIZE_480       512
   #define CDC_RX_SIZE_12        64
   #define CDC_TX_SIZE_12        64
-  #define EXPERIMENTAL_INTERFACE 2
+  //#define EXPERIMENTAL_INTERFACE 2
   #define ENDPOINT2_CONFIG	ENDPOINT_RECEIVE_UNUSED + ENDPOINT_TRANSMIT_INTERRUPT
   #define ENDPOINT3_CONFIG	ENDPOINT_RECEIVE_BULK + ENDPOINT_TRANSMIT_UNUSED
   #define ENDPOINT4_CONFIG      ENDPOINT_RECEIVE_UNUSED + ENDPOINT_TRANSMIT_BULK
@@ -958,53 +958,53 @@ let me know?  http://forum.pjrc.com/forums/4-Suggestions-amp-Bug-Reports
 // Serial0 and Serial1 are unchanged from their defaults
 // RawHID is modified to allow 1023 byte packet sizes
 
-#define VENDOR_ID             	0x16C0
-#define PRODUCT_ID            	0x048B
-#define MANUFACTURER_NAME     	{'T','e','e','n','s','y','d','u','i','n','o'}
-#define MANUFACTURER_NAME_LEN 	11
-#define PRODUCT_NAME          	{'U','S','B',' ','C','u','s','t','o','m'}
-#define PRODUCT_NAME_LEN      	10
-#define EP0_SIZE              	64
+  #define VENDOR_ID             	0x16C0
+  #define PRODUCT_ID            	0x048B
+  #define MANUFACTURER_NAME     	{'T','e','e','n','s','y','d','u','i','n','o'}
+  #define MANUFACTURER_NAME_LEN 	11
+  #define PRODUCT_NAME          	{'U','S','B',' ','C','u','s','t','o','m'}
+  #define PRODUCT_NAME_LEN      	10
+  #define EP0_SIZE              	64
 
-#define NUM_ENDPOINTS         	6		// Serial0: 2, Serial1: 2, RawHID: 2
-#define NUM_INTERFACE         	5		// Serial0: 2, Serial1: 2, RawHID: 1
+  #define NUM_ENDPOINTS         	6		// Serial0: 2, Serial1: 2, RawHID: 2
+  #define NUM_INTERFACE         	5		// Serial0: 2, Serial1: 2, RawHID: 1
+  
+  // Serial 0
+  #define CDC_IAD_DESCRIPTOR    	1       // Serial
+  #define CDC_STATUS_INTERFACE  	0
+  #define CDC_DATA_INTERFACE    	1
+  #define CDC_ACM_ENDPOINT      	1
+  #define CDC_RX_ENDPOINT       	2
+  #define CDC_TX_ENDPOINT       	2
+  #define CDC_ACM_SIZE          	16
+  #define CDC_RX_SIZE_480       	512
+  #define CDC_TX_SIZE_480       	512
+  #define CDC_RX_SIZE_12        	64
+  #define CDC_TX_SIZE_12        	64
+  #define ENDPOINT1_CONFIG			ENDPOINT_RECEIVE_UNUSED + ENDPOINT_TRANSMIT_INTERRUPT
+  #define ENDPOINT2_CONFIG			ENDPOINT_RECEIVE_BULK + ENDPOINT_TRANSMIT_BULK
+  
+  // Serial 1
+  #define CDC2_STATUS_INTERFACE 	2       // SerialUSB1
+  #define CDC2_DATA_INTERFACE   	3
+  #define CDC2_ACM_ENDPOINT     	3
+  #define CDC2_RX_ENDPOINT      	4
+  #define CDC2_TX_ENDPOINT      	4
+  #define ENDPOINT3_CONFIG			ENDPOINT_RECEIVE_UNUSED + ENDPOINT_TRANSMIT_INTERRUPT
+  #define ENDPOINT4_CONFIG			ENDPOINT_RECEIVE_BULK + ENDPOINT_TRANSMIT_BULK
 
-// Serial 0
-#define CDC_IAD_DESCRIPTOR    	1       // Serial
-#define CDC_STATUS_INTERFACE  	0
-#define CDC_DATA_INTERFACE    	1
-#define CDC_ACM_ENDPOINT      	1
-#define CDC_RX_ENDPOINT       	2
-#define CDC_TX_ENDPOINT       	2
-#define CDC_ACM_SIZE          	16
-#define CDC_RX_SIZE_480       	512
-#define CDC_TX_SIZE_480       	512
-#define CDC_RX_SIZE_12        	64
-#define CDC_TX_SIZE_12        	64
-#define ENDPOINT1_CONFIG			ENDPOINT_RECEIVE_UNUSED + ENDPOINT_TRANSMIT_INTERRUPT
-#define ENDPOINT2_CONFIG			ENDPOINT_RECEIVE_BULK + ENDPOINT_TRANSMIT_BULK
-
-// Serial 1
-#define CDC2_STATUS_INTERFACE 	2       // SerialUSB1
-#define CDC2_DATA_INTERFACE   	3
-#define CDC2_ACM_ENDPOINT     	3
-#define CDC2_RX_ENDPOINT      	4
-#define CDC2_TX_ENDPOINT      	4
-#define ENDPOINT3_CONFIG			ENDPOINT_RECEIVE_UNUSED + ENDPOINT_TRANSMIT_INTERRUPT
-#define ENDPOINT4_CONFIG			ENDPOINT_RECEIVE_BULK + ENDPOINT_TRANSMIT_BULK
-
-// RawHID
-#define RAWHID_USAGE_PAGE			0xFFAB  // recommended: 0xFF00 to 0xFFFF
-#define RAWHID_USAGE				0x0200  // recommended: 0x0100 to 0xFFFF
-#define RAWHID_INTERFACE      	4		// RawHID
-#define RAWHID_TX_ENDPOINT    	5
-#define RAWHID_TX_SIZE        	1023	// increased packet size
-#define RAWHID_TX_INTERVAL    	1	 
-#define RAWHID_RX_ENDPOINT    	6
-#define RAWHID_RX_SIZE        	1023	// increased packet size
-#define RAWHID_RX_INTERVAL    	1	 
-#define ENDPOINT5_CONFIG			ENDPOINT_RECEIVE_UNUSED + ENDPOINT_TRANSMIT_INTERRUPT
-#define ENDPOINT6_CONFIG			ENDPOINT_RECEIVE_INTERRUPT + ENDPOINT_TRANSMIT_UNUSED
+  // RawHID
+  #define RAWHID_USAGE_PAGE			0xFFAB  // recommended: 0xFF00 to 0xFFFF
+  #define RAWHID_USAGE				0x0200  // recommended: 0x0100 to 0xFFFF
+  #define RAWHID_INTERFACE      	4		// RawHID
+  #define RAWHID_TX_ENDPOINT    	5
+  #define RAWHID_TX_SIZE        	1023	// increased packet size
+  #define RAWHID_TX_INTERVAL    	1	 
+  #define RAWHID_RX_ENDPOINT    	6
+  #define RAWHID_RX_SIZE        	1023	// increased packet size
+  #define RAWHID_RX_INTERVAL    	1	 
+  #define ENDPOINT5_CONFIG			ENDPOINT_RECEIVE_UNUSED + ENDPOINT_TRANSMIT_INTERRUPT
+  #define ENDPOINT6_CONFIG			ENDPOINT_RECEIVE_INTERRUPT + ENDPOINT_TRANSMIT_UNUSED
 
 #endif
 

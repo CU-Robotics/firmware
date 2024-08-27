@@ -57,8 +57,7 @@ class Print
   public:
 	constexpr Print() : write_error(0) {}
 	virtual size_t write(uint8_t b) = 0;
-	size_t write(const char *str)			{ if (str == nullptr) return 0;
-							  return write((const uint8_t *)str, strlen(str)); }
+	size_t write(const char *str)			{ return write((const uint8_t *)str, strlen(str)); }
 	virtual size_t write(const uint8_t *buffer, size_t size);
 	virtual int availableForWrite(void)		{ return 0; }
 	virtual void flush()				{ }
@@ -157,8 +156,6 @@ class Print
 	int printf(const char *format, ...);
 	// printf is a C standard function which allows you to print any number of variables using a somewhat cryptic format string
 	int printf(const __FlashStringHelper *format, ...);
-	// vprintf is a C standard function that allows you to print a variable argument list with a format string
-	int vprintf(const char *format, va_list ap) { return vdprintf((int)this, format, ap); }
 
 	// format warnings are too pedantic - disable until newer toolchain offers better...
 	// https://forum.pjrc.com/threads/62473?p=256873&viewfull=1#post256873
@@ -167,7 +164,7 @@ class Print
   protected:
 	void setWriteError(int err = 1) { write_error = err; }
   private:
-	int write_error;
+	char write_error;
 	size_t printFloat(double n, uint8_t digits);
 	size_t printNumber(unsigned long n, uint8_t base, uint8_t sign);
 	size_t printNumber64(uint64_t n, uint8_t base, uint8_t sign);

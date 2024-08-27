@@ -45,12 +45,12 @@ void operator delete[](void * ptr)
 	free(ptr);
 }
 
-void operator delete(void * ptr, size_t size __attribute__((unused)))
+void operator delete(void * ptr, size_t size)
 {
 	free(ptr);
 }
 
-void operator delete[](void * ptr, size_t size __attribute__((unused)))
+void operator delete[](void * ptr, size_t size)
 {
 	free(ptr);
 }

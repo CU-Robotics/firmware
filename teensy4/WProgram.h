@@ -34,7 +34,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
-#include <time.h>
 
 // some libraries and sketches depend on this
 // AVR stuff, assuming Arduino.h or WProgram.h
@@ -48,7 +47,6 @@
 
 #ifdef __cplusplus
 
-#include "inplace_function.h"
 #include "avr_emulation.h"
 #include "usb_serial.h"
 #include "usb_seremu.h"

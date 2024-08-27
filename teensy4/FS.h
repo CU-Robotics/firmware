@@ -92,7 +92,7 @@ private:
 
 
 
-// File move semantics require rvalue references, introduced in C++11.
+// TODO: does this help in any way, or just extra useless code?
 #define FILE_USE_MOVE
 
 
@@ -130,14 +130,11 @@ public:
 		//Serial.printf("File copy ctor %x, refcount=%d\n", (int)f, get_refcount());
 	}
 #ifdef FILE_USE_MOVE
-	// Move constructor. Typically used when a File is passed by rvalue
-	// reference into a function, such as when using std::move(). The
-	// original file is closed, and the refcount of the underlying
-	// FileImpl is unchanged.
-	File(File&& file) {
+	// Move constructor.
+	File(const File&& file) {
 		f = file.f;
-		file.f = nullptr;
-		//Serial.printf("File move ctor %x, refcount=%d\n", (int)f, get_refcount());
+		if (f) f->refcount++;
+		//Serial.printf("File copy ctor %x, refcount=%d\n", (int)f, get_refcount());
 	}
 #endif
 	// Copy assignment.
@@ -150,11 +147,11 @@ public:
 	}
 #ifdef FILE_USE_MOVE
 	// Move assignment.
-	File& operator = (File&& file) {
+	File& operator = (const File&& file) {
 		//Serial.println("File move assignment");
+		if (file.f) file.f->refcount++;
 		if (f) { dec_refcount(); /*Serial.println("File move assignment autoclose");*/ }
 		f = file.f;
-		file.f = nullptr;
 		return *this;
 	}
 #endif

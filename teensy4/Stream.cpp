@@ -53,36 +53,38 @@ int Stream::timedPeek()
 
 // returns peek of the next digit in the stream or -1 if timeout
 // discards non-numeric characters
-int Stream::peekNextDigit(LookaheadMode lookahead, bool detectDecimal)
+int Stream::peekNextDigit()
 {
   int c;
   while (1) {
     c = timedPeek();
-
-    if( c < 0 ||
-        c == '-' ||
-        (c >= '0' && c <= '9') ||
-        (detectDecimal && c == '.')) return c;
-
-    switch( lookahead ){
-        case SKIP_NONE: return -1; // Fail code.
-        case SKIP_WHITESPACE:
-            switch( c ){
-                case ' ':
-                case '\t':
-                case '\r':
-                case '\n': break;
-                default: return -1; // Fail code.
-            }
-        case SKIP_ALL:
-            break;
-    }
+    if (c < 0) return c;  // timeout
+    if (c == '-') return c;
+    if (c >= '0' && c <= '9') return c;
     read();  // discard non-numeric
   }
 }
 
 // Public Methods
 //////////////////////////////////////////////////////////////
+
+void Stream::setTimeout(unsigned long timeout)  // sets the maximum number of milliseconds to wait
+{
+  _timeout = timeout;
+}
+
+ // find returns true if the target string is found
+bool  Stream::find(const char *target)
+{  
+  return findUntil(target, NULL);
+}
+
+// reads data from the stream until the target string of given length is found
+// returns true if target string is found, false if timed out
+bool Stream::find(const char *target, size_t length)
+{
+  return findUntil(target, length, NULL, 0);
+}
 
 // as find but search ends if the terminator string is found
 bool  Stream::findUntil(const char *target, const char *terminator)
@@ -104,7 +106,7 @@ bool Stream::findUntil(const char *target, size_t targetLen, const char *termina
   if( target == nullptr) return true;
   if( *target == 0) return true;   // return true if target is a null string
   if (terminator == nullptr) termLen = 0;
-
+	
   while( (c = timedRead()) > 0){
     if( c == target[index]){
     //////Serial.print("found "); Serial.write(c); Serial.print("index now"); Serial.println(index+1);
@@ -125,25 +127,31 @@ bool Stream::findUntil(const char *target, size_t targetLen, const char *termina
   return false;
 }
 
+
 // returns the first valid (long) integer value from the current position.
-// lookahead determines how parseInt looks ahead in the stream.
-// See LookaheadMode enumeration at the top of the file.
-// Lookahead is terminated by the first character that is not a valid part of an integer.
-// Once parsing commences, 'ignore' will be skipped in the stream.
-long Stream::parseInt(LookaheadMode lookahead, char ignore)
+// initial characters that are not digits (or the minus sign) are skipped
+// function is terminated by the first character that is not a digit.
+long Stream::parseInt()
 {
-  bool isNegative = false;
+  return parseInt(NO_SKIP_CHAR); // terminate on first non-digit character (or timeout)
+}
+
+// as above but a given skipChar is ignored
+// this allows format characters (typically commas) in values to be ignored
+long Stream::parseInt(char skipChar)
+{
+  boolean isNegative = false;
   long value = 0;
   int c;
 
-  c = peekNextDigit(lookahead, false);
+  c = peekNextDigit();
   // ignore non numeric leading characters
   if(c < 0)
     return 0; // zero returned if timeout
 
   do{
-    if(c == ignore)
-      ; // ignore this character
+    if(c == skipChar)
+      ; // ignore this charactor
     else if(c == '-')
       isNegative = true;
     else if(c >= '0' && c <= '9')        // is c a digit?
@@ -151,29 +159,36 @@ long Stream::parseInt(LookaheadMode lookahead, char ignore)
     read();  // consume the character we got with peek
     c = timedPeek();
   }
-  while( (c >= '0' && c <= '9') || c == ignore );
+  while( (c >= '0' && c <= '9') || c == skipChar );
 
   if(isNegative)
     value = -value;
   return value;
 }
 
+
 // as parseInt but returns a floating point value
-float Stream::parseFloat(LookaheadMode lookahead, char ignore)
+float Stream::parseFloat()
 {
-  bool isNegative = false;
-  bool isFraction = false;
+  return parseFloat(NO_SKIP_CHAR);
+}
+
+// as above but the given skipChar is ignored
+// this allows format characters (typically commas) in values to be ignored
+float Stream::parseFloat(char skipChar){
+  boolean isNegative = false;
+  boolean isFraction = false;
   long value = 0;
   int c;
-  float fraction = 1.0f;
+  float fraction = 1.0;
 
-  c = peekNextDigit(lookahead, true);
+  c = peekNextDigit();
     // ignore non numeric leading characters
   if(c < 0)
     return 0; // zero returned if timeout
 
   do{
-    if(c == ignore)
+    if(c == skipChar)
       ; // ignore
     else if(c == '-')
       isNegative = true;
@@ -182,12 +197,12 @@ float Stream::parseFloat(LookaheadMode lookahead, char ignore)
     else if(c >= '0' && c <= '9')  {      // is c a digit?
       value = value * 10 + c - '0';
       if(isFraction)
-         fraction *= 0.1;
+         fraction *= 0.1f;
     }
     read();  // consume the character we got with peek
     c = timedPeek();
   }
-  while( (c >= '0' && c <= '9')  || (c == '.' && !isFraction) || c == ignore );
+  while( (c >= '0' && c <= '9')  || c == '.' || c == skipChar );
 
   if(isNegative)
     value = -value;
@@ -247,7 +262,7 @@ String Stream::readString(size_t max)
 {
 	String str;
 	size_t length = 0;
-	while (length < max || !max) {
+	while (length < max) {
 		int c = timedRead();
 		if (c < 0) {
 			setReadError();
@@ -264,7 +279,7 @@ String Stream::readStringUntil(char terminator, size_t max)
 {
 	String str;
 	size_t length = 0;
-	while (length < max || !max) {
+	while (length < max) {
 		int c = timedRead();
 		if (c < 0) {
 			setReadError();
