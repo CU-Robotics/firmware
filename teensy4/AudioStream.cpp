@@ -73,8 +73,17 @@ FLASHMEM void AudioStream::initialize_memory(audio_block_t *data, unsigned int n
 	for (i=0; i < num; i++) {
 		data[i].memory_pool_index = i;
 	}
+	if (update_scheduled == false) {
+		// if no hardware I/O has taken responsibility for update,
+		// start a timer which will call update_all() at the correct rate
+		IntervalTimer *timer = new IntervalTimer();
+		if (timer) {
+			float usec = 1e6 * AUDIO_BLOCK_SAMPLES / AUDIO_SAMPLE_RATE_EXACT;
+			timer->begin(update_all, usec);
+			update_setup();
+		}
+	}
 	__enable_irq();
-
 }
 
 // Allocate 1 audio data block.  If successful
@@ -192,28 +201,19 @@ audio_block_t * AudioStream::receiveWritable(unsigned int index)
 }
 
 /**************************************************************************************/
-// Full constructor with 4 parameters
-AudioConnection::AudioConnection(AudioStream &source, unsigned char sourceOutput,
-		AudioStream &destination, unsigned char destinationInput)
+// Constructor with no parameters: leave unconnected
+AudioConnection::AudioConnection() 
+	: src(NULL), dst(NULL),
+	  src_index(0), dest_index(0),
+	  isConnected(false)
+
 {
-	// we are effectively unused right now, so
+	// we are unused right now, so
 	// link ourselves at the start of the unused list
 	next_dest = AudioStream::unused;
 	AudioStream::unused = this;
-	
-	isConnected = false;	  
-	connect(source,sourceOutput,destination,destinationInput); 
 }
 
-// Simplified constructor assuming channel 0 at both ends
-AudioConnection::AudioConnection(AudioStream &source, AudioStream &destination)
-{
-	next_dest = AudioStream::unused;
-	AudioStream::unused = this;
-	
-	isConnected = false;	  
-	connect(source, 0, destination,0);
-}
 
 // Destructor
 AudioConnection::~AudioConnection()
