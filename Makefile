@@ -15,9 +15,13 @@ TEENSY_LIB = teensy4
 LIBRARY_DIR = libraries
 LIBRARY_SOURCE_C = $(shell find $(LIBRARY_DIR) -name "*.c") 
 LIBRARY_SOURCE_CPP = $(shell find $(LIBRARY_DIR) -name "*.cpp")
-
-LIBRARY_INCLUDE = -Ilibraries/Adafruit_BusIO -Ilibraries/Adafruit_ICM20X -Ilibraries/Adafruit_LIS3MDL -Ilibraries/Adafruit_LSM6DS -Ilibraries/Adafruit_Sensor -Ilibraries/FlexCAN_T4 -Ilibraries/FreqMeasureMulti -Ilibraries/SPI -Ilibraries/unity -Ilibraries/Wire -Ilibraries/VL53L4CD -Ilibraries/SD -Ilibraries/SdFat -Ilibraries/SdFat/src -Ilibraries/QNEthernet/src -Ilibraries/TeensyDebug/src
-
+# sensor libraries
+LIBRARY_INCLUDE =  -Ilibraries/Adafruit_BusIO -Ilibraries/Adafruit_ICM20X -Ilibraries/Adafruit_LIS3MDL -Ilibraries/Adafruit_LSM6DS -Ilibraries/Adafruit_Sensor
+LIBRARY_INCLUDE += -Ilibraries/FreqMeasureMulti -Ilibraries/VL53L4CD
+# communication libraries
+LIBRARY_INCLUDE += -Ilibraries/FlexCAN_T4  -Ilibraries/SPI -Ilibraries/Wire -Ilibraries/QNEthernet/src 
+# utility libraries
+LIBRARY_INCLUDE += -Ilibraries/unity  -Ilibraries/SD -Ilibraries/SdFat/src -Ilibraries/TeensyDebug/src
 # name of the output lib file
 LIBRARY_LIB_NAME = liblibs.a
 # lib file name stripped of initial 'lib' and '.a'
@@ -25,7 +29,7 @@ LIBRARY_LIB = libs
 
 # Project files
 PROJECT_DIR = .
-PROJECT_SOURCE = src/*.cpp src/comms/*.cpp src/controls/*.cpp src/filters/*.cpp src/sensors/*.cpp src/utils/*.cpp
+PROJECT_SOURCE = $(shell find src -name "*.cpp")
 PROJECT_INCLUDE = src
 # application filename will end up as PROJECT_NAME.hex once built
 PROJECT_NAME = firmware
