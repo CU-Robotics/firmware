@@ -4,6 +4,10 @@
 # Don't commit doxygen warnings log
 /docs/doxygen_warnings.txt
 
+# Ignore the non existant build/ directory
+build
+build/
+
 # Ignore the output binaries
 *.elf
 *.hex
