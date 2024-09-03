@@ -35,9 +35,10 @@ PROJECT_INCLUDE = src
 PROJECT_NAME = firmware
 
 # Teensy41 compiler flags
-TEENSY4_FLAGS = -DF_CPU=600000000 -DUSB_CUSTOM -DLAYOUT_US_ENGLISH -D__IMXRT1062__ -DTEENSYDUINO=157 -DARDUINO_TEENSY41 -DARDUINO=200
+# USB_CUSTOM enables dual-serial and RawHID connections
+TEENSY4_FLAGS = -DUSB_CUSTOM -DLAYOUT_US_ENGLISH  -DTEENSYDUINO=157 -DARDUINO_TEENSY41 -DARDUINO=200
 # CPU flags to tailor the code for the Teensy processor
-CPU_FLAGS = -mcpu=cortex-m7 -mfloat-abi=hard -mfpu=fpv5-d16 -mthumb
+CPU_FLAGS = -DF_CPU=600000000 -D__IMXRT1062__ -mcpu=cortex-m7 -mfloat-abi=hard -mfpu=fpv5-d16 -mthumb
 
 # Base compiler flags for both C++ and C
 COMPILE_FLAGS = -Wall -g -O2 $(CPU_FLAGS) $(TEENSY4_FLAGS) -I$(TEENSY_INCLUDE) -ffunction-sections -fdata-sections
@@ -160,6 +161,9 @@ help:
 	@echo "  upload:       builds the source and uploads it to the Teensy"
 	@echo "  gdb:          starts GDB and attaches to the firmware running on a connected Teensy"
 	@echo "  build_libs:   builds the external libraries"
+	@echo "  monitor: 	   monitors any actively running firmware and displays serial output"
+	@echo "  kill:         stops any running firmware"
+	@echo "  restart:      restarts any running firmware"
 
 # starts GDB and attaches to the firmware running on a connected Teensy
 # calls a script to prepare the GDB environment, this finds the exact port Teensy is connected to
