@@ -25,6 +25,9 @@ Install the required tools
 ./tools/install_tytools.sh
 ```
 
+If the files `liblibs.a` and `libsteensy4.a` do not exist in the core directory, follow these steps.
+ * Run `make lib_all`
+
 ## Usage
 
 Now, navigate to the main directory, and run:
