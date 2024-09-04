@@ -161,7 +161,7 @@ help:
 	@echo "  upload:       builds the source and uploads it to the Teensy"
 	@echo "  gdb:          starts GDB and attaches to the firmware running on a connected Teensy"
 	@echo "  build_libs:   builds the external libraries"
-	@echo "  monitor: 	   monitors any actively running firmware and displays serial output"
+	@echo "  monitor:      monitors any actively running firmware and displays serial output"
 	@echo "  kill:         stops any running firmware"
 	@echo "  restart:      restarts any running firmware"
 
