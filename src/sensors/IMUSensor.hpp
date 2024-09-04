@@ -10,7 +10,7 @@
 class IMUSensor {
 public:
     /// @brief read values from the sensor. Call this to update sensor data before accessing them from the getters. 
-    virtual void read();
+    virtual void read() = 0;
 
     /// @brief Get the temperature of the sensor
     /// @return temperature in Celcius
