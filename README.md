@@ -26,7 +26,7 @@ Install the required tools
 ```
 
 If the files `liblibs.a` and `libsteensy4.a` do not exist in the core directory, follow these steps.
- * Run `make lib_all`
+ * Run `make build_libs`
 
 ## Usage
 
