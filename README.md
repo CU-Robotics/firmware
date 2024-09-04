@@ -1,15 +1,15 @@
 # firmware 
-This repo contains the source code for the CU Boulder Robotics Teams' microcontroller firmware. It runs on a PJRC Teensy 4.1 and interfaces with any device running `buff-core`.
+This repo contains the source code for the CU Boulder Robotics Teams' microcontroller firmware. It runs on a PJRC Teensy 4.1 and interfaces with any device running `hive`.
 
 # Documentation
-You can find up-to-date documentation at [cu-robotics.github.io/firmware](cu-robotics.github.io/firmware), compiled on merges to `main`.
+You can find up-to-date documentation at [cu-robotics.github.io/firmware](cu-robotics.github.io/firmware/), compiled on merges to `main`.
 
 You can find our documentation guidelines at [docs/README](docs/README.md), and how to access your documentation before being merged to main.
 
 ## Installation
 To begin, clone the repository:
 ```bash
-git clone https://github.com/cu-robotics/firmware.git
+git clone git@github.com:CU-Robotics/firmware.git
 ```
 
 Then, install dependencies:
@@ -19,8 +19,11 @@ Then, install dependencies:
 git config --local core.hooksPath .githooks
 ```
 
-If the files `liblibs.a` and `libsteensy4.a` do not exist in the core directory, follow these steps.
- * Run `make lib_all`
+Install the required tools
+```bash
+./tools/install_arduino.sh
+./tools/install_tytools.sh
+```
 
 ## Usage
 
