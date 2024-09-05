@@ -17,7 +17,7 @@ struct Profiler {
     };
 
     profiler_section_t stack[PROF_MAX_SECTIONS];
-    int8_t top = -1; // top index, -1 means empty                            
+    int8_t top = -1; // top index, -1 means empty
 
     /// @brief Start (push) a profiling section onto the stack.
     /// @param name A unique name to identify the section.
