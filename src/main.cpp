@@ -3,6 +3,7 @@
 #include "git_info.h"
 
 #include "utils/timing.hpp"
+#include "utils/profiler.hpp"
 #include "comms/rm_can.hpp"
 #include "sensors/dr16.hpp"
 #include "controls/estimator_manager.hpp"
@@ -31,6 +32,8 @@ ACS712 current_sensor;
 
 ConfigLayer config_layer;
 Config config;
+
+Profiler prof;
 
 Timer loop_timer;
 Timer stall_timer;
