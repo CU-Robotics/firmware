@@ -4,16 +4,16 @@
 #include <Arduino.h>
 
 #define PROF_MAX_SECTIONS 4 // max nested profiling sections
-#define PROF_MAX_NAME 16
+#define PROF_MAX_NAME 8 // max length of section name
 #define PROF_MAX_TIMES 256 // max number of start/end times per profiler
 
 /// @brief Object for profiling sections of code.
 struct Profiler {
     struct profiler_section_t {
-        char name[PROF_MAX_NAME];
         uint32_t start_times[PROF_MAX_TIMES];
         uint32_t end_times[PROF_MAX_TIMES];
         uint8_t count = 0;
+        char name[PROF_MAX_NAME + 1]; // extra for null terminator
     };
 
     profiler_section_t stack[PROF_MAX_SECTIONS];
@@ -24,8 +24,8 @@ struct Profiler {
     void begin(const char* name) {
         if (top >= PROF_MAX_SECTIONS - 1) return;
         top++;
-        strncpy(stack[top].name, name, PROF_MAX_NAME - 1);
-        stack[top].name[PROF_MAX_NAME - 1] = '\0'; // ensure null termination
+        strncpy(stack[top].name, name, PROF_MAX_NAME);
+        stack[top].name[PROF_MAX_NAME] = '\0'; // ensure null termination
         if (stack[top].count < PROF_MAX_TIMES) {
             stack[top].start_times[stack[top].count] = micros();
         }
@@ -34,8 +34,9 @@ struct Profiler {
     /// @brief End (pop) the newest profiling section. Don't call without a corresponding push.
     void end() {
         if (top < 0) return;
-        if (stack[top].count < PROF_MAX_TIMES) {
-            stack[top].end_times[stack[top].count] = micros();
+        uint8_t count = stack[top].count;
+        if (count < PROF_MAX_TIMES) {
+            stack[top].end_times[count] = micros();
             stack[top].count++;
         }
         top--;
