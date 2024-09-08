@@ -15,9 +15,6 @@ TEENSY_LIB = teensy4
 LIBRARY_DIR = libraries
 LIBRARY_SOURCE_C = $(shell find $(LIBRARY_DIR) -name "*.c") 
 LIBRARY_SOURCE_CPP = $(shell find $(LIBRARY_DIR) -name "*.cpp")
-<<<<<<< HEAD
-LIBRARY_INCLUDE = -Ilibraries/Adafruit_BusIO -Ilibraries/Adafruit_ICM20X -Ilibraries/Adafruit_LIS3MDL -Ilibraries/Adafruit_LSM6DS -Ilibraries/Adafruit_Sensor -Ilibraries/FlexCAN_T4 -Ilibraries/FreqMeasureMulti -Ilibraries/SPI -Ilibraries/unity -Ilibraries/Wire -Ilibraries/VL53L4CD -Ilibraries/SD -Ilibraries/SdFat -Ilibraries/SdFat/src -Ilibraries/QNEthernet/src -Ilibraries/TeensyDebug/src
-=======
 # sensor libraries
 LIBRARY_INCLUDE =  -Ilibraries/Adafruit_BusIO -Ilibraries/Adafruit_ICM20X -Ilibraries/Adafruit_LIS3MDL -Ilibraries/Adafruit_LSM6DS -Ilibraries/Adafruit_Sensor
 LIBRARY_INCLUDE += -Ilibraries/FreqMeasureMulti -Ilibraries/VL53L4CD
@@ -25,7 +22,6 @@ LIBRARY_INCLUDE += -Ilibraries/FreqMeasureMulti -Ilibraries/VL53L4CD
 LIBRARY_INCLUDE += -Ilibraries/FlexCAN_T4  -Ilibraries/SPI -Ilibraries/Wire -Ilibraries/QNEthernet/src 
 # utility libraries
 LIBRARY_INCLUDE += -Ilibraries/unity  -Ilibraries/SD -Ilibraries/SdFat/src -Ilibraries/TeensyDebug/src
->>>>>>> patch-inheritance-fix
 # name of the output lib file
 LIBRARY_LIB_NAME = liblibs.a
 # lib file name stripped of initial 'lib' and '.a'
@@ -33,23 +29,14 @@ LIBRARY_LIB = libs
 
 # Project files
 PROJECT_DIR = .
-<<<<<<< HEAD
 PROJECT_SRC_DIR = src
 PROJECT_SOURCE = $(shell find $(PROJECT_SRC_DIR) -name "*.cpp") $(shell find $(PROJECT_SRC_DIR) -name "*.c")
-=======
-PROJECT_SOURCE = $(shell find src -name "*.cpp")
->>>>>>> patch-inheritance-fix
 PROJECT_INCLUDE = src
 # application filename will end up as PROJECT_NAME.hex once built
 PROJECT_NAME = firmware
 
 # Teensy41 compiler flags
-<<<<<<< HEAD
 TEENSY4_FLAGS = -DF_CPU=600000000 -DUSB_CUSTOM -DLAYOUT_US_ENGLISH -D__IMXRT1062__ -DTEENSYDUINO=159 -DARDUINO_TEENSY41 -DARDUINO=10813
-=======
-# USB_CUSTOM enables dual-serial and RawHID connections
-TEENSY4_FLAGS = -DUSB_CUSTOM -DLAYOUT_US_ENGLISH  -DTEENSYDUINO=157 -DARDUINO_TEENSY41 -DARDUINO=200
->>>>>>> patch-inheritance-fix
 # CPU flags to tailor the code for the Teensy processor
 CPU_FLAGS = -DF_CPU=600000000 -D__IMXRT1062__ -mcpu=cortex-m7 -mfloat-abi=hard -mfpu=fpv5-d16 -mthumb
 
