@@ -1,7 +1,7 @@
 # path to the /dev/ serial device that the Teensy is connected to
 tty_path=""
 
-# Completely disable ctrl-C since it breaks the monitor
+# handle sigint in a strange way to not break tycmd monitor
 trap 'exit 0' INT;
 
 # The correct serial device has the following name
@@ -25,7 +25,6 @@ fi
 # If the tty path is not empty, we can start the monitor
 if [ -n "$tty_path" ]; then
 	echo "Monitoring Teensy on $tty_path"
-	echo "Do not ctrl-C to stop the monitor, use ctrl-D instead"
 
 	# Start the monitor, if this fails its likely because monitor is acting up and a terminal restart is needed
 	tycmd monitor --board="-Teensy@$tty_path" || echo "Failed to monitor: Restart your terminal and try again"
