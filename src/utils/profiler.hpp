@@ -15,6 +15,7 @@
 #define PROF_MAX_TIMES 256 // max number of start/end times per profiler
 
 /// @brief Object for profiling sections of code.
+/// Limitation: Nesting two profiler sections at the same level doesn't work properly, i.e. main { test1 {} test2 {} } will not work as expected
 struct Profiler {
     struct profiler_section_t {
         uint32_t start_times[PROF_MAX_TIMES];
