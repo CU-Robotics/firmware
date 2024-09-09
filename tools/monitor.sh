@@ -2,7 +2,7 @@
 tty_path=""
 
 # Completely disable ctrl-C since it breaks the monitor
-trap '' INT;
+trap 'exit 0' INT;
 
 # The correct serial device has the following name
 # usb-Teensyduino_USB_Custom_*-if00
