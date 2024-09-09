@@ -7,6 +7,8 @@
 
 #include "debug/printf.h"
 
+#pragma GCC optimize ("O2")
+
 // from the linker
 extern unsigned long _stextload;
 extern unsigned long _stext;
