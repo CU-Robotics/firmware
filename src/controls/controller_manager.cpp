@@ -1,111 +1,83 @@
 #include "controller_manager.hpp"
 
-ControllerManager::ControllerManager() {}
+void ControllerManager::init() {
+    // intializes all controllers given the controller_types matrix from the config
+    for (int i = 0; i < NUM_CONTROLLERS; i++) {
+        init_controller(config.controller_types[i], config.gains[i], config.gear_ratios[i]);
+    }
+}
 
-void ControllerManager::init_controller(uint8_t can_id, uint8_t motor_id, int controller_type, int controller_level, float gains[NUM_GAINS]) {
-    int index = ((can_id)*NUM_MOTORS_PER_BUS) + (motor_id - 1);
-
+void ControllerManager::init_controller(int controller_type, float gains[NUM_GAINS], float gear_ratios[NUM_MOTORS]) {
+    // intializes controller based on type defined in config yaml
     switch (controller_type) {
     case 0:
-        controllers[index][controller_level] = new NullController();
-        controllers[index][controller_level]->set_gains(gains);
+        controllers[num_controllers] = new NullController();
         break;
     case 1:
-        controllers[index][controller_level] = new PIDPositionController(controller_level);
-        controllers[index][controller_level]->set_gains(gains);
+        controllers[num_controllers++] = new PIDPositionController(controller_level);
         break;
     case 2:
-        controllers[index][controller_level] = new PIDVelocityController(controller_level);
-        controllers[index][controller_level]->set_gains(gains);
+        controllers[num_controllers++] = new PIDVelocityController(controller_level);
         break;
     case 3:
-        controllers[index][controller_level] = new FullStateFeedbackController(controller_level);
-        controllers[index][controller_level]->set_gains(gains);
+        controllers[num_controllers++] = new FullStateFeedbackController(controller_level);
         break;
     case 4:
-        controllers[index][controller_level] = new ChassisPIDVelocityController(controller_level);
-        controllers[index][controller_level]->set_gains(gains);
+        controllers[num_controllers++] = new ChassisPIDVelocityController(controller_level);
         break;
     case 5:
-        controllers[index][controller_level] = new PIDFVelocityController(controller_level);
-        controllers[index][controller_level]->set_gains(gains);
+        controllers[num_controllers++] = new PIDFVelocityController(controller_level);
         break;
     case 6:
-        controllers[index][controller_level] = new SwitcherController(controller_level);
-        controllers[index][controller_level]->set_gains(gains);
+        controllers[num_controllers++] = new SwitcherController(controller_level);
         break;
     case 7:
-        controllers[index][controller_level] = new ChassisFullStateFeedbackController(controller_level);
-        controllers[index][controller_level]->set_gains(gains);
+        controllers[num_controllers++] = new ChassisFullStateFeedbackController(controller_level);
         break;
     default:
-        controllers[index][controller_level] = new NullController();
-        controllers[index][controller_level]->set_gains(gains);
+        controllers[num_controllers] = new NullController();
         break;
     }
+    controllers[num_controllers]->set_gains(gains);
+    controllers[num_controllers]->set_gear_ratios(gear_ratios);
 }
 
-void ControllerManager::step(float macro_reference[STATE_LEN][3], float macro_estimate[STATE_LEN][3], float micro_estimate[NUM_MOTORS][MICRO_STATE_LEN], float kinematics_p[NUM_MOTORS][STATE_LEN], float kinematics_v[NUM_MOTORS][STATE_LEN], float outputs[NUM_MOTORS]) {
-    // clear the outputs array before updating
-    for (int i = 0;i < NUM_MOTORS;i++) outputs[i] = 0;
-
-    float micro_reference[STATE_LEN];
-    // Iterate through controller level 0
-    for (int m = 0; m < NUM_MOTORS; m++) {
-        float output = 0;
-        for (int j = 0; j < STATE_LEN; j++) {
-            if (kinematics_v[m][j] == 0 && kinematics_p[m][j] == 0) continue;
-            float temp_macro_reference[3];
-            float temp_macro_estimate[3];
-
-            temp_macro_reference[0] = macro_reference[j][0] * kinematics_p[m][j];
-            temp_macro_estimate[0] = macro_estimate[j][0] * kinematics_p[m][j];
-
-            temp_macro_reference[1] = macro_reference[j][1] * kinematics_v[m][j];
-            temp_macro_estimate[1] = macro_estimate[j][1] * kinematics_v[m][j];
-            //itterate the high level controllers first
-            output += controllers[m][0]->step(temp_macro_reference, temp_macro_estimate);
+void ControllerManager::step(float macro_reference[STATE_LEN][3], float macro_estimate[STATE_LEN][3], float micro_estimate[NUM_MOTORS][MICRO_STATE_LEN]) {
+    float outputs[NUM_MOTORS];
+    // iterate through all the created controllers
+    for(int i = 0; i < num_controllers; i++) {
+        // grab the motor outputs for this controller
+        outputs = controllers[i].step(macro_reference, macro_estimate, micro_estimate);
+        // iterate through all the motors this controller sets
+        for(int j = 0; j < NUM_MOTORS; j++) {
+            if(motor_config.controller_motor_outputs[i][j] < 0) continue;
+            actuator_write(motor_config.controller_motor_outputs[i][j], outputs[j]);
         }
-        micro_reference[m] = output;
-    }
-
-
-    // Iterate through controller level 1
-    for (int m = 0; m < NUM_MOTORS; m++) {
-        float temp_micro_reference;
-        float temp_micro_estimate[MICRO_STATE_LEN];
-        temp_micro_reference = micro_reference[m];
-        for (int j = 0; j < MICRO_STATE_LEN; j++) temp_micro_estimate[j] = micro_estimate[m][j];
-
-        //itterate the low level controllers second
-        outputs[m] += controllers[m][1]->step(temp_micro_reference, temp_micro_estimate);
-    }
-
-    // Iterate through controller level 2
-    for (int m = 0; m < NUM_MOTORS; m++) {
-        float output = 0;
-        for (int j = 0; j < STATE_LEN; j++) {
-            if (kinematics_v[m][j] == 0 && kinematics_p[m][j] == 0) continue;
-            float temp_macro_reference[3];
-            float temp_macro_estimate[3];
-
-            temp_macro_reference[0] = macro_reference[j][0] * kinematics_p[m][j];
-            temp_macro_estimate[0] = macro_estimate[j][0] * kinematics_p[m][j];
-
-            temp_macro_reference[1] = macro_reference[j][1] * kinematics_v[m][j];
-            temp_macro_estimate[1] = macro_estimate[j][1] * kinematics_v[m][j];
-
-            //itterate the overarching controllers last
-            output += controllers[m][2]->step(temp_macro_reference, temp_macro_estimate);
-        }
-        outputs[m] += output;
     }
 }
 
-// void ControllerManager::step(float reference[STATE_LEN][3], float estimate[STATE_LEN][3], float outputs[NUM_MOTORS])
-// {
-//     for(int i = 0; i < NUM_CONTROLLERS; i++){
-//         controllers[i]->step(reference, estimate, outputs);
-//     }
+// motor_types[Global ID][type, Physical ID, Physical Bus]
+// motor_types[id][0] -- type
+// motor_types[id][1] -- Phys ID
+// motor_types[id][2] -- Phys Bus
 
-// }
+// motor_types:
+//  - [type, phys_id, phys_bus]
+//  - [type, phys_id, phys_bus]
+//  - [type, phys_id, phys_bus]
+
+#define MOTOR_TYPE_TYPE 0
+#define MOTOR_TYPE_ID 1
+#define MOTOR_TYPE_BUS 2
+
+void actuator_write(int motor_id, float value){
+    switch(config.motor_types[motor_id][MOTOR_TYPE_TYPE])
+    case C610: // 0
+        can.write_motor_norm(config.motor_info[motor_id][MOTOR_TYPE_BUS], config.motor_info[motor_id][MOTOR_TYPE_ID], C610, value);
+        break;
+    case C620: // 1
+        can.write_motor_norm(config.motor_info[motor_id][MOTOR_TYPE_BUS], config.motor_info[motor_id][MOTOR_TYPE_ID], C620, value);
+        break;
+    default:
+        break;
+}

@@ -20,7 +20,6 @@
 
 #define NUM_IMU_CALIBRATION 50000
 
-
 // Rev encoder pins
 #define REV_ENC_PIN1 2
 #define REV_ENC_PIN2 3
@@ -29,14 +28,12 @@
 /// @brief Manage all estimators for macro and micro state
 class EstimatorManager {
 private:
-    //sensor arrays
-
     /// @brief array to store robot icm imu's
     ICM20649 icm_sensors[NUM_SENSOR_TYPE];
     /// @brief array to store robot lsm imu's
     LSM6DSOX lsm_sensors[NUM_SENSOR_TYPE];
     /// @brief array to store robot buff encoders
-    BuffEncoder buff_sensors[NUM_SENSOR_TYPE];
+    BuffEncoder buff_encoders[NUM_SENSOR_TYPE];
     /// @brief array to store robot rev encoders
     RevEncoder rev_sensors[NUM_SENSOR_TYPE];
     /// @brief array to store tof sensors
@@ -52,20 +49,18 @@ private:
     /// @brief can data pointer to pass to each estimator so they can use can to estimate state when needed (usually used for micro state).
     CANData* can_data;
 
-    /// @brief config struct to store all config data
-    Config config_data;
-
     /// @brief current number of estimators
     int num_estimators = 0;
 
 public:
-    /// @brief initialize sensors and set can_data pointer
-    /// @param data Struct storing all of can data so we don't have to pass around rmCAN itself.
-    /// @param c_data Struct storing all of the config data.
-    EstimatorManager(CANData* data, Config c_data);
+    /// @brief default constructor. does nothing
+    EstimatorManager() {}
 
     /// @brief Free all dynamically allocated memory and end SPI
     ~EstimatorManager();
+
+    /// @brief initialize sensors and estimators
+    void init();
 
     /// @brief Populates the corresponding index of the "estimators" array attribute with an estimator object.
     /// @param estimator_id id of estimator to init
@@ -92,6 +87,8 @@ public:
     /// @param macro_outputs input 1
     /// @param micro_outputs input 2
     void clear_outputs(float macro_outputs[STATE_LEN][3], float micro_outputs[NUM_MOTORS][MICRO_STATE_LEN]);
+
+    void set_can_data(CANData* can_data);
 
     // int configure(ConfigPacket packet[]);
 };

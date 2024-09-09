@@ -36,9 +36,9 @@ Timer loop_timer;
 Timer stall_timer;
 Timer control_input_timer;
 
-EstimatorManager* estimator_manager;
-ControllerManager* controller_manager;
-State state;
+EstimatorManager estimator_manager;
+ControllerManager* controller_manager = nullptr;
+Governor state;
 
 // DONT put anything else in this function. It is not a setup function
 void print_logo() {
@@ -94,9 +94,9 @@ int main() {
     //can data pointer so we don't pass around rm_CAN object
     CANData* can_data = can.get_data();
 
+    // Config TODO: Condense to a single function
     uint8_t packet_subsection_sizes[MAX_CONFIG_PACKETS] = { 0 };
     CommsPacket config_packets[MAX_CONFIG_PACKETS];
-    // Config config
     
     Serial.println("Configuring...");
     while(!config_layer.is_configured()) {
@@ -108,64 +108,40 @@ int main() {
     Serial.println("Configured!");
 
     //estimate micro and macro state
-    estimator_manager = new EstimatorManager(can_data, config);
+    estimator_manager.set_can_data(can_data);
+    estimator_manager.init();
+
     //generate controller outputs based on governed references and estimated state
-    controller_manager = new ControllerManager();
-
-    //gains for each motor and controller
-    float gains[NUM_MOTORS][NUM_CONTROLLER_LEVELS][NUM_GAINS] = { 0 };
-    memcpy(gains, config.gains, sizeof(config.gains));
-    //which states each estimator estimates
-    float assigned_states[NUM_ESTIMATORS][STATE_LEN] = { 0 };
-    memcpy(assigned_states, config.assigned_states, sizeof(config.assigned_states));
-    //number of states each estimator estimates
-    float num_states_per_estimator[NUM_ESTIMATORS] = { 0 };
-    memcpy(num_states_per_estimator, config.num_states_per_estimator, sizeof(config.num_states_per_estimator));
-    //reference limits of our reference governor. Used to turn an ungoverned reference into a governed reference to send to ControllerManager
-    float set_reference_limits[STATE_LEN][3][2] = { 0 };
-    memcpy(set_reference_limits, config.set_reference_limits, sizeof(config.set_reference_limits));
-
-    float governor_types[STATE_LEN] = { 0 }; //Position vs Velcity governor
-    memcpy(governor_types, config.governor_types, sizeof(config.governor_types));
-
-    float kinematics_pos[NUM_MOTORS][STATE_LEN] = { 0 }; //Position kinematics 
-    memcpy(kinematics_pos, config.kinematics_p, sizeof(config.kinematics_p));
-    float kinematics_vel[NUM_MOTORS][STATE_LEN] = { 0 }; //Velocity kinematics
-    memcpy(kinematics_vel, config.kinematics_v, sizeof(config.kinematics_v));
-    
-    float controller_types[NUM_MOTORS][NUM_CONTROLLER_LEVELS] = { 0 };
-    memcpy(controller_types, config.controller_types, sizeof(config.controller_types));
-    
-    float chassis_pos_to_motor_error = config.drive_conversion_factors[1];
+    controller_manager.init();
 
     //set reference limits in the reference governor
-    state.set_reference_limits(set_reference_limits);
+    state.set_reference_limits(config.set_reference_limits);
 
-    // intializes all controllers given the controller_types matrix
-    for (int i = 0; i < NUM_CAN_BUSES; i++)
-    {
-        for (int j = 0; j < NUM_MOTORS_PER_BUS; j++)
-        {
-            for (int k = 0; k < NUM_CONTROLLER_LEVELS; k++)
-            {
-                controller_manager->init_controller(i, j + 1, controller_types[(i * NUM_MOTORS_PER_BUS) + j][k], k, gains[(i * NUM_MOTORS_PER_BUS) + j][k]);
-            }
-        }
-    }
+    // // intializes all controllers given the controller_types matrix
+    // for (int i = 0; i < NUM_CAN_BUSES; i++)
+    // {
+    //     for (int j = 0; j < NUM_MOTORS_PER_BUS; j++)
+    //     {
+    //         for (int k = 0; k < NUM_CONTROLLER_LEVELS; k++)
+    //         {
+    //             controller_manager->init_controller(i, j + 1, controller_types[(i * NUM_MOTORS_PER_BUS) + j][k], k, gains[(i * NUM_MOTORS_PER_BUS) + j][k]);
+    //         }
+    //     }
+    // }
 
-    // initalize estimators
-    estimator_manager->assign_states(assigned_states);
+    // // initalize estimators
+    // estimator_manager.assign_states(assigned_states);
    
-    for(int i = 0; i < NUM_ESTIMATORS; i++){
-        Serial.printf("Init Estimator %d\n", config.estimators[i]);
+    // for(int i = 0; i < NUM_ESTIMATORS; i++){
+    //     Serial.printf("Init Estimator %d\n", config.estimators[i]);
 
-        if(config.estimators[i] != 0){
-            estimator_manager->init_estimator(config.estimators[i], (int) num_states_per_estimator[i]);
-        }
-    }
+    //     if(config.estimators[i] != 0){
+    //         estimator_manager.init_estimator(config.estimators[i], (int) num_states_per_estimator[i]);
+    //     }
+    // }
 
-    // imu calibration
-    estimator_manager->calibrate_imus();
+    // // imu calibration
+    // estimator_manager.calibrate_imus();
 
     // variables for use in main
     float temp_state[STATE_LEN][3] = { 0 }; // Temp state array
@@ -269,7 +245,7 @@ int main() {
         }
         
         // Read sensors
-        estimator_manager->read_sensors();
+        estimator_manager.read_sensors();
 
         //step estimates and construct estimated state
         // Serial.printf("step\n");
@@ -284,7 +260,7 @@ int main() {
             }
         }
 
-        estimator_manager->step(temp_state, temp_micro_state, incoming->get_hive_override_request());
+        estimator_manager.step(temp_state, temp_micro_state, incoming->get_hive_override_request());
         // Serial.printf("estimated\n");
         //if first loop set target state to estimated state
         if (count_one == 0) {
@@ -295,44 +271,11 @@ int main() {
 
         //reference govern
         state.set_estimate(temp_state);
-        state.step_reference(target_state, governor_types);
+        state.step_reference(target_state, config.governor_types);
         state.get_reference(temp_reference);
 
-        // Update the kinematics of x,y states, as the kinematics change when chassis angle changes
-        kinematics_vel[0][0] = -sin(temp_state[2][0]) * chassis_pos_to_motor_error;
-        kinematics_vel[0][1] = cos(temp_state[2][0]) * chassis_pos_to_motor_error;
-        // motor 2 back right
-        kinematics_vel[1][0] = cos(temp_state[2][0]) * chassis_pos_to_motor_error;
-        kinematics_vel[1][1] = sin(temp_state[2][0]) * chassis_pos_to_motor_error;
-        // motor 3 back left
-        kinematics_vel[2][0] = sin(temp_state[2][0]) * chassis_pos_to_motor_error;
-        kinematics_vel[2][1] = -cos(temp_state[2][0]) * chassis_pos_to_motor_error;
-        // motor 4 front left
-        kinematics_vel[3][0] = -cos(temp_state[2][0]) * chassis_pos_to_motor_error;
-        kinematics_vel[3][1] = -sin(temp_state[2][0]) * chassis_pos_to_motor_error;
-
-        // Update the kinematics of x,y states, as the kinematics change when chassis angle changes
-        kinematics_pos[0][0] = -sin(temp_state[2][0]) * chassis_pos_to_motor_error;
-        kinematics_pos[0][1] = cos(temp_state[2][0]) * chassis_pos_to_motor_error;
-        // motor 2 back right
-        kinematics_pos[1][0] = cos(temp_state[2][0]) * chassis_pos_to_motor_error;
-        kinematics_pos[1][1] = sin(temp_state[2][0]) * chassis_pos_to_motor_error;
-        // motor 3 back left
-        kinematics_pos[2][0] = sin(temp_state[2][0]) * chassis_pos_to_motor_error;
-        kinematics_pos[2][1] = -cos(temp_state[2][0]) * chassis_pos_to_motor_error;
-        // motor 4 front left
-        kinematics_pos[3][0] = -cos(temp_state[2][0]) * chassis_pos_to_motor_error;
-        kinematics_pos[3][1] = -sin(temp_state[2][0]) * chassis_pos_to_motor_error;
         //generate motor outputs from controls
-        controller_manager->step(temp_reference, temp_state, temp_micro_state, kinematics_pos, kinematics_vel, motor_inputs);
-
-        for (int j = 0; j < 2; j++) {
-            for (int i = 0; i < NUM_MOTORS_PER_BUS; i++) {
-                can.write_motor_norm(j, i + 1, C620, motor_inputs[(j * NUM_MOTORS_PER_BUS) + i]);
-                if (j == 1 && i == 4)
-                    can.write_motor_norm(j, i + 1, C610, motor_inputs[(j * NUM_MOTORS_PER_BUS) + i]);
-            }
-        }
+        controller_manager->step(temp_reference, temp_state, temp_micro_state);
 
         // Serial.printf("Current: %f\n", val);
         // construct sensor data packet

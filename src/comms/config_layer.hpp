@@ -89,33 +89,25 @@ public:
 /// @brief struct to hold configuration data
 struct Config {
     //check yaml for more details on values
-
-    /// @brief number of motors
-    float num_motors;
-    /// @brief number of gains
-    float num_gains;
-    /// @brief number of controller levels
-    float num_controller_levels;
+    
     /// @brief Encoder offsets for each encoder
     float encoder_offsets[16]; 
     /// @brief number of sensors 
     float num_sensors[16];
-    /// @brief position kinematics matrix
-    float kinematics_p[NUM_MOTORS][STATE_LEN];
-    /// @brief velocity kinematics matrix
-    float kinematics_v[NUM_MOTORS][STATE_LEN];
 
     /// @brief gains matrix
-    float gains[NUM_MOTORS][NUM_CONTROLLER_LEVELS][NUM_GAINS];
-    /// @brief assigned states matrix
-    float assigned_states[NUM_ESTIMATORS][STATE_LEN];
-    /// @brief number of states per estimator
-    float num_states_per_estimator[NUM_ESTIMATORS];
+    float gains[NUM_CONTROLLERS][NUM_GAINS];
+    /// @brief matrix that contains which states are set by which estimators
+    float estimator_state_outputs[NUM_ESTIMATORS][STATE_LEN];
+    /// @brief matrix that contains which motor inputs are set by which controllers
+    float controller_motor_outputs[NUM_CONTROLLERS][NUM_MOTORS];
+    /// @brief matrix that contains the type, physical id, and physical bus of each motor
+    int motor_info[NUM_MOTORS][3];
     /// @brief reference limits matrix
     float set_reference_limits[STATE_LEN][3][2];
 
-    /// @brief governor types
-    float estimators[NUM_ESTIMATORS];
+    /// @brief the estimator type for each estimator
+    float estimator_types[NUM_ESTIMATORS];
 
     /// @brief gyro readings of imu when you spin yaw
     float yaw_axis_vector[3];
@@ -126,7 +118,7 @@ struct Config {
     /// @brief default chassis starting angles
     float default_chassis_starting_angles[3];
     /// @brief controller types
-    float controller_types[NUM_MOTORS][NUM_CONTROLLER_LEVELS];
+    float controller_types[NUM_CONTROLLERS];
     /// @brief values for chassis kinematics/dynamics
     float drive_conversion_factors[2];
     /// @brief what pitch angle we have when the the imu calibrates
@@ -151,30 +143,12 @@ struct Config {
 
             if(subsec_id == 0) index = 0;
 
-            Serial.printf("id: %d, subsec_id: %d, sub_size: %d\n", id, subsec_id, sub_size);
-            Serial.println();
-
-            if(id == yaml_section_id_mappings.at("kinematics_p")){
-                size_t linear_index = index / sizeof(float);
-                size_t i1 = linear_index / STATE_LEN;
-                size_t i2 = linear_index % STATE_LEN;
-                memcpy(&kinematics_p[i1][i2], packets[i].raw + 8, sub_size);
-                index+=sub_size;
-            }
-            if(id == yaml_section_id_mappings.at("kinematics_v")){
-                size_t linear_index = index / sizeof(float);
-                size_t i1 = linear_index / STATE_LEN;
-                size_t i2 = linear_index % STATE_LEN;
-                memcpy(&kinematics_v[i1][i2], packets[i].raw + 8, sub_size);
-                index+=sub_size;
-            }
             if(id == yaml_section_id_mappings.at("gains")) {
                 size_t linear_index = index / sizeof(float); 
                 size_t i1 = linear_index / (NUM_CONTROLLER_LEVELS * NUM_GAINS);
                 size_t i2 = (linear_index % (NUM_CONTROLLER_LEVELS * NUM_GAINS)) / NUM_GAINS;
                 size_t i3 = (linear_index % (NUM_CONTROLLER_LEVELS * NUM_GAINS)) % NUM_GAINS;
                 memcpy(&gains[i1][i2][i3], packets[i].raw + 8, sub_size);
-                // Serial.println(index/sizeof(float));
                 index+=sub_size;
             }
             if(id == yaml_section_id_mappings.at("assigned_states")){
@@ -184,9 +158,6 @@ struct Config {
                 memcpy(&assigned_states[i1][i2], packets[i].raw + 8, sub_size);
                 index+=sub_size;
             }
-            if(id == yaml_section_id_mappings.at("num_states_per_estimator")){
-                memcpy(num_states_per_estimator, packets[i].raw + 8, sub_size);
-            }
             if(id == yaml_section_id_mappings.at("reference_limits")){
                 size_t linear_index = index / sizeof(float);
                 size_t i1 = linear_index / (STATE_LEN * 3 * 2);
@@ -194,7 +165,6 @@ struct Config {
                 size_t i3 = (linear_index % (STATE_LEN * 3 * 2)) % (3 * 2);
                 memcpy(&set_reference_limits[i1][i2][i3], packets[i].raw + 8, sub_size);
                 index+=sub_size;
-                Serial.printf("indices: %d, %d, %d\n", i1, i2, i3);
             }
             if(id == yaml_section_id_mappings.at("yaw_axis_vector")){
                 memcpy(yaw_axis_vector, packets[i].raw + 8,sub_size);
@@ -222,8 +192,6 @@ struct Config {
             }
             if(id==yaml_section_id_mappings.at("estimators")){
                 memcpy(estimators, packets[i].raw + 8, sub_size);
-                Serial.println(sub_size);
-                Serial.println(estimators[0]);
             }
             if(id==yaml_section_id_mappings.at("odom_values")){
                 memcpy(odom_values, packets[i].raw + 8, sub_size);
@@ -248,5 +216,7 @@ struct Config {
         uint16_t index = 0;
 
 };
+
+extern Config config;
 
 #endif

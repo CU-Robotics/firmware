@@ -1,46 +1,63 @@
 #include "estimator_manager.hpp"
 
-EstimatorManager::EstimatorManager(CANData* data, Config c_data) {
+EstimatorManager::init() {
+    // configure pins and write high to the encoders
     for (int i = 0;i < c_data.num_sensors[0];i++) {
         pinMode(c_data.encoder_pins[i], OUTPUT);
         digitalWrite(c_data.encoder_pins[i], HIGH);
     }
 
+    // write high to the IMU's cs pin
     pinMode(ICM_CS, OUTPUT);
     digitalWrite(ICM_CS, HIGH);
 
+    // begin SPI
     Serial.println("Starting SPI");
     SPI.begin();
     Serial.println("SPI Started");
 
-    //buff enc loop
+    // init buff encoders
     for(int i = 0;i < c_data.num_sensors[0];i++){
-        buff_sensors[i].init(c_data.encoder_pins[i]);
+        buff_encoders[i].init(c_data.encoder_pins[i]);
     }
-    //imu loop
+
+    // init icms
     for(int i = 0;i < c_data.num_sensors[1];i++){
         icm_sensors[i].init(icm_sensors[i].CommunicationProtocol::SPI);
         icm_sensors[i].set_gyro_range(4000);
     }
-    //rev enc loop
+
+    // init rev encoders
     for(int i = 0;i < c_data.num_sensors[2];i++){
         rev_sensors[i].init(REV_ENC_PIN1+i,true);
     }
-    //time of flight sensor loop
+
+    // init TOF sensors
     for(int i = 0;i < c_data.num_sensors[3];i++){
         tof_sensors[i].init();
     }
 
-    can_data = data;
-    config_data = c_data;
+    // set the assign state
+    assign_states(config.assigned_states);
+
+    // initialize estimators
+    for(int i = 0; i < NUM_ESTIMATORS; i++) {
+        Serial.printf("Init Estimator %f\n", config.estimators[i]);
+
+        if(config.estimators[i] != 0) {
+            estimator_manager.init_estimator(config.estimators[i], (int) num_states_per_estimator[i]);
+        }
+    }
+
+    // calibrate IMUs
+    estimator_manager.calibrate_imus();
 }
 
 void EstimatorManager::init_estimator(int estimator_id, int num_states) {
     switch (estimator_id) {
     case 1: 
-        estimators[num_estimators] = new GimbalEstimator(config_data,&rev_sensors[0],&rev_sensors[1],&rev_sensors[2], &buff_sensors[0], &buff_sensors[1], &icm_sensors[0], can_data, num_states);
+        estimators[num_estimators] = new GimbalEstimator(config_data,&rev_sensors[0],&rev_sensors[1],&rev_sensors[2], &buff_encoders[0], &buff_encoders[1], &icm_sensors[0], can_data, num_states);
         break;
-
     case 2:
         estimators[num_estimators] = new FlyWheelEstimator(can_data, num_states);
         break;
@@ -54,7 +71,7 @@ void EstimatorManager::init_estimator(int estimator_id, int num_states) {
         estimators[num_estimators] = new SwitcherEstimator(config_data, can_data, &tof_sensors[0],num_states);
         break;
     case 6:
-        estimators[num_estimators] = new GimbalEstimatorNoOdom(config_data, &buff_sensors[0], &buff_sensors[1], &icm_sensors[0], can_data, num_states);
+        estimators[num_estimators] = new GimbalEstimatorNoOdom(config_data, &buff_encoders[0], &buff_encoders[1], &icm_sensors[0], can_data, num_states);
         break;
     default:
         break;
@@ -115,7 +132,7 @@ void EstimatorManager::assign_states(float as[NUM_ESTIMATORS][STATE_LEN]) {
 
 void EstimatorManager::read_sensors() {
     for (int i = 0; i < config_data.num_sensors[0]; i++) {
-        buff_sensors[i].read();
+        buff_encoders[i].read();
     }
     for (int i = 0; i < config_data.num_sensors[1]; i++) {
         icm_sensors[i].read();
@@ -146,8 +163,7 @@ void EstimatorManager::calibrate_imus() {
         sum_accel_z += icm_sensors[0].get_accel_Z();
     }
 
-    Serial.printf("Calibrated offsets: %f, %f, %f", sum_x / NUM_IMU_CALIBRATION, sum_y / NUM_IMU_CALIBRATION, sum_z / NUM_IMU_CALIBRATION);
-    Serial.println();
+    Serial.printf("Calibrated offsets: %f, %f, %f\n", sum_x / NUM_IMU_CALIBRATION, sum_y / NUM_IMU_CALIBRATION, sum_z / NUM_IMU_CALIBRATION);
     icm_sensors[0].set_offsets(sum_x / NUM_IMU_CALIBRATION, sum_y / NUM_IMU_CALIBRATION, sum_z / NUM_IMU_CALIBRATION);
 }
 
@@ -162,4 +178,8 @@ EstimatorManager::~EstimatorManager() {
             continue;
         delete estimators[i];
     }
+}
+
+void EstimatorManager::set_can_data(CANData *_can_data) {
+    can_data = _can_data
 }

@@ -14,13 +14,13 @@ constexpr unsigned int COMMS_PACKET_SIZE = 1023u;
 constexpr unsigned int KHADAS_PACKET_ID_OFFSET = 1u; 	// 2 bytes
 /// @brief The offset of the Packet info bits from the base of the Khadas packet
 constexpr unsigned int KHADAS_PACKET_INFO_OFFSET = 3u;	// 1 byte
-/// @brief The offset of the Packet target state from the base of the Khadas packet
+/// @brief The offset of the Packet target governor from the base of the Khadas packet
 constexpr unsigned int KHADAS_PACKET_TSTATE_OFFSET = 4u;	// 288 bytes
 /// @brief The offset of the Packet ref draw data from the base of the Khadas packet
 constexpr unsigned int KHADAS_PACKET_REF_OFFSET = 292u;	// 128 bytes
-/// @brief The offset for the request byte if hive sent an override state
+/// @brief The offset for the request byte if hive sent an override governor
 constexpr unsigned int KHADAS_PACKET_HIVE_OVERRIDE_STATE_REQUEST_OFFSET = 420u; // 1 byte
-/// @brief The offset of the override state from hive
+/// @brief The offset of the override governor from hive
 constexpr unsigned int KHADAS_PACKET_HIVE_OVERRIDE_STATE_OFFSET = 421u; // 288 bytes
 /// @brief The offset to the end of the Khadas packet
 constexpr unsigned int KHADAS_PACKET_END_OFFSET = 709u;
@@ -33,7 +33,7 @@ constexpr unsigned int TEENSY_PACKET_ID_OFFSET = 1u;	// 2 bytes
 constexpr unsigned int TEENSY_PACKET_INFO_OFFSET = 3u;	// 1 bytes
 /// @brief The offset of the packet time from the base of the Teesny packet
 constexpr unsigned int TEENSY_PACKET_TIME_OFFSET = 4u;	// 8 bytes
-/// @brief The offset of the packet estimated state from the base of the Teesny packet
+/// @brief The offset of the packet estimated governor from the base of the Teesny packet
 constexpr unsigned int TEENSY_PACKET_ESTATE_OFFSET = 12u;	// 288 bytes
 /// @brief The offset of the packet sensor data from the base of the Teesny packet
 constexpr unsigned int TEENSY_PACKET_SENSOR_OFFSET = 300u;	// 400 bytes
@@ -85,9 +85,9 @@ struct CommsPacket {
 	void set_info(uint8_t info);
 
 	// khadas getters
-	/// @brief Get the target state from this packet
-	/// @param state The float array to put the state into
-	void get_target_state(float state[STATE_LEN][3]);
+	/// @brief Get the target governor from this packet
+	/// @param governor The float array to put the governor into
+	void get_target_state(float governor[STATE_LEN][3]);
 	/// @brief Get the ref draw data from this packet
 	/// @param draw_data The char array to put the data into
 	void get_ref_draw_data(char** draw_data);
@@ -96,17 +96,17 @@ struct CommsPacket {
 	/// @return The request bit
 	uint8_t get_hive_override_request();
 
-	/// @brief Get the hive override state
-	/// @param state The float array to put the state into
-	void get_hive_override_state(float state[STATE_LEN][3]);
+	/// @brief Get the hive override governor
+	/// @param governor The float array to put the governor into
+	void get_hive_override_state(float governor[STATE_LEN][3]);
 
 	// teensy setters
 	/// @brief Set the time of this packet
 	/// @param time The time as a double
 	void set_time(double time);
-	/// @brief Set the estimated state for this packet
-	/// @param state The float array of state
-	void set_estimated_state(float state[STATE_LEN][3]);
+	/// @brief Set the estimated governor for this packet
+	/// @param governor The float array of governor
+	void set_estimated_state(float governor[STATE_LEN][3]);
 	/// @brief Set the sensor data for this packet
 	/// @param sensor_data The sensor data struct reference to use
 	void set_sensor_data(SensorData* sensor_data);
