@@ -1,6 +1,13 @@
 #ifndef PROFILER_H
 #define PROFILER_H
 
+// IMPORTANT! Use this flag to toggle profiling globally.
+// The compiler should optimize out the functions with empty bodies.
+// #define PROFILE
+
+// TODO: make 2:1 nested sections work and finisht the PROFILE flag
+// TODO: profile main
+
 #include <Arduino.h>
 
 #define PROF_MAX_SECTIONS 4 // max nested profiling sections
@@ -22,6 +29,7 @@ struct Profiler {
     /// @brief Start (push) a profiling section onto the stack.
     /// @param name A unique name to identify the section.
     void begin(const char* name) {
+    #ifdef PROFILE
         if (top >= PROF_MAX_SECTIONS - 1) return;
         top++;
         strncpy(stack[top].name, name, PROF_MAX_NAME);
@@ -29,10 +37,12 @@ struct Profiler {
         if (stack[top].count < PROF_MAX_TIMES) {
             stack[top].start_times[stack[top].count] = micros();
         }
+    #endif
     }
 
     /// @brief End (pop) the newest profiling section. Don't call without a corresponding push.
     void end() {
+    #ifdef PROFILE
         if (top < 0) return;
         uint8_t count = stack[top].count;
         if (count < PROF_MAX_TIMES) {
@@ -40,11 +50,13 @@ struct Profiler {
             stack[top].count++;
         }
         top--;
+    #endif
     }
 
     /// @brief Print stats for a particular profiling section.
     /// @param name The name of the section to print statistics for.
     void print(const char* name) {
+    #ifdef PROFILE
         uint32_t min = UINT32_MAX;
         uint32_t max = 0;
         uint32_t sum = 0;
@@ -64,6 +76,7 @@ struct Profiler {
             }
             return;
         }
+    #endif
     }
 };
 
