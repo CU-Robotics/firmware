@@ -68,6 +68,11 @@ public:
     /// @brief default constructor
     ConfigLayer() {}
 
+    /// @brief process config packets until all packets are received and processed
+    /// @return a constructed config object holding all the data in the yaml
+    // TODO: make this pick the SD card config file after a timeout
+    Config configure();
+
     /// @brief check incoming packet from the comms layer and update outgoing packet accordingly to request next config packet
     /// @param in incoming comms packet
     /// @param out outgoing comms packet to write config requests to
@@ -97,6 +102,8 @@ struct Config {
 
     /// @brief gains matrix
     float gains[NUM_CONTROLLERS][NUM_GAINS];
+    /// @brief gear ratio matrix
+    float gear_ratios[NUM_CONTROLLERS][NUM_MOTORS];
     /// @brief matrix that contains which states are set by which estimators
     float estimator_state_outputs[NUM_ESTIMATORS][STATE_LEN];
     /// @brief matrix that contains which motor inputs are set by which controllers

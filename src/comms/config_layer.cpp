@@ -1,5 +1,18 @@
 #include "config_layer.hpp"
 
+Config ConfigLayer::configure() {
+    while (!configured) {
+        comms.ping();
+        config_layer.process(comms.get_incoming_packet(), comms.get_outgoing_packet());
+    }
+
+    Config config_object;
+
+    config_object.fill_data(config_packets, subsec_sizes);
+
+    return config_object;
+}
+
 void ConfigLayer::process(CommsPacket *in, CommsPacket *out) {
     char *in_raw = in->raw;
     char *out_raw = out->raw;
