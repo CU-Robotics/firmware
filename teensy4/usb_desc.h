@@ -596,20 +596,20 @@ let me know?  http://forum.pjrc.com/forums/4-Suggestions-amp-Bug-Reports
   #define EP0_SIZE		64
   #define NUM_ENDPOINTS         4
   #define NUM_INTERFACE		2
-  #define RAWHID_INTERFACE      0	// RawHID
+  #define RAWHID_INTERFACE      0		// RawHID
   #define RAWHID_TX_ENDPOINT    3
-  #define RAWHID_TX_SIZE        1023
-  #define RAWHID_TX_INTERVAL    1	 // TODO: is this ok for 480 Mbit speed
+  #define RAWHID_TX_SIZE        1023	// increased packet size
+  #define RAWHID_TX_INTERVAL    1	 
   #define RAWHID_RX_ENDPOINT    4
-  #define RAWHID_RX_SIZE        1023
-  #define RAWHID_RX_INTERVAL    1	 // TODO: is this ok for 480 Mbit speed
-  #define SEREMU_INTERFACE      1	// Serial emulation
+  #define RAWHID_RX_SIZE        1023	// increased packet size
+  #define RAWHID_RX_INTERVAL    1	 
+  #define SEREMU_INTERFACE      1		// Serial emulation
   #define SEREMU_TX_ENDPOINT    2
   #define SEREMU_TX_SIZE        64
-  #define SEREMU_TX_INTERVAL    1	 // TODO: is this ok for 480 Mbit speed
+  #define SEREMU_TX_INTERVAL    1	 
   #define SEREMU_RX_ENDPOINT    2
   #define SEREMU_RX_SIZE        32
-  #define SEREMU_RX_INTERVAL    2	 // TODO: is this ok for 480 Mbit speed
+  #define SEREMU_RX_INTERVAL    2	 
   #define ENDPOINT2_CONFIG	ENDPOINT_RECEIVE_INTERRUPT + ENDPOINT_TRANSMIT_INTERRUPT
   #define ENDPOINT3_CONFIG	ENDPOINT_RECEIVE_UNUSED + ENDPOINT_TRANSMIT_INTERRUPT
   #define ENDPOINT4_CONFIG	ENDPOINT_RECEIVE_INTERRUPT + ENDPOINT_TRANSMIT_UNUSED
@@ -948,6 +948,63 @@ let me know?  http://forum.pjrc.com/forums/4-Suggestions-amp-Bug-Reports
   #define ENDPOINT13_CONFIG	(ENDPOINT_RECEIVE_ISOCHRONOUS|ENDPOINT_TRANSMIT_ISOCHRONOUS)
   #define ENDPOINT14_CONFIG	ENDPOINT_TRANSMIT_ISOCHRONOUS
   #define ENDPOINT15_CONFIG	ENDPOINT_TRANSMIT_ONLY
+
+
+#elif defined(USB_CUSTOM) // Define USB_CUSTOM in the makefile to enable this section
+
+// Modified by Jackson Stepka (github: Pandabear1125)
+
+// Enables Dual Serial and RawHID on Teensy 4.1
+// Serial0 and Serial1 are unchanged from their defaults
+// RawHID is modified to allow 1023 byte packet sizes
+
+  #define VENDOR_ID             	0x16C0
+  #define PRODUCT_ID            	0x048B
+  #define MANUFACTURER_NAME     	{'T','e','e','n','s','y','d','u','i','n','o'}
+  #define MANUFACTURER_NAME_LEN 	11
+  #define PRODUCT_NAME          	{'U','S','B',' ','C','u','s','t','o','m'}
+  #define PRODUCT_NAME_LEN      	10
+  #define EP0_SIZE              	64
+
+  #define NUM_ENDPOINTS         	6		// Serial0: 2, Serial1: 2, RawHID: 2
+  #define NUM_INTERFACE         	5		// Serial0: 2, Serial1: 2, RawHID: 1
+  
+  // Serial 0
+  #define CDC_IAD_DESCRIPTOR    	1       // Serial
+  #define CDC_STATUS_INTERFACE  	0
+  #define CDC_DATA_INTERFACE    	1
+  #define CDC_ACM_ENDPOINT      	1
+  #define CDC_RX_ENDPOINT       	2
+  #define CDC_TX_ENDPOINT       	2
+  #define CDC_ACM_SIZE          	16
+  #define CDC_RX_SIZE_480       	512
+  #define CDC_TX_SIZE_480       	512
+  #define CDC_RX_SIZE_12        	64
+  #define CDC_TX_SIZE_12        	64
+  #define ENDPOINT1_CONFIG			ENDPOINT_RECEIVE_UNUSED + ENDPOINT_TRANSMIT_INTERRUPT
+  #define ENDPOINT2_CONFIG			ENDPOINT_RECEIVE_BULK + ENDPOINT_TRANSMIT_BULK
+  
+  // Serial 1
+  #define CDC2_STATUS_INTERFACE 	2       // SerialUSB1
+  #define CDC2_DATA_INTERFACE   	3
+  #define CDC2_ACM_ENDPOINT     	3
+  #define CDC2_RX_ENDPOINT      	4
+  #define CDC2_TX_ENDPOINT      	4
+  #define ENDPOINT3_CONFIG			ENDPOINT_RECEIVE_UNUSED + ENDPOINT_TRANSMIT_INTERRUPT
+  #define ENDPOINT4_CONFIG			ENDPOINT_RECEIVE_BULK + ENDPOINT_TRANSMIT_BULK
+
+  // RawHID
+  #define RAWHID_USAGE_PAGE			0xFFAB  // recommended: 0xFF00 to 0xFFFF
+  #define RAWHID_USAGE				0x0200  // recommended: 0x0100 to 0xFFFF
+  #define RAWHID_INTERFACE      	4		// RawHID
+  #define RAWHID_TX_ENDPOINT    	5
+  #define RAWHID_TX_SIZE        	1023	// increased packet size
+  #define RAWHID_TX_INTERVAL    	1	 
+  #define RAWHID_RX_ENDPOINT    	6
+  #define RAWHID_RX_SIZE        	1023	// increased packet size
+  #define RAWHID_RX_INTERVAL    	1	 
+  #define ENDPOINT5_CONFIG			ENDPOINT_RECEIVE_UNUSED + ENDPOINT_TRANSMIT_INTERRUPT
+  #define ENDPOINT6_CONFIG			ENDPOINT_RECEIVE_INTERRUPT + ENDPOINT_TRANSMIT_UNUSED
 
 #endif
 
