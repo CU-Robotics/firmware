@@ -1,3 +1,6 @@
+# install dependencies (curl)
+sudo apt install curl
+
 # makes the keyrings directory with correct permission
 sudo mkdir -p -m0755 /etc/apt/keyrings
 
