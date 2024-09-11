@@ -24,6 +24,7 @@ struct Profiler {
         char name[PROF_MAX_NAME + 1];  // extra for null terminator
     };
 
+    /// @brief Array of profiling sections.
     profiler_section_t sections[PROF_MAX_SECTIONS];
 
     /// @brief Start a profiling section.
