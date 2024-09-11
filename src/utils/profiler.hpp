@@ -12,10 +12,15 @@
 
 /// @brief Object for profiling sections of code.
 struct Profiler {
+    /// @brief Data structure for a profiling section. 
     struct profiler_section_t {
+        /// @brief Start time for each profiling section.
         uint32_t start_times[PROF_MAX_TIMES];
+        /// @brief End time for each profiling section.
         uint32_t end_times[PROF_MAX_TIMES];
+        /// @brief Number of start/end times recorded (how many deltas can be calculated).
         uint8_t count = 0;
+        /// @brief A unique name to identify the section.
         char name[PROF_MAX_NAME + 1];  // extra for null terminator
     };
 
