@@ -2,7 +2,7 @@
 
 BalancingControl::BalancingControl(){}
 
-void BalancingControl::set_fdbinput(float x_d[10], float psi_d, float l_d){
+void BalancingControl::set_refinput(float x_d[10], float psi_d, float l_d){
 
 }
 
@@ -10,6 +10,6 @@ void BalancingControl::set_fdbinput(float x[10], float psi, float ll, float lr, 
 
 }
 
-void BalancingControl::step(){
+void BalancingControl::step(float output[NUM_MOTORS]){
     float dt = timer.delta();
 }
