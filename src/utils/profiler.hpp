@@ -15,18 +15,24 @@ struct Profiler {
     /// @brief Data structure for a profiling section. 
     struct profiler_section_t {
         /// @brief Start time for each profiling section.
-        uint32_t start_times[PROF_MAX_TIMES];
+        uint32_t start_times[PROF_MAX_TIMES] = { 0 };
         /// @brief End time for each profiling section.
-        uint32_t end_times[PROF_MAX_TIMES];
+        uint32_t end_times[PROF_MAX_TIMES] = { 0 };
         /// @brief Number of start/end times recorded (how many deltas can be calculated).
-        uint8_t count = 0;
+        uint16_t count = 0;
+        /// @brief Flag on whether count has overflowed or not
+        uint8_t overflow : 7;
+        /// @brief Flag on whether this section had begin() called on it
+        uint8_t started : 1;
         /// @brief A unique name to identify the section.
-        char name[PROF_MAX_NAME + 1];  // extra for null terminator
+        char name[PROF_MAX_NAME + 1] = { 0 };  // extra for null terminator
     };
 
+    // dont allocate this memory if we dont need it
+#ifdef PROFILE
     /// @brief Array of profiling sections.
-    profiler_section_t sections[PROF_MAX_SECTIONS];
-
+    profiler_section_t sections[PROF_MAX_SECTIONS] = {};
+#endif
     /// @brief Start a profiling section.
     /// @param name A unique name to identify the section.
     void begin(const char* name);
