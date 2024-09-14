@@ -11,23 +11,23 @@ class SD {
 
     SD();
 
-    int open(char* filepath);
+    int open(const char* filepath);
     void close();
 
-    int mkfile(char* filename);
-    int mkdir(char* dirname);
-    int rm(char* filename, bool r);
-    int rm(char* filename);
+    int mkfile(const char* filename);
+    int mkdir(const char* dirname);
+    int rm(const char* filename, bool r);
+    int rm(const char* filename);
 
     int read(uint8_t* dest, unsigned int len);
     int write(uint8_t* src, unsigned int len);
     
-    bool exists(char* filepath);
-    void enumerate_files(char* root, bool r);
+    bool exists(const char* filepath);
+    void enumerate_files(const char* root, bool r);
 
     private:
 
-    void enumerate_files(char* root, bool r, int tabs);
+    void enumerate_files(const char* root, bool r, int tabs);
 
     SDClass SDinternal;
     

@@ -11,7 +11,7 @@ SD::SD(){
     };
 }
 
-int SD::open(char* filepath){
+int SD::open(const char* filepath){
     // check if exists
     if(!exists(filepath)) {
         Serial.print("SD_NOTICE::filepath ");
@@ -28,7 +28,7 @@ void SD::close(){
     return;
 }
 
-int SD::mkfile(char* filename){
+int SD::mkfile(const char* filename){
     if(SDinternal.exists(filename)){
         Serial.print("SD_NOTICE::file located at ");
         Serial.print(filename);
@@ -44,7 +44,7 @@ int SD::mkfile(char* filename){
     return 0;
 }
 
-int SD::mkdir(char* dirname){
+int SD::mkdir(const char* dirname){
     if(!SDinternal.mkdir(dirname)){
         Serial.print("SD_NOTICE::directory ");
         Serial.print(dirname);
@@ -54,11 +54,11 @@ int SD::mkdir(char* dirname){
     return 0;
 }
 
-int SD::rm(char* filename){
-    rm(filename, 0);
+int SD::rm(const char* filename){
+    return rm(filename, 0);
 }
 
-int SD::rm(char* filename, bool r){
+int SD::rm(const char* filename, bool r){
     // check if file or directory
     File cur;
     if(SDinternal.exists(filename)) cur = SDinternal.open(filename);
@@ -81,7 +81,7 @@ int SD::rm(char* filename, bool r){
         }
         else{
             // recursive erase
-            File tmp = cur.openNextFile;
+            File tmp = cur.openNextFile();
             while(tmp){
                 rm(tmp.name(), 1);
                 tmp = cur.openNextFile();
@@ -118,16 +118,16 @@ int SD::write(uint8_t* src, unsigned int len){
     return 0;
 }
 
-bool SD::exists(char* filepath)
+bool SD::exists(const char* filepath)
 {
     return SDinternal.exists(filepath);
 }
 
-void SD::enumerate_files(char* root, bool r){
+void SD::enumerate_files(const char* root, bool r){
     enumerate_files(root, r, 0);
 }
 
-void SD::enumerate_files(char* root, bool r, int tabs)
+void SD::enumerate_files(const char* root, bool r, int tabs)
 {
     if(!exists(root)){  // dir does not exist
         Serial.print("SD_NOTICE::directory ");
