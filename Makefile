@@ -29,21 +29,22 @@ LIBRARY_LIB = libs
 
 # Project files
 PROJECT_DIR = .
-PROJECT_SOURCE = $(shell find src -name "*.cpp")
+PROJECT_SRC_DIR = src
+PROJECT_SOURCE = $(shell find $(PROJECT_SRC_DIR) -name "*.cpp") $(shell find $(PROJECT_SRC_DIR) -name "*.c")
 PROJECT_INCLUDE = src
 # application filename will end up as PROJECT_NAME.hex once built
 PROJECT_NAME = firmware
 
 # Teensy41 compiler flags
-# USB_CUSTOM enables dual-serial and RawHID connections
-TEENSY4_FLAGS = -DUSB_CUSTOM -DLAYOUT_US_ENGLISH  -DTEENSYDUINO=157 -DARDUINO_TEENSY41 -DARDUINO=200
+TEENSY4_FLAGS = -DF_CPU=600000000 -DUSB_CUSTOM -DLAYOUT_US_ENGLISH -D__IMXRT1062__ -DTEENSYDUINO=159 -DARDUINO_TEENSY41 -DARDUINO=10813
 # CPU flags to tailor the code for the Teensy processor
 CPU_FLAGS = -DF_CPU=600000000 -D__IMXRT1062__ -mcpu=cortex-m7 -mfloat-abi=hard -mfpu=fpv5-d16 -mthumb
 
 # Base compiler flags for both C++ and C
+# -O0 is not supported
 COMPILE_FLAGS = -Wall -g -O2 $(CPU_FLAGS) $(TEENSY4_FLAGS) -I$(TEENSY_INCLUDE) -ffunction-sections -fdata-sections
 # C++ specific flags for compiling
-CPP_FLAGS = -std=gnu++14 -felide-constructors -fno-exceptions -fpermissive -fno-rtti -Wno-error=narrowing
+CPP_FLAGS = -std=gnu++17 -felide-constructors -fno-exceptions -fpermissive -fno-rtti -Wno-error=narrowing
 # c++ moment
 CPP_FLAGS += -Wno-trigraphs -Wno-comment
 
@@ -65,10 +66,10 @@ ifeq ($(UNAME),Linux)
 endif
 
 # Complete compilers
-COMPILER_CPP := $(ARDUINO_PATH)/packages/teensy/tools/teensy-compile/5.4.1/arm/bin/arm-none-eabi-g++
-COMPILER_C := $(ARDUINO_PATH)/packages/teensy/tools/teensy-compile/5.4.1/arm/bin/arm-none-eabi-gcc
-OBJCOPY := $(ARDUINO_PATH)/packages/teensy/tools/teensy-compile/5.4.1/arm/bin/arm-none-eabi-objcopy
-GDB := $(ARDUINO_PATH)/packages/teensy/tools/teensy-compile/5.4.1/arm/bin/arm-none-eabi-gdb
+COMPILER_CPP := $(ARDUINO_PATH)/packages/teensy/tools/teensy-compile/*/arm/bin/arm-none-eabi-g++
+COMPILER_C := $(ARDUINO_PATH)/packages/teensy/tools/teensy-compile/*/arm/bin/arm-none-eabi-gcc
+OBJCOPY := $(ARDUINO_PATH)/packages/teensy/tools/teensy-compile/*/arm/bin/arm-none-eabi-objcopy
+GDB := $(ARDUINO_PATH)/packages/teensy/tools/teensy-compile/*/arm/bin/arm-none-eabi-gdb
 
 GIT_SCRAPER = ./tools/git_scraper.cpp
 

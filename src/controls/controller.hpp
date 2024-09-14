@@ -39,12 +39,12 @@ public:
     /// @param reference target reference
     /// @param estimate current macro state estimate
     /// @returns motor_current or Micro_state depending on controller_level
-    virtual float step(float reference[3], float estimate[3]);
+    virtual float step(float reference[3], float estimate[3]) = 0;
     /// @brief Generates an output from a state reference and estimation
     /// @param reference target reference
     /// @param estimate current micro state estimate
     /// @returns motor_current 
-    virtual float step(float reference, float estimate[MICRO_STATE_LEN]);
+    virtual float step(float reference, float estimate[MICRO_STATE_LEN]) = 0;
 
     /// @brief Resets integrators/timers
     virtual void reset() { timer.start_timer(); }
