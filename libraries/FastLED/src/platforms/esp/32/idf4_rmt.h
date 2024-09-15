@@ -111,6 +111,9 @@
 #define CONFIG_RMT_SUPPRESS_DEPRECATE_WARN 1
 
 #include "namespace.h"
+#include "eorder.h"
+#include "rgbw.h"
+#include "pixel_iterator.h"
 
 FASTLED_NAMESPACE_BEGIN
 
@@ -129,32 +132,22 @@ class ESP32RMTController;
 class RmtController
 {
 public:
-    static void init(gpio_num_t pin, bool built_in_driver);
+    // When built_in_driver is true then the entire RMT datablock is
+    // generated ahead of time. This eliminates the flicker at the
+    // cost of using WAY more memory (24x the size of the pixel data
+    // as opposed to 2x - the size of an additional pixel buffer for
+    // stream encoding).
+    static void init(int pin, bool built_in_driver);
     RmtController() = delete;
     RmtController(const RmtController &) = delete;
     RmtController(
         int DATA_PIN,
         int T1, int T2, int T3,  // Bit timings.
         int maxChannel,
-        bool built_in_driver,
-        bool is_rgbw,
-        RGBW_MODE,
-        uint16_t white_color_temp);
+        bool built_in_driver);
     ~RmtController();
 
-    template <EOrder RGB_ORDER>
-    void showPixels(PixelController<RGB_ORDER> &pixels)
-    {
-        if (built_in_driver())
-        {
-            loadAllPixelsToRmtSymbolData(pixels);
-        }
-        else
-        {
-            loadPixelDataForStreamEncoding(pixels);
-        }
-        showPixels();
-    }
+    void showPixels(PixelIterator &pixels);
 
 private:
     void ingest(uint8_t val);
@@ -162,75 +155,10 @@ private:
     bool built_in_driver();
     uint8_t *getPixelBuffer(int size_in_bytes);
     void initPulseBuffer(int size_in_bytes);
-    template <EOrder RGB_ORDER>
-    void loadAllPixelsToRmtSymbolData(PixelController<RGB_ORDER> &pixels)
-    {
-        // -- Make sure the data buffer is allocated
-        const int bytes_per_pixel = mIsRgbw ? 4 : 3;
-        const int size = pixels.size() * bytes_per_pixel;
-        initPulseBuffer(size);
+    void loadAllPixelsToRmtSymbolData(PixelIterator& pixels);
 
-        // -- Cycle through the R,G, B (and W) values in the right order,
-        //    storing the pulses in the big buffer
-        if (!mIsRgbw)
-        {
-            while (pixels.has(1))
-            {
-                uint8_t r, g, b;
-                pixels.loadAndScaleRGB(&r, &g, &b);
-                ingest(r);
-                ingest(g);
-                ingest(b);
-                pixels.advanceData();
-                pixels.stepDithering();
-            }
-        }
-        else
-        {
-            while (pixels.has(1))
-            {
-                uint8_t r, g, b, w;
-                pixels.loadAndScaleRGBW(mRgbwMode, mColorTemp, &r, &g, &b, &w);
-                ingest(r);
-                ingest(g);
-                ingest(b);
-                ingest(w);
-                pixels.advanceData();
-                pixels.stepDithering();
-            }
-        }
-    }
-
-    template <EOrder RGB_ORDER>
-    void loadPixelDataForStreamEncoding(PixelController<RGB_ORDER> &pixels)
-    {
-        // -- Make sure the buffer is allocated
-        const int size_per_pixel = mIsRgbw ? 4 : 3;
-        const int size_in_bytes = pixels.size() * size_per_pixel;
-        uint8_t *pData = getPixelBuffer(size_in_bytes);
-
-        if (!mIsRgbw) {
-            while (pixels.has(1))
-            {
-                pixels.loadAndScaleRGB(pData, pData + 1, pData + 2);
-                pData += 3;
-                pixels.advanceData();
-                pixels.stepDithering();
-            }
-        } else {
-            while (pixels.has(1))
-            {
-                pixels.loadAndScaleRGBW(mRgbwMode, mColorTemp, pData, pData + 1, pData + 2, pData + 3);
-                pData += 4;
-                pixels.advanceData();
-                pixels.stepDithering();
-            }
-        }
-    }
+    void loadPixelDataForStreamEncoding(PixelIterator& pixels);
     ESP32RMTController *pImpl = nullptr;
-    bool mIsRgbw = false;
-    RGBW_MODE mRgbwMode = kRGBWInvalid;
-    uint16_t mColorTemp = kRGBWDefaultColorTemp;
 };
 
 FASTLED_NAMESPACE_END

@@ -12,6 +12,8 @@
 #include "force_inline.h"
 #include "pixel_controller.h"
 #include "dither_mode.h"
+#include "pixel_iterator.h"
+#include "assert.h"
 
 FASTLED_NAMESPACE_BEGIN
 
@@ -39,6 +41,7 @@ protected:
     static CLEDController *m_pHead;  ///< pointer to the first LED controller in the linked list
     static CLEDController *m_pTail;  ///< pointer to the last LED controller in the linked list
 
+
     /// Set all the LEDs to a given color. 
     /// @param data the CRGB color to set the LEDs to
     /// @param nLeds the number of LEDs to set to this color
@@ -52,6 +55,16 @@ protected:
     virtual void show(const struct CRGB *data, int nLeds, CRGB scale) = 0;
 
 public:
+
+    Rgbw mRgbMode = RgbwInvalid::value();
+    CLEDController& setRgbw(const Rgbw& arg = RgbwDefault::value()) {
+        // Note that at this time (Sept 13th, 2024) this is only implemented in the ESP32 driver
+        // directly. For an emulated version please see RGBWEmulatedController in chipsets.h
+        mRgbMode = arg;
+        return *this;  // builder pattern.
+    }
+    Rgbw getRgbw() const { return mRgbMode; }
+
     /// Create an led controller object, add it to the chain of controllers
     CLEDController() : m_Data(NULL), m_ColorCorrection(UncorrectedColor), m_ColorTemperature(UncorrectedTemperature), m_DitherMode(BINARY_DITHER), m_nLeds(0) {
         m_pNext = NULL;
@@ -250,9 +263,7 @@ public:
 /// @tparam MASK bitmask for the output lanes
 template<EOrder RGB_ORDER, int LANES=1, uint32_t MASK=0xFFFFFFFF> class CPixelLEDController : public CLEDController {
 protected:
-    /// Send the LED data to the strip
-    /// @param pixels the PixelController object for the LED data
-    virtual void showPixels(PixelController<RGB_ORDER,LANES,MASK> & pixels) = 0;
+
 
     /// Set all the LEDs on the controller to a given color
     /// @param data the CRGB color to set the LEDs to
@@ -277,7 +288,14 @@ protected:
     }
 
 public:
+    static const EOrder RGB_ORDER_VALUE = RGB_ORDER; ///< The RGB ordering for this controller
+    static const int LANES_VALUE = LANES;             ///< The number of lanes for this controller
+    static const uint32_t MASK_VALUE = MASK;         ///< The mask for the lanes for this controller
     CPixelLEDController() : CLEDController() {}
+
+    /// Send the LED data to the strip
+    /// @param pixels the PixelController object for the LED data
+    virtual void showPixels(PixelController<RGB_ORDER,LANES,MASK> & pixels) = 0;
 
     /// Get the number of lanes of the Controller
     /// @returns LANES from template

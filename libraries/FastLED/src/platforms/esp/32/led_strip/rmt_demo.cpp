@@ -18,19 +18,9 @@
 #include "esp_err.h"
 #include "led_strip_rmt.h"
 
-
-
 #if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 0, 0)
 #include "esp_private/esp_clk.h"
-
 #endif
-
-// GPIO assignment
-#define LED_STRIP_BLINK_GPIO  2
-// Numbers of the LED in the strip
-#define LED_STRIP_LED_NUMBERS 24
-// 10MHz resolution, 1 tick = 0.1us (led strip needs a high resolution)
-#define LED_STRIP_RMT_RES_HZ  (10 * 1000 * 1000)
 
 static const char *TAG = "example";
 
@@ -66,11 +56,11 @@ led_strip_rmt_config_t make_rmt_config(rmt_clock_source_t clk_src, uint32_t reso
     return config;
 }
 
-led_strip_handle_t configure_led(void)
+led_strip_handle_t configure_led(int pin, uint32_t led_numbers, uint32_t rmt_res_hz)
 {
 #if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 0, 0) || FASTLED_ESP32_COMPONENT_LED_STRIP_FORCE_IDF4
-    led_strip_config_t strip_config = make_config(LED_STRIP_BLINK_GPIO, LED_STRIP_LED_NUMBERS, LED_PIXEL_FORMAT_GRB, LED_MODEL_WS2812, 0);
-    led_strip_rmt_config_t rmt_config = make_rmt_config(RMT_CLK_SRC_DEFAULT, LED_STRIP_RMT_RES_HZ, 0, false);
+    led_strip_config_t strip_config = make_config(pin, led_numbers, LED_PIXEL_FORMAT_GRB, LED_MODEL_WS2812, 0);
+    led_strip_rmt_config_t rmt_config = make_rmt_config(RMT_CLK_SRC_DEFAULT, rmt_res_hz, 0, false);
 
     // LED Strip object handle
     led_strip_handle_t led_strip;
@@ -80,11 +70,11 @@ led_strip_handle_t configure_led(void)
 #else
     // For older ESP-IDF versions, use the appropriate LED strip initialization
     led_strip_config_t strip_config = {
-        .strip_gpio_num = LED_STRIP_BLINK_GPIO,
-        .max_leds = LED_STRIP_LED_NUMBERS,
+        .strip_gpio_num = pin,
+        .max_leds = led_numbers,
     };
     led_strip_rmt_config_t rmt_config = {
-        .resolution_hz = LED_STRIP_RMT_RES_HZ,
+        .resolution_hz = rmt_res_hz,
     };
     led_strip_handle_t led_strip;
     ESP_ERROR_CHECK(led_strip_new_rmt_device(&strip_config, &rmt_config, &led_strip));
@@ -94,14 +84,18 @@ led_strip_handle_t configure_led(void)
 }
 
 void __demo() {
-    led_strip_handle_t led_strip = configure_led();
+    static const int led_strip_gpio = 2;
+    uint32_t led_numbers = 24;            // Replace with desired number of LEDs
+    uint32_t rmt_res_hz = (10 * 1000 * 1000); // 10MHz resolution, 1 tick = 0.1us (led strip needs a high resolution)
+
+    led_strip_handle_t led_strip = configure_led(led_strip_gpio, led_numbers, rmt_res_hz);
     bool led_on_off = false;
 
     ESP_LOGI(TAG, "Start blinking LED strip");
     while (1) {
         if (led_on_off) {
             /* Set the LED pixel using RGB from 0 (0%) to 255 (100%) for each color */
-            for (int i = 0; i < LED_STRIP_LED_NUMBERS; i++) {
+            for (int i = 0; i < led_numbers; i++) {
                 ESP_ERROR_CHECK(led_strip_set_pixel(led_strip, i, 5, 5, 5));
             }
             /* Refresh the strip to send data */

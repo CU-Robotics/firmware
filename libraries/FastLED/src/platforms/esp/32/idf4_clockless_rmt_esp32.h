@@ -37,6 +37,7 @@
 #include "idf4_rmt.h"
 #include "FastLED.h"
 #include "esp_idf_version.h"
+#include "pixel_iterator.h"
 
 // -- Core or custom driver
 #ifndef FASTLED_RMT_BUILTIN_DRIVER
@@ -63,17 +64,6 @@ FASTLED_NAMESPACE_BEGIN
 #endif
 #endif
 
-#ifndef FASTLED_EXPERIMENTAL_ESP32_RGBW_ENABLED
-#define FASTLED_EXPERIMENTAL_ESP32_RGBW_ENABLED 0
-#endif
-
-#ifndef FASTLED_EXPERIMENTAL_ESP32_RGBW_MODE
-#define FASTLED_EXPERIMENTAL_ESP32_RGBW_MODE kRGBWExactColors
-#endif
-
-#ifndef FASTLED_EXPERIMENTAL_ESP32_RGBW_WHITE_TEMP
-#define FASTLED_EXPERIMENTAL_ESP32_RGBW_WHITE_TEMP 4000
-#endif
 
 template <int DATA_PIN, int T1, int T2, int T3, EOrder RGB_ORDER = RGB, int XTRA0 = 0, bool FLIP = false, int WAIT_TIME = 5>
 class ClocklessController : public CPixelLEDController<RGB_ORDER>
@@ -90,10 +80,7 @@ public:
         : mRMTController(
             DATA_PIN, T1, T2, T3,
             FASTLED_RMT_MAX_CHANNELS,
-            FASTLED_RMT_BUILTIN_DRIVER,
-            FASTLED_EXPERIMENTAL_ESP32_RGBW_ENABLED,
-            FASTLED_EXPERIMENTAL_ESP32_RGBW_MODE,
-            FASTLED_EXPERIMENTAL_ESP32_RGBW_WHITE_TEMP
+            FASTLED_RMT_BUILTIN_DRIVER
         )
     {
     }
@@ -109,7 +96,8 @@ protected:
     //    This is the main entry point for the controller.
     virtual void showPixels(PixelController<RGB_ORDER> &pixels)
     {
-        mRMTController.showPixels(pixels);
+        PixelIterator iterator = pixels.as_iterator(this->getRgbw());
+        mRMTController.showPixels(iterator);
     }
 };
 

@@ -181,6 +181,10 @@ class UCS2903 : public UCS2903Controller<DATA_PIN, RGB_ORDER> {};
 template<uint8_t DATA_PIN, EOrder RGB_ORDER>
 class WS2812 : public WS2812Controller800Khz<DATA_PIN, RGB_ORDER> {};
 
+/// @brief WS2815 controller class.
+template<uint8_t DATA_PIN, EOrder RGB_ORDER>
+class WS2815 : public WS2815Controller<DATA_PIN, RGB_ORDER> {};
+
 /// @brief WS2852 controller class.
 /// @copydetails WS2812Controller800Khz
 template<uint8_t DATA_PIN, EOrder RGB_ORDER>
@@ -260,6 +264,10 @@ class LPD1886 : public LPD1886Controller1250Khz<DATA_PIN, RGB_ORDER> {};
 /// @copydetails LPD1886Controller1250Khz_8bit
 template<uint8_t DATA_PIN, EOrder RGB_ORDER>
 class LPD1886_8BIT : public LPD1886Controller1250Khz_8bit<DATA_PIN, RGB_ORDER> {};
+
+/// @brief UCS1912 controller class.
+template<uint8_t DATA_PIN, EOrder RGB_ORDER>
+class UCS1912 : public UCS1912Controller<DATA_PIN, RGB_ORDER> {};
 
 #if defined(DmxSimple_h) || defined(FASTLED_DOXYGEN)
 /// @copydoc DMXSimpleController

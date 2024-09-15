@@ -16,6 +16,7 @@
 #include "sensors/ACS712.hpp"
 
 #include <TeensyDebug.h>
+#include "sensors/blinkingled.hpp"
 
 // Loop constants
 #define LOOP_FREQ 1000
@@ -91,6 +92,8 @@ int main() {
 
     // Execute setup functions
     pinMode(13, OUTPUT);
+
+    blinkLED();
 
     //initialize objects
     can.init();
