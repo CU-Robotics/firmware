@@ -4,14 +4,14 @@
 #include "../filters/pid_filter.hpp"
 #include "../utils/timing.hpp"
 
-/** Constants for Final OUTPUT*/
-#define WHEEL_UPPER_LIMIT 0.5
-#define WHEEL_LOWER_LIMIT -0.5
-
+/** Constants for Final OUTPUT*/ 
+#define WHEEL_UPPER_LIMIT 0.5                   //Need test
+#define WHEEL_LOWER_LIMIT -0.5                  //Need test
+#define F_WH_OUTPUT_LIMIT_NUM 5                 //Need test
 /** Constants for helping*/
 //for x[12] = [s, s_dot, phi, phi_dot, theta_ll, theta_ll_dot, theta_lr, theta_lr_dot, theta_b, theta_b_dot, s_ddot, phi_ddot]
-#define XHELP_LENGTH 12
-#define XHELP_s 0
+#define XHELP_LENGTH 12                         
+#define XHELP_s 0                                       
 #define XHELP_s_dot 1
 #define XHELP_s_ddot 10
 #define XHELP_phi 2
@@ -24,22 +24,22 @@
 #define XHELP_theta_b 8
 #define XHELP_theta_b_dot 9
 /** Constants for leg_controller*/
-#define m_b 
-#define m_l 
-#define R_l 
-#define eta_l
+#define m_b 1                                   //Need test
+#define m_l 1                                   //Need test
+#define R_l 1                                   //Need test
+#define eta_l 1                                 //Need test
 
-#define K1_P 
-#define K1_I 
-#define K1_D 
-#define K1_F 
-#define K2_P 
-#define K2_I 
-#define K2_D 
-#define K2_F 
-#define BOUND true
-#define WARP 
-// MatrixMultiply 2x6 constant (If this doesn't need to change, need to simpfy the calculation) //ASK
+#define K1_P 1                                  //Need test                                    
+#define K1_I 1                                  //Need test 
+#define K1_D 1                                  //Need test                         
+#define K1_F 1                                  //Need test                         
+#define K2_P 1                                  //Need test                         
+#define K2_I 1                                  //Need test                         
+#define K2_D 1                                  //Need test                         
+#define K2_F 1                                  //Need test                         
+#define BOUND true                                                   
+#define WARP true                               //Need test //ASK
+// MatrixMultiply 2x6 constant (If this doesn't need to change, need to simpfy the calculation) //ASK!!!!!!!!!!!!!!!!!!!
 //[a0][a1][a2][a3][a4][a5]
 //[b0][b1][b2][b3][b4][b5]
 #define MA0 1
@@ -55,8 +55,8 @@
 #define MB4 0
 #define MB5 1
 //For gravity_ff
-#define G_CONSTANT 9.81 
-#define THE_C_IDK 0.2868 //ASK
+#define G_CONSTANT 9.81                         //Need test
+#define THE_C_IDK 0.2868 //ASK                  //Need test
 
 /** Constants for locomotion_controller*/
 #define P_LOCO_ROW 4
@@ -86,13 +86,12 @@ class BalancingControl{
         float p[6][P_LOCO_ROW][10];
         /// @brief defalt constrctor 
         BalancingControl();
-        
 
         void init();
 
         /// @brief calculate the output and send them to the Can_bus
         /// @param output for balancing contorl the data form is [T_lwl, T_jlf, T_jlb, T_lwr, T_jrf, T_jrb] 
-        void step(float output[NUM_MOTORS], float x_d[XHELP_LENGTH], float psi_d, float l_d, float x[XHELP_LENGTH], float psi, float ll, float lr, float jl[4], float jr[4], float a_z);
+        void step(float output[NUM_MOTORS], float x_d[XHELP_LENGTH], float psi_d, float l_d, float x[XHELP_LENGTH], float psi, float ll, float lr, float jl[2][2], float jr[2][2], float a_z, float ll_ddot, float lr_ddot);
 };
 
 #endif
