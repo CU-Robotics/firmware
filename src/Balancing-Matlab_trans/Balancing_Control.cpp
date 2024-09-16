@@ -3,9 +3,10 @@
 BalancingControl::BalancingControl(){}
 
 void BalancingControl::init(){
-    float gain[4] = {K1_P, K1_I, K1_D, K1_F};
-    pid1.set_K(gain);
-    pid2.set_K(gain);
+    float gain1[4] = {K1_P, K1_I, K1_D, K1_F};
+    float gain2[4] = {K2_P, K2_I, K2_D, K2_F};
+    pid1.set_K(gain1);
+    pid2.set_K(gain2);
     // p[rows = P_LOCO_ROW] [cols = XHELP_LENGTH]
     float tempp[6][P_LOCO_ROW][10] =
         {{{1,0,0,0,0,0,0,0,0,0},  
