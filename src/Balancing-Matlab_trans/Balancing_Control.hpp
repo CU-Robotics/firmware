@@ -4,20 +4,25 @@
 #include "../filters/pid_filter.hpp"
 #include "../utils/timing.hpp"
 
+/** Constants for Final OUTPUT*/
+#define WHEEL_UPPER_LIMIT 0.5
+#define WHEEL_LOWER_LIMIT -0.5
+
 /** Constants for helping*/
-//for x[12] = [s, s_dot, s_ddot, phi, phi_dot, phi_ddot, theta_ll, theta_ll_dot, theta_lr, theta_lr_dot, theta_b, theta_b_dot]
+//for x[12] = [s, s_dot, phi, phi_dot, theta_ll, theta_ll_dot, theta_lr, theta_lr_dot, theta_b, theta_b_dot, s_ddot, phi_ddot]
+#define XHELP_LENGTH 12
 #define XHELP_s 0
 #define XHELP_s_dot 1
-#define XHELP_s_ddot 2
-#define XHELP_phi 3
-#define XHELP_phi_dot 4
-#define XHELP_phi_ddot 5
-#define XHELP_theta_ll 6
-#define XHELP_theta_ll_dot 7
-#define XHELP_theta_lr 8
-#define XHELP_theta_lr_dot 9
-#define XHELP_theta_b 10
-#define XHELP_theta_b_dot 11
+#define XHELP_s_ddot 10
+#define XHELP_phi 2
+#define XHELP_phi_dot 3
+#define XHELP_phi_ddot 11
+#define XHELP_theta_ll 4
+#define XHELP_theta_ll_dot 5
+#define XHELP_theta_lr 6
+#define XHELP_theta_lr_dot 7
+#define XHELP_theta_b 8
+#define XHELP_theta_b_dot 9
 /** Constants for leg_controller*/
 #define m_b 
 #define m_l 
@@ -54,28 +59,21 @@
 #define THE_C_IDK 0.2868 //ASK
 
 /** Constants for locomotion_controller*/
-#define P_LOCO
-
+#define P_LOCO_ROW 4
+//For P_LOCO go to init() to define it
 
 
 /** Constants for mechanical*/
 #define NUM_MOTORS 6
-
+#define T_LWL_OUTPUT_NUM 0
+#define T_LWR_OUTPUT_NUM 1
+#define T_JLF_OUTPUT_NUM 2
+#define T_JLB_OUTPUT_NUM 3
+#define T_JRF_OUTPUT_NUM 4
+#define T_JRB_OUTPUT_NUM 5
 /// @brief Manage all the balancing control 
 class BalancingControl{
     private:
-    /** Variables - Ref */
-        float _x_d[12]; 
-        float _psi_d; 
-        float _l_d; 
-    /** Variables - fdb */
-        float _x[12]; 
-        float _psi; 
-        float _ll; // Left Leg length 
-        float _lr; // Right Leg length 
-        float _jl[4]; 
-        float _jr[4];
-        float _a_z; 
     /** Helping Classes */
         Timer timer;
         /// @brief The PID for psi
@@ -85,29 +83,16 @@ class BalancingControl{
 
     public:
         float output[NUM_MOTORS];
+        float p[6][P_LOCO_ROW][10];
         /// @brief defalt constrctor 
         BalancingControl();
-
+        
 
         void init();
-        /// @brief ref input(Not sure if those are constant)
-        /// @param x_d = [s, s_dot, s_ddot, phi, phi_dot, phi_ddot, theta_ll, theta_ll_dot, theta_lr, theta_lr_dot, theta_b, theta_b_dot]
-        /// @param psi_d 
-        /// @param l_d leg length
-        void set_refinput(float x_d[12], float psi_d, float l_d);
 
-        /// @brief fdb input from the observer
-        /// @param x = [s, s_dot, s_ddot, phi, phi_dot, phi_ddot, theta_ll, theta_ll_dot, theta_lr, theta_lr_dot, theta_b, theta_b_dot]
-        /// @param psi 
-        /// @param ll left leg length
-        /// @param lr right leg length
-        /// @param jl jacobian matrix for left
-        /// @param jr Jacobian matrix for right
-        /// @param a_z 
-        void set_fdbinput(float x[12], float psi, float ll, float lr, float jl[4], float jr[4], float a_z);
         /// @brief calculate the output and send them to the Can_bus
         /// @param output for balancing contorl the data form is [T_lwl, T_jlf, T_jlb, T_lwr, T_jrf, T_jrb] 
-        void step(float output[NUM_MOTORS]);
+        void step(float output[NUM_MOTORS], float x_d[XHELP_LENGTH], float psi_d, float l_d, float x[XHELP_LENGTH], float psi, float ll, float lr, float jl[4], float jr[4], float a_z);
 };
 
 #endif
