@@ -54,19 +54,19 @@ void BalancingControl::step(float output[NUM_MOTORS], float x_d[XHELP_LENGTH], f
             float Fl = -Fr; */
 
         /** In gravity_ff */
+            float costheta_l = cos(x[XHELP_theta_ll]);
+            float costheta_r = cos(x[XHELP_theta_lr]);
             float gffhelp = (m_b / 2 + m_l * THE_C_IDK) * G_CONSTANT;
-            float gF_l = gffhelp * cos(x[XHELP_theta_ll]);
-            float gF_r = gffhelp * cos(x[XHELP_theta_lr]);
+            float gF_l = gffhelp * costheta_l;
+            float gF_r = gffhelp * costheta_r;
 
         float F_bll = F_psi * MA0 + F_l * MA1 + iF_l * MA2 + iF_r * MA3 + gF_l * MA4 + gF_r * MA5; 
         float F_blr = F_psi * MA0 + F_l * MA1 + iF_l * MB2 + iF_r * MB3 + gF_l * MB4 + gF_r * MB5;
     
     /**The NormalF Left */
-        float costheta_l = cos(x[XHELP_theta_ll]);
         float F_whl = F_bll * costheta_l + m_l * (G_CONSTANT + a_z - (1-eta_l) * ll_ddot * costheta_l);
-
-    /**The NormalF Right */
-        float costheta_r = cos(x[XHELP_theta_lr]);//ASK
+        
+    /**The NormalF Right */ //ASK
         float F_whr = F_blr * costheta_r + m_l * (G_CONSTANT + a_z - (1-eta_l) * lr_ddot * costheta_r);
 
     if(F_whl < F_WH_OUTPUT_LIMIT_NUM && F_whr < F_WH_OUTPUT_LIMIT_NUM){
