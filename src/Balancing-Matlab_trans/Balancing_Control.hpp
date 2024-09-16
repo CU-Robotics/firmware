@@ -3,12 +3,40 @@
 #include "../comms/rm_can.hpp"
 #include "../filters/pid_filter.hpp"
 #include "../utils/timing.hpp"
-/** Constants for math functions*/
+
+
+/** IMPORTANT Constants for leg_controller*/
 #define param.m_b 
 #define param.m_l 
 #define param.R_l 
-#define led_controller.eta_l
-#define p 
+#define eta_l
+
+#define K1_P 
+#define K1_I 
+#define K1_D 
+#define K1_F 
+#define K2_P 
+#define K2_I 
+#define K2_D 
+#define K2_F 
+#define BOUND true
+#define WARP 
+// MatrixMultiply 2x6 constant 
+//[a0][a1][a2][a3][a4][a5]
+//[b0][b1][b2][b3][b4][b5]
+#define a0 1
+#define a1 1
+#define a2 1
+#define a3 0
+#define a4 1
+#define a5 0
+#define b0 -1
+#define b1 1
+#define b2 0 
+#define b3 1
+#define b4 0
+#define b5 1
+
 /** Constants for mechanical*/
 #define NUM_MOTORS 6
 
@@ -29,13 +57,18 @@ class BalancingControl{
         float _a_z; //Checked
     /** Helping Classes */
         Timer timer;
-        PIDFilter pid;
+        /// @brief The PID for psi
+        PIDFilter pid1; 
+        /// @brief The PID for l
+        PIDFilter pid2; 
 
     public:
         float output[NUM_MOTORS];
         /// @brief defalt constrctor 
         BalancingControl();
 
+
+        void init();
         /// @brief ref input(Not sure if those are constant)
         /// @param x_d = [s, s_dot, phi, phi_dot, theta_ll, theta_ll_dot, theta_lr, theta_lr_dot, theta_b, theta_b_dot]
         /// @param psi_d 
