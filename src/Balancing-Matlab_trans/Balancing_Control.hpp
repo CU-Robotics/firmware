@@ -36,24 +36,11 @@
 #define K2_P 1                                  //Need test                         
 #define K2_I 1                                  //Need test                         
 #define K2_D 1                                  //Need test                         
-#define K2_F 1                                  //Need test                         
-#define BOUND true                                                   
-#define WARP true                               //Need test //ASK
-// MatrixMultiply 2x6 constant (If this doesn't need to change, need to simpfy the calculation) //ASK!!!!!!!!!!!!!!!!!!!
-//[a0][a1][a2][a3][a4][a5]
-//[b0][b1][b2][b3][b4][b5]
-#define MA0 1
-#define MA1 1
-#define MA2 1
-#define MA3 0
-#define MA4 1
-#define MA5 0
-#define MB0 -1
-#define MB1 1
-#define MB2 0 
-#define MB3 1
-#define MB4 0
-#define MB5 1
+#define K2_F 1                                  //Need test
+
+#define BOUND true                              // 1 to -1                      
+#define WARP true                               // 360 degree  
+
 //For gravity_ff
 #define G_CONSTANT 9.81                         //Need test
 #define THE_C_IDK 0.2868 //ASK                  //Need test

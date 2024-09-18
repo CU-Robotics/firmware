@@ -47,6 +47,7 @@ void BalancingControl::step(float output[NUM_MOTORS], float x_d[XHELP_LENGTH], f
 
     float dt = timer.delta(); 
     float l = (ll + lr) / 2; 
+
     /** Initialize all output variables */
     output[T_LWL_OUTPUT_NUM] = 0;
     output[T_JLF_OUTPUT_NUM] = 0;
@@ -54,6 +55,7 @@ void BalancingControl::step(float output[NUM_MOTORS], float x_d[XHELP_LENGTH], f
     output[T_LWR_OUTPUT_NUM] = 0;
     output[T_JRF_OUTPUT_NUM] = 0;
     output[T_JRB_OUTPUT_NUM] = 0;
+
     /** This is the part for leg_controller */
     float F_psi = pid1.filter(dt, BOUND, WARP) * (psi_d - psi); 
     float F_l = pid2.filter(dt, BOUND, WARP) * (l_d - l); 
@@ -61,26 +63,28 @@ void BalancingControl::step(float output[NUM_MOTORS], float x_d[XHELP_LENGTH], f
     /** In inertia_ff */
     //s_dot = _x[XHELP_s_dot], s_ddot = _x[XHELP_s_ddot], phi_dot = _x[XHELP_phi_dot], phi_ddot = _x[XHELP_phi_ddot], theta_ll = _x[XHELP_theta_ll], theta_lr = _x[XHELP_theta_lr]
     float iffhelp = (m_b / 2 + m_l * eta_l) * (x[XHELP_phi_ddot] * R_l + x[XHELP_s_ddot]);
-    float iF_l = -iffhelp * sin(x[XHELP_theta_ll]);
+    /*float iF_l = -iffhelp * sin(x[XHELP_theta_ll]);
     float iF_r = iffhelp * sin(x[XHELP_theta_lr]); 
-    /* F = (m_b / 2 + eta_l * m_l) * l * _x[XHELP_phi_dot]* _x[XHELP_s_dot] / 2 / R_l;
-    float Fr = F;
-    float Fl = -Fr; */
+    F =
+    */
+
+    float iF_r = (m_b / 2 + eta_l * m_l) * l * x[XHELP_phi_dot] * x[XHELP_s_dot] / 2 / R_l;
+    float iF_l = -iF_r; 
 
     /** In gravity_ff */
     float costheta_l = cos(x[XHELP_theta_ll]);
     float costheta_r = cos(x[XHELP_theta_lr]);
-    float gffhelp = (m_b / 2 + m_l * THE_C_IDK) * G_CONSTANT;
+    float gffhelp = (m_b / 2 + m_l * eta_l) * G_CONSTANT;
     float gF_l = gffhelp * costheta_l;
     float gF_r = gffhelp * costheta_r;
-    //Matrix muilti
-    float F_bll = F_psi * MA0 + F_l * MA1 + iF_l * MA2 + iF_r * MA3 + gF_l * MA4 + gF_r * MA5; 
-    float F_blr = F_psi * MA0 + F_l * MA1 + iF_l * MB2 + iF_r * MB3 + gF_l * MB4 + gF_r * MB5;
+    //Matrix muilti {Checked}
+    float F_bll = F_psi + F_l + iF_l + gF_l;
+    float F_blr = -F_psi + F_l + iF_r + gF_r; 
     
     /**The NormalF Left */
     float F_whl = F_bll * costheta_l + m_l * (G_CONSTANT + a_z - (1-eta_l) * ll_ddot * costheta_l);
         
-    /**The NormalF Right */ //ASK
+    /**The NormalF Right */ 
     float F_whr = F_blr * costheta_r + m_l * (G_CONSTANT + a_z - (1-eta_l) * lr_ddot * costheta_r);
 
     if(F_whl < F_WH_OUTPUT_LIMIT_NUM && F_whr < F_WH_OUTPUT_LIMIT_NUM)
