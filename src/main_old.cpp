@@ -98,13 +98,6 @@ int main() {
     uint8_t packet_subsection_sizes[MAX_CONFIG_PACKETS] = { 0 };
     CommsPacket config_packets[MAX_CONFIG_PACKETS];
     // Config config
-
-    SDManager sdcard;
-
-    sdcard.enumerate_files("/", 1);
-
-    while(1) { ; }      // stop
-
     Serial.println("Configuring...");
     while(!config_layer.is_configured()) {
         comms.ping();
@@ -409,7 +402,5 @@ int main() {
     }
     return 0;
 }
-
-
 
 

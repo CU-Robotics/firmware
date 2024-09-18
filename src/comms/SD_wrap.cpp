@@ -4,14 +4,14 @@
 #define RM_ERR_DIR_MISC 2
 #define RM_ERR_FILE_MISC 3
 
-SD::SD(){
+SDManager::SDManager(){
     if(!SDinternal.begin()){
-        Serial.println("SD_ERROR::SD card initialization failed");
+        Serial.println("SD_ERROR::SDManager card initialization failed");
         // TODO: perhaps there should be a better error handler here?? 
     };
 }
 
-int SD::open(const char* filepath){
+int SDManager::open(const char* filepath){
     // check if exists
     if(!exists(filepath)) {
         Serial.print("SD_NOTICE::filepath ");
@@ -23,12 +23,12 @@ int SD::open(const char* filepath){
     return 0;
 }
 
-void SD::close(){
+void SDManager::close(){
     file.close();
     return;
 }
 
-int SD::mkfile(const char* filename){
+int SDManager::mkfile(const char* filename){
     if(SDinternal.exists(filename)){
         Serial.print("SD_NOTICE::file located at ");
         Serial.print(filename);
@@ -44,7 +44,7 @@ int SD::mkfile(const char* filename){
     return 0;
 }
 
-int SD::mkdir(const char* dirname){
+int SDManager::mkdir(const char* dirname){
     if(!SDinternal.mkdir(dirname)){
         Serial.print("SD_NOTICE::directory ");
         Serial.print(dirname);
@@ -54,11 +54,11 @@ int SD::mkdir(const char* dirname){
     return 0;
 }
 
-int SD::rm(const char* filename){
+int SDManager::rm(const char* filename){
     return rm(filename, 0);
 }
 
-int SD::rm(const char* filename, bool r){
+int SDManager::rm(const char* filename, bool r){
     // check if file or directory
     File cur;
     if(SDinternal.exists(filename)) cur = SDinternal.open(filename);
@@ -100,7 +100,7 @@ int SD::rm(const char* filename, bool r){
     return 0;
 }
 
-int SD::read(uint8_t* dest, unsigned int len){
+int SDManager::read(uint8_t* dest, unsigned int len){
     if(!file){
         Serial.println("SD_NOTICE::file cannot be read (no file open)");
         return 1;
@@ -109,7 +109,7 @@ int SD::read(uint8_t* dest, unsigned int len){
     return 0;
 }
 
-int SD::write(uint8_t* src, unsigned int len){
+int SDManager::write(uint8_t* src, unsigned int len){
     if(!file){
         Serial.println("SD_NOTICE::file cannot be written to (no file open)");
         return 1;
@@ -118,16 +118,16 @@ int SD::write(uint8_t* src, unsigned int len){
     return 0;
 }
 
-bool SD::exists(const char* filepath)
+bool SDManager::exists(const char* filepath)
 {
     return SDinternal.exists(filepath);
 }
 
-void SD::enumerate_files(const char* root, bool r){
+void SDManager::enumerate_files(const char* root, bool r){
     enumerate_files(root, r, 0);
 }
 
-void SD::enumerate_files(const char* root, bool r, int tabs)
+void SDManager::enumerate_files(const char* root, bool r, int tabs)
 {
     if(!exists(root)){  // dir does not exist
         Serial.print("SD_NOTICE::directory ");
@@ -156,7 +156,7 @@ void SD::enumerate_files(const char* root, bool r, int tabs)
         }
         Serial.println(tmp.name());
 
-        if(tmp.isDirectory()){
+        if(tmp.isDirectory() && r){
             enumerate_files(tmp.name(), 1, tabs + 1);
         }
 

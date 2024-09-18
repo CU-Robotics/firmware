@@ -6,10 +6,10 @@
 
 #define _DIR_LENGTH 128
 
-class SD {
+class SDManager {
     public:
 
-    SD();
+    SDManager();
 
     int open(const char* filepath);
     void close();
