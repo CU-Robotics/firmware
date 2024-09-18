@@ -43,7 +43,6 @@
 
 //For gravity_ff
 #define G_CONSTANT 9.81                         //Need test
-#define THE_C_IDK 0.2868 //ASK                  //Need test
 
 /** Constants for locomotion_controller*/
 #define P_LOCO_ROW 4

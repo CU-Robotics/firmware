@@ -109,8 +109,8 @@ void BalancingControl::step(float output[NUM_MOTORS], float x_d[XHELP_LENGTH], f
             K = p[0][i][j] * l * l * l + p[1][i][j] * l * l + p[2][i][j] * l + p[3][i][j]; */
     // K is 4x10 matrix
     // 4x10 x 10x1 matrix multi (K * dx)
-    float T_bll;  
-    float T_blr; 
+    float T_bll = 0;  
+    float T_blr = 0; 
     for(int i = 0; i < 10; i++){
         output[T_LWL_OUTPUT_NUM] += K[0][i] * dx[i];
         output[T_LWR_OUTPUT_NUM] += K[1][i] * dx[i];
