@@ -12,7 +12,6 @@
 #include "../sensors/RefSystem.hpp"
 #include "estimator.hpp"
 #include "../comms/rm_can.hpp"
-#include "../comms/config_layer.hpp"
 #include <SPI.h>
 
 // maximum number of each sensor (arbitrary)

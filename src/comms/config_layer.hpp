@@ -2,8 +2,7 @@
 #define CONFIG_LAYER
 
 #include "usb_hid.hpp"
-#include "../controls/state.hpp"
-#include "../controls/controller_manager.hpp"
+#include "../controls/controller.hpp"
 
 #include <map>
 #include <string>

@@ -42,7 +42,7 @@ Timer stall_timer;
 Timer control_input_timer;
 
 EstimatorManager estimator_manager;
-ControllerManager* controller_manager;
+ControllerManager controller_manager;
 State state;
 
 // DONT put anything else in this function. It is not a setup function
@@ -110,7 +110,7 @@ int main() {
     estimator_manager.init(can_data, config);
 
     //generate controller outputs based on governed references and estimated state
-    controller_manager = new ControllerManager();
+    controller_manager.init(config);
 
     //gains for each motor and controller
     float gains[NUM_MOTORS][NUM_CONTROLLER_LEVELS][NUM_GAINS] = { 0 };
@@ -140,15 +140,6 @@ int main() {
 
     //set reference limits in the reference governor
     state.set_reference_limits(set_reference_limits);
-
-    // intializes all controllers given the controller_types matrix
-    for (int i = 0; i < NUM_CAN_BUSES; i++) {
-        for (int j = 0; j < NUM_MOTORS_PER_BUS; j++) {
-            for (int k = 0; k < NUM_CONTROLLER_LEVELS; k++) {
-                controller_manager->init_controller(i, j + 1, controller_types[(i * NUM_MOTORS_PER_BUS) + j][k], k, gains[(i * NUM_MOTORS_PER_BUS) + j][k]);
-            }
-        }
-    }
 
     // variables for use in main
     float temp_state[STATE_LEN][3] = { 0 }; // Temp state array
@@ -307,7 +298,7 @@ int main() {
         kinematics_pos[3][0] = -cos(temp_state[2][0]) * chassis_pos_to_motor_error;
         kinematics_pos[3][1] = -sin(temp_state[2][0]) * chassis_pos_to_motor_error;
         //generate motor outputs from controls
-        controller_manager->step(temp_reference, temp_state, temp_micro_state, kinematics_pos, kinematics_vel, motor_inputs);
+        controller_manager.step(temp_reference, temp_state, temp_micro_state, kinematics_pos, kinematics_vel, motor_inputs);
 
         for (int j = 0; j < 2; j++) {
             for (int i = 0; i < NUM_MOTORS_PER_BUS; i++) {
