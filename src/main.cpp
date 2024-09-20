@@ -34,7 +34,6 @@ D200LD14P lidar2(&Serial5, 1);
 ACS712 current_sensor;
 
 ConfigLayer config_layer;
-Config config;
 
 Profiler prof;
 
@@ -87,6 +86,7 @@ int main() {
 
     Serial.begin(115200); // the serial monitor is actually always active (for debug use Serial.println & tycmd)
     debug.begin(SerialUSB1);
+
     print_logo();
 
     // Execute setup functions
@@ -101,48 +101,41 @@ int main() {
     //can data pointer so we don't pass around rm_CAN object
     CANData* can_data = can.get_data();
 
-    uint8_t packet_subsection_sizes[MAX_CONFIG_PACKETS] = { 0 };
-    CommsPacket config_packets[MAX_CONFIG_PACKETS];
     // Config config
     Serial.println("Configuring...");
-    while (!config_layer.is_configured()) {
-        comms.ping();
-        config_layer.process(comms.get_incoming_packet(), comms.get_outgoing_packet());
-    }
-    config_layer.get_config_packets(config_packets, packet_subsection_sizes);
-    config.fill_data(config_packets, packet_subsection_sizes);
+    const Config* config = config_layer.configure(&comms);
     Serial.println("Configured!");
 
     //estimate micro and macro state
-    estimator_manager = new EstimatorManager(can_data, config);
+    estimator_manager = new EstimatorManager(can_data, (*config));
     //generate controller outputs based on governed references and estimated state
     controller_manager = new ControllerManager();
 
     //gains for each motor and controller
     float gains[NUM_MOTORS][NUM_CONTROLLER_LEVELS][NUM_GAINS] = { 0 };
-    memcpy(gains, config.gains, sizeof(config.gains));
+    memcpy(gains, (*config).gains, sizeof((*config).gains));
     //which states each estimator estimates
     float assigned_states[NUM_ESTIMATORS][STATE_LEN] = { 0 };
-    memcpy(assigned_states, config.assigned_states, sizeof(config.assigned_states));
+    memcpy(assigned_states, (*config).assigned_states, sizeof((*config).assigned_states));
     //number of states each estimator estimates
     float num_states_per_estimator[NUM_ESTIMATORS] = { 0 };
-    memcpy(num_states_per_estimator, config.num_states_per_estimator, sizeof(config.num_states_per_estimator));
+    memcpy(num_states_per_estimator, (*config).num_states_per_estimator, sizeof((*config).num_states_per_estimator));
     //reference limits of our reference governor. Used to turn an ungoverned reference into a governed reference to send to ControllerManager
     float set_reference_limits[STATE_LEN][3][2] = { 0 };
-    memcpy(set_reference_limits, config.set_reference_limits, sizeof(config.set_reference_limits));
+    memcpy(set_reference_limits, (*config).set_reference_limits, sizeof((*config).set_reference_limits));
 
     float governor_types[STATE_LEN] = { 0 }; //Position vs Velcity governor
-    memcpy(governor_types, config.governor_types, sizeof(config.governor_types));
+    memcpy(governor_types, (*config).governor_types, sizeof((*config).governor_types));
 
     float kinematics_pos[NUM_MOTORS][STATE_LEN] = { 0 }; //Position kinematics 
-    memcpy(kinematics_pos, config.kinematics_p, sizeof(config.kinematics_p));
+    memcpy(kinematics_pos, (*config).kinematics_p, sizeof((*config).kinematics_p));
     float kinematics_vel[NUM_MOTORS][STATE_LEN] = { 0 }; //Velocity kinematics
-    memcpy(kinematics_vel, config.kinematics_v, sizeof(config.kinematics_v));
+    memcpy(kinematics_vel, (*config).kinematics_v, sizeof((*config).kinematics_v));
 
     float controller_types[NUM_MOTORS][NUM_CONTROLLER_LEVELS] = { 0 };
-    memcpy(controller_types, config.controller_types, sizeof(config.controller_types));
+    memcpy(controller_types, (*config).controller_types, sizeof((*config).controller_types));
 
-    float chassis_pos_to_motor_error = config.drive_conversion_factors[1];
+    float chassis_pos_to_motor_error = (*config).drive_conversion_factors[1];
 
     //set reference limits in the reference governor
     state.set_reference_limits(set_reference_limits);
@@ -160,10 +153,10 @@ int main() {
     estimator_manager->assign_states(assigned_states);
 
     for (int i = 0; i < NUM_ESTIMATORS; i++) {
-        Serial.printf("Init Estimator %d\n", config.estimators[i]);
+        Serial.printf("Init Estimator %d\n", (*config).estimators[i]);
 
-        if (config.estimators[i] != 0) {
-            estimator_manager->init_estimator(config.estimators[i], (int)num_states_per_estimator[i]);
+        if ((*config).estimators[i] != 0) {
+            estimator_manager->init_estimator((*config).estimators[i], (int)num_states_per_estimator[i]);
         }
     }
 
@@ -215,14 +208,14 @@ int main() {
 
         vtm_pos_x += ref.ref_data.kbm_interaction.mouse_speed_x * 0.05 * delta;
         vtm_pos_y += ref.ref_data.kbm_interaction.mouse_speed_y * 0.05 * delta;
-        if (config.governor_types[0] == 2) {
+        if ((*config).governor_types[0] == 2) {
             chassis_velocity_x = -dr16.get_l_stick_y() * 5.4
                 + (-ref.ref_data.kbm_interaction.key_w + ref.ref_data.kbm_interaction.key_s) * 2.5
                 + (-dr16.keys.w + dr16.keys.s) * 2.5;
             chassis_velocity_y = dr16.get_l_stick_x() * 5.4
                 + (ref.ref_data.kbm_interaction.key_d - ref.ref_data.kbm_interaction.key_a) * 2.5
                 + (dr16.keys.d - dr16.keys.a) * 2.5;
-        } else if (config.governor_types[0] == 1) {
+        } else if ((*config).governor_types[0] == 1) {
             chassis_pos_x = dr16.get_l_stick_x() * 2 + pos_offset_x;
             chassis_pos_y = dr16.get_l_stick_y() * 2 + pos_offset_y;
         }
