@@ -3,7 +3,6 @@
 #include "git_info.h"
 
 #include "utils/timing.hpp"
-#include "utils/profiler.hpp"
 #include "comms/rm_can.hpp"
 #include "sensors/dr16.hpp"
 #include "controls/estimator_manager.hpp"
@@ -14,9 +13,7 @@
 #include "sensors/RefSystem.hpp"
 #include "sensors/d200.hpp"
 #include "sensors/ACS712.hpp"
-#include "comms/SD_wrap.hpp"
-
-#include <TeensyDebug.h>
+#include "comms/SDManager.hpp"
 
 // Loop constants
 #define LOOP_FREQ 1000
@@ -35,8 +32,6 @@ ACS712 current_sensor;
 
 ConfigLayer config_layer;
 Config config;
-
-Profiler prof;
 
 Timer loop_timer;
 Timer stall_timer;
@@ -73,9 +68,9 @@ void print_logo() {
         Serial.print("\033[0m");
         Serial.println("\n\033[1;92mFW Ver. 2.1.0");
         Serial.printf("\nLast Built: %s at %s", __DATE__, __TIME__);
-        Serial.printf("\nGit Hash: %s", GIT_COMMIT_HASH);
-        Serial.printf("\nGit Branch: %s", GIT_BRANCH);
-        Serial.printf("\nCommit Message: %s", GIT_COMMIT_MSG);
+		Serial.printf("\nGit Hash: %s", GIT_COMMIT_HASH);
+		Serial.printf("\nGit Branch: %s", GIT_BRANCH);
+		Serial.printf("\nCommit Message: %s", GIT_COMMIT_MSG);
         Serial.printf("\nRandom Num: %x", ARM_DWT_CYCCNT);
         Serial.println("\033[0m\n");
     }
@@ -85,9 +80,7 @@ void print_logo() {
 int main() {
     long long loopc = 0; // Loop counter for heartbeat
 
-    Serial.begin(115200); // the serial monitor is actually always active (for debug use Serial.println & tycmd)
-    debug.begin(SerialUSB1);
-
+    Serial.begin(1000000); // the serial monitor is actually always active (for debug use Serial.println & tycmd)
     print_logo();
 
     // Execute setup functions
@@ -104,16 +97,10 @@ int main() {
 
     uint8_t packet_subsection_sizes[MAX_CONFIG_PACKETS] = { 0 };
     CommsPacket config_packets[MAX_CONFIG_PACKETS];
+    while(1) { ; }
     // Config config
-
-    SDManager sdcard;
-
-    sdcard.enumerate_files("/", 1);
-
-    while(1) { ; }      // stop
-
     Serial.println("Configuring...");
-    while (!config_layer.is_configured()) {
+    while(!config_layer.is_configured()) {
         comms.ping();
         config_layer.process(comms.get_incoming_packet(), comms.get_outgoing_packet());
     }
@@ -146,19 +133,22 @@ int main() {
     memcpy(kinematics_pos, config.kinematics_p, sizeof(config.kinematics_p));
     float kinematics_vel[NUM_MOTORS][STATE_LEN] = { 0 }; //Velocity kinematics
     memcpy(kinematics_vel, config.kinematics_v, sizeof(config.kinematics_v));
-
+    
     float controller_types[NUM_MOTORS][NUM_CONTROLLER_LEVELS] = { 0 };
     memcpy(controller_types, config.controller_types, sizeof(config.controller_types));
-
+    
     float chassis_pos_to_motor_error = config.drive_conversion_factors[1];
 
     //set reference limits in the reference governor
     state.set_reference_limits(set_reference_limits);
 
     // intializes all controllers given the controller_types matrix
-    for (int i = 0; i < NUM_CAN_BUSES; i++) {
-        for (int j = 0; j < NUM_MOTORS_PER_BUS; j++) {
-            for (int k = 0; k < NUM_CONTROLLER_LEVELS; k++) {
+    for (int i = 0; i < NUM_CAN_BUSES; i++)
+    {
+        for (int j = 0; j < NUM_MOTORS_PER_BUS; j++)
+        {
+            for (int k = 0; k < NUM_CONTROLLER_LEVELS; k++)
+            {
                 controller_manager->init_controller(i, j + 1, controller_types[(i * NUM_MOTORS_PER_BUS) + j][k], k, gains[(i * NUM_MOTORS_PER_BUS) + j][k]);
             }
         }
@@ -166,12 +156,12 @@ int main() {
 
     // initalize estimators
     estimator_manager->assign_states(assigned_states);
-
-    for (int i = 0; i < NUM_ESTIMATORS; i++) {
+   
+    for(int i = 0; i < NUM_ESTIMATORS; i++){
         Serial.printf("Init Estimator %d\n", config.estimators[i]);
 
-        if (config.estimators[i] != 0) {
-            estimator_manager->init_estimator(config.estimators[i], (int)num_states_per_estimator[i]);
+        if(config.estimators[i] != 0){
+            estimator_manager->init_estimator(config.estimators[i], (int) num_states_per_estimator[i]);
         }
     }
 
@@ -209,7 +199,7 @@ int main() {
         current_sensor.read();
         lidar1.read();
         lidar2.read();
-
+        
         //handle read/write
         comms.ping();
 
@@ -223,26 +213,26 @@ int main() {
 
         vtm_pos_x += ref.ref_data.kbm_interaction.mouse_speed_x * 0.05 * delta;
         vtm_pos_y += ref.ref_data.kbm_interaction.mouse_speed_y * 0.05 * delta;
-        if (config.governor_types[0] == 2) {
+        if(config.governor_types[0] == 2){
             chassis_velocity_x = -dr16.get_l_stick_y() * 5.4
-                + (-ref.ref_data.kbm_interaction.key_w + ref.ref_data.kbm_interaction.key_s) * 2.5
-                + (-dr16.keys.w + dr16.keys.s) * 2.5;
+                                    + (-ref.ref_data.kbm_interaction.key_w + ref.ref_data.kbm_interaction.key_s) * 2.5
+                                    + (-dr16.keys.w + dr16.keys.s) * 2.5;
             chassis_velocity_y = dr16.get_l_stick_x() * 5.4
-                + (ref.ref_data.kbm_interaction.key_d - ref.ref_data.kbm_interaction.key_a) * 2.5
-                + (dr16.keys.d - dr16.keys.a) * 2.5;
-        } else if (config.governor_types[0] == 1) {
+                                    + (ref.ref_data.kbm_interaction.key_d - ref.ref_data.kbm_interaction.key_a) * 2.5
+                                    + (dr16.keys.d - dr16.keys.a) * 2.5;
+        } else if (config.governor_types[0] == 1){
             chassis_pos_x = dr16.get_l_stick_x() * 2 + pos_offset_x;
             chassis_pos_y = dr16.get_l_stick_y() * 2 + pos_offset_y;
         }
         float chassis_spin = dr16.get_wheel() * 25;
 
         float pitch_target = 1.57
-            + -dr16.get_r_stick_y() * 0.3
-            + dr16_pos_y
-            + vtm_pos_y;
+                            + -dr16.get_r_stick_y() * 0.3
+                            + dr16_pos_y
+                            + vtm_pos_y;
         float yaw_target = -dr16.get_r_stick_x() * 1.5
-            - dr16_pos_x
-            - vtm_pos_x;
+                            - dr16_pos_x
+                            - vtm_pos_x;
         float fly_wheel_target = (dr16.get_r_switch() == 1 || dr16.get_r_switch() == 3) ? 18 : 0; //m/s
         float feeder_target = (((dr16.get_l_mouse_button() || ref.ref_data.kbm_interaction.button_left) && dr16.get_r_switch() != 2) || dr16.get_r_switch() == 1) ? 10 : 0;
 
@@ -262,33 +252,33 @@ int main() {
         target_state[7][0] = 1;
 
         // if the left switch is all the way down use Hive controls
-        if (dr16.get_l_switch() == 2) {
+        if(dr16.get_l_switch() == 2) {
             incoming->get_target_state(target_state);
             // if you just switched to hive controls, set the reference to the current state
-            if (hive_toggle) {
+            if(hive_toggle){
                 state.set_reference(temp_state);
                 hive_toggle = false;
-            }
+            } 
         }
         // when in teensy control mode reset hive toggle
-        if (dr16.get_l_switch() == 3) {
-            if (!hive_toggle) {
+        if(dr16.get_l_switch() == 3) {
+            if(!hive_toggle){
                 pos_offset_x = temp_state[0][0];
                 pos_offset_y = temp_state[1][0];
             }
             hive_toggle = true;
         }
-
+        
         // Read sensors
         estimator_manager->read_sensors();
 
         //step estimates and construct estimated state
         // Serial.printf("step\n");
-
-        if (incoming->get_hive_override_request() == 1) {
+        
+        if(incoming->get_hive_override_request() == 1) {
             incoming->get_hive_override_state(hive_state_offset);
-            for (int i = 0; i < STATE_LEN; i++) {
-                for (int j = 0; j < 3; j++) {
+            for(int i = 0; i < STATE_LEN; i++) {
+                for(int j = 0; j < 3; j++) {
                     temp_state[i][j] = hive_state_offset[i][j];
                     // Serial.printf("override: %d, %d\n", i, j);
                 }
@@ -353,12 +343,12 @@ int main() {
         // set lidars
         uint8_t lidar_data[D200_NUM_PACKETS_CACHED * D200_PAYLOAD_SIZE] = { 0 };
         lidar1.export_data(lidar_data);
-
+        
         memcpy(sensor_data.raw + SENSOR_LIDAR1_OFFSET, lidar_data, D200_NUM_PACKETS_CACHED * D200_PAYLOAD_SIZE);
         lidar2.export_data(lidar_data);
         memcpy(sensor_data.raw + SENSOR_LIDAR2_OFFSET, lidar_data, D200_NUM_PACKETS_CACHED * D200_PAYLOAD_SIZE);
 
-
+        
         // construct ref data packet
         uint8_t ref_data_raw[180] = { 0 };
         ref.get_data_for_comms(ref_data_raw);
@@ -413,7 +403,5 @@ int main() {
     }
     return 0;
 }
-
-
 
 
