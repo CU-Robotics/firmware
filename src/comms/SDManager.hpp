@@ -19,6 +19,7 @@ public:
 
     /// @brief Opens to internal file
     /// @param filepath path to file
+    /// @return 0 on success, -1 on failure
     int open(const char* filepath);
 
     /// @brief Opens to internal file, choose open setting from FILE_READ, FILE_WRITE, FILE_WRITE_APPEND
@@ -26,7 +27,7 @@ public:
     /// @param setting 
     /// @return 0 on success, -1 on failure
     int open(const char* filepath, int setting);
-    
+
     /// @brief Close currently open file
     void close();
 

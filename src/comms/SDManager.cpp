@@ -123,18 +123,18 @@ int SDManager::write(uint8_t* src, unsigned int len) {
 
 int SDManager::lseek(int offset, int whence) {
     int flag = 0;
-    switch (whence){
-        case SEEK_SET:
-            flag = file.seek(offset);
-            break;
-        case SEEK_CUR:
-            flag = file.seek(file.position() + offset);
-            break;
-        case SEEK_END:
-            flag = file.seek(file.size() + offset);
-            break;
+    switch (whence) {
+    case SEEK_SET:
+        flag = file.seek(offset);
+        break;
+    case SEEK_CUR:
+        flag = file.seek(file.position() + offset);
+        break;
+    case SEEK_END:
+        flag = file.seek(file.size() + offset);
+        break;
     }
-    if(flag) return file.position();
+    if (flag) return file.position();
     else return -1;
 }
 
