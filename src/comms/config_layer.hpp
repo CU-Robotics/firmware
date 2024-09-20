@@ -128,6 +128,7 @@ private:
     /// @brief flag indicating if all config packets have been received
     bool configured = false;
 
+    /// @brief a local instance of the config data
     Config config;
 
 public:
