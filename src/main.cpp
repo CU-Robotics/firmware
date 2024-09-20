@@ -14,6 +14,7 @@
 #include "sensors/RefSystem.hpp"
 #include "sensors/d200.hpp"
 #include "sensors/ACS712.hpp"
+#include "comms/SDManager.hpp"
 
 #include <TeensyDebug.h>
 
@@ -86,7 +87,6 @@ int main() {
 
     Serial.begin(115200); // the serial monitor is actually always active (for debug use Serial.println & tycmd)
     debug.begin(SerialUSB1);
-
     print_logo();
 
     // Execute setup functions
@@ -104,7 +104,6 @@ int main() {
     uint8_t packet_subsection_sizes[MAX_CONFIG_PACKETS] = { 0 };
     CommsPacket config_packets[MAX_CONFIG_PACKETS];
     // Config config
-
     Serial.println("Configuring...");
     while (!config_layer.is_configured()) {
         comms.ping();

@@ -8,7 +8,7 @@
 
 #define PROF_MAX_SECTIONS 4  // max number of active profiling sections
 #define PROF_MAX_NAME 16      // max length of section name
-#define PROF_MAX_TIMES (1 << 20)   // max number of start/end times per section
+#define PROF_MAX_TIMES (60000)   // max number of start/end times per section
 
 /// @brief Object for profiling sections of code.
 struct Profiler {
