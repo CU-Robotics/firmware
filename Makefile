@@ -97,7 +97,8 @@ upload: build
 	@echo [Uploading] - If this fails, press the button on the teensy and re-run make upload
 	@tycmd upload $(PROJECT_NAME).hex
 # Teensy serial isn't immediately available after upload, so we wait a bit
-	@sleep 0.25s
+# The teensy waits for 20 + 280 + 20 ms after power up/boot
+	@sleep 0.4s
 	@bash tools/monitor.sh
 
 # # # Clean Targets # # #
