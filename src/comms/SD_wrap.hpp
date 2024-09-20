@@ -1,8 +1,8 @@
 #ifndef SD_WRAP
 #define SD_WRAP
 
-#include "../../libraries/SD/SD.h"
-#include "../../libraries/SPI/SPI.h"
+#include <SD.h>
+#include <SPI.h>
 
 #define _DIR_LENGTH 128
 
