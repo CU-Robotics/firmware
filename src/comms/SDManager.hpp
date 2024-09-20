@@ -26,6 +26,7 @@ public:
     /// @param filepath 
     /// @param setting 
     /// @return 0 on success, -1 on failure
+    /// @note FILE_READ opens from start of file, FILE_WRITE opens at end and truncates file, FILE_WRITE_APPEND opens at end and appends to file
     int open(const char* filepath, int setting);
 
     /// @brief Close currently open file
@@ -91,7 +92,7 @@ private:
     /// @param tabs number of tabs to print (used internally for inner dir printing)
     void enumerate_files(const char* root, bool r, int tabs);
 
-    /// @brief Internal instance of SDClass object used by Arduino
+    /// @brief Internal instance of SDClass object used by Teensy
     SDClass SDinternal;
 
     /// @brief Internal File object that represents currently opened file on SD card
