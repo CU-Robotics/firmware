@@ -41,7 +41,7 @@ Timer loop_timer;
 Timer stall_timer;
 Timer control_input_timer;
 
-EstimatorManager* estimator_manager;
+EstimatorManager estimator_manager;
 ControllerManager* controller_manager;
 State state;
 
@@ -107,7 +107,8 @@ int main() {
     Serial.println("Configured!");
 
     //estimate micro and macro state
-    estimator_manager = new EstimatorManager(can_data, (*config));
+    estimator_manager.init(can_data, config);
+
     //generate controller outputs based on governed references and estimated state
     controller_manager = new ControllerManager();
 
@@ -148,20 +149,6 @@ int main() {
             }
         }
     }
-
-    // initalize estimators
-    estimator_manager->assign_states(assigned_states);
-
-    for (int i = 0; i < NUM_ESTIMATORS; i++) {
-        Serial.printf("Init Estimator %d\n", (*config).estimators[i]);
-
-        if ((*config).estimators[i] != 0) {
-            estimator_manager->init_estimator((*config).estimators[i], (int)num_states_per_estimator[i]);
-        }
-    }
-
-    // imu calibration
-    estimator_manager->calibrate_imus();
 
     // variables for use in main
     float temp_state[STATE_LEN][3] = { 0 }; // Temp state array
@@ -265,7 +252,7 @@ int main() {
         }
 
         // Read sensors
-        estimator_manager->read_sensors();
+        estimator_manager.read_sensors();
 
         //step estimates and construct estimated state
         // Serial.printf("step\n");
@@ -280,7 +267,7 @@ int main() {
             }
         }
 
-        estimator_manager->step(temp_state, temp_micro_state, incoming->get_hive_override_request());
+        estimator_manager.step(temp_state, temp_micro_state, incoming->get_hive_override_request());
         // Serial.printf("estimated\n");
         //if first loop set target state to estimated state
         if (count_one == 0) {
