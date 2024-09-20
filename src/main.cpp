@@ -101,7 +101,6 @@ int main() {
     //generate controller outputs based on governed references and estimated state
     controller_manager.init(config);
 
-    float chassis_pos_to_motor_error = config->drive_conversion_factors[1];
 
     //set reference limits in the reference governor
     state.set_reference_limits(config->set_reference_limits);
@@ -119,6 +118,9 @@ int main() {
     memcpy(kinematics_pos, (*config).kinematics_p, sizeof((*config).kinematics_p));
     float kinematics_vel[NUM_MOTORS][STATE_LEN] = { 0 }; //Velocity kinematics
     memcpy(kinematics_vel, (*config).kinematics_v, sizeof((*config).kinematics_v));
+
+    // used in the kinematics matrix
+    float chassis_pos_to_motor_error = config->drive_conversion_factors[1];
 
     // manual controls variables
     int vtm_pos_x = 0;
