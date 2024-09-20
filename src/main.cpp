@@ -3,6 +3,7 @@
 #include "git_info.h"
 
 #include "utils/timing.hpp"
+#include "utils/profiler.hpp"
 #include "comms/rm_can.hpp"
 #include "sensors/dr16.hpp"
 #include "controls/estimator_manager.hpp"
@@ -14,6 +15,8 @@
 #include "sensors/d200.hpp"
 #include "sensors/ACS712.hpp"
 #include "comms/SDManager.hpp"
+
+#include <TeensyDebug.h>
 
 // Loop constants
 #define LOOP_FREQ 1000
@@ -32,6 +35,8 @@ ACS712 current_sensor;
 
 ConfigLayer config_layer;
 Config config;
+
+Profiler prof;
 
 Timer loop_timer;
 Timer stall_timer;
@@ -80,7 +85,8 @@ void print_logo() {
 int main() {
     long long loopc = 0; // Loop counter for heartbeat
 
-    Serial.begin(1000000); // the serial monitor is actually always active (for debug use Serial.println & tycmd)
+    Serial.begin(115200); // the serial monitor is actually always active (for debug use Serial.println & tycmd)
+    debug.begin(SerialUSB1);
     print_logo();
 
     // Execute setup functions
