@@ -31,7 +31,7 @@ LIBRARY_LIB = libs
 PROJECT_DIR = .
 PROJECT_SRC_DIR = src
 PROJECT_SOURCE = $(shell find $(PROJECT_SRC_DIR) -name "*.cpp") $(shell find $(PROJECT_SRC_DIR) -name "*.c")
-PROJECT_INCLUDE = src
+PROJECT_INCLUDE = -Isrc
 # application filename will end up as PROJECT_NAME.hex once built
 PROJECT_NAME = firmware
 
@@ -82,7 +82,7 @@ GIT_SCRAPER = ./tools/git_scraper.cpp
 # builds source, links with libraries, and constructs the .elf and .hex to be uploaded
 build: clean git_scraper
 	@echo [Building Source]
-	@$(COMPILER_CPP) $(COMPILE_FLAGS) $(CPP_FLAGS) $(PROJECT_SOURCE) $(LIBRARY_LIB_NAME) $(TEENSY_LIB_NAME) $(LIBRARY_INCLUDE) $(TEENSY_INCLUDE) $(LINKING_FLAGS) -o $(PROJECT_NAME).elf
+	@$(COMPILER_CPP) $(COMPILE_FLAGS) $(CPP_FLAGS) $(PROJECT_SOURCE) $(PROJECT_INCLUDE) $(LIBRARY_LIB_NAME) $(TEENSY_LIB_NAME) $(LIBRARY_INCLUDE) $(TEENSY_INCLUDE) $(LINKING_FLAGS) -o $(PROJECT_NAME).elf
 	@echo [Constructing $(PROJECT_NAME).hex]
 	@$(OBJCOPY) -O ihex -R .eeprom $(PROJECT_NAME).elf $(PROJECT_NAME).hex
 	@chmod +x $(PROJECT_NAME).hex
