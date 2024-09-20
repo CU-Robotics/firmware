@@ -40,9 +40,6 @@ public:
     /// @param kinematics_v velocity kinematics matrix relating motors to states (Number_of_motors x State_length)
     /// @param outputs generated motor input normalized -1 to 1
     void step(float macro_reference[STATE_LEN][3], float macro_estimate[STATE_LEN][3], float micro_estimate[NUM_MOTORS][MICRO_STATE_LEN], float kinematics_p[NUM_MOTORS][STATE_LEN], float kinematics_v[NUM_MOTORS][STATE_LEN], float outputs[NUM_MOTORS]);
-
-    /// @brief Stores motor outputs
-    float output[NUM_MOTORS];
 };
 
 #endif // CONTROLLER_MANAGER_H

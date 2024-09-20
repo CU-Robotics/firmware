@@ -2,19 +2,10 @@
 
 #include "git_info.h"
 
-#include "utils/timing.hpp"
 #include "utils/profiler.hpp"
-#include "comms/rm_can.hpp"
-#include "sensors/dr16.hpp"
+#include "sensors/d200.hpp"
 #include "controls/estimator_manager.hpp"
 #include "controls/controller_manager.hpp"
-#include "controls/state.hpp"
-#include "comms/usb_hid.hpp"
-#include "comms/config_layer.hpp"
-#include "sensors/RefSystem.hpp"
-#include "sensors/d200.hpp"
-#include "sensors/ACS712.hpp"
-#include "comms/SDManager.hpp"
 
 #include <TeensyDebug.h>
 
@@ -30,8 +21,6 @@ HIDLayer comms;
 
 D200LD14P lidar1(&Serial4, 0);
 D200LD14P lidar2(&Serial5, 1);
-
-ACS712 current_sensor;
 
 ConfigLayer config_layer;
 
@@ -112,34 +101,10 @@ int main() {
     //generate controller outputs based on governed references and estimated state
     controller_manager.init(config);
 
-    //gains for each motor and controller
-    float gains[NUM_MOTORS][NUM_CONTROLLER_LEVELS][NUM_GAINS] = { 0 };
-    memcpy(gains, (*config).gains, sizeof((*config).gains));
-    //which states each estimator estimates
-    float assigned_states[NUM_ESTIMATORS][STATE_LEN] = { 0 };
-    memcpy(assigned_states, (*config).assigned_states, sizeof((*config).assigned_states));
-    //number of states each estimator estimates
-    float num_states_per_estimator[NUM_ESTIMATORS] = { 0 };
-    memcpy(num_states_per_estimator, (*config).num_states_per_estimator, sizeof((*config).num_states_per_estimator));
-    //reference limits of our reference governor. Used to turn an ungoverned reference into a governed reference to send to ControllerManager
-    float set_reference_limits[STATE_LEN][3][2] = { 0 };
-    memcpy(set_reference_limits, (*config).set_reference_limits, sizeof((*config).set_reference_limits));
-
-    float governor_types[STATE_LEN] = { 0 }; //Position vs Velcity governor
-    memcpy(governor_types, (*config).governor_types, sizeof((*config).governor_types));
-
-    float kinematics_pos[NUM_MOTORS][STATE_LEN] = { 0 }; //Position kinematics 
-    memcpy(kinematics_pos, (*config).kinematics_p, sizeof((*config).kinematics_p));
-    float kinematics_vel[NUM_MOTORS][STATE_LEN] = { 0 }; //Velocity kinematics
-    memcpy(kinematics_vel, (*config).kinematics_v, sizeof((*config).kinematics_v));
-
-    float controller_types[NUM_MOTORS][NUM_CONTROLLER_LEVELS] = { 0 };
-    memcpy(controller_types, (*config).controller_types, sizeof((*config).controller_types));
-
-    float chassis_pos_to_motor_error = (*config).drive_conversion_factors[1];
+    float chassis_pos_to_motor_error = config->drive_conversion_factors[1];
 
     //set reference limits in the reference governor
-    state.set_reference_limits(set_reference_limits);
+    state.set_reference_limits(config->set_reference_limits);
 
     // variables for use in main
     float temp_state[STATE_LEN][3] = { 0 }; // Temp state array
@@ -149,56 +114,65 @@ int main() {
     float hive_state_offset[STATE_LEN][3] = { 0 }; //Hive offset state
     float motor_inputs[NUM_MOTORS] = { 0 }; //Array for storing controller outputs to send to CAN
 
+    // create a copy of the position and velocity kinematic matrixes since we'll be updating them
+    float kinematics_pos[NUM_MOTORS][STATE_LEN] = { 0 }; //Position kinematics 
+    memcpy(kinematics_pos, (*config).kinematics_p, sizeof((*config).kinematics_p));
+    float kinematics_vel[NUM_MOTORS][STATE_LEN] = { 0 }; //Velocity kinematics
+    memcpy(kinematics_vel, (*config).kinematics_v, sizeof((*config).kinematics_v));
+
+    // manual controls variables
+    int vtm_pos_x = 0;
+    int vtm_pos_y = 0;
     float dr16_pos_x = 0;
     float dr16_pos_y = 0;
     float pos_offset_x = 0;
     float pos_offset_y = 0;
-    int vtm_pos_x = 0;
-    int vtm_pos_y = 0;
-    int count_one = 0;
-    float chassis_velocity_x = 0;
-    float chassis_velocity_y = 0;
-    float chassis_pos_x = 0;
-    float chassis_pos_y = 0;
 
+    // param to specify whether this is the first loop
+    int count_one = 0;
+
+    // whether we are in hive mode or not
     bool hive_toggle = false;
 
     // Main loop
     while (true) {
-        //read everything
+        // read main sensors
         can.read();
         dr16.read();
         ref.read();
-        current_sensor.read();
         lidar1.read();
         lidar2.read();
 
-        //handle read/write
+        // read and write comms packets
         comms.ping();
-
         CommsPacket* incoming = comms.get_incoming_packet();
         CommsPacket* outgoing = comms.get_outgoing_packet();
 
-        //manual controls on firmware
+        // manual controls on firmware
         float delta = control_input_timer.delta();
         dr16_pos_x += dr16.get_mouse_x() * 0.05 * delta;
         dr16_pos_y += dr16.get_mouse_y() * 0.05 * delta;
 
         vtm_pos_x += ref.ref_data.kbm_interaction.mouse_speed_x * 0.05 * delta;
         vtm_pos_y += ref.ref_data.kbm_interaction.mouse_speed_y * 0.05 * delta;
-        if ((*config).governor_types[0] == 2) {
-            chassis_velocity_x = -dr16.get_l_stick_y() * 5.4
+        
+        float chassis_vel_x = 0;
+        float chassis_vel_y = 0;
+        float chassis_pos_x = 0;
+        float chassis_pos_y = 0;
+        if (config->governor_types[0] == 2) {   // if we should be controlling velocity
+            chassis_vel_x = -dr16.get_l_stick_y() * 5.4
                 + (-ref.ref_data.kbm_interaction.key_w + ref.ref_data.kbm_interaction.key_s) * 2.5
                 + (-dr16.keys.w + dr16.keys.s) * 2.5;
-            chassis_velocity_y = dr16.get_l_stick_x() * 5.4
+            chassis_vel_y = dr16.get_l_stick_x() * 5.4
                 + (ref.ref_data.kbm_interaction.key_d - ref.ref_data.kbm_interaction.key_a) * 2.5
                 + (dr16.keys.d - dr16.keys.a) * 2.5;
-        } else if ((*config).governor_types[0] == 1) {
+        } else if (config->governor_types[0] == 1) { // if we should be controlling position
             chassis_pos_x = dr16.get_l_stick_x() * 2 + pos_offset_x;
             chassis_pos_y = dr16.get_l_stick_y() * 2 + pos_offset_y;
         }
-        float chassis_spin = dr16.get_wheel() * 25;
 
+        float chassis_spin = dr16.get_wheel() * 25;
         float pitch_target = 1.57
             + -dr16.get_r_stick_y() * 0.3
             + dr16_pos_y
@@ -209,10 +183,11 @@ int main() {
         float fly_wheel_target = (dr16.get_r_switch() == 1 || dr16.get_r_switch() == 3) ? 18 : 0; //m/s
         float feeder_target = (((dr16.get_l_mouse_button() || ref.ref_data.kbm_interaction.button_left) && dr16.get_r_switch() != 2) || dr16.get_r_switch() == 1) ? 10 : 0;
 
+        // set manual controls
         target_state[0][0] = chassis_pos_x;
-        target_state[0][1] = chassis_velocity_x;
+        target_state[0][1] = chassis_vel_x;
         target_state[1][0] = chassis_pos_y;
-        target_state[1][1] = chassis_velocity_y;
+        target_state[1][1] = chassis_vel_y;
         target_state[2][1] = chassis_spin;
         target_state[3][0] = yaw_target;
         target_state[3][1] = 0;
@@ -221,7 +196,6 @@ int main() {
 
         target_state[5][1] = fly_wheel_target;
         target_state[6][1] = feeder_target;
-        // target_state[7][0] = dr16.get_r_switch() == 2 ? 1 : -1;
         target_state[7][0] = 1;
 
         // if the left switch is all the way down use Hive controls
@@ -242,34 +216,28 @@ int main() {
             hive_toggle = true;
         }
 
-        // Read sensors
+        // read sensors
         estimator_manager.read_sensors();
 
-        //step estimates and construct estimated state
-        // Serial.printf("step\n");
-
+        // override temp state if needed
         if (incoming->get_hive_override_request() == 1) {
             incoming->get_hive_override_state(hive_state_offset);
-            for (int i = 0; i < STATE_LEN; i++) {
-                for (int j = 0; j < 3; j++) {
-                    temp_state[i][j] = hive_state_offset[i][j];
-                    // Serial.printf("override: %d, %d\n", i, j);
-                }
-            }
+            memcpy(temp_state, hive_state_offset, sizeof(hive_state_offset));
         }
 
+        // step estimates and construct estimated state
         estimator_manager.step(temp_state, temp_micro_state, incoming->get_hive_override_request());
-        // Serial.printf("estimated\n");
-        //if first loop set target state to estimated state
+
+        // if first loop set target state to estimated state
         if (count_one == 0) {
             temp_state[7][0] = 0;
             state.set_reference(temp_state);
             count_one++;
         }
 
-        //reference govern
+        // reference govern
         state.set_estimate(temp_state);
-        state.step_reference(target_state, governor_types);
+        state.step_reference(target_state, config->governor_types);
         state.get_reference(temp_reference);
 
         // Update the kinematics of x,y states, as the kinematics change when chassis angle changes
@@ -297,9 +265,11 @@ int main() {
         // motor 4 front left
         kinematics_pos[3][0] = -cos(temp_state[2][0]) * chassis_pos_to_motor_error;
         kinematics_pos[3][1] = -sin(temp_state[2][0]) * chassis_pos_to_motor_error;
-        //generate motor outputs from controls
+
+        // generate motor outputs from controls
         controller_manager.step(temp_reference, temp_state, temp_micro_state, kinematics_pos, kinematics_vel, motor_inputs);
 
+        // set motor outputs from motor_inputs
         for (int j = 0; j < 2; j++) {
             for (int i = 0; i < NUM_MOTORS_PER_BUS; i++) {
                 can.write_motor_norm(j, i + 1, C620, motor_inputs[(j * NUM_MOTORS_PER_BUS) + i]);
@@ -308,7 +278,6 @@ int main() {
             }
         }
 
-        // Serial.printf("Current: %f\n", val);
         // construct sensor data packet
         SensorData sensor_data;
         // set dr16 raw data
@@ -316,11 +285,9 @@ int main() {
         // set lidars
         uint8_t lidar_data[D200_NUM_PACKETS_CACHED * D200_PAYLOAD_SIZE] = { 0 };
         lidar1.export_data(lidar_data);
-
         memcpy(sensor_data.raw + SENSOR_LIDAR1_OFFSET, lidar_data, D200_NUM_PACKETS_CACHED * D200_PAYLOAD_SIZE);
         lidar2.export_data(lidar_data);
         memcpy(sensor_data.raw + SENSOR_LIDAR2_OFFSET, lidar_data, D200_NUM_PACKETS_CACHED * D200_PAYLOAD_SIZE);
-
 
         // construct ref data packet
         uint8_t ref_data_raw[180] = { 0 };
@@ -333,6 +300,7 @@ int main() {
         outgoing->set_sensor_data(&sensor_data);
         outgoing->set_ref_data(ref_data_raw);
         outgoing->set_estimated_state(temp_state);
+
         //  SAFETY MODE
         if (dr16.is_connected() && (dr16.get_l_switch() == 2 || dr16.get_l_switch() == 3) && config_layer.is_configured()) {
             // SAFETY OFF
@@ -343,28 +311,6 @@ int main() {
             can.zero();
         }
 
-        // Serial.print("estimate:");
-        //     for (int i = 2; i < 4; i++) {
-        //         Serial.printf("[");
-        //         for (int j = 0; j < 3; j++) {
-        //             Serial.printf("%f ,", temp_state[i][j]);
-        //         }
-        //         Serial.print("] ");
-        //     }
-        //     Serial.print("\nreference: ");
-        //     for (int i = 2; i < 4; i++) {
-        //         Serial.printf("[");
-        //         for (int j = 0; j < 3; j++) {
-        //             Serial.printf("%f ,", temp_reference[i][j]);
-        //         }
-        //         Serial.print("] ");
-        //     }
-        //     Serial.print("\nmotor inputs: ");
-        //     for (int i = 4; i < 6; i++) {
-        //             Serial.printf("%f ,", motor_inputs[i]);
-        //     }
-        //     Serial.println();
-
         // LED heartbeat -- linked to loop count to reveal slowdowns and freezes.
         loopc % (int)(1E3 / float(HEARTBEAT_FREQ)) < (int)(1E3 / float(5 * HEARTBEAT_FREQ)) ? digitalWrite(13, HIGH) : digitalWrite(13, LOW);
         loopc++;
@@ -374,6 +320,7 @@ int main() {
         float dt = stall_timer.delta();
         if (dt > 0.002) Serial.printf("Slow loop with dt: %f\n", dt);
     }
+    
     return 0;
 }
 
