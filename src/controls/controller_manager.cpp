@@ -1,8 +1,21 @@
 #include "controller_manager.hpp"
 
-ControllerManager::ControllerManager() {}
+void ControllerManager::init(const Config* _config_data) {
+    // set the config data reference
+    config_data = _config_data;
+    
+    // intializes all controllers given the controller_types matrix
+    for (int i = 0; i < NUM_CAN_BUSES; i++) {
+        for (int j = 0; j < NUM_MOTORS_PER_BUS; j++) {
+            for (int k = 0; k < NUM_CONTROLLER_LEVELS; k++) {
+                init_controller(i, j + 1, config_data->controller_types[(i * NUM_MOTORS_PER_BUS) + j][k], k, config_data->gains[(i * NUM_MOTORS_PER_BUS) + j][k]);
+            }
+        }
+    }
 
-void ControllerManager::init_controller(uint8_t can_id, uint8_t motor_id, int controller_type, int controller_level, float gains[NUM_GAINS]) {
+}
+
+void ControllerManager::init_controller(uint8_t can_id, uint8_t motor_id, int controller_type, int controller_level, const float gains[NUM_GAINS]) {
     int index = ((can_id)*NUM_MOTORS_PER_BUS) + (motor_id - 1);
 
     switch (controller_type) {

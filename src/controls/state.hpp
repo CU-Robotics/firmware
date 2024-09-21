@@ -48,7 +48,7 @@ public:
     /// @brief Steps the reference matrix towards a goal, applying a reference governor to prevent impossible motion
     /// @param ungoverned_reference The desired robot state to step towards in the form of a matrix; Must be of shape [STATE_LEN][3]
     /// @param governor_type position based governor (1) or velocity based governor (2)
-    void step_reference(float ungoverned_reference[STATE_LEN][3], float governor_type[STATE_LEN]);
+    void step_reference(float ungoverned_reference[STATE_LEN][3], const float governor_type[STATE_LEN]);
 
     /// @brief Gives the instantaneous state estimate matrix
     /// @param estimate The array to override with the estimate matrix; Must be of shape [STATE_LEN][3]
@@ -66,7 +66,7 @@ public:
 
     /// @brief Sets the reference limits matrix which is used by the reference governor
     /// @param reference_limits Reference limits, in the form of a 3D tensor; Must be of shape [STATE_LEN][3][2]
-    void set_reference_limits(float reference_limits[STATE_LEN][3][2]);
+    void set_reference_limits(const float reference_limits[STATE_LEN][3][2]);
 };
 
 #endif
