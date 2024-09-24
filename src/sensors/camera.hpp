@@ -4,7 +4,7 @@
 #include <imxrt.h>
 
 void enable_csi() {
-    // setup sCSI[9:2] select daisy registers
+    // setup CSI[9:2] select daisy registers
     // set last bit to zero
     IOMUXC_CSI_DATA02_SELECT_INPUT &= ~0x1U; // AD_B1_15
     IOMUXC_CSI_DATA03_SELECT_INPUT &= ~0x1U; // AD_B1_14
@@ -15,9 +15,8 @@ void enable_csi() {
     IOMUXC_CSI_DATA08_SELECT_INPUT &= ~0x1U; // AD_B1_09
     IOMUXC_CSI_DATA09_SELECT_INPUT &= ~0x1U; // AD_B1_08
 
-    // Set SW_MUX_CTL_PAD_X all to ALT4 (ALT4 corresponds to CSI)
+    // Set all SW_MUX_CTL_PAD_X to SION enable and ALT4 (CSI)
     // set the last 5 bits to 10100
-    // SION enable and mux mode alt 4
     IOMUXC_SW_MUX_CTL_PAD_GPIO_AD_B1_15 = (IOMUXC_SW_MUX_CTL_PAD_GPIO_AD_B1_15 & ~0x1FU) | 0x14U;
     IOMUXC_SW_MUX_CTL_PAD_GPIO_AD_B1_14 = (IOMUXC_SW_MUX_CTL_PAD_GPIO_AD_B1_14 & ~0x1FU) | 0x14U;
     IOMUXC_SW_MUX_CTL_PAD_GPIO_AD_B1_13 = (IOMUXC_SW_MUX_CTL_PAD_GPIO_AD_B1_13 & ~0x1FU) | 0x14U;
@@ -27,7 +26,7 @@ void enable_csi() {
     IOMUXC_SW_MUX_CTL_PAD_GPIO_AD_B1_09 = (IOMUXC_SW_MUX_CTL_PAD_GPIO_AD_B1_09 & ~0x1FU) | 0x14U;
     IOMUXC_SW_MUX_CTL_PAD_GPIO_AD_B1_08 = (IOMUXC_SW_MUX_CTL_PAD_GPIO_AD_B1_08 & ~0x1FU) | 0x14U;
 
-    // set SW_PAD_CTL_PAD_X defaults
+    // set all SW_PAD_CTL_PAD_X to defaults
     IOMUXC_SW_PAD_CTL_PAD_GPIO_AD_B1_15 = (IOMUXC_SW_PAD_CTL_PAD_GPIO_AD_B1_15 & ~0x1F8F9U) | 0x010B0U;
     IOMUXC_SW_PAD_CTL_PAD_GPIO_AD_B1_14 = (IOMUXC_SW_PAD_CTL_PAD_GPIO_AD_B1_14 & ~0x1F8F9U) | 0x010B0U;
     IOMUXC_SW_PAD_CTL_PAD_GPIO_AD_B1_13 = (IOMUXC_SW_PAD_CTL_PAD_GPIO_AD_B1_13 & ~0x1F8F9U) | 0x010B0U;
