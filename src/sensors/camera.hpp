@@ -4,8 +4,12 @@
 #include <imxrt.h>
 
 void enable_csi() {
+    // enable csi_clk_enable
+    // i think this is on by default, but just to be safe...
+    CCM_CCGR2 |= 0x6U;
+
+
     // setup CSI[9:2] select daisy registers
-    // set last bit to zero
     IOMUXC_CSI_DATA02_SELECT_INPUT &= ~0x1U; // AD_B1_15
     IOMUXC_CSI_DATA03_SELECT_INPUT &= ~0x1U; // AD_B1_14
     IOMUXC_CSI_DATA04_SELECT_INPUT &= ~0x1U; // AD_B1_13
@@ -16,7 +20,6 @@ void enable_csi() {
     IOMUXC_CSI_DATA09_SELECT_INPUT &= ~0x1U; // AD_B1_08
 
     // Set all SW_MUX_CTL_PAD_X to SION enable and ALT4 (CSI)
-    // set the last 5 bits to 10100
     IOMUXC_SW_MUX_CTL_PAD_GPIO_AD_B1_15 = (IOMUXC_SW_MUX_CTL_PAD_GPIO_AD_B1_15 & ~0x1FU) | 0x14U;
     IOMUXC_SW_MUX_CTL_PAD_GPIO_AD_B1_14 = (IOMUXC_SW_MUX_CTL_PAD_GPIO_AD_B1_14 & ~0x1FU) | 0x14U;
     IOMUXC_SW_MUX_CTL_PAD_GPIO_AD_B1_13 = (IOMUXC_SW_MUX_CTL_PAD_GPIO_AD_B1_13 & ~0x1FU) | 0x14U;
@@ -36,15 +39,16 @@ void enable_csi() {
     IOMUXC_SW_PAD_CTL_PAD_GPIO_AD_B1_09 = (IOMUXC_SW_PAD_CTL_PAD_GPIO_AD_B1_09 & ~0x1F8F9U) | 0x010B0U;
     IOMUXC_SW_PAD_CTL_PAD_GPIO_AD_B1_08 = (IOMUXC_SW_PAD_CTL_PAD_GPIO_AD_B1_08 & ~0x1F8F9U) | 0x010B0U;
 
-    // enable csi_clk_enable
-    // set bits [3:2] to 1
-    CCM_CCGR2 |= 0x6U;
+    // disable csi, CSI_CR18[CSI_ENABLE]=0
+    CSI_CSICR18 &= ~(0x1U << 31);
 
-    // hardware reset
+    // Reflash the DMA controller for RFIFO, CSI_CR3[DMA_REFLASH_RFF]=1
+    CSI_CSICR3 |= (0x1U << 14);
 
     // config all regs
 
-    // enable csi
+    // enable csi, CSI_CR18[CSI_ENABLE]=1
+    CSI_CSICR18 |= (0x1U << 31);
 }
 
 #endif
