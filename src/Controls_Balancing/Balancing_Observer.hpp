@@ -1,0 +1,59 @@
+#ifndef BALANCING_OBSERVER_H
+#define BALANCING_OBSERVER_H
+
+#include "../comms/rm_can.hpp"
+#include "../filters/pid_filter.hpp"
+#include "../utils/timing.hpp"
+//  #include""                !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!We need to make an IMUFilter
+
+#define L_CAN 0         // Need Check
+#define R_CAN 1         // Need Check
+#define L_W_MOTORID 1   // Need Check
+#define L_FJ_MOTORID 2  // Need Check
+#define L_BJ_MOTORID 3  // Need Check
+#define R_W_MOTORID 1   // Need Check
+#define R_FJ_MOTORID 2  // Need Check
+#define R_BJ_MOTORID 3  // Need Check
+#define l_a 0   // test
+#define l_u 0   // test
+#define l_l 0   // test
+#define R_w 0   // test
+
+
+/// @brief Temp usage
+struct IMUData{
+    float accel_X;
+    float accel_Y;
+    float accel_Z; 
+    float gyro_X;
+    float gyro_Y;
+    float gyro_Z;
+};
+
+
+class BalancingObserver{
+    private:
+        /** Helping Classes */
+        Timer timer;
+
+        /** Derivative prev variables */
+        float _theta_b_old;
+        float _phi_old;
+    public:
+        
+        void observer_init();
+        /// @brief Get the data we want for controller
+        /// @param can the CANDate struct to get motor data
+        /// @param imu the imu class to get IMU data
+        /// @param out the calculated number to put in the controller code
+        void step(CANData* can, IMUData* imu, float obs[26]);
+
+            
+            
+        
+
+
+
+
+};
+#endif

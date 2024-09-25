@@ -77,7 +77,9 @@ class BalancingControl{
 
         /// @brief calculate the output and send them to the Can_bus
         /// @param output for balancing contorl the data form is [T_lwl, T_jlf, T_jlb, T_lwr, T_jrf, T_jrb] 
-        void step(float output[NUM_MOTORS], float x_d[XHELP_LENGTH], float psi_d, float l_d, float x[XHELP_LENGTH], float psi, float ll, float lr, float jl[2][2], float jr[2][2], float a_z, float ll_ddot, float lr_ddot);
+        /// @param ref array from ref {x_d[12] = ref[0-11], psi_d = ref[12], l_d = ref[13]}
+        /// @param obs array from observer {x[12] = obs[0-11], psi = obs[12], ll = obs[13], lr = obs[14], jl[2][2] = obs[15-18], jr[2][2] = obs[19-22], a_z = obs[23], ll_ddot = obs[24], lr_ddot = obs[25]}
+        void step(float output[NUM_MOTORS], float ref[13], float obs[26]);
 };
 
 #endif
