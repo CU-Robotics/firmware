@@ -16,7 +16,7 @@
 #include "sensors/ACS712.hpp"
 
 #include <TeensyDebug.h>
-#include "sensors/blinkingled.hpp"
+#include "sensors/LEDBoard.hpp"
 
 // Loop constants
 #define LOOP_FREQ 1000

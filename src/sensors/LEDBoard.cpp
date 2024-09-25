@@ -4,10 +4,11 @@
 #include "LEDBoard.hpp"
 
 // Constructor
-LEDBoard::LEDBoard(int num_leds, int brightness)
+LEDBoard::LEDBoard(int num_leds, uint8_t brightness)
     : NUM_LEDS(num_leds), BRIGHTNESS(brightness)
 {
     leds = new CRGB[NUM_LEDS];
+    
     setup_LEDS();
 }
 

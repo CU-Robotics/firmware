@@ -17,7 +17,7 @@ public:
      * @param num_leds The number of LEDs in the matrix. Default is 8.
      * @param brightness The brightness level of the LEDs (0-255). Default is 100.
      */
-    LEDBoard(int num_leds = 8, int brightness = 100);
+    LEDBoard(int num_leds = 8, uint8_t brightness = 100);
 
     /**
      * @brief Destructor for the LEDBoard class.
@@ -108,7 +108,7 @@ private:
     const int NUM_LEDS;
 
     /// The brightness level of the LEDs (0-255).
-    const int BRIGHTNESS;
+    const u_int8_t BRIGHTNESS;
 };
 
 #endif 
