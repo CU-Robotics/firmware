@@ -8,7 +8,6 @@ void enable_csi() {
     // i think this is on by default, but just to be safe...
     CCM_CCGR2 |= 0x6U;
 
-
     // setup CSI[9:2] select daisy registers
     IOMUXC_CSI_DATA02_SELECT_INPUT &= ~0x1U; // AD_B1_15
     IOMUXC_CSI_DATA03_SELECT_INPUT &= ~0x1U; // AD_B1_14
@@ -44,8 +43,12 @@ void enable_csi() {
 
     // Reflash the DMA controller for RFIFO, CSI_CR3[DMA_REFLASH_RFF]=1
     CSI_CSICR3 |= (0x1U << 14);
+    while (CSI_CSICR3 & (0x1U << 14)) {
+        // wait for reflash to complete
+    }
 
     // config all regs
+    //
 
     // enable csi, CSI_CR18[CSI_ENABLE]=1
     CSI_CSICR18 |= (0x1U << 31);
