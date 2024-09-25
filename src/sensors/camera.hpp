@@ -43,12 +43,10 @@ void enable_csi() {
 
     // Reflash the DMA controller for RFIFO, CSI_CR3[DMA_REFLASH_RFF]=1
     CSI_CSICR3 |= (0x1U << 14);
-    while (CSI_CSICR3 & (0x1U << 14)) {
-        // wait for reflash to complete
-    }
+    // wait for reflash to complete
+    while (CSI_CSICR3 & (0x1U << 14)) { }
 
-    // config all regs
-    //
+    // TODO: config all regs
 
     // enable csi, CSI_CR18[CSI_ENABLE]=1
     CSI_CSICR18 |= (0x1U << 31);
