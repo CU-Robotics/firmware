@@ -94,7 +94,7 @@ private:
     const int num_leds;
 
     /// @brief The brightness level of the LEDs (0-255).
-    const u_int8_t brightness;
+    const uint8_t brightness;
 };
 
 #endif 
