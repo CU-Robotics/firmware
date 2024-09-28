@@ -85,8 +85,6 @@ int main() {
     pinMode(13, OUTPUT);
 
     led.init();
-    led.blinkLED();
-
     //initialize objects
     can.init();
     dr16.init();
