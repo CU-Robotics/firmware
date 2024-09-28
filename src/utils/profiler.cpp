@@ -1,7 +1,7 @@
 #include "profiler.hpp"
 
 /// @brief Array of profiling sections.
-static DMAMEM Profiler::profiler_section_t sections[PROF_MAX_SECTIONS] = {};
+static DMAMEM Profiler::profiler_section_t sections[PROF_MAX_SECTIONS] = { 0 };
 
 void Profiler::begin(const char* name) {
 #ifdef PROFILE
@@ -49,6 +49,8 @@ void Profiler::print(const char* name) {
     uint32_t min = UINT32_MAX;
     uint32_t max = 0;
     uint32_t sum = 0;
+
+    Serial.println("print");
 
     for (uint32_t i = 0; i < PROF_MAX_SECTIONS; i++) {
         if (strncmp(sections[i].name, name, PROF_MAX_NAME) != 0) continue;

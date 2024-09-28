@@ -35,6 +35,8 @@ EstimatorManager estimator_manager;
 ControllerManager controller_manager;
 State state;
 
+LEDBoard led;
+
 // DONT put anything else in this function. It is not a setup function
 void print_logo() {
     if (Serial) {
@@ -82,7 +84,8 @@ int main() {
     // Execute setup functions
     pinMode(13, OUTPUT);
 
-    blinkLED();
+    led.init();
+    led.blinkLED();
 
     //initialize objects
     can.init();
@@ -103,7 +106,6 @@ int main() {
 
     //generate controller outputs based on governed references and estimated state
     controller_manager.init(config);
-
 
     //set reference limits in the reference governor
     state.set_reference_limits(config->set_reference_limits);
