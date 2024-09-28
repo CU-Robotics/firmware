@@ -50,8 +50,6 @@ void Profiler::print(const char* name) {
     uint32_t max = 0;
     uint32_t sum = 0;
 
-    Serial.println("print");
-
     for (uint32_t i = 0; i < PROF_MAX_SECTIONS; i++) {
         if (strncmp(sections[i].name, name, PROF_MAX_NAME) != 0) continue;
         // find actual count since this value can overflow/max out
