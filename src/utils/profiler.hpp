@@ -6,9 +6,9 @@
 
 #include <Arduino.h>
 
-#define PROF_MAX_SECTIONS 4  // max number of active profiling sections
+#define PROF_MAX_SECTIONS 8  // max number of active profiling sections
 #define PROF_MAX_NAME 16      // max length of section name
-#define PROF_MAX_TIMES (1 << 8)   // max number of start/end times per section
+#define PROF_MAX_TIMES (5000)   // max number of start/end times per section
 
 /// @brief Object for profiling sections of code.
 struct Profiler {
@@ -28,11 +28,6 @@ struct Profiler {
         char name[PROF_MAX_NAME + 1] = { 0 };  // extra for null terminator
     };
 
-    // dont allocate this memory if we dont need it
-#ifdef PROFILE
-    /// @brief Array of profiling sections.
-    profiler_section_t sections[PROF_MAX_SECTIONS] = {};
-#endif
     /// @brief Start a profiling section.
     /// @param name A unique name to identify the section.
     void begin(const char* name);
@@ -46,6 +41,6 @@ struct Profiler {
     void print(const char* name);
 };
 
-extern PROGMEM Profiler prof;  // Global profiler
+extern Profiler prof;  // Global profiler
 
 #endif  // PROFILER_H
