@@ -1,5 +1,8 @@
 #include "profiler.hpp"
 
+/// @brief Array of profiling sections.
+static DMAMEM Profiler::profiler_section_t sections[PROF_MAX_SECTIONS] = {};
+
 void Profiler::begin(const char* name) {
 #ifdef PROFILE
     // search for a section by name or an empty slot
