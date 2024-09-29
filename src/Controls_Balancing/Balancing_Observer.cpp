@@ -146,7 +146,7 @@ void BalancingObserver::step(CANData* can, IMUData* imu, float obs[9][3]){
     _lr_dot_old = lr_dot;
     return;
 }
-
+#ifdef Serial
 void BalancingObserver::testprint(float obs[9][3]){
    
     Serial.print("\ns = ");
@@ -263,7 +263,5 @@ void BalancingObserver::settingprint(CANData *can, IMUData *imu){
     Serial.print(imu->gyro_Y);
     Serial.print("\ngyro_Z = ");
     Serial.print(imu->gyro_Z);
-    
-
-    
 }
+#endif
