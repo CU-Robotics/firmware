@@ -39,6 +39,14 @@ class BalancingObserver{
         /** Derivative prev variables */
         float _theta_b_old;
         float _phi_old;
+        float _phi_dot_old;
+        float _theta_ll_old;
+        float _theta_lr_old;
+        float _s_dot_old;
+        float _ll_old;
+        float _ll_dot_old;
+        float _lr_old;
+        float _lr_dot_old;
     public:
         
         void observer_init();
@@ -46,7 +54,7 @@ class BalancingObserver{
         /// @param can the CANDate struct to get motor data
         /// @param imu the imu class to get IMU data
         /// @param out the calculated number to put in the controller code
-        void step(CANData* can, IMUData* imu, float obs[26]);
+        void step(CANData* can, IMUData* imu, float obs[9][3]);
 
             
             

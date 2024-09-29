@@ -43,11 +43,13 @@ void BalancingControl::init(){
     memcpy(p,tempp,sizeof(tempp));
 }
 /// @param ref array from ref {x_d[12] = ref[0-11], psi_d = ref[12], l_d = ref[13]}
+/// @param updatedref[0][0-2], obs[1][3-5], obs[2][6-8], obs[3][9-11], obs[4][12-14]
 /// @param obs array from observer {x[12] = obs[0-11], psi = obs[12], ll = obs[13], lr = obs[14], jl[0][0] = obs[15], jl[0][1] = obs[16], jl[1][1] = obs[17], jl[1][1] = obs[18], jr[0][0] = obs[19], jr[0][1] = obs[20], jr[1][0] = obs[21], jr[1][1] = obs[22], a_z = obs[23], ll_ddot = obs[24], lr_ddot = obs[25]}
-void BalancingControl::step(float output[NUM_MOTORS], float ref[13], float obs[26]){
+/// @param updatedobs[0][0-2], obs[1][3-5], obs[2][6-8], obs[3][9-11], obs[4][12-14], obs[5][15-17], obs[6][18-20], obs[7][21-23], obs[8][24-26]
+void BalancingControl::step(float output[NUM_MOTORS], float ref[5][3], float obs[9][3]){
 
     float dt = timer.delta(); 
-    float l = (obs[13] + obs[14]) / 2; 
+    float l = (obs[4][1] + obs[4][2]) / 2; 
 
     /** Initialize all output variables */
     output[T_LWL_OUTPUT_NUM] = 0;
@@ -58,23 +60,23 @@ void BalancingControl::step(float output[NUM_MOTORS], float ref[13], float obs[2
     output[T_JRB_OUTPUT_NUM] = 0;
 
     /** This is the part for leg_controller */
-    float F_psi = pid1.filter(dt, BOUND, WARP) * (ref[12] - obs[12]); 
-    float F_l = pid2.filter(dt, BOUND, WARP) * (ref[13]- l); 
+    float F_psi = pid1.filter(dt, BOUND, WARP) * (ref[4][0] - obs[4][0]); 
+    float F_l = pid2.filter(dt, BOUND, WARP) * (ref[4][1]- l); 
 
     /** In inertia_ff */
     //s_dot = _x[XHELP_s_dot], s_ddot = _x[XHELP_s_ddot], phi_dot = _x[XHELP_phi_dot], phi_ddot = _x[XHELP_phi_ddot], theta_ll = _x[XHELP_theta_ll], theta_lr = _x[XHELP_theta_lr]
-    float iffhelp = (m_b / 2 + m_l * eta_l) * (obs[XHELP_phi_ddot] * R_l + obs[XHELP_s_ddot]);
+    float iffhelp = (m_b / 2 + m_l * eta_l) * (obs[3][2] * R_l + obs[3][1]);
     /*float iF_l = -iffhelp * sin(x[XHELP_theta_ll]);
     float iF_r = iffhelp * sin(x[XHELP_theta_lr]); 
     F =
     */
 
-    float iF_r = (m_b / 2 + eta_l * m_l) * l * obs[XHELP_phi_dot] * obs[XHELP_s_dot] / 2 / R_l;
+    float iF_r = (m_b / 2 + eta_l * m_l) * l * obs[1][0] * obs[0][1] / 2 / R_l;
     float iF_l = -iF_r; 
 
     /** In gravity_ff */
-    float costheta_l = cos(obs[XHELP_theta_ll]);
-    float costheta_r = cos(obs[XHELP_theta_lr]);
+    float costheta_l = cos(obs[1][1]);
+    float costheta_r = cos(obs[2][0]);
     float gffhelp = (m_b / 2 + m_l * eta_l) * G_CONSTANT;
     float gF_l = gffhelp * costheta_l;
     float gF_r = gffhelp * costheta_r;//This can be #define
@@ -83,10 +85,10 @@ void BalancingControl::step(float output[NUM_MOTORS], float ref[13], float obs[2
     float F_blr = -F_psi + F_l + iF_r + gF_r; 
     
     /**The NormalF Left */
-    float F_whl = F_bll * costheta_l + m_l * (G_CONSTANT + obs[23] - (1-eta_l) * obs[24] * costheta_l);
+    float F_whl = F_bll * costheta_l + m_l * (G_CONSTANT + obs[7][2] - (1-eta_l) * obs[8][0] * costheta_l);
         
     /**The NormalF Right */ 
-    float F_whr = F_blr * costheta_r + m_l * (G_CONSTANT + obs[23] - (1-eta_l) * obs[25] * costheta_r);
+    float F_whr = F_blr * costheta_r + m_l * (G_CONSTANT + obs[7][2] - (1-eta_l) * obs[8][1] * costheta_r);
 
     if(F_whl < F_WH_OUTPUT_LIMIT_NUM && F_whr < F_WH_OUTPUT_LIMIT_NUM)
         return;
@@ -94,16 +96,26 @@ void BalancingControl::step(float output[NUM_MOTORS], float ref[13], float obs[2
     /** This is the part for locomotion_controller */
     /** In Acceleration Saturation */
     // dx is a array but only used the element 1 in matlab which is 0 here
-    float dx[XHELP_LENGTH];
-    for(int i = 0; i < 10; i++)
-        dx[i] = ref[i] - ref[i];
+    float dx[10];
+    dx[0] = ref[0][0] - obs[0][0];
+    dx[1] = ref[0][1] - obs[0][1];
+    dx[2] = ref[0][2] - obs[0][2];
+    dx[3] = ref[1][0] - obs[1][0];
+    dx[4] = ref[1][1] - obs[1][1];
+    dx[5] = ref[1][2] - obs[1][2];
+    dx[6] = ref[2][0] - obs[2][0];
+    dx[7] = ref[2][1] - obs[2][1];
+    dx[8] = ref[2][2] - obs[2][2];
+    dx[9] = ref[3][0] - obs[3][0];
+
+        
     if(dx[XHELP_s]>1) dx[XHELP_s] = 1;
     else if(dx[XHELP_s] < -1) dx[XHELP_s] = -1;
     /** In Leg Length to K */
     float K[4][10];
     for(int i = 0; i < P_LOCO_ROW; i++)
         for(int j = 0; j < 10; j++)
-            K[i][j] = p[0][i][j] * obs[13] * obs[13] + p[1][i][j] * obs[13] * obs[14] + p[2][i][j] * obs[13] + p[3][i][j] * obs[14] * obs[14] + p[4][i][j] * obs[14] + p[5][i][j];
+            K[i][j] = p[0][i][j] * obs[4][1] * obs[4][1] + p[1][i][j] * obs[4][1] * obs[4][2] + p[2][i][j] * obs[4][1] + p[3][i][j] * obs[4][2] * obs[4][2] + p[4][i][j] * obs[4][2] + p[5][i][j];
     // K = p; // Please change p 
     /* for(int i = 0; i < P_LOCO_ROW; i++) //Please change p
         for(int j = 0; j < 10; j++)
@@ -130,8 +142,8 @@ void BalancingControl::step(float output[NUM_MOTORS], float ref[13], float obs[2
     //   [cf + dt]
     //Left side check force
     if(F_whl >= F_WH_OUTPUT_LIMIT_NUM){
-        output[T_JLF_OUTPUT_NUM] = obs[15] * F_bll + obs[16] * T_bll;
-        output[T_JLB_OUTPUT_NUM] = obs[17] * F_bll + obs[18] * F_bll;
+        output[T_JLF_OUTPUT_NUM] = obs[5][0] * F_bll + obs[5][1] * T_bll;
+        output[T_JLB_OUTPUT_NUM] = obs[5][2] * F_bll + obs[6][0] * F_bll;
     }else{
         output[T_LWL_OUTPUT_NUM] = 0;
         //output[T_JLF_OUTPUT_NUM] = 0;
@@ -139,8 +151,8 @@ void BalancingControl::step(float output[NUM_MOTORS], float ref[13], float obs[2
     }
     //Right side check force
     if(F_whr >= F_WH_OUTPUT_LIMIT_NUM){
-        output[T_JRF_OUTPUT_NUM] = obs[19] * F_blr + obs[20] * T_blr;
-        output[T_JRB_OUTPUT_NUM] = obs[21] * F_blr + obs[22] * T_blr;
+        output[T_JRF_OUTPUT_NUM] = obs[6][1] * F_blr + obs[6][2] * T_blr;
+        output[T_JRB_OUTPUT_NUM] = obs[7][0] * F_blr + obs[7][1] * T_blr;
     }else{
         output[T_LWR_OUTPUT_NUM] = 0;
         //output[T_JRF_OUTPUT_NUM] = 0;

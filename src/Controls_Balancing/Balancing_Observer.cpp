@@ -4,28 +4,31 @@ void BalancingObserver::observer_init(){
 
 }
 //for x[12] = [s 0, s_dot 1, phi 2, phi_dot 3, theta_ll 4, theta_ll_dot 5, theta_lr 6, theta_lr_dot 7, theta_b 8, theta_b_dot 9, s_ddot 10, phi_ddot 11] 
-//{x[12] = obs[0-11], psi = obs[12], ll = obs[13], lr = obs[14], jl[0][0] = obs[15], jl[0][1] = obs[16], jl[1][1] = obs[17], jl[1][1] = obs[18], jr[0][0] = obs[19], jr[0][1] = obs[20], jr[1][0] = obs[21], jr[1][1] = obs[22], a_z = obs[23], ll_ddot = obs[24], lr_ddot = obs[25]}
-void BalancingObserver::step(CANData* can, IMUData* imu, float obs[26]){
+//{x[12] = obs[0-11], psi = obs[12], ll = obs[13], lr = obs[14], jl[0][0] = obs[15], jl[0][1] = obs[16], jl[1][0] = obs[17], jl[1][1] = obs[18], jr[0][0] = obs[19], jr[0][1] = obs[20], jr[1][0] = obs[21], jr[1][1] = obs[22], a_z = obs[23], ll_ddot = obs[24], lr_ddot = obs[25]}
+//new obs[0][0-2], obs[1][3-5], obs[2][6-8], obs[3][9-11], obs[4][12-14], obs[5][15-17], obs[6][18-20], obs[7][21-23], obs[8][24-26]
+void BalancingObserver::step(CANData* can, IMUData* imu, float obs[9][3]){
     // not used but needed
     float a_z; //out[25]
     //a_x is not used in anywhere
     float dt = timer.delta();
     // From sensors
-    obs[8] = imu->gyro_X;// theta_b                 // need check 
-    obs[9] = (obs[8] - _theta_b_old)/ dt;// theta_b_dot
-    _theta_b_old = obs[8];
+    obs[2][2] = imu->gyro_X;// theta_b                 // need check 
+    obs[3][0] = (obs[2][2] - _theta_b_old)/ dt;// theta_b_dot
+    _theta_b_old = obs[2][2];
 
-    obs[2] = imu->gyro_Z; // phi                    // need check
-    obs[3] = (obs[2] - _phi_old)/ dt; // phi_dot    // need check
-    _phi_old = obs[2];
-    obs[12] = imu->gyro_Y;// psi                    // need check 
+    obs[0][2] = imu->gyro_Z; // phi                    // need check
+    obs[1][0] = (obs[0][2] - _phi_old)/ dt; // phi_dot    // need check
+    _phi_old = obs[0][2];
+    obs[3][2] = (obs[1][0] - _phi_dot_old) / dt;
 
-    obs[25] = imu->accel_Z;// a_z                    // need check
+    obs[4][0] = imu->gyro_Y;// psi                    // need check 
+
+    obs[7][2] = imu->accel_Z;// a_z                    // need check // we might get wrong answer when the robot is not straight theta_b = verticleaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaasw
 
     
-    float theta_wl; // need check
+    float theta_wl = can->get_motor_attribute(L_CAN, L_W_MOTORID, ANGLE); // need check
     float theta_wl_dot = can->get_motor_attribute(L_CAN, L_W_MOTORID, SPEED);
-    float theta_wr; // need check
+    float theta_wr = can->get_motor_attribute(L_CAN, L_W_MOTORID, ANGLE); // need check
     float theta_wr_dot = can->get_motor_attribute(R_CAN, R_W_MOTORID, SPEED);
 
 
@@ -35,18 +38,106 @@ void BalancingObserver::step(CANData* can, IMUData* imu, float obs[26]){
     float phi1_r = can->get_motor_attribute(R_CAN, R_BJ_MOTORID, ANGLE);// need check
 
 
-    obs[0] =  (1/2) * (R_w) * (theta_wl + theta_wr); // s // need check
-    obs[1] =  (1/2) * (R_w) * (theta_wl_dot + theta_wr_dot); // s_dot
+    obs[0][0] =  (1.0f/2) * (R_w) * (theta_wl + theta_wr); // s // need check
+    obs[0][1] =  (1.0f/2) * (R_w) * (theta_wl_dot + theta_wr_dot); // s_dot
 
+    obs[3][1] = (obs[0][1] - _s_dot_old) / dt;
     
 
 
 
 
 
-    //to get
-    float theta_ll;
-    float theta_ll_dot;
-    float theta_lr;
-    float theta_lr_dot;
+    // Left Leg Forward Kinematics & Jacobian
+    // theta_ll = obs[4], theta_ll_dot = obs[5], ll = obs[13] ,jl[0][0] = obs[15], jl[0][1] = obs[16], jl[1][0] = obs[17], jl[1][1] = obs[18]
+    
+    // phi4_r = M_PIf - phi4_r;
+    // phi1_r = M_PIf - phi1_r; // Need testing
+
+    float cphi1_l = cos(phi1_l);
+    float sphi1_l = sin(phi1_l);
+    float cphi4_l = cos(phi4_l);
+    float sphi4_l = sin(phi4_l);
+    float xBl = l_u * cphi1_l;
+    float yBl = l_u * sphi1_l;
+    float xDl = 2 * l_a + l_u * cphi4_l;
+    float yDl = l_u * sphi4_l;
+    float lBDl = sqrt((xBl - xDl) * (xBl - xDl) + (yBl - yDl) * (yBl - yDl));
+ 
+    float A0l = 2 * (xBl - xDl) * l_l;
+    float b0l = 2 * (yBl - yDl) * l_l;
+    float C0l = -(lBDl * lBDl);
+    float phihelpl = sqrt(b0l * b0l + A0l * A0l - C0l * C0l) - b0l;
+    float phi2l= 2 * atan2(phihelpl, A0l + C0l);
+    float phi2l= fmod(phi2l, 2 * M_PIf);
+    float phi3l= 2 * atan2(phihelpl, C0l - A0l);
+
+    float xCl = l_u * cphi1_l + l_l * cos(phi2l);
+    float yCl = l_u * sphi1_l+l_l * sin(phi2l);
+    float xC_l = (l_u * cphi4_l + l_l * cos(phi3l) + 2 * l_a);
+
+    float helpingl = (xCl - l_a);
+    obs[4][1] = sqrt(yCl * yCl + helpingl * helpingl);//ll
+    float phi0l = atan2(yCl, helpingl);
+
+    obs[5][0] = (l_u * sin(phi0l - phi3l) * sin(phi1_l - phi2l)) / sin(phi2l - phi3l); 
+    obs[5][1] = -(l_u * cos(phi0l - phi3l) * sin(phi1_l - phi2l)) / (obs[4][1] * sin(phi2l - phi3l));
+    obs[5][2] = (l_u * sin(phi0l - phi2l) * sin(phi3l - phi4_l)) / sin(phi2l - phi3l);
+    obs[6][0] = -(l_u * cos(phi0l - phi2l) * sin(phi3l - phi4_l)) / (obs[4][1] * sin(phi2l - phi3l));
+
+    obs[1][1] = fmod((M_PI_2f + obs[2][2] - phi0l + M_PIf), 2 * M_PIf) - M_PIf;
+    
+ 
+    // Right Leg Forward Kinematics & Jacobian
+
+    float cphi1r = cos(phi1_r);
+    float sphi1r = sin(phi1_r);
+    float cphi4r = cos(phi4_r);
+    float sphi4r = sin(phi4_r);
+    float xBr = l_u * cphi1r;
+    float yBr = l_u * sphi1r;
+    float xDr = 2 * l_a + l_u * cphi4r;
+    float yDr = l_u * sphi4r;
+    float lBDr = sqrt((xBr - xDr) * (xBr - xDr) + (yBr - yDr) * (yBr - yDr));
+ 
+    float a0r = 2 * (xBr - xDr) * l_l;
+    float b0r = 2 * (yBr - yDr) * l_l;
+    float c0r = -(lBDr * lBDr);
+    float phihelpr = sqrt(b0r * b0r + a0r * a0r - c0r * c0r) - b0r;
+    float phi2r= 2 * atan2(phihelpr, a0r + c0r);
+    phi2r= fmod(phi2r, 2 * M_PIf);
+    float phi3r= 2 * atan2(phihelpr, c0r - a0r);
+
+    float xCr = l_u * cphi1r + l_l * cos(phi2r);
+    float yCr = l_u * sphi1r + l_l * sin(phi2r);
+    float xC_r = (l_u * cphi4r + l_l * cos(phi3r) + 2 * l_a);
+
+    float helpingr = xCr - l_a;
+    obs[4][2] = sqrt(yCr * yCr + helpingr * helpingr); // lr
+    float phi0r = atan2(yCr, helpingr);
+
+    obs[6][1] = (l_u * sin(phi0r - phi3r) * sin(phi1_r - phi2r)) / sin(phi2r - phi3r); 
+    obs[6][2] = -(l_u * cos(phi0r - phi3r) * sin(phi1_r - phi2r)) / (obs[4][2] * sin(phi2r - phi3r));
+    obs[7][0] = (l_u * sin(phi0r - phi2r) * sin(phi3r - phi4_r)) / sin(phi2r - phi3r);
+    obs[7][1] = -(l_u * cos(phi0r - phi2r) * sin(phi3r - phi4_r)) / (obs[4][2] * sin(phi2r - phi3r));
+
+    obs[2][0] = fmod((M_PI_2f + obs[2][2] - phi0r + M_PIf), (2 * M_PIf)) - M_PIf;
+
+    //get theta_ll_dot and theta_lr_dot
+    obs[1][2] = (obs[1][1] - _theta_ll_old) / dt;
+    _theta_ll_old = obs[1][1];
+    obs[2][1] = (obs[2][0] - _theta_lr_old) / dt;
+    _theta_lr_old = obs[2][0];
+
+    // get ll_ddot and lr_ddot
+    float ll_dot = (obs[4][1] - _ll_old) / dt;
+    _ll_old = ll_dot;
+    obs[8][0] = (ll_dot - _ll_dot_old) / dt;
+    _ll_dot_old = ll_dot;
+
+    float lr_dot = (obs[4][1] - _lr_old) / dt;
+    _lr_old = lr_dot;
+    obs[8][1] = (lr_dot - _lr_dot_old) / dt;
+    _lr_dot_old = lr_dot;
+    return;
 }
