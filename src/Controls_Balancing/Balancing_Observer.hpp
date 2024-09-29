@@ -2,8 +2,8 @@
 #define BALANCING_OBSERVER_H
 
 #include "../comms/rm_can.hpp"
-#include "../filters/pid_filter.hpp"
 #include "../utils/timing.hpp"
+#include "./Sensor_Balancing/BalancingIMU_Filter.hpp"
 //  #include""                !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!We need to make an IMUFilter
 
 #define L_CAN 0         // Need Check
@@ -19,23 +19,10 @@
 #define l_l 0   // test
 #define R_w 0   // test
 
-
-/// @brief Temp usage !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1
-struct IMUData{
-    float accel_X;
-    float accel_Y;
-    float accel_Z; 
-    float gyro_X;
-    float gyro_Y;
-    float gyro_Z;
-};
-
-
 class BalancingObserver{
     private:
         /** Helping Classes */
         Timer timer;
-
         /** Derivative prev variables */
         float _theta_b_old;
         float _phi_old;
