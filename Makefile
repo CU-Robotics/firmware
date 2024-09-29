@@ -17,7 +17,7 @@ LIBRARY_SOURCE_C = $(shell find $(LIBRARY_DIR) -name "*.c")
 LIBRARY_SOURCE_CPP = $(shell find $(LIBRARY_DIR) -name "*.cpp")
 # sensor libraries
 LIBRARY_INCLUDE =  -Ilibraries/Adafruit_BusIO -Ilibraries/Adafruit_ICM20X -Ilibraries/Adafruit_LIS3MDL -Ilibraries/Adafruit_LSM6DS -Ilibraries/Adafruit_Sensor
-LIBRARY_INCLUDE += -Ilibraries/FreqMeasureMulti -Ilibraries/VL53L4CD
+LIBRARY_INCLUDE += -Ilibraries/FreqMeasureMulti -Ilibraries/VL53L4CD -Ilibraries/FastLED/src
 # communication libraries
 LIBRARY_INCLUDE += -Ilibraries/FlexCAN_T4  -Ilibraries/SPI -Ilibraries/Wire -Ilibraries/QNEthernet/src 
 # utility libraries
@@ -70,6 +70,7 @@ COMPILER_CPP := $(ARDUINO_PATH)/packages/teensy/tools/teensy-compile/*/arm/bin/a
 COMPILER_C := $(ARDUINO_PATH)/packages/teensy/tools/teensy-compile/*/arm/bin/arm-none-eabi-gcc
 OBJCOPY := $(ARDUINO_PATH)/packages/teensy/tools/teensy-compile/*/arm/bin/arm-none-eabi-objcopy
 GDB := $(ARDUINO_PATH)/packages/teensy/tools/teensy-compile/*/arm/bin/arm-none-eabi-gdb
+SIZE := $(ARDUINO_PATH)/packages/teensy/tools/teensy-tools/1.59.0/teensy_size
 
 GIT_SCRAPER = ./tools/git_scraper.cpp
 
@@ -83,6 +84,7 @@ GIT_SCRAPER = ./tools/git_scraper.cpp
 build: clean git_scraper
 	@echo [Building Source]
 	@$(COMPILER_CPP) $(COMPILE_FLAGS) $(CPP_FLAGS) $(PROJECT_SOURCE) $(PROJECT_INCLUDE) $(LIBRARY_LIB_NAME) $(TEENSY_LIB_NAME) $(LIBRARY_INCLUDE) $(TEENSY_INCLUDE) $(LINKING_FLAGS) -o $(PROJECT_NAME).elf
+	@$(SIZE) $(PROJECT_NAME).elf
 	@echo [Constructing $(PROJECT_NAME).hex]
 	@$(OBJCOPY) -O ihex -R .eeprom $(PROJECT_NAME).elf $(PROJECT_NAME).hex
 	@chmod +x $(PROJECT_NAME).hex
