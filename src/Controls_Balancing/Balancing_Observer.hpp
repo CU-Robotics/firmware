@@ -20,7 +20,7 @@
 #define R_w 0   // test
 
 
-/// @brief Temp usage
+/// @brief Temp usage !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1
 struct IMUData{
     float accel_X;
     float accel_Y;
@@ -48,20 +48,21 @@ class BalancingObserver{
         float _lr_old;
         float _lr_dot_old;
     public:
-        
         void observer_init();
         /// @brief Get the data we want for controller
         /// @param can the CANDate struct to get motor data
         /// @param imu the imu class to get IMU data
-        /// @param out the calculated number to put in the controller code
-        void step(CANData* can, IMUData* imu, float obs[9][3]);
+        /// @param obs the calculated number to put in the controller code
+        void step(CANData* can, IMUData* imu, float obs[9][3]); 
 
-            
-            
-        
-
-
-
-
+        //#if defined(Serial)
+        /// @brief print and labeled obs[9][3]
+        /// @param obs the obs array we want to be print and labeled
+        void testprint(float obs[9][3]);
+        /// @brief Print out what sensors get and what the number after calculated
+        /// @param can The can bus class
+        /// @param imu the imu classes
+        void settingprint(CANData* can, IMUData* imu);
+        //#endif
 };
 #endif

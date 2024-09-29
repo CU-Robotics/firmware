@@ -1,7 +1,17 @@
 #include "Balancing_Observer.hpp"
 
 void BalancingObserver::observer_init(){
-
+    _theta_b_old = 0;
+    _phi_old = 0;
+    _phi_dot_old = 0;
+    _theta_ll_old = 0;
+    _theta_lr_old = 0;
+    _s_dot_old = 0;
+    _ll_old = 0;
+    _ll_dot_old = 0;
+    _lr_old = 0;
+    _lr_dot_old = 0;
+    // Better run the step 2 times before the while loop to avoid control code calculate something weird. !!!!!!!!!
 }
 //for x[12] = [s 0, s_dot 1, phi 2, phi_dot 3, theta_ll 4, theta_ll_dot 5, theta_lr 6, theta_lr_dot 7, theta_b 8, theta_b_dot 9, s_ddot 10, phi_ddot 11] 
 //{x[12] = obs[0-11], psi = obs[12], ll = obs[13], lr = obs[14], jl[0][0] = obs[15], jl[0][1] = obs[16], jl[1][0] = obs[17], jl[1][1] = obs[18], jr[0][0] = obs[19], jr[0][1] = obs[20], jr[1][0] = obs[21], jr[1][1] = obs[22], a_z = obs[23], ll_ddot = obs[24], lr_ddot = obs[25]}
@@ -17,7 +27,7 @@ void BalancingObserver::step(CANData* can, IMUData* imu, float obs[9][3]){
     _theta_b_old = obs[2][2];
 
     obs[0][2] = imu->gyro_Z; // phi                    // need check
-    obs[1][0] = (obs[0][2] - _phi_old)/ dt; // phi_dot    // need check
+    obs[1][0] = (obs[0][2] - _phi_old) / dt; // phi_dot    // need check
     _phi_old = obs[0][2];
     obs[3][2] = (obs[1][0] - _phi_dot_old) / dt;
 
@@ -42,11 +52,6 @@ void BalancingObserver::step(CANData* can, IMUData* imu, float obs[9][3]){
     obs[0][1] =  (1.0f/2) * (R_w) * (theta_wl_dot + theta_wr_dot); // s_dot
 
     obs[3][1] = (obs[0][1] - _s_dot_old) / dt;
-    
-
-
-
-
 
     // Left Leg Forward Kinematics & Jacobian
     // theta_ll = obs[4], theta_ll_dot = obs[5], ll = obs[13] ,jl[0][0] = obs[15], jl[0][1] = obs[16], jl[1][0] = obs[17], jl[1][1] = obs[18]
@@ -140,4 +145,125 @@ void BalancingObserver::step(CANData* can, IMUData* imu, float obs[9][3]){
     obs[8][1] = (lr_dot - _lr_dot_old) / dt;
     _lr_dot_old = lr_dot;
     return;
+}
+
+void BalancingObserver::testprint(float obs[9][3]){
+   
+    Serial.print("\ns = ");
+    Serial.print(obs[0][0]);
+    Serial.print("\ns_dot = ");
+    Serial.print(obs[0][1]);
+    Serial.print("\nphi = ");
+    Serial.print(obs[0][2]);
+    Serial.print("\nphi_dot = ");
+    Serial.print(obs[1][0]);
+    Serial.print("\ntheta_ll = ");
+    Serial.print(obs[1][1]);
+    Serial.print("\ntheta_ll_dot  = ");
+    Serial.print(obs[1][2]);
+    Serial.print("\ntheta_lr = ");
+    Serial.print(obs[2][0]);
+    Serial.print("\ntheta_lr_dot = ");
+    Serial.print(obs[2][1]);
+    Serial.print("\ntheta_b = ");
+    Serial.print(obs[2][2]);
+    Serial.print("\ntheta_b_dot = ");
+    Serial.print(obs[3][0]);
+    Serial.print("\ns_ddot = ");
+    Serial.print(obs[3][1]);
+    Serial.print("\nphi_ddot = ");
+    Serial.print(obs[3][2]);
+    Serial.print("\npsi = ");
+    Serial.print(obs[4][0]);
+    Serial.print("\nll = ");
+    Serial.print(obs[4][1]);
+    Serial.print("\nlr = ");
+    Serial.print(obs[4][2]);
+
+
+    Serial.print("\njl = [");
+    Serial.print(obs[5][0]);
+    Serial.print("] [");
+    Serial.print(obs[5][1]);
+    Serial.print("]");
+    Serial.print("\n[");
+    Serial.print(obs[5][2]);
+    Serial.print("] [");
+    Serial.print(obs[6][0]);
+    Serial.print("]");
+
+    Serial.print("\njr = [");
+    Serial.print(obs[6][1]);
+    Serial.print("] [");
+    Serial.print(obs[6][2]);
+    Serial.print("]");
+    Serial.print("\n[");
+    Serial.print(obs[7][0]);
+    Serial.print("] [");
+    Serial.print(obs[7][1]);
+    Serial.print("]");
+    
+    Serial.print("\na_z = ");
+    Serial.print(obs[7][2]);
+    Serial.print("\nll_ddot = ");
+    Serial.print(obs[8][0]);
+    Serial.print("\nlr_ddot = ");
+    Serial.print(obs[8][1]);
+}
+
+void BalancingObserver::settingprint(CANData *can, IMUData *imu){
+    Serial.print("\n ----------New update line----------");
+    Serial.print("\nL_W_MOTOR: ");
+    Serial.print("\nANGLE = ");
+    Serial.print(can->get_motor_attribute(L_CAN, L_W_MOTORID, ANGLE));
+    Serial.print("\nSPEED = ");
+    Serial.print(can->get_motor_attribute(L_CAN, L_W_MOTORID, SPEED));
+
+    Serial.print("\nL_FJ_MOTOR: ");
+    Serial.print("\nANGLE = ");
+    Serial.print(can->get_motor_attribute(L_CAN, L_FJ_MOTORID, ANGLE));
+    Serial.print("\nSPEED = ");
+    Serial.print(can->get_motor_attribute(L_CAN, L_FJ_MOTORID, SPEED));
+
+    Serial.print("\nL_BJ_MOTOR: ");
+    Serial.print("\nANGLE = ");
+    Serial.print(can->get_motor_attribute(L_CAN, L_BJ_MOTORID, ANGLE));
+    Serial.print("\nSPEED = ");
+    Serial.print(can->get_motor_attribute(L_CAN, L_BJ_MOTORID, SPEED));
+
+    Serial.print("\nR_W_MOTOR: ");
+    Serial.print("\nANGLE = ");
+    Serial.print(can->get_motor_attribute(R_CAN, R_W_MOTORID, ANGLE));
+    Serial.print("\nSPEED = ");
+    Serial.print(can->get_motor_attribute(R_CAN, R_W_MOTORID, SPEED));
+
+    Serial.print("\nR_FJ_MOTOR: ");
+    Serial.print("\nANGLE = ");
+    Serial.print(can->get_motor_attribute(R_CAN, R_FJ_MOTORID, ANGLE));
+    Serial.print("\nSPEED = ");
+    Serial.print(can->get_motor_attribute(R_CAN, R_FJ_MOTORID, SPEED));
+
+    Serial.print("\nR_BJ_MOTOR: ");
+    Serial.print("\nANGLE = ");
+    Serial.print(can->get_motor_attribute(R_CAN, R_BJ_MOTORID, ANGLE));
+    Serial.print("\nSPEED = ");
+    Serial.print(can->get_motor_attribute(R_CAN, R_BJ_MOTORID, SPEED));
+
+    Serial.print("\nimu acceleration: ");
+    Serial.print("\na_X = ");
+    Serial.print(imu->accel_X);
+    Serial.print("\na_Y = ");
+    Serial.print(imu->accel_Y);
+    Serial.print("\na_Z = ");
+    Serial.print(imu->accel_Z);
+    Serial.print("\nimu gyro: ");
+    Serial.print("\ngyro_X = ");
+    Serial.print(imu->gyro_X);
+    Serial.print("\ngyro_Y = ");
+    Serial.print(imu->gyro_Y);
+    Serial.print("\ngyro_Z = ");
+    Serial.print(imu->gyro_Z);
+    
+
+    
 }
