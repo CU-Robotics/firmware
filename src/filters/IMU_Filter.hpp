@@ -1,5 +1,5 @@
-#ifndef BALANCINGIMU_FILTER_H
-#define BALANCINGIMU_FILTER_H
+#ifndef IMU_FILTER_H
+#define IMU_FILTER_H
 #include "./sensors/ICM20649.hpp"
 struct IMUData{
     float accel_X;

@@ -1,4 +1,4 @@
-#include "BalancingIMU_Filter.hpp"
+#include "IMU_Filter.hpp"
 
 void IMU_filter::read(){
     imu.accel_X = icm.get_accel_X();
