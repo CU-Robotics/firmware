@@ -1,6 +1,6 @@
 #include "Balancing_Observer.hpp"
 
-void BalancingObserver::observer_init(){
+void BalancingObserver::init(){
     _theta_b_old = 0;
     _phi_old = 0;
     _phi_dot_old = 0;
@@ -146,7 +146,7 @@ void BalancingObserver::step(CANData* can, IMUData* imu, float obs[9][3]){
     _lr_dot_old = lr_dot;
     return;
 }
-#ifdef Serial
+
 void BalancingObserver::testprint(float obs[9][3]){
    
     Serial.print("\ns = ");
@@ -264,4 +264,3 @@ void BalancingObserver::settingprint(CANData *can, IMUData *imu){
     Serial.print("\ngyro_Z = ");
     Serial.print(imu->gyro_Z);
 }
-#endif

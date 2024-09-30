@@ -3,7 +3,6 @@
 #include "../comms/rm_can.hpp"
 #include "../filters/pid_filter.hpp"
 #include "../utils/timing.hpp"
-
 /** Constants for Final OUTPUT*/ 
 #define WHEEL_UPPER_LIMIT 0.5                   //Need test
 #define WHEEL_LOWER_LIMIT -0.5                  //Need test
@@ -80,6 +79,7 @@ class BalancingControl{
         /// @param ref array from ref {x_d[12] = ref[0-11], psi_d = ref[12], l_d = ref[13]}
         /// @param obs array from observer {x[12] = obs[0-11], psi = obs[12], ll = obs[13], lr = obs[14], jl[2][2] = obs[15-18], jr[2][2] = obs[19-22], a_z = obs[23], ll_ddot = obs[24], lr_ddot = obs[25]}
         void step(float output[NUM_MOTORS], float ref[5][3], float obs[9][3]);
+        void printmotors(float output[NUM_MOTORS]);
 };
 
 #endif

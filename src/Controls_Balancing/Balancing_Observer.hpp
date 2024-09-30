@@ -35,7 +35,7 @@ class BalancingObserver{
         float _lr_old;
         float _lr_dot_old;
     public:
-        void observer_init();
+        void init();
         /// @brief Get the data we want for controller
         /// @param can the CANDate struct to get motor data
         /// @param imu the imu class to get IMU data

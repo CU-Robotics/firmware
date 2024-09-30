@@ -12,9 +12,11 @@ struct IMUData{
 };
 class IMU_filter{
     private:
-        ICM20649 icm;
+        ICM20649 _icm;
+
+        IMUData _imu;
     public:
-        IMUData imu;
+        IMUData* getdata();
         void read();
 };
 #endif

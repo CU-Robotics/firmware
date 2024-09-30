@@ -160,3 +160,18 @@ void BalancingControl::step(float output[NUM_MOTORS], float ref[5][3], float obs
     }
 return;
 }   
+
+void BalancingControl::printmotors(float motorsout[6]){
+    Serial.print("\nT_Wheel L : ");
+    Serial.print(motorsout[0]);
+    Serial.print("\nT_Wheel R : ");
+    Serial.print(motorsout[1]);
+    Serial.print("\nT_Joint LF : ");
+    Serial.print(motorsout[2]);
+    Serial.print("\nT_Joint LB : ");
+    Serial.print(motorsout[3]);
+    Serial.print("\nT_Joint LF : ");
+    Serial.print(motorsout[4]);
+    Serial.print("\nT_Joint LB : ");
+    Serial.print(motorsout[5]);
+}
