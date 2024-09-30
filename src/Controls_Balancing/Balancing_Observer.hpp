@@ -3,7 +3,7 @@
 
 #include "../comms/rm_can.hpp"
 #include "../utils/timing.hpp"
-#include "./Sensor_Balancing/BalancingIMU_Filter.hpp"
+#include "./filters/IMU_Filter.hpp"
 //  #include""                !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!We need to make an IMUFilter
 
 #define L_CAN 0         // Need Check
