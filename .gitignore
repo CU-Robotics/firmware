@@ -1,11 +1,24 @@
-# Ignore build files
-build/
-build/*
-*.hex
 # Ignore doxygen output directory. Shared documentation is handled by github-actions in a separate branch, not individuals' compilations sent here.
 /docs/html
 /docs/latex
 # Don't commit doxygen warnings log
 /docs/doxygen_warnings.txt
-# Ignore the git_info file
+
+# Ignore the non existant build/ directory
+build
+build/
+
+# Ignore the output binaries
+*.elf
+*.hex
+
+# Ignore the libraries
+*.a
+
+# Ignore any tools/ directory artifacts
+tools/*.txt
+tools/*.out
+tools/git_scraper
+
+# Ignore the output from the git scraper
 src/git_info.h

@@ -8,4 +8,4 @@ sudo BINDIR=/usr/local/bin/ ./arduino-install-thing.sh
 rm arduino-install-thing.sh
 
 # install the needed board/tools for Teensy
-arduino-cli core install teensy:avr@1.57.3 --additional-urls "https://www.pjrc.com/teensy/package_teensy_index.json"
+arduino-cli core install teensy:avr@1.59.0 --additional-urls "https://www.pjrc.com/teensy/package_teensy_index.json"

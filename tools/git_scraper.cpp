@@ -51,6 +51,14 @@ int main(int argc, char** argv) {
 		commit_msg += ' ';
 	}
 
+	// Escape all quotes or backslashes in the commit message
+	for (size_t i = 0; i < commit_msg.size(); i++) {
+		if (commit_msg[i] == '"' || commit_msg[i] == '\\') {
+			commit_msg.insert(i, 1, '\\');
+			i++;
+		}
+	}
+
 	// Now we construct the header file
 	std::ofstream git_info_header(path_to_header + header_name);
 	if (!git_info_header.is_open()) {
