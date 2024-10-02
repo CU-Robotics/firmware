@@ -161,9 +161,9 @@ public:
         memcpy(sizes, subsec_sizes, sizeof(uint8_t) * MAX_CONFIG_PACKETS);
     }
 
-    void sd_load();
+    bool sd_load();
 
-    bool validate();
+    void store_config();
 };
 
 #endif

@@ -3,10 +3,8 @@
 const Config* const ConfigLayer::configure(HIDLayer* comms) {
     // check SD
     if(sdcard.exists("/.config")){
-        // load sd config
-        sd_load();
-        // validate sd config
-        configured = validate();
+        // load sd config into config_packets
+        configured = sd_load();
     }
     
     // if no config on SD, then await transmission
@@ -15,6 +13,9 @@ const Config* const ConfigLayer::configure(HIDLayer* comms) {
         comms->ping();
         process(comms->get_incoming_packet(), comms->get_outgoing_packet());
     }
+
+    // update stored config
+    store_config();
 
     // put the data from the packets into the config object
     config.fill_data(config_packets, subsec_sizes);
@@ -194,10 +195,38 @@ void Config::fill_data(CommsPacket packets[MAX_CONFIG_PACKETS], uint8_t sizes[MA
     }
 }
 
-void ConfigLayer::sd_load(){
+bool ConfigLayer::sd_load(){
+    // num of total bytes in config_packets
+    int config_byte_size = MAX_CONFIG_PACKETS * sizeof(CommsPacket);
+    uint8_t buf[config_byte_size];
+    sdcard.open("/.config");
 
+    // read config file into buf, copy into config_packets
+    sdcard.read(buf, config_byte_size);
+    memcpy(config_packets, buf, config_byte_size);
+
+    // read config file into buf, copy into subsec_sizes
+    sdcard.read(buf, MAX_CONFIG_PACKETS);
+    memcpy(subsec_sizes, buf, MAX_CONFIG_PACKETS);
+
+    sdcard.close();
+    return 1;
 }
 
-bool ConfigLayer::validate(){
+void ConfigLayer::store_config(){
+    int config_byte_size = MAX_CONFIG_PACKETS * sizeof(CommsPacket);
+    uint8_t buf[config_byte_size];
+    if(sdcard.exists("/.config")) sdcard.rm("/.config");
+    sdcard.touch("/.config");
+    sdcard.open("/.config");
 
+    // copy contents of config packets into byte buffer, then write
+    memcpy(buf, config_packets, config_byte_size);
+    sdcard.write(buf, config_byte_size);
+
+    // copy contents of subsec_sizes into byte buffer, then write
+    memcpy(buf, subsec_sizes, MAX_CONFIG_PACKETS);
+    sdcard.write(buf, MAX_CONFIG_PACKETS);
+    
+    sdcard.close();
 }
