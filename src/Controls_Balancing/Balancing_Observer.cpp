@@ -13,12 +13,14 @@ void BalancingObserver::init(){
     _lr_dot_old = 0;
     // Better run the step 2 times before the while loop to avoid control code calculate something weird. !!!!!!!!!
 }
+
+BalancingObserver::BalancingObserver(){}
+
 //for x[12] = [s 0, s_dot 1, phi 2, phi_dot 3, theta_ll 4, theta_ll_dot 5, theta_lr 6, theta_lr_dot 7, theta_b 8, theta_b_dot 9, s_ddot 10, phi_ddot 11] 
 //{x[12] = obs[0-11], psi = obs[12], ll = obs[13], lr = obs[14], jl[0][0] = obs[15], jl[0][1] = obs[16], jl[1][0] = obs[17], jl[1][1] = obs[18], jr[0][0] = obs[19], jr[0][1] = obs[20], jr[1][0] = obs[21], jr[1][1] = obs[22], a_z = obs[23], ll_ddot = obs[24], lr_ddot = obs[25]}
 //new obs[0][0-2], obs[1][3-5], obs[2][6-8], obs[3][9-11], obs[4][12-14], obs[5][15-17], obs[6][18-20], obs[7][21-23], obs[8][24-26]
 void BalancingObserver::step(CANData* can, IMUData* imu, float obs[9][3]){
     // not used but needed
-    float a_z; //out[25]
     //a_x is not used in anywhere
     float dt = timer.delta();
     // From sensors
@@ -74,12 +76,12 @@ void BalancingObserver::step(CANData* can, IMUData* imu, float obs[9][3]){
     float C0l = -(lBDl * lBDl);
     float phihelpl = sqrt(b0l * b0l + A0l * A0l - C0l * C0l) - b0l;
     float phi2l= 2 * atan2(phihelpl, A0l + C0l);
-    float phi2l= fmod(phi2l, 2 * M_PIf);
+    phi2l= fmod(phi2l, 2 * M_PI);
     float phi3l= 2 * atan2(phihelpl, C0l - A0l);
 
     float xCl = l_u * cphi1_l + l_l * cos(phi2l);
     float yCl = l_u * sphi1_l+l_l * sin(phi2l);
-    float xC_l = (l_u * cphi4_l + l_l * cos(phi3l) + 2 * l_a);
+    //float xC_l = (l_u * cphi4_l + l_l * cos(phi3l) + 2 * l_a);
 
     float helpingl = (xCl - l_a);
     obs[4][1] = sqrt(yCl * yCl + helpingl * helpingl);//ll
@@ -90,7 +92,7 @@ void BalancingObserver::step(CANData* can, IMUData* imu, float obs[9][3]){
     obs[5][2] = (l_u * sin(phi0l - phi2l) * sin(phi3l - phi4_l)) / sin(phi2l - phi3l);
     obs[6][0] = -(l_u * cos(phi0l - phi2l) * sin(phi3l - phi4_l)) / (obs[4][1] * sin(phi2l - phi3l));
 
-    obs[1][1] = fmod((M_PI_2f + obs[2][2] - phi0l + M_PIf), 2 * M_PIf) - M_PIf;
+    obs[1][1] = fmod((M_PI_2 + obs[2][2] - phi0l + M_PI), 2 * M_PI) - M_PI;
     
  
     // Right Leg Forward Kinematics & Jacobian
@@ -110,12 +112,12 @@ void BalancingObserver::step(CANData* can, IMUData* imu, float obs[9][3]){
     float c0r = -(lBDr * lBDr);
     float phihelpr = sqrt(b0r * b0r + a0r * a0r - c0r * c0r) - b0r;
     float phi2r= 2 * atan2(phihelpr, a0r + c0r);
-    phi2r= fmod(phi2r, 2 * M_PIf);
+    phi2r= fmod(phi2r, 2 * M_PI);
     float phi3r= 2 * atan2(phihelpr, c0r - a0r);
 
     float xCr = l_u * cphi1r + l_l * cos(phi2r);
     float yCr = l_u * sphi1r + l_l * sin(phi2r);
-    float xC_r = (l_u * cphi4r + l_l * cos(phi3r) + 2 * l_a);
+    //float xC_r = (l_u * cphi4r + l_l * cos(phi3r) + 2 * l_a);
 
     float helpingr = xCr - l_a;
     obs[4][2] = sqrt(yCr * yCr + helpingr * helpingr); // lr

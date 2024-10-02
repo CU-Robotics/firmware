@@ -3,8 +3,9 @@
 
 #include "../comms/rm_can.hpp"
 #include "../utils/timing.hpp"
-#include "./filters/IMU_Filter.hpp"
+#include "../filters/IMU_Filter.hpp"
 //  #include""                !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!We need to make an IMUFilter
+
 
 #define L_CAN 0         // Need Check
 #define R_CAN 1         // Need Check
@@ -35,6 +36,8 @@ class BalancingObserver{
         float _lr_old;
         float _lr_dot_old;
     public:
+        BalancingObserver();
+
         void init();
         /// @brief Get the data we want for controller
         /// @param can the CANDate struct to get motor data

@@ -49,7 +49,7 @@
 
 
 /** Constants for mechanical*/
-#define NUM_MOTORS 6
+#define NUM_MOTORS_Chassis 6
 #define T_LWL_OUTPUT_NUM 0
 #define T_LWR_OUTPUT_NUM 1
 #define T_JLF_OUTPUT_NUM 2
@@ -67,7 +67,7 @@ class BalancingControl{
         PIDFilter pid2; 
 
     public:
-        float output[NUM_MOTORS];
+        float output[NUM_MOTORS_Chassis];
         float p[6][P_LOCO_ROW][10];
         /// @brief defalt constrctor 
         BalancingControl();
@@ -78,8 +78,8 @@ class BalancingControl{
         /// @param output for balancing contorl the data form is [T_lwl, T_jlf, T_jlb, T_lwr, T_jrf, T_jrb] 
         /// @param ref array from ref {x_d[12] = ref[0-11], psi_d = ref[12], l_d = ref[13]}
         /// @param obs array from observer {x[12] = obs[0-11], psi = obs[12], ll = obs[13], lr = obs[14], jl[2][2] = obs[15-18], jr[2][2] = obs[19-22], a_z = obs[23], ll_ddot = obs[24], lr_ddot = obs[25]}
-        void step(float output[NUM_MOTORS], float ref[5][3], float obs[9][3]);
-        void printmotors(float output[NUM_MOTORS]);
+        void step(float output[NUM_MOTORS_Chassis], float ref[5][3], float obs[9][3]);
+        void printmotors(float output[NUM_MOTORS_Chassis]);
 };
 
 #endif

@@ -65,7 +65,7 @@ void BalancingControl::step(float output[NUM_MOTORS], float ref[5][3], float obs
 
     /** In inertia_ff */
     //s_dot = _x[XHELP_s_dot], s_ddot = _x[XHELP_s_ddot], phi_dot = _x[XHELP_phi_dot], phi_ddot = _x[XHELP_phi_ddot], theta_ll = _x[XHELP_theta_ll], theta_lr = _x[XHELP_theta_lr]
-    float iffhelp = (m_b / 2 + m_l * eta_l) * (obs[3][2] * R_l + obs[3][1]);
+    //float iffhelp = (m_b / 2 + m_l * eta_l) * (obs[3][2] * R_l + obs[3][1]);
     /*float iF_l = -iffhelp * sin(x[XHELP_theta_ll]);
     float iF_r = iffhelp * sin(x[XHELP_theta_lr]); 
     F =
