@@ -17,7 +17,7 @@ LIBRARY_SOURCE_C = $(shell find $(LIBRARY_DIR) -name "*.c")
 LIBRARY_SOURCE_CPP = $(shell find $(LIBRARY_DIR) -name "*.cpp")
 # sensor libraries
 LIBRARY_INCLUDE =  -Ilibraries/Adafruit_BusIO -Ilibraries/Adafruit_ICM20X -Ilibraries/Adafruit_LIS3MDL -Ilibraries/Adafruit_LSM6DS -Ilibraries/Adafruit_Sensor
-LIBRARY_INCLUDE += -Ilibraries/FreqMeasureMulti -Ilibraries/VL53L4CD -Ilibraries/Teensy_Camera
+LIBRARY_INCLUDE += -Ilibraries/FreqMeasureMulti -Ilibraries/VL53L4CD -Ilibraries/FastLED/src -Ilibraries/Teensy_Camera
 # communication libraries
 LIBRARY_INCLUDE += -Ilibraries/FlexCAN_T4  -Ilibraries/SPI -Ilibraries/Wire -Ilibraries/QNEthernet/src -Ilibraries/FlexIO_t4
 # utility libraries

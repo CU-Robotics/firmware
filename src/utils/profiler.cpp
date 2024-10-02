@@ -1,7 +1,7 @@
 #include "profiler.hpp"
 
 /// @brief Array of profiling sections.
-static DMAMEM Profiler::profiler_section_t sections[PROF_MAX_SECTIONS] = {};
+static DMAMEM Profiler::profiler_section_t sections[PROF_MAX_SECTIONS] = { 0 };
 
 void Profiler::begin(const char* name) {
 #ifdef PROFILE
