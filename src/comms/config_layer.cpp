@@ -1,6 +1,15 @@
 #include "config_layer.hpp"
 
 const Config* const ConfigLayer::configure(HIDLayer* comms) {
+    // check SD
+    if(sdcard.exists("/.config")){
+        // load sd config
+        sd_load();
+        // validate sd config
+        configured = validate();
+    }
+    
+    // if no config on SD, then await transmission
     // grab and process all config packets until finished
     while (!is_configured()) {
         comms->ping();
@@ -183,4 +192,12 @@ void Config::fill_data(CommsPacket packets[MAX_CONFIG_PACKETS], uint8_t sizes[MA
             memcpy(encoder_pins, packets[i].raw + 8, sub_size);
         }
     }
+}
+
+void ConfigLayer::sd_load(){
+
+}
+
+bool ConfigLayer::validate(){
+
 }

@@ -3,6 +3,7 @@
 
 #include "usb_hid.hpp"
 #include "../controls/controller.hpp"
+#include "SDManager.hpp"
 
 #include <map>
 #include <string>
@@ -131,6 +132,8 @@ private:
     /// @brief a local instance of the config data
     Config config;
 
+    SDManager sdcard;
+
 public:
     /// @brief default constructor
     ConfigLayer() { }
@@ -157,6 +160,10 @@ public:
         memcpy(packets, config_packets, sizeof(CommsPacket) * MAX_CONFIG_PACKETS);
         memcpy(sizes, subsec_sizes, sizeof(uint8_t) * MAX_CONFIG_PACKETS);
     }
+
+    void sd_load();
+
+    bool validate();
 };
 
 #endif
