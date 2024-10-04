@@ -1,3 +1,6 @@
+# verify that curl is installed
+sudo apt install curl
+
 # download arduino-cli's install script
 curl -o arduino-install-thing.sh https://raw.githubusercontent.com/arduino/arduino-cli/master/install.sh 
 # make this executable
