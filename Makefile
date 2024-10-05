@@ -86,13 +86,16 @@ OBJCOPY := $(ARDUINO_PATH)/packages/teensy/tools/teensy-compile/*/arm/bin/arm-no
 GDB := $(ARDUINO_PATH)/packages/teensy/tools/teensy-compile/*/arm/bin/arm-none-eabi-gdb
 SIZE := $(ARDUINO_PATH)/packages/teensy/tools/teensy-tools/1.59.0/teensy_size
 
+GIT_SCRAPER = ./tools/git_scraper.cpp
+
+
 .PHONY: all
 
-all: $(BUILD_DIR)/$(TARGET_EXEC)
+all: $(BUILD_DIR)/$(TARGET_EXEC) git_scraper
 
 
 # The final build step.
-$(BUILD_DIR)/$(TARGET_EXEC): $(LIBRARY_OBJS) $(TEENSY_OBJS) $(SRC_OBJS)
+$(BUILD_DIR)/$(TARGET_EXEC): $(LIBRARY_OBJS) $(TEENSY_OBJS) $(SRC_OBJS) git_scraper
 	$(COMPILER_CPP) $(CPPFLAGS) $(CXXFLAGS) $(LIBRARY_OBJS) $(TEENSY_OBJS) $(SRC_OBJS) $(LINKING_FLAGS) -o $(BUILD_DIR)/$(TARGET_EXEC).elf
 
 
@@ -121,3 +124,10 @@ clean:
 -include $(TEENSY_DEPS)
 -include $(LIBRARY_DEPS)
 -include $(SRC_DEPS)
+
+
+# compiles, runs, and cleans up the git_scraper tool which stores the current git info in a header file
+git_scraper:
+	@g++ $(GIT_SCRAPER) -o ./tools/git_scraper
+	@./tools/git_scraper
+	@rm ./tools/git_scraper

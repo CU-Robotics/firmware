@@ -1,7 +1,6 @@
 #include <Arduino.h>
 
-//TODO Figure out why the compiler can't find this file
-//#include "git_info.h"
+#include "git_info.h"
 
 #include "utils/profiler.hpp"
 #include "sensors/d200.hpp"
