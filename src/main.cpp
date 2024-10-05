@@ -9,7 +9,7 @@
 
 
 //TODO Figure out why I can't include TeensyDebug without everything going to shit
-//#include <TeensyDebug.h>
+#include <TeensyDebug.h>
 #include "sensors/LEDBoard.hpp"
 
 // Loop constants

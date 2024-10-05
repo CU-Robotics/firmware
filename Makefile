@@ -67,7 +67,7 @@ CXXFLAGS := $(CPU_CFLAGS) -std=gnu++17 -felide-constructors -fno-exceptions -fpe
 
 
 # Required linker config for teensy related things
-LINKING_FLAGS = -Wl,--gc-sections,--relax -Wl,-Tteensy4/imxrt1062_t41.ld
+LINKING_FLAGS = -Wl,--gc-sections,--relax,-Tteensy4/imxrt1062_t41.ld
 
 
 ifeq ($(UNAME),Darwin)
@@ -110,7 +110,6 @@ $(BUILD_DIR)/%.c.o: %.c
 
 # Build step for C++ source
 $(BUILD_DIR)/%.cpp.o: %.cpp
-	@echo [here]
 	mkdir -p $(dir $@)
 	$(COMPILER_CPP) $(CPPFLAGS) $(CXXFLAGS) -c $< -o $@
 
