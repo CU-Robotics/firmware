@@ -1,5 +1,12 @@
 # Made by Jack Miller 2024 (Github: guywithhat99)
 # Thanks to Jackson Stepka (Github: Pandabear1125) a lot of code is based off his original makefile 
+
+
+
+
+# Use uname to detect current OS
+UNAME := $(shell uname -s)
+
 TARGET_EXEC := firmware
 
 BUILD_DIR := ./build
@@ -63,8 +70,6 @@ CXXFLAGS := $(CPU_CFLAGS) -std=gnu++17 -felide-constructors -fno-exceptions -fpe
 LINKING_FLAGS = -Wl,--gc-sections,--relax -Wl,-Tteensy4/imxrt1062_t41.ld
 
 
-#TODO: Figure out why ARDUINO_PATH is not working dynamically
-ARDUINO_PATH := ~/.arduino15
 ifeq ($(UNAME),Darwin)
  ARDUINO_PATH = $(abspath $(HOME)/Library/Arduino15)
  $(info We've detected you are using a Mac! Consult God if this breaks.)
