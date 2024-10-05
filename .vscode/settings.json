@@ -40,6 +40,12 @@
         "compare": "cpp",
         "concepts": "cpp",
         "map": "cpp",
-        "numbers": "cpp"
+        "numbers": "cpp",
+        "smalloc_i.h": "c",
+        "__bit_reference": "cpp",
+        "__hash_table": "cpp",
+        "__split_buffer": "cpp",
+        "__tree": "cpp",
+        "forward_list": "cpp"
     }
 }
