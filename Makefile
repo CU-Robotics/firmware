@@ -89,9 +89,9 @@ GIT_SCRAPER = ./tools/git_scraper.cpp
 
 MAKEFLAGS += -j$(nproc)
 
-.PHONY: all
+.PHONY: build
 
-all: $(BUILD_DIR)/$(TARGET_EXEC) git_scraper
+build: $(BUILD_DIR)/$(TARGET_EXEC) git_scraper
 
 #This line will output a list of memory sections with sizes
 #	$(ARM_SIZE) -A $(BUILD_DIR)/$(TARGET_EXEC).elf
@@ -105,6 +105,8 @@ $(SRC_OBJS): $(LIBRARY_OBJS)
 
 $(LIBRARY_OBJS): $(TEENSY_OBJS)
 
+$(TEENSY_OBJS):
+
 # Build step for C source
 $(BUILD_DIR)/%.c.o: %.c
 	mkdir -p $(dir $@)
@@ -116,8 +118,16 @@ $(BUILD_DIR)/%.cpp.o: %.cpp
 	$(COMPILER_CPP) $(CPPFLAGS) $(CXXFLAGS) -c $< -o $@
 
 .PHONY: clean
+
 clean:
 	rm -r $(BUILD_DIR)
+
+clean_src:
+	rm -r $(BUILD_DIR)/src
+clean_libs:
+	rm -r $(BUILD_DIR)/libraries
+clean_teensy4:
+	rm -r $(BUILD_DIR)/teensy4
 
 # Include the .d makefiles. The - at the front suppresses the errors of missing
 # Makefiles. Initially, all the .d files will be missing, and we don't want those
@@ -132,3 +142,5 @@ git_scraper:
 	@g++ $(GIT_SCRAPER) -o ./tools/git_scraper
 	@./tools/git_scraper
 	@rm ./tools/git_scraper
+
+	
