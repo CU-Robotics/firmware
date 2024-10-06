@@ -139,7 +139,7 @@ clean_teensy4:
 
 # compiles, runs, and cleans up the git_scraper tool which stores the current git info in a header file
 git_scraper:
-	@g++ $(GIT_SCRAPER) -o ./tools/git_scraper
+	@g++ -std=gnu++17 $(GIT_SCRAPER) -o ./tools/git_scraper
 	@./tools/git_scraper
 	@rm ./tools/git_scraper
 
