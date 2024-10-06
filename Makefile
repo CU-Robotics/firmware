@@ -2,8 +2,6 @@
 # Thanks to Jackson Stepka (Github: Pandabear1125) a lot of code is based off his original makefile 
 
 
-
-
 # Use uname to detect current OS
 UNAME := $(shell uname -s)
 
@@ -37,8 +35,8 @@ SRC_DEPS := $(SRC_OBJS:.o=.d)
 
 
 # Every folder will need to be passed to GCC so that it can find header files
-TEENSY_INC_DIRS := $(shell find $(TEENSY_SRC_DIRS) -type d)
-LIBRARY_INC_DIRS := $(shell find $(LIBRARY_SRC_DIRS) -type d) 
+TEENSY_INC_DIRS := $(shell find $(TEENSY_SRC_DIRS) -type d )
+LIBRARY_INC_DIRS := $(shell find $(LIBRARY_SRC_DIRS) -maxdepth 2 -type d )  
 SRC_INC_DIRS := $(shell find $(SRC_SRC_DIRS) -type d) 
 
 # Include directories
@@ -58,16 +56,16 @@ CPU_CFLAGS = -mcpu=cortex-m7 -mfloat-abi=hard -mfpu=fpv5-d16 -mthumb
 DEFINES := $(TEENSY4_FLAGS)
 
 # Preprocessor flags
-#TODO - Figure out why I neeed to include  -DLWIP_PROVIDE_ERRNO=22 as a flag
-CPPFLAGS := $(INCLUDE_FLAGS) $(DEFINES) -MMD -MP  -DLWIP_PROVIDE_ERRNO=22
+CPPFLAGS := $(INCLUDE_FLAGS) $(DEFINES) -MMD -MP -ffunction-sections -fdata-sections -O2
 
 # Compiler flags
 CFLAGS := $(CPU_CFLAGS)
-CXXFLAGS := $(CPU_CFLAGS) -std=gnu++17 -felide-constructors -fno-exceptions -fpermissive -fno-rtti -Wno-error=narrowing -Wno-trigraphs -Wno-comment
-
+CXXFLAGS := $(CPU_CFLAGS) -std=gnu++17 \
+            -felide-constructors -fno-exceptions -fpermissive -fno-rtti \
+            -Wno-error=narrowing -Wno-trigraphs -Wno-comment
 
 # Required linker config for teensy related things
-LINKING_FLAGS = -Wl,--gc-sections,--relax,-Tteensy4/imxrt1062_t41.ld
+LINKING_FLAGS =-Wl,--gc-sections,--relax,-Tteensy4/imxrt1062_t41.ld
 
 
 ifeq ($(UNAME),Darwin)
@@ -85,18 +83,22 @@ COMPILER_C := $(ARDUINO_PATH)/packages/teensy/tools/teensy-compile/*/arm/bin/arm
 OBJCOPY := $(ARDUINO_PATH)/packages/teensy/tools/teensy-compile/*/arm/bin/arm-none-eabi-objcopy
 GDB := $(ARDUINO_PATH)/packages/teensy/tools/teensy-compile/*/arm/bin/arm-none-eabi-gdb
 SIZE := $(ARDUINO_PATH)/packages/teensy/tools/teensy-tools/1.59.0/teensy_size
+ARM_SIZE := $(ARDUINO_PATH)/packages/teensy/tools/teensy-compile/*/arm/bin/arm-none-eabi-size
 
 GIT_SCRAPER = ./tools/git_scraper.cpp
 
+MAKEFLAGS += -j$(nproc)
 
 .PHONY: all
 
 all: $(BUILD_DIR)/$(TARGET_EXEC) git_scraper
 
+#This line will output a list of memory sections with sizes
+#	$(ARM_SIZE) -A $(BUILD_DIR)/$(TARGET_EXEC).elf
 
 # The final build step.
-$(BUILD_DIR)/$(TARGET_EXEC): $(LIBRARY_OBJS) $(TEENSY_OBJS) $(SRC_OBJS) git_scraper
-	$(COMPILER_CPP) $(CPPFLAGS) $(CXXFLAGS) $(LIBRARY_OBJS) $(TEENSY_OBJS) $(SRC_OBJS) $(LINKING_FLAGS) -o $(BUILD_DIR)/$(TARGET_EXEC).elf
+$(BUILD_DIR)/$(TARGET_EXEC): $(SRC_OBJS) $(LIBRARY_OBJS) $(TEENSY_OBJS)  git_scraper
+	 $(COMPILER_CPP) $(CPPFLAGS) $(CXXFLAGS) $(LIBRARY_OBJS) $(TEENSY_OBJS) $(SRC_OBJS) $(LINKING_FLAGS) -o $(BUILD_DIR)/$(TARGET_EXEC).elf
 
 
 $(SRC_OBJS): $(LIBRARY_OBJS)

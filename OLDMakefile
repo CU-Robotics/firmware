@@ -71,7 +71,7 @@ COMPILER_C := $(ARDUINO_PATH)/packages/teensy/tools/teensy-compile/*/arm/bin/arm
 OBJCOPY := $(ARDUINO_PATH)/packages/teensy/tools/teensy-compile/*/arm/bin/arm-none-eabi-objcopy
 GDB := $(ARDUINO_PATH)/packages/teensy/tools/teensy-compile/*/arm/bin/arm-none-eabi-gdb
 SIZE := $(ARDUINO_PATH)/packages/teensy/tools/teensy-tools/1.59.0/teensy_size
-
+ARM_SIZE := $(ARDUINO_PATH)/packages/teensy/tools/teensy-compile/*/arm/bin/arm-none-eabi-size
 GIT_SCRAPER = ./tools/git_scraper.cpp
 
 # targets are phony to force it to rebuild every time
@@ -82,6 +82,7 @@ GIT_SCRAPER = ./tools/git_scraper.cpp
 
 # builds source, links with libraries, and constructs the .elf and .hex to be uploaded
 build: clean git_scraper
+	
 	@echo [Building Source]
 	@$(COMPILER_CPP) $(COMPILE_FLAGS) $(CPP_FLAGS) $(PROJECT_SOURCE) $(PROJECT_INCLUDE) $(LIBRARY_LIB_NAME) $(TEENSY_LIB_NAME) $(LIBRARY_INCLUDE) $(TEENSY_INCLUDE) $(LINKING_FLAGS) -o $(PROJECT_NAME).elf
 	@$(SIZE) $(PROJECT_NAME).elf
@@ -90,7 +91,7 @@ build: clean git_scraper
 	@chmod +x $(PROJECT_NAME).hex
 	@echo [Cleaning Up]
 	@git config --local core.hooksPath .githooks
-
+	$(ARM_SIZE) -A $(PROJECT_NAME).elf
 # builds the libraries and the source
 build_all: clean_all build_libs build
 

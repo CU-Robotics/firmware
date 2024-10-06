@@ -9,6 +9,8 @@
  * 
  */
 
+
+
 #include <Arduino.h>
 
 #define CPU_RESTART_ADDR (uint32_t *)0xE000ED0C
@@ -17,7 +19,7 @@
 
 #define GDB_DEBUG_INTERNAL
 #include "TeensyDebug.h"
-
+#pragma GCC optimize ("Os")
 // #define GDB_DEBUG_COMMANDS
 
 #define GDB_POLL_INTERVAL_MICROSEC 500
@@ -1208,4 +1210,6 @@ void gdb_init(Stream *device) {
     debug.setBreakpoint(setup, 1);
   #endif
 #endif
+
 }
+//#pragma GCC optimize ("Os")
