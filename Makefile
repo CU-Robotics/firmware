@@ -66,10 +66,10 @@ ifeq ($(UNAME),Linux)
 endif
 
 # Complete compilers
-COMPILER_CPP := $(ARDUINO_PATH)/packages/teensy/tools/teensy-compile/*/arm/bin/arm-none-eabi-g++
-COMPILER_C := $(ARDUINO_PATH)/packages/teensy/tools/teensy-compile/*/arm/bin/arm-none-eabi-gcc
-OBJCOPY := $(ARDUINO_PATH)/packages/teensy/tools/teensy-compile/*/arm/bin/arm-none-eabi-objcopy
-GDB := $(ARDUINO_PATH)/packages/teensy/tools/teensy-compile/*/arm/bin/arm-none-eabi-gdb
+COMPILER_CPP := $(ARDUINO_PATH)/packages/teensy/tools/teensy-compile/11.3.1/arm/bin/arm-none-eabi-g++
+COMPILER_C := $(ARDUINO_PATH)/packages/teensy/tools/teensy-compile/11.3.1/arm/bin/arm-none-eabi-gcc
+OBJCOPY := $(ARDUINO_PATH)/packages/teensy/tools/teensy-compile/11.3.1/arm/bin/arm-none-eabi-objcopy
+GDB := $(ARDUINO_PATH)/packages/teensy/tools/teensy-compile/11.3.1/arm/bin/arm-none-eabi-gdb
 SIZE := $(ARDUINO_PATH)/packages/teensy/tools/teensy-tools/1.59.0/teensy_size
 
 GIT_SCRAPER = ./tools/git_scraper.cpp
