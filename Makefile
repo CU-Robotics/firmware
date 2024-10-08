@@ -77,13 +77,23 @@ ifeq ($(UNAME),Linux)
  $(info We've detected you're on Linux! Nerd.)
 endif
 
-# Complete compilers
-COMPILER_CPP:= $(ARDUINO_PATH)/packages/teensy/tools/teensy-compile/*/arm/bin/arm-none-eabi-g++
-COMPILER_C := $(ARDUINO_PATH)/packages/teensy/tools/teensy-compile/*/arm/bin/arm-none-eabi-gcc
-OBJCOPY := $(ARDUINO_PATH)/packages/teensy/tools/teensy-compile/*/arm/bin/arm-none-eabi-objcopy
-GDB := $(ARDUINO_PATH)/packages/teensy/tools/teensy-compile/*/arm/bin/arm-none-eabi-gdb
-SIZE := $(ARDUINO_PATH)/packages/teensy/tools/teensy-tools/1.59.0/teensy_size
-ARM_SIZE := $(ARDUINO_PATH)/packages/teensy/tools/teensy-compile/*/arm/bin/arm-none-eabi-size
+# Base arm-none-eabi and Teensyduino tool paths
+COMPILER_TOOLS_PATH := $(ARDUINO_PATH)/packages/teensy/tools/teensy-compile/11.3.1/arm/bin
+TEENSYDUINO_TOOLS_PATH := $(ARDUINO_PATH)/packages/teensy/tools/teensy-tools/1.59.0
+
+# arm-none-eabi tools
+COMPILER_CPP	= $(COMPILER_TOOLS_PATH)/arm-none-eabi-g++
+COMPILER_C		= $(COMPILER_TOOLS_PATH)/arm-none-eabi-gcc
+AR				= $(COMPILER_TOOLS_PATH)/arm-none-eabi-ar
+GDB				= $(COMPILER_TOOLS_PATH)/arm-none-eabi-gdb
+OBJCOPY			= $(COMPILER_TOOLS_PATH)/arm-none-eabi-objcopy
+OBJDUMP			= $(COMPILER_TOOLS_PATH)/arm-none-eabi-objdump
+READELF			= $(COMPILER_TOOLS_PATH)/arm-none-eabi-readelf
+ADDR2LINE		= $(COMPILER_TOOLS_PATH)/arm-none-eabi-addr2line
+SIZE			= $(COMPILER_TOOLS_PATH)/arm-none-eabi-size
+
+# Teensyduino tools
+TEENSY_SIZE		= $(TEENSYDUINO_TOOLS_PATH)/teensy_size
 
 GIT_SCRAPER = ./tools/git_scraper.cpp
 
@@ -120,7 +130,7 @@ $(BUILD_DIR)/%.cpp.o: %.cpp
 .PHONY: clean
 
 clean:
-	rm -r $(BUILD_DIR)
+	rm -rf $(BUILD_DIR)
 
 clean_src:
 	rm -r $(BUILD_DIR)/src
