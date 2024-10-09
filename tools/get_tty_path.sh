@@ -28,7 +28,7 @@ done
 
 # found the id, now we need the actual path to the specific ttyACM device
 if [ -n "$tty_path" ]; then
-	tty_path=$(readlink -e $tty_path)
+	tty_path=$(readlink -f $tty_path)
 fi
 
 # if no tty path found
