@@ -81,18 +81,18 @@ COMPILER_TOOLS_PATH := $(ARDUINO_PATH)/packages/teensy/tools/teensy-compile/11.3
 TEENSYDUINO_TOOLS_PATH := $(ARDUINO_PATH)/packages/teensy/tools/teensy-tools/1.59.0
 
 # arm-none-eabi tools
-COMPILER_CPP	= $(COMPILER_TOOLS_PATH)/arm-none-eabi-g++
-COMPILER_C		= $(COMPILER_TOOLS_PATH)/arm-none-eabi-gcc
-AR				= $(COMPILER_TOOLS_PATH)/arm-none-eabi-ar
-GDB				= $(COMPILER_TOOLS_PATH)/arm-none-eabi-gdb
-OBJCOPY			= $(COMPILER_TOOLS_PATH)/arm-none-eabi-objcopy
-OBJDUMP			= $(COMPILER_TOOLS_PATH)/arm-none-eabi-objdump
-READELF			= $(COMPILER_TOOLS_PATH)/arm-none-eabi-readelf
-ADDR2LINE		= $(COMPILER_TOOLS_PATH)/arm-none-eabi-addr2line
-SIZE			= $(COMPILER_TOOLS_PATH)/arm-none-eabi-size
+COMPILER_CPP	:= $(COMPILER_TOOLS_PATH)/arm-none-eabi-g++
+COMPILER_C		:= $(COMPILER_TOOLS_PATH)/arm-none-eabi-gcc
+AR				:= $(COMPILER_TOOLS_PATH)/arm-none-eabi-ar
+GDB				:= $(COMPILER_TOOLS_PATH)/arm-none-eabi-gdb
+OBJCOPY			:= $(COMPILER_TOOLS_PATH)/arm-none-eabi-objcopy
+OBJDUMP			:= $(COMPILER_TOOLS_PATH)/arm-none-eabi-objdump
+READELF			:= $(COMPILER_TOOLS_PATH)/arm-none-eabi-readelf
+ADDR2LINE		:= $(COMPILER_TOOLS_PATH)/arm-none-eabi-addr2line
+SIZE			:= $(COMPILER_TOOLS_PATH)/arm-none-eabi-size
 
 # Teensyduino tools
-TEENSY_SIZE		= $(TEENSYDUINO_TOOLS_PATH)/teensy_size
+TEENSY_SIZE		:= $(TEENSYDUINO_TOOLS_PATH)/teensy_size
 
 # Path to the Git scraper tool source file
 GIT_SCRAPER = ./tools/git_scraper.cpp
@@ -104,7 +104,7 @@ MAKEFLAGS += -j$(nproc)
 .PHONY: build
 
 # Main build target; depends on the target executable and git scraper
-build: $(BUILD_DIR)/$(TARGET_EXEC) git_scraper
+build: $(BUILD_DIR)/$(TARGET_EXEC)
 
 # Uncomment the following line to output memory section sizes
 #	$(SIZE) -A $(BUILD_DIR)/$(TARGET_EXEC).elf
@@ -113,7 +113,7 @@ build: $(BUILD_DIR)/$(TARGET_EXEC) git_scraper
 # This rule links all the object files to produce the final ELF executable.
 # It depends on all object files and the 'git_scraper' target to ensure
 # that Git information is up-to-date before linking.
-$(BUILD_DIR)/$(TARGET_EXEC): $(SRC_OBJS) $(LIBRARY_OBJS) $(TEENSY_OBJS) git_scraper
+$(BUILD_DIR)/$(TARGET_EXEC): git_scraper $(SRC_OBJS) $(LIBRARY_OBJS) $(TEENSY_OBJS) 
 
 # Invoke the C++ compiler as the linker.
 # - $(COMPILER_CPP): The compiler executable.
@@ -135,17 +135,10 @@ $(BUILD_DIR)/$(TARGET_EXEC): $(SRC_OBJS) $(LIBRARY_OBJS) $(TEENSY_OBJS) git_scra
 # - '-R .eeprom': Removes the .eeprom section from the output, as it's not needed for flashing.
 # - '$(TARGET_EXEC).elf': The input ELF executable.
 # - '$(TARGET_EXEC).hex': The output HEX file.
-
 	@$(OBJCOPY) -O ihex -R .eeprom $(TARGET_EXEC).elf $(TARGET_EXEC).hex
 
 # Ensure the HEX file has execute permissions.
 	@chmod +x $(TARGET_EXEC).hex
-
-
-# Define dependencies between object files
-$(SRC_OBJS): $(LIBRARY_OBJS)
-$(LIBRARY_OBJS): $(TEENSY_OBJS)
-$(TEENSY_OBJS):
 
 # Build step for compiling C source files
 $(BUILD_DIR)/%.c.o: %.c
@@ -189,14 +182,16 @@ git_scraper:
 	@./tools/git_scraper
 	@rm ./tools/git_scraper
 
+
 # Upload the firmware to the Teensy device
 upload: build
 	@echo [Uploading] - If this fails, press the button on the teensy and re-run 'make upload'
 	@tycmd upload $(TARGET_EXEC).hex
-	# Teensy serial isn't immediately available after upload, so we wait a bit
-	# The Teensy waits for 20 + 280 + 20 ms after power up/boot
+    # Teensy serial isn't immediately available after upload, so we wait a bit
+    # The Teensy waits for 20 + 280 + 20 ms after power up/boot
 	@sleep 0.4s
 	@bash tools/monitor.sh
+
 
 # Install required tools for building and uploading firmware
 install:
@@ -217,11 +212,13 @@ monitor:
 	@echo [Monitoring]
 	@bash tools/monitor.sh
 
+
 # resets teensy and switches it into boot-loader mode, effectively stopping any execution
 # this only works if power is consistent, will restart loaded firmware if turned off and on again
 kill:
 	@echo [Attempting to Kill Teensy]
 	@tycmd reset -b
+
 
 # restarts teensy
 restart:
