@@ -1208,6 +1208,4 @@ void gdb_init(Stream *device) {
     debug.setBreakpoint(setup, 1);
   #endif
 #endif
-
 }
-//#pragma GCC optimize ("Os")

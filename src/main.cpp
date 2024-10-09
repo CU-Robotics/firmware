@@ -7,7 +7,6 @@
 #include "controls/estimator_manager.hpp"
 #include "controls/controller_manager.hpp"
 
-
 #include <TeensyDebug.h>
 #include "sensors/LEDBoard.hpp"
 
@@ -37,7 +36,6 @@ ControllerManager controller_manager;
 State state;
 
 LEDBoard led;
-
 
 // DONT put anything else in this function. It is not a setup function
 void print_logo() {
