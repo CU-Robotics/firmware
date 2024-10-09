@@ -214,7 +214,11 @@ gdb:
 # monitors currently running firmware on robot
 monitor:
 	@echo [Monitoring]
-	@bash $(TOOLS_DIR)/monitor.sh
+    # calls monitor with a specific board type:
+    # -Teensy: looks for a board with the Teensy name
+    # @$(shell ...): looks for a board at this specific device path
+    # get_tty_path *-if00: grabs the device path for teensy and appends it to the board name after the @
+	@tycmd monitor --board="-Teensy@$(shell $(TOOLS_DIR)/get_tty_path.sh *-if00)"
 
 
 # resets teensy and switches it into boot-loader mode, effectively stopping any execution

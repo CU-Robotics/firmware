@@ -9,6 +9,9 @@ tty_id=$1
 # path to the /dev/ serial device that the Teensy is connected to
 tty_path=""
 
+# path to the file which will store our tty path
+output_path="./tools/tty_path.txt"
+
 # if no first argument provided
 if [ ! -n "$tty_id" ]; then
     # 1>&2 redirects stdout (1) into stderr (2)
@@ -40,6 +43,6 @@ if [ ! -n "$tty_path" ]; then
     exit 1
 fi
 
-echo $tty_path # outputs to stdout by default
+echo $tty_path
 
 exit 0
