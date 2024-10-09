@@ -14,8 +14,9 @@ tty_path=$(./tools/get_tty_path.sh *-if00)
 if [ -n "$tty_path" ]; then
 	echo "Monitoring Teensy on $tty_path"
 
+	echo tycmd monitor --board="-Teensy@$(./tools/blah.sh $tty_path)"
 	# Start the monitor, if this fails its likely because monitor is acting up and a terminal restart is needed
-	tycmd monitor --board="-Teensy@$tty_path" || echo "Failed to monitor: Restart your terminal and try again"
+	tycmd monitor --board="-Teensy@$(./tools/blah.sh $tty_path)" || echo "Failed to monitor: Restart your terminal and try again"
 
 	exit 0
 else
