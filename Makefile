@@ -17,9 +17,9 @@ SRC_SRC_DIRS := ./src
 
 # Find all C, C++, and assembly source files in the specified directories
 # Note: Single quotes are used to prevent the shell from expanding '*'
-TEENSY_SRC := $(shell find $(TEENSY_SRC_DIRS) -name '*.cpp' -or -name '*.c' -or -name '*.s')
-LIBRARY_SRC := $(shell find $(LIBRARY_SRC_DIRS) -name '*.cpp' -or -name '*.c' -or -name '*.s')
-SRC_SRC := $(shell find $(SRC_SRC_DIRS) -name '*.cpp' -or -name '*.c' -or -name '*.s')
+TEENSY_SRC := $(shell find $(TEENSY_SRC_DIRS) -name '*.cpp' -or -name '*.c')
+LIBRARY_SRC := $(shell find $(LIBRARY_SRC_DIRS) -name '*.cpp' -or -name '*.c')
+SRC_SRC := $(shell find $(SRC_SRC_DIRS) -name '*.cpp' -or -name '*.c')
 
 # Generate object file paths by prepending BUILD_DIR and appending .o to source files
 # Example: ./your_dir/hello.cpp turns into ./build/./your_dir/hello.cpp.o
