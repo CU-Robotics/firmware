@@ -10,6 +10,9 @@ TARGET_EXEC := firmware
 # Directory where build outputs will be placed
 BUILD_DIR := ./build
 
+# Tools directory
+TOOLS_DIR := ./tools
+
 # Source directories
 TEENSY_SRC_DIRS := ./teensy4
 LIBRARY_SRC_DIRS := ./libraries
@@ -95,7 +98,7 @@ SIZE			:= $(COMPILER_TOOLS_PATH)/arm-none-eabi-size
 TEENSY_SIZE		:= $(TEENSYDUINO_TOOLS_PATH)/teensy_size
 
 # Path to the Git scraper tool source file
-GIT_SCRAPER = ./tools/git_scraper.cpp
+GIT_SCRAPER = $(TOOLS_DIR)/git_scraper.cpp
 
 # Utilize all available CPU cores for parallel build
 MAKEFLAGS += -j$(nproc)
@@ -105,9 +108,6 @@ MAKEFLAGS += -j$(nproc)
 
 # Main build target; depends on the target executable and git scraper
 build: $(BUILD_DIR)/$(TARGET_EXEC)
-
-# Uncomment the following line to output memory section sizes
-#	$(SIZE) -A $(BUILD_DIR)/$(TARGET_EXEC).elf
 
 # Final linking step to create the executable.
 # This rule links all the object files to produce the final ELF executable.
@@ -122,7 +122,7 @@ $(BUILD_DIR)/$(TARGET_EXEC): git_scraper $(SRC_OBJS) $(LIBRARY_OBJS) $(TEENSY_OB
 # - $(LIBRARY_OBJS), $(TEENSY_OBJS), $(SRC_OBJS): Object files to link.
 # - $(LINKING_FLAGS): Linker flags, including the linker script.
 # - '-o $(BUILD_DIR)/$(TARGET_EXEC).elf': Output the ELF executable to the build directory.
-	$(COMPILER_CPP) $(CPPFLAGS) $(CXXFLAGS) $(LIBRARY_OBJS) $(TEENSY_OBJS) $(SRC_OBJS) $(LINKING_FLAGS) -o $(BUILD_DIR)/$(TARGET_EXEC).elf
+	@$(COMPILER_CPP) $(CPPFLAGS) $(CXXFLAGS) $(LIBRARY_OBJS) $(TEENSY_OBJS) $(SRC_OBJS) $(LINKING_FLAGS) -o $(BUILD_DIR)/$(TARGET_EXEC).elf
 
 # Copy the ELF executable to the root directory.
 	@cp $(BUILD_DIR)/$(TARGET_EXEC).elf .
@@ -140,15 +140,19 @@ $(BUILD_DIR)/$(TARGET_EXEC): git_scraper $(SRC_OBJS) $(LIBRARY_OBJS) $(TEENSY_OB
 # Ensure the HEX file has execute permissions.
 	@chmod +x $(TARGET_EXEC).hex
 
+
 # Build step for compiling C source files
 $(BUILD_DIR)/%.c.o: %.c
 	@mkdir -p $(dir $@)
-	$(COMPILER_C) $(CPPFLAGS) $(CFLAGS) -c $< -o $@
+	@echo [Building $<]
+	@$(COMPILER_C) $(CPPFLAGS) $(CFLAGS) -c $< -o $@
 
 # Build step for compiling C++ source files
 $(BUILD_DIR)/%.cpp.o: %.cpp
 	@mkdir -p $(dir $@)
-	$(COMPILER_CPP) $(CPPFLAGS) $(CXXFLAGS) -c $< -o $@
+	@echo [Building $<]
+	@$(COMPILER_CPP) $(CPPFLAGS) $(CXXFLAGS) -c $< -o $@
+
 
 # Phony target to prevent conflicts with files named 'clean' and force a rebuild every time
 .PHONY: clean
@@ -178,9 +182,9 @@ clean_teensy4:
 
 # Build, run, and clean up the git scraper tool to store current Git info in a header file
 git_scraper:
-	@g++ -std=gnu++17 $(GIT_SCRAPER) -o ./tools/git_scraper
-	@./tools/git_scraper
-	@rm ./tools/git_scraper
+	@g++ -std=gnu++17 $(GIT_SCRAPER) -o $(TOOLS_DIR)/git_scraper
+	@$(TOOLS_DIR)/git_scraper
+	@rm $(TOOLS_DIR)/git_scraper
 
 
 # Upload the firmware to the Teensy device
@@ -190,27 +194,27 @@ upload: build
     # Teensy serial isn't immediately available after upload, so we wait a bit
     # The Teensy waits for 20 + 280 + 20 ms after power up/boot
 	@sleep 0.4s
-	@bash tools/monitor.sh
+	@bash $(TOOLS_DIR)/monitor.sh
 
 
 # Install required tools for building and uploading firmware
 install:
-	@./tools/install_tytools.sh
-	@./tools/install_arduino.sh
+	@$(TOOLS_DIR)/install_tytools.sh
+	@$(TOOLS_DIR)/install_arduino.sh
 
 
 # starts GDB and attaches to the firmware running on a connected Teensy
 # calls a script to prepare the GDB environment, this finds the exact port Teensy is connected to
 gdb:
 	@echo [Starting GDB]
-	@bash tools/prepare_gdb.sh
-	@$(GDB) -x ./tools/gdb_commands.txt --args $(TARGET_EXEC).elf
+	@bash $(TOOLS_DIR)/prepare_gdb.sh
+	@$(GDB) -x $(TOOLS_DIR)/gdb_commands.txt --args $(TARGET_EXEC).elf
 
 
 # monitors currently running firmware on robot
 monitor:
 	@echo [Monitoring]
-	@bash tools/monitor.sh
+	@bash $(TOOLS_DIR)/monitor.sh
 
 
 # resets teensy and switches it into boot-loader mode, effectively stopping any execution
@@ -229,6 +233,7 @@ restart:
 help: 
 	@echo "Basic usage: make [target]"
 	@echo "Targets:"
+	@echo "  install:      installs all required dependencies"
 	@echo "  build:        compiles the source code and links with libraries"
 	@echo "  upload:       builds the source and uploads it to the Teensy"
 	@echo "  gdb:          starts GDB and attaches to the firmware running on a connected Teensy"
