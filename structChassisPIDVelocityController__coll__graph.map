@@ -1,0 +1,6 @@
+<map id="ChassisPIDVelocityController" name="ChassisPIDVelocityController">
+<area shape="rect" id="node1" title="Controller for all chassis movement, which includes power limiting." alt="" coords="5,184,197,211"/>
+<area shape="rect" id="node2" href="$structController.html" title="Parent controller struct, all controllers should be based off of this." alt="" coords="13,95,91,121"/>
+<area shape="rect" id="node3" href="$structTimer.html" title="Timing object with blocking capability." alt="" coords="25,5,79,32"/>
+<area shape="rect" id="node4" href="$structPIDFilter.html" title="PIDF filter used in controls. Gains are configurable via K." alt="" coords="115,95,189,121"/>
+</map>

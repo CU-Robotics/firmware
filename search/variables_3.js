@@ -1,0 +1,19 @@
+var searchData=
+[
+  ['d_1013',['d',['../structDR16_1_1Keys.html#abf53b16f7497d43cd294d141097c2a71',1,'DR16::Keys']]],
+  ['damage_5fstatus_1014',['damage_status',['../structRefData.html#a3e55eacb7a2403b2cc1a50a7e56a68fc',1,'RefData']]],
+  ['damage_5ftype_1015',['damage_type',['../structDamageStatus.html#ae231e108fed19f03cf1b1209ae014837',1,'DamageStatus']]],
+  ['dart_5fcommand_1016',['dart_command',['../structRefData.html#a118b600dff09122eb778d4f02d080fdd',1,'RefData']]],
+  ['dart_5fstatus_1017',['dart_status',['../structRefData.html#a954ee97310b3b4a439f7a80030a756b8',1,'RefData']]],
+  ['data_1018',['data',['../structComms_1_1EthernetPacketPayload.html#a1bec5c19e9461026f20e12572fb5acec',1,'Comms::EthernetPacketPayload::data()'],['../structCANData.html#af2012b5b1e1137336369f2efc98db34f',1,'CANData::data()'],['../structFrameData.html#a566853f57f7c25722bb85561eb21d9aa',1,'FrameData::data()'],['../structFrame.html#a4e61e897c0d1f076f2773ea1b40d9541',1,'Frame::data()'],['../structRobotInteraction.html#a398919ec6d1926810c225ff81e462b1d',1,'RobotInteraction::data()'],['../structCustomControllerRobot.html#a19537a5663048d037f402d9144f94515',1,'CustomControllerRobot::data()'],['../structSmallMapRobotData.html#a11611890aa7913a07e42f4472a9f953f',1,'SmallMapRobotData::data()']]],
+  ['data_5flength_1019',['data_length',['../structFrameHeader.html#a6a7d1c546f17a20ee27e5c7b7337d4ec',1,'FrameHeader']]],
+  ['default_5fchassis_5fstarting_5fangles_1020',['default_chassis_starting_angles',['../structConfig.html#aeaa48135fc2914abd1b961ad3d69bc63',1,'Config']]],
+  ['default_5fgimbal_5fstarting_5fangles_1021',['default_gimbal_starting_angles',['../structConfig.html#a02f473a077441a84b79a23ab4327e33a',1,'Config']]],
+  ['default_5fspeed_1022',['DEFAULT_SPEED',['../classD200LD14P.html#ad6c514a2b811376377c8b700bfc51bcf',1,'D200LD14P']]],
+  ['defence_1023',['defence',['../structRobotBuff.html#a0ccb07f8cada42a17f9a79b46b61eddd',1,'RobotBuff']]],
+  ['delta_5fx_1024',['delta_x',['../structSmallMapSentryCommand.html#a151029b8961ee5c9db98f1d691f2afcb',1,'SmallMapSentryCommand']]],
+  ['delta_5fy_1025',['delta_y',['../structSmallMapSentryCommand.html#a398e47107f6959f90050a73dd177c2f0',1,'SmallMapSentryCommand']]],
+  ['distance_1026',['distance',['../structLidarDataPacketSI.html#aa4b599476597b3948e05849193682c30',1,'LidarDataPacketSI']]],
+  ['drive_5fconversion_5ffactors_1027',['drive_conversion_factors',['../structConfig.html#a7ca29cd67fc1c6652b4b36563fa23b93',1,'Config']]],
+  ['dt_1028',['dt',['../structGimbalEstimator.html#a6ed5509c223d808a92866f6b52ddd638',1,'GimbalEstimator::dt()'],['../structGimbalEstimatorNoOdom.html#a8c1b26b557de046730544f97df723468',1,'GimbalEstimatorNoOdom::dt()'],['../structSwitcherEstimator.html#a64a6156272c1e26e1a3be8d1ff9a8f77',1,'SwitcherEstimator::dt()']]]
+];
