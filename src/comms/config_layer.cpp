@@ -3,13 +3,31 @@
 const Config* const ConfigLayer::configure(HIDLayer* comms) {
     // check SD
     if(sdcard.exists("/.config")){
+        #ifdef CONFIG_LAYER_DEBUG
+        Serial.printf("Config located on SD in /.config , attempting to load from file\n");
+        #endif
+        
         // load sd config into config_packets
         configured = sd_load();
     }
-    
+    #ifdef CONFIG_LAYER_DEBUG
+    else{
+        Serial.printf("No config packet located, awaiting input from comms....\n");
+    }
+    #endif
     // if no config on SD, then await transmission
     // grab and process all config packets until finished
+    double prev_time = millis();
+    double delta_time = prev_time;
     while (!is_configured()) {
+        #ifdef CONFIG_LAYER_DEBUG
+        if(delta_time >= 2000){
+            Serial.printf("Pinging for config packet....\n");
+            prev_time = millis();
+        }
+        delta_time = millis() - prev_time;
+        #endif
+
         comms->ping();
         process(comms->get_incoming_packet(), comms->get_outgoing_packet());
     }
