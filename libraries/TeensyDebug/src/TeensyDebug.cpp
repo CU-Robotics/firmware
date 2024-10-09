@@ -32,13 +32,11 @@ https://web.eecs.umich.edu/~prabal/teaching/eecs373-f10/readings/ARMv7-M_ARM.pdf
 
 */
 
-
-
 #include <Arduino.h>
 
 #define GDB_DEBUG_INTERNAL
 #include "TeensyDebug.h"
-//#pragma GCC optimize ("Os")
+
 // #define DISPLAY_HARD_FAULT
 
 /**
