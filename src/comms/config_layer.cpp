@@ -1,10 +1,13 @@
 #include "config_layer.hpp"
 
 const Config* const ConfigLayer::configure(HIDLayer* comms) {
+    // check if already configured
+    if(configured) return &config;
+    
     // check SD
-    if(sdcard.exists("/.config")){
+    if(sdcard.exists("/config.pack")){
         #ifdef CONFIG_LAYER_DEBUG
-        Serial.printf("Config located on SD in /.config , attempting to load from file\n");
+        Serial.printf("Config located on SD in /config.pack , attempting to load from file\n");
         #endif
         
         // load sd config into config_packets
@@ -18,7 +21,7 @@ const Config* const ConfigLayer::configure(HIDLayer* comms) {
     // if no config on SD, then await transmission
     // grab and process all config packets until finished
     double prev_time = millis();
-    double delta_time = prev_time;
+    double delta_time = 0;
     while (!is_configured()) {
         #ifdef CONFIG_LAYER_DEBUG
         if(delta_time >= 2000){
@@ -217,14 +220,18 @@ bool ConfigLayer::sd_load(){
     // num of total bytes in config_packets
     int config_byte_size = MAX_CONFIG_PACKETS * sizeof(CommsPacket);
     uint8_t buf[config_byte_size];
-    sdcard.open("/.config");
+    sdcard.open("/config.pack");
 
     // read config file into buf, copy into config_packets
-    sdcard.read(buf, config_byte_size);
+    if(sdcard.read(buf, config_byte_size) != config_byte_size){
+        return 0;
+    }
     memcpy(config_packets, buf, config_byte_size);
 
     // read config file into buf, copy into subsec_sizes
-    sdcard.read(buf, MAX_CONFIG_PACKETS);
+    if(sdcard.read(buf, MAX_CONFIG_PACKETS) != MAX_CONFIG_PACKETS){
+        return 0;
+    }
     memcpy(subsec_sizes, buf, MAX_CONFIG_PACKETS);
 
     sdcard.close();
@@ -232,11 +239,17 @@ bool ConfigLayer::sd_load(){
 }
 
 void ConfigLayer::store_config(){
+    // total size of /config.pack: MAX_CONFIG_PACKETS * (sizeof(CommsPacket) + 1)
+
+    // num of packets * size of each packet == num of bytes for all packets
     int config_byte_size = MAX_CONFIG_PACKETS * sizeof(CommsPacket);
     uint8_t buf[config_byte_size];
-    if(sdcard.exists("/.config")) sdcard.rm("/.config");
-    sdcard.touch("/.config");
-    sdcard.open("/.config");
+
+    // erase existing config if exists
+    if(sdcard.exists("/config.pack")) sdcard.rm("/config.pack");
+    // create new config
+    sdcard.touch("/config.pack");
+    sdcard.open("/config.pack");
 
     // copy contents of config packets into byte buffer, then write
     memcpy(buf, config_packets, config_byte_size);
