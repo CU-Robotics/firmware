@@ -1,3 +1,18 @@
+// DART MAIN
+#include <Arduino.h>
+#include "sensors/camera.hpp"
+
+Dartcam dartcam;
+
+int main() {
+    dartcam.init();
+    while (1) {
+        dartcam.read();
+    }
+    return 0;
+}
+
+/*
 #include <Arduino.h>
 
 #include "git_info.h"
@@ -328,5 +343,4 @@ int main() {
     
     return 0;
 }
-
-
+*/

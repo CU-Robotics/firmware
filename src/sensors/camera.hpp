@@ -1,55 +1,38 @@
 #ifndef CAMERA_H
 #define CAMERA_H
 
-// #include <imxrt.h>
+#include "Teensy_Camera.h"
+#include "OV5640.h"
 
-// void enable_csi() {
-//     // enable csi_clk_enable
-//     // i think this is on by default, but just to be safe...
-//     CCM_CCGR2 |= 0x6U;
+#define CAMERA_ID OV5640a
 
-//     // setup CSI[9:2] select daisy registers
-//     IOMUXC_CSI_DATA02_SELECT_INPUT &= ~0x1U; // AD_B1_15
-//     IOMUXC_CSI_DATA03_SELECT_INPUT &= ~0x1U; // AD_B1_14
-//     IOMUXC_CSI_DATA04_SELECT_INPUT &= ~0x1U; // AD_B1_13
-//     IOMUXC_CSI_DATA05_SELECT_INPUT &= ~0x1U; // AD_B1_12
-//     IOMUXC_CSI_DATA06_SELECT_INPUT &= ~0x1U; // AD_B1_11
-//     IOMUXC_CSI_DATA07_SELECT_INPUT &= ~0x1U; // AD_B1_10
-//     IOMUXC_CSI_DATA08_SELECT_INPUT &= ~0x1U; // AD_B1_09
-//     IOMUXC_CSI_DATA09_SELECT_INPUT &= ~0x1U; // AD_B1_08
+struct Dartcam {
+    uint8_t frameBuffer[160 * 120];
+    uint8_t frameBuffer2[160 * 120];
 
-//     // Set all SW_MUX_CTL_PAD_X to SION enable and ALT4 (CSI)
-//     IOMUXC_SW_MUX_CTL_PAD_GPIO_AD_B1_15 = (IOMUXC_SW_MUX_CTL_PAD_GPIO_AD_B1_15 & ~0x1FU) | 0x14U;
-//     IOMUXC_SW_MUX_CTL_PAD_GPIO_AD_B1_14 = (IOMUXC_SW_MUX_CTL_PAD_GPIO_AD_B1_14 & ~0x1FU) | 0x14U;
-//     IOMUXC_SW_MUX_CTL_PAD_GPIO_AD_B1_13 = (IOMUXC_SW_MUX_CTL_PAD_GPIO_AD_B1_13 & ~0x1FU) | 0x14U;
-//     IOMUXC_SW_MUX_CTL_PAD_GPIO_AD_B1_12 = (IOMUXC_SW_MUX_CTL_PAD_GPIO_AD_B1_12 & ~0x1FU) | 0x14U;
-//     IOMUXC_SW_MUX_CTL_PAD_GPIO_AD_B1_11 = (IOMUXC_SW_MUX_CTL_PAD_GPIO_AD_B1_11 & ~0x1FU) | 0x14U;
-//     IOMUXC_SW_MUX_CTL_PAD_GPIO_AD_B1_10 = (IOMUXC_SW_MUX_CTL_PAD_GPIO_AD_B1_10 & ~0x1FU) | 0x14U;
-//     IOMUXC_SW_MUX_CTL_PAD_GPIO_AD_B1_09 = (IOMUXC_SW_MUX_CTL_PAD_GPIO_AD_B1_09 & ~0x1FU) | 0x14U;
-//     IOMUXC_SW_MUX_CTL_PAD_GPIO_AD_B1_08 = (IOMUXC_SW_MUX_CTL_PAD_GPIO_AD_B1_08 & ~0x1FU) | 0x14U;
+    OV5640 omni;
+    Camera camera;
 
-//     // set all SW_PAD_CTL_PAD_X to defaults
-//     IOMUXC_SW_PAD_CTL_PAD_GPIO_AD_B1_15 = (IOMUXC_SW_PAD_CTL_PAD_GPIO_AD_B1_15 & ~0x1F8F9U) | 0x010B0U;
-//     IOMUXC_SW_PAD_CTL_PAD_GPIO_AD_B1_14 = (IOMUXC_SW_PAD_CTL_PAD_GPIO_AD_B1_14 & ~0x1F8F9U) | 0x010B0U;
-//     IOMUXC_SW_PAD_CTL_PAD_GPIO_AD_B1_13 = (IOMUXC_SW_PAD_CTL_PAD_GPIO_AD_B1_13 & ~0x1F8F9U) | 0x010B0U;
-//     IOMUXC_SW_PAD_CTL_PAD_GPIO_AD_B1_12 = (IOMUXC_SW_PAD_CTL_PAD_GPIO_AD_B1_12 & ~0x1F8F9U) | 0x010B0U;
-//     IOMUXC_SW_PAD_CTL_PAD_GPIO_AD_B1_11 = (IOMUXC_SW_PAD_CTL_PAD_GPIO_AD_B1_11 & ~0x1F8F9U) | 0x010B0U;
-//     IOMUXC_SW_PAD_CTL_PAD_GPIO_AD_B1_10 = (IOMUXC_SW_PAD_CTL_PAD_GPIO_AD_B1_10 & ~0x1F8F9U) | 0x010B0U;
-//     IOMUXC_SW_PAD_CTL_PAD_GPIO_AD_B1_09 = (IOMUXC_SW_PAD_CTL_PAD_GPIO_AD_B1_09 & ~0x1F8F9U) | 0x010B0U;
-//     IOMUXC_SW_PAD_CTL_PAD_GPIO_AD_B1_08 = (IOMUXC_SW_PAD_CTL_PAD_GPIO_AD_B1_08 & ~0x1F8F9U) | 0x010B0U;
+    Dartcam() : omni(), camera(omni) { }
 
-//     // disable csi, CSI_CR18[CSI_ENABLE]=0
-//     CSI_CSICR18 &= ~(0x1U << 31);
+    void init() {
+        Serial.println("initializing camera");
+        uint8_t status = camera.begin(FRAMESIZE_VGA, JPEG, 30, CAMERA_ID, false);
+        if (!status) {
+            Serial.println("camera failed to start");
+            while (1) { } // Halt if camera fails to start
+        }
+    }
 
-//     // Reflash the DMA controller for RFIFO, CSI_CR3[DMA_REFLASH_RFF]=1
-//     CSI_CSICR3 |= (0x1U << 14);
-//     // wait for reflash to complete
-//     while (CSI_CSICR3 & (0x1U << 14)) { }
+    void read() {
+        camera.readFrame(frameBuffer, sizeof(frameBuffer), frameBuffer2, sizeof(frameBuffer2));
 
-//     // TODO: config all regs
+        Serial.println("frame captured");
 
-//     // enable csi, CSI_CR18[CSI_ENABLE]=1
-//     CSI_CSICR18 |= (0x1U << 31);
-// }
+        Serial.println(frameBuffer[0]);
+        Serial.println(frameBuffer[1]);
+        Serial.println(frameBuffer[200]);
+    }
+};
 
-#endif
+#endif // CAMERA_H
