@@ -4,9 +4,9 @@ void StereoCamTrigger::track_exposures() {
   // disable interrupts to protect volatile access
   cli();
 
-  // generate HIGH pulse with width of 10 micros (minimum necessary pulse width - check datasheet)
+  // generate HIGH pulse with given width to create square wave
   digitalWrite(TRIG_PIN, HIGH);
-  delayMicroseconds(10);
+  delayMicroseconds(TRIG_PULSE_WIDTH);
   digitalWrite(TRIG_PIN, LOW);
   
   // update timestamp
