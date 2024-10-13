@@ -2,7 +2,7 @@
 
 const Config* const ConfigLayer::configure(HIDLayer* comms) {
     // check if already configured
-    if(configured) return &config;
+    // if(configured) return &config;
     
     // check SD
     if(sdcard.exists("/config.pack")){
@@ -40,6 +40,23 @@ const Config* const ConfigLayer::configure(HIDLayer* comms) {
 
     // put the data from the packets into the config object
     config.fill_data(config_packets, subsec_sizes);
+
+    uint8_t* config_bytes = (uint8_t *)config_packets;
+    uint8_t* subsec_bytes = (uint8_t *)subsec_sizes;
+
+    for(unsigned int i = 0; i < MAX_CONFIG_PACKETS * sizeof(CommsPacket); i++){
+        Serial.printf("%.2x", config_bytes[i]);
+        if((i % 16 == 0) && (i != 0)) Serial.println("");
+    }
+
+    for(unsigned int i = 0; i < MAX_CONFIG_PACKETS; i++){
+        Serial.printf("%.2x", subsec_bytes[i]);
+        if((i % 16 == 0) && (i != 0)) Serial.println("");
+    }
+    
+    Serial.println("Config output complete, busy wait....");
+
+    while(1) ;
 
     return &config;
 }
