@@ -49,6 +49,7 @@ class StereoCamTrigger {
     void stop();
     
     /// @brief get the latest time at which an exposure was triggered
+    /// @return the latest exposure timestamp
     uint32_t get_latest_exposure_timestamp();
 };
 
