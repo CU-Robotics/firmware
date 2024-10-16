@@ -78,32 +78,38 @@ int main() {
     *   {psi_d, l_d, empty}
     */
 
-    Testcontorl.init();
+    /*Testcontorl.init();
     Testobserver.init();
     can.read();
     imu.read();
     Testobserver.step(can.get_data(), imu.getdata(), tempobs);
     Testobserver.step(can.get_data(), imu.getdata(), tempobs);
-    Testobserver.step(can.get_data(), imu.getdata(), tempobs);
+    Testobserver.step(can.get_data(), imu.getdata(), tempobs);*/
     // Run 3 times for derivative values not get crazy (Maybe this works HAHA)
-
+    uint8_t motor_off[8] = {0x80, 0, 0, 0, 0, 0, 0, 0}; // Turn off motor
+    can.test_write_balancing_motor(CAN_1, 0, motor_off);
+    if(can.write())
+        Serial.print("write");
+    Serial.print("start");
+    uint8_t motor_speed[8] = {0xA2, 0, 0, 0, 0xff, 0xff, 0x00, 0x0};
+        
+        can.test_write_balancing_motor(CAN_1, 0, motor_speed);
+        if(can.write())
+            Serial.print("write");
     // Main loop
     while (true) {
         // Read sensors
         dr16.read();
         can.read();
-        imu.read();
-        Testobserver.settingprint(can.get_data(), imu.getdata()); // sensors values
-        Testobserver.step(can.get_data(), imu.getdata(), tempobs); // Calculate Observer values
-        Testobserver.testprint(tempobs); // Print Obs values
+        //imu.read();
+        //Testobserver.step(can.get_data(), imu.getdata(), tempobs); // Calculate Observer values
+        //Testcontorl.step(tempmotor, ref, tempobs); // Calculate motors motion
 
-        Testcontorl.step(tempmotor, ref, tempobs); // Calculate motors motion
-
-        Testcontorl.printmotors(tempmotor); // Print what motors torque should be
-
-
+        
+        
+        
         // Write actuators
-        if (!dr16.is_connected() || dr16.get_l_switch() == 1) {
+        /*if (!dr16.is_connected() || dr16.get_l_switch() == 1) {
             // SAFETY ON
             // TODO: Reset all controller integrators here
             can.zero();
@@ -111,7 +117,8 @@ int main() {
             // SAFETY OFF
             Serial.println("SAFTYOFF");
             can.write();
-        }
+        }*/
+        
 
         // LED heartbeat -- linked to loop count to reveal slowdowns and freezes.
         loopc % (int)(1E3/float(HEARTBEAT_FREQ)) < (int)(1E3/float(5*HEARTBEAT_FREQ)) ? digitalWrite(13, HIGH) : digitalWrite(13, LOW);

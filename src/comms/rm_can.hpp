@@ -113,6 +113,9 @@ public:
     /// @param value A value in the range of [-1.0, 1.0]
     void write_motor_norm(uint16_t canID, uint16_t motorID, uint8_t controllerType, float value);
 
+    void test_write_balancing_motor(uint16_t canID, uint16_t motorID, uint8_t value[8]);
+
+
     /// @brief Reads and returns value from input array of specified motor
     /// @param canID ID of the CAN which the motor is on, expects indexable ID value
     /// @param motorID ID of the individual motor, expects indexable ID value
