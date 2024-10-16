@@ -100,7 +100,7 @@ upload: build
 	@tycmd upload $(PROJECT_NAME).hex
 # Teensy serial isn't immediately available after upload, so we wait a bit
 # The teensy waits for 20 + 280 + 20 ms after power up/boot
-	@sleep 0.4s
+	@sleep 0.2s
 	@bash tools/monitor.sh
 
 # # # Clean Targets # # #
