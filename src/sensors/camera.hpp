@@ -17,7 +17,7 @@ struct Dartcam {
 
     void init() {
         Serial.println("initializing camera");
-        uint8_t status = camera.begin(FRAMESIZE_VGA, JPEG, 30, CAMERA_ID, false);
+        uint8_t status = camera.begin(FRAMESIZE_QQVGA, RGB565, 30, CAMERA_ID, false);
         if (!status) {
             Serial.println("camera failed to start");
             while (1) { } // Halt if camera fails to start

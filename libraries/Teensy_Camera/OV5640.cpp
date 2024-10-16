@@ -787,6 +787,8 @@ uint8_t OV5640::cameraReadRegister(uint16_t reg_addr, uint8_t &reg_data) {
     if (_wire->endTransmission(false) != 0) {
         if (_debug)
             debug.println("error reading OV5640, address");
+            // print what register we're trying to read
+            debug.printf("reg_addr = %04x\n", reg_addr);
         return 0;
     }
     if (_wire->requestFrom(0x3C, 1) < 1) {
@@ -885,12 +887,19 @@ int OV5640::calculate_vts(uint16_t readout_height) {
 uint16_t OV5640::getModelid() {
     uint8_t Data = 0;
     uint16_t MID = 0x0000;
+#ifdef DEBUG_CAMERA
+    debug.println("entered getModelid");
+#endif
 
     cameraReadRegister(0x300A, Data);
     MID = (Data << 8);
 
     cameraReadRegister(0x300B, Data);
     MID |= Data;
+
+#ifdef DEBUG_CAMERA
+    debug.printf("Exiting getModelid: MID = %04x\n", MID);
+#endif
     return MID;
 }
 
