@@ -1,6 +1,7 @@
 #include <cstdint>
 #include <state.hpp>
 #include <vector>
+#include <rm_can.hpp>
 
 #define MAX_PACKET_SIZE 4096
 
@@ -48,11 +49,6 @@ struct data_packet
     typedef struct
     {
 
-    } CANData;
-
-    typedef struct
-    {
-
     } LoggingData;
 #pragma pack(pop)
 
@@ -74,25 +70,26 @@ struct data_packet
     //     sensorData.insert(std::end(sensorDataBuffer),std::begin(sensorData),std::end(sensorData)); //append sensorData onto sensorDataBuffer
     // }
 
-    void packDataPacket(uint8_t *packetBuffer, uint8_t numOfSensors, State robotState, uint8_t ref_data_raw[180])
+    void packDataPacket(uint8_t packetBuffer[MAX_PACKET_SIZE], uint32_t timestamp, uint8_t numOfSensors, State robotState, uint8_t ref_data_raw[180], CANData *canData)
     {
         int packetOffset = 0;
         // Create the packet header
         DataPacketHeader header;
         header.state = robotState;
-        header.timestamp = micros();
+        header.timestamp = timestamp;
         header.numSensors = all_sensor_headers.size();
         header.sensorDataBufferLength = sensorDataBuffer.size();
-
-        RefereeData RefData;                                              // Create the ReferreData
-        memcpy(RefData.ref_data_raw, ref_data_raw, sizeof(ref_data_raw)); // load ref_data_raw with the given parameter
-        packetOffset += sizeof(ref_data_raw);
 
 
         // Copy the packet header into the buffer
         memcpy(packetBuffer + packetOffset, &header, sizeof(header));
         packetOffset += sizeof(header);
-        
+
+
+        RefereeData RefData;                                              // Create the ReferreData
+        memcpy(RefData.ref_data_raw, ref_data_raw, sizeof(ref_data_raw)); // load ref_data_raw with the given parameter
+        packetOffset += sizeof(ref_data_raw);
+
 
         int sensorDataBufferOffset = 0;
         
@@ -101,11 +98,25 @@ struct data_packet
             //add the sensorDataHeader
             memcpy(packetBuffer + packetOffset, &all_sensor_headers.at(i), sizeof(all_sensor_headers.at(i)));
             packetOffset += sizeof(all_sensor_headers.at(i));
-            //then pack the sensors associated data
+            //then pack the sensor's associated data
             memcpy(packetBuffer + packetOffset, &sensorDataBuffer.at(sensorDataBufferOffset), all_sensor_headers.at(i).dataLength);
             sensorDataBufferOffset += all_sensor_headers.at(i).dataLength;
+            packetOffset += all_sensor_headers.at(i).dataLength;
         }
 
+
+        //handle can data
+        memcpy(packetBuffer + packetOffset, canData, sizeof(canData));
         
     }
-};
+
+
+    void unpackDataPacket(uint8_t packetBuffer[MAX_PACKET_SIZE]) {
+        int packetOffset = 0;
+
+        DataPacketHeader header;
+        memcpy(&header.timestamp,packetBuffer + packetOffset, sizeof(header.timestamp));
+        Serial.println(header.timestamp);
+
+    }
+};ain
