@@ -11,6 +11,8 @@ enum sensorType
         OTHERS
     };
 
+
+
 struct data_packet
 {
 
@@ -33,8 +35,9 @@ struct data_packet
     typedef struct
     {
         uint16_t sensorType; // Identifier for sensor type
-        uint16_t dataLength; // Length of the sensor data
+        uint16_t dataLength; // Length of the sensor data in bytes
     } SensorDataHeader;
+
 
 
     typedef struct
@@ -55,15 +58,25 @@ struct data_packet
 
     std::vector<SensorDataHeader> all_sensor_headers;
 
-    void addSensorData(sensorType sensor_type, uint16_t dataLength,std::vector<uint8_t> sensorData ) {
-        SensorDataHeader new_sensor = {sensor_type,dataLength};
-        all_sensor_headers.push_back(new_sensor);
-        sensorData.insert(std::end(sensorDataBuffer),std::begin(sensorData),std::end(sensorData)); //append sensorData onto sensorDataBuffer
-    }
+
+
+
+
+
+
+
+
+
+
+    // void addSensorData(sensorType sensor_type, uint16_t dataLength,std::vector<uint8_t> sensorData ) {
+    //     SensorDataHeader new_sensor = {sensor_type,dataLength};
+    //     all_sensor_headers.push_back(new_sensor);
+    //     sensorData.insert(std::end(sensorDataBuffer),std::begin(sensorData),std::end(sensorData)); //append sensorData onto sensorDataBuffer
+    // }
 
     void packDataPacket(uint8_t *packetBuffer, uint8_t numOfSensors, State robotState, uint8_t ref_data_raw[180])
     {
-        int offset = 0;
+        int packetOffset = 0;
         // Create the packet header
         DataPacketHeader header;
         header.state = robotState;
@@ -73,12 +86,26 @@ struct data_packet
 
         RefereeData RefData;                                              // Create the ReferreData
         memcpy(RefData.ref_data_raw, ref_data_raw, sizeof(ref_data_raw)); // load ref_data_raw with the given parameter
-        offset += sizeof(ref_data_raw);
+        packetOffset += sizeof(ref_data_raw);
 
 
         // Copy the packet header into the buffer
-        memcpy(packetBuffer + offset, &header, sizeof(header));
-        offset += sizeof(header);
-        //copy the ref data and sensor data
+        memcpy(packetBuffer + packetOffset, &header, sizeof(header));
+        packetOffset += sizeof(header);
+        
+
+        int sensorDataBufferOffset = 0;
+        
+        //for every sensor
+        for(int i = 0; i < header.numSensors; i++) {
+            //add the sensorDataHeader
+            memcpy(packetBuffer + packetOffset, &all_sensor_headers.at(i), sizeof(all_sensor_headers.at(i)));
+            packetOffset += sizeof(all_sensor_headers.at(i));
+            //then pack the sensors associated data
+            memcpy(packetBuffer + packetOffset, &sensorDataBuffer.at(sensorDataBufferOffset), all_sensor_headers.at(i).dataLength);
+            sensorDataBufferOffset += all_sensor_headers.at(i).dataLength;
+        }
+
+        
     }
 };
