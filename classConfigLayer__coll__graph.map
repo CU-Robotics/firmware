@@ -1,0 +1,5 @@
+<map id="ConfigLayer" name="ConfigLayer">
+<area shape="rect" id="node1" title="Handle seeking and reading configuration packets coming from khadas." alt="" coords="43,95,133,121"/>
+<area shape="rect" id="node2" href="$structConfig.html" title="struct to hold configuration data" alt="" coords="5,5,64,32"/>
+<area shape="rect" id="node3" href="$structCommsPacket.html" title="An encapsulating data struct managing a HID packet." alt="" coords="89,5,197,32"/>
+</map>
