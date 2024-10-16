@@ -29,14 +29,9 @@ LIBRARY_LIB = libs
 
 # Project files
 PROJECT_DIR = .
-<<<<<<< HEAD
-PROJECT_SOURCE = $(shell find src -name "*.cpp")
-PROJECT_INCLUDE = src
-=======
 PROJECT_SRC_DIR = src
 PROJECT_SOURCE = $(shell find $(PROJECT_SRC_DIR) -name "*.cpp") $(shell find $(PROJECT_SRC_DIR) -name "*.c")
 PROJECT_INCLUDE = -Isrc
->>>>>>> origin/main
 # application filename will end up as PROJECT_NAME.hex once built
 PROJECT_NAME = firmware
 

@@ -128,7 +128,7 @@ void BalancingObserver::step(CANData* can, IMUData* imu, float obs[9][3]){
     obs[7][0] = (l_u * sin(phi0r - phi2r) * sin(phi3r - phi4_r)) / sin(phi2r - phi3r);
     obs[7][1] = -(l_u * cos(phi0r - phi2r) * sin(phi3r - phi4_r)) / (obs[4][2] * sin(phi2r - phi3r));
 
-    obs[2][0] = fmod((M_PI_2f + obs[2][2] - phi0r + M_PIf), (2 * M_PIf)) - M_PIf;
+    obs[2][0] = fmod((M_PI_2 + obs[2][2] - phi0r + M_PI), (2 * M_PI)) - M_PI;
 
     //get theta_ll_dot and theta_lr_dot
     obs[1][2] = (obs[1][1] - _theta_ll_old) / dt;
@@ -220,37 +220,51 @@ void BalancingObserver::settingprint(CANData *can, IMUData *imu){
     Serial.print(can->get_motor_attribute(L_CAN, L_W_MOTORID, ANGLE));
     Serial.print("\nSPEED = ");
     Serial.print(can->get_motor_attribute(L_CAN, L_W_MOTORID, SPEED));
+    Serial.print("\nTORQUE = ");
+    Serial.print(can->get_motor_attribute(L_CAN, L_W_MOTORID, TORQUE));
+
 
     Serial.print("\nL_FJ_MOTOR: ");
     Serial.print("\nANGLE = ");
     Serial.print(can->get_motor_attribute(L_CAN, L_FJ_MOTORID, ANGLE));
     Serial.print("\nSPEED = ");
     Serial.print(can->get_motor_attribute(L_CAN, L_FJ_MOTORID, SPEED));
-
+    Serial.print("\nTORQUE = ");
+    Serial.print(can->get_motor_attribute(L_CAN, L_FJ_MOTORID, TORQUE));
+    
     Serial.print("\nL_BJ_MOTOR: ");
     Serial.print("\nANGLE = ");
     Serial.print(can->get_motor_attribute(L_CAN, L_BJ_MOTORID, ANGLE));
     Serial.print("\nSPEED = ");
     Serial.print(can->get_motor_attribute(L_CAN, L_BJ_MOTORID, SPEED));
-
+    Serial.print("\nTORQUE = ");
+    Serial.print(can->get_motor_attribute(L_CAN, L_BJ_MOTORID, TORQUE));
+    
     Serial.print("\nR_W_MOTOR: ");
     Serial.print("\nANGLE = ");
     Serial.print(can->get_motor_attribute(R_CAN, R_W_MOTORID, ANGLE));
     Serial.print("\nSPEED = ");
     Serial.print(can->get_motor_attribute(R_CAN, R_W_MOTORID, SPEED));
+    Serial.print("\nTORQUE = ");
+    Serial.print(can->get_motor_attribute(R_CAN, R_W_MOTORID, TORQUE));
+
 
     Serial.print("\nR_FJ_MOTOR: ");
     Serial.print("\nANGLE = ");
     Serial.print(can->get_motor_attribute(R_CAN, R_FJ_MOTORID, ANGLE));
     Serial.print("\nSPEED = ");
     Serial.print(can->get_motor_attribute(R_CAN, R_FJ_MOTORID, SPEED));
-
+    Serial.print("\nTORQUE = ");
+    Serial.print(can->get_motor_attribute(R_CAN, R_FJ_MOTORID, TORQUE));
+    
     Serial.print("\nR_BJ_MOTOR: ");
     Serial.print("\nANGLE = ");
     Serial.print(can->get_motor_attribute(R_CAN, R_BJ_MOTORID, ANGLE));
     Serial.print("\nSPEED = ");
     Serial.print(can->get_motor_attribute(R_CAN, R_BJ_MOTORID, SPEED));
-
+    Serial.print("\nTORQUE = ");
+    Serial.print(can->get_motor_attribute(R_CAN, R_BJ_MOTORID, TORQUE));
+    
     Serial.print("\nimu acceleration: ");
     Serial.print("\na_X = ");
     Serial.print(imu->accel_X);
