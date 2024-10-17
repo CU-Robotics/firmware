@@ -13,7 +13,7 @@ public:
 	~Logger() = default;
 	
 	/// @brief Neccesary function to utilize Print abstract class
-	size_t write(uint8_t b){print("UNEXPECTED PRINT IN LOGGER.CPP"); return b;}
+	size_t write(uint8_t b){print("UNEXPECTED PRINT IN LOGGER.HPP"); return b;}
 	
 	/// @brief copies internal buffer to inputted location (*data) in memory
 	/// @return number of bytes copied
