@@ -7,6 +7,7 @@
 #include "controls/estimator_manager.hpp"
 #include "controls/controller_manager.hpp"
 
+#include "utils/logger.hpp"
 #include <TeensyDebug.h>
 #include "sensors/LEDBoard.hpp"
 
@@ -37,48 +38,49 @@ State state;
 
 LEDBoard led;
 
+Logger logger;
+
 // DONT put anything else in this function. It is not a setup function
 void print_logo() {
     if (Serial) {
-        Serial.println("TEENSY SERIAL START\n\n");
-        Serial.print("\033[1;33m");
-        Serial.println("                  .:^!?!^.                        ");
-        Serial.println("           .:~!?JYYYJ?7?Y5Y7!!.                   ");
-        Serial.println("         :?5YJ?!~:.      ^777YP?.                 ");
-        Serial.println("         5G~                  ~YP?:               ");
-        Serial.println("         7P5555Y:               ^YP?:....         ");
-        Serial.println("        ~55J7~^.   ..    .        ^JYYYYYYYYYJJ!. ");
-        Serial.println("        YG^     !Y5555J:^PJ    Y5:      ...::^5G^ ");
-        Serial.println("       :GY    .YG?^..^~ ~GY    5G^ ^!~~^^^!!~7G?  ");
-        Serial.println(" .!JYYY5G!    7BJ       ~GY    5G^ ~??JJJY555GP!  ");
-        Serial.println("^55!^:.^~.    ^PP~   .: ^GP:  ^PP:           :7PY.");
-        Serial.println("YG^            :JP5YY55: ~YP55PY^              ~GJ");
-        Serial.println("?G~      .?7~:   .^~~^.    .^:.                :G5");
-        Serial.println(".5P^     7BYJ5YJ7^.                          .~5P^");
-        Serial.println(" .JPJ!~!JP?  .:~?PP^            .:.    .^!JYY5Y!. ");
-        Serial.println("   :!???!:       5P.         .!Y5YYYJ?Y5Y?!^:.    ");
-        Serial.println("                 7G7        7GY!. .:~!^.          ");
-        Serial.println("                  JG!      :G5                    ");
-        Serial.println("                   7PY!^^~?PY:                    ");
-        Serial.println("                    .!JJJJ?^                      ");
-        Serial.print("\033[0m");
-        Serial.println("\n\033[1;92mFW Ver. 2.1.0");
-        Serial.printf("\nLast Built: %s at %s", __DATE__, __TIME__);
-        Serial.printf("\nGit Hash: %s", GIT_COMMIT_HASH);
-        Serial.printf("\nGit Branch: %s", GIT_BRANCH);
-        Serial.printf("\nCommit Message: %s", GIT_COMMIT_MSG);
-        Serial.printf("\nRandom Num: %x", ARM_DWT_CYCCNT);
-        Serial.println("\033[0m\n");
+        logger.println("TEENSY SERIAL START\n\n");
+        logger.print("\033[1;33m");
+        logger.println("                  .:^!?!^.                        ");
+        logger.println("           .:~!?JYYYJ?7?Y5Y7!!.                   ");
+        logger.println("         :?5YJ?!~:.      ^777YP?.                 ");
+        logger.println("         5G~                  ~YP?:               ");
+        logger.println("         7P5555Y:               ^YP?:....         ");
+        logger.println("        ~55J7~^.   ..    .        ^JYYYYYYYYYJJ!. ");
+        logger.println("        YG^     !Y5555J:^PJ    Y5:      ...::^5G^ ");
+        logger.println("       :GY    .YG?^..^~ ~GY    5G^ ^!~~^^^!!~7G?  ");
+        logger.println(" .!JYYY5G!    7BJ       ~GY    5G^ ~??JJJY555GP!  ");
+        logger.println("^55!^:.^~.    ^PP~   .: ^GP:  ^PP:           :7PY.");
+        logger.println("YG^            :JP5YY55: ~YP55PY^              ~GJ");
+        logger.println("?G~      .?7~:   .^~~^.    .^:.                :G5");
+        logger.println(".5P^     7BYJ5YJ7^.                          .~5P^");
+        logger.println(" .JPJ!~!JP?  .:~?PP^            .:.    .^!JYY5Y!. ");
+        logger.println("   :!???!:       5P.         .!Y5YYYJ?Y5Y?!^:.    ");
+        logger.println("                 7G7        7GY!. .:~!^.          ");
+        logger.println("                  JG!      :G5                    ");
+        logger.println("                   7PY!^^~?PY:                    ");
+        logger.println("                    .!JJJJ?^                      ");
+        logger.print("\033[0m");
+        logger.println("\n\033[1;92mFW Ver. 2.1.0");
+        logger.printf("\nLast Built: %s at %s", __DATE__, __TIME__);
+        logger.printf("\nGit Hash: %s", GIT_COMMIT_HASH);
+        logger.printf("\nGit Branch: %s", GIT_BRANCH);
+        logger.printf("\nCommit Message: %s", GIT_COMMIT_MSG);
+        logger.printf("\nRandom Num: %x", ARM_DWT_CYCCNT);
+        logger.println("\033[0m\n");
     }
 }
 
 // Master loop
 int main() {
     long long loopc = 0; // Loop counter for heartbeat
-
+	
     Serial.begin(115200); // the serial monitor is actually always active (for debug use Serial.println & tycmd)
     debug.begin(SerialUSB1);
-
     print_logo();
 
     // Execute setup functions
@@ -95,9 +97,9 @@ int main() {
     CANData* can_data = can.get_data();
 
     // Config config
-    Serial.println("Configuring...");
+    logger.println("Configuring...");
     const Config* config = config_layer.configure(&comms);
-    Serial.println("Configured!");
+    logger.println("Configured!");
 
     //estimate micro and macro state
     estimator_manager.init(can_data, config);
@@ -323,7 +325,7 @@ int main() {
         // Keep the loop running at the desired rate
         loop_timer.delay_micros((int)(1E6 / (float)(LOOP_FREQ)));
         float dt = stall_timer.delta();
-        if (dt > 0.002) Serial.printf("Slow loop with dt: %f\n", dt);
+        if (dt > 0.002) logger.printf("Slow loop with dt: %f\n", dt);
     }
     
     return 0;
