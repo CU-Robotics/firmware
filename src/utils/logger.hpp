@@ -24,7 +24,7 @@ private:
 	size_t write(const uint8_t *buffer, size_t size);
 	
 	/// @brief amoount of bytes currently stored in log
-	/// @notes also used as current position in memory
+	/// @note also used as current position in memory
 	unsigned int cursor;
 };
 /// @brief universal logger object to be called anywhere in codebase
