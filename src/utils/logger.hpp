@@ -12,8 +12,8 @@ public:
 	/// @brief Default Destructor
 	~Logger() = default;
 	
-	/// @brief Neccesary to utilize Print abstract class
-	size_t write(uint8_t b){print("THIS SHOULD NEVER PRINT"); return b;}
+	/// @brief Neccesary function to utilize Print abstract class
+	size_t write(uint8_t b){print("UNEXPECTED PRINT IN LOGGER.CPP"); return b;}
 	
 	/// @brief copies internal buffer to inputted location (*data) in memory
 	/// @return number of bytes copied
@@ -24,6 +24,7 @@ private:
 	size_t write(const uint8_t *buffer, size_t size);
 	
 	/// @brief amoount of bytes currently stored in log
+	/// @notes also used as current position in memory
 	unsigned int cursor;
 };
 /// @brief universal logger object to be called anywhere in codebase
