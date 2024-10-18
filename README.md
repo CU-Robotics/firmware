@@ -21,12 +21,8 @@ git config --local core.hooksPath .githooks
 
 Install the required tools
 ```bash
-./tools/install_arduino.sh
-./tools/install_tytools.sh
+make install
 ```
-
-If the files `liblibs.a` and `libsteensy4.a` do not exist in the core directory, follow these steps.
- * Run `make build_libs`
 
 ## Usage
 
@@ -42,11 +38,12 @@ This will build the current firmware. To upload, run:
 make upload
 ```
 
-If you only wish to monitor an already uploaded firmware version, run: 
+There are a few other nice helper functions within the makefile. This will list them:
 
 ```bash
-make monitor
+make help
 ```
+
 
 ## Contributing
 This repo follows the CU Robotics code standard:
