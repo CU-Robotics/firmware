@@ -19,7 +19,6 @@
 
 #define NUM_IMU_CALIBRATION 50000
 
-
 // Rev encoder pins
 #define REV_ENC_PIN1 2
 #define REV_ENC_PIN2 3
@@ -28,12 +27,10 @@
 /// @brief Manage all estimators for macro and micro state
 class EstimatorManager {
 private:
-    //sensor arrays
-
     /// @brief array to store robot icm imu's
     ICM20649 icm_sensors[NUM_SENSOR_TYPE];
     /// @brief array to store robot buff encoders
-    BuffEncoder buff_sensors[NUM_SENSOR_TYPE];
+    BuffEncoder buff_encoders[NUM_SENSOR_TYPE];
     /// @brief array to store robot rev encoders
     RevEncoder rev_sensors[NUM_SENSOR_TYPE];
     /// @brief array to store tof sensors
@@ -95,6 +92,5 @@ private:
     /// @param as assigned array
     void assign_states(const float as[NUM_ESTIMATORS][STATE_LEN]);
 };
-
 
 #endif

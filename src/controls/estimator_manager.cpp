@@ -16,6 +16,7 @@ void EstimatorManager::init(CANData* _can_data, const Config* _config_data) {
     if (!config_data)
         Serial.println("CONFIG DATA IS NULL!!!!!");
 
+
     // set can and config data pointers
     can_data = _can_data;
     config_data = _config_data;
@@ -33,6 +34,7 @@ void EstimatorManager::init(CANData* _can_data, const Config* _config_data) {
     // start SPI
     Serial.println("Starting SPI");
     SPI.begin();
+
 
     // initialize buff encoders
     for (int i = 0;i < config_data->num_sensors[0];i++) {
@@ -79,7 +81,6 @@ void EstimatorManager::init_estimator(int estimator_id, int num_states) {
     case 1:
         estimators[num_estimators] = new GimbalEstimator(*config_data, &rev_sensors[0], &rev_sensors[1], &rev_sensors[2], &buff_sensors[0], &buff_sensors[1], &icm_sensors[0], can_data, num_states);
         break;
-
     case 2:
         estimators[num_estimators] = new FlyWheelEstimator(can_data, num_states);
         break;
@@ -188,7 +189,5 @@ void EstimatorManager::calibrate_imus() {
         sum_accel_z += icm_sensors[0].get_accel_Z();
     }
 
-    Serial.printf("Calibrated offsets: %f, %f, %f", sum_x / NUM_IMU_CALIBRATION, sum_y / NUM_IMU_CALIBRATION, sum_z / NUM_IMU_CALIBRATION);
-    Serial.println();
+    Serial.printf("Calibrated offsets: %f, %f, %f\n", sum_x / NUM_IMU_CALIBRATION, sum_y / NUM_IMU_CALIBRATION, sum_z / NUM_IMU_CALIBRATION);
     icm_sensors[0].set_offsets(sum_x / NUM_IMU_CALIBRATION, sum_y / NUM_IMU_CALIBRATION, sum_z / NUM_IMU_CALIBRATION);
-}

@@ -138,12 +138,10 @@ protected:
         // Case 2
         else {
             if (D1 == 0 && D2 == 0 && D3 == 0) {
-                Serial.println("matrix solve bad1");
                 output[0] = 0;
                 output[1] = 0;
                 output[2] = 0;
             } else if (D1 != 0 || D2 != 0 || D3 != 0) {
-                Serial.println("matrix solve bad2");
                 output[0] = 0;
                 output[1] = 0;
                 output[2] = 0;
@@ -327,8 +325,6 @@ public:
     /// @param curr_state current state array to update with new state
     /// @param override true if we want to override the current state with the new state
     void step_states(float output[STATE_LEN][3], float curr_state[STATE_LEN][3], int override) override {
-        // Serial.printf("Pitch encoder offset: %f\n" ,PITCH_ENCODER_OFFSET);
-
         float pitch_enc_angle = (-buff_enc_pitch->get_angle()) - PITCH_ENCODER_OFFSET;
         while (pitch_enc_angle >= PI)
             pitch_enc_angle -= 2 * PI;
@@ -344,8 +340,6 @@ public:
         // calculates yaw velocity before integrating to find position
         // calculates the difference in initial and current pitch angle
         float pitch_diff = starting_pitch_angle - pitch_enc_angle;
-
-        // Serial.println(pitch_enc_angle);
 
         // gimbal rotation axis in spherical coordinates in imu refrence frame
         if (imu_yaw_axis_vector[0] == 0)
@@ -367,8 +361,6 @@ public:
         yaw_axis_unitvector[0] = yaw_axis_spherical[0] * cos(yaw_axis_spherical[1]) * sin(yaw_axis_spherical[2]);
         yaw_axis_unitvector[1] = yaw_axis_spherical[0] * sin(yaw_axis_spherical[1]) * sin(yaw_axis_spherical[2]);
         yaw_axis_unitvector[2] = yaw_axis_spherical[0] * cos(yaw_axis_spherical[2]);
-
-        // Serial.printf("x: %f,y: %f,z: %f\n", roll_axis_unitvector[0],roll_axis_unitvector[1],roll_axis_unitvector[2]);
 
         // roll_axis_unitvector[0] = roll_axis_spherical[0]*cos(roll_axis_spherical[1])*sin(roll_axis_spherical[2]);
         // roll_axis_unitvector[1] = roll_axis_spherical[0]*sin(roll_axis_spherical[1])*sin(roll_axis_spherical[2]);
@@ -717,8 +709,6 @@ public:
     /// @param curr_state current state of the system
     /// @param override override the current state
     void step_states(float output[STATE_LEN][3], float curr_state[STATE_LEN][3], int override) override {
-        // Serial.printf("Pitch encoder offset: %f\n" ,PITCH_ENCODER_OFFSET);
-
         float pitch_enc_angle = (-buff_enc_pitch->get_angle()) - PITCH_ENCODER_OFFSET;
         while (pitch_enc_angle >= PI)
             pitch_enc_angle -= 2 * PI;
@@ -734,8 +724,6 @@ public:
         // calculates yaw velocity before integrating to find position
         // calculates the difference in initial and current pitch angle
         float pitch_diff = starting_pitch_angle - pitch_enc_angle;
-
-        // Serial.println(pitch_enc_angle);
 
         // gimbal rotation axis in spherical coordinates in imu refrence frame
         if (imu_yaw_axis_vector[0] == 0)
@@ -757,8 +745,6 @@ public:
         yaw_axis_unitvector[0] = yaw_axis_spherical[0] * cos(yaw_axis_spherical[1]) * sin(yaw_axis_spherical[2]);
         yaw_axis_unitvector[1] = yaw_axis_spherical[0] * sin(yaw_axis_spherical[1]) * sin(yaw_axis_spherical[2]);
         yaw_axis_unitvector[2] = yaw_axis_spherical[0] * cos(yaw_axis_spherical[2]);
-
-        // Serial.printf("x: %f,y: %f,z: %f\n", roll_axis_unitvector[0],roll_axis_unitvector[1],roll_axis_unitvector[2]);
 
         // roll_axis_unitvector[0] = roll_axis_spherical[0]*cos(roll_axis_spherical[1])*sin(roll_axis_spherical[2]);
         // roll_axis_unitvector[1] = roll_axis_spherical[0]*sin(roll_axis_spherical[1])*sin(roll_axis_spherical[2]);
@@ -789,7 +775,7 @@ public:
 
         // gets the velocity data from the imu and uses the gravity vector to calculate the yaw velocity
         float raw_omega_vector[3] = { icm_imu->get_gyro_X(), icm_imu->get_gyro_Y(), icm_imu->get_gyro_Z() };
-        // Serial.printf("X: %f, Y: %f, Z: %f\n", raw_omega_vector[0], raw_omega_vector[1], raw_omega_vector[2]);
+
         // *Note: X is pitch Y is Roll Z is Yaw, when level
         // positive pitch angle is up, positive roll angle is right(robot pov), positive yaw is left(robot pov)
 
@@ -1064,7 +1050,6 @@ public:
         // }
         // distance_from_right = distance_from_right*0.99 + tof_distance*0.01;
         output[0][0] = tof_distance;
-        Serial.printf("tof: %f\n",tof_distance);
         output[0][1] = angular_velocity_motor;
     }
 };
