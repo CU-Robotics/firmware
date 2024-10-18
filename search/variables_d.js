@@ -1,0 +1,27 @@
+var searchData=
+[
+  ['odom_5fangle_5foffset_1193',['odom_angle_offset',['../structGimbalEstimatorNoOdom.html#a902a8ece718b5b6ad71c8732465cf3ed',1,'GimbalEstimatorNoOdom::odom_angle_offset()'],['../structGimbalEstimator.html#ad12e7f502c088f1daaa751993b39ed89',1,'GimbalEstimator::odom_angle_offset()']]],
+  ['odom_5faxis_5foffset_5fx_1194',['odom_axis_offset_x',['../structGimbalEstimator.html#a1d2bb4c384244775f4a3ebcfc46dd6e2',1,'GimbalEstimator::odom_axis_offset_x()'],['../structGimbalEstimatorNoOdom.html#a4fc461e14d53abe037c1ebe48c50e2fd',1,'GimbalEstimatorNoOdom::odom_axis_offset_x()']]],
+  ['odom_5faxis_5foffset_5fy_1195',['odom_axis_offset_y',['../structGimbalEstimator.html#ab25c11c4ed3a40ea464571969bb8345a',1,'GimbalEstimator::odom_axis_offset_y()'],['../structGimbalEstimatorNoOdom.html#aab145aef359fcaa8065c6fc6ff376bb1',1,'GimbalEstimatorNoOdom::odom_axis_offset_y()']]],
+  ['odom_5fpos_5fdiff_1196',['odom_pos_diff',['../structGimbalEstimator.html#a207dbd28c9332231bc41d024c670b1a7',1,'GimbalEstimator::odom_pos_diff()'],['../structGimbalEstimatorNoOdom.html#a8eaf4f8b80f9fa145095e1552701ebd1',1,'GimbalEstimatorNoOdom::odom_pos_diff()']]],
+  ['odom_5fvalues_1197',['odom_values',['../structConfig.html#ac75c000eb67fc5954d8ce4d09169d47f',1,'Config']]],
+  ['odom_5fwheel_5fradius_1198',['odom_wheel_radius',['../structGimbalEstimator.html#a7d690beecdd4f5d60009c65582396aee',1,'GimbalEstimator::odom_wheel_radius()'],['../structGimbalEstimatorNoOdom.html#a455eb7493a8288369fd090fb9b010d9b',1,'GimbalEstimatorNoOdom::odom_wheel_radius()']]],
+  ['offset_5fx_1199',['offset_X',['../classIMUSensor.html#ab8b2f16604484a6317457f2af0dbefcd',1,'IMUSensor']]],
+  ['offset_5fy_1200',['offset_Y',['../classIMUSensor.html#adb1ce532ba6147376c6db8ef2248ba5a',1,'IMUSensor']]],
+  ['offset_5fz_1201',['offset_Z',['../classIMUSensor.html#a855ff5ded555181c12f6a0784dd407f7',1,'IMUSensor']]],
+  ['old_5fcurrent_1202',['old_current',['../classACS712.html#a7a9ab661d90cea84c766c6be7a13c458',1,'ACS712']]],
+  ['our_5f3_5ftrapezoid_5fbuff_5fpoint_1203',['our_3_trapezoid_buff_point',['../structRFIDStatus.html#aaec5c13ac643f0b9c66538cb183babd2',1,'RFIDStatus']]],
+  ['our_5f4_5ftrapezoid_5fbuff_5fpoint_1204',['our_4_trapezoid_buff_point',['../structRFIDStatus.html#ad8b0d598be3adeafd225d0bc9f51f4ff',1,'RFIDStatus']]],
+  ['our_5fbase_5fbuff_5fpoint_1205',['our_base_buff_point',['../structRFIDStatus.html#a578180f3a9e5363e1a2d0749a5a617f2',1,'RFIDStatus']]],
+  ['our_5fexchange_5fzone_1206',['our_exchange_zone',['../structRFIDStatus.html#ab18607e4d46fcc9731a5348e3d46c87a',1,'RFIDStatus']]],
+  ['our_5flarge_5fresource_5fbuff_5fpoint_1207',['our_large_resource_buff_point',['../structRFIDStatus.html#aaebd52ba24dc205a6823badb40d130e2',1,'RFIDStatus']]],
+  ['our_5flaunch_5framp_5fbuff_5fpoint_5fback_1208',['our_launch_ramp_buff_point_back',['../structRFIDStatus.html#a21bc6350573cfb43b864cf5c10b99dc7',1,'RFIDStatus']]],
+  ['our_5flaunch_5framp_5fbuff_5fpoint_5ffront_1209',['our_launch_ramp_buff_point_front',['../structRFIDStatus.html#a5c076a8bf62d38c8a28cf1b015a048a8',1,'RFIDStatus']]],
+  ['our_5foutpost_5fbuff_5fpoint_1210',['our_outpost_buff_point',['../structRFIDStatus.html#abddad336eb28e57d95be7292e78ff65c',1,'RFIDStatus']]],
+  ['our_5fpower_5frune_5fpoint_1211',['our_power_rune_point',['../structRFIDStatus.html#a3f9694dd30c9b58b8a661f3e9c542244',1,'RFIDStatus']]],
+  ['our_5frestoration_5fzone_1212',['our_restoration_zone',['../structRFIDStatus.html#aefe3dc525127282840f5c764288c465b',1,'RFIDStatus']]],
+  ['our_5fring_5fbuff_5fpoint_1213',['our_ring_buff_point',['../structRFIDStatus.html#a89d620f6ec53cf813a9ff4db6e5f5d51',1,'RFIDStatus']]],
+  ['our_5fsentry_5fpatrol_5fzones_1214',['our_sentry_patrol_zones',['../structRFIDStatus.html#a9c9ec482e21b7eaae8ccb85073491664',1,'RFIDStatus']]],
+  ['output_1215',['output',['../classLowpassFilter.html#a42ef84b52dc3081575774263ec74ccd7',1,'LowpassFilter']]],
+  ['overflow_1216',['overflow',['../structProfiler_1_1profiler__section__t.html#a2933749f4b54a0b5f6b688d8b7d99fa2',1,'Profiler::profiler_section_t']]]
+];

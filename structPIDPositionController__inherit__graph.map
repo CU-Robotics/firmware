@@ -1,0 +1,4 @@
+<map id="PIDPositionController" name="PIDPositionController">
+<area shape="rect" id="node1" title="PID controller working on position." alt="" coords="5,80,152,107"/>
+<area shape="rect" id="node2" href="$structController.html" title="Parent controller struct, all controllers should be based off of this." alt="" coords="40,5,117,32"/>
+</map>
