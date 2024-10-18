@@ -30,7 +30,7 @@ public:
 
     /// @brief set the gains for this specific controller
     /// @param _gains gains array of length NUM_GAINS
-    void set_gains(float _gains[NUM_GAINS]) {
+    void set_gains(const float _gains[NUM_GAINS]) {
         for (int i = 0; i < NUM_GAINS; i++)
             gains[i] = _gains[i];
     }

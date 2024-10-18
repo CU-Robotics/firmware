@@ -12,7 +12,6 @@
 #include "../sensors/RefSystem.hpp"
 #include "estimator.hpp"
 #include "../comms/rm_can.hpp"
-#include "../comms/config_layer.hpp"
 #include <SPI.h>
 
 // maximum number of each sensor (arbitrary)
@@ -30,8 +29,6 @@ class EstimatorManager {
 private:
     /// @brief array to store robot icm imu's
     ICM20649 icm_sensors[NUM_SENSOR_TYPE];
-    /// @brief array to store robot lsm imu's
-    LSM6DSOX lsm_sensors[NUM_SENSOR_TYPE];
     /// @brief array to store robot buff encoders
     BuffEncoder buff_encoders[NUM_SENSOR_TYPE];
     /// @brief array to store robot rev encoders
@@ -49,23 +46,24 @@ private:
     /// @brief can data pointer to pass to each estimator so they can use can to estimate state when needed (usually used for micro state).
     CANData* can_data;
 
+    /// @brief config struct to store all config data
+    /// @note this is read only
+    const Config* config_data = nullptr;
+
     /// @brief current number of estimators
     int num_estimators = 0;
 
 public:
-    /// @brief default constructor. does nothing
-    EstimatorManager() {}
+    /// @brief Default constructor, does nothing
+    EstimatorManager() = default;
 
     /// @brief Free all dynamically allocated memory and end SPI
     ~EstimatorManager();
 
-    /// @brief initialize sensors and estimators
-    void init();
-
-    /// @brief Populates the corresponding index of the "estimators" array attribute with an estimator object.
-    /// @param estimator_id id of estimator to init
-    /// @param num_states number of states this estimator should estimate
-    void init_estimator(int estimator_id, int num_states);
+    /// @brief initialize all sensors and set can_data pointer
+    /// @param can_data reference struct storing all of can data so we dont have to pass rm_can around
+    /// @param config_data read only reference struct storing all the config data
+    void init(CANData* can_data, const Config* config_data);
 
     /// @brief Steps through every estimator and constructs a state array based on current sensor values.
     /// @param state macro state array pointer to be updated.
@@ -76,22 +74,23 @@ public:
     /// @brief read all sensor arrays besides can and dr16(they are in main).
     void read_sensors();
 
-    /// @brief call read for imu's NUM_IMU_CALIBRATION times and then averages returns to calculate offset.
-    void calibrate_imus();
-
-    /// @brief sets the assigned states array use for telling which estimators estimate which states
-    /// @param as assigned array
-    void assign_states(float as[NUM_ESTIMATORS][STATE_LEN]);
-
     /// @brief sets both input arrays to all 0's
     /// @param macro_outputs input 1
     /// @param micro_outputs input 2
     void clear_outputs(float macro_outputs[STATE_LEN][3], float micro_outputs[NUM_MOTORS][MICRO_STATE_LEN]);
 
-    void set_can_data(CANData* can_data);
+private:
+    /// @brief call read for imu's NUM_IMU_CALIBRATION times and then averages returns to calculate offset.
+    void calibrate_imus();
 
-    // int configure(ConfigPacket packet[]);
+    /// @brief Populates the corresponding index of the "estimators" array attribute with an estimator object.
+    /// @param estimator_id id of estimator to init
+    /// @param num_states number of states this estimator should estimate
+    void init_estimator(int estimator_id, int num_states);
+
+    /// @brief sets the assigned states array use for telling which estimators estimate which states
+    /// @param as assigned array
+    void assign_states(const float as[NUM_ESTIMATORS][STATE_LEN]);
 };
-
 
 #endif

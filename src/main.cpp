@@ -2,17 +2,13 @@
 
 #include "git_info.h"
 
-#include "utils/timing.hpp"
-#include "comms/rm_can.hpp"
-#include "sensors/dr16.hpp"
+#include "utils/profiler.hpp"
+#include "sensors/d200.hpp"
 #include "controls/estimator_manager.hpp"
 #include "controls/controller_manager.hpp"
-#include "controls/state.hpp"
-#include "comms/usb_hid.hpp"
-#include "comms/config_layer.hpp"
-#include "sensors/RefSystem.hpp"
-#include "sensors/d200.hpp"
-#include "sensors/ACS712.hpp"
+
+#include <TeensyDebug.h>
+#include "sensors/LEDBoard.hpp"
 
 // Loop constants
 #define LOOP_FREQ 1000
@@ -29,7 +25,8 @@ D200LD14P lidar1(&Serial4, 0);
 D200LD14P lidar2(&Serial5, 1);
 
 ConfigLayer config_layer;
-Config config;  // extern in config_layer.hpp
+
+Profiler prof;
 
 Timer loop_timer;
 Timer stall_timer;
@@ -37,7 +34,10 @@ Timer control_input_timer;
 
 EstimatorManager estimator_manager;
 ControllerManager controller_manager;
+
 Governor governor;
+
+LEDBoard led;
 
 // DONT put anything else in this function. It is not a setup function
 void print_logo() {
@@ -66,9 +66,9 @@ void print_logo() {
         Serial.print("\033[0m");
         Serial.println("\n\033[1;92mFW Ver. 2.1.0");
         Serial.printf("\nLast Built: %s at %s", __DATE__, __TIME__);
-		Serial.printf("\nGit Hash: %s", GIT_COMMIT_HASH);
-		Serial.printf("\nGit Branch: %s", GIT_BRANCH);
-		Serial.printf("\nCommit Message: %s", GIT_COMMIT_MSG);
+        Serial.printf("\nGit Hash: %s", GIT_COMMIT_HASH);
+        Serial.printf("\nGit Branch: %s", GIT_BRANCH);
+        Serial.printf("\nCommit Message: %s", GIT_COMMIT_MSG);
         Serial.printf("\nRandom Num: %x", ARM_DWT_CYCCNT);
         Serial.println("\033[0m\n");
     }
@@ -78,12 +78,15 @@ void print_logo() {
 int main() {
     long long loopc = 0; // Loop counter for heartbeat
 
-    Serial.begin(112500); // the serial monitor is actually always active (for debug use Serial.println & tycmd)
+    Serial.begin(115200); // the serial monitor is actually always active (for debug use Serial.println & tycmd)
+    debug.begin(SerialUSB1);
+
     print_logo();
 
     // Execute setup functions
     pinMode(LED_BUILTIN, OUTPUT);
 
+    led.init();
     //initialize objects
     can.init();
     dr16.init();
@@ -94,20 +97,19 @@ int main() {
     // TODO: extern the can_data object
     CANData* can_data = can.get_data();
 
-    // Config TODO: Condense to a single function
+    // Config config
     Serial.println("Configuring...");
-    config = config_layer.configure();
+    const Config* config = config_layer.configure(&comms);
     Serial.println("Configured!");
 
     //estimate micro and macro state
-    estimator_manager.set_can_data(can_data);
-    estimator_manager.init();
+    estimator_manager.init(can_data, config);
 
     //generate controller outputs based on governed references and estimated state
-    controller_manager.init();
+    controller_manager.init(config);
 
     //set reference limits in the reference governor
-    governor.set_reference_limits(config.set_reference_limits);
+    state.set_reference_limits(config->set_reference_limits);
 
     // variables for use in main
     float temp_state[STATE_LEN][3] = { 0 }; // Temp state array
@@ -116,107 +118,110 @@ int main() {
     float target_state[STATE_LEN][3] = { 0 }; //Temp ungoverned state
     float motor_inputs[NUM_MOTORS] = { 0 }; //Array for storing controller outputs to send to CAN
 
+    // manual controls variables
+    int vtm_pos_x = 0;
+    int vtm_pos_y = 0;
+    float dr16_pos_x = 0;
+    float dr16_pos_y = 0;
     float pos_offset_x = 0;
     float pos_offset_y = 0;
+
+    // param to specify whether this is the first loop
     int count_one = 0;
 
+    // whether we are in hive mode or not
     bool hive_toggle = false;
 
     // Main loop
     while (true) {
-        //read everything
+        // read main sensors
         can.read();
         dr16.read();
         ref.read();
-        current_sensor.read();
         lidar1.read();
         lidar2.read();
-        
-        // handle read/write
-        comms.ping();
 
+        // read and write comms packets
+        comms.ping();
         CommsPacket* incoming = comms.get_incoming_packet();
         CommsPacket* outgoing = comms.get_outgoing_packet();
 
         // manual controls on firmware
-        // TODO: put this in controller_manager as a static function
-        {
-            float delta = control_input_timer.delta();
-            float dr16_pos_x += dr16.get_mouse_x() * 0.05 * delta;
-            float dr16_pos_y += dr16.get_mouse_y() * 0.05 * delta;
 
-            float vtm_pos_x += ref.ref_data.kbm_interaction.mouse_speed_x * 0.05 * delta;
-            float vtm_pos_y += ref.ref_data.kbm_interaction.mouse_speed_y * 0.05 * delta;
+        float delta = control_input_timer.delta();
+        dr16_pos_x += dr16.get_mouse_x() * 0.05 * delta;
+        dr16_pos_y += dr16.get_mouse_y() * 0.05 * delta;
 
-            float chassis_velocity_x = 0;
-            float chassis_velocity_y = 0;
-            float chassis_pos_x = 0;
-            float chassis_pos_y = 0;
-            if (config.governor_types[0] == 2) {
-                chassis_velocity_x = -dr16.get_l_stick_y() * 5.4
-                                        + (-ref.ref_data.kbm_interaction.key_w + ref.ref_data.kbm_interaction.key_s) * 2.5
-                                        + (-dr16.keys.w + dr16.keys.s) * 2.5;
-                chassis_velocity_y = dr16.get_l_stick_x() * 5.4
-                                        + (ref.ref_data.kbm_interaction.key_d - ref.ref_data.kbm_interaction.key_a) * 2.5
-                                        + (dr16.keys.d - dr16.keys.a) * 2.5;
-            } else if (config.governor_types[0] == 1){
-                chassis_pos_x = dr16.get_l_stick_x() * 2 + pos_offset_x;
-                chassis_pos_y = dr16.get_l_stick_y() * 2 + pos_offset_y;
-            }
-            float chassis_spin = dr16.get_wheel() * 25;
-
-            float pitch_target = 1.57
-                                + -dr16.get_r_stick_y() * 0.3
-                                + dr16_pos_y
-                                + vtm_pos_y;
-            float yaw_target = -dr16.get_r_stick_x() * 1.5
-                                - dr16_pos_x
-                                - vtm_pos_x;
-            float fly_wheel_target = (dr16.get_r_switch() == 1 || dr16.get_r_switch() == 3) ? 18 : 0; // m/s
-            float feeder_target = (((dr16.get_l_mouse_button() || ref.ref_data.kbm_interaction.button_left) && dr16.get_r_switch() != 2) || dr16.get_r_switch() == 1) ? 10 : 0;
-
-            // set calculated target state
-            target_state[0][0] = chassis_pos_x;
-            target_state[0][1] = chassis_velocity_x;
-            target_state[1][0] = chassis_pos_y;
-            target_state[1][1] = chassis_velocity_y;
-            target_state[2][1] = chassis_spin;
-            target_state[3][0] = yaw_target;
-            target_state[3][1] = 0;
-            target_state[4][0] = pitch_target;
-            target_state[4][1] = 0;
-
-            target_state[5][1] = fly_wheel_target;
-            target_state[6][1] = feeder_target;
-            target_state[7][0] = 1;
+        vtm_pos_x += ref.ref_data.kbm_interaction.mouse_speed_x * 0.05 * delta;
+        vtm_pos_y += ref.ref_data.kbm_interaction.mouse_speed_y * 0.05 * delta;
+        
+        float chassis_vel_x = 0;
+        float chassis_vel_y = 0;
+        float chassis_pos_x = 0;
+        float chassis_pos_y = 0;
+        if (config->governor_types[0] == 2) {   // if we should be controlling velocity
+            chassis_vel_x = -dr16.get_l_stick_y() * 5.4
+                + (-ref.ref_data.kbm_interaction.key_w + ref.ref_data.kbm_interaction.key_s) * 2.5
+                + (-dr16.keys.w + dr16.keys.s) * 2.5;
+            chassis_vel_y = dr16.get_l_stick_x() * 5.4
+                + (ref.ref_data.kbm_interaction.key_d - ref.ref_data.kbm_interaction.key_a) * 2.5
+                + (dr16.keys.d - dr16.keys.a) * 2.5;
+        } else if (config->governor_types[0] == 1) { // if we should be controlling position
+            chassis_pos_x = dr16.get_l_stick_x() * 2 + pos_offset_x;
+            chassis_pos_y = dr16.get_l_stick_y() * 2 + pos_offset_y;
         }
+
+        float chassis_spin = dr16.get_wheel() * 25;
+        float pitch_target = 1.57
+            + -dr16.get_r_stick_y() * 0.3
+            + dr16_pos_y
+            + vtm_pos_y;
+        float yaw_target = -dr16.get_r_stick_x() * 1.5
+            - dr16_pos_x
+            - vtm_pos_x;
+        float fly_wheel_target = (dr16.get_r_switch() == 1 || dr16.get_r_switch() == 3) ? 18 : 0; //m/s
+        float feeder_target = (((dr16.get_l_mouse_button() || ref.ref_data.kbm_interaction.button_left) && dr16.get_r_switch() != 2) || dr16.get_r_switch() == 1) ? 10 : 0;
+
+        // set manual controls
+        target_state[0][0] = chassis_pos_x;
+        target_state[0][1] = chassis_vel_x;
+        target_state[1][0] = chassis_pos_y;
+        target_state[1][1] = chassis_vel_y;
+        target_state[2][1] = chassis_spin;
+        target_state[3][0] = yaw_target;
+        target_state[3][1] = 0;
+        target_state[4][0] = pitch_target;
+        target_state[4][1] = 0;
+
+        target_state[5][1] = fly_wheel_target;
+        target_state[6][1] = feeder_target;
+        target_state[7][0] = 1;
 
         // if the left switch is all the way down use Hive controls
         if (dr16.get_l_switch() == 2) {
-            // set `target_state` from comms' target state
             incoming->get_target_state(target_state);
             // if you just switched to hive controls, set the reference to the current state
             if (hive_toggle) {
-                governor.set_reference(temp_state);
+                state.set_reference(temp_state);
                 hive_toggle = false;
-            } 
+            }
+        }
         // when in teensy control mode reset hive toggle
-        } else if (dr16.get_l_switch() == 3) {
+        if (dr16.get_l_switch() == 3) {
             if (!hive_toggle) {
                 pos_offset_x = temp_state[0][0];
                 pos_offset_y = temp_state[1][0];
             }
             hive_toggle = true;
         }
-        
-        // Read sensors
+
+        // read sensors
         estimator_manager.read_sensors();
 
-        // override state if requested
+        // override temp state if needed
         if (incoming->get_hive_override_request() == 1) {
-            float hive_state_offset[STATE_LEN][3] = { 0 };
             incoming->get_hive_override_state(hive_state_offset);
-            memcpy(temp_state, hive_state_offset, sizeof(float) * STATE_LEN * 3);
+            memcpy(temp_state, hive_state_offset, sizeof(hive_state_offset));
         }
 
         // step estimates and construct estimated state
@@ -236,6 +241,7 @@ int main() {
 
         // generate motor outputs from controls
         controller_manager.step(temp_reference, temp_state, temp_micro_state);
+
 
         // construct sensor data packet
         SensorData sensor_data;
@@ -281,6 +287,5 @@ int main() {
         float dt = stall_timer.delta();
         if (dt > 0.002) Serial.printf("Slow loop with dt: %f\n", dt);
     }
-
     return 0;
 }

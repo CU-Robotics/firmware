@@ -4,6 +4,7 @@
 #include "controller.hpp"
 #include "../comms/rm_can.hpp"
 #include "../sensors/RefSystem.hpp"
+#include "../comms/config_layer.hpp"
 
 /// @brief Manage all controllers
 class ControllerManager {
@@ -16,10 +17,12 @@ private:
     float outputs[NUM_MOTORS] = { 0 };
 
 public:
-    /// @brief default constructor. does nothing
-    ControllerManager() {}
+    /// @brief default constructor, does nothing
+    ControllerManager() = default;
 
-    void init();
+    /// @brief Initializes controllers with data from the config yaml
+    /// @param _config_data read-only config reference storing all config data
+    void init(const Config* _config_data);
 
     /// @brief Populates the corresponding index of the "controllers" array attribute with a controller object
     /// @param controller_type denotes what kind of controller to initialize (see contoller.hpp)

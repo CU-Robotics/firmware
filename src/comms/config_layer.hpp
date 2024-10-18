@@ -2,8 +2,7 @@
 #define CONFIG_LAYER
 
 #include "usb_hid.hpp"
-#include "../controls/state.hpp"
-#include "../controls/controller_manager.hpp"
+#include "../controls/controller.hpp"
 
 #include <map>
 #include <string>
@@ -40,63 +39,17 @@ static const std::map<std::string, u_int8_t> yaml_section_id_mappings = {
     {"encoder_pins", 23}
 };
 
-/// @brief Handle seeking and reading configuration packets coming from khadas
-class ConfigLayer {
-private:
-    /// @brief array to save config packets
-    CommsPacket config_packets[MAX_CONFIG_PACKETS];
-
-    /// @brief flag indicating if all config packets have been received
-    bool configured = false;
-
-    /// @brief current YAML section we are seeking
-    int seek_sec = -1;
-
-    /// @brief current YAML subsection we are seeking
-    int seek_subsec = 0;
-
-    /// @brief number of YAML sections
-    uint16_t num_sec;
-
-    /// @brief array to store number of subsections per YAML section
-    uint8_t subsec_sizes[MAX_CONFIG_PACKETS] = { 0 }; 
-
-    /// @brief size counter
-    int index = 0;
-
-public:
-    /// @brief default constructor
-    ConfigLayer() {}
-
-    /// @brief process config packets until all packets are received and processed
-    /// @return a constructed config object holding all the data in the yaml
-    // TODO: make this pick the SD card config file after a timeout
-    Config configure();
-
-    /// @brief check incoming packet from the comms layer and update outgoing packet accordingly to request next config packet
-    /// @param in incoming comms packet
-    /// @param out outgoing comms packet to write config requests to
-    void process(CommsPacket *in, CommsPacket *out);
-
-    /// @brief return configured flag (check if all config packets have been received)
-    /// @return the configured flag
-    bool is_configured() { return configured; }
-
-    /// @brief get config and size arrays
-    /// @param packets return array of packets
-    /// @param sizes return array of sizes
-    void get_config_packets(CommsPacket packets[MAX_CONFIG_PACKETS], uint8_t sizes[MAX_CONFIG_PACKETS]){
-        memcpy(packets, config_packets, sizeof(CommsPacket) * MAX_CONFIG_PACKETS);
-        memcpy(sizes, subsec_sizes, sizeof(uint8_t) * MAX_CONFIG_PACKETS);
-    }
-};
-
 /// @brief struct to hold configuration data
 struct Config {
+    /// @brief fill all config data from packets
+    /// @param packets CommsPacket array filled with data from yaml
+    /// @param sizes Number of sections for each section
+    void fill_data(CommsPacket packets[MAX_CONFIG_PACKETS], uint8_t sizes[MAX_CONFIG_PACKETS]);
+    
     //check yaml for more details on values
     
     /// @brief Encoder offsets for each encoder
-    float encoder_offsets[16]; 
+    float encoder_offsets[16];
     /// @brief number of sensors 
     float num_sensors[16];
 
@@ -139,89 +92,65 @@ struct Config {
     /// @brief pin numbers on the teensy for the encoders
     float encoder_pins[2];
 
-    /// @brief fill all config data from packets
-    /// @param packets CommsPacket array filled with data from yaml
-    /// @param sizes Number of sections for each section
-    void fill_data(CommsPacket packets[MAX_CONFIG_PACKETS], uint8_t sizes[MAX_CONFIG_PACKETS]) {
-        for(int i = 0; i < MAX_CONFIG_PACKETS; i++){
-            uint8_t id = packets[i].get_id();
-            uint8_t subsec_id = *reinterpret_cast<uint8_t*>(packets[i].raw + 2);
-            uint16_t sub_size = *reinterpret_cast<uint16_t*>(packets[i].raw + 6);
+private:
+    /// @brief keep track of past index for when there are multiple packets for a section
+    uint16_t index = 0;
 
-            if(subsec_id == 0) index = 0;
+};
 
-            if(id == yaml_section_id_mappings.at("gains")) {
-                size_t linear_index = index / sizeof(float); 
-                size_t i1 = linear_index / (NUM_CONTROLLER_LEVELS * NUM_GAINS);
-                size_t i2 = (linear_index % (NUM_CONTROLLER_LEVELS * NUM_GAINS)) / NUM_GAINS;
-                size_t i3 = (linear_index % (NUM_CONTROLLER_LEVELS * NUM_GAINS)) % NUM_GAINS;
-                memcpy(&gains[i1][i2][i3], packets[i].raw + 8, sub_size);
-                index+=sub_size;
-            }
-            if(id == yaml_section_id_mappings.at("assigned_states")){
-                size_t linear_index = index / sizeof(float);
-                size_t i1 = linear_index / STATE_LEN;
-                size_t i2 = linear_index % STATE_LEN;
-                memcpy(&assigned_states[i1][i2], packets[i].raw + 8, sub_size);
-                index+=sub_size;
-            }
-            if(id == yaml_section_id_mappings.at("reference_limits")){
-                size_t linear_index = index / sizeof(float);
-                size_t i1 = linear_index / (STATE_LEN * 3 * 2);
-                size_t i2 = (linear_index % (STATE_LEN * 3 * 2)) / (3 * 2);
-                size_t i3 = (linear_index % (STATE_LEN * 3 * 2)) % (3 * 2);
-                memcpy(&set_reference_limits[i1][i2][i3], packets[i].raw + 8, sub_size);
-                index+=sub_size;
-            }
-            if(id == yaml_section_id_mappings.at("yaw_axis_vector")){
-                memcpy(yaw_axis_vector, packets[i].raw + 8,sub_size);
-            }
-            if(id == yaml_section_id_mappings.at("pitch_axis_vector")){
-                memcpy(pitch_axis_vector, packets[i].raw + 8, sub_size);
-            }
-            if(id == yaml_section_id_mappings.at("default_gimbal_starting_angles")){
-                memcpy(default_gimbal_starting_angles, packets[i].raw + 8, sub_size);
-            }
-            if(id == yaml_section_id_mappings.at("default_chassis_starting_angles")){
-                memcpy(default_chassis_starting_angles, packets[i].raw + 8, sub_size);
-            }
-            if(id == yaml_section_id_mappings.at("controller_types")){
-                memcpy(controller_types, packets[i].raw + 8, sub_size);
-            }
-            if(id == yaml_section_id_mappings.at("pitch_angle_at_yaw_imu_calibration")){
-                memcpy(&pitch_angle_at_yaw_imu_calibration, packets[i].raw + 8, sub_size);
-            }
-            if(id==yaml_section_id_mappings.at("governor_types")){
-                memcpy(governor_types, packets[i].raw + 8, sub_size);
-            }
-            if(id==yaml_section_id_mappings.at("drive_conversion_factors")){
-                memcpy(drive_conversion_factors, packets[i].raw + 8, sub_size);
-            }
-            if(id==yaml_section_id_mappings.at("estimators")){
-                memcpy(estimators, packets[i].raw + 8, sub_size);
-            }
-            if(id==yaml_section_id_mappings.at("odom_values")){
-                memcpy(odom_values, packets[i].raw + 8, sub_size);
-            }
-            if(id==yaml_section_id_mappings.at("switcher_values")){
-                memcpy(switcher_values, packets[i].raw + 8, sub_size);
-            }
-            if(id==yaml_section_id_mappings.at("num_sensors")){
-                memcpy(&num_sensors, packets[i].raw + 8, sub_size);
-            }
-            if(id==yaml_section_id_mappings.at("encoder_offsets")){
-                memcpy(encoder_offsets, packets[i].raw + 8, sub_size);
-            }
-            if(id==yaml_section_id_mappings.at("encoder_pins")){
-                memcpy(encoder_pins, packets[i].raw + 8, sub_size);
-            }
-        }
+/// @brief Handle seeking and reading configuration packets coming from khadas
+class ConfigLayer {
+private:
+    /// @brief array to save config packets
+    CommsPacket config_packets[MAX_CONFIG_PACKETS];
+
+    /// @brief array to store number of subsections per YAML section
+    uint8_t subsec_sizes[MAX_CONFIG_PACKETS] = { 0 };
+
+    /// @brief number of YAML sections
+    uint16_t num_sec;
+
+    /// @brief current YAML section we are seeking
+    int seek_sec = -1;
+
+    /// @brief current YAML subsection we are seeking
+    int seek_subsec = 0;
+
+    /// @brief size counter
+    int index = 0;
+
+    /// @brief flag indicating if all config packets have been received
+    bool configured = false;
+
+    /// @brief a local instance of the config data
+    Config config;
+
+public:
+    /// @brief default constructor
+    ConfigLayer() { }
+
+    /// @brief Block until all config packets are read, processed, and set within the returned Config object
+    /// @param comms pointer to the HID comms layer for grabbing config packets
+    /// @return a const pointer const config object holding all the data within the config yaml
+    /// @note its double const so its enforced as a read-only object
+    const Config* const configure(HIDLayer* comms);
+
+    /// @brief check incoming packet from the comms layer and update outgoing packet accordingly to request next config packet
+    /// @param in incoming comms packet
+    /// @param out outgoing comms packet to write config requests to
+    void process(CommsPacket *in, CommsPacket *out);
+
+    /// @brief return configured flag (check if all config packets have been received)
+    /// @return the configured flag
+    bool is_configured() { return configured; }
+
+    /// @brief get config and size arrays
+    /// @param packets return array of packets
+    /// @param sizes return array of sizes
+    void get_config_packets(CommsPacket packets[MAX_CONFIG_PACKETS], uint8_t sizes[MAX_CONFIG_PACKETS]){
+        memcpy(packets, config_packets, sizeof(CommsPacket) * MAX_CONFIG_PACKETS);
+        memcpy(sizes, subsec_sizes, sizeof(uint8_t) * MAX_CONFIG_PACKETS);
     }
-
-    private: 
-        /// @brief keep track of past index for when there are multiple packets for a section
-        uint16_t index = 0;
-
 };
 
 extern Config config;

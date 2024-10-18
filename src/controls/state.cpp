@@ -9,7 +9,7 @@ void Governor::get_reference(float reference[STATE_LEN][3]) {
     memcpy(reference, this->reference, sizeof(this->reference));
 }
 
-void Governor::step_reference(float ungoverned_reference[STATE_LEN][3], float governor_type[STATE_LEN]) {
+void Governor::step_reference(float ungoverned_reference[STATE_LEN][3], const float governor_type[STATE_LEN]) {
     float threshold = 0.0005;
     float dt = governor_timer.delta();
     if (count == 0){
@@ -129,7 +129,7 @@ void Governor::set_estimate_at_location(float estimate, int row, int col) {
     this->estimate[row][col] = estimate;
 }
 
-void Governor::set_reference_limits(float reference_limits[STATE_LEN][3][2]) {
+void Governor::set_reference_limits(const float reference_limits[STATE_LEN][3][2]) {
     for (int n = 0; n < STATE_LEN; n++) {
         for (int p = 0; p < 3; p++) {
             this->reference_limits[n][p][0] = reference_limits[n][p][0];

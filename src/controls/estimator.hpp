@@ -19,7 +19,7 @@ public:
     /// @param outputs estimated state array to update with certain estimated states
     /// @param curr_state current state array to update with new state
     /// @param override true if we want to override the current state with the new state
-    virtual void step_states(float outputs[STATE_LEN][3], float curr_state[STATE_LEN][3], int override);
+    virtual void step_states(float outputs[STATE_LEN][3], float curr_state[STATE_LEN][3], int override) = 0;
 
     /// @brief gets the number of states that an estimator is estimating
     /// @return get number of states estimated by this estimator
