@@ -13,17 +13,19 @@ public:
 	~Logger() = default;
 	
 	/// @brief Neccesary function to utilize Print abstract class
-	/// @params matches parameters in Print.h
+	/// @param b matches parameters in Print.h
 	size_t write(uint8_t b){print("UNEXPECTED PRINT IN LOGGER.HPP"); return b;}
 	
 	/// @brief copies internal buffer to inputted location (*data) in memory
 	/// @return number of bytes copied
-	/// @parems size of data and pointer to data
+	/// @param size of data
+	/// @param data pointer to data
 	uint32_t grab_log_data(uint32_t size, uint8_t *data);
 private:
 	/// @brief copies formatted bytes to internal buffer
 	/// @return number of bytes
-	/// @parems pointer to a buffer and size of the buffer
+	/// @param buffer pointer to a buffer
+	/// @param size size of the buffer
 	size_t write(const uint8_t *buffer, size_t size);
 	
 	/// @brief amount of bytes currently stored in log
