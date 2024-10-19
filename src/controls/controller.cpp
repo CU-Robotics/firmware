@@ -1,6 +1,6 @@
 #include "controller.hpp"
 
-XDrivePositionController::step(float reference[STATE_LEN][3], float estimate[STATE_LEN][3], float micro_estimate[NUM_MOTORS][MICRO_STATE_LEN], float outputs[NUM_MOTORS]){
+void XDrivePositionController::step(float reference[STATE_LEN][3], float estimate[STATE_LEN][3], float micro_estimate[NUM_MOTORS][MICRO_STATE_LEN], float outputs[NUM_MOTORS]){
     float dt = timer.delta();
     // High level position controller
     for(int i = 0; i < 2; i++){
@@ -43,8 +43,8 @@ XDrivePositionController::step(float reference[STATE_LEN][3], float estimate[STA
         pidv[2].K[2] = 0;
         pidv[2].K[3] = 1;
     }
-    outputp[2] = pidp[i].filter(dt, false, false);
-    outputv[2] = pidv[i].filter(dt, false, false);
+    outputp[2] = pidp[2].filter(dt, false, false);
+    outputv[2] = pidv[2].filter(dt, false, false);
     output[2] = (outputp[2] + outputv[2])*gear_ratios[2];
 
     // Adjust for chassis heading so control is field relative
@@ -77,7 +77,7 @@ XDrivePositionController::step(float reference[STATE_LEN][3], float estimate[STA
     }
 }
 
-XDriveVelocityController::step(float reference[STATE_LEN][3], float estimate[STATE_LEN][3], float micro_estimate[NUM_MOTORS][MICRO_STATE_LEN], float outputs[NUM_MOTORS]){
+void XDriveVelocityController::step(float reference[STATE_LEN][3], float estimate[STATE_LEN][3], float micro_estimate[NUM_MOTORS][MICRO_STATE_LEN], float outputs[NUM_MOTORS]){
     float dt = timer.delta();
     // High level velocity controller
     for(int i = 0; i < 2; i++){
@@ -90,7 +90,7 @@ XDriveVelocityController::step(float reference[STATE_LEN][3], float estimate[STA
     pidp[2].measurement = estimate[2][0];
     pidv[2].setpoint = reference[2][1]; 
     pidv[2].measurement = estimate[2][1];
-    if(reference[10][0] == 1){ // if state 10 is 1 then chassis heading is position controlled 
+    if(reference[2][2] == 1){ // if state [2][2] is 1 (We dont use the accel spot for anything) then chassis heading is position controlled 
         pidp[2].K[0] = gains[0];
         pidp[2].K[1] = gains[1];
         pidp[2].K[2] = gains[2];
@@ -107,8 +107,8 @@ XDriveVelocityController::step(float reference[STATE_LEN][3], float estimate[STA
         pidv[2].K[2] = 0;
         pidv[2].K[3] = 1;
     }
-    outputp[2] = pidp[i].filter(dt, false, false);
-    outputv[2] = pidv[i].filter(dt, false, false);
+    outputp[2] = pidp[2].filter(dt, false, false);
+    outputv[2] = pidv[2].filter(dt, false, false);
     output[2] = (outputp[2] + outputv[2])*gear_ratios[2];
 
     // Adjust for chassis heading so control is field relative
@@ -141,7 +141,7 @@ XDriveVelocityController::step(float reference[STATE_LEN][3], float estimate[STA
     }
 }
 
-YawController::step(float reference[STATE_LEN][3], float estimate[STATE_LEN][3], float micro_estimate[NUM_MOTORS][MICRO_STATE_LEN], float outputs[NUM_MOTORS]){
+void YawController::step(float reference[STATE_LEN][3], float estimate[STATE_LEN][3], float micro_estimate[NUM_MOTORS][MICRO_STATE_LEN], float outputs[NUM_MOTORS]){
     float dt = timer.delta();
     float output = 0.0;
 
@@ -165,41 +165,78 @@ YawController::step(float reference[STATE_LEN][3], float estimate[STATE_LEN][3],
     outputs[1] = output;
 }
 
-PitchController::step(float reference[STATE_LEN][3], float estimate[STATE_LEN][3], float micro_estimate[NUM_MOTORS][MICRO_STATE_LEN], float outputs[NUM_MOTORS]){
+void PitchController::step(float reference[STATE_LEN][3], float estimate[STATE_LEN][3], float micro_estimate[NUM_MOTORS][MICRO_STATE_LEN], float outputs[NUM_MOTORS]){
     float dt = timer.delta();
     float output = 0.0;
 
-    pid1.K[0] = gains[0];
-    pid1.K[1] = gains[1];
-    pid1.K[2] = gains[2];
-    pid1.K[3] = gains[3] * sin(reference[4][0]);
-    pid2.K[0] = gains[4];
-    pid2.K[1] = gains[5];
-    pid2.K[2] = gains[6];
+    pidp.K[0] = gains[0];
+    pidp.K[1] = gains[1];
+    pidp.K[2] = gains[2];
+    pidp.K[3] = gains[3] * sin(reference[4][0]);
+    pidv.K[0] = gains[4];
+    pidv.K[1] = gains[5];
+    pidv.K[2] = gains[6];
 
-    pid1.setpoint = reference[4][0];
-    pid1.measurement = estimate[4][0];
+    pidp.setpoint = reference[4][0];
+    pidp.measurement = estimate[4][0];
 
-    pid2.setpoint = reference[4][1];
-    pid2.measurement = estimate[4][1];
+    pidv.setpoint = reference[4][1];
+    pidv.measurement = estimate[4][1];
 
-    output += pid1.filter(dt, true, true); // position wraps
-    output += pid2.filter(dt, true, false); // no wrap for velocity
+    output += pidp.filter(dt, true, true); // position wraps
+    output += pidv.filter(dt, true, false); // no wrap for velocity
     output = constrain(output, -1.0, 1.0);
 
     outputs[0] = output * gear_ratios[0];
     outputs[1] = output * gear_ratios[1];
 }
 
-FlywheelController::step(float reference[STATE_LEN][3], float estimate[STATE_LEN][3], float micro_estimate[NUM_MOTORS][MICRO_STATE_LEN], float outputs[NUM_MOTORS]){
-
-}
-
-FeederController::step(float reference[STATE_LEN][3], float estimate[STATE_LEN][3], float micro_estimate[NUM_MOTORS][MICRO_STATE_LEN], float outputs[NUM_MOTORS]){
+void FlywheelController::step(float reference[STATE_LEN][3], float estimate[STATE_LEN][3], float micro_estimate[NUM_MOTORS][MICRO_STATE_LEN], float outputs[NUM_MOTORS]){
+    float dt = timer.delta();
     
+    pid_high.K[0] = gains[0];
+    pid_high.K[1] = gains[1];
+    pid_high.K[2] = gains[2];
+    pid_high.K[3] = gains[3];
+
+    pid_high.setpoint = reference[5][0];
+    pid_high.measurement = estimate[5][0];
+    float target_motor_velocity = pid_high.filter(dt, true, false);
+    for(int i = 0; i < 2; i++){
+        pid_low.K[0] = gains[4];
+        pid_low.K[1] = gains[5];
+        pid_low.K[2] = gains[6];
+        pid_low.K[3] = 0;
+        if(i == 1){
+            pid_low.setpoint = -target_motor_velocity;
+        }
+            pid_low.setpoint = target_motor_velocity;
+        pid_low.measurement = micro_estimate[i+10][1];
+        outputs[i] = pid_low.filter(dt, true, false);
+    }
 }
 
-SwitcherController::step(float reference[STATE_LEN][3], float estimate[STATE_LEN][3], float micro_estimate[NUM_MOTORS][MICRO_STATE_LEN], float outputs[NUM_MOTORS]){
+void FeederController::step(float reference[STATE_LEN][3], float estimate[STATE_LEN][3], float micro_estimate[NUM_MOTORS][MICRO_STATE_LEN], float outputs[NUM_MOTORS]){
+    pid_high.K[0] = gains[0];
+    pid_high.K[1] = gains[1];
+    pid_high.K[2] = gains[2];
+    pid_high.K[3] = gains[3];
+
+    pid_high.setpoint = reference[6][0];
+    pid_high.measurement = estimate[6][0];
+    float output = pid_high.filter(timer.delta(), true, false);
+
+    pid_low.K[0] = gains[4];
+    pid_low.K[1] = gains[5];
+    pid_low.K[2] = gains[6];
+    
+    pid_low.setpoint = output;
+    pid_low.measurement = micro_estimate[12][1];
+    output = pid_low.filter(timer.delta(), true, false);
+    outputs[0] = output;
+}
+
+void SwitcherController::step(float reference[STATE_LEN][3], float estimate[STATE_LEN][3], float micro_estimate[NUM_MOTORS][MICRO_STATE_LEN], float outputs[NUM_MOTORS]){
     float dt = timer.delta();
 
     pidp.K[0] = gains[0];
@@ -212,11 +249,11 @@ SwitcherController::step(float reference[STATE_LEN][3], float estimate[STATE_LEN
     pidv.K[2] = gains[6];
     // Serial.printf("Pushing into wall: %f, %f\n", estimate[0], reference[0]);
     // // Feed forward to push the switcher into the wall constantly with a small force
-    if(estimate[0] > gains[7] && reference[0] > -gains[7] && !(reference[0] < gains[7])) {
+    if(estimate[7][0] > gains[7] && reference[7][0] > -gains[7] && !(reference[7][0] < gains[7])) {
         pidp.K[3] = gains[3];
         pidp.K[0] = 0;
         pidv.K[0] = 0;
-    } else if(estimate[0] < -gains[7] && reference[0] < gains[7] && !(reference[0] > -gains[7])) {
+    } else if(estimate[7][0] < -gains[7] && reference[7][0] < gains[7] && !(reference[7][0] > -gains[7])) {
         pidp.K[3] = -gains[3];
         pidp.K[0] = 0;
         pidv.K[0] = 0;
@@ -232,11 +269,11 @@ SwitcherController::step(float reference[STATE_LEN][3], float estimate[STATE_LEN
     //     pidp.K[3] = 0;
     // }
 
-    pidp.setpoint = reference[0]; // 1st index = position
-    pidp.measurement = estimate[0];
+    pidp.setpoint = reference[7][0]; // 1st index = position
+    pidp.measurement = estimate[7][0];
 
-    pidv.setpoint = reference[1]; 
-    pidv.measurement = estimate[1];
+    pidv.setpoint = reference[7][1]; 
+    pidv.measurement = estimate[7][1];
 
     float outputp = pidp.filter(dt, true, false);
     float outputv = pidv.filter(dt, true, false);

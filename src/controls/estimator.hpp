@@ -21,17 +21,10 @@ public:
     /// @param override true if we want to override the current state with the new state
     virtual void step_states(float outputs[STATE_LEN][3], float curr_state[STATE_LEN][3], int override) = 0;
 
-    /// @brief gets the number of states that an estimator is estimating
-    /// @return get number of states estimated by this estimator
-    int get_num_states() { return num_states; }
-
     /// @brief bool that indicates if the estimator is a micro or macro estimator
     bool micro_estimator = false;
 
 protected:
-    /// @brief number of states that an estimator will estimate. For the micro estimators its the number micro states to estimate
-    int num_states;
-
     ///@brief create a timer object for each estimator
     Timer time;
 
@@ -285,7 +278,7 @@ public:
     /// @param imu icm encoder
     /// @param data can data from Estimator Manager
     /// @param n num states this estimator estimates
-    GimbalEstimator(Config config_data, RevEncoder* r1, RevEncoder* r2, RevEncoder* r3, BuffEncoder* b1, BuffEncoder* b2, ICM20649* imu, CANData* data, int n) {
+    GimbalEstimator(Config config_data, RevEncoder* r1, RevEncoder* r2, RevEncoder* r3, BuffEncoder* b1, BuffEncoder* b2, ICM20649* imu, CANData* data) {
         buff_enc_yaw = b1; // sensor object definitions
         buff_enc_pitch = b2;
         rev_enc[0] = r1;
@@ -293,7 +286,6 @@ public:
         rev_enc[2] = r3;
         can_data = data;
         icm_imu = imu;
-        num_states = n; // number of estimated states
         YAW_ENCODER_OFFSET = config_data.encoder_offsets[0];
         PITCH_ENCODER_OFFSET = config_data.encoder_offsets[1];
 
@@ -672,12 +664,11 @@ public:
     /// @param imu icm encoder
     /// @param data can data from Estimator Manager
     /// @param n num states this estimator estimates
-    GimbalEstimatorNoOdom(Config config_data,BuffEncoder* b1, BuffEncoder* b2, ICM20649* imu, CANData* data, int n) {
+    GimbalEstimatorNoOdom(Config config_data,BuffEncoder* b1, BuffEncoder* b2, ICM20649* imu, CANData* data) {
         buff_enc_yaw = b1; // sensor object definitions
         buff_enc_pitch = b2;
         can_data = data;
         icm_imu = imu;
-        num_states = n; // number of estimated states
         YAW_ENCODER_OFFSET = config_data.encoder_offsets[0];
         PITCH_ENCODER_OFFSET = config_data.encoder_offsets[1];
 
@@ -910,10 +901,8 @@ private:
 public:
     /// @brief make new flywheel estimator and set can data pointer and num states
     /// @param c can data pointer from EstimatorManager
-    /// @param _num_states number of states estimated
-    FlyWheelEstimator(CANData* c, int _num_states) {
+    FlyWheelEstimator(CANData* c) {
         can_data = c;
-        num_states = _num_states;
     }
   
     ~FlyWheelEstimator() {};
@@ -959,10 +948,8 @@ private:
 public:
     /// @brief make new feeder estimator and set can_data pointer and num_states
     /// @param c can data pointer from EstimatorManager
-    /// @param _num_states number of states this estimator estimates
-    FeederEstimator(CANData* c, int _num_states) {
+    FeederEstimator(CANData* c) {
         can_data = c;
-        num_states = _num_states;
     }
 
     ~FeederEstimator() {};
@@ -1015,11 +1002,9 @@ public:
     /// @brief make new barrel switcher estimator and set can_data pointer and num_states
     /// @param config config data from yaml
     /// @param c can data pointer from EstimatorManager
-    /// @param _num_states number of states this estimator estimates
     /// @param tof time of flight sensor object
-    SwitcherEstimator(Config config,CANData* c,TOFSensor* tof, int _num_states) {
+    SwitcherEstimator(Config config,CANData* c,TOFSensor* tof) {
         can_data = c;
-        num_states = _num_states;
         time_of_flight = tof;
         tof_sensor_offset = config.switcher_values[0];
         tof_scale = config.switcher_values[1];
@@ -1065,10 +1050,9 @@ public:
     /// @brief Make new local estimator and set can data pointer and num states
     /// @param c can data pointer from EstimatorManager
     /// @param ns number of states this estimator estimates
-    LocalEstimator(CANData* c, int ns) {
+    LocalEstimator(CANData* c) {
         micro_estimator = true;
         can_data = c;
-        num_states = ns;
     }
 
     /// @brief step through each motor and add to micro state

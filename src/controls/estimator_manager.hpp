@@ -39,10 +39,6 @@ private:
     /// @brief array of robot estimators to estimate full robot state
     Estimator* estimators[STATE_LEN] = { nullptr };
 
-    /// @brief matrix that is number_of_estimators by State_length.
-    /// the values inside the matrix tell the estimator stepper which states to write to for each estimator
-    int applied_states[NUM_ESTIMATORS][STATE_LEN];
-
     /// @brief can data pointer to pass to each estimator so they can use can to estimate state when needed (usually used for micro state).
     CANData* can_data;
 
@@ -85,8 +81,7 @@ private:
 
     /// @brief Populates the corresponding index of the "estimators" array attribute with an estimator object.
     /// @param estimator_id id of estimator to init
-    /// @param num_states number of states this estimator should estimate
-    void init_estimator(int estimator_id, int num_states);
+    void init_estimator(int estimator_id);
 
     /// @brief sets the assigned states array use for telling which estimators estimate which states
     /// @param as assigned array

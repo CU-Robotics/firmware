@@ -96,39 +96,21 @@ void Config::fill_data(CommsPacket packets[MAX_CONFIG_PACKETS], uint8_t sizes[MA
         Serial.printf("id: %d, subsec_id: %d, sub_size: %d\n", id, subsec_id, sub_size);
         Serial.println();
 
-        if (id == yaml_section_id_mappings.at("kinematics_p")) {
+        if(id == yaml_section_id_mappings.at("gains")){
             size_t linear_index = index / sizeof(float);
-            size_t i1 = linear_index / STATE_LEN;
-            size_t i2 = linear_index % STATE_LEN;
-            memcpy(&kinematics_p[i1][i2], packets[i].raw + 8, sub_size);
+            size_t i1 = linear_index / (NUM_GAINS);
+            size_t i2 = linear_index % NUM_GAINS;
+            memcpy(&gains[i1][i2], packets[i].raw + 8, sub_size);
             index += sub_size;
         }
-        if (id == yaml_section_id_mappings.at("kinematics_v")) {
+        if (id == yaml_section_id_mappings.at("gear_ratios")) {
             size_t linear_index = index / sizeof(float);
-            size_t i1 = linear_index / STATE_LEN;
-            size_t i2 = linear_index % STATE_LEN;
-            memcpy(&kinematics_v[i1][i2], packets[i].raw + 8, sub_size);
+            size_t i1 = linear_index / (NUM_GAINS);
+            size_t i2 = linear_index % NUM_GAINS;
+            memcpy(&gear_ratios[i1][i2], packets[i].raw + 8, sub_size);
             index += sub_size;
         }
-        if (id == yaml_section_id_mappings.at("gains")) {
-            size_t linear_index = index / sizeof(float);
-            size_t i1 = linear_index / (NUM_CONTROLLER_LEVELS * NUM_GAINS);
-            size_t i2 = (linear_index % (NUM_CONTROLLER_LEVELS * NUM_GAINS)) / NUM_GAINS;
-            size_t i3 = (linear_index % (NUM_CONTROLLER_LEVELS * NUM_GAINS)) % NUM_GAINS;
-            memcpy(&gains[i1][i2][i3], packets[i].raw + 8, sub_size);
-            // Serial.println(index/sizeof(float));
-            index += sub_size;
-        }
-        if (id == yaml_section_id_mappings.at("assigned_states")) {
-            size_t linear_index = index / sizeof(float);
-            size_t i1 = linear_index / STATE_LEN;
-            size_t i2 = linear_index % STATE_LEN;
-            memcpy(&assigned_states[i1][i2], packets[i].raw + 8, sub_size);
-            index += sub_size;
-        }
-        if (id == yaml_section_id_mappings.at("num_states_per_estimator")) {
-            memcpy(num_states_per_estimator, packets[i].raw + 8, sub_size);
-        }
+
         if (id == yaml_section_id_mappings.at("reference_limits")) {
             size_t linear_index = index / sizeof(float);
             size_t i1 = linear_index / (STATE_LEN * 3 * 2);
@@ -150,8 +132,12 @@ void Config::fill_data(CommsPacket packets[MAX_CONFIG_PACKETS], uint8_t sizes[MA
         if (id == yaml_section_id_mappings.at("default_chassis_starting_angles")) {
             memcpy(default_chassis_starting_angles, packets[i].raw + 8, sub_size);
         }
-        if (id == yaml_section_id_mappings.at("controller_types")) {
-            memcpy(controller_types, packets[i].raw + 8, sub_size);
+        if (id == yaml_section_id_mappings.at("controller_info")) {
+            size_t linear_index = index / sizeof(float);
+            size_t i1 = linear_index / (NUM_MOTORS);
+            size_t i2 = linear_index % NUM_MOTORS;
+            memcpy(&controller_info[i1][i2], packets[i].raw + 8, sub_size);
+            index += sub_size;
         }
         if (id == yaml_section_id_mappings.at("pitch_angle_at_yaw_imu_calibration")) {
             memcpy(&pitch_angle_at_yaw_imu_calibration, packets[i].raw + 8, sub_size);
@@ -162,10 +148,12 @@ void Config::fill_data(CommsPacket packets[MAX_CONFIG_PACKETS], uint8_t sizes[MA
         if (id == yaml_section_id_mappings.at("drive_conversion_factors")) {
             memcpy(drive_conversion_factors, packets[i].raw + 8, sub_size);
         }
-        if (id == yaml_section_id_mappings.at("estimators")) {
-            memcpy(estimators, packets[i].raw + 8, sub_size);
-            Serial.println(sub_size);
-            Serial.println(estimators[0]);
+        if (id == yaml_section_id_mappings.at("estimator_info")) {
+            size_t linear_index = index / sizeof(float);
+            size_t i1 = linear_index / (STATE_LEN);
+            size_t i2 = linear_index % STATE_LEN;
+            memcpy(&estimator_info[i1][i2], packets[i].raw + 8, sub_size);
+            index += sub_size;
         }
         if (id == yaml_section_id_mappings.at("odom_values")) {
             memcpy(odom_values, packets[i].raw + 8, sub_size);

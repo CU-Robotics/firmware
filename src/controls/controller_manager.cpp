@@ -1,9 +1,11 @@
 #include "controller_manager.hpp"
 
-void ControllerManager::init() {
+void ControllerManager::init(CANData* _can_data, const Config* config) {
+    can_data = _can_data;
+    config_data = config;
     // intializes all controllers given the controller_types matrix from the config
     for (int i = 0; i < NUM_CONTROLLERS; i++) {
-        init_controller(config.controller_types[i], config.gains[i], config.gear_ratios[i]);
+        init_controller(config_data->controller_info[i][0], config_data->gains[i], config_data->gear_ratios[i]);
     }
 }
 
@@ -14,25 +16,25 @@ void ControllerManager::init_controller(int controller_type, float gains[NUM_GAI
         controllers[num_controllers] = new NullController();
         break;
     case 1:
-        controllers[num_controllers++] = new PIDPositionController(controller_level);
+        controllers[num_controllers++] = new XDrivePositionController();
         break;
     case 2:
-        controllers[num_controllers++] = new PIDVelocityController(controller_level);
+        controllers[num_controllers++] = new XDriveVelocityController();
         break;
     case 3:
-        controllers[num_controllers++] = new FullStateFeedbackController(controller_level);
+        controllers[num_controllers++] = new YawController();
         break;
     case 4:
-        controllers[num_controllers++] = new ChassisPIDVelocityController(controller_level);
+        controllers[num_controllers++] = new PitchController();
         break;
     case 5:
-        controllers[num_controllers++] = new PIDFVelocityController(controller_level);
+        controllers[num_controllers++] = new FlywheelController();
         break;
     case 6:
-        controllers[num_controllers++] = new SwitcherController(controller_level);
+        controllers[num_controllers++] = new FeederController();
         break;
     case 7:
-        controllers[num_controllers++] = new ChassisFullStateFeedbackController(controller_level);
+        controllers[num_controllers++] = new SwitcherController();
         break;
     default:
         controllers[num_controllers] = new NullController();
@@ -47,11 +49,11 @@ void ControllerManager::step(float macro_reference[STATE_LEN][3], float macro_es
     // iterate through all the created controllers
     for(int i = 0; i < num_controllers; i++) {
         // grab the motor outputs for this controller
-        outputs = controllers[i].step(macro_reference, macro_estimate, micro_estimate);
+        controllers[i]->step(macro_reference, macro_estimate, micro_estimate, outputs);
         // iterate through all the motors this controller sets
         for(int j = 0; j < NUM_MOTORS; j++) {
-            if(motor_config.controller_motor_outputs[i][j] < 0) continue;
-            actuator_write(motor_config.controller_motor_outputs[i][j], outputs[j]);
+            if(config_data->controller_info[i][j + 1] < 0) continue;
+            actuator_write(config_data.controller_motor_outputs[i][j], outputs[j]);
         }
     }
 }
@@ -70,14 +72,15 @@ void ControllerManager::step(float macro_reference[STATE_LEN][3], float macro_es
 #define MOTOR_TYPE_ID 1
 #define MOTOR_TYPE_BUS 2
 
-void actuator_write(int motor_id, float value){
-    switch(config.motor_types[motor_id][MOTOR_TYPE_TYPE])
+void ControllerManager::actuator_write(int motor_id, float value){
+    switch(config_data->motor_info[motor_id][MOTOR_TYPE_TYPE]) {
     case C610: // 0
-        can.write_motor_norm(config.motor_info[motor_id][MOTOR_TYPE_BUS], config.motor_info[motor_id][MOTOR_TYPE_ID], C610, value);
+        can_data->write_motor_norm(config_data->motor_info[motor_id][MOTOR_TYPE_BUS], config_data->motor_info[motor_id][MOTOR_TYPE_ID], C610, value);
         break;
     case C620: // 1
-        can.write_motor_norm(config.motor_info[motor_id][MOTOR_TYPE_BUS], config.motor_info[motor_id][MOTOR_TYPE_ID], C620, value);
+        can_data->write_motor_norm(config_data->motor_info[motor_id][MOTOR_TYPE_BUS], config_data->motor_info[motor_id][MOTOR_TYPE_ID], C620, value);
         break;
     default:
         break;
+    }
 }

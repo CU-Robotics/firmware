@@ -57,17 +57,16 @@ struct Config {
     float gains[NUM_CONTROLLERS][NUM_GAINS];
     /// @brief gear ratio matrix
     float gear_ratios[NUM_CONTROLLERS][NUM_MOTORS];
-    /// @brief matrix that contains which states are set by which estimators
-    float estimator_state_outputs[NUM_ESTIMATORS][STATE_LEN];
-    /// @brief matrix that contains which motor inputs are set by which controllers
-    float controller_motor_outputs[NUM_CONTROLLERS][NUM_MOTORS];
+
     /// @brief matrix that contains the type, physical id, and physical bus of each motor
     int motor_info[NUM_MOTORS][3];
     /// @brief reference limits matrix
     float set_reference_limits[STATE_LEN][3][2];
-
-    /// @brief the estimator type for each estimator
-    float estimator_types[NUM_ESTIMATORS];
+    
+    /// @brief the estimator id's and info
+    float estimator_info[NUM_ESTIMATORS][STATE_LEN];
+    /// @brief controller id's and info
+    float controller_info[NUM_CONTROLLERS][NUM_MOTORS];
 
     /// @brief gyro readings of imu when you spin yaw
     float yaw_axis_vector[3];

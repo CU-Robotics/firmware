@@ -109,7 +109,7 @@ int main() {
     controller_manager.init(config);
 
     //set reference limits in the reference governor
-    state.set_reference_limits(config->set_reference_limits);
+    governor.set_reference_limits(config->set_reference_limits);
 
     // variables for use in main
     float temp_state[STATE_LEN][3] = { 0 }; // Temp state array
@@ -202,7 +202,7 @@ int main() {
             incoming->get_target_state(target_state);
             // if you just switched to hive controls, set the reference to the current state
             if (hive_toggle) {
-                state.set_reference(temp_state);
+                governor.set_reference(temp_state);
                 hive_toggle = false;
             }
         }
@@ -236,7 +236,7 @@ int main() {
 
         // reference govern
         governor.set_estimate(temp_state);
-        governor.step_reference(target_state, config.governor_types);
+        governor.step_reference(target_state, config->governor_types);
         governor.get_reference(temp_reference);
 
         // generate motor outputs from controls

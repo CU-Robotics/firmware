@@ -59,12 +59,52 @@ public:
     void step(float reference[STATE_LEN][3], float estimate[STATE_LEN][3], float micro_estimate[NUM_MOTORS][MICRO_STATE_LEN], float outputs[NUM_MOTORS]) {}
 };
 
+/// @brief Position controller for the chassis
+struct XDrivePositionController : public Controller {
+private:
+    /// @brief filter for calculating pid position controller outputs
+    PIDFilter pidp[3];
+    /// @brief filter for calculating pid velocity controller outputs
+    PIDFilter pidv[3];
+    /// @brief outputs of the pid position controller
+    float outputp[4];
+    /// @brief outputs of the pid velocity controller
+    float outputv[4];
+    /// @brief combined outputs of the pid position and velocity controllers
+    float output[4];
+    /// @brief target motor velocity
+    float motor_velocity[4];
+public:
+    /// @brief set controller level and make sure it's not low level
+    /// @param _controller_level controller level(if it outputs a torque or a target micro state).
+    XDrivePositionController() = default;
+
+    void step(float reference[STATE_LEN][3], float estimate[STATE_LEN][3], float micro_estimate[NUM_MOTORS][MICRO_STATE_LEN], float outputs[NUM_MOTORS]);
+
+    void reset() {
+        Controller::reset();
+        for(int i = 0; i < 3; i++){
+            pidp[i].sumError = 0.0;
+            pidv[i].sumError = 0.0;
+        }    
+    }
+};
+
 /// @brief Controller for all chassis movement, which includes power limiting
 struct XDriveVelocityController : public Controller {
 private:
-    /// @brief filter for calculating pid controller outputs
-    PIDFilter pid;
-
+    /// @brief filter for calculating pid position controller outputs
+    PIDFilter pidp[3];
+    /// @brief filter for calculating pid velocity controller outputs
+    PIDFilter pidv[3];
+    /// @brief outputs of the pid position controller
+    float outputp[4];
+    /// @brief outputs of the pid velocity controller
+    float outputv[4];
+    /// @brief combined outputs of the pid position and velocity controllers
+    float output[4];
+    /// @brief target motor velocity
+    float motor_velocity[4];
 public:
     /// @brief set controller level and make sure it's a low level controller
     /// @param _controller_level controller level(if it outputs a torque or a target micro state).
@@ -78,35 +118,10 @@ public:
 
     void reset() {
         Controller::reset();
-        pid.sumError = 0.0;
-    }
-};
-
-/// @brief Position controller for the chassis
-struct XDriveChassisPositionController : public Controller {
-private:
-    /// @brief filter for calculating pid position controller outputs
-    PIDFilter pidp[3];
-    /// @brief filter for calculating pid velocity controller outputs
-    PIDFilter pidv[3];
-    /// @brief outputs of the pid position controller
-    float outputp[i];
-    /// @brief outputs of the pid velocity controller
-    float outputv[i];
-    /// @brief combined outputs of the pid position and velocity controllers
-    float output[i];
-    /// @brief target motor velocity
-    float motor_velocity[4];
-public:
-    /// @brief set controller level and make sure it's not low level
-    /// @param _controller_level controller level(if it outputs a torque or a target micro state).
-    XDrivePositionController() = defualt;
-
-    void step(float reference[STATE_LEN][3], float estimate[STATE_LEN][3], float micro_estimate[NUM_MOTORS][MICRO_STATE_LEN], float outputs[NUM_MOTORS]);
-
-    void reset() {
-        Controller::reset();
-        pidp.sumError = 0.0;
+        for(int i = 0; i < 3; i++){
+            pidp[i].sumError = 0.0;
+            pidv[i].sumError = 0.0;
+        }
     }
 };
 
@@ -125,7 +140,7 @@ struct YawController : public Controller {
             pidp.sumError = 0.0;
             pidv.sumError = 0.0;
         }
-}
+};
 
 struct PitchController : public Controller {
 
@@ -143,12 +158,14 @@ struct PitchController : public Controller {
             pidp.sumError = 0.0;
             pidv.sumError = 0.0;
         }
-}
+};
 
 struct FlywheelController : public Controller{
     private:
-        PIDFilter pidv;
-
+        /// @brief filter for controlling meters/second
+        PIDFilter pid_high;
+        /// @brief filter for controlling motor velocity
+        PIDFilter pid_low;
     public:
         FlywheelController() = default;
 
@@ -156,13 +173,17 @@ struct FlywheelController : public Controller{
 
         void reset(){
             Controller:reset();
-            pidv.sumError = 0.0;
+            pid_high.sumError = 0.0;
+            pid_low.sumError = 0.0;
         }
-}
+};
 
 struct FeederController : public Controller{
     private:
-        PIDFilter pidv;
+        /// @brief filter for controlling balls/sec
+        PIDFilter pid_high;
+        /// @brief filter for controlling motor velocity
+        PIDFilter pid_low;
 
     public:
         FeederController() = default;
@@ -171,9 +192,10 @@ struct FeederController : public Controller{
 
         void reset(){
             Controller:reset();
-            pidv.sumError = 0.0;
+            pid_high.sumError = 0.0;
+            pid_low.sumError = 0.0;
         }
-}
+};
 
 /// @brief Controller for the switcher, which is a fullstate controller with feedforward
 struct SwitcherController : public Controller {
