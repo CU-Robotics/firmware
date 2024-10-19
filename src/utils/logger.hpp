@@ -14,6 +14,7 @@ public:
 	
 	/// @brief Neccesary function to utilize Print abstract class
 	/// @param b matches parameters in Print.h
+	/// @return input byte
 	size_t write(uint8_t b){print("UNEXPECTED PRINT IN LOGGER.HPP"); return b;}
 	
 	/// @brief copies internal buffer to inputted location (*data) in memory
