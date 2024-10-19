@@ -10,9 +10,9 @@
 class ControllerManager {
 private:
     /// @brief Array storing every controller
-    Controller* controllers[NUM_CONTROLLERS];
+    Controller* controllers[NUM_ROBOT_CONTROLLERS];
     
-    static int num_controllers;
+    int num_controllers;
 
     float outputs[NUM_MOTORS] = { 0 };
 
@@ -21,7 +21,7 @@ private:
     const Config* config_data = nullptr;
 
     /// @brief can data pointer used to write to the can bus
-    CANData* can_data;
+    rm_CAN* can;
 
 public:
     /// @brief default constructor, does nothing
@@ -29,12 +29,12 @@ public:
 
     /// @brief Initializes controllers with data from the config yaml
     /// @param _config_data read-only config reference storing all config data
-    void init(CANData* can_data, const Config* _config_data);
+    void init(rm_CAN* _can, const Config* _config_data);
 
     /// @brief Populates the corresponding index of the "controllers" array attribute with a controller object
     /// @param controller_type denotes what kind of controller to initialize (see contoller.hpp)
     /// @param gains gains matrix input (see controller.hpp for what each gain means)
-    void init_controller(int controller_type, float gains[NUM_GAINS], float gear_ratios[NUM_MOTORS]);
+    void init_controller(int controller_type, const float gains[NUM_GAINS], const float gear_ratios[NUM_MOTORS]);
 
     /// @brief Steps through controllers and sets the new motor inputs (ie. motor current, torque)
     /// @param macro_reference Governor reference (governed target state)
@@ -51,7 +51,4 @@ public:
     /// @param value 
     void actuator_write(int motor_id, float value);
 };
-
-int ControllerManager::num_controllers = 0;
-
 #endif // CONTROLLER_MANAGER_H

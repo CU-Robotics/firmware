@@ -106,7 +106,7 @@ int main() {
     estimator_manager.init(can_data, config);
 
     //generate controller outputs based on governed references and estimated state
-    controller_manager.init(config);
+    controller_manager.init(&can, config);
 
     //set reference limits in the reference governor
     governor.set_reference_limits(config->set_reference_limits);
@@ -116,6 +116,7 @@ int main() {
     float temp_micro_state[NUM_MOTORS][MICRO_STATE_LEN] = { 0 }; // Temp micro state array
     float temp_reference[STATE_LEN][3] = { 0 }; //Temp governed state
     float target_state[STATE_LEN][3] = { 0 }; //Temp ungoverned state
+    float hive_state_offset[STATE_LEN][3] = { 0 }; //Hive offset state
     float motor_inputs[NUM_MOTORS] = { 0 }; //Array for storing controller outputs to send to CAN
 
     // manual controls variables

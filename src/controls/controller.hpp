@@ -9,7 +9,7 @@
 #include "../sensors/ACS712.hpp"
 
 #define NUM_GAINS 24
-#define NUM_CONTROLLERS 12
+#define NUM_ROBOT_CONTROLLERS 12
 #define NUM_CONTROLLER_LEVELS 3
 
 /// @brief Parent controller struct, all controllers should be based off of this.
@@ -31,15 +31,13 @@ public:
     /// @brief set the gains for this specific controller
     /// @param _gains gains array of length NUM_GAINS
     void set_gains(const float _gains[NUM_GAINS]) {
-        for (int i = 0; i < NUM_GAINS; i++)
-            gains[i] = _gains[i];
+        for (int i = 0; i < NUM_GAINS; i++) gains[i] = _gains[i];
     }
 
     /// @brief set the gear ratios for this specific controller
-    /// @param _gear_ratios gains array of length NUM_GAINS
-    void set_gear_ratios(float _gear_ratios[NUM_GAINS]) {
-        for (int i = 0; i < NUM_GAINS; i++)
-            gear_ratios[i] = _gear_ratios[i];
+    /// @param _gear_ratios gains array of length NUM_MOTORS
+    void set_gear_ratios(const float _gear_ratios[NUM_MOTORS]) {
+        for (int i = 0; i < NUM_MOTORS; i++) gear_ratios[i] = _gear_ratios[i];
     }
 
     /// @brief Generates an output from a state reference and estimation

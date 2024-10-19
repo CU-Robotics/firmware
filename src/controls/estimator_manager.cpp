@@ -91,7 +91,7 @@ void EstimatorManager::init_estimator(int estimator_id) {
         estimators[num_estimators] = new SwitcherEstimator(*config_data, can_data, &tof_sensors[0]);
         break;
     case 6:
-        estimators[num_estimators] = new GimbalEstimatorNoOdom(*config_data, &buff_sensors[0], &buff_sensors[1], &icm_sensors[0], can_data);
+        estimators[num_estimators] = new GimbalEstimatorNoOdom(*config_data, &buff_encoders[0], &buff_encoders[1], &icm_sensors[0], can_data);
         break;
     default:
         break;

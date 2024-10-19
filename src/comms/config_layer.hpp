@@ -54,9 +54,9 @@ struct Config {
     float num_sensors[16];
 
     /// @brief gains matrix
-    float gains[NUM_CONTROLLERS][NUM_GAINS];
+    float gains[NUM_ROBOT_CONTROLLERS][NUM_GAINS];
     /// @brief gear ratio matrix
-    float gear_ratios[NUM_CONTROLLERS][NUM_MOTORS];
+    float gear_ratios[NUM_ROBOT_CONTROLLERS][NUM_MOTORS];
 
     /// @brief matrix that contains the type, physical id, and physical bus of each motor
     int motor_info[NUM_MOTORS][3];
@@ -66,7 +66,7 @@ struct Config {
     /// @brief the estimator id's and info
     float estimator_info[NUM_ESTIMATORS][STATE_LEN];
     /// @brief controller id's and info
-    float controller_info[NUM_CONTROLLERS][NUM_MOTORS];
+    float controller_info[NUM_ROBOT_CONTROLLERS][NUM_MOTORS + 1];
 
     /// @brief gyro readings of imu when you spin yaw
     float yaw_axis_vector[3];
@@ -77,7 +77,7 @@ struct Config {
     /// @brief default chassis starting angles
     float default_chassis_starting_angles[3];
     /// @brief controller types
-    float controller_types[NUM_CONTROLLERS];
+    float controller_types[NUM_ROBOT_CONTROLLERS];
     /// @brief values for chassis kinematics/dynamics
     float drive_conversion_factors[2];
     /// @brief what pitch angle we have when the the imu calibrates
