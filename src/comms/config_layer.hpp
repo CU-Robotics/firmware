@@ -47,33 +47,26 @@ struct Config {
     void fill_data(CommsPacket packets[MAX_CONFIG_PACKETS], uint8_t sizes[MAX_CONFIG_PACKETS]);
     
     //check yaml for more details on values
-
-    /// @brief number of motors
-    float num_motors;
-    /// @brief number of gains
-    float num_gains;
-    /// @brief number of controller levels
-    float num_controller_levels;
+    
     /// @brief Encoder offsets for each encoder
     float encoder_offsets[16];
     /// @brief number of sensors 
     float num_sensors[16];
-    /// @brief position kinematics matrix
-    float kinematics_p[NUM_MOTORS][STATE_LEN];
-    /// @brief velocity kinematics matrix
-    float kinematics_v[NUM_MOTORS][STATE_LEN];
 
     /// @brief gains matrix
-    float gains[NUM_MOTORS][NUM_CONTROLLER_LEVELS][NUM_GAINS];
-    /// @brief assigned states matrix
-    float assigned_states[NUM_ESTIMATORS][STATE_LEN];
-    /// @brief number of states per estimator
-    float num_states_per_estimator[NUM_ESTIMATORS];
+    float gains[NUM_ROBOT_CONTROLLERS][NUM_GAINS];
+    /// @brief gear ratio matrix
+    float gear_ratios[NUM_ROBOT_CONTROLLERS][NUM_MOTORS];
+
+    /// @brief matrix that contains the type, physical id, and physical bus of each motor
+    int motor_info[NUM_MOTORS][3];
     /// @brief reference limits matrix
     float set_reference_limits[STATE_LEN][3][2];
-
-    /// @brief governor types
-    float estimators[NUM_ESTIMATORS];
+    
+    /// @brief the estimator id's and info
+    float estimator_info[NUM_ESTIMATORS][STATE_LEN];
+    /// @brief controller id's and info
+    float controller_info[NUM_ROBOT_CONTROLLERS][NUM_MOTORS + 1];
 
     /// @brief gyro readings of imu when you spin yaw
     float yaw_axis_vector[3];
@@ -84,7 +77,7 @@ struct Config {
     /// @brief default chassis starting angles
     float default_chassis_starting_angles[3];
     /// @brief controller types
-    float controller_types[NUM_MOTORS][NUM_CONTROLLER_LEVELS];
+    float controller_types[NUM_ROBOT_CONTROLLERS];
     /// @brief values for chassis kinematics/dynamics
     float drive_conversion_factors[2];
     /// @brief what pitch angle we have when the the imu calibrates
@@ -158,5 +151,7 @@ public:
         memcpy(sizes, subsec_sizes, sizeof(uint8_t) * MAX_CONFIG_PACKETS);
     }
 };
+
+extern Config config;
 
 #endif

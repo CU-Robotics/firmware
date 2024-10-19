@@ -21,17 +21,10 @@ public:
     /// @param override true if we want to override the current state with the new state
     virtual void step_states(float outputs[STATE_LEN][3], float curr_state[STATE_LEN][3], int override) = 0;
 
-    /// @brief gets the number of states that an estimator is estimating
-    /// @return get number of states estimated by this estimator
-    int get_num_states() { return num_states; }
-
     /// @brief bool that indicates if the estimator is a micro or macro estimator
     bool micro_estimator = false;
 
 protected:
-    /// @brief number of states that an estimator will estimate. For the micro estimators its the number micro states to estimate
-    int num_states;
-
     ///@brief create a timer object for each estimator
     Timer time;
 
@@ -138,12 +131,10 @@ protected:
         // Case 2
         else {
             if (D1 == 0 && D2 == 0 && D3 == 0) {
-                Serial.println("matrix solve bad1");
                 output[0] = 0;
                 output[1] = 0;
                 output[2] = 0;
             } else if (D1 != 0 || D2 != 0 || D3 != 0) {
-                Serial.println("matrix solve bad2");
                 output[0] = 0;
                 output[1] = 0;
                 output[2] = 0;
@@ -287,7 +278,7 @@ public:
     /// @param imu icm encoder
     /// @param data can data from Estimator Manager
     /// @param n num states this estimator estimates
-    GimbalEstimator(Config config_data, RevEncoder* r1, RevEncoder* r2, RevEncoder* r3, BuffEncoder* b1, BuffEncoder* b2, ICM20649* imu, CANData* data, int n) {
+    GimbalEstimator(Config config_data, RevEncoder* r1, RevEncoder* r2, RevEncoder* r3, BuffEncoder* b1, BuffEncoder* b2, ICM20649* imu, CANData* data) {
         buff_enc_yaw = b1; // sensor object definitions
         buff_enc_pitch = b2;
         rev_enc[0] = r1;
@@ -295,7 +286,6 @@ public:
         rev_enc[2] = r3;
         can_data = data;
         icm_imu = imu;
-        num_states = n; // number of estimated states
         YAW_ENCODER_OFFSET = config_data.encoder_offsets[0];
         PITCH_ENCODER_OFFSET = config_data.encoder_offsets[1];
 
@@ -327,8 +317,6 @@ public:
     /// @param curr_state current state array to update with new state
     /// @param override true if we want to override the current state with the new state
     void step_states(float output[STATE_LEN][3], float curr_state[STATE_LEN][3], int override) override {
-        // Serial.printf("Pitch encoder offset: %f\n" ,PITCH_ENCODER_OFFSET);
-
         float pitch_enc_angle = (-buff_enc_pitch->get_angle()) - PITCH_ENCODER_OFFSET;
         while (pitch_enc_angle >= PI)
             pitch_enc_angle -= 2 * PI;
@@ -344,8 +332,6 @@ public:
         // calculates yaw velocity before integrating to find position
         // calculates the difference in initial and current pitch angle
         float pitch_diff = starting_pitch_angle - pitch_enc_angle;
-
-        // Serial.println(pitch_enc_angle);
 
         // gimbal rotation axis in spherical coordinates in imu refrence frame
         if (imu_yaw_axis_vector[0] == 0)
@@ -367,8 +353,6 @@ public:
         yaw_axis_unitvector[0] = yaw_axis_spherical[0] * cos(yaw_axis_spherical[1]) * sin(yaw_axis_spherical[2]);
         yaw_axis_unitvector[1] = yaw_axis_spherical[0] * sin(yaw_axis_spherical[1]) * sin(yaw_axis_spherical[2]);
         yaw_axis_unitvector[2] = yaw_axis_spherical[0] * cos(yaw_axis_spherical[2]);
-
-        // Serial.printf("x: %f,y: %f,z: %f\n", roll_axis_unitvector[0],roll_axis_unitvector[1],roll_axis_unitvector[2]);
 
         // roll_axis_unitvector[0] = roll_axis_spherical[0]*cos(roll_axis_spherical[1])*sin(roll_axis_spherical[2]);
         // roll_axis_unitvector[1] = roll_axis_spherical[0]*sin(roll_axis_spherical[1])*sin(roll_axis_spherical[2]);
@@ -680,12 +664,11 @@ public:
     /// @param imu icm encoder
     /// @param data can data from Estimator Manager
     /// @param n num states this estimator estimates
-    GimbalEstimatorNoOdom(Config config_data,BuffEncoder* b1, BuffEncoder* b2, ICM20649* imu, CANData* data, int n) {
+    GimbalEstimatorNoOdom(Config config_data,BuffEncoder* b1, BuffEncoder* b2, ICM20649* imu, CANData* data) {
         buff_enc_yaw = b1; // sensor object definitions
         buff_enc_pitch = b2;
         can_data = data;
         icm_imu = imu;
-        num_states = n; // number of estimated states
         YAW_ENCODER_OFFSET = config_data.encoder_offsets[0];
         PITCH_ENCODER_OFFSET = config_data.encoder_offsets[1];
 
@@ -717,8 +700,6 @@ public:
     /// @param curr_state current state of the system
     /// @param override override the current state
     void step_states(float output[STATE_LEN][3], float curr_state[STATE_LEN][3], int override) override {
-        // Serial.printf("Pitch encoder offset: %f\n" ,PITCH_ENCODER_OFFSET);
-
         float pitch_enc_angle = (-buff_enc_pitch->get_angle()) - PITCH_ENCODER_OFFSET;
         while (pitch_enc_angle >= PI)
             pitch_enc_angle -= 2 * PI;
@@ -734,8 +715,6 @@ public:
         // calculates yaw velocity before integrating to find position
         // calculates the difference in initial and current pitch angle
         float pitch_diff = starting_pitch_angle - pitch_enc_angle;
-
-        // Serial.println(pitch_enc_angle);
 
         // gimbal rotation axis in spherical coordinates in imu refrence frame
         if (imu_yaw_axis_vector[0] == 0)
@@ -757,8 +736,6 @@ public:
         yaw_axis_unitvector[0] = yaw_axis_spherical[0] * cos(yaw_axis_spherical[1]) * sin(yaw_axis_spherical[2]);
         yaw_axis_unitvector[1] = yaw_axis_spherical[0] * sin(yaw_axis_spherical[1]) * sin(yaw_axis_spherical[2]);
         yaw_axis_unitvector[2] = yaw_axis_spherical[0] * cos(yaw_axis_spherical[2]);
-
-        // Serial.printf("x: %f,y: %f,z: %f\n", roll_axis_unitvector[0],roll_axis_unitvector[1],roll_axis_unitvector[2]);
 
         // roll_axis_unitvector[0] = roll_axis_spherical[0]*cos(roll_axis_spherical[1])*sin(roll_axis_spherical[2]);
         // roll_axis_unitvector[1] = roll_axis_spherical[0]*sin(roll_axis_spherical[1])*sin(roll_axis_spherical[2]);
@@ -789,7 +766,7 @@ public:
 
         // gets the velocity data from the imu and uses the gravity vector to calculate the yaw velocity
         float raw_omega_vector[3] = { icm_imu->get_gyro_X(), icm_imu->get_gyro_Y(), icm_imu->get_gyro_Z() };
-        // Serial.printf("X: %f, Y: %f, Z: %f\n", raw_omega_vector[0], raw_omega_vector[1], raw_omega_vector[2]);
+
         // *Note: X is pitch Y is Roll Z is Yaw, when level
         // positive pitch angle is up, positive roll angle is right(robot pov), positive yaw is left(robot pov)
 
@@ -924,10 +901,8 @@ private:
 public:
     /// @brief make new flywheel estimator and set can data pointer and num states
     /// @param c can data pointer from EstimatorManager
-    /// @param _num_states number of states estimated
-    FlyWheelEstimator(CANData* c, int _num_states) {
+    FlyWheelEstimator(CANData* c) {
         can_data = c;
-        num_states = _num_states;
     }
   
     ~FlyWheelEstimator() {};
@@ -973,10 +948,8 @@ private:
 public:
     /// @brief make new feeder estimator and set can_data pointer and num_states
     /// @param c can data pointer from EstimatorManager
-    /// @param _num_states number of states this estimator estimates
-    FeederEstimator(CANData* c, int _num_states) {
+    FeederEstimator(CANData* c) {
         can_data = c;
-        num_states = _num_states;
     }
 
     ~FeederEstimator() {};
@@ -1029,11 +1002,9 @@ public:
     /// @brief make new barrel switcher estimator and set can_data pointer and num_states
     /// @param config config data from yaml
     /// @param c can data pointer from EstimatorManager
-    /// @param _num_states number of states this estimator estimates
     /// @param tof time of flight sensor object
-    SwitcherEstimator(Config config,CANData* c,TOFSensor* tof, int _num_states) {
+    SwitcherEstimator(Config config,CANData* c,TOFSensor* tof) {
         can_data = c;
-        num_states = _num_states;
         time_of_flight = tof;
         tof_sensor_offset = config.switcher_values[0];
         tof_scale = config.switcher_values[1];
@@ -1064,7 +1035,6 @@ public:
         // }
         // distance_from_right = distance_from_right*0.99 + tof_distance*0.01;
         output[0][0] = tof_distance;
-        Serial.printf("tof: %f\n",tof_distance);
         output[0][1] = angular_velocity_motor;
     }
 };
@@ -1080,10 +1050,9 @@ public:
     /// @brief Make new local estimator and set can data pointer and num states
     /// @param c can data pointer from EstimatorManager
     /// @param ns number of states this estimator estimates
-    LocalEstimator(CANData* c, int ns) {
+    LocalEstimator(CANData* c) {
         micro_estimator = true;
         can_data = c;
-        num_states = ns;
     }
 
     /// @brief step through each motor and add to micro state

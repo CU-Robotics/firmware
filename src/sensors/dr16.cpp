@@ -42,11 +42,8 @@ void DR16::read() {
 		return;
 	}
 
-	// Serial.println(m_disctTime);
 	m_disctTime = millis();
 	m_connected = true;
-	// Serial.print("CONNCETD: ");
-	// Serial.println(m_connected);
 
 	  // issue read command, fills m_inputRaw with 18 bytes
 	Serial8.readBytes(m_inputRaw, DR16_PACKET_SIZE);
@@ -123,8 +120,6 @@ void DR16::read() {
 			m_fail = false;
 	}
 
-
-	// Serial.printf("%.4d (%.3f)\t%.4d (%.3f)\t%.4d (%.3f)\t%.4d (%.3f)\t%.4d (%.3f)\t%.4d\t%.4d\n", c0, m_input[0], c1, m_input[1], c2, m_input[2], c3, m_input[3], wh, m_input[4], s1, s2);
 	m_prevTime = micros();
 }
 
