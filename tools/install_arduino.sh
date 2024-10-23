@@ -13,3 +13,6 @@ rm arduino-install-thing.sh
 
 # install the needed board/tools for Teensy
 arduino-cli core install teensy:avr@1.59.0 --additional-urls "https://www.pjrc.com/teensy/package_teensy_index.json"
+
+# install the compiler if we're running on arm (aarch64)
+./tools/install_compiler.sh
