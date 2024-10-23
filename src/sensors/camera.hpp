@@ -6,10 +6,10 @@
 
 #define CAMERA_ID OV5640a
 
-struct Dartcam {
-    uint8_t frameBuffer[160 * 120];
-    uint8_t frameBuffer2[160 * 120];
+DMAMEM static uint8_t frameBuffer[160 * 120];
+DMAMEM static uint8_t frameBuffer2[160 * 120];
 
+struct Dartcam {
     OV5640 omni;
     Camera camera;
 
@@ -20,7 +20,6 @@ struct Dartcam {
         uint8_t status = camera.begin(FRAMESIZE_QQVGA, RGB565, 30, CAMERA_ID, false);
         if (!status) {
             Serial.println("camera failed to start");
-            while (1) { } // Halt if camera fails to start
         }
     }
 
