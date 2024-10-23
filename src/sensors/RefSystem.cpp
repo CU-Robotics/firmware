@@ -1,5 +1,7 @@
 #include "RefSystem.hpp"
 
+uint32_t launches = 0;
+
 uint8_t generateCRC8(uint8_t* data, uint32_t len) {
     uint8_t CRC8 = 0xFF;
     while (len-- > 0) {
@@ -369,6 +371,7 @@ void RefSystem::set_ref_data(Frame& frame, uint8_t raw_buffer[REF_MAX_PACKET_SIZ
         ref_data.damage_status.set_data(frame.data);
         break;
     case FrameType::LAUNCHING_STATUS:
+        launches++;
         ref_data.launching_status.set_data(frame.data);
         break;
     case FrameType::PROJECTILE_ALLOWANCE:
@@ -423,3 +426,4 @@ void RefSystem::set_ref_data(Frame& frame, uint8_t raw_buffer[REF_MAX_PACKET_SIZ
         break;
     }
 }
+

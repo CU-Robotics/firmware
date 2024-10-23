@@ -1,4 +1,5 @@
 #include <Arduino.h>
+#include <TeensyDebug.h>
 
 #include "git_info.h"
 
@@ -7,8 +8,9 @@
 #include "controls/estimator_manager.hpp"
 #include "controls/controller_manager.hpp"
 
-#include <TeensyDebug.h>
 #include "sensors/LEDBoard.hpp"
+
+extern uint32_t launches;
 
 // Loop constants
 #define LOOP_FREQ 1000
@@ -139,8 +141,14 @@ int main() {
     // whether we are in hive mode or not
     bool hive_toggle = false;
 
+    bool shooting = false;
+    uint32_t shooting_start = 0; // us
+    uint32_t shooting_time = 10 * 1000000; // us
+    uint32_t shots_per_sec = 10;
+
     // Main loop
     while (true) {
+        Serial.println(launches);
         // read main sensors
         can.read();
         dr16.read();
@@ -177,6 +185,21 @@ int main() {
             chassis_pos_y = dr16.get_l_stick_y() * 2 + pos_offset_y;
         }
 
+        if (dr16.get_r_switch() == 1) {
+            if (shooting == false) {
+                shooting = true;
+                shooting_start = micros();
+            }
+        }
+
+        if (shooting && micros() - shooting_start >= shooting_time) {
+            can.zero();
+            while (1) {
+                Serial.printf("Shot %u rounds in %uus\n", launches, shooting_time);
+                delay(500);
+            }
+        }
+
         float chassis_spin = dr16.get_wheel() * 25;
         float pitch_target = 1.57
             + -dr16.get_r_stick_y() * 0.3
@@ -186,7 +209,7 @@ int main() {
             - dr16_pos_x
             - vtm_pos_x;
         float fly_wheel_target = (dr16.get_r_switch() == 1 || dr16.get_r_switch() == 3) ? 18 : 0; //m/s
-        float feeder_target = (((dr16.get_l_mouse_button() || ref.ref_data.kbm_interaction.button_left) && dr16.get_r_switch() != 2) || dr16.get_r_switch() == 1) ? 10 : 0;
+        float feeder_target = (((dr16.get_l_mouse_button() || ref.ref_data.kbm_interaction.button_left) && dr16.get_r_switch() != 2) || dr16.get_r_switch() == 1) ? shots_per_sec : 0;
 
         // set manual controls
         target_state[0][0] = chassis_pos_x;
@@ -328,5 +351,6 @@ int main() {
     
     return 0;
 }
+
 
 
