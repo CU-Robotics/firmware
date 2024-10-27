@@ -9,6 +9,11 @@
 #include <string>
 #define CONFIG_LAYER_DEBUG
 
+// config err handler macros
+#define CONFIG_RM_FAIL 0
+#define CONFIG_TOUCH_FAIL 1
+#define CONFIG_OPEN_FAIL 2
+
 /// @brief arbitrary cap on config packets that can be received (make sure it's enough)
 const int MAX_CONFIG_PACKETS = 64;
 
@@ -163,7 +168,14 @@ public:
 
     bool sd_load();
 
-    void store_config();
+    bool store_config();
+
+    uint64_t sd_checksum64(uint8_t* arr, uint64_t n);
+
+    /// @brief handles errors during the configuration procedure from the SD card
+    /// @param err_code error code to identify which behavior to execute
+    /// @return false when error is unrecoverable or fails to recover, true when successfully recovers.
+    bool SD_ERR_HANDLER(int err_code);
 };
 
 #endif
