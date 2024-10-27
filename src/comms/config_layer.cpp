@@ -235,10 +235,11 @@ bool ConfigLayer::sd_load(){
         return false;
     }
     // read checksum and each packet
-    // grab first packet and checksum
+    // grab first packet and checksum (kept separate in order to validate subsequent checksum values)
     uint64_t checksum;
     if(sdcard.read((uint8_t *)(&checksum), sizeof(uint64_t)) != sizeof(uint64_t)) return false;
     if(sdcard.read((uint8_t *)(&config_packets[0]), sizeof(CommsPacket)) != sizeof(CommsPacket)) return false;
+    // read remaining packets
     for(int i = 1; i < MAX_CONFIG_PACKETS; i++){
         uint64_t temp_checksum;
         if(sdcard.read((uint8_t *)(&temp_checksum), sizeof(uint64_t)) != sizeof(uint64_t)) {
@@ -262,6 +263,9 @@ bool ConfigLayer::sd_load(){
     sdcard.close();
 
     uint8_t *config_bytes = (uint8_t *)config_packets;
+    #ifdef CONFIG_LAYER_DEBUG
+    Serial.printf("sd_load: computing checksum for stored config\n");
+    #endif
     if(sd_checksum64(config_bytes, config_byte_size) != checksum){
         Serial.printf("Checksum for config file does not match stored config, requesting config from hive...\n");
         return false;
@@ -291,10 +295,11 @@ bool ConfigLayer::store_config(){
     int config_byte_size = MAX_CONFIG_PACKETS * sizeof(CommsPacket);
     
     // calculate checksum on config packet array
+    #ifdef CONFIG_LAYER_DEBUG
+    Serial.printf("store_config: computing checksum for received config\n");
+    #endif
     uint8_t* config_bytes = (uint8_t *)config_packets;
     uint64_t checksum = sd_checksum64(config_bytes, config_byte_size);
-
-    Serial.printf("Calculated checksum of %lu for current config\n", checksum);
 
     // write robot id byte to ref data so it can be compared directly
     sdcard.write(&ref.ref_data.robot_performance.robot_ID, 1);
@@ -315,7 +320,11 @@ bool ConfigLayer::store_config(){
 }
 
 uint64_t ConfigLayer::sd_checksum64(uint8_t* arr, uint64_t n){
-    return (uint64_t)0x4545454545454545;    // test value
+    uint64_t out = 0x4545454545454545;  // test value
+    #ifdef CONFIG_LAYER_DEBUG
+    Serial.printf("sd_checksum64: returned %x\n", out);
+    #endif
+    return out; 
 }
 
 bool ConfigLayer::SD_ERR_HANDLER(int err_code){
