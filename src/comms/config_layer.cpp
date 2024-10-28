@@ -320,7 +320,11 @@ bool ConfigLayer::store_config(){
 }
 
 uint64_t ConfigLayer::sd_checksum64(uint8_t* arr, uint64_t n){
-    uint64_t out = 0x4545454545454545;  // test value
+    // uint64_t out = 0x4545454545454545;  // test value
+    uint64_t out = 0;
+    for(uint32_t i = 0; i < n; i++){
+        out += arr[i];
+    }
     #ifdef CONFIG_LAYER_DEBUG
     Serial.printf("sd_checksum64: returned %x\n", out);
     #endif
