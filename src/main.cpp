@@ -86,16 +86,6 @@ int main() {
     Testobserver.step(can.get_data(), imu.getdata(), tempobs);
     Testobserver.step(can.get_data(), imu.getdata(), tempobs);*/
     // Run 3 times for derivative values not get crazy (Maybe this works HAHA)
-    uint8_t motor_off[8] = {0x80, 0, 0, 0, 0, 0, 0, 0}; // Turn off motor
-    can.test_write_balancing_motor(CAN_1, 0, motor_off);
-    if(can.write())
-        Serial.print("write");
-    Serial.print("start");
-    uint8_t motor_speed[8] = {0xA2, 0, 0, 0, 0xff, 0xff, 0x00, 0x0};
-        
-        can.test_write_balancing_motor(CAN_1, 0, motor_speed);
-        if(can.write())
-            Serial.print("write");
     // Main loop
     while (true) {
         // Read sensors

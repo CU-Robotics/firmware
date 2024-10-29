@@ -111,13 +111,6 @@ void rm_CAN::write_motor(uint16_t canID, uint16_t motorID, int32_t value) {
     m_output[canID][messageID].buf[mID * 2 + 1] = value & 0xff;
 }
 
-void rm_CAN::test_write_balancing_motor(uint16_t canID, uint16_t motorID, uint8_t value[8]){
-    m_output[canID][0].id = 0x140 + 1;
-    for(int i = 0; i < 8; i++)
-        m_output[canID][0].buf[i] = value[i];
-    return;
-}
-
 void rm_CAN::write_motor_norm(uint16_t canID, uint16_t motorID, uint8_t controllerType, float value) {
     switch (controllerType) {
     case C610:
