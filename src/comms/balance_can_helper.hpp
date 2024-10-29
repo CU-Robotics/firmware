@@ -59,7 +59,12 @@ struct MG8016_Data{
 class MG8016_can{
 private:
     FlexCAN_T4<CAN3, RX_SIZE_256, TX_SIZE_16> m_can3;
-    CAN_message_t messages[NUM_CAN_BUSES][NUM_MESSAGE_IDS];
+    CAN_message_t messages[NUM_MESSAGE_IDS];
+    /// @brief Clear all messages
+    void zero_all();
+    /// @brief Clear messages for a single message id
+    /// @param id the message id or the one motor id (1,2,3,4)
+    void zero_id(uint8_t id);
 public:
     MG8016_Data motor_data[NUM_MOTORS];
     void MG8016_init();
@@ -178,14 +183,5 @@ public:
     /// @param id the one motor id (1,2,3,4)
     /// @note Data goes to motor_data[id - 1]
     void MG8016_read_motor_state_3(uint8_t id);
-
 }
-
-
-
-
-
-
-
-
 #endif
