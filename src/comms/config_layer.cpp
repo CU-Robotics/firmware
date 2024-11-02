@@ -2,7 +2,6 @@
 
 const Config* const ConfigLayer::configure(HIDLayer* comms) {
     // check SD
-    delay(5000);
     if(sdcard.exists("/config.pack")){
         #ifdef CONFIG_LAYER_DEBUG
         Serial.printf("Config located on SD in /config.pack, attempting to load from file\n");
@@ -222,9 +221,10 @@ void Config::fill_data(CommsPacket packets[MAX_CONFIG_PACKETS], uint8_t sizes[MA
 
 bool ConfigLayer::sd_load(){
     // num of total bytes in config_packets
+    int config_byte_size = MAX_CONFIG_PACKETS * sizeof(CommsPacket);
+
     if(sdcard.open("/config.pack") != 0) return false;
 
-    int config_byte_size = MAX_CONFIG_PACKETS * sizeof(CommsPacket);
 
     // DEBUG: we are expecting this to run after hive sends a packet. compare results (should be ***identical***!!!)
     uint8_t received_id;
@@ -290,7 +290,6 @@ bool ConfigLayer::store_config(){
     }
 
     // total size of /config.pack: MAX_CONFIG_PACKETS * (sizeof(CommsPacket) + 1)
-
     // num of packets * size of each packet == num of bytes for all packets
     int config_byte_size = MAX_CONFIG_PACKETS * sizeof(CommsPacket);
     
@@ -320,7 +319,6 @@ bool ConfigLayer::store_config(){
 }
 
 uint64_t ConfigLayer::sd_checksum64(uint8_t* arr, uint64_t n){
-    // uint64_t out = 0x4545454545454545;  // test value
     uint64_t out = 0;
     for(uint32_t i = 0; i < n; i++){
         out += arr[i];
