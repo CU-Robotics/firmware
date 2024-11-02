@@ -35,8 +35,8 @@ void RefSystem::init() {
 }
 
 void RefSystem::read() {
-   read_vtm();
-   read_mcm(); 
+    read_vtm();
+    read_mcm();
 }
 
 void RefSystem::write(uint8_t* packet, uint8_t length) {
@@ -369,7 +369,7 @@ void RefSystem::read_vtm() {
             vtm_data.command_ID_read = false;
             vtm_data.data_read = false;
             vtm_data.tail_read = false;
-	    vtm_data.buffer_index = 0;
+            vtm_data.buffer_index = 0;
             memset(vtm_data.raw_buffer, 0, REF_MAX_PACKET_SIZE * 2);
         } else {
             success = false;
@@ -385,7 +385,7 @@ void RefSystem::read_vtm() {
         vtm_data.command_ID_read = false;
         vtm_data.data_read = false;
         vtm_data.tail_read = false;
-	vtm_data.buffer_index = 0;
+        vtm_data.buffer_index = 0;
         memset(vtm_data.raw_buffer, 0, REF_MAX_PACKET_SIZE * 2);
     }
 }
@@ -426,7 +426,7 @@ void RefSystem::read_mcm() {
             mcm_data.command_ID_read = false;
             mcm_data.data_read = false;
             mcm_data.tail_read = false;
-	    mcm_data.buffer_index = 0;
+            mcm_data.buffer_index = 0;
             memset(mcm_data.raw_buffer, 0, REF_MAX_PACKET_SIZE * 2);
         } else {
             success = false;
@@ -442,7 +442,7 @@ void RefSystem::read_mcm() {
         mcm_data.command_ID_read = false;
         mcm_data.data_read = false;
         mcm_data.tail_read = false;
-	mcm_data.buffer_index = 0;
+        mcm_data.buffer_index = 0;
         memset(mcm_data.raw_buffer, 0, REF_MAX_PACKET_SIZE * 2);
     }
 }

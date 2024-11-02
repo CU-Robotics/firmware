@@ -135,10 +135,10 @@ private:
     /// @brief Get the current outgoing sequence. Used in sending frames
     /// @return The next sequence
     inline uint8_t get_seq() noexcept { seq++;  return seq; }
-    
+
     /// @brief Read the VTM data
     void read_vtm();
-    
+
     /// @brief Read the MCM data
     void read_mcm();
 
@@ -161,13 +161,13 @@ private:
         /// @brief Whether the tail has been read
         bool tail_read = false;
         /// @brief Current frame being read
-        Frame curr_frame{};
+        Frame curr_frame {};
     };
 
     /// @brief Internal data for the VTM
-    RefInternalData vtm_data{};
+    RefInternalData vtm_data {};
     /// @brief Internal data for the MCM
-    RefInternalData mcm_data{};
+    RefInternalData mcm_data {};
 
 public:
     /// @brief Number of inter-robot packets sent
@@ -184,7 +184,7 @@ public:
     uint16_t bytes_sent = 0;
 
     /// @brief struct to store all ref data
-    RefData ref_data{};
+    RefData ref_data {};
 };
 
 extern RefSystem ref;
