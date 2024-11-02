@@ -35,7 +35,8 @@ void RefSystem::init() {
 }
 
 void RefSystem::read() {
-    
+   read_vtm();
+   read_mcm(); 
 }
 
 void RefSystem::write(uint8_t* packet, uint8_t length) {
@@ -222,8 +223,6 @@ int RefSystem::read_frame_tail(HardwareSerial* serial, uint8_t raw_buffer[REF_MA
 }
 
 void RefSystem::set_ref_data(Frame& frame, uint8_t raw_buffer[REF_MAX_PACKET_SIZE * 2]) {
-    // Serial.printf("Received frame with ID: %04X\n", *reinterpret_cast<uint16_t*>(raw_buffer + 5));
-
     // Copy the header
     frame.header.SOF = raw_buffer[0];
     frame.header.data_length = (raw_buffer[2] << 8) | raw_buffer[1];
@@ -315,7 +314,6 @@ void RefSystem::set_ref_data(Frame& frame, uint8_t raw_buffer[REF_MAX_PACKET_SIZ
         break;
     case FrameType::KBM_INTERACTION:
         ref_data.kbm_interaction.set_data(frame.data);
-        // ref_data.kbm_interaction.print();
         break;
     case FrameType::SMALL_MAP_RADAR_POSITION:
         ref_data.small_map_radar_position.set_data(frame.data);
@@ -371,6 +369,7 @@ void RefSystem::read_vtm() {
             vtm_data.command_ID_read = false;
             vtm_data.data_read = false;
             vtm_data.tail_read = false;
+	    vtm_data.buffer_index = 0;
             memset(vtm_data.raw_buffer, 0, REF_MAX_PACKET_SIZE * 2);
         } else {
             success = false;
@@ -386,6 +385,7 @@ void RefSystem::read_vtm() {
         vtm_data.command_ID_read = false;
         vtm_data.data_read = false;
         vtm_data.tail_read = false;
+	vtm_data.buffer_index = 0;
         memset(vtm_data.raw_buffer, 0, REF_MAX_PACKET_SIZE * 2);
     }
 }
@@ -426,6 +426,7 @@ void RefSystem::read_mcm() {
             mcm_data.command_ID_read = false;
             mcm_data.data_read = false;
             mcm_data.tail_read = false;
+	    mcm_data.buffer_index = 0;
             memset(mcm_data.raw_buffer, 0, REF_MAX_PACKET_SIZE * 2);
         } else {
             success = false;
@@ -441,6 +442,7 @@ void RefSystem::read_mcm() {
         mcm_data.command_ID_read = false;
         mcm_data.data_read = false;
         mcm_data.tail_read = false;
+	mcm_data.buffer_index = 0;
         memset(mcm_data.raw_buffer, 0, REF_MAX_PACKET_SIZE * 2);
     }
 }
