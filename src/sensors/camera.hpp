@@ -4,34 +4,34 @@
 #include "Teensy_Camera.h"
 #include "OV5640.h"
 
-#define CAMERA_ID OV5640a
+#define DARTCAM_BUFFER_SIZE 38400 // 10240
+#define DARTCAM_ID OV5640a
+#define DARTCAM_FRAME_RATE 30
+#define DARTCAM_FORMAT RGB565
+#define DARTCAM_FRAMESIZE FRAMESIZE_QQVGA
+#define DARTCAM_USE_GPIO false
 
-DMAMEM static uint8_t frameBuffer[160 * 120];
-DMAMEM static uint8_t frameBuffer2[160 * 120];
+/// @brief frame buffer 1 for the camera
+extern uint8_t frameBuffer[ ];
+/// @brief frame buffer 2 for the camera
+extern uint8_t frameBuffer2[ ];
 
 struct Dartcam {
+    /// @brief ImageSensor object for the OV5640 sensor
     OV5640 omni;
+    /// @brief Camera object for the OV5640 sensor. Constructor requires an ImageSensor object.
     Camera camera;
 
-    Dartcam() : omni(), camera(omni) { }
+    /// @brief Constructor for the Dartcam object
+    Dartcam();
 
-    void init() {
-        Serial.println("initializing camera");
-        uint8_t status = camera.begin(FRAMESIZE_QQVGA, RGB565, 30, CAMERA_ID, false);
-        if (!status) {
-            Serial.println("camera failed to start");
-        }
-    }
+    /// @brief Initialize the camera. Prints an error message and halts if the camera fails to start.
+    void init();
 
-    void read() {
-        camera.readFrame(frameBuffer, sizeof(frameBuffer), frameBuffer2, sizeof(frameBuffer2));
+    /// @brief Read a frame from the camera and put it into the frame buffers.
+    void read();
 
-        Serial.println("frame captured");
-
-        Serial.println(frameBuffer[0]);
-        Serial.println(frameBuffer[1]);
-        Serial.println(frameBuffer[200]);
-    }
+    void process_frame();
 };
 
 #endif // CAMERA_H

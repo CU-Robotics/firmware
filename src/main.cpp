@@ -8,6 +8,7 @@ int main() {
     dartcam.init();
     while (1) {
         dartcam.read();
+        delay(1000);
     }
     return 0;
 }
