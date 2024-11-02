@@ -2,37 +2,37 @@
 
 const Config* const ConfigLayer::configure(HIDLayer* comms) {
     // check SD
-    while(ref.ref_data.robot_performance.robot_ID != 0) ref.read();
+    while (ref.ref_data.robot_performance.robot_ID != 0) ref.read();
 
-    if(sdcard.exists("/config.pack")){
-        #ifdef CONFIG_LAYER_DEBUG
+    if (sdcard.exists("/config.pack")) {
+    #ifdef CONFIG_LAYER_DEBUG
         Serial.printf("Config located on SD in /config.pack, attempting to load from file\n");
-        #endif
-        
-        // load sd config into config_packets
+    #endif
+
+    // load sd config into config_packets
         configured = sd_load();
-        if(configured) {
+        if (configured) {
             Serial.printf("SD load successful!\n");
             return &config;
         }
     }
-    #ifdef CONFIG_LAYER_DEBUG
-    else{
+#ifdef CONFIG_LAYER_DEBUG
+    else {
         Serial.printf("No config packet located, awaiting input from comms....\n");
     }
-    #endif
-    // if no config on SD, then await transmission
-    // grab and process all config packets until finished
+#endif
+// if no config on SD, then await transmission
+// grab and process all config packets until finished
     double prev_time = millis();
     double delta_time = 0;
     while (!is_configured()) {
-        #ifdef CONFIG_LAYER_DEBUG
-        if(delta_time >= 2000){
+    #ifdef CONFIG_LAYER_DEBUG
+        if (delta_time >= 2000) {
             Serial.printf("Pinging for config packet....\n");
             prev_time = millis();
         }
         delta_time = millis() - prev_time;
-        #endif
+    #endif
 
         comms->ping();
         process(comms->get_incoming_packet(), comms->get_outgoing_packet());
@@ -43,7 +43,7 @@ const Config* const ConfigLayer::configure(HIDLayer* comms) {
 
     // verify that config received matches ref system: if not, repeat config procedure
     Serial.printf("Received robot ID from config: %d\nRobot ID from ref system: %d\n", (int)config.robot_id, ref.ref_data.robot_performance.robot_ID);
-    if(ref.ref_data.robot_performance.robot_ID != (int)config.robot_id){
+    if (ref.ref_data.robot_performance.robot_ID != (int)config.robot_id) {
         Serial.printf("ERROR: IDs do not match, repeating config prodedure....\n");
         configure(comms);
     }
@@ -51,14 +51,15 @@ const Config* const ConfigLayer::configure(HIDLayer* comms) {
     // update stored config, repeat until successful
     do {
         Serial.println("Attempting to store config...");
-    } while(!store_config());
+    }
+    while (!store_config());
 
     return &config;
 }
 
-void ConfigLayer::process(CommsPacket *in, CommsPacket *out) {
-    char *in_raw = in->raw;
-    char *out_raw = out->raw;
+void ConfigLayer::process(CommsPacket* in, CommsPacket* out) {
+    char* in_raw = in->raw;
+    char* out_raw = out->raw;
     int8_t sec_id = in_raw[1];
     uint8_t subsec_id = in_raw[2];
     uint8_t info_bit = in_raw[3];
@@ -74,10 +75,10 @@ void ConfigLayer::process(CommsPacket *in, CommsPacket *out) {
             */
             num_sec = (in_raw[5] << 8) | in_raw[4];
             memcpy(
-                subsec_sizes, 
+                subsec_sizes,
                 in_raw + 8, // byte array starts at byte 8
                 num_sec);
-            
+
         #ifdef CONFIG_LAYER_DEBUG
             Serial.printf("YAML metadata received:\n");
             for (int i = 0; i < num_sec; i++) {
@@ -90,7 +91,7 @@ void ConfigLayer::process(CommsPacket *in, CommsPacket *out) {
         } else {
             config_packets[index] = *in;
             index++;
-        
+
         #ifdef CONFIG_LAYER_DEBUG
             Serial.printf("Received YAML configuration packet: (%u, %u)\n", sec_id, subsec_id);
         #endif
@@ -139,7 +140,7 @@ void Config::fill_data(CommsPacket packets[MAX_CONFIG_PACKETS], uint8_t sizes[MA
         Serial.printf("id: %d, subsec_id: %d, sub_size: %d\n", id, subsec_id, sub_size);
         Serial.println();
 
-        if (id == yaml_section_id_mappings.at("robot")){
+        if (id == yaml_section_id_mappings.at("robot")) {
             memcpy(&robot_id, packets[i].raw + 8, sub_size);
         }
         if (id == yaml_section_id_mappings.at("kinematics_p")) {
@@ -231,50 +232,50 @@ void Config::fill_data(CommsPacket packets[MAX_CONFIG_PACKETS], uint8_t sizes[MA
     }
 }
 
-bool ConfigLayer::sd_load(){
+bool ConfigLayer::sd_load() {
     // num of total bytes in config_packets
     int config_byte_size = MAX_CONFIG_PACKETS * sizeof(CommsPacket);
 
-    if(sdcard.open("/config.pack") != 0) return false;
+    if (sdcard.open("/config.pack") != 0) return false;
 
 
     // grab ID from config (originally from hive). should match ID from ref system- if not, abort!!
     float received_id;
-    sdcard.read((uint8_t *)(&received_id), sizeof(float));
+    sdcard.read((uint8_t*)(&received_id), sizeof(float));
 
     // read checksum and each packet
     // grab first packet and checksum (kept separate in order to validate subsequent checksum values)
     uint64_t checksum;
-    if(sdcard.read((uint8_t *)(&checksum), sizeof(uint64_t)) != sizeof(uint64_t)) return false;
-    if(sdcard.read((uint8_t *)(&config_packets[0]), sizeof(CommsPacket)) != sizeof(CommsPacket)) return false;
+    if (sdcard.read((uint8_t*)(&checksum), sizeof(uint64_t)) != sizeof(uint64_t)) return false;
+    if (sdcard.read((uint8_t*)(&config_packets[0]), sizeof(CommsPacket)) != sizeof(CommsPacket)) return false;
     // read remaining packets
-    for(int i = 1; i < MAX_CONFIG_PACKETS; i++){
+    for (int i = 1; i < MAX_CONFIG_PACKETS; i++) {
         uint64_t temp_checksum;
-        if(sdcard.read((uint8_t *)(&temp_checksum), sizeof(uint64_t)) != sizeof(uint64_t)) {
+        if (sdcard.read((uint8_t*)(&temp_checksum), sizeof(uint64_t)) != sizeof(uint64_t)) {
             Serial.printf("Unexpected mismatch in number of bytes read, requesting config from hive...\n");
             return false;
         }
-        if(temp_checksum != checksum){
+        if (temp_checksum != checksum) {
             Serial.printf("Inconsistent data found in config file, requesting config from hive...\n");
             return false;
         }
-        if(sdcard.read((uint8_t *)(&config_packets[i]), sizeof(CommsPacket)) != sizeof(CommsPacket)){
+        if (sdcard.read((uint8_t*)(&config_packets[i]), sizeof(CommsPacket)) != sizeof(CommsPacket)) {
             Serial.printf("Unexpected mismatch in number of bytes read, requesting config from hive...\n");
             return false;
         }
     }
-    if(sdcard.read(subsec_sizes, MAX_CONFIG_PACKETS) != MAX_CONFIG_PACKETS){
+    if (sdcard.read(subsec_sizes, MAX_CONFIG_PACKETS) != MAX_CONFIG_PACKETS) {
         Serial.printf("Unexpected mismatch in number of bytes read, requesting config from hive...\n");
         return false;
     }
 
     sdcard.close();
 
-    uint8_t *config_bytes = (uint8_t *)config_packets;
-    #ifdef CONFIG_LAYER_DEBUG
+    uint8_t* config_bytes = (uint8_t*)config_packets;
+#ifdef CONFIG_LAYER_DEBUG
     Serial.printf("sd_load: computing checksum for stored config\n");
-    #endif
-    if(sd_checksum64(config_bytes, config_byte_size) != checksum){
+#endif
+    if (sd_checksum64(config_bytes, config_byte_size) != checksum) {
         Serial.printf("Checksum for config file does not match stored config, requesting config from hive...\n");
         return false;
     }
@@ -283,7 +284,7 @@ bool ConfigLayer::sd_load(){
 
     temp_config.fill_data(config_packets, subsec_sizes);
 
-    if(ref.ref_data.robot_performance.robot_ID != (int)received_id){
+    if (ref.ref_data.robot_performance.robot_ID != (int)received_id) {
         Serial.printf("NOTICE: attempting to load firmware for different robot type! \n");
         Serial.printf("Current robot ID: %d\nStored config robot ID: %d\n", ref.ref_data.robot_performance.robot_ID, (int)received_id);
         Serial.println("Requesting config from hive...");
@@ -295,42 +296,42 @@ bool ConfigLayer::sd_load(){
     return true;
 }
 
-bool ConfigLayer::store_config(){
+bool ConfigLayer::store_config() {
     // initialize: erase config.pack if exists, reopen
     // check return values of everything!!!
-    if(sdcard.exists("/config.pack")) {
-        if(sdcard.rm("/config.pack") != 0){
-            if(!SD_ERR_HANDLER(CONFIG_RM_FAIL)) return false;
+    if (sdcard.exists("/config.pack")) {
+        if (sdcard.rm("/config.pack") != 0) {
+            if (!SD_ERR_HANDLER(CONFIG_RM_FAIL)) return false;
         }
     }
-    if(sdcard.touch("/config.pack") != 0){
-        if(!SD_ERR_HANDLER(CONFIG_TOUCH_FAIL)) return false;
+    if (sdcard.touch("/config.pack") != 0) {
+        if (!SD_ERR_HANDLER(CONFIG_TOUCH_FAIL)) return false;
     }
-    if(sdcard.open("/config.pack") != 0){
-        if(!SD_ERR_HANDLER(CONFIG_OPEN_FAIL)) return false;
+    if (sdcard.open("/config.pack") != 0) {
+        if (!SD_ERR_HANDLER(CONFIG_OPEN_FAIL)) return false;
     }
 
     // total size of /config.pack: MAX_CONFIG_PACKETS * (sizeof(CommsPacket) + 1)
     // num of packets * size of each packet == num of bytes for all packets
     int config_byte_size = MAX_CONFIG_PACKETS * sizeof(CommsPacket);
-    
+
     // calculate checksum on config packet array
-    #ifdef CONFIG_LAYER_DEBUG
+#ifdef CONFIG_LAYER_DEBUG
     Serial.printf("store_config: computing checksum for received config\n");
-    #endif
-    uint8_t* config_bytes = (uint8_t *)config_packets;
+#endif
+    uint8_t* config_bytes = (uint8_t*)config_packets;
     uint64_t checksum = sd_checksum64(config_bytes, config_byte_size);
 
     // write robot id byte to ref data so it can be compared directly
-    sdcard.write((uint8_t *)(&config.robot_id), sizeof(float));
+    sdcard.write((uint8_t*)(&config.robot_id), sizeof(float));
 
     Serial.printf("Robot ID from config: %d\n", (int)config.robot_id);
 
-    for(int i = 0; i < MAX_CONFIG_PACKETS; i++){
+    for (int i = 0; i < MAX_CONFIG_PACKETS; i++) {
         // write checksum once
-        sdcard.write((uint8_t *)(&checksum), sizeof(uint64_t)); // reinterpret addr of checksum as byte array
+        sdcard.write((uint8_t*)(&checksum), sizeof(uint64_t)); // reinterpret addr of checksum as byte array
         // write one packet
-        sdcard.write((uint8_t *)(&config_packets[i]), sizeof(CommsPacket));
+        sdcard.write((uint8_t*)(&config_packets[i]), sizeof(CommsPacket));
     }
     sdcard.write(subsec_sizes, MAX_CONFIG_PACKETS);
 
@@ -341,27 +342,27 @@ bool ConfigLayer::store_config(){
     return true;
 }
 
-uint64_t ConfigLayer::sd_checksum64(uint8_t* arr, uint64_t n){
+uint64_t ConfigLayer::sd_checksum64(uint8_t* arr, uint64_t n) {
     uint64_t out = 0;
-    for(uint32_t i = 0; i < n; i++){
+    for (uint32_t i = 0; i < n; i++) {
         out += arr[i];
     }
-    #ifdef CONFIG_LAYER_DEBUG
+#ifdef CONFIG_LAYER_DEBUG
     Serial.printf("sd_checksum64: returned %x\n", out);
-    #endif
-    return out; 
+#endif
+    return out;
 }
 
-bool ConfigLayer::SD_ERR_HANDLER(int err_code){
-    if(err_code == CONFIG_RM_FAIL){
+bool ConfigLayer::SD_ERR_HANDLER(int err_code) {
+    if (err_code == CONFIG_RM_FAIL) {
         Serial.println("CONFIG_ERROR::config failed to remove /config.pack from SD");
         return false;
     }
-    if(err_code == CONFIG_TOUCH_FAIL){
+    if (err_code == CONFIG_TOUCH_FAIL) {
         Serial.println("CONFIG_ERROR::config failed to create /config.pack on SD");
         return false;
     }
-    if(err_code == CONFIG_OPEN_FAIL){
+    if (err_code == CONFIG_OPEN_FAIL) {
         Serial.println("CONFIG_ERROR::config failed to open /config.pack from SD");
         return false;
     }

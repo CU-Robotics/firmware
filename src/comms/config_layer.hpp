@@ -51,7 +51,7 @@ struct Config {
     /// @param packets CommsPacket array filled with data from yaml
     /// @param sizes Number of sections for each section
     void fill_data(CommsPacket packets[MAX_CONFIG_PACKETS], uint8_t sizes[MAX_CONFIG_PACKETS]);
-    
+
     //check yaml for more details on values
     /// @brief robot id sent from hive
     float robot_id;
@@ -153,7 +153,7 @@ public:
     /// @brief check incoming packet from the comms layer and update outgoing packet accordingly to request next config packet
     /// @param in incoming comms packet
     /// @param out outgoing comms packet to write config requests to
-    void process(CommsPacket *in, CommsPacket *out);
+    void process(CommsPacket* in, CommsPacket* out);
 
     /// @brief return configured flag (check if all config packets have been received)
     /// @return the configured flag
@@ -162,15 +162,24 @@ public:
     /// @brief get config and size arrays
     /// @param packets return array of packets
     /// @param sizes return array of sizes
-    void get_config_packets(CommsPacket packets[MAX_CONFIG_PACKETS], uint8_t sizes[MAX_CONFIG_PACKETS]){
+    void get_config_packets(CommsPacket packets[MAX_CONFIG_PACKETS], uint8_t sizes[MAX_CONFIG_PACKETS]) {
         memcpy(packets, config_packets, sizeof(CommsPacket) * MAX_CONFIG_PACKETS);
         memcpy(sizes, subsec_sizes, sizeof(uint8_t) * MAX_CONFIG_PACKETS);
     }
 
+    /// @brief attempt to load configuration stored on sd card, assuming it exists
+    /// @return true if successful, false otherwise
     bool sd_load();
 
+    /// @brief attempt to store configuration from comms, only runs after comms is run 
+    /// @return true if successful, false otherwise
     bool store_config();
 
+    /// @brief compute sum of bytes of array (arr) of size n
+    /// @param arr array whose data we take sum of
+    /// @param n number of bytes in arr
+    /// @return 64-bit sum of bytes in arr
+    /// @note there is no need to do this as 64-bit (slow), but it will work for now
     uint64_t sd_checksum64(uint8_t* arr, uint64_t n);
 
     /// @brief handles errors during the configuration procedure from the SD card
