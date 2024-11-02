@@ -11,7 +11,10 @@ const Config* const ConfigLayer::configure(HIDLayer* comms) {
         
         // load sd config into config_packets
         configured = sd_load();
-        if(configured) Serial.printf("SD load successful!\n");
+        if(configured) {
+            Serial.printf("SD load successful!\n");
+            return &config;
+        }
     }
     #ifdef CONFIG_LAYER_DEBUG
     else{
@@ -37,6 +40,13 @@ const Config* const ConfigLayer::configure(HIDLayer* comms) {
 
     // put the data from the packets into the config object
     config.fill_data(config_packets, subsec_sizes);
+
+    // verify that config received matches ref system: if not, repeat config procedure
+    Serial.printf("Received robot ID from config: %d\nRobot ID from ref system: %d\n", (int)config.robot_id, ref.ref_data.robot_performance.robot_ID);
+    if(ref.ref_data.robot_performance.robot_ID != (int)config.robot_id){
+        Serial.printf("ERROR: IDs do not match, repeating config prodedure....\n");
+        configure(comms);
+    }
 
     // update stored config, repeat until successful
     do {
@@ -129,6 +139,9 @@ void Config::fill_data(CommsPacket packets[MAX_CONFIG_PACKETS], uint8_t sizes[MA
         Serial.printf("id: %d, subsec_id: %d, sub_size: %d\n", id, subsec_id, sub_size);
         Serial.println();
 
+        if (id == yaml_section_id_mappings.at("robot")){
+            memcpy(&robot_id, packets[i].raw + 8, sub_size);
+        }
         if (id == yaml_section_id_mappings.at("kinematics_p")) {
             size_t linear_index = index / sizeof(float);
             size_t i1 = linear_index / STATE_LEN;
@@ -225,15 +238,10 @@ bool ConfigLayer::sd_load(){
     if(sdcard.open("/config.pack") != 0) return false;
 
 
-    // DEBUG: we are expecting this to run after hive sends a packet. compare results (should be ***identical***!!!)
-    uint8_t received_id;
-    sdcard.read(&received_id, 1);
-    if(ref.ref_data.robot_performance.robot_ID != received_id){
-        Serial.printf("NOTICE: attempting to load firmware for different robot type! \n");
-        Serial.printf("Current robot ID: %d\nStored config robot ID: %d\n", ref.ref_data.robot_performance.robot_ID, received_id);
-        return false;
-    }
-    
+    // grab ID from config (originally from hive). should match ID from ref system- if not, abort!!
+    float received_id;
+    sdcard.read((uint8_t *)(&received_id), sizeof(float));
+
     // read checksum and each packet
     // grab first packet and checksum (kept separate in order to validate subsequent checksum values)
     uint64_t checksum;
@@ -271,6 +279,19 @@ bool ConfigLayer::sd_load(){
         return false;
     }
 
+    Config temp_config;
+
+    temp_config.fill_data(config_packets, subsec_sizes);
+
+    if(ref.ref_data.robot_performance.robot_ID != (int)received_id){
+        Serial.printf("NOTICE: attempting to load firmware for different robot type! \n");
+        Serial.printf("Current robot ID: %d\nStored config robot ID: %d\n", ref.ref_data.robot_performance.robot_ID, (int)received_id);
+        Serial.println("Requesting config from hive...");
+        return false;
+    }
+
+    config = temp_config;
+
     return true;
 }
 
@@ -301,7 +322,9 @@ bool ConfigLayer::store_config(){
     uint64_t checksum = sd_checksum64(config_bytes, config_byte_size);
 
     // write robot id byte to ref data so it can be compared directly
-    sdcard.write(&ref.ref_data.robot_performance.robot_ID, 1);
+    sdcard.write((uint8_t *)(&config.robot_id), sizeof(float));
+
+    Serial.printf("Robot ID from config: %d\n", (int)config.robot_id);
 
     for(int i = 0; i < MAX_CONFIG_PACKETS; i++){
         // write checksum once

@@ -53,7 +53,8 @@ struct Config {
     void fill_data(CommsPacket packets[MAX_CONFIG_PACKETS], uint8_t sizes[MAX_CONFIG_PACKETS]);
     
     //check yaml for more details on values
-
+    /// @brief robot id sent from hive
+    float robot_id;
     /// @brief number of motors
     float num_motors;
     /// @brief number of gains
