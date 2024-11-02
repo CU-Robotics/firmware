@@ -2,6 +2,8 @@
 
 const Config* const ConfigLayer::configure(HIDLayer* comms) {
     // check SD
+    while(ref.ref_data.robot_performance.robot_ID != 0) ref.read();
+
     if(sdcard.exists("/config.pack")){
         #ifdef CONFIG_LAYER_DEBUG
         Serial.printf("Config located on SD in /config.pack, attempting to load from file\n");
@@ -33,13 +35,13 @@ const Config* const ConfigLayer::configure(HIDLayer* comms) {
         process(comms->get_incoming_packet(), comms->get_outgoing_packet());
     }
 
+    // put the data from the packets into the config object
+    config.fill_data(config_packets, subsec_sizes);
+
     // update stored config, repeat until successful
     do {
         Serial.println("Attempting to store config...");
     } while(!store_config());
-
-    // put the data from the packets into the config object
-    config.fill_data(config_packets, subsec_sizes);
 
     return &config;
 }
@@ -231,6 +233,7 @@ bool ConfigLayer::sd_load(){
         Serial.printf("Current robot ID: %d\nStored config robot ID: %d\n", ref.ref_data.robot_performance.robot_ID, received_id);
         return false;
     }
+    
     // read checksum and each packet
     // grab first packet and checksum (kept separate in order to validate subsequent checksum values)
     uint64_t checksum;
