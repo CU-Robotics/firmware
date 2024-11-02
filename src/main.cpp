@@ -142,8 +142,8 @@ int main() {
     float chassis_pos_to_motor_error = config->drive_conversion_factors[1];
 
     // manual controls variables
-    int vtm_pos_x = 0;
-    int vtm_pos_y = 0;
+    float vtm_pos_x = 0;
+    float vtm_pos_y = 0;
     float dr16_pos_x = 0;
     float dr16_pos_y = 0;
     float pos_offset_x = 0;
