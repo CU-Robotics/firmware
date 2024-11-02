@@ -8,6 +8,7 @@
 #include "controls/controller_manager.hpp"
 
 #include <TeensyDebug.h>
+#include "sensors/LEDBoard.hpp"
 
 // Loop constants
 #define LOOP_FREQ 1000
@@ -33,6 +34,8 @@ Timer control_input_timer;
 EstimatorManager estimator_manager;
 ControllerManager controller_manager;
 State state;
+
+LEDBoard led;
 
 // DONT put anything else in this function. It is not a setup function
 void print_logo() {
@@ -81,6 +84,7 @@ int main() {
     // Execute setup functions
     pinMode(13, OUTPUT);
 
+    led.init();
     //initialize objects
     can.init();
     dr16.init();
@@ -100,7 +104,6 @@ int main() {
 
     //generate controller outputs based on governed references and estimated state
     controller_manager.init(config);
-
 
     //set reference limits in the reference governor
     state.set_reference_limits(config->set_reference_limits);
@@ -123,8 +126,8 @@ int main() {
     float chassis_pos_to_motor_error = config->drive_conversion_factors[1];
 
     // manual controls variables
-    int vtm_pos_x = 0;
-    int vtm_pos_y = 0;
+    float vtm_pos_x = 0;
+    float vtm_pos_y = 0;
     float dr16_pos_x = 0;
     float dr16_pos_y = 0;
     float pos_offset_x = 0;
