@@ -14,6 +14,9 @@
 #define CONFIG_TOUCH_FAIL 1
 #define CONFIG_OPEN_FAIL 2
 
+// define CONFIG_OFF_ROBOT macro when running off of real robot (testing firmware away from actual robot)
+#define CONFIG_OFF_ROBOT 
+
 /// @brief arbitrary cap on config packets that can be received (make sure it's enough)
 const int MAX_CONFIG_PACKETS = 64;
 

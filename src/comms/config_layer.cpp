@@ -2,8 +2,9 @@
 
 const Config* const ConfigLayer::configure(HIDLayer* comms) {
     // check SD
-    while (ref.ref_data.robot_performance.robot_ID != 0) ref.read();
-
+    #ifndef CONFIG_OFF_ROBOT
+        while (ref.ref_data.robot_performance.robot_ID != 0) ref.read();
+    #endif
     if (sdcard.exists("/config.pack")) {
     #ifdef CONFIG_LAYER_DEBUG
         Serial.printf("Config located on SD in /config.pack, attempting to load from file\n");
@@ -21,8 +22,8 @@ const Config* const ConfigLayer::configure(HIDLayer* comms) {
         Serial.printf("No config packet located, awaiting input from comms....\n");
     }
 #endif
-// if no config on SD, then await transmission
-// grab and process all config packets until finished
+    // if no config on SD, then await transmission
+    // grab and process all config packets until finished
     double prev_time = millis();
     double delta_time = 0;
     while (!is_configured()) {
@@ -33,7 +34,6 @@ const Config* const ConfigLayer::configure(HIDLayer* comms) {
         }
         delta_time = millis() - prev_time;
     #endif
-
         comms->ping();
         process(comms->get_incoming_packet(), comms->get_outgoing_packet());
     }
@@ -42,11 +42,13 @@ const Config* const ConfigLayer::configure(HIDLayer* comms) {
     config.fill_data(config_packets, subsec_sizes);
 
     // verify that config received matches ref system: if not, repeat config procedure
+    #ifndef CONFIG_OFF_ROBOT
     Serial.printf("Received robot ID from config: %d\nRobot ID from ref system: %d\n", (int)config.robot_id, ref.ref_data.robot_performance.robot_ID);
     if (ref.ref_data.robot_performance.robot_ID != (int)config.robot_id) {
         Serial.printf("ERROR: IDs do not match, repeating config prodedure....\n");
         configure(comms);
     }
+    #endif
 
     // update stored config, repeat until successful
     do {
@@ -284,12 +286,14 @@ bool ConfigLayer::sd_load() {
 
     temp_config.fill_data(config_packets, subsec_sizes);
 
+    #ifndef CONFIG_OFF_ROBOT
     if (ref.ref_data.robot_performance.robot_ID != (int)received_id) {
         Serial.printf("NOTICE: attempting to load firmware for different robot type! \n");
         Serial.printf("Current robot ID: %d\nStored config robot ID: %d\n", ref.ref_data.robot_performance.robot_ID, (int)received_id);
         Serial.println("Requesting config from hive...");
         return false;
     }
+    #endif
 
     config = temp_config;
 
