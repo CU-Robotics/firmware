@@ -41,9 +41,6 @@ const Config* const ConfigLayer::configure(HIDLayer* comms) {
     // put the data from the packets into the config object
     config.fill_data(config_packets, subsec_sizes);
 
-    Serial.println("Config output complete, busy wait....");
-    while(1) ;
-
     return &config;
 }
 
