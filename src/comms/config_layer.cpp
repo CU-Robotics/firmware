@@ -50,7 +50,7 @@ const Config* const ConfigLayer::configure(HIDLayer* comms) {
     // verify that config received matches ref system: if not, error out
     #ifndef CONFIG_OFF_ROBOT
     Serial.printf("Received robot ID from config: %d\nRobot ID from ref system: %d\n", (int)config.robot_id, ref.ref_data.robot_performance.robot_ID);
-    if (ref.ref_data.robot_performance.robot_ID != (int)config.robot_id) {
+    if ((ref.ref_data.robot_performance.robot_ID % 100) != (int)config.robot_id) {
         Serial.printf("ERROR: IDs do not match!! Check robot_id.cfg and robot settings from ref system!\n");
         if(!CONFIG_ERR_HANDLER(CONFIG_ID_MISMATCH)){
             return nullptr; // ?????? BAD
@@ -294,7 +294,7 @@ bool ConfigLayer::sd_load() {
     temp_config.fill_data(config_packets, subsec_sizes);
 
     #ifndef CONFIG_OFF_ROBOT
-    if (ref.ref_data.robot_performance.robot_ID != (int)received_id) {
+    if ((ref.ref_data.robot_performance.robot_ID % 100) != (int)received_id) {
         Serial.printf("NOTICE: attempting to load firmware for different robot type! \n");
         Serial.printf("Current robot ID: %d\nStored config robot ID: %d\n", ref.ref_data.robot_performance.robot_ID, (int)received_id);
         Serial.println("Requesting config from hive...");
