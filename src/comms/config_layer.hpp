@@ -13,9 +13,10 @@
 #define CONFIG_RM_FAIL 0
 #define CONFIG_TOUCH_FAIL 1
 #define CONFIG_OPEN_FAIL 2
+#define CONFIG_ID_MISMATCH 3
 
 // define CONFIG_OFF_ROBOT macro when running off of real robot (testing firmware away from actual robot)
-#define CONFIG_OFF_ROBOT 
+// #define CONFIG_OFF_ROBOT 
 
 /// @brief arbitrary cap on config packets that can be received (make sure it's enough)
 const int MAX_CONFIG_PACKETS = 64;
@@ -188,7 +189,7 @@ public:
     /// @brief handles errors during the configuration procedure from the SD card
     /// @param err_code error code to identify which behavior to execute
     /// @return false when error is unrecoverable or fails to recover, true when successfully recovers.
-    bool SD_ERR_HANDLER(int err_code);
+    bool CONFIG_ERR_HANDLER(int err_code);
 };
 
 #endif

@@ -1,10 +1,14 @@
 #include "config_layer.hpp"
 
 const Config* const ConfigLayer::configure(HIDLayer* comms) {
-    // check SD
+    // if on robot, we need to wait for ref to send robot_id
     #ifndef CONFIG_OFF_ROBOT
-        while (ref.ref_data.robot_performance.robot_ID != 0) ref.read();
+        Serial.println("Waiting for ref system to initialize...");
+        while (ref.ref_data.robot_performance.robot_ID == 0) ref.read();
+        Serial.println("Ref system online");
     #endif
+
+    // check SD
     if (sdcard.exists("/config.pack")) {
     #ifdef CONFIG_LAYER_DEBUG
         Serial.printf("Config located on SD in /config.pack, attempting to load from file\n");
@@ -17,11 +21,13 @@ const Config* const ConfigLayer::configure(HIDLayer* comms) {
             return &config;
         }
     }
+
 #ifdef CONFIG_LAYER_DEBUG
     else {
         Serial.printf("No config packet located, awaiting input from comms....\n");
     }
 #endif
+
     // if no config on SD, then await transmission
     // grab and process all config packets until finished
     double prev_time = millis();
@@ -41,20 +47,21 @@ const Config* const ConfigLayer::configure(HIDLayer* comms) {
     // put the data from the packets into the config object
     config.fill_data(config_packets, subsec_sizes);
 
-    // verify that config received matches ref system: if not, repeat config procedure
+    // verify that config received matches ref system: if not, error out
     #ifndef CONFIG_OFF_ROBOT
     Serial.printf("Received robot ID from config: %d\nRobot ID from ref system: %d\n", (int)config.robot_id, ref.ref_data.robot_performance.robot_ID);
     if (ref.ref_data.robot_performance.robot_ID != (int)config.robot_id) {
-        Serial.printf("ERROR: IDs do not match, repeating config prodedure....\n");
-        configure(comms);
+        Serial.printf("ERROR: IDs do not match!! Check robot_id.cfg and robot settings from ref system!\n");
+        if(!CONFIG_ERR_HANDLER(CONFIG_ID_MISMATCH)){
+            return nullptr; // ?????? BAD
+        }
     }
     #endif
 
-    // update stored config, repeat until successful
-    do {
-        Serial.println("Attempting to store config...");
-    }
-    while (!store_config());
+    // update stored config, msg if successful
+    Serial.println("Attempting to store config...");
+    if(store_config()) Serial.println("Config successfully stored in /config.pack");
+    else Serial.println("Config not successfully stored (is an SD card inserted?)");
 
     return &config;
 }
@@ -305,14 +312,14 @@ bool ConfigLayer::store_config() {
     // check return values of everything!!!
     if (sdcard.exists("/config.pack")) {
         if (sdcard.rm("/config.pack") != 0) {
-            if (!SD_ERR_HANDLER(CONFIG_RM_FAIL)) return false;
+            if (!CONFIG_ERR_HANDLER(CONFIG_RM_FAIL)) return false;
         }
     }
     if (sdcard.touch("/config.pack") != 0) {
-        if (!SD_ERR_HANDLER(CONFIG_TOUCH_FAIL)) return false;
+        if (!CONFIG_ERR_HANDLER(CONFIG_TOUCH_FAIL)) return false;
     }
     if (sdcard.open("/config.pack") != 0) {
-        if (!SD_ERR_HANDLER(CONFIG_OPEN_FAIL)) return false;
+        if (!CONFIG_ERR_HANDLER(CONFIG_OPEN_FAIL)) return false;
     }
 
     // total size of /config.pack: MAX_CONFIG_PACKETS * (sizeof(CommsPacket) + 1)
@@ -357,21 +364,30 @@ uint64_t ConfigLayer::sd_checksum64(uint8_t* arr, uint64_t n) {
     return out;
 }
 
-bool ConfigLayer::SD_ERR_HANDLER(int err_code) {
-    if (err_code == CONFIG_RM_FAIL) {
-        Serial.println("CONFIG_ERROR::config failed to remove /config.pack from SD");
-        return false;
-    }
-    if (err_code == CONFIG_TOUCH_FAIL) {
-        Serial.println("CONFIG_ERROR::config failed to create /config.pack on SD");
-        return false;
-    }
-    if (err_code == CONFIG_OPEN_FAIL) {
-        Serial.println("CONFIG_ERROR::config failed to open /config.pack from SD");
-        return false;
-    }
+bool ConfigLayer::CONFIG_ERR_HANDLER(int err_code) {
+    // make sure that every error case returns a value!
+    switch(err_code){
+        case CONFIG_RM_FAIL:
+            Serial.println("CONFIG_ERROR::config failed to remove /config.pack from SD");
+            return false;
+            
+        case CONFIG_TOUCH_FAIL:
+            Serial.println("CONFIG_ERROR::config failed to create /config.pack on SD");
+            return false;
 
-    // default case, in the event that invalid err_code passed
-    Serial.printf("CONFIG_SD_ERR_HANDLER::invalid err_code (%d) passed\n", err_code);
-    return false;
+        case CONFIG_OPEN_FAIL:
+            Serial.println("CONFIG_ERROR::config failed to open /config.pack from SD");
+            return false;
+
+        case CONFIG_ID_MISMATCH:
+            Serial.println("CONFIG_ERROR::ID of config data and ref system inconsistent, busy wait for now");
+            while(1) ;
+            return false;
+
+        default:
+            // default case, in the event that invalid err_code passed
+            Serial.printf("CONFIG_ERR_HANDLER::invalid err_code (%d) passed\n", err_code);
+            return false;
+    }
+    
 }
