@@ -3,6 +3,8 @@
 
 #include <Arduino.h>
 #include <SPI.h>
+#include "Sensor.hpp"
+#include "constants.hpp"
 
 // Encoder Registers and Config
 constexpr uint32_t MT6835_OP_READ = 0b0011;
@@ -43,19 +45,19 @@ constexpr int YAW_BUFF_CS = 37;
 constexpr int PITCH_BUFF_CS = 36;
 
 /// @brief Driver for the Buff-Encoder
-class BuffEncoder {
+class BuffEncoder : public Sensor{
 public:
     /// @brief 
     /// @param 
-    BuffEncoder() {};
+    BuffEncoder() : Sensor(SensorType::BUFFENC) {};
 
     /// @brief Initialize the encoder object with the specific Chip Select pin
     /// @param cs The Chip Select pin
-    BuffEncoder(int cs) : m_CS(cs) {};
+    BuffEncoder(int cs) : Sensor(SensorType::BUFFENC),  m_CS(cs) {};
 
     /// @brief initialize sensor with new cs(if needed)
     /// @param cs input Chip Select pin
-    void init(int cs) { m_CS = cs; }
+    void init(int cs) { m_CS = cs; };
 
     /// @brief Read via SPI the current angle of the encoder
     /// @return Read angle (radians)
@@ -66,6 +68,17 @@ public:
     /// @return Read angle (radians)
     inline float get_angle() const { return m_angle; }
 
+    void serialize(uint8_t* buffer, size_t& offset) const override {
+        buffer[offset++] = id_;
+        memcpy(buffer + offset, &m_angle, sizeof(m_angle));
+        offset += sizeof(m_angle);
+    }
+
+    void deserialize(const uint8_t* data, size_t& offset) override {
+        id_ = data[offset++];
+        memcpy(&m_angle, data + offset, sizeof(m_angle));
+        offset += sizeof(m_angle);
+    }
 
 private:
     /// @brief Stored Chip Select pin

@@ -10,6 +10,7 @@
 #include <TeensyDebug.h>
 #include "sensors/LEDBoard.hpp"
 #include "data_packet.hpp"
+#include "constants.hpp"
 
 // Loop constants
 #define LOOP_FREQ 1000
@@ -39,8 +40,10 @@ State state;
 LEDBoard led;
 
 // DONT put anything else in this function. It is not a setup function
-void print_logo() {
-    if (Serial) {
+void print_logo()
+{
+    if (Serial)
+    {
         Serial.println("TEENSY SERIAL START\n\n");
         Serial.print("\033[1;33m");
         Serial.println("                  .:^!?!^.                        ");
@@ -74,7 +77,8 @@ void print_logo() {
 }
 
 // Master loop
-int main() {
+int main()
+{
     long long loopc = 0; // Loop counter for heartbeat
 
     Serial.begin(115200); // the serial monitor is actually always active (for debug use Serial.println & tycmd)
@@ -86,41 +90,41 @@ int main() {
     pinMode(13, OUTPUT);
 
     led.init();
-    //initialize objects
+    // initialize objects
     can.init();
     dr16.init();
     ref.init();
     comms.init();
 
-    //can data pointer so we don't pass around rm_CAN object
-    CANData* can_data = can.get_data();
+    // can data pointer so we don't pass around rm_CAN object
+    CANData *can_data = can.get_data();
 
     // Config config
     Serial.println("Configuring...");
-    const Config* config = config_layer.configure(&comms);
+    const Config *config = config_layer.configure(&comms);
     Serial.println("Configured!");
 
-    //estimate micro and macro state
+    // estimate micro and macro state
     estimator_manager.init(can_data, config);
 
-    //generate controller outputs based on governed references and estimated state
+    // generate controller outputs based on governed references and estimated state
     controller_manager.init(config);
 
-    //set reference limits in the reference governor
+    // set reference limits in the reference governor
     state.set_reference_limits(config->set_reference_limits);
 
     // variables for use in main
-    float temp_state[STATE_LEN][3] = { 0 }; // Temp state array
-    float temp_micro_state[NUM_MOTORS][MICRO_STATE_LEN] = { 0 }; // Temp micro state array
-    float temp_reference[STATE_LEN][3] = { 0 }; //Temp governed state
-    float target_state[STATE_LEN][3] = { 0 }; //Temp ungoverned state
-    float hive_state_offset[STATE_LEN][3] = { 0 }; //Hive offset state
-    float motor_inputs[NUM_MOTORS] = { 0 }; //Array for storing controller outputs to send to CAN
+    float temp_state[STATE_LEN][3] = {0};                      // Temp state array
+    float temp_micro_state[NUM_MOTORS][MICRO_STATE_LEN] = {0}; // Temp micro state array
+    float temp_reference[STATE_LEN][3] = {0};                  // Temp governed state
+    float target_state[STATE_LEN][3] = {0};                    // Temp ungoverned state
+    float hive_state_offset[STATE_LEN][3] = {0};               // Hive offset state
+    float motor_inputs[NUM_MOTORS] = {0};                      // Array for storing controller outputs to send to CAN
 
     // create a copy of the position and velocity kinematic matrixes since we'll be updating them
-    float kinematics_pos[NUM_MOTORS][STATE_LEN] = { 0 }; //Position kinematics 
+    float kinematics_pos[NUM_MOTORS][STATE_LEN] = {0}; // Position kinematics
     memcpy(kinematics_pos, (*config).kinematics_p, sizeof((*config).kinematics_p));
-    float kinematics_vel[NUM_MOTORS][STATE_LEN] = { 0 }; //Velocity kinematics
+    float kinematics_vel[NUM_MOTORS][STATE_LEN] = {0}; // Velocity kinematics
     memcpy(kinematics_vel, (*config).kinematics_v, sizeof((*config).kinematics_v));
 
     // used in the kinematics matrix
@@ -141,7 +145,8 @@ int main() {
     bool hive_toggle = false;
 
     // Main loop
-    while (true) {
+    while (true)
+    {
         // read main sensors
         can.read();
         dr16.read();
@@ -150,15 +155,43 @@ int main() {
         lidar2.read();
 
         // construct ref data packet
-        uint8_t ref_data_raw[180] = { 0 };
-        ref.get_data_for_comms(ref_data_raw);
+        uint8_t ref_data_raw[180] = {0};
+        // ref.get_data_for_comms(ref_data_raw);
 
         data_packet packet;
         uint8_t buffer[4096];
 
+        uint8_t lidardata[154];
 
-        packet.packDataPacket(buffer,micros(),0,state,ref_data_raw,can_data);
-        packet.unpackDataPacket(buffer);
+        for (uint8_t i = 0; i < 180; i++)
+        {
+            ref_data_raw[i] = i;
+        }
+
+        for (int i = 0; i < 2; i++)
+        {
+            for (int j = 0; j < 8; j++)
+            {
+                for (int k = 0; k < 8; k++)
+                {
+                    can_data->data[i][j][k] = rand() % 256; // Fill with random values between 0 and 255
+                }
+            }
+        }
+
+        // for (int i = 0; i < 180; i++)
+        // {
+        //     Serial.println((ref_data_raw[i]));
+        // }
+
+
+
+        packet.packDataPacket(buffer, micros(), state, ref_data_raw, can_data, config, estimator_manager);
+        packet.unpackDataPacket(buffer, config);
+
+        while (true)
+        {
+        }
 
         // // read and write comms packets
         // comms.ping();
@@ -172,7 +205,7 @@ int main() {
 
         // vtm_pos_x += ref.ref_data.kbm_interaction.mouse_speed_x * 0.05 * delta;
         // vtm_pos_y += ref.ref_data.kbm_interaction.mouse_speed_y * 0.05 * delta;
-        
+
         // float chassis_vel_x = 0;
         // float chassis_vel_y = 0;
         // float chassis_pos_x = 0;
@@ -306,8 +339,6 @@ int main() {
         // lidar2.export_data(lidar_data);
         // memcpy(sensor_data.raw + SENSOR_LIDAR2_OFFSET, lidar_data, D200_NUM_PACKETS_CACHED * D200_PAYLOAD_SIZE);
 
-        
-
         // // set the outgoing packet
         // outgoing->set_id((uint16_t)loopc);
         // outgoing->set_info(0x0000);
@@ -335,8 +366,6 @@ int main() {
         // float dt = stall_timer.delta();
         // if (dt > 0.002) Serial.printf("Slow loop with dt: %f\n", dt);
     }
-    
+
     return 0;
 }
-
-

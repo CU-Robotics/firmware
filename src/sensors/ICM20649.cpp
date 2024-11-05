@@ -100,3 +100,40 @@ void ICM20649::set_gyro_range(int gyro_rate_range) {
 
     Serial.println(sensor.getGyroRange());
 }
+
+//implenet seralize and deserialize
+void ICM20649::serialize(uint8_t* buffer, size_t& offset) const {
+    buffer[offset++] = id_;
+    memcpy(buffer + offset, &accel_X, sizeof(accel_X));
+    offset += sizeof(accel_X);
+    memcpy(buffer + offset, &accel_Y, sizeof(accel_Y));
+    offset += sizeof(accel_Y);
+    memcpy(buffer + offset, &accel_Z, sizeof(accel_Z));
+    offset += sizeof(accel_Z);
+    memcpy(buffer + offset, &gyro_X, sizeof(gyro_X));
+    offset += sizeof(gyro_X);
+    memcpy(buffer + offset, &gyro_Y, sizeof(gyro_Y));
+    offset += sizeof(gyro_Y);
+    memcpy(buffer + offset, &gyro_Z, sizeof(gyro_Z));
+    offset += sizeof(gyro_Z);
+    memcpy(buffer + offset, &temperature, sizeof(temperature));
+    offset += sizeof(temperature);
+}
+
+void ICM20649::deserialize(const uint8_t* data, size_t& offset) {
+    id_ = data[offset++];
+    memcpy(&accel_X, data + offset, sizeof(accel_X));
+    offset += sizeof(accel_X);
+    memcpy(&accel_Y, data + offset, sizeof(accel_Y));
+    offset += sizeof(accel_Y);
+    memcpy(&accel_Z, data + offset, sizeof(accel_Z));
+    offset += sizeof(accel_Z);
+    memcpy(&gyro_X, data + offset, sizeof(gyro_X));
+    offset += sizeof(gyro_X);
+    memcpy(&gyro_Y, data + offset, sizeof(gyro_Y));
+    offset += sizeof(gyro_Y);
+    memcpy(&gyro_Z, data + offset, sizeof(gyro_Z));
+    offset += sizeof(gyro_Z);
+    memcpy(&temperature, data + offset, sizeof(temperature));
+    offset += sizeof(temperature);
+}

@@ -5,10 +5,15 @@
 #include <Wire.h> // https://www.arduino.cc/reference/en/language/functions/communication/wire/
 
 #include <Adafruit_Sensor.h>
+#include "Sensor.hpp"
 
 /// @brief Abstract parent class for all IMUSensors, which give acceleration and gyroscope data. 
-class IMUSensor {
+class IMUSensor : public Sensor {
 public:
+    /// @brief Constructor that takes a SensorType and passes it to the Sensor constructor.
+    IMUSensor() : Sensor(SensorType::ICM) {}
+
+
     /// @brief read values from the sensor. Call this to update sensor data before accessing them from the getters. 
     virtual void read() = 0;
 

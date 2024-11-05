@@ -30,7 +30,7 @@ public:
     };
 
     /// @brief Constructor. Currently does nothing, use @ref init(CommunicationProtocol) instead for initialization.
-    ICM20649();
+    ICM20649() : sensor() {};
 
     /// @brief Initialize the sensor with the assigned communication protocol.
     /// @param protocol Which communication protocol to use for this sensor.
@@ -42,6 +42,9 @@ public:
     /// @brief set teh gyro rate range of the sensor
     /// @param gyro_rate_range new rate range
     void set_gyro_range(int gyro_rate_range);
+
+    void serialize(uint8_t* buffer, size_t& offset) const override;
+    void deserialize(const uint8_t* data, size_t& offset) override;
 
 private:
     /// @brief sensor object from adafruit libraries.
