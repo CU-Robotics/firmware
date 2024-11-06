@@ -13,6 +13,11 @@ void rm_CAN::init() {
     m_can2.setBaudRate(1000000);
     m_can2.enableFIFO(true);
 
+    // initialize CAN 2
+    m_can3.begin();
+    m_can3.setBaudRate(1000000);
+    m_can3.enableFIFO(true);
+
     // set message IDs for CAN 1
     m_output[CAN_1][0].id = 0x200;
     m_output[CAN_1][1].id = 0x1ff;
@@ -23,6 +28,8 @@ void rm_CAN::init() {
     m_output[CAN_2][1].id = 0x1ff;
     m_output[CAN_2][2].id = 0x2ff;
 
+    // set message IDs for CAN 3
+    m_output[CAN_3][0].id = 0x280;
     // zero CANs just in case
     zero();
 }
@@ -43,7 +50,6 @@ void rm_CAN::read() {
 
     // read from CAN 2
     CAN_message_t msg2;
-
     while (m_can2.read(msg2)) {
         // isolate the ID part of the message id (0x202 becomes 2)
         int id = msg2.id & 0xf;
@@ -52,10 +58,21 @@ void rm_CAN::read() {
         // fill appropriate buffer
         for (int i = 0; i < CAN_MESSAGE_SIZE; i++) m_input.data[CAN_2][id][i] = msg2.buf[i];
     }
+
+    // read from CAN 3
+    CAN_message_t msg3;
+    while (m_can3.read(msg3)) {
+        // isolate the ID part of the message id (0x142 becomes 2)
+        int id = msg3.id & 0xf;
+        id -= 1; // subtract by 1 to allow for array indexing
+
+        // fill appropriate buffer
+        for (int i = 0; i < CAN_MESSAGE_SIZE; i++) m_input.data[CAN_3][id][i] = msg3.buf[i];
+    }
 }
 
 uint8_t rm_CAN::write() {
-    int w1, w2;
+    int w1, w2, w3;
 
     // write all messages to CAN 1
     for (int i = 0; i < NUM_MESSAGE_IDS; i++)
@@ -65,13 +82,17 @@ uint8_t rm_CAN::write() {
     for (int i = 0; i < NUM_MESSAGE_IDS; i++)
         w2 = m_can2.write(m_output[CAN_2][i]);
 
+    // write all messages to CAN 3
+        w3 = m_can3.write(m_output[CAN_3][0]);
     // normalize from the -1 or 1 output of CAN write command to 0 or 1
     if (w1 == -1)
         w1 = 0;
     if (w2 == -1)
         w2 = 0;
+    if (w3 == -1)
+        w3 = 0;
 
-    return w1 && w2;
+    return w1 && w2 && w3;
 }
 
 void rm_CAN::zero_motors() {
@@ -122,6 +143,12 @@ void rm_CAN::write_motor_norm(uint16_t canID, uint16_t motorID, uint8_t controll
     case GM6020:
         write_motor(canID, motorID, (int)(value * GM6020_OUTPUT_SCALE));
         break;
+    case MG8016:{
+        uint16_t temp = (motorID-1)*2;
+        m_output[canID][0].buf[temp] = (int16_t(value * MG8016_OUTPUT_SCALE) & 0X00ff);
+        m_output[canID][0].buf[temp + 1] = (int16_t(value * MG8016_OUTPUT_SCALE) & 0Xff00) >> 8;
+        break; 
+    }       
     default:
         Serial.println("CURo WARN: Invalid motor controller type on write_motor_norm() call!");
     }
@@ -148,6 +175,27 @@ int rm_CAN::get_motor_attribute(uint16_t canID, uint16_t motorID, MotorAttribute
         break;
     }
 }
+int rm_CAN::get_motor_attribute_MG8016(uint16_t canID, uint16_t motorID, MotorAttribute valueType) {
+        // return correct value depending on valueType enum
+        switch (valueType) {
+        case MotorAttribute::TEMP:
+            return (int16_t)(m_input.data[canID][motorID - 1][1]);
+            break;
+        case MotorAttribute::TORQUE:
+            return (int16_t)(combine_bytes(m_input.data[canID][motorID - 1][2], m_input.data[canID][motorID - 1][3]));
+            break;
+        case MotorAttribute::SPEED:
+            return (int16_t)(combine_bytes(m_input.data[canID][motorID - 1][4], m_input.data[canID][motorID - 1][5]));
+            break;
+        case MotorAttribute::ANGLE:
+            return (uint16_t)(combine_bytes(m_input.data[canID][motorID - 1][6], m_input.data[canID][motorID - 1][7]));
+            break;
+        
+        default:
+            return 0;
+            break;
+        }
+    }
 
 void rm_CAN::print_motor(uint16_t canID, uint16_t motorID, bool showFullHex) {
     // strip angle, speed, torque, and temp from input array

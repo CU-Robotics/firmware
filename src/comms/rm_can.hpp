@@ -12,8 +12,9 @@
 
 constexpr uint16_t CAN_1 = 0;             // CAN 1 (indexable value)
 constexpr uint16_t CAN_2 = 1;             // CAN 2 (indexable value)
+constexpr uint16_t CAN_3 = 2;             // CAN 2 (indexable value)
 
-#define NUM_CAN_BUSES      2 // 2 cans per robot
+#define NUM_CAN_BUSES      3 // 2 cans per robot
 #define NUM_MOTORS_PER_BUS 8 // 8 motors per can
 #define NUM_MOTORS         (NUM_CAN_BUSES * NUM_MOTORS_PER_BUS)
 #define NUM_MESSAGE_IDS    3 // 3 messages per can: 0x200, 0x1ff, 0x2ff
@@ -22,11 +23,13 @@ constexpr uint16_t CAN_2 = 1;             // CAN 2 (indexable value)
 #define C610   0
 #define C620   1
 #define GM6020 2
+#define MG8016 3
+
 
 #define C610_OUTPUT_SCALE  10000
 #define C620_OUTPUT_SCALE  16384
 #define GM6020_OUTPUT_SCALE 30000
-
+#define MG8016_OUTPUT_SCALE 2000
 /// @brief Returns a 2-byte value given 2 1-byte values
 /// @param highByte higher order byte
 /// @param lowByte lower order byte
@@ -70,6 +73,7 @@ struct CANData {
             break;
         }
     }
+    
 };
 
 /// @brief Manages both CANs on the robot. Able to read from and write to individual or multiple motors on the CANs.
@@ -113,8 +117,6 @@ public:
     /// @param value A value in the range of [-1.0, 1.0]
     void write_motor_norm(uint16_t canID, uint16_t motorID, uint8_t controllerType, float value);
 
-    void test_write_balancing_motor(uint16_t canID, uint16_t motorID, uint8_t value[8]);
-
 
     /// @brief Reads and returns value from input array of specified motor
     /// @param canID ID of the CAN which the motor is on, expects indexable ID value
@@ -123,6 +125,8 @@ public:
     /// @return Requested value
     int get_motor_attribute(uint16_t canID, uint16_t motorID, MotorAttribute valueType);
 
+
+    int get_motor_attribute_MG8016(uint16_t canID, uint16_t motorID, MotorAttribute valueType);
     /// @brief Print off all values associated with specified motor
     /// @param canID ID of the CAN which the motor is on, expects indexable ID value
     /// @param motorID ID of the individual motor, expects indexable ID value
@@ -146,7 +150,8 @@ private:
     FlexCAN_T4<CAN1, RX_SIZE_256, TX_SIZE_16> m_can1;
     /// @brief CAN 2 object
     FlexCAN_T4<CAN2, RX_SIZE_256, TX_SIZE_16> m_can2;
-
+    /// @brief CAN 3 object
+    FlexCAN_T4<CAN3, RX_SIZE_256, TX_SIZE_16> m_can3;
     /// @brief Output array in the format of CAN_message_t's
     CAN_message_t m_output[NUM_CAN_BUSES][NUM_MESSAGE_IDS];
     /// @brief Input array in the format of uint8_t's

@@ -3,8 +3,7 @@
 #include "utils/timing.hpp"
 #include "comms/rm_can.hpp"
 #include "sensors/dr16.hpp"
-#include "Controls_Balancing/Balancing_Control.hpp"
-#include "Controls_Balancing/Balancing_Observer.hpp"
+#include "sensors/ICM20649.hpp"
 // Loop constants
 #define LOOP_FREQ      1000
 #define HEARTBEAT_FREQ 2
@@ -12,10 +11,9 @@
 // Declare global objects
 DR16 dr16;
 rm_CAN can;
+
 Timer loop_timer;
-IMU_filter imu;
-BalancingControl Testcontorl;
-BalancingObserver Testobserver;
+ICM20649 icm;
 // DONT put anything else in this function. It is not a setup function
 void print_logo() {
     if (Serial) {
@@ -57,12 +55,15 @@ int main() {
     pinMode(13, OUTPUT);
     dr16.init();
     can.init();
+    SPI.begin();
+    icm.init(icm.SPI);
     long long loopc = 0; // Loop counter for heartbeat
 
     
     float tempobs[9][3];
     float tempmotor[6];
 
+<<<<<<< Updated upstream
     // Config config
     Serial.println("Configuring...");
     const Config* config = config_layer.configure(&comms);
@@ -108,6 +109,22 @@ int main() {
     // whether we are in hive mode or not
     bool hive_toggle = false;
 
+=======
+    float ref[5][3] = {
+    {0,0,0},
+    {0,0,0},
+    {0,0,0},
+    {0,0,0},
+    {0,0,0}
+    };
+    /** 
+    *   {s, s_dot, phi},
+    *   {phi_dot, theta_ll, theta_ll_dot},
+    *   {theta_lr, theta_lr_dot, theta_b},
+    *   {theta_b_dot, s_ddot, phi_ddot},
+    *   {psi_d, l_d, empty}
+    */
+>>>>>>> Stashed changes
     /*Testcontorl.init();
     Testobserver.init();
     can.read();
@@ -120,13 +137,23 @@ int main() {
     while (true) {
         // Read sensors
         dr16.read();
-        can.read();
-        //imu.read();
+        can.write_motor_norm(CAN_3, 1, MG8016, 0.01);
+        can.write_motor_norm(CAN_3, 2, MG8016, 0.01);
+        icm.read();
         //Testobserver.step(can.get_data(), imu.getdata(), tempobs); // Calculate Observer values
         //Testcontorl.step(tempmotor, ref, tempobs); // Calculate motors motion
-
-        
-        
+        Serial.println("ax");
+        Serial.println(icm.get_accel_X());
+        Serial.println("ay");
+        Serial.println(icm.get_accel_Y());
+        Serial.println("az");
+        Serial.println(icm.get_accel_Z());
+        Serial.println("gx");
+        Serial.println(icm.get_gyro_X());
+        Serial.println("gy");
+        Serial.println(icm.get_gyro_Y());
+        Serial.println("gz");
+        Serial.println(icm.get_gyro_Z());
         
         // Write actuators
         /*if (!dr16.is_connected() || dr16.get_l_switch() == 1) {
@@ -138,7 +165,7 @@ int main() {
             Serial.println("SAFTYOFF");
             can.write();
         }*/
-        
+        can.write();
 
         // LED heartbeat -- linked to loop count to reveal slowdowns and freezes.
         loopc % (int)(1E3/float(HEARTBEAT_FREQ)) < (int)(1E3/float(5*HEARTBEAT_FREQ)) ? digitalWrite(13, HIGH) : digitalWrite(13, LOW);
