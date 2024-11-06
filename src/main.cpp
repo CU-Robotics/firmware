@@ -124,6 +124,9 @@ int main() {
     *   {theta_b_dot, s_ddot, phi_ddot},
     *   {psi_d, l_d, empty}
     */
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
     /*Testcontorl.init();
     Testobserver.init();
