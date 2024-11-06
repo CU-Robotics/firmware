@@ -63,20 +63,50 @@ int main() {
     float tempobs[9][3];
     float tempmotor[6];
 
-    float ref[5][3] = {
-    {0,0,0},
-    {0,0,0},
-    {0,0,0},
-    {0,0,0},
-    {0,0,0}
-    };
-    /** 
-    *   {s, s_dot, phi},
-    *   {phi_dot, theta_ll, theta_ll_dot},
-    *   {theta_lr, theta_lr_dot, theta_b},
-    *   {theta_b_dot, s_ddot, phi_ddot},
-    *   {psi_d, l_d, empty}
-    */
+    // Config config
+    Serial.println("Configuring...");
+    const Config* config = config_layer.configure(&comms);
+    Serial.println("Configured!");
+
+    //estimate micro and macro state
+    estimator_manager.init(can_data, config);
+
+    //generate controller outputs based on governed references and estimated state
+    controller_manager.init(config);
+
+    //set reference limits in the reference governor
+    state.set_reference_limits(config->set_reference_limits);
+
+    // variables for use in main
+    float temp_state[STATE_LEN][3] = { 0 }; // Temp state array
+    float temp_micro_state[NUM_MOTORS][MICRO_STATE_LEN] = { 0 }; // Temp micro state array
+    float temp_reference[STATE_LEN][3] = { 0 }; //Temp governed state
+    float target_state[STATE_LEN][3] = { 0 }; //Temp ungoverned state
+    float hive_state_offset[STATE_LEN][3] = { 0 }; //Hive offset state
+    float motor_inputs[NUM_MOTORS] = { 0 }; //Array for storing controller outputs to send to CAN
+
+    // create a copy of the position and velocity kinematic matrixes since we'll be updating them
+    float kinematics_pos[NUM_MOTORS][STATE_LEN] = { 0 }; //Position kinematics 
+    memcpy(kinematics_pos, (*config).kinematics_p, sizeof((*config).kinematics_p));
+    float kinematics_vel[NUM_MOTORS][STATE_LEN] = { 0 }; //Velocity kinematics
+    memcpy(kinematics_vel, (*config).kinematics_v, sizeof((*config).kinematics_v));
+
+    // used in the kinematics matrix
+    float chassis_pos_to_motor_error = config->drive_conversion_factors[1];
+
+    // manual controls variables
+    float vtm_pos_x = 0;
+    float vtm_pos_y = 0;
+    float dr16_pos_x = 0;
+    float dr16_pos_y = 0;
+    float pos_offset_x = 0;
+    float pos_offset_y = 0;
+
+    // param to specify whether this is the first loop
+    int count_one = 0;
+
+    // whether we are in hive mode or not
+    bool hive_toggle = false;
 
     /*Testcontorl.init();
     Testobserver.init();
