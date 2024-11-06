@@ -2,7 +2,7 @@
 #include <cassert>
 
 // empty constructor
-ICM20649::ICM20649() {}
+//ICM20649::ICM20649() {}
 
 // initialize ICM
 void ICM20649::init(CommunicationProtocol protocol) {

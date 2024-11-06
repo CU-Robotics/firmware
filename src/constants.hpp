@@ -2,10 +2,7 @@
 #define CONSTANTS_HPP
 
 #include <cstdint>
-#include <cstring>   
-#include <iostream>
-#include "sensors/Sensor.hpp"  
-#include <vector>
+#include <cstddef>   
 
 // **Constants**
 
