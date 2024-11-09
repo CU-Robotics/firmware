@@ -4,6 +4,7 @@
 
 #include "utils/profiler.hpp"
 #include "sensors/d200.hpp"
+#include "sensors/StereoCamTrigger.hpp"
 #include "controls/estimator_manager.hpp"
 #include "controls/controller_manager.hpp"
 
@@ -22,6 +23,8 @@ HIDLayer comms;
 
 D200LD14P lidar1(&Serial4, 0);
 D200LD14P lidar2(&Serial5, 1);
+
+StereoCamTrigger stereoCamTrigger(60);
 
 ConfigLayer config_layer;
 
@@ -90,6 +93,7 @@ int main() {
     dr16.init();
     ref.init();
     comms.init();
+    stereoCamTrigger.init();
 
     //can data pointer so we don't pass around rm_CAN object
     CANData* can_data = can.get_data();
