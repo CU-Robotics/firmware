@@ -11,6 +11,7 @@
 #include "sensors/LEDBoard.hpp"
 #include "data_packet.hpp"
 #include "constants.hpp"
+#include "comms/virtual_sensor_manager.hpp"
 
 // Loop constants
 #define LOOP_FREQ 1000
@@ -158,6 +159,7 @@ int main()
         uint8_t ref_data_raw[180] = {0};
         // ref.get_data_for_comms(ref_data_raw);
 
+        VirtualSensorManager virtual_sensor_data = VirtualSensorManager(config);
         data_packet packet;
         uint8_t buffer[4096];
 
@@ -183,7 +185,7 @@ int main()
 
 
         packet.packDataPacket(buffer, state, ref_data_raw, can_data, config, estimator_manager, lidar1, lidar2);
-        packet.unpackDataPacket(buffer, config);
+        packet.unpackDataPacket(buffer, config, virtual_sensor_data);
 
         while (true)
         {

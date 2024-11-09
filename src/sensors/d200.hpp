@@ -155,13 +155,13 @@ struct D200Calibration {
 class D200LD14P : Sensor{
   private:
     /// @brief default scanning speed (deg/s) (used internally)
-    const uint16_t DEFAULT_SPEED = 6 * 360;
+    static const uint16_t DEFAULT_SPEED = 6 * 360;
 
     /// @brief minimum specified scanning speed (deg/s) (used internally)
-    const uint16_t MIN_SPEED = 2 * 360 + 1;
+    static const uint16_t MIN_SPEED = 2 * 360 + 1;
 
     /// @brief maximum specified scanning speed (deg/s) (used internally)
-    const uint16_t MAX_SPEED = 8 * 360 - 1;
+    static const uint16_t MAX_SPEED = 8 * 360 - 1;
 
     /// @brief teensy-side cache of packets for comms to use. number of cached packets may be adjusted as needed
     LidarDataPacketSI packets[D200_NUM_PACKETS_CACHED];

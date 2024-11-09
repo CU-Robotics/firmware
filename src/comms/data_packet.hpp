@@ -10,6 +10,7 @@
 #include "ICM20649.hpp"
 #include "rev_encoder.hpp"
 #include "d200.hpp"
+#include "virtual_sensor_manager.hpp"
 
 struct DataPacketHeader
     {
@@ -33,11 +34,6 @@ struct data_packet
 
     } ;
 
-    //these are temporary, I need to figure out where to send the unpacked sensor data
-    BuffEncoder buff_sensors[MAX_SENSORS];
-    ICM20649 icm_sensors[MAX_SENSORS];
-    RevEncoder rev_sensors[MAX_SENSORS];
-    TOFSensor tof_sensors[MAX_SENSORS];
     D200LD14P lidar1;
     D200LD14P lidar2;
 
@@ -145,7 +141,7 @@ struct data_packet
         }
     }
 
-    void unpackDataPacket(uint8_t packetBuffer[BUFFER_SIZE], const Config* config_data)
+    void unpackDataPacket(uint8_t packetBuffer[BUFFER_SIZE], const Config* config_data, VirtualSensorManager& virtualSensorManager)
     {
         size_t packetOffset = 0;
 
@@ -194,53 +190,97 @@ struct data_packet
         // Unpack Buff Encoders
         for(int i = 0; i < config_data->num_sensors[0]; i++)
         {
-            buff_sensors[i].deserialize(packetBuffer, packetOffset);
+            BuffEncoder encoder;
+            encoder.deserialize(packetBuffer, packetOffset);
+            
+            virtualSensorManager.updateSensor(SensorType::BUFFENC, encoder.getId(), &encoder);
+
             Serial.print("Buff Encoder ");
-            Serial.print(buff_sensors[i].getId());
+            Serial.print(virtualSensorManager.getBuffSensors()[i].getId());
             Serial.print(": ");
-            buff_sensors[i].print(); 
+            //buff_sensors[i].print(); 
+
+            virtualSensorManager.getBuffSensors()[i].print();
         }
 
         // Unpack ICM Sensors
         for(int i = 0; i < config_data->num_sensors[1]; i++)
         {
-            icm_sensors[i].deserialize(packetBuffer, packetOffset);
+            // icm_sensors[i].deserialize(packetBuffer, packetOffset);
+            // Serial.print("ICM Sensor ");
+            // Serial.print(icm_sensors[i].getId());  
+            // Serial.print(": ");
+            // icm_sensors[i].print(); 
+
+            ICM20649 icm;
+            icm.deserialize(packetBuffer, packetOffset);
+            virtualSensorManager.updateSensor(SensorType::ICM, icm.getId(), &icm);
+
             Serial.print("ICM Sensor ");
-            Serial.print(icm_sensors[i].getId());  
+            Serial.print(virtualSensorManager.getICMSensors()[i].getId());
             Serial.print(": ");
-            icm_sensors[i].print(); 
+            virtualSensorManager.getICMSensors()[i].print();
         }
 
         // Unpack Rev Encoders
         for(int i = 0; i < config_data->num_sensors[2]; i++)
         {
-            rev_sensors[i].deserialize(packetBuffer, packetOffset);
+            // rev_sensors[i].deserialize(packetBuffer, packetOffset);
+            // Serial.print("Rev Encoder ");
+            // Serial.print(rev_sensors[i].getId());
+            // Serial.print(": ");
+            // rev_sensors[i].print(); 
+
+            RevEncoder rev;
+            rev.deserialize(packetBuffer, packetOffset);
+            virtualSensorManager.updateSensor(SensorType::REVENC, rev.getId(), &rev);
+
             Serial.print("Rev Encoder ");
-            Serial.print(rev_sensors[i].getId());
+            Serial.print(virtualSensorManager.getRevSensors()[i].getId());
             Serial.print(": ");
-            rev_sensors[i].print(); 
+            virtualSensorManager.getRevSensors()[i].print();
         }
 
         // Unpack TOF Sensors
         for(int i = 0; i < config_data->num_sensors[3]; i++)
         {
-            tof_sensors[i].deserialize(packetBuffer, packetOffset);
+            // tof_sensors[i].deserialize(packetBuffer, packetOffset);
+            // Serial.print("TOF Sensor ");
+            // Serial.print(tof_sensors[i].getId());
+            // Serial.print(": ");
+            // tof_sensors[i].print();
+
+            TOFSensor tof;
+            tof.deserialize(packetBuffer, packetOffset);
+            virtualSensorManager.updateSensor(SensorType::TOF, tof.getId(), &tof);
+
             Serial.print("TOF Sensor ");
-            Serial.print(tof_sensors[i].getId());
+            Serial.print(virtualSensorManager.getTOFSensors()[i].getId());
             Serial.print(": ");
-            tof_sensors[i].print();
+            virtualSensorManager.getTOFSensors()[i].print();
+
         }
 
         // Unpack Lidar Sensors
         if(config_data->num_sensors[4] == 2)
         {
-            lidar1.deserialize(packetBuffer, packetOffset);
-            Serial.print("Lidar 1: ");
-            lidar1.print_latest_packet();
+            // lidar1.deserialize(packetBuffer, packetOffset);
+            // Serial.print("Lidar 1: ");
+            // lidar1.print_latest_packet();
 
-            lidar2.deserialize(packetBuffer, packetOffset);
+            // lidar2.deserialize(packetBuffer, packetOffset);
+            // Serial.print("Lidar 2: ");
+            // lidar2.print_latest_packet();
+
+
+            virtualSensorManager.updateSensor(SensorType::LIDAR, 1, &lidar1);
+            virtualSensorManager.updateSensor(SensorType::LIDAR, 2, &lidar2);
+
+            Serial.print("Lidar 1: ");
+            virtualSensorManager.getLidar1().print_latest_packet();
+
             Serial.print("Lidar 2: ");
-            lidar2.print_latest_packet();
+            virtualSensorManager.getLidar2().print_latest_packet();
         }
     }
 };
