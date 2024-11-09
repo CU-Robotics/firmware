@@ -34,7 +34,7 @@ float RevEncoder::get_angle_radians() {
     return (this->radians-starting_value);
 }
 
-void RevEncoder::serialize(uint8_t* buffer, size_t& offset) const {
+void RevEncoder::serialize(uint8_t* buffer, size_t& offset) {
     buffer[offset++] = id_;
     memcpy(buffer + offset, &ticks, sizeof(ticks));
     offset += sizeof(ticks);

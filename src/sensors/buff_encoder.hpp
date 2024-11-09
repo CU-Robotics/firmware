@@ -68,7 +68,7 @@ public:
     /// @return Read angle (radians)
     inline float get_angle() const { return m_angle; }
 
-    void serialize(uint8_t* buffer, size_t& offset) const override {
+    void serialize(uint8_t* buffer, size_t& offset) override {
         buffer[offset++] = id_;
         memcpy(buffer + offset, &m_angle, sizeof(m_angle));
         offset += sizeof(m_angle);
@@ -78,6 +78,12 @@ public:
         id_ = data[offset++];
         memcpy(&m_angle, data + offset, sizeof(m_angle));
         offset += sizeof(m_angle);
+    }
+
+    void print() {
+        Serial.println("Buff Encoder:");
+        Serial.print("Angle: ");
+        Serial.println(m_angle);
     }
 
 private:

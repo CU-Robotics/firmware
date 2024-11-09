@@ -102,7 +102,7 @@ void ICM20649::set_gyro_range(int gyro_rate_range) {
 }
 
 //implenet seralize and deserialize
-void ICM20649::serialize(uint8_t* buffer, size_t& offset) const {
+void ICM20649::serialize(uint8_t* buffer, size_t& offset) {
     buffer[offset++] = id_;
     memcpy(buffer + offset, &accel_X, sizeof(accel_X));
     offset += sizeof(accel_X);

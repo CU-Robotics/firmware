@@ -94,6 +94,10 @@ public:
     RevEncoder& getRevSensor(int index) {
         return rev_sensors[index];
     }
+
+    TOFSensor& getTOFSensor(int index) {
+        return tof_sensors[index];
+    }
     
 private:
     /// @brief call read for imu's NUM_IMU_CALIBRATION times and then averages returns to calculate offset.

@@ -6,13 +6,15 @@
 // Include TOF sensor library
 #include <vl53l4cd_class.h>
 
+#include "Sensor.hpp"
+
 /// @brief Default I2C bus for the TOF sensor (Wire2 is pins 24 and 25)
 constexpr TwoWire* TOF_DEFAULT_I2C_BUS = &Wire2;
 /// @brief Default pin to turn off and on the sensor (-1 to disable this feature)
 constexpr int TOF_DEFAULT_SHUTOFF_PIN = -1;
 
 /// @brief A time of flight sensor to measure distance in millimeters
-class TOFSensor
+class TOFSensor : public Sensor
 {
 protected:
     /// @brief communicates with the VL53L4CD sensor
@@ -24,17 +26,18 @@ protected:
     /// @brief Flag to determine whether it is time to read or time to clear the interrupt
     bool should_read = false;
 
+    
     /// @brief The most recent distance read from the sensor
     uint16_t latest_distance = 0;
 
 public:
     /// @brief Default constructor
-    TOFSensor() : i2c_bus(TOF_DEFAULT_I2C_BUS), sensor(TOF_DEFAULT_I2C_BUS, TOF_DEFAULT_SHUTOFF_PIN) {}
+    TOFSensor() : Sensor(SensorType::TOF), i2c_bus(TOF_DEFAULT_I2C_BUS), sensor(TOF_DEFAULT_I2C_BUS, TOF_DEFAULT_SHUTOFF_PIN) {}
 
     /// @brief constructor, define the external wire within the class and define sensor object.
     /// @param wire_input  input to initialize communication between VL53L4CD sensor and wire
     /// @param pin controls if the senor is on or off
-    TOFSensor(TwoWire* wire_input, int pin) {
+    TOFSensor(TwoWire* wire_input, int pin) : Sensor(SensorType::TOF) {
         // initalize the wire and the sensor
         i2c_bus = wire_input;
 
@@ -91,6 +94,37 @@ public:
 
         // return the results
         return latest_distance;
+    }
+
+    /// @brief function to serialize the TOF sensor data
+    /// @param buffer  buffer to store the serialized data
+    /// @param offset  offset to store the serialized data
+    void serialize(uint8_t* buffer, size_t& offset) override
+    {
+        // serialize the sensor id
+        buffer[offset++] = id_;
+
+        // serialize the distance
+        buffer[offset++] = latest_distance & 0xFF;
+        buffer[offset++] = (latest_distance >> 8) & 0xFF;
+    }
+
+    /// @brief function to deserialize the TOF sensor data
+    /// @param data  data to deserialize
+    /// @param offset  offset to deserialize the data
+    void deserialize(const uint8_t* data, size_t& offset) override
+    {
+        // deserialize the sensor id
+        id_ = data[offset++];
+
+        // deserialize the distance
+        latest_distance = data[offset++];
+        latest_distance |= data[offset++] << 8;
+    }
+
+    void print() {
+        Serial.println("TOF Sensor:");
+        Serial.printf("\tDistance: %u mm\n", latest_distance);
     }
 };
 

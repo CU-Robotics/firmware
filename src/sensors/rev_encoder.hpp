@@ -44,9 +44,17 @@ public:
 	/// @return the last angle of the encoder in radians [0, 2pi)
 	float get_angle_radians();
 
-	void serialize(uint8_t* buffer, size_t& offset) const override;
+	void serialize(uint8_t* buffer, size_t& offset)  override;
 
 	void deserialize(const uint8_t* data, size_t& offset) override;
+
+	void print() {
+		Serial.println("Rev Encoder:");
+		Serial.print("Ticks: ");
+		Serial.println(ticks);
+		Serial.print("Radians: ");
+		Serial.println(radians);
+	}
 };
 
 #endif

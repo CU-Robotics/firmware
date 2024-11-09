@@ -22,8 +22,8 @@ rm_CAN can;
 RefSystem ref;
 HIDLayer comms;
 
-D200LD14P lidar1(&Serial4, 0);
-D200LD14P lidar2(&Serial5, 1);
+D200LD14P lidar1(&Serial4);
+D200LD14P lidar2(&Serial5);
 
 ConfigLayer config_layer;
 
@@ -179,14 +179,10 @@ int main()
             }
         }
 
-        // for (int i = 0; i < 180; i++)
-        // {
-        //     Serial.println((ref_data_raw[i]));
-        // }
 
 
 
-        packet.packDataPacket(buffer, micros(), state, ref_data_raw, can_data, config, estimator_manager);
+        packet.packDataPacket(buffer, state, ref_data_raw, can_data, config, estimator_manager, lidar1, lidar2);
         packet.unpackDataPacket(buffer, config);
 
         while (true)

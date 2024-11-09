@@ -19,7 +19,8 @@ enum class SensorType : uint8_t {
     BUFFENC = 0,
     ICM = 1,
     REVENC = 2,
-    LIDAR = 3,
+    TOF = 3,
+    LIDAR = 4,
 
     // Add other sensor types here
 };

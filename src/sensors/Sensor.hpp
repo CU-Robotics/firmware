@@ -13,7 +13,7 @@ public:
     SensorType getType() const { return type_; }
     uint8_t getId() const { return id_; }
 
-    virtual void serialize(uint8_t* buffer, size_t& offset) const = 0;
+    virtual void serialize(uint8_t* buffer, size_t& offset) = 0;
     virtual void deserialize(const uint8_t* data, size_t& offset) = 0;
 
 protected:
