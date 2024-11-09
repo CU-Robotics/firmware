@@ -52,11 +52,11 @@ void StereoCamTrigger::init() {
 }
 
 uint32_t StereoCamTrigger::get_latest_exposure_timestamp() {
-  // disable interrupts to protect volatile access
-  cli();
+  uint32_t ret;
 
-  return latest_exposure_timestamp;
+  cli(); // disable interrupts to protect volatile access
+  ret = latest_exposure_timestamp;
+  sei(); // reenable interrupts
 
-  // reenable interrupts
-  sei();
+  return ret;
 }
