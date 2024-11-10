@@ -163,7 +163,7 @@ int main()
 
         // construct ref data packet
         uint8_t ref_data_raw[180] = {0};
-        ref.get_data_for_comms(ref_data_raw);
+        //ref.get_data_for_comms(ref_data_raw);
 
 
 
