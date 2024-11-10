@@ -99,7 +99,7 @@ public:
                 if (icm_sensors[i].getId() == 254 || icm_sensors[i].getId() == id)
                 {
                     icm_sensors[i] = *static_cast<ICM20649*>(sensor);
-                    icm_sensors[i].setId(11);
+                    icm_sensors[i].setId(id);
                     break;
                 }
             }
