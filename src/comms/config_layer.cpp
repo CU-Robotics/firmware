@@ -1,32 +1,9 @@
 #include "config_layer.hpp"
 
 const Config* const ConfigLayer::configure(HIDLayer* comms) {
-    // if on robot, we need to wait for ref to send robot_id
-    #ifndef CONFIG_OFF_ROBOT
-        Serial.println("Waiting for ref system to initialize...");
-        while (ref.ref_data.robot_performance.robot_ID == 0) ref.read();
-        Serial.println("Ref system online");
-    #endif
-
-    // check SD
-    if (sdcard.exists("/config.pack")) {
-    #ifdef CONFIG_LAYER_DEBUG
-        Serial.printf("Config located on SD in /config.pack, attempting to load from file\n");
-    #endif
-
-    // load sd config into config_packets
-        configured = sd_load();
-        if (configured) {
-            Serial.printf("SD load successful!\n");
-            return &config;
-        }
-    }
-
-#ifdef CONFIG_LAYER_DEBUG
-    else {
-        Serial.printf("No config packet located, awaiting input from comms....\n");
-    }
-#endif
+    // attempt SD card load
+    config_SD_init(comms);
+    if(configured) return &config;
 
     // if no config on SD, then await transmission
     // grab and process all config packets until finished
@@ -53,7 +30,9 @@ const Config* const ConfigLayer::configure(HIDLayer* comms) {
     if ((ref.ref_data.robot_performance.robot_ID % 100) != (int)config.robot_id) {
         Serial.printf("ERROR: IDs do not match!! Check robot_id.cfg and robot settings from ref system!\n");
         if(!CONFIG_ERR_HANDLER(CONFIG_ID_MISMATCH)){
-            return nullptr; // ?????? BAD
+            // honestly not sure what to put here. in current implementation ERR_HANDLER just while(1) loops
+            // this recursive call probably won't work? but it also shouldn't run? will change later if needed
+            return configure(comms);
         }
     }
     #endif
@@ -61,9 +40,31 @@ const Config* const ConfigLayer::configure(HIDLayer* comms) {
     // update stored config, msg if successful
     Serial.println("Attempting to store config...");
     if(store_config()) Serial.println("Config successfully stored in /config.pack");
-    else Serial.println("Config not successfully stored (is an SD card inserted?)");
+    else Serial.println("Config not successfully stored (is an SD card inserted?)");    // not a fatal error, can still return
 
     return &config;
+}
+
+void ConfigLayer::config_SD_init(HIDLayer* comms){
+    // if on robot, we need to wait for ref to send robot_id
+    Serial.println("Waiting for ref system to initialize...");
+    while (ref.ref_data.robot_performance.robot_ID == 0) ref.read();
+    Serial.println("Ref system online");
+    
+
+    // check SD
+    if (sdcard.exists("/config.pack")) {
+        Serial.printf("Config located on SD in /config.pack, attempting to load from file\n");
+        
+        // load sd config into config_packets
+        configured = sd_load();
+        if (configured) {
+            Serial.printf("SD load successful!\n");
+        }
+        else {
+            Serial.printf("No config packet located, awaiting input from comms....\n");
+        }
+    }
 }
 
 void ConfigLayer::process(CommsPacket* in, CommsPacket* out) {
@@ -247,14 +248,46 @@ bool ConfigLayer::sd_load() {
 
     if (sdcard.open("/config.pack") != 0) return false;
 
-
     // grab ID from config (originally from hive). should match ID from ref system- if not, abort!!
     float received_id;
     sdcard.read((uint8_t*)(&received_id), sizeof(float));
 
+    // checksum is passed by reference and written to for later reference
+    uint64_t checksum;
+    if(!config_SD_read_packets(checksum)) return false;
+
+    sdcard.close();
+
+    uint8_t* config_bytes = (uint8_t*)config_packets;
+#ifdef CONFIG_LAYER_DEBUG
+    Serial.printf("sd_load: computing checksum for stored config\n");
+#endif
+    if (sd_checksum64(config_bytes, config_byte_size) != checksum) {
+        Serial.printf("Checksum for config file does not match stored config, requesting config from hive...\n");
+        return false;
+    }
+
+    Config temp_config;
+
+    temp_config.fill_data(config_packets, subsec_sizes);
+
+    #ifndef CONFIG_OFF_ROBOT
+    if ((ref.ref_data.robot_performance.robot_ID % 100) != (int)received_id) {      // % 100 in case robot is blue team (ID == 101, 102, ...)
+        Serial.printf("NOTICE: attempting to load firmware for different robot type! \n");
+        Serial.printf("Current robot ID: %d\nStored config robot ID: %d\n", ref.ref_data.robot_performance.robot_ID, (int)received_id);
+        Serial.println("Requesting config from hive...");
+        return false;
+    }
+    #endif
+
+    config = temp_config;
+
+    return true;
+}
+
+bool ConfigLayer::config_SD_read_packets(uint64_t &checksum){
     // read checksum and each packet
     // grab first packet and checksum (kept separate in order to validate subsequent checksum values)
-    uint64_t checksum;
     if (sdcard.read((uint8_t*)(&checksum), sizeof(uint64_t)) != sizeof(uint64_t)) return false;
     if (sdcard.read((uint8_t*)(&config_packets[0]), sizeof(CommsPacket)) != sizeof(CommsPacket)) return false;
     // read remaining packets
@@ -277,32 +310,6 @@ bool ConfigLayer::sd_load() {
         Serial.printf("Unexpected mismatch in number of bytes read, requesting config from hive...\n");
         return false;
     }
-
-    sdcard.close();
-
-    uint8_t* config_bytes = (uint8_t*)config_packets;
-#ifdef CONFIG_LAYER_DEBUG
-    Serial.printf("sd_load: computing checksum for stored config\n");
-#endif
-    if (sd_checksum64(config_bytes, config_byte_size) != checksum) {
-        Serial.printf("Checksum for config file does not match stored config, requesting config from hive...\n");
-        return false;
-    }
-
-    Config temp_config;
-
-    temp_config.fill_data(config_packets, subsec_sizes);
-
-    #ifndef CONFIG_OFF_ROBOT
-    if ((ref.ref_data.robot_performance.robot_ID % 100) != (int)received_id) {
-        Serial.printf("NOTICE: attempting to load firmware for different robot type! \n");
-        Serial.printf("Current robot ID: %d\nStored config robot ID: %d\n", ref.ref_data.robot_performance.robot_ID, (int)received_id);
-        Serial.println("Requesting config from hive...");
-        return false;
-    }
-    #endif
-
-    config = temp_config;
 
     return true;
 }
@@ -332,6 +339,7 @@ bool ConfigLayer::store_config() {
 #endif
     uint8_t* config_bytes = (uint8_t*)config_packets;
     uint64_t checksum = sd_checksum64(config_bytes, config_byte_size);
+    checksum += sd_checksum64(subsec_sizes, MAX_CONFIG_PACKETS);
 
     // write robot id byte to ref data so it can be compared directly
     sdcard.write((uint8_t*)(&config.robot_id), sizeof(float));
@@ -365,6 +373,9 @@ uint64_t ConfigLayer::sd_checksum64(uint8_t* arr, uint64_t n) {
 }
 
 bool ConfigLayer::CONFIG_ERR_HANDLER(int err_code) {
+    // vars that may be used by err handler procedures
+    float prev_time, delta_time;
+
     // make sure that every error case returns a value!
     switch(err_code){
         case CONFIG_RM_FAIL:
@@ -380,8 +391,16 @@ bool ConfigLayer::CONFIG_ERR_HANDLER(int err_code) {
             return false;
 
         case CONFIG_ID_MISMATCH:
-            Serial.println("CONFIG_ERROR::ID of config data and ref system inconsistent, busy wait for now");
-            while(1) ;
+            prev_time = millis();
+            delta_time = millis() - prev_time;
+            while(1){
+                if(delta_time >= 2.0f){
+                    Serial.println("CONFIG_ERROR::config from comms does not match from ref system!!");
+                    Serial.println("Check robot_id.cfg and robot ID on ref system for inconsistency");
+                    prev_time = millis();
+                }
+                delta_time = millis() - prev_time;
+            }
             return false;
 
         default:

@@ -171,6 +171,10 @@ public:
         memcpy(sizes, subsec_sizes, sizeof(uint8_t) * MAX_CONFIG_PACKETS);
     }
 
+    void config_SD_init(HIDLayer* comms);
+
+    bool config_SD_read_packets(uint64_t &checksum);
+
     /// @brief attempt to load configuration stored on sd card, assuming it exists
     /// @return true if successful, false otherwise
     bool sd_load();
