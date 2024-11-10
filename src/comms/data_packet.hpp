@@ -20,22 +20,26 @@ struct DataPacketHeader
         uint16_t sensorDataBufferLength;
     } ;
 
-struct data_packet
-{
-
-
     struct RefereeData
     {
         uint8_t ref_data_raw[180] = {0}; // construct ref data packet
     } ;
 
-    struct LoggingData
-    {
 
-    } ;
+struct data_packet
+{
+
+
+    DataPacketHeader header;
+    RefereeData refData;
+    CANData canData;
 
     D200LD14P lidar1;
     D200LD14P lidar2;
+
+    DataPacketHeader getHeader() const { return header; }
+    RefereeData getRefData() const { return refData; }
+    CANData getCanData() const { return canData; }
 
     void packDataPacket(uint8_t packetBuffer[BUFFER_SIZE], State robotState, uint8_t ref_data_raw[180], CANData *canData, const Config* config_data, EstimatorManager& estimatorManager, D200LD14P& lidar1, D200LD14P& lidar2) 
     {
@@ -146,7 +150,6 @@ struct data_packet
         size_t packetOffset = 0;
 
         // Unpack the header
-        DataPacketHeader header;
         memcpy(&header, packetBuffer + packetOffset, sizeof(header));
         packetOffset += sizeof(header);
 
@@ -157,7 +160,6 @@ struct data_packet
         Serial.println(header.numSensors);
 
         // Unpack the RefereeData
-        RefereeData refData;
         memcpy(&refData, packetBuffer + packetOffset, sizeof(refData));
         packetOffset += sizeof(refData);
 
@@ -168,8 +170,7 @@ struct data_packet
         }
         Serial.println();
 
-        // Unpack CAN data
-        CANData canData;
+        //unpack can data
         memcpy(&canData, packetBuffer + packetOffset, sizeof(CANData));
         packetOffset += sizeof(CANData);
 
