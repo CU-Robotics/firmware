@@ -114,15 +114,15 @@ struct data_packet
         for(int i = 0; i < config_data->num_sensors[1]; i++)
         {
             Serial.println("starting icm sensor serialization");
-            ICM20649 icm = estimatorManager.getICMSensor(i);
+            ICM20649& icm = estimatorManager.getICMSensor(i);
             Serial.print("ICM Sensor ");
             Serial.print(icm.getId());
             Serial.print(": ");
             icm.print();
             icm.serialize(packetBuffer, packetOffset);
-            
+            Serial.println("ending icm sensor serialization");
         }
-        Serial.println("ending icm sensor serialization");
+        
         Serial.println("starting rev encoder serialization");
         Serial.print("Number of rev sensors: ");
         Serial.println(config_data->num_sensors[2]);
