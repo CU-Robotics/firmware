@@ -120,9 +120,9 @@ struct data_packet
             Serial.print(": ");
             icm.print();
             icm.serialize(packetBuffer, packetOffset);
-            Serial.println("ending icm sensor serialization");
+            
         }
-
+        Serial.println("ending icm sensor serialization");
         Serial.println("starting rev encoder serialization");
         Serial.print("Number of rev sensors: ");
         Serial.println(config_data->num_sensors[2]);
