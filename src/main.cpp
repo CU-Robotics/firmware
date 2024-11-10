@@ -172,9 +172,6 @@ int main()
         packet.packDataPacket(buffer, state, ref_data_raw, can_data, config, estimator_manager, lidar1, lidar2);
         packet.unpackDataPacket(buffer, config, virtual_sensor_data);
 
-        virtual_sensor_data.getTOFSensorCount();
-
-        packet.getRefData();
     
 
         // read and write comms packets
