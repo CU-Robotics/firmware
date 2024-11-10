@@ -47,14 +47,13 @@ struct data_packet
     
         // Create the packet header
         DataPacketHeader header;
+        Serial.println("Packing Robot State:");
         header.state = robotState;
+        
         header.timestamp = micros();
         header.numSensors = config_data->num_sensors[0] + config_data->num_sensors[1] + config_data->num_sensors[2] + config_data->num_sensors[3] + config_data->num_sensors[4];
     
-        // Copy the packet header into the buffer
-        memcpy(packetBuffer + packetOffset, &header, sizeof(header));
-        packetOffset += sizeof(header);
-    
+
         // Print header information
         Serial.println("Packing Header:");
         Serial.println("Timestamp: ");
@@ -62,6 +61,12 @@ struct data_packet
         Serial.println("Num Sensors: ");
         Serial.println(header.numSensors);
     
+        // Copy the packet header into the buffer
+        memcpy(packetBuffer + packetOffset, &header, sizeof(header));
+        packetOffset += sizeof(header);
+    
+        
+
         // Create the RefereeData
         RefereeData RefData;
         memcpy(RefData.ref_data_raw, ref_data_raw, sizeof(RefData.ref_data_raw)); // load ref_data_raw with the given parameter
@@ -147,9 +152,11 @@ struct data_packet
 
     void unpackDataPacket(uint8_t packetBuffer[BUFFER_SIZE], const Config* config_data, VirtualSensorManager& virtualSensorManager)
     {
+        Serial.println("Inside Unpacking Data Packet");
         size_t packetOffset = 0;
 
         // Unpack the header
+        Serial.println("Unpacking Header:");
         memcpy(&header, packetBuffer + packetOffset, sizeof(header));
         packetOffset += sizeof(header);
 
@@ -160,6 +167,7 @@ struct data_packet
         Serial.println(header.numSensors);
 
         // Unpack the RefereeData
+        Serial.println("Unpacking Referee Data:");
         memcpy(&refData, packetBuffer + packetOffset, sizeof(refData));
         packetOffset += sizeof(refData);
 
@@ -171,6 +179,7 @@ struct data_packet
         Serial.println();
 
         //unpack can data
+        Serial.println("Unpacking CAN Data:");
         memcpy(&canData, packetBuffer + packetOffset, sizeof(CANData));
         packetOffset += sizeof(CANData);
 
@@ -188,6 +197,7 @@ struct data_packet
         }
 
         // Unpack the sensor data
+        Serial.println("Unpacking Sensor Data:");
         // Unpack Buff Encoders
         for(int i = 0; i < config_data->num_sensors[0]; i++)
         {
@@ -283,6 +293,8 @@ struct data_packet
             Serial.print("Lidar 2: ");
             virtualSensorManager.getLidar2().print_latest_packet();
         }
+        Serial.println("Exiting Unpacking Data Packet");
     }
+
 };
 

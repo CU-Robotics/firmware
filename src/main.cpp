@@ -168,8 +168,9 @@ int main()
 
 
 
-
+        Serial.println("Packing Data Packet");
         packet.packDataPacket(buffer, state, ref_data_raw, can_data, config, estimator_manager, lidar1, lidar2);
+        Serial.println("Unpacking Data Packet");
         packet.unpackDataPacket(buffer, config, virtual_sensor_data);
 
     
