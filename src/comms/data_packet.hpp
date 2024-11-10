@@ -156,6 +156,7 @@ struct data_packet
             lidar2.print_latest_packet();
             lidar2.serialize(packetBuffer, packetOffset);
         }
+        Serial.println("Data Packet Packed");
     }
 
     void unpackDataPacket(uint8_t packetBuffer[BUFFER_SIZE], const Config* config_data, VirtualSensorManager& virtualSensorManager)
