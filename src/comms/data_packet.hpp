@@ -123,6 +123,10 @@ struct data_packet
             Serial.println("ending icm sensor serialization");
         }
 
+        Serial.println("starting rev encoder serialization");
+        Serial.print("Number of rev sensors: ");
+        Serial.println(config_data->num_sensors[2]);
+
         for(int i = 0; i < config_data->num_sensors[2]; i++)
         {
             Serial.println("starting rev encoder serialization");
