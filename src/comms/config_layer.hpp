@@ -142,6 +142,7 @@ private:
     /// @brief a local instance of the config data
     Config config;
 
+    /// @brief sd card object for interacting with config files
     SDManager sdcard;
 
 public:
