@@ -3,7 +3,7 @@
 const Config* const ConfigLayer::configure(HIDLayer* comms) {
     // attempt SD card load
     config_SD_init(comms);
-    if(configured) return &config;
+    if (configured) return &config;
 
     // if no config on SD, then await transmission
     // grab and process all config packets until finished
@@ -25,43 +25,42 @@ const Config* const ConfigLayer::configure(HIDLayer* comms) {
     config.fill_data(config_packets, subsec_sizes);
 
     // verify that config received matches ref system: if not, error out
-    #ifndef CONFIG_OFF_ROBOT
+#ifndef CONFIG_OFF_ROBOT
     Serial.printf("Received robot ID from config: %d\nRobot ID from ref system: %d\n", (int)config.robot_id, ref.ref_data.robot_performance.robot_ID);
     if ((ref.ref_data.robot_performance.robot_ID % 100) != (int)config.robot_id) {
         Serial.printf("ERROR: IDs do not match!! Check robot_id.cfg and robot settings from ref system!\n");
-        if(!CONFIG_ERR_HANDLER(CONFIG_ID_MISMATCH)){
+        if (!CONFIG_ERR_HANDLER(CONFIG_ID_MISMATCH)) {
             // honestly not sure what to put here. in current implementation ERR_HANDLER just while(1) loops
             // this recursive call probably won't work? but it also shouldn't run? will change later if needed
             return configure(comms);
         }
     }
-    #endif
+#endif
 
-    // update stored config, msg if successful
+// update stored config, msg if successful
     Serial.println("Attempting to store config...");
-    if(store_config()) Serial.println("Config successfully stored in /config.pack");
+    if (store_config()) Serial.println("Config successfully stored in /config.pack");
     else Serial.println("Config not successfully stored (is an SD card inserted?)");    // not a fatal error, can still return
 
     return &config;
 }
 
-void ConfigLayer::config_SD_init(HIDLayer* comms){
+void ConfigLayer::config_SD_init(HIDLayer* comms) {
     // if on robot, we need to wait for ref to send robot_id
     Serial.println("Waiting for ref system to initialize...");
     while (ref.ref_data.robot_performance.robot_ID == 0) ref.read();
     Serial.println("Ref system online");
-    
+
 
     // check SD
     if (sdcard.exists("/config.pack")) {
         Serial.printf("Config located on SD in /config.pack, attempting to load from file\n");
-        
+
         // load sd config into config_packets
         configured = sd_load();
         if (configured) {
             Serial.printf("SD load successful!\n");
-        }
-        else {
+        } else {
             Serial.printf("No config packet located, awaiting input from comms....\n");
         }
     }
@@ -254,7 +253,7 @@ bool ConfigLayer::sd_load() {
 
     // checksum is passed by reference and written to for later reference
     uint64_t checksum;
-    if(!config_SD_read_packets(checksum)) return false;
+    if (!config_SD_read_packets(checksum)) return false;
 
     sdcard.close();
 
@@ -271,21 +270,21 @@ bool ConfigLayer::sd_load() {
 
     temp_config.fill_data(config_packets, subsec_sizes);
 
-    #ifndef CONFIG_OFF_ROBOT
+#ifndef CONFIG_OFF_ROBOT
     if ((ref.ref_data.robot_performance.robot_ID % 100) != (int)received_id) {      // % 100 in case robot is blue team (ID == 101, 102, ...)
         Serial.printf("NOTICE: attempting to load firmware for different robot type! \n");
         Serial.printf("Current robot ID: %d\nStored config robot ID: %d\n", ref.ref_data.robot_performance.robot_ID, (int)received_id);
         Serial.println("Requesting config from hive...");
         return false;
     }
-    #endif
+#endif
 
     config = temp_config;
 
     return true;
 }
 
-bool ConfigLayer::config_SD_read_packets(uint64_t &checksum){
+bool ConfigLayer::config_SD_read_packets(uint64_t& checksum) {
     // read checksum and each packet
     // grab first packet and checksum (kept separate in order to validate subsequent checksum values)
     if (sdcard.read((uint8_t*)(&checksum), sizeof(uint64_t)) != sizeof(uint64_t)) return false;
@@ -377,36 +376,36 @@ bool ConfigLayer::CONFIG_ERR_HANDLER(int err_code) {
     float prev_time, delta_time;
 
     // make sure that every error case returns a value!
-    switch(err_code){
-        case CONFIG_RM_FAIL:
-            Serial.println("CONFIG_ERROR::config failed to remove /config.pack from SD");
-            return false;
-            
-        case CONFIG_TOUCH_FAIL:
-            Serial.println("CONFIG_ERROR::config failed to create /config.pack on SD");
-            return false;
+    switch (err_code) {
+    case CONFIG_RM_FAIL:
+        Serial.println("CONFIG_ERROR::config failed to remove /config.pack from SD");
+        return false;
 
-        case CONFIG_OPEN_FAIL:
-            Serial.println("CONFIG_ERROR::config failed to open /config.pack from SD");
-            return false;
+    case CONFIG_TOUCH_FAIL:
+        Serial.println("CONFIG_ERROR::config failed to create /config.pack on SD");
+        return false;
 
-        case CONFIG_ID_MISMATCH:
-            prev_time = millis();
-            delta_time = millis() - prev_time;
-            while(1){
-                if(delta_time >= 2.0f){
-                    Serial.println("CONFIG_ERROR::config from comms does not match from ref system!!");
-                    Serial.println("Check robot_id.cfg and robot ID on ref system for inconsistency");
-                    prev_time = millis();
-                }
-                delta_time = millis() - prev_time;
+    case CONFIG_OPEN_FAIL:
+        Serial.println("CONFIG_ERROR::config failed to open /config.pack from SD");
+        return false;
+
+    case CONFIG_ID_MISMATCH:
+        prev_time = millis();
+        delta_time = millis() - prev_time;
+        while (1) {
+            if (delta_time >= 2.0f) {
+                Serial.println("CONFIG_ERROR::config from comms does not match from ref system!!");
+                Serial.println("Check robot_id.cfg and robot ID on ref system for inconsistency");
+                prev_time = millis();
             }
-            return false;
+            delta_time = millis() - prev_time;
+        }
+        return false;
 
-        default:
-            // default case, in the event that invalid err_code passed
-            Serial.printf("CONFIG_ERR_HANDLER::invalid err_code (%d) passed\n", err_code);
-            return false;
+    default:
+        // default case, in the event that invalid err_code passed
+        Serial.printf("CONFIG_ERR_HANDLER::invalid err_code (%d) passed\n", err_code);
+        return false;
     }
-    
+
 }

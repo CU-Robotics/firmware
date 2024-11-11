@@ -171,9 +171,14 @@ public:
         memcpy(sizes, subsec_sizes, sizeof(uint8_t) * MAX_CONFIG_PACKETS);
     }
 
+    /// @brief check if SD card is available to load from, and wait for ref system initialization
+    /// @param comms 
     void config_SD_init(HIDLayer* comms);
 
-    bool config_SD_read_packets(uint64_t &checksum);
+    /// @brief read packet data from SD card at /config.pack
+    /// @param checksum variable to store checksum into (passed by reference in order to use outside of function)
+    /// @return false if any errors were encountered during load procedure, true otherwise.
+    bool config_SD_read_packets(uint64_t& checksum);
 
     /// @brief attempt to load configuration stored on sd card, assuming it exists
     /// @return true if successful, false otherwise
