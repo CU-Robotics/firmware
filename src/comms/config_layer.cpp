@@ -261,7 +261,8 @@ bool ConfigLayer::sd_load() {
 #ifdef CONFIG_LAYER_DEBUG
     Serial.printf("sd_load: computing checksum for stored config\n");
 #endif
-    if (sd_checksum64(config_bytes, config_byte_size) != checksum) {
+    // need combined checksum of config_bytes, subsec_sizes
+    if ((sd_checksum64(config_bytes, config_byte_size) + sd_checksum64(subsec_sizes, MAX_CONFIG_PACKETS)) != checksum) {     
         Serial.printf("Checksum for config file does not match stored config, requesting config from hive...\n");
         return false;
     }
