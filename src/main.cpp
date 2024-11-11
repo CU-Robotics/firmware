@@ -299,11 +299,11 @@ int main() {
                 impulse_count++;
                 can.write_motor_norm(chassis_can_bus, yaw_motor1_id, C620, impulse_val);
                 can.write_motor_norm(chassis_can_bus, yaw_motor2_id, C620, impulse_val);
-                Serial.printf("%f/n", estimator_manager.read_yaw_encoder());
+                Serial.printf("%f\n", estimator_manager.read_yaw_encoder());
             } else {
                 can.write_motor_norm(chassis_can_bus, yaw_motor1_id, C620, 0);
                 can.write_motor_norm(chassis_can_bus, yaw_motor2_id, C620, 0);
-                Serial.printf("%f/n", estimator_manager.read_yaw_encoder());
+                Serial.printf("%f\n", estimator_manager.read_yaw_encoder());
             }
         } else {
             can.write_motor_norm(chassis_can_bus, yaw_motor1_id, C620, 0);
