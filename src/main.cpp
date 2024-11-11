@@ -296,13 +296,13 @@ int main() {
         
         if (dr16.get_r_switch() == 1) {
             if (impulse_count < impulse_duration) {
-                impulse_count++;
-                can.write_motor_norm(chassis_can_bus, yaw_motor1_id, C620, impulse_val);
-                can.write_motor_norm(chassis_can_bus, yaw_motor2_id, C620, impulse_val);
                 if (impulse_count == 0){
                     Serial.println("==================================");
                     Serial.println("==================================");
                 }
+                impulse_count++;
+                can.write_motor_norm(chassis_can_bus, yaw_motor1_id, C620, impulse_val);
+                can.write_motor_norm(chassis_can_bus, yaw_motor2_id, C620, impulse_val);
                 Serial.printf("%f\n", estimator_manager.read_yaw_encoder());
             } else {
                 can.write_motor_norm(chassis_can_bus, yaw_motor1_id, C620, 0);
