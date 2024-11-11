@@ -146,8 +146,8 @@ int main() {
     const int chassis_can_bus = 0;
     const int yaw_motor1_id = 5;
     const int yaw_motor2_id = 6;
-    const float impulse_val = 0.1;
-    const int impulse_duration = 1;
+    const float impulse_val = 0.2;
+    const int impulse_duration = 50;
     int impulse_count = 0;
 
     // Main loop
@@ -299,9 +299,11 @@ int main() {
                 impulse_count++;
                 can.write_motor_norm(chassis_can_bus, yaw_motor1_id, C620, impulse_val);
                 can.write_motor_norm(chassis_can_bus, yaw_motor2_id, C620, impulse_val);
+                Serial.println("%f", estimator_manager.read_yaw_encoder());
             } else {
                 can.write_motor_norm(chassis_can_bus, yaw_motor1_id, C620, 0);
                 can.write_motor_norm(chassis_can_bus, yaw_motor2_id, C620, 0);
+                Serial.println("%f", estimator_manager.read_yaw_encoder());
             }
         } else {
             can.write_motor_norm(chassis_can_bus, yaw_motor1_id, C620, 0);

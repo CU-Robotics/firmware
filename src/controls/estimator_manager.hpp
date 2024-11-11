@@ -82,6 +82,7 @@ public:
     /// @param micro_outputs input 2
     void clear_outputs(float macro_outputs[STATE_LEN][3], float micro_outputs[NUM_MOTORS][MICRO_STATE_LEN]);
 
+    float read_yaw_encoder();
 private:
     /// @brief call read for imu's NUM_IMU_CALIBRATION times and then averages returns to calculate offset.
     void calibrate_imus();

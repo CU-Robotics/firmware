@@ -167,6 +167,10 @@ void EstimatorManager::read_sensors() {
     }
 }
 
+float EstimatorManager::read_yaw_encoder() {
+    return buff_sensors[0].get_angle();
+}
+
 void EstimatorManager::calibrate_imus() {
     Serial.println("Calibrating IMU's...");
     float sum_x = 0;
