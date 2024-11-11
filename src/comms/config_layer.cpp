@@ -390,15 +390,15 @@ bool ConfigLayer::CONFIG_ERR_HANDLER(int err_code) {
         return false;
 
     case CONFIG_ID_MISMATCH:
-        prev_time = millis();
-        delta_time = millis() - prev_time;
+        prev_time = (float)millis()/1000;
+        delta_time = (float)millis()/1000 - prev_time;
         while (1) {
             if (delta_time >= 2.0f) {
                 Serial.println("CONFIG_ERROR::config from comms does not match from ref system!!");
                 Serial.println("Check robot_id.cfg and robot ID on ref system for inconsistency");
-                prev_time = millis();
+                prev_time = (float)millis()/1000;
             }
-            delta_time = millis() - prev_time;
+            delta_time = (float)millis()/1000 - prev_time;
         }
         return false;
 
