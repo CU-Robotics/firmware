@@ -146,8 +146,8 @@ int main() {
     const int chassis_can_bus = 0;
     const int yaw_motor1_id = 5;
     const int yaw_motor2_id = 6;
-    const float impulse_val = 0.2;
-    const int impulse_duration = 50;
+    const float impulse_val = 1.0;
+    const int impulse_duration = 100;
     int impulse_count = 0;
 
     // Main loop
