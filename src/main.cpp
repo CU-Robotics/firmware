@@ -143,6 +143,13 @@ int main() {
     // whether we are in hive mode or not
     bool hive_toggle = false;
 
+    const int chassis_can_bus = 0;
+    const int yaw_motor1_id = 5;
+    const int yaw_motor2_id = 6;
+    const float impulse_val = 0.1;
+    const int impulse_duration = 1;
+    int impulse_count = 0;
+
     // Main loop
     while (true) {
         // read main sensors
@@ -279,13 +286,29 @@ int main() {
         controller_manager.step(temp_reference, temp_state, temp_micro_state, kinematics_pos, kinematics_vel, motor_inputs);
 
         // set motor outputs from motor_inputs
-        for (int j = 0; j < 2; j++) {
-            for (int i = 0; i < NUM_MOTORS_PER_BUS; i++) {
-                can.write_motor_norm(j, i + 1, C620, motor_inputs[(j * NUM_MOTORS_PER_BUS) + i]);
-                if (j == 1 && i == 4)
-                    can.write_motor_norm(j, i + 1, C610, motor_inputs[(j * NUM_MOTORS_PER_BUS) + i]);
+        // for (int j = 0; j < 2; j++) {
+        //     for (int i = 0; i < NUM_MOTORS_PER_BUS; i++) {
+        //         can.write_motor_norm(j, i + 1, C620, motor_inputs[(j * NUM_MOTORS_PER_BUS) + i]);
+        //         if (j == 1 && i == 4)
+        //             can.write_motor_norm(j, i + 1, C610, motor_inputs[(j * NUM_MOTORS_PER_BUS) + i]);
+        //     }
+        // }
+        
+        if (dr16.get_r_switch() == 1) {
+            if (impulse_count < impulse_duration) {
+                impulse_count++;
+                can.write_motor_norm(chassis_can_bus, yaw_motor1_id, C620, impulse_val);
+                can.write_motor_norm(chassis_can_bus, yaw_motor2_id, C620, impulse_val);
+            } else {
+                can.write_motor_norm(chassis_can_bus, yaw_motor1_id, C620, 0);
+                can.write_motor_norm(chassis_can_bus, yaw_motor2_id, C620, 0);
             }
+        } else {
+            can.write_motor_norm(chassis_can_bus, yaw_motor1_id, C620, 0);
+            can.write_motor_norm(chassis_can_bus, yaw_motor2_id, C620, 0);
+            impulse_count = 0;
         }
+
 
         // construct sensor data packet
         SensorData sensor_data;
