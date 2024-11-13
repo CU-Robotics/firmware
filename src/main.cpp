@@ -97,6 +97,14 @@ int main()
     ref.init();
     comms.init();
 
+    //make icm sensor
+    ICM20649 sens = ICM20649();
+
+    sens.init(ICM20649::SPI);
+    while (true) {
+        sens.read();
+    }
+
     // can data pointer so we don't pass around rm_CAN object
     CANData *can_data = can.get_data();
 
