@@ -148,10 +148,11 @@ int main() {
     const int yaw_motor2_id = 6;
     const float impulse_val = 0.2;
     const int impulse_duration = 100;
-    const int num_stable_vals = 10;
+    const int num_stable_vals = 100;
     float prev_vals[num_stable_vals];
     short curr_index = 10;
     int impulse_count = 0;
+    bool run_done = false;
 
     // Main loop
     while (true) {
@@ -297,7 +298,7 @@ int main() {
         //     }
         // }
         
-        if (dr16.get_r_switch() == 1) {
+        if (dr16.get_r_switch() == 1 && !run_done) {
             if (impulse_count < impulse_duration) {
                 if (impulse_count == 0){
                     Serial.println("==================================");
@@ -315,6 +316,8 @@ int main() {
                 if (curr_val != prev_vals[curr_index]){
                     Serial.printf("%f\n", estimator_manager.read_yaw_encoder());
 
+                }else{
+                    run_done = true;
                 }
                 prev_vals[curr_index] = curr_val;
                 curr_index++;
@@ -326,6 +329,7 @@ int main() {
             can.write_motor_norm(chassis_can_bus, yaw_motor1_id, C620, 0);
             can.write_motor_norm(chassis_can_bus, yaw_motor2_id, C620, 0);
             impulse_count = 0;
+            run_done = false;
         }
 
 
