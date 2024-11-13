@@ -232,9 +232,8 @@ struct data_packet
             // Serial.print(": ");
             // icm_sensors[i].print(); 
 
-            ICM20649 icm;
-            icm.deserialize(packetBuffer, packetOffset);
-            virtualSensorManager.updateSensor(SensorType::ICM, icm.getId(), &icm);
+            virtualSensorManager.getICMSensors()[i].deserialize(packetBuffer, packetOffset);
+            //virtualSensorManager.updateSensor(SensorType::ICM, i, &icm);
 
             Serial.print("ICM Sensor ");
             Serial.print(virtualSensorManager.getICMSensors()[i].getId());
