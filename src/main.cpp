@@ -148,7 +148,7 @@ int main() {
     const int yaw_motor2_id = 6;
     const float impulse_val = 0.2;
     const int impulse_duration = 100;
-    const int num_stable_vals = 10
+    const int num_stable_vals = 10;
     float prev_vals[num_stable_vals];
     short curr_index = 10;
     int impulse_count = 0;
