@@ -7,8 +7,8 @@ const Config* const ConfigLayer::configure(HIDLayer* comms) {
 
     // if no config on SD, then await transmission
     // grab and process all config packets until finished
-    double prev_time = millis();
-    double delta_time = 0;
+    uint32_t prev_time = millis();
+    uint32_t delta_time = 0;
     while (!is_configured()) {
     #ifdef CONFIG_LAYER_DEBUG
         if (delta_time >= 2000) {
@@ -29,10 +29,14 @@ const Config* const ConfigLayer::configure(HIDLayer* comms) {
     Serial.printf("Received robot ID from config: %d\nRobot ID from ref system: %d\n", (int)config.robot_id, ref.ref_data.robot_performance.robot_ID);
     if ((ref.ref_data.robot_performance.robot_ID % 100) != (int)config.robot_id) {
         Serial.printf("ERROR: IDs do not match!! Check robot_id.cfg and robot settings from ref system!\n");
-        if (!CONFIG_ERR_HANDLER(CONFIG_ID_MISMATCH)) {
-            // honestly not sure what to put here. in current implementation ERR_HANDLER just while(1) loops
-            // this recursive call probably won't work? but it also shouldn't run? will change later if needed
-            return configure(comms);
+        if (!CONFIG_ERR_HANDLER(CONFIG_ID_MISMATCH)) { 
+            // in current implementation, CONFIG_ERR_HANDLER w/ err code CONFIG_ID_MISMATCH will
+            // enter an infinite while(1) loop-- if that is changed, this loop should be changed accordingly as well
+            while(1){
+                Serial.println("CONFIG_ERR_HANDLER: exited with error code CONFIG_ID_MISMATCH");
+                Serial.println("if function was modified for case CONFIG_ID_MISMATCH, remove this loop in config_layer.cpp");
+                delay(2000);
+            }
         }
     }
 #endif
@@ -46,6 +50,8 @@ const Config* const ConfigLayer::configure(HIDLayer* comms) {
 }
 
 void ConfigLayer::config_SD_init(HIDLayer* comms) {
+    const char* config_path = "/config.pack";
+
     // if on robot, we need to wait for ref to send robot_id
     Serial.println("Waiting for ref system to initialize...");
     while (ref.ref_data.robot_performance.robot_ID == 0) ref.read();
@@ -53,7 +59,7 @@ void ConfigLayer::config_SD_init(HIDLayer* comms) {
 
 
     // check SD
-    if (sdcard.exists("/config.pack")) {
+    if (sdcard.exists(config_path)) {
         Serial.printf("Config located on SD in /config.pack, attempting to load from file\n");
 
         // load sd config into config_packets
@@ -242,10 +248,12 @@ void Config::fill_data(CommsPacket packets[MAX_CONFIG_PACKETS], uint8_t sizes[MA
 }
 
 bool ConfigLayer::sd_load() {
-    // num of total bytes in config_packets
-    int config_byte_size = MAX_CONFIG_PACKETS * sizeof(CommsPacket);
+    // total size of /config.pack: MAX_CONFIG_PACKETS * (sizeof(CommsPacket) + 1)
+    // num of packets * size of each packet == num of bytes for all packets
+    const int config_byte_size = MAX_CONFIG_PACKETS * sizeof(CommsPacket);
+    const char* config_path = "/config.pack";
 
-    if (sdcard.open("/config.pack") != 0) return false;
+    if (sdcard.open(config_path) != 0) return false;
 
     // grab ID from config (originally from hive). should match ID from ref system- if not, abort!!
     float received_id;
@@ -267,6 +275,10 @@ bool ConfigLayer::sd_load() {
         return false;
     }
 
+    // fill_data fills a Config object using info from config_packets and subsec_sizes
+    // we want to make sure requesting data from ref is reliable, so we load the config
+    // if the ID from packets does not match ref, we need to get rid of the config- we use a temp config that we can throw out
+    // set config = temp_config if IDs match
     Config temp_config;
 
     temp_config.fill_data(config_packets, subsec_sizes);
@@ -315,23 +327,24 @@ bool ConfigLayer::config_SD_read_packets(uint64_t& checksum) {
 }
 
 bool ConfigLayer::store_config() {
+    // total size of /config.pack: MAX_CONFIG_PACKETS * (sizeof(CommsPacket) + 1)
+    // num of packets * size of each packet == num of bytes for all packets
+    const int config_byte_size = MAX_CONFIG_PACKETS * sizeof(CommsPacket);
+    const char* config_path = "/config.pack";
+
     // initialize: erase config.pack if exists, reopen
     // check return values of everything!!!
-    if (sdcard.exists("/config.pack")) {
-        if (sdcard.rm("/config.pack") != 0) {
+    if (sdcard.exists(config_path)) {
+        if (sdcard.rm(config_path) != 0) {
             if (!CONFIG_ERR_HANDLER(CONFIG_RM_FAIL)) return false;
         }
     }
-    if (sdcard.touch("/config.pack") != 0) {
+    if (sdcard.touch(config_path) != 0) {
         if (!CONFIG_ERR_HANDLER(CONFIG_TOUCH_FAIL)) return false;
     }
-    if (sdcard.open("/config.pack") != 0) {
+    if (sdcard.open(config_path) != 0) {
         if (!CONFIG_ERR_HANDLER(CONFIG_OPEN_FAIL)) return false;
     }
-
-    // total size of /config.pack: MAX_CONFIG_PACKETS * (sizeof(CommsPacket) + 1)
-    // num of packets * size of each packet == num of bytes for all packets
-    int config_byte_size = MAX_CONFIG_PACKETS * sizeof(CommsPacket);
 
     // calculate checksum on config packet array
 #ifdef CONFIG_LAYER_DEBUG
@@ -374,7 +387,7 @@ uint64_t ConfigLayer::sd_checksum64(uint8_t* arr, uint64_t n) {
 
 bool ConfigLayer::CONFIG_ERR_HANDLER(int err_code) {
     // vars that may be used by err handler procedures
-    float prev_time, delta_time;
+    uint32_t prev_time, delta_time;
 
     // make sure that every error case returns a value!
     switch (err_code) {
@@ -391,15 +404,15 @@ bool ConfigLayer::CONFIG_ERR_HANDLER(int err_code) {
         return false;
 
     case CONFIG_ID_MISMATCH:
-        prev_time = (float)millis()/1000;
-        delta_time = (float)millis()/1000 - prev_time;
+        prev_time = millis();
+        delta_time = millis() - prev_time;
         while (1) {
-            if (delta_time >= 2.0f) {
+            if (delta_time >= 2000) {
                 Serial.println("CONFIG_ERROR::config from comms does not match from ref system!!");
                 Serial.println("Check robot_id.cfg and robot ID on ref system for inconsistency");
-                prev_time = (float)millis()/1000;
+                prev_time = millis();
             }
-            delta_time = (float)millis()/1000 - prev_time;
+            delta_time = millis() - prev_time;
         }
         return false;
 
