@@ -128,7 +128,7 @@ void ICM20649::serialize(uint8_t *buffer, size_t &offset)
             {
                 Serial.print("0");
             }
-            Serial.println(" ");
+            Serial.print(" ");
         }
         Serial.println(" ");
     }
@@ -166,7 +166,7 @@ void ICM20649::deserialize(const uint8_t *data, size_t &offset)
             {
                 Serial.print("0");
             }
-            Serial.println(" ");
+            Serial.print(" ");
         }
         Serial.println(" ");
     }
