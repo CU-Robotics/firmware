@@ -3,7 +3,7 @@
 FlightController::FlightController(ServoController &sc, IMU &imu, Camera &cam)
     : servoController(sc), imu(imu), camera(cam), currentMode(FIN_HOLD),
       pitchPID(0.1, 0.01, 0.05, -10, 10),
-      rollPID(0.1, 0.01, 0.05, -10, 10), // TODO Will need to adjust these
+      rollPID(0.1, 0.01, 0.05, -10, 10), // TODO Will need to tune these
       yawPID(0.1, 0.01, 0.05, -10, 10) {}
 
 void FlightController::setControlMode(ControlMode mode) { currentMode = mode; }
@@ -30,24 +30,39 @@ void FlightController::holdFinPosition() {
   //  current fin positions
 }
 
-// Mode 2. alignToVelocityVector
+// Mode 2: Velo Vector Stable Flight
 void FlightController::alignToVelocityVector() {
-  float pitchSetpoint =
-      0.0; // TODO these need to be set to the velo vector for this to work
+  // This is currently just stable flight, will need to be set to the actual
+  // velo vector if we want it to fly a true arc.
+  float pitchSetpoint = 0.0; // Target pitch angle in degrees
   float yawSetpoint = 0.0;
+  float rollSetpoint = 0.0;
 
   IMUData imuData = imu.readData();
   float currentPitch = imuData.pitch;
   float currentYaw = imuData.yaw;
   float currentRoll = imuData.roll;
 
-  float pitchAdjustment = pitchPID.calculate(pitchSetpoint, currentPitch);
-  float yawAdjustment = yawPID.calculate(yawSetpoint, currentYaw);
+  float pitchAdjustment =
+      pitchPID.calculate(pitchSetpoint, currentPitch);             // For pitch
+  float yawAdjustment = yawPID.calculate(yawSetpoint, currentYaw); // For yaw
+  float rollAdjustment =
+      rollPID.calculate(rollSetpoint, currentRoll); // For roll stability
 
-  float rollAdjustment = 0.0;
+  // - Servo 0: Left Elevator
+  // - Servo 1: Right Elevator
+  // - Servo 2: Left Rudder
+  // - Servo 3: Right Rudder
 
-  servoController.setAllServos(pitchAdjustment, pitchAdjustment, yawAdjustment,
-                               yawAdjustment);
+  float leftElevator = pitchAdjustment + rollAdjustment;
+  float rightElevator = pitchAdjustment - rollAdjustment;
+  float leftRudder = yawAdjustment + rollAdjustment;
+  float rightRudder = yawAdjustment - rollAdjustment;
+
+  servoController.setServoAngle(0, leftElevator);
+  servoController.setServoAngle(1, rightElevator);
+  servoController.setServoAngle(2, leftRudder);
+  servoController.setServoAngle(3, rightRudder);
 }
 
 // Mode 3: Guided
