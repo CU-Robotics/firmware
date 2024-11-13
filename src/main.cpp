@@ -336,7 +336,7 @@ int main() {
             can.write_motor_norm(chassis_can_bus, yaw_motor1_id, C620, 0);
             can.write_motor_norm(chassis_can_bus, yaw_motor2_id, C620, 0);
             impulse_count = 0;
-            run_done = true;
+            run_done = false;
         }
 
 
