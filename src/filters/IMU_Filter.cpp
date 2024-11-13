@@ -1,6 +1,7 @@
 #include "IMU_Filter.hpp"
 
 void IMU_filter::init(){
+    SPI.begin();
     _icm.init(_icm.SPI);
 }
 

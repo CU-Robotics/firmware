@@ -13,7 +13,7 @@ void rm_CAN::init() {
     m_can2.setBaudRate(1000000);
     m_can2.enableFIFO(true);
 
-    // initialize CAN 2
+    // initialize CAN 3
     m_can3.begin();
     m_can3.setBaudRate(1000000);
     m_can3.enableFIFO(true);

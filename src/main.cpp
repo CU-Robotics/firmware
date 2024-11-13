@@ -3,7 +3,9 @@
 #include "utils/timing.hpp"
 #include "comms/rm_can.hpp"
 #include "sensors/dr16.hpp"
-#include "sensors/ICM20649.hpp"
+#include "filters/IMU_Filter.hpp"
+#include "Controls_Balancing/Balancing_Control.hpp"
+#include "Controls_Balancing/Balancing_Observer.hpp"
 // Loop constants
 #define LOOP_FREQ      1000
 #define HEARTBEAT_FREQ 2
@@ -11,9 +13,8 @@
 // Declare global objects
 DR16 dr16;
 rm_CAN can;
-
 Timer loop_timer;
-ICM20649 icm;
+ICM20649 testicm;
 // DONT put anything else in this function. It is not a setup function
 void print_logo() {
     if (Serial) {
@@ -52,111 +53,30 @@ int main() {
     print_logo();
 
     // Execute setup functions
-    pinMode(13, OUTPUT);
-    dr16.init();
-    can.init();
+    //pinMode(13, OUTPUT);
+    pinMode(ICM_CS, OUTPUT);
+    digitalWrite(ICM_CS, HIGH);
     SPI.begin();
-    icm.init(icm.SPI);
-    long long loopc = 0; // Loop counter for heartbeat
 
     
-    float tempobs[9][3];
-    float tempmotor[6];
+    dr16.init();
+    can.init();
+    
+    testicm.init(testicm.SPI);
+    testicm.set_gyro_range(4000);
+    long long loopc = 0; // Loop counter for heartbeat
 
-<<<<<<< Updated upstream
-    // Config config
-    Serial.println("Configuring...");
-    const Config* config = config_layer.configure(&comms);
-    Serial.println("Configured!");
 
-    //estimate micro and macro state
-    estimator_manager.init(can_data, config);
 
-    //generate controller outputs based on governed references and estimated state
-    controller_manager.init(config);
-
-    //set reference limits in the reference governor
-    state.set_reference_limits(config->set_reference_limits);
-
-    // variables for use in main
-    float temp_state[STATE_LEN][3] = { 0 }; // Temp state array
-    float temp_micro_state[NUM_MOTORS][MICRO_STATE_LEN] = { 0 }; // Temp micro state array
-    float temp_reference[STATE_LEN][3] = { 0 }; //Temp governed state
-    float target_state[STATE_LEN][3] = { 0 }; //Temp ungoverned state
-    float hive_state_offset[STATE_LEN][3] = { 0 }; //Hive offset state
-    float motor_inputs[NUM_MOTORS] = { 0 }; //Array for storing controller outputs to send to CAN
-
-    // create a copy of the position and velocity kinematic matrixes since we'll be updating them
-    float kinematics_pos[NUM_MOTORS][STATE_LEN] = { 0 }; //Position kinematics 
-    memcpy(kinematics_pos, (*config).kinematics_p, sizeof((*config).kinematics_p));
-    float kinematics_vel[NUM_MOTORS][STATE_LEN] = { 0 }; //Velocity kinematics
-    memcpy(kinematics_vel, (*config).kinematics_v, sizeof((*config).kinematics_v));
-
-    // used in the kinematics matrix
-    float chassis_pos_to_motor_error = config->drive_conversion_factors[1];
-
-    // manual controls variables
-    float vtm_pos_x = 0;
-    float vtm_pos_y = 0;
-    float dr16_pos_x = 0;
-    float dr16_pos_y = 0;
-    float pos_offset_x = 0;
-    float pos_offset_y = 0;
-
-    // param to specify whether this is the first loop
-    int count_one = 0;
-
-    // whether we are in hive mode or not
-    bool hive_toggle = false;
-
-=======
-    float ref[5][3] = {
-    {0,0,0},
-    {0,0,0},
-    {0,0,0},
-    {0,0,0},
-    {0,0,0}
-    };
-    /** 
-    *   {s, s_dot, phi},
-    *   {phi_dot, theta_ll, theta_ll_dot},
-    *   {theta_lr, theta_lr_dot, theta_b},
-    *   {theta_b_dot, s_ddot, phi_ddot},
-    *   {psi_d, l_d, empty}
-    */
-<<<<<<< Updated upstream
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-    /*Testcontorl.init();
-    Testobserver.init();
-    can.read();
-    imu.read();
-    Testobserver.step(can.get_data(), imu.getdata(), tempobs);
-    Testobserver.step(can.get_data(), imu.getdata(), tempobs);
-    Testobserver.step(can.get_data(), imu.getdata(), tempobs);*/
-    // Run 3 times for derivative values not get crazy (Maybe this works HAHA)
     // Main loop
     while (true) {
         // Read sensors
         dr16.read();
-        can.write_motor_norm(CAN_3, 1, MG8016, 0.01);
-        can.write_motor_norm(CAN_3, 2, MG8016, 0.01);
-        icm.read();
+        can.read();
+        testicm.read();
         //Testobserver.step(can.get_data(), imu.getdata(), tempobs); // Calculate Observer values
         //Testcontorl.step(tempmotor, ref, tempobs); // Calculate motors motion
-        Serial.println("ax");
-        Serial.println(icm.get_accel_X());
-        Serial.println("ay");
-        Serial.println(icm.get_accel_Y());
-        Serial.println("az");
-        Serial.println(icm.get_accel_Z());
-        Serial.println("gx");
-        Serial.println(icm.get_gyro_X());
-        Serial.println("gy");
-        Serial.println(icm.get_gyro_Y());
-        Serial.println("gz");
-        Serial.println(icm.get_gyro_Z());
+        testicm.print();  
         
         // Write actuators
         /*if (!dr16.is_connected() || dr16.get_l_switch() == 1) {
@@ -168,11 +88,12 @@ int main() {
             Serial.println("SAFTYOFF");
             can.write();
         }*/
-        can.write();
+        
 
         // LED heartbeat -- linked to loop count to reveal slowdowns and freezes.
-        loopc % (int)(1E3/float(HEARTBEAT_FREQ)) < (int)(1E3/float(5*HEARTBEAT_FREQ)) ? digitalWrite(13, HIGH) : digitalWrite(13, LOW);
+        // loopc % (int)(1E3/float(HEARTBEAT_FREQ)) < (int)(1E3/float(5*HEARTBEAT_FREQ)) ? digitalWrite(13, HIGH) : digitalWrite(13, LOW);
         loopc++;
+
 
         // Keep the loop running at the desired rate
         loop_timer.delay_micros((int)(1E6/(float)(LOOP_FREQ)));
