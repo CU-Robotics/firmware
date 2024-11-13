@@ -102,24 +102,22 @@ struct data_packet
         for(int i = 0; i < config_data->num_sensors[0]; i++)
         {
             Serial.println("starting buff encoder serialization");
-            BuffEncoder encoder = estimatorManager.getBuffSensor(i);
+            estimatorManager.getBuffSensor(i).serialize(packetBuffer, packetOffset);
             Serial.print("Buff Encoder ");
-            Serial.print(encoder.getId());
+            Serial.print(estimatorManager.getBuffSensor(i).getId());
             Serial.print(": ");
-            encoder.print();
-            encoder.serialize(packetBuffer, packetOffset);
+            estimatorManager.getBuffSensor(i).print();
             Serial.println("ending buff encoder serialization");
         }
 
         for(int i = 0; i < config_data->num_sensors[1]; i++)
         {
             Serial.println("starting icm sensor serialization");
-            ICM20649& icm = estimatorManager.getICMSensor(i);
+            estimatorManager.getICMSensor(i).serialize(packetBuffer, packetOffset);
             Serial.print("ICM Sensor ");
-            Serial.print(icm.getId());
+            Serial.print(estimatorManager.getICMSensor(i).getId());
             Serial.print(": ");
-            icm.print();
-            icm.serialize(packetBuffer, packetOffset);
+            estimatorManager.getICMSensor(i).print();
             Serial.println("ending icm sensor serialization");
         }
         
@@ -130,23 +128,21 @@ struct data_packet
         for(int i = 0; i < config_data->num_sensors[2]; i++)
         {
             Serial.println("starting rev encoder serialization");
-            RevEncoder rev = estimatorManager.getRevSensor(i);
             Serial.print("Rev Encoder ");
-            Serial.print(rev.getId());
+            Serial.print(estimatorManager.getRevSensor(i).getId());
             Serial.print(": ");
-            rev.print();
-            rev.serialize(packetBuffer, packetOffset);
+            estimatorManager.getRevSensor(i).print();
+            estimatorManager.getRevSensor(i).serialize(packetBuffer, packetOffset);
             Serial.println("ending rev encoder serialization");
         }
 
         for(int i = 0; i < config_data->num_sensors[3]; i++) {
             Serial.println("starting tof sensor serialization");
-            TOFSensor tof = estimatorManager.getTOFSensor(i);
             Serial.print("TOF Sensor ");
-            Serial.print(tof.getId());
+            Serial.print(estimatorManager.getTOFSensor(i).getId());
             Serial.print(": ");
-            tof.print();
-            tof.serialize(packetBuffer, packetOffset);
+            estimatorManager.getTOFSensor(i).print();
+            estimatorManager.getTOFSensor(i).serialize(packetBuffer, packetOffset);
             Serial.println("ending tof sensor serialization");
         }
 
