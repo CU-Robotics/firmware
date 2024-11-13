@@ -298,38 +298,45 @@ int main() {
         //     }
         // }
         
-        if (dr16.get_r_switch() == 1 && !run_done) {
-            if (impulse_count < impulse_duration) {
-                if (impulse_count == 0){
-                    Serial.println("==================================");
-                    Serial.println("==================================");
-                }
-                impulse_count++;
-                can.write_motor_norm(chassis_can_bus, yaw_motor1_id, C620, -impulse_val);
-                can.write_motor_norm(chassis_can_bus, yaw_motor2_id, C620, -impulse_val);
-                Serial.printf("%f\n", estimator_manager.read_yaw_encoder());
-            } else {
-                can.write_motor_norm(chassis_can_bus, yaw_motor1_id, C620, 0);
-                can.write_motor_norm(chassis_can_bus, yaw_motor2_id, C620, 0);
-                float curr_val = estimator_manager.read_yaw_encoder();
-                
-                if (curr_val != prev_vals[curr_index]){
+        if (dr16.get_r_switch() == 1) {
+            if (!run_done){
+                if (impulse_count < impulse_duration) {
+                    if (impulse_count == 0){
+                        Serial.println("==================================");
+                        Serial.println("==================================");
+                    }
+                    impulse_count++;
+                    can.write_motor_norm(chassis_can_bus, yaw_motor1_id, C620, -impulse_val);
+                    can.write_motor_norm(chassis_can_bus, yaw_motor2_id, C620, -impulse_val);
                     Serial.printf("%f\n", estimator_manager.read_yaw_encoder());
+                } else {
+                    can.write_motor_norm(chassis_can_bus, yaw_motor1_id, C620, 0);
+                    can.write_motor_norm(chassis_can_bus, yaw_motor2_id, C620, 0);
+                    float curr_val = estimator_manager.read_yaw_encoder();
+                    
 
-                }else{
-                    run_done = true;
-                }
-                prev_vals[curr_index] = curr_val;
-                curr_index++;
-                if (curr_index >= num_stable_vals){
-                    curr_index = 0;
+                    for (int i = 0; i < num_stable_vals; i++){
+                        run_done = true;
+                        if (curr_val == prev_vals[i]){
+                            run_done = false;
+                        } 
+                    }
+                    if (!run_done){
+                        Serial.printf("%f\n", estimator_manager.read_yaw_encoder());
+
+                    }
+                    prev_vals[curr_index] = curr_val;
+                    curr_index++;
+                    if (curr_index >= num_stable_vals){
+                        curr_index = 0;
+                    }
                 }
             }
         } else {
             can.write_motor_norm(chassis_can_bus, yaw_motor1_id, C620, 0);
             can.write_motor_norm(chassis_can_bus, yaw_motor2_id, C620, 0);
             impulse_count = 0;
-            run_done = false;
+            run_done = true;
         }
 
 
