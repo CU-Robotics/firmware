@@ -173,7 +173,7 @@ int main()
         // Serial.println("Unpacking Data Packet");
         // packet.unpackDataPacket(buffer, config, virtual_sensor_data);
 
-        estimator_manager.getICMSensor(0).print();
+        estimator_manager.icm_sensors[0].print();
 
         // read and write comms packets
         comms.ping();
