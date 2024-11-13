@@ -29,10 +29,10 @@ const Config* const ConfigLayer::configure(HIDLayer* comms) {
     Serial.printf("Received robot ID from config: %d\nRobot ID from ref system: %d\n", (int)config.robot_id, ref.ref_data.robot_performance.robot_ID);
     if ((ref.ref_data.robot_performance.robot_ID % 100) != (int)config.robot_id) {
         Serial.printf("ERROR: IDs do not match!! Check robot_id.cfg and robot settings from ref system!\n");
-        if (!CONFIG_ERR_HANDLER(CONFIG_ID_MISMATCH)) { 
+        if (!CONFIG_ERR_HANDLER(CONFIG_ID_MISMATCH)) {
             // in current implementation, CONFIG_ERR_HANDLER w/ err code CONFIG_ID_MISMATCH will
             // enter an infinite while(1) loop-- if that is changed, this loop should be changed accordingly as well
-            while(1){
+            while (1) {
                 Serial.println("CONFIG_ERR_HANDLER: exited with error code CONFIG_ID_MISMATCH");
                 Serial.println("if function was modified for case CONFIG_ID_MISMATCH, remove this loop in config_layer.cpp");
                 delay(2000);
@@ -270,7 +270,7 @@ bool ConfigLayer::sd_load() {
     Serial.printf("sd_load: computing checksum for stored config\n");
 #endif
     // need combined checksum of config_bytes, subsec_sizes
-    if ((sd_checksum64(config_bytes, config_byte_size) + sd_checksum64(subsec_sizes, MAX_CONFIG_PACKETS)) != checksum) {     
+    if ((sd_checksum64(config_bytes, config_byte_size) + sd_checksum64(subsec_sizes, MAX_CONFIG_PACKETS)) != checksum) {
         Serial.printf("Checksum for config file does not match stored config, requesting config from hive...\n");
         return false;
     }
