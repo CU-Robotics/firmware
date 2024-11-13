@@ -15,7 +15,7 @@
 #define debug Serial
 // #define NO_CLK_PIN
 
-#define DEBUG_CAMERA
+// #define DEBUG_CAMERA
 // #define DEBUG_CAMERA_VERBOSE
 // #define DEBUG_FLEXIO
 // #define USE_DEBUG_PINS

@@ -4,17 +4,17 @@
 #include "Teensy_Camera.h"
 #include "OV5640.h"
 
-#define DARTCAM_BUFFER_SIZE 38400 // 10240
+#define DARTCAM_BUFFER_SIZE (320 * 240)
 #define DARTCAM_ID OV5640a
 #define DARTCAM_FRAME_RATE 30
 #define DARTCAM_FORMAT RGB565
-#define DARTCAM_FRAMESIZE FRAMESIZE_QQVGA
+#define DARTCAM_FRAMESIZE FRAMESIZE_QVGA
 #define DARTCAM_USE_GPIO false
 
 /// @brief frame buffer 1 for the camera
-extern uint8_t frameBuffer[ ];
+extern uint16_t frameBuffer[ ];
 /// @brief frame buffer 2 for the camera
-extern uint8_t frameBuffer2[ ];
+extern uint16_t frameBuffer2[ ];
 
 struct Dartcam {
     /// @brief ImageSensor object for the OV5640 sensor
@@ -32,6 +32,8 @@ struct Dartcam {
     void read();
 
     void process_frame();
+    
+    void send_frame_serial();
 };
 
 #endif // CAMERA_H

@@ -2,13 +2,25 @@
 #include <Arduino.h>
 #include "sensors/camera.hpp"
 
+#include <TeensyDebug.h>
+
 Dartcam dartcam;
 
 int main() {
+    Serial.begin(115200);
+    debug.begin(SerialUSB1);
+
     dartcam.init();
-    while (1) {
+    int frame_count = 0;
+    while (true) {
         dartcam.read();
-        delay(1000);
+        if (frame_count % 40 == 0) {
+            Serial.println("BEGIN\n");
+            dartcam.send_frame_serial();
+            Serial.println("\nEND");
+        }
+        delay(500);
+        frame_count++;
     }
     return 0;
 }
@@ -133,7 +145,7 @@ int main() {
     float motor_inputs[NUM_MOTORS] = { 0 }; //Array for storing controller outputs to send to CAN
 
     // create a copy of the position and velocity kinematic matrixes since we'll be updating them
-    float kinematics_pos[NUM_MOTORS][STATE_LEN] = { 0 }; //Position kinematics 
+    float kinematics_pos[NUM_MOTORS][STATE_LEN] = { 0 }; //Position kinematics
     memcpy(kinematics_pos, (*config).kinematics_p, sizeof((*config).kinematics_p));
     float kinematics_vel[NUM_MOTORS][STATE_LEN] = { 0 }; //Velocity kinematics
     memcpy(kinematics_vel, (*config).kinematics_v, sizeof((*config).kinematics_v));
@@ -176,7 +188,7 @@ int main() {
 
         vtm_pos_x += ref.ref_data.kbm_interaction.mouse_speed_x * 0.05 * delta;
         vtm_pos_y += ref.ref_data.kbm_interaction.mouse_speed_y * 0.05 * delta;
-        
+
         float chassis_vel_x = 0;
         float chassis_vel_y = 0;
         float chassis_pos_x = 0;
@@ -341,7 +353,7 @@ int main() {
         float dt = stall_timer.delta();
         if (dt > 0.002) Serial.printf("Slow loop with dt: %f\n", dt);
     }
-    
+
     return 0;
 }
 */
