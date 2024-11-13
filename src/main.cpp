@@ -103,6 +103,7 @@ int main()
     sens.init(ICM20649::SPI);
     while (true) {
         sens.read();
+        sens.print();
     }
 
     // can data pointer so we don't pass around rm_CAN object
