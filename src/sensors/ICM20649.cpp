@@ -104,20 +104,20 @@ void ICM20649::set_gyro_range(int gyro_rate_range) {
 //implenet seralize and deserialize
 void ICM20649::serialize(uint8_t* buffer, size_t& offset) {
     buffer[offset++] = id_;
-    memcpy(buffer + offset, &accel_X, sizeof(accel_X));
+    memcpy(buffer + offset, &accel.acceleration.x, sizeof(accel.acceleration.x));
     offset += sizeof(accel_X);
-    memcpy(buffer + offset, &accel_Y, sizeof(accel_Y));
-    offset += sizeof(accel_Y);
-    memcpy(buffer + offset, &accel_Z, sizeof(accel_Z));
-    offset += sizeof(accel_Z);
-    memcpy(buffer + offset, &gyro_X, sizeof(gyro_X));
-    offset += sizeof(gyro_X);
-    memcpy(buffer + offset, &gyro_Y, sizeof(gyro_Y));
-    offset += sizeof(gyro_Y);
-    memcpy(buffer + offset, &gyro_Z, sizeof(gyro_Z));
-    offset += sizeof(gyro_Z);
+    memcpy(buffer + offset, &accel.acceleration.y, sizeof(accel.acceleration.y));
+    offset += 4;
+    memcpy(buffer + offset, &accel.acceleration.z, sizeof(accel.acceleration.z));
+    offset += 4;
+    memcpy(buffer + offset, &gyro.gyro.x, sizeof(gyro.gyro.x));
+    offset += 4;
+    memcpy(buffer + offset, &gyro.gyro.y, sizeof(gyro.gyro.y));
+    offset += 4;
+    memcpy(buffer + offset, &gyro.gyro.z, sizeof(gyro.gyro.z));
+    offset += 4;
     memcpy(buffer + offset, &temperature, sizeof(temperature));
-    offset += sizeof(temperature);
+    offset += 4;
 }
 
 void ICM20649::deserialize(const uint8_t* data, size_t& offset) {
