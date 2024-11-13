@@ -2,18 +2,21 @@
 #include <cassert>
 
 // empty constructor
-//ICM20649::ICM20649() {}
+// ICM20649::ICM20649() {}
 
 // initialize ICM
-void ICM20649::init(CommunicationProtocol protocol) {
+void ICM20649::init(CommunicationProtocol protocol)
+{
     // assign protocol to object.
     this->protocol = protocol;
     // begin sensor depending on selected protocol
-    switch (protocol) {
+    switch (protocol)
+    {
     case I2C:
     {
         // start I2C communication
-        if (!sensor.begin_I2C()) {
+        if (!sensor.begin_I2C())
+        {
             Serial.println("Failed to begin I2C");
         }
         break;
@@ -23,7 +26,8 @@ void ICM20649::init(CommunicationProtocol protocol) {
         // start SPI communication
         int a = sensor.begin_SPI(ICM_CS, ICM_SCK, ICM_MISO, ICM_MOSI);
         Serial.println(a);
-        if (!a) {
+        if (!a)
+        {
             Serial.println("Failed to begin SPI");
         }
         break;
@@ -44,18 +48,19 @@ void ICM20649::init(CommunicationProtocol protocol) {
     // sensor.setAccelRateDivisor(0);
     // accel_rate = get_accel_data_rate();
 
-    // // set bit period (via divisor setting). 8-bit, Max (slowest) is 255, min (fastest) is 0. 
+    // // set bit period (via divisor setting). 8-bit, Max (slowest) is 255, min (fastest) is 0.
     // sensor.setGyroRateDivisor(0);
     // gyro_rate = get_gyro_data_rate();
 }
 
-void ICM20649::read() {
+void ICM20649::read()
+{
     // get the event data from the sensor class
     sensor.getEvent(&accel, &gyro, &temp);
 
     // assign result to this object's members.
-        // could increase efficiency by specifying which values we need, and only assigning values to the object's members from that. 
-        // However, getEvent will read all values from the sensor regardless, and assigning these values is very fast
+    // could increase efficiency by specifying which values we need, and only assigning values to the object's members from that.
+    // However, getEvent will read all values from the sensor regardless, and assigning these values is very fast
 
     accel_X = accel.acceleration.x;
     accel_Y = accel.acceleration.y;
@@ -68,19 +73,23 @@ void ICM20649::read() {
 }
 
 // calculate the approximate acceleration data rate (Hz) from the divisor.
-float ICM20649::get_accel_data_rate() {
+float ICM20649::get_accel_data_rate()
+{
     // equation from Adafruit ICM20649 example code
     return 1125 / (1.0 + sensor.getAccelRateDivisor());
 }
 
 // calculate the approximate gyroscope data rate from the divisor.
-float ICM20649::get_gyro_data_rate() {
+float ICM20649::get_gyro_data_rate()
+{
     // equation from Adafruit ICM20649 example code
     return gyro_rate = 1100 / (1.0 + sensor.getGyroRateDivisor());
 }
 
-void ICM20649::set_gyro_range(int gyro_rate_range) {
-    switch (gyro_rate_range) {
+void ICM20649::set_gyro_range(int gyro_rate_range)
+{
+    switch (gyro_rate_range)
+    {
     default:
         sensor.setGyroRange(ICM20649_GYRO_RANGE_500_DPS);
         break;
@@ -101,8 +110,29 @@ void ICM20649::set_gyro_range(int gyro_rate_range) {
     Serial.println(sensor.getGyroRange());
 }
 
-//implenet seralize and deserialize
-void ICM20649::serialize(uint8_t* buffer, size_t& offset) {
+// implenet seralize and deserialize
+void ICM20649::serialize(uint8_t *buffer, size_t &offset)
+{
+    //  code that prints out raw bytes of the buffer for this sensor
+    Serial.print("ICM20649: ");
+    for (int i = 0; i < 28; i++)
+    {
+        for (int ii = 0; ii <= 7; ii++)
+        {
+            int k = buffer[i] >> ii;
+            if (k & 1)
+            {
+                Serial.print("1");
+            }
+            else
+            {
+                Serial.print("0");
+            }
+            Serial.println(" ");
+        }
+        Serial.println(" ");
+    }
+
     memcpy(buffer + offset, &accel.acceleration.x, sizeof(accel.acceleration.x));
     offset += sizeof(accel_X);
     memcpy(buffer + offset, &accel.acceleration.y, sizeof(accel.acceleration.y));
@@ -119,7 +149,27 @@ void ICM20649::serialize(uint8_t* buffer, size_t& offset) {
     offset += 4;
 }
 
-void ICM20649::deserialize(const uint8_t* data, size_t& offset) {
+void ICM20649::deserialize(const uint8_t *data, size_t &offset)
+{
+    // code that prints out raw bytes of the buffer for this sensor
+    Serial.print("ICM20649: ");
+    for (int i = 0; i < 28; i++)
+    {
+        for (int ii = 0; ii <= 7; ii++)
+        {
+            int k = data[i] >> ii;
+            if (k & 1)
+            {
+                Serial.print("1");
+            }
+            else
+            {
+                Serial.print("0");
+            }
+            Serial.println(" ");
+        }
+        Serial.println(" ");
+    }
     memcpy(&accel_X, data + offset, sizeof(accel_X));
     offset += sizeof(accel_X);
     memcpy(&accel_Y, data + offset, sizeof(accel_Y));
