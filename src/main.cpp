@@ -11,6 +11,9 @@
 #include <TeensyDebug.h>
 #include "sensors/LEDBoard.hpp"
 
+#include <iostream>
+#include <fstream>
+
 // Loop constants
 #define LOOP_FREQ 1000
 #define HEARTBEAT_FREQ 2
@@ -153,6 +156,15 @@ int main() {
     short curr_index = 10;
     int impulse_count = 0;
     bool run_done = false;
+
+    // std::cout << "Please enter the name of the file you would like "
+    // ofstream MyFile("filename.txt");
+
+  // Write to the file
+//   MyFile << "Files can be tricky, but it is fun enough!";
+
+  // Close the file
+//   MyFile.close();
 
     // Main loop
     while (true) {
