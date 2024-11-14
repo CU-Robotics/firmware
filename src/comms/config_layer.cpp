@@ -50,8 +50,6 @@ const Config* const ConfigLayer::configure(HIDLayer* comms) {
 }
 
 void ConfigLayer::config_SD_init(HIDLayer* comms) {
-    const char* config_path = "/config.pack";
-
     // if on robot, we need to wait for ref to send robot_id
     Serial.println("Waiting for ref system to initialize...");
     while (ref.ref_data.robot_performance.robot_ID == 0) ref.read();
@@ -59,7 +57,7 @@ void ConfigLayer::config_SD_init(HIDLayer* comms) {
 
 
     // check SD
-    if (sdcard.exists(config_path)) {
+    if (sdcard.exists(CONFIG_PATH)) {
         Serial.printf("Config located on SD in /config.pack, attempting to load from file\n");
 
         // load sd config into config_packets
@@ -251,9 +249,8 @@ bool ConfigLayer::sd_load() {
     // total size of /config.pack: MAX_CONFIG_PACKETS * (sizeof(CommsPacket) + 1)
     // num of packets * size of each packet == num of bytes for all packets
     const int config_byte_size = MAX_CONFIG_PACKETS * sizeof(CommsPacket);
-    const char* config_path = "/config.pack";
 
-    if (sdcard.open(config_path) != 0) return false;
+    if (sdcard.open(CONFIG_PATH) != 0) return false;
 
     // grab ID from config (originally from hive). should match ID from ref system- if not, abort!!
     float received_id;

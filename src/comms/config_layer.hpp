@@ -15,6 +15,13 @@
 #define CONFIG_OPEN_FAIL 2
 #define CONFIG_ID_MISMATCH 3
 
+// config filepath
+// this file has the following structure (defined in store_config()):
+// 1 byte to store robot ID from parsed hive config packets
+// (uint64_t holding the computed checksum for config_packets, followed by a config_packets packet) repeated for all packets in config_packets
+// lastly, stores bytes of subsec_sizes array
+#define CONFIG_PATH "/config.pack"
+
 // define CONFIG_OFF_ROBOT macro when running off of real robot (testing firmware away from actual robot)
 // #define CONFIG_OFF_ROBOT 
 
