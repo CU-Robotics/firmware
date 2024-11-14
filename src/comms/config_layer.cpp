@@ -96,6 +96,22 @@ void Config::fill_data(CommsPacket packets[MAX_CONFIG_PACKETS], uint8_t sizes[MA
         Serial.printf("id: %d, subsec_id: %d, sub_size: %d\n", id, subsec_id, sub_size);
         Serial.println();
 
+        if (id == yaml_section_id_mappings.at("motor_info")) {
+            size_t linear_index = index / sizeof(float);
+            size_t i1 = linear_index / (NUM_MOTORS);
+            size_t i2 = linear_index % NUM_MOTORS;
+            memcpy(&motor_info[i1][i2], packets[i].raw + 8, sub_size);
+            index += sub_size;
+        }
+
+        if(id == yaml_section_id_mappings.at("sensor_info")){
+            size_t linear_index = index / sizeof(float);
+            size_t i1 = linear_index / (NUM_SENSORS);
+            size_t i2 = linear_index % NUM_SENSORS;
+            memcpy(&sensor_info[i1][i2], packets[i].raw + 8, sub_size);
+            index += sub_size;
+        }
+
         if(id == yaml_section_id_mappings.at("gains")){
             size_t linear_index = index / sizeof(float);
             size_t i1 = linear_index / (NUM_GAINS);
@@ -120,18 +136,6 @@ void Config::fill_data(CommsPacket packets[MAX_CONFIG_PACKETS], uint8_t sizes[MA
             index += sub_size;
             Serial.printf("indices: %d, %d, %d\n", i1, i2, i3);
         }
-        if (id == yaml_section_id_mappings.at("yaw_axis_vector")) {
-            memcpy(yaw_axis_vector, packets[i].raw + 8, sub_size);
-        }
-        if (id == yaml_section_id_mappings.at("pitch_axis_vector")) {
-            memcpy(pitch_axis_vector, packets[i].raw + 8, sub_size);
-        }
-        if (id == yaml_section_id_mappings.at("default_gimbal_starting_angles")) {
-            memcpy(default_gimbal_starting_angles, packets[i].raw + 8, sub_size);
-        }
-        if (id == yaml_section_id_mappings.at("default_chassis_starting_angles")) {
-            memcpy(default_chassis_starting_angles, packets[i].raw + 8, sub_size);
-        }
         if (id == yaml_section_id_mappings.at("controller_info")) {
             size_t linear_index = index / sizeof(float);
             size_t i1 = linear_index / (NUM_MOTORS);
@@ -139,14 +143,8 @@ void Config::fill_data(CommsPacket packets[MAX_CONFIG_PACKETS], uint8_t sizes[MA
             memcpy(&controller_info[i1][i2], packets[i].raw + 8, sub_size);
             index += sub_size;
         }
-        if (id == yaml_section_id_mappings.at("pitch_angle_at_yaw_imu_calibration")) {
-            memcpy(&pitch_angle_at_yaw_imu_calibration, packets[i].raw + 8, sub_size);
-        }
         if (id == yaml_section_id_mappings.at("governor_types")) {
             memcpy(governor_types, packets[i].raw + 8, sub_size);
-        }
-        if (id == yaml_section_id_mappings.at("drive_conversion_factors")) {
-            memcpy(drive_conversion_factors, packets[i].raw + 8, sub_size);
         }
         if (id == yaml_section_id_mappings.at("estimator_info")) {
             size_t linear_index = index / sizeof(float);
@@ -154,21 +152,6 @@ void Config::fill_data(CommsPacket packets[MAX_CONFIG_PACKETS], uint8_t sizes[MA
             size_t i2 = linear_index % STATE_LEN;
             memcpy(&estimator_info[i1][i2], packets[i].raw + 8, sub_size);
             index += sub_size;
-        }
-        if (id == yaml_section_id_mappings.at("odom_values")) {
-            memcpy(odom_values, packets[i].raw + 8, sub_size);
-        }
-        if (id == yaml_section_id_mappings.at("switcher_values")) {
-            memcpy(switcher_values, packets[i].raw + 8, sub_size);
-        }
-        if (id == yaml_section_id_mappings.at("num_sensors")) {
-            memcpy(&num_sensors, packets[i].raw + 8, sub_size);
-        }
-        if (id == yaml_section_id_mappings.at("encoder_offsets")) {
-            memcpy(encoder_offsets, packets[i].raw + 8, sub_size);
-        }
-        if (id == yaml_section_id_mappings.at("encoder_pins")) {
-            memcpy(encoder_pins, packets[i].raw + 8, sub_size);
         }
     }
 }

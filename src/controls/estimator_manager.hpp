@@ -49,6 +49,9 @@ private:
     /// @brief current number of estimators
     int num_estimators = 0;
 
+    /// @brief array to store the number of sensors for each sensor type
+    int num_sensors[NUM_SENSORS];
+
 public:
     /// @brief Default constructor, does nothing
     EstimatorManager() = default;

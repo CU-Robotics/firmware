@@ -58,12 +58,12 @@ void ControllerManager::step(float macro_reference[STATE_LEN][3], float macro_es
     }
 }
 
-// motor_types[Global ID][type, Physical ID, Physical Bus]
-// motor_types[id][0] -- type
-// motor_types[id][1] -- Phys ID
-// motor_types[id][2] -- Phys Bus
+// motor_info[Global ID][type, Physical ID, Physical Bus]
+// motor_info[id][0] -- type
+// motor_info[id][1] -- Phys ID
+// motor_info[id][2] -- Phys Bus
 
-// motor_types:
+// motor_info:
 //  - [type, phys_id, phys_bus]
 //  - [type, phys_id, phys_bus]
 //  - [type, phys_id, phys_bus]

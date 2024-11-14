@@ -81,6 +81,11 @@ void XDriveVelocityController::step(float reference[STATE_LEN][3], float estimat
     float dt = timer.delta();
     // High level velocity controller
     for(int i = 0; i < 2; i++){
+        pidv[i].K[0] = gains[0];
+        pidv[i].K[1] = gains[1];
+        pidv[i].K[2] = gains[2];
+        pidv[i].K[3] = gains[3];
+
         pidv[i].setpoint = reference[i][1]; 
         pidv[i].measurement = estimate[i][1];
         pidv[i].K[3] = 1;
@@ -91,12 +96,12 @@ void XDriveVelocityController::step(float reference[STATE_LEN][3], float estimat
     pidv[2].setpoint = reference[2][1]; 
     pidv[2].measurement = estimate[2][1];
     if(reference[2][2] == 1){ // if state [2][2] is 1 (We dont use the accel spot for anything) then chassis heading is position controlled 
-        pidp[2].K[0] = gains[0];
-        pidp[2].K[1] = gains[1];
-        pidp[2].K[2] = gains[2];
-        pidv[2].K[0] = gains[3];
-        pidv[2].K[1] = gains[4];
-        pidv[2].K[2] = gains[5];
+        pidp[2].K[0] = gains[4];
+        pidp[2].K[1] = gains[5];
+        pidp[2].K[2] = gains[6];
+        pidv[2].K[0] = gains[7];
+        pidv[2].K[1] = gains[8];
+        pidv[2].K[2] = gains[9];
         pidv[2].K[3] = 0;
     }else{
         pidp[2].K[0] = 0;
@@ -134,9 +139,9 @@ void XDriveVelocityController::step(float reference[STATE_LEN][3], float estimat
         PIDFilter pid;
         pid.setpoint = motor_velocity[i];
         pid.measurement = micro_estimate[i][1];
-        pid.K[0] = gains[6];
-        pid.K[1] = gains[7];
-        pid.K[2] = gains[8];
+        pid.K[0] = gains[10];
+        pid.K[1] = gains[11];
+        pid.K[2] = gains[12];
         outputs[i] = pid.filter(dt, true, false) * power_limit_ratio;
     }
 }
@@ -187,8 +192,8 @@ void PitchController::step(float reference[STATE_LEN][3], float estimate[STATE_L
     output += pidv.filter(dt, true, false); // no wrap for velocity
     output = constrain(output, -1.0, 1.0);
 
-    outputs[0] = output * gear_ratios[0];
-    outputs[1] = output * gear_ratios[1];
+    outputs[0] = output;
+    outputs[1] = output;
 }
 
 void FlywheelController::step(float reference[STATE_LEN][3], float estimate[STATE_LEN][3], float micro_estimate[NUM_MOTORS][MICRO_STATE_LEN], float outputs[NUM_MOTORS]){

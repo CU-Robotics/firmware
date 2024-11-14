@@ -6,7 +6,6 @@
 #include "../sensors/RefSystem.hpp"
 #include "../comms/config_layer.hpp"
 
-#define NUM_SENSOR_VALUES 8
 
 /// @brief Parent estimator struct. All estimators should inherit from this.
 struct Estimator {
@@ -158,8 +157,7 @@ private:
     float roll_angle;
     /// @brief calculated chassis angle
     float chassis_angle;
-    /// @brief calculated chassis pitch angle
-    float chassis_pitch_angle;
+
     /// @brief yaw imu vector
     float imu_yaw_axis_vector[3];
 
@@ -286,24 +284,24 @@ public:
         rev_enc[2] = r3;
         can_data = data;
         icm_imu = imu;
-        YAW_ENCODER_OFFSET = config_data.encoder_offsets[0];
-        PITCH_ENCODER_OFFSET = config_data.encoder_offsets[1];
+        YAW_ENCODER_OFFSET = config_data.sensor_info[0][2];
+        PITCH_ENCODER_OFFSET = config_data.sensor_info[1][2];
 
-        yaw_angle = config_data.default_gimbal_starting_angles[0];
-        pitch_angle = config_data.default_gimbal_starting_angles[1];
-        roll_angle = config_data.default_gimbal_starting_angles[2];
-        chassis_pitch_angle = config_data.default_chassis_starting_angles[1];
+        yaw_angle = config_data.sensor_info[2][2];
+        pitch_angle = config_data.sensor_info[2][3];
+        roll_angle = config_data.sensor_info[2][4];
         chassis_angle = 0;
-        imu_yaw_axis_vector[0] = config_data.yaw_axis_vector[0];
-        imu_yaw_axis_vector[1] = config_data.yaw_axis_vector[1];
-        imu_yaw_axis_vector[2] = config_data.yaw_axis_vector[2];
-        imu_pitch_axis_vector[0] = config_data.pitch_axis_vector[0];
-        imu_pitch_axis_vector[1] = config_data.pitch_axis_vector[1];
-        imu_pitch_axis_vector[2] = config_data.pitch_axis_vector[2];
-        starting_pitch_angle = config_data.pitch_angle_at_yaw_imu_calibration;
-        odom_wheel_radius = config_data.odom_values[0];
-        odom_axis_offset_x = config_data.odom_values[1];
-        odom_axis_offset_y = config_data.odom_values[2];
+        imu_yaw_axis_vector[0] = config_data.sensor_info[2][5];
+        imu_yaw_axis_vector[1] = config_data.sensor_info[2][6];
+        imu_yaw_axis_vector[2] = config_data.sensor_info[2][7];
+        imu_pitch_axis_vector[0] = config_data.sensor_info[2][8];
+        imu_pitch_axis_vector[1] = config_data.sensor_info[2][9];
+        imu_pitch_axis_vector[2] = config_data.sensor_info[2][10];
+        starting_pitch_angle = config_data.sensor_info[2][1];
+
+        odom_wheel_radius = config_data.sensor_info[3][2];
+        odom_axis_offset_x = config_data.sensor_info[3][1];
+        odom_axis_offset_y = config_data.sensor_info[4][1];
         // definitions for spherical coordinates of new axis in the imu refrence frame
         yaw_axis_spherical[0] = 1;   // rho (1 for a spherical)
         pitch_axis_spherical[0] = 1; // rho (1 for a spherical)
@@ -551,8 +549,7 @@ private:
     float roll_angle;
     /// @brief calculated chassis angle
     float chassis_angle;
-    /// @brief calculated chassis pitch angle
-    float chassis_pitch_angle;
+
     /// @brief yaw imu vector
     float imu_yaw_axis_vector[3];
 
@@ -669,24 +666,24 @@ public:
         buff_enc_pitch = b2;
         can_data = data;
         icm_imu = imu;
-        YAW_ENCODER_OFFSET = config_data.encoder_offsets[0];
-        PITCH_ENCODER_OFFSET = config_data.encoder_offsets[1];
+        YAW_ENCODER_OFFSET = config_data.sensor_info[0][2];
+        PITCH_ENCODER_OFFSET = config_data.sensor_info[1][2];
 
-        yaw_angle = config_data.default_gimbal_starting_angles[0];
-        pitch_angle = config_data.default_gimbal_starting_angles[1];
-        roll_angle = config_data.default_gimbal_starting_angles[2];
-        chassis_pitch_angle = config_data.default_chassis_starting_angles[1];
+        yaw_angle = config_data.sensor_info[2][2];
+        pitch_angle = config_data.sensor_info[2][3];
+        roll_angle = config_data.sensor_info[2][4];
         chassis_angle = 0;
-        imu_yaw_axis_vector[0] = config_data.yaw_axis_vector[0];
-        imu_yaw_axis_vector[1] = config_data.yaw_axis_vector[1];
-        imu_yaw_axis_vector[2] = config_data.yaw_axis_vector[2];
-        imu_pitch_axis_vector[0] = config_data.pitch_axis_vector[0];
-        imu_pitch_axis_vector[1] = config_data.pitch_axis_vector[1];
-        imu_pitch_axis_vector[2] = config_data.pitch_axis_vector[2];
-        starting_pitch_angle = config_data.pitch_angle_at_yaw_imu_calibration;
-        odom_wheel_radius = config_data.odom_values[0];
-        odom_axis_offset_x = config_data.odom_values[1];
-        odom_axis_offset_y = config_data.odom_values[2];
+        imu_yaw_axis_vector[0] = config_data.sensor_info[2][5];
+        imu_yaw_axis_vector[1] = config_data.sensor_info[2][6];
+        imu_yaw_axis_vector[2] = config_data.sensor_info[2][7];
+        imu_pitch_axis_vector[0] = config_data.sensor_info[2][8];
+        imu_pitch_axis_vector[1] = config_data.sensor_info[2][9];
+        imu_pitch_axis_vector[2] = config_data.sensor_info[2][10];
+        starting_pitch_angle = config_data.sensor_info[2][1];
+
+        odom_wheel_radius = config_data.sensor_info[3][2];
+        odom_axis_offset_x = config_data.sensor_info[3][1];
+        odom_axis_offset_y = config_data.sensor_info[4][1];
         // definitions for spherical coordinates of new axis in the imu refrence frame
         yaw_axis_spherical[0] = 1;   // rho (1 for a spherical)
         pitch_axis_spherical[0] = 1; // rho (1 for a spherical)
@@ -878,10 +875,6 @@ public:
     }
 };
 
-
-
-
-
 /// @brief Estimate the state of the flywheels as meters/second of balls exiting the barrel.
 struct FlyWheelEstimator : public Estimator {
 private:
@@ -1006,8 +999,8 @@ public:
     SwitcherEstimator(Config config,CANData* c,TOFSensor* tof) {
         can_data = c;
         time_of_flight = tof;
-        tof_sensor_offset = config.switcher_values[0];
-        tof_scale = config.switcher_values[1];
+        tof_sensor_offset = config.sensor_info[6][1];
+        tof_scale = config.sensor_info[6][2];
     }
 
     /// @brief calculate state updates
