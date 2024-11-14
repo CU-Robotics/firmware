@@ -82,7 +82,7 @@ int main() {
     Serial.begin(115200); // the serial monitor is actually always active (for debug use Serial.println & tycmd)
     debug.begin(SerialUSB1);
 
-    print_logo();
+    // print_logo();
 
     // Execute setup functions
     pinMode(13, OUTPUT);
