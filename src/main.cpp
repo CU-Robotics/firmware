@@ -314,10 +314,9 @@ int main() {
                     can.write_motor_norm(chassis_can_bus, yaw_motor2_id, C620, 0);
                     float curr_val = estimator_manager.read_yaw_encoder();
                     
-
+                    run_done = true;
                     for (int i = 0; i < num_stable_vals; i++){
-                        run_done = true;
-                        if (curr_val == prev_vals[i]){
+                        if (curr_val != prev_vals[i]){
                             run_done = false;
                         } 
                     }
