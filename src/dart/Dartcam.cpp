@@ -1,4 +1,4 @@
-#include "camera.hpp"
+#include "Dartcam.hpp"
 
 DMAMEM uint16_t frameBuffer[DARTCAM_BUFFER_SIZE];
 DMAMEM uint16_t frameBuffer2[DARTCAM_BUFFER_SIZE];
@@ -25,4 +25,14 @@ void Dartcam::send_frame_serial() {
     for (int i = 0; i < DARTCAM_BUFFER_SIZE; i++) {
         Serial.printf("%.4x", frameBuffer[i]);
     }
+}
+
+std::pair<int, int> Dartcam::getObjectPosition() {
+    // TODO All image capture, object mask/get cords
+
+    // Initialize position with an invalid value
+    int x_pos = -1;
+    int y_pos = -1;
+
+    return std::make_pair(x_pos, y_pos);
 }
