@@ -1,5 +1,5 @@
 #include "Arduino.h"
-#include "PWMServo.h"
+#include "PWMServo.hpp"
 
 /*
   PWMServo.cpp - Hardware Servo Timer Library
