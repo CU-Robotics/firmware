@@ -418,6 +418,20 @@ struct data_packet
         memcpy(&tof_sensor_count, packetBuffer + packetOffset, sizeof(tof_sensor_count));
         packetOffset += sizeof(tof_sensor_count);
 
+        // Print the unpacked data
+        Serial.println("Unpacked Data:");
+        Serial.print("Timestamp: ");
+        Serial.println(timestamp);
+        Serial.print("Buff Sensor Count: ");
+        Serial.println(buff_sensor_count);
+        Serial.print("ICM Sensor Count: ");
+        Serial.println(icm_sensor_count);
+        Serial.print("Rev Sensor Count: ");
+        Serial.println(rev_sensor_count);
+        Serial.print("TOF Sensor Count: ");
+        Serial.println(tof_sensor_count);
+        
+
         // Unpack the RefereeData
         Serial.println("Unpacking Referee Data:");
         memcpy(&refData, packetBuffer + packetOffset, sizeof(refData));
