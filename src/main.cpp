@@ -147,8 +147,8 @@ int main()
 
 
 
-    VirtualSensorManager virtual_sensor_data = VirtualSensorManager(config);
-    data_packet packet;
+    //VirtualSensorManager virtual_sensor_data = VirtualSensorManager(config);
+    data_packet packet(config);
     uint8_t buffer[4096];
 
     // Main loop
@@ -171,7 +171,7 @@ int main()
         Serial.println("Packing Data Packet");
         packet.packDataPacket(buffer, state, ref_data_raw, can_data, config, estimator_manager, lidar1, lidar2);
         Serial.println("Unpacking Data Packet");
-        packet.unpackDataPacket(buffer, config, virtual_sensor_data);
+        packet.unpackDataPacket(buffer);
 
         estimator_manager.icm_sensors[0].print();
 

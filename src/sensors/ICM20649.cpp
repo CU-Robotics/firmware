@@ -113,6 +113,13 @@ void ICM20649::set_gyro_range(int gyro_rate_range)
 // implenet seralize and deserialize
 void ICM20649::serialize(uint8_t *buffer, size_t &offset)
 {
+    //returns the acceleration with the offset applied
+    float corrected_accel_X = get_accel_X();
+    float corrected_accel_Y = get_accel_Y();
+    float corrected_accel_Z = get_accel_Z();
+    float corrected_gyro_X = get_gyro_X();
+    float corrected_gyro_Y = get_gyro_Y();
+    float corrected_gyro_Z = get_gyro_Z();
     //  code that prints out raw bytes of the buffer for this sensor
     Serial.print("ICM20649: ");
     for (int i = 0; i < 28; i++)
@@ -133,20 +140,20 @@ void ICM20649::serialize(uint8_t *buffer, size_t &offset)
         Serial.println(" ");
     }
 
-    memcpy(buffer + offset, &accel.acceleration.x, sizeof(accel.acceleration.x));
-    offset += sizeof(accel_X);
-    memcpy(buffer + offset, &accel.acceleration.y, sizeof(accel.acceleration.y));
-    offset += 4;
-    memcpy(buffer + offset, &accel.acceleration.z, sizeof(accel.acceleration.z));
-    offset += 4;
-    memcpy(buffer + offset, &gyro.gyro.x, sizeof(gyro.gyro.x));
-    offset += 4;
-    memcpy(buffer + offset, &gyro.gyro.y, sizeof(gyro.gyro.y));
-    offset += 4;
-    memcpy(buffer + offset, &gyro.gyro.z, sizeof(gyro.gyro.z));
-    offset += 4;
+    memcpy(buffer + offset, &corrected_accel_X, sizeof(corrected_accel_X));
+    offset += sizeof(corrected_accel_X);
+    memcpy(buffer + offset, &corrected_accel_Y, sizeof(corrected_accel_Y));
+    offset += sizeof(corrected_accel_Y);
+    memcpy(buffer + offset, &corrected_accel_Z, sizeof(corrected_accel_Z));
+    offset += sizeof(corrected_accel_Z);
+    memcpy(buffer + offset, &corrected_gyro_X, sizeof(corrected_gyro_X));
+    offset += sizeof(corrected_gyro_X);
+    memcpy(buffer + offset, &corrected_gyro_Y, sizeof(corrected_gyro_Y));
+    offset += sizeof(corrected_gyro_Y);
+    memcpy(buffer + offset, &corrected_gyro_Z, sizeof(corrected_gyro_Z));
+    offset += sizeof(corrected_gyro_Z);
     memcpy(buffer + offset, &temperature, sizeof(temperature));
-    offset += 4;
+    offset += sizeof(temperature);
 }
 
 void ICM20649::deserialize(const uint8_t *data, size_t &offset)

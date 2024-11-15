@@ -21,6 +21,8 @@ public:
     /// @return temperature in Celcius
     inline float get_temperature() { return temperature; };
 
+
+    //POSSIBLE BUG REASON: the accelerations are not corrected for the offset possibly being the reason for the weird values.
     /// @brief Get the acceleration of the sensor in its local x axis.
     /// @return acceleration m/s^2
     inline float get_accel_X() { return accel_X; };
