@@ -44,10 +44,3 @@ void RevEncoder::serialize(uint8_t* buffer, size_t& offset) {
     
 }
 
-void RevEncoder::deserialize(const uint8_t* data, size_t& offset) {
-    id_ = data[offset++];
-    memcpy(&ticks, data + offset, sizeof(ticks));
-    offset += sizeof(ticks);
-    memcpy(&radians, data + offset, sizeof(radians));
-    offset += sizeof(radians);
-}

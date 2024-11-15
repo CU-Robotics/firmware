@@ -44,7 +44,6 @@ public:
     void set_gyro_range(int gyro_rate_range);
 
     void serialize(uint8_t* buffer, size_t& offset) override;
-    void deserialize(const uint8_t* data, size_t& offset) override;
 
 private:
     /// @brief sensor object from adafruit libraries.

@@ -207,7 +207,6 @@ struct data_packet
 
     lidar_sensor *lidar_sensors;
 
-    // DataPacketHeader getHeader() const { return header; }
     RefereeData getRefData() const { return refData; }
     CANData getCanData() const { return canData; }
 
@@ -262,11 +261,6 @@ struct data_packet
     {
         size_t packetOffset = 0;
         timestamp = micros();
-
-        // // Create the packet header
-        // DataPacketHeader header;
-        // Serial.println("Packing Robot State:");
-        // header.state = robotState;
 
         // pack the timestamp, state, and number of sensors
         memcpy(packetBuffer + packetOffset, &timestamp, sizeof(timestamp));
@@ -430,7 +424,7 @@ struct data_packet
         Serial.println(rev_sensor_count);
         Serial.print("TOF Sensor Count: ");
         Serial.println(tof_sensor_count);
-        
+
 
         // Unpack the RefereeData
         Serial.println("Unpacking Referee Data:");

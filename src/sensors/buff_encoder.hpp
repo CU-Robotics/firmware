@@ -74,11 +74,6 @@ public:
         offset += sizeof(m_angle);
     }
 
-    void deserialize(const uint8_t* data, size_t& offset) override {
-        id_ = data[offset++];
-        memcpy(&m_angle, data + offset, sizeof(m_angle));
-        offset += sizeof(m_angle);
-    }
 
     void print() {
         Serial.println("Buff Encoder:");

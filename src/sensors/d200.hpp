@@ -238,11 +238,6 @@ class D200LD14P : Sensor{
     /// @param buffer buffer to store the serialized data
     /// @param offset offset to store the serialized data
     void serialize(uint8_t* buffer, size_t& offset) override;
-
-    /// @brief deserialize the LiDAR data
-    /// @param data data to deserialize
-    /// @param offset offset to deserialize the data
-    void deserialize(const uint8_t* data, size_t& offset) override;
 };
 
 #endif // D200_H

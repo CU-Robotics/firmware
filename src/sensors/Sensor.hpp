@@ -16,8 +16,6 @@ public:
     void setId(uint8_t id) { id_ = id; }
 
     virtual void serialize(uint8_t* buffer, size_t& offset) = 0;
-    virtual void deserialize(const uint8_t* data, size_t& offset) = 0;
-
 protected:
     SensorType type_;
     uint8_t id_;

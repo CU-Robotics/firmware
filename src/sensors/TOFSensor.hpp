@@ -109,18 +109,7 @@ public:
         buffer[offset++] = (latest_distance >> 8) & 0xFF;
     }
 
-    /// @brief function to deserialize the TOF sensor data
-    /// @param data  data to deserialize
-    /// @param offset  offset to deserialize the data
-    void deserialize(const uint8_t* data, size_t& offset) override
-    {
-        // deserialize the sensor id
-        id_ = data[offset++];
 
-        // deserialize the distance
-        latest_distance = data[offset++];
-        latest_distance |= data[offset++] << 8;
-    }
 
     void print() {
         Serial.println("TOF Sensor:");

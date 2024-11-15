@@ -46,8 +46,6 @@ public:
 
 	void serialize(uint8_t* buffer, size_t& offset)  override;
 
-	void deserialize(const uint8_t* data, size_t& offset) override;
-
 	void print() {
 		Serial.println("Rev Encoder:");
 		Serial.print("Ticks: ");
