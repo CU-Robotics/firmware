@@ -51,42 +51,25 @@ struct icm_sensor
 
     void deserialize(const uint8_t *data, size_t &offset)
     {
-        // // code that prints out raw bytes of the buffer for this sensor
-        // Serial.print("ICM20649: ");
-        // for (int i = 0; i < 28; i++)
-        // {
-        //     for (int ii = 0; ii <= 7; ii++)
-        //     {
-        //         int k = data[i] >> ii;
-        //         if (k & 1)
-        //         {
-        //             Serial.print("1");
-        //         }
-        //         else
-        //         {
-        //             Serial.print("0");
-        //         }
-        //         Serial.print(" ");
-        //     }
-        //     Serial.println(" ");
-        // }Serial.print("ICM20649: ");
-        // for (int i = 0; i < 28; i++)
-        // {
-        //     for (int ii = 0; ii <= 7; ii++)
-        //     {
-        //         int k = data[i] >> ii;
-        //         if (k & 1)
-        //         {
-        //             Serial.print("1");
-        //         }
-        //         else
-        //         {
-        //             Serial.print("0");
-        //         }
-        //         Serial.print(" ");
-        //     }
-        //     Serial.println(" ");
-        // }
+        // code that prints out raw bytes of the buffer for this sensor
+        Serial.print("ICM20649: ");
+        for (int i = 0; i < 28; i++)
+        {
+            for (int ii = 0; ii <= 7; ii++)
+            {
+                int k = data[i] >> ii;
+                if (k & 1)
+                {
+                    Serial.print("1");
+                }
+                else
+                {
+                    Serial.print("0");
+                }
+                Serial.print(" ");
+            }
+            Serial.println(" ");
+        }
         memcpy(&accel_X, data + offset, sizeof(accel_X));
         offset += sizeof(accel_X);
         memcpy(&accel_Y, data + offset, sizeof(accel_Y));
@@ -135,7 +118,6 @@ struct rev_sensor
     int ticks;
     float radians;
 
-
     void deserialize(const uint8_t *data, size_t &offset)
     {
         id = data[offset++];
@@ -145,13 +127,14 @@ struct rev_sensor
         offset += sizeof(radians);
     }
 
-    void print() {
-		Serial.println("Rev Encoder:");
-		Serial.print("Ticks: ");
-		Serial.println(ticks);
-		Serial.print("Radians: ");
-		Serial.println(radians);
-	}
+    void print()
+    {
+        Serial.println("Rev Encoder:");
+        Serial.print("Ticks: ");
+        Serial.println(ticks);
+        Serial.print("Radians: ");
+        Serial.println(radians);
+    }
 };
 
 struct tof_sensor
@@ -180,22 +163,62 @@ struct tof_sensor
 };
 
 // TODO figure out lidar struct
-//  struct lidar
-//  {
-//      uint8_t id;
-//      int current_packet;
-//      D200Calibration cal;
-//      void serialize(uint8_t *buffer, size_t &offset)
-//      {
-//          buffer[offset++] = id;
-//          memcpy(buffer + offset, &current_packet, sizeof(current_packet));
-//          offset += sizeof(current_packet);
-//          memcpy(buffer + offset, &cal, sizeof(cal));
-//          offset += sizeof(cal);
-//          memcpy(buffer + offset, get_packets(), D200_NUM_PACKETS_CACHED * D200_PAYLOAD_SIZE);
-//          offset += D200_NUM_PACKETS_CACHED * D200_PAYLOAD_SIZE;
-//      }
-//  };
+struct LidarDataPacketSI
+{
+    /// @brief speed of lidar module (rad/s)
+    float lidar_speed = 0;
+
+    /// @brief start angle of measurements (rad)
+    float start_angle = 0;
+
+    /// @brief array of point measurements
+    struct
+    {
+        /// @brief distance (m)
+        float distance;
+
+        /// @brief intensity of measurement. units are ambiguous (not documented), but in general "the higher the intensity, the larger the signal strength value"
+        uint8_t intensity = 0;
+    } points[D200_POINTS_PER_PACKET];
+
+    /// @brief end angle of measurements (rad)
+    float end_angle = 0;
+
+    /// @brief timestamp of measurements, calibrated (s)
+    float timestamp = 0;
+};
+struct lidar_sensor
+{
+    uint8_t id;
+    int current_packet;
+    D200Calibration cal;
+    LidarDataPacketSI packets[D200_NUM_PACKETS_CACHED];
+    void deserialize(const uint8_t *data, size_t &offset)
+    {
+        id = data[offset++];
+        memcpy(&current_packet, data + offset, sizeof(current_packet));
+        offset += sizeof(current_packet);
+        memcpy(&cal, data + offset, sizeof(cal));
+        offset += sizeof(cal);
+        memcpy(packets, data + offset, D200_NUM_PACKETS_CACHED * D200_PAYLOAD_SIZE);
+        offset += D200_NUM_PACKETS_CACHED * D200_PAYLOAD_SIZE;
+    }
+
+    void print_latest_packet()
+    {
+        LidarDataPacketSI p = packets[current_packet];
+        Serial.println("==D200LD14P PACKET==");
+        Serial.print("LiDAR speed: ");
+        Serial.println(p.lidar_speed);
+        Serial.print("start angle: ");
+        Serial.println(p.start_angle);
+        Serial.println("measurement data: ...");
+        Serial.print("end angle: ");
+        Serial.println(p.end_angle);
+        Serial.print("timestamp: ");
+        Serial.println(p.timestamp);
+    }
+};
 
 struct data_packet
 {
@@ -212,12 +235,14 @@ struct data_packet
     int icm_sensor_count;
     int rev_sensor_count;
     int tof_sensor_count;
+    int lidar_sensor_count;
+
     buff_sensor *buff_sensors;
     icm_sensor *icm_sensors;
     rev_sensor *rev_sensors;
     tof_sensor *tof_sensors;
-    D200LD14P lidar1;
-    D200LD14P lidar2;
+
+    lidar_sensor *lidar_sensors;
 
     // DataPacketHeader getHeader() const { return header; }
     RefereeData getRefData() const { return refData; }
@@ -229,11 +254,13 @@ struct data_packet
         icm_sensor_count = config_data->num_sensors[1];
         rev_sensor_count = config_data->num_sensors[2];
         tof_sensor_count = config_data->num_sensors[3];
+        lidar_sensor_count = config_data->num_sensors[4];
 
         buff_sensors = new buff_sensor[buff_sensor_count];
         icm_sensors = new icm_sensor[icm_sensor_count];
         rev_sensors = new rev_sensor[rev_sensor_count];
         tof_sensors = new tof_sensor[tof_sensor_count];
+        lidar_sensors = new lidar_sensor[lidar_sensor_count];
 
         // give the initial id of 254 to all sensors
         for (int i = 0; i < buff_sensor_count; ++i)
@@ -251,6 +278,10 @@ struct data_packet
         for (int i = 0; i < tof_sensor_count; ++i)
         {
             tof_sensors[i].id = 254;
+        }
+        for (int i = 0; i < lidar_sensor_count; ++i)
+        {
+            lidar_sensors[i].id = 254;
         }
     }
 
@@ -292,17 +323,8 @@ struct data_packet
         Serial.println(rev_sensor_count);
         Serial.print("TOF Sensor Count: ");
         Serial.println(tof_sensor_count);
-
-        // // Print header information
-        // Serial.println("Packing Header:");
-        // Serial.println("Timestamp: ");
-        // Serial.println(header.timestamp);
-        // Serial.println("Num Sensors: ");
-        // Serial.println(header.numSensors);
-
-        // // Copy the packet header into the buffer
-        // memcpy(packetBuffer + packetOffset, &header, sizeof(header));
-        // packetOffset += sizeof(header);
+        Serial.println("Lidar Sensor Count: ");
+        Serial.println(lidar_sensor_count);
 
         // Create the RefereeData
         RefereeData RefData;
@@ -388,7 +410,7 @@ struct data_packet
             Serial.println("ending tof sensor serialization");
         }
 
-        if (config_data->num_sensors[4] == 2)
+        if (lidar_sensor_count == 2)
         {
             Serial.print("Lidar 1: ");
             lidar1.print_latest_packet();
@@ -421,12 +443,6 @@ struct data_packet
         packetOffset += sizeof(rev_sensor_count);
         memcpy(&tof_sensor_count, packetBuffer + packetOffset, sizeof(tof_sensor_count));
         packetOffset += sizeof(tof_sensor_count);
-
-        // // Print header information
-        // Serial.println("Timestamp: ");
-        // Serial.println(header.timestamp);
-        // Serial.println("Num Sensors: ");
-        // Serial.println(header.numSensors);
 
         // Unpack the RefereeData
         Serial.println("Unpacking Referee Data:");
@@ -480,19 +496,6 @@ struct data_packet
         // Unpack ICM Sensors
         for (int i = 0; i < icm_sensor_count; i++)
         {
-            // icm_sensors[i].deserialize(packetBuffer, packetOffset);
-            // Serial.print("ICM Sensor ");
-            // Serial.print(icm_sensors[i].getId());
-            // Serial.print(": ");
-            // icm_sensors[i].print();
-
-            // virtualSensorManager.getICMSensors()[i].deserialize(packetBuffer, packetOffset);
-            // // virtualSensorManager.updateSensor(SensorType::ICM, i, &icm);
-
-            // Serial.print("ICM Sensor ");
-            // Serial.print(virtualSensorManager.getICMSensors()[i].getId());
-            // Serial.print(": ");
-            // virtualSensorManager.getICMSensors()[i].print();
 
             icm_sensors[i].deserialize(packetBuffer, packetOffset);
             // print the sensor data
@@ -505,20 +508,6 @@ struct data_packet
         // Unpack Rev Encoders
         for (int i = 0; i < rev_sensor_count; i++)
         {
-            // rev_sensors[i].deserialize(packetBuffer, packetOffset);
-            // Serial.print("Rev Encoder ");
-            // Serial.print(rev_sensors[i].getId());
-            // Serial.print(": ");
-            // rev_sensors[i].print();
-
-            // RevEncoder rev;
-            // rev.deserialize(packetBuffer, packetOffset);
-            // virtualSensorManager.updateSensor(SensorType::REVENC, rev.getId(), &rev);
-
-            // Serial.print("Rev Encoder ");
-            // Serial.print(virtualSensorManager.getRevSensors()[i].getId());
-            // Serial.print(": ");
-            //virtualSensorManager.getRevSensors()[i].print();
 
             rev_sensors[i].deserialize(packetBuffer, packetOffset);
             // print the sensor data
@@ -531,20 +520,6 @@ struct data_packet
         // Unpack TOF Sensors
         for (int i = 0; i < tof_sensor_count; i++)
         {
-            // tof_sensors[i].deserialize(packetBuffconfig_data->num_sensors[3]er, packetOffset);
-            // Serial.print("TOF Sensor ");
-            // Serial.print(tof_sensors[i].getId());
-            // Serial.print(": ");
-            // tof_sensors[i].print();
-
-            // TOFSensor tof;
-            // tof.deserialize(packetBuffer, packetOffset);
-            // virtualSensorManager.updateSensor(SensorType::TOF, tof.getId(), &tof);
-
-            // Serial.print("TOF Sensor ");
-            // Serial.print(virtualSensorManager.getTOFSensors()[i].getId());
-            // Serial.print(": ");
-            // virtualSensorManager.getTOFSensors()[i].print();
 
             tof_sensors[i].deserialize(packetBuffer, packetOffset);
             // print the sensor data
@@ -555,25 +530,37 @@ struct data_packet
         }
 
         // Unpack Lidar Sensors
-        // if (config_data->num_sensors[4] == 2)
-        // {
-        //     // lidar1.deserialize(packetBuffer, packetOffset);
-        //     // Serial.print("Lidar 1: ");
-        //     // lidar1.print_latest_packet();
+        if (lidar_sensor_count == 2)
+        {
+            // lidar1.deserialize(packetBuffer, packetOffset);
+            // Serial.print("Lidar 1: ");
+            // lidar1.print_latest_packet();
 
-        //     // lidar2.deserialize(packetBuffer, packetOffset);
-        //     // Serial.print("Lidar 2: ");
-        //     // lidar2.print_latest_packet();
+            // lidar2.deserialize(packetBuffer, packetOffset);
+            // Serial.print("Lidar 2: ");
+            // lidar2.print_latest_packet();
 
-        //     virtualSensorManager.updateSensor(SensorType::LIDAR, 1, &lidar1);
-        //     virtualSensorManager.updateSensor(SensorType::LIDAR, 2, &lidar2);
+            // virtualSensorManager.updateSensor(SensorType::LIDAR, 1, &lidar1);
+            // virtualSensorManager.updateSensor(SensorType::LIDAR, 2, &lidar2);
 
-        //     Serial.print("Lidar 1: ");
-        //     virtualSensorManager.getLidar1().print_latest_packet();
+            // Serial.print("Lidar 1: ");
+            // virtualSensorManager.getLidar1().print_latest_packet();
 
-        //     Serial.print("Lidar 2: ");
-        //     virtualSensorManager.getLidar2().print_latest_packet();
-        // }
+            // Serial.print("Lidar 2: ");
+            // virtualSensorManager.getLidar2().print_latest_packet();
+
+            // lidar1.deserialize(packetBuffer, packetOffset);
+            // Serial.print("Lidar 1: ");
+            // lidar1.print_latest_packet();
+
+            lidar_sensors[0].deserialize(packetBuffer, packetOffset);
+            Serial.print("Lidar 1: ");
+            lidar_sensors[0].print_latest_packet();
+
+            lidar_sensors[1].deserialize(packetBuffer, packetOffset);
+            Serial.print("Lidar 2: ");
+            lidar_sensors[1].print_latest_packet();
+        }
         Serial.println("Exiting Unpacking Data Packet");
     }
 };
