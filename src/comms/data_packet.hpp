@@ -46,7 +46,7 @@ struct icm_sensor
         {
             for (int ii = 0; ii <= 7; ii++)
             {
-                int k = data[i] >> ii;
+                int k = data[i + offset] >> ii;
                 if (k & 1)
                 {
                     Serial.print("1");

@@ -126,7 +126,7 @@ void ICM20649::serialize(uint8_t *buffer, size_t &offset)
     {
         for (int ii = 0; ii <= 7; ii++)
         {
-            int k = buffer[i] >> ii;
+            int k = buffer[i + offset] >> ii;
             if (k & 1)
             {
                 Serial.print("1");
