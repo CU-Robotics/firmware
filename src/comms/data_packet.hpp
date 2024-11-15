@@ -261,6 +261,7 @@ struct data_packet
     void packDataPacket(uint8_t packetBuffer[BUFFER_SIZE], State robotState, uint8_t ref_data_raw[180], CANData *canData, EstimatorManager &estimatorManager, D200LD14P &lidar1, D200LD14P &lidar2)
     {
         size_t packetOffset = 0;
+        timestamp = micros();
 
         // // Create the packet header
         // DataPacketHeader header;
