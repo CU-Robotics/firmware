@@ -1,1 +1,0 @@
-#include "virtual_sensor_manager.hpp"

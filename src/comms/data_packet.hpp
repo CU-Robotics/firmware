@@ -6,19 +6,8 @@
 #include "constants.hpp"
 #include "estimator_manager.hpp"
 #include "config_layer.hpp"
-#include "buff_encoder.hpp"
-#include "ICM20649.hpp"
-#include "rev_encoder.hpp"
-#include "d200.hpp"
-#include "virtual_sensor_manager.hpp"
+#include "d200.hpp" 
 
-struct DataPacketHeader
-{
-    uint32_t timestamp;  // Current time in microseconds
-    State state;         // Robot state
-    uint16_t numSensors; // Number of sensors
-    uint16_t sensorDataBufferLength;
-};
 
 struct RefereeData
 {
@@ -162,31 +151,6 @@ struct tof_sensor
     }
 };
 
-// TODO figure out lidar struct
-struct LidarDataPacketSI
-{
-    /// @brief speed of lidar module (rad/s)
-    float lidar_speed = 0;
-
-    /// @brief start angle of measurements (rad)
-    float start_angle = 0;
-
-    /// @brief array of point measurements
-    struct
-    {
-        /// @brief distance (m)
-        float distance;
-
-        /// @brief intensity of measurement. units are ambiguous (not documented), but in general "the higher the intensity, the larger the signal strength value"
-        uint8_t intensity = 0;
-    } points[D200_POINTS_PER_PACKET];
-
-    /// @brief end angle of measurements (rad)
-    float end_angle = 0;
-
-    /// @brief timestamp of measurements, calibrated (s)
-    float timestamp = 0;
-};
 struct lidar_sensor
 {
     uint8_t id;
@@ -222,8 +186,7 @@ struct lidar_sensor
 
 struct data_packet
 {
-
-    // DataPacketHeader header;
+    const Config *config; // Config struct to store all config data
 
     uint32_t timestamp; // Current time in microseconds
     State state;        // Robot state
@@ -250,6 +213,8 @@ struct data_packet
 
     data_packet(const Config *config_data)
     {
+
+        config = config_data; // store the config data
         buff_sensor_count = config_data->num_sensors[0];
         icm_sensor_count = config_data->num_sensors[1];
         rev_sensor_count = config_data->num_sensors[2];
@@ -285,7 +250,15 @@ struct data_packet
         }
     }
 
-    void packDataPacket(uint8_t packetBuffer[BUFFER_SIZE], State robotState, uint8_t ref_data_raw[180], CANData *canData, const Config *config_data, EstimatorManager &estimatorManager, D200LD14P &lidar1, D200LD14P &lidar2)
+    ~data_packet()
+    {
+        delete[] buff_sensors;
+        delete[] icm_sensors;
+        delete[] rev_sensors;
+        delete[] tof_sensors;
+    }
+
+    void packDataPacket(uint8_t packetBuffer[BUFFER_SIZE], State robotState, uint8_t ref_data_raw[180], CANData *canData, EstimatorManager &estimatorManager, D200LD14P &lidar1, D200LD14P &lidar2)
     {
         size_t packetOffset = 0;
 
@@ -386,7 +359,7 @@ struct data_packet
 
         Serial.println("starting rev encoder serialization");
         Serial.print("Number of rev sensors: ");
-        Serial.println(config_data->num_sensors[2]);
+        Serial.println(rev_sensor_count);
 
         for (int i = 0; i < rev_sensor_count; i++)
         {
@@ -532,27 +505,6 @@ struct data_packet
         // Unpack Lidar Sensors
         if (lidar_sensor_count == 2)
         {
-            // lidar1.deserialize(packetBuffer, packetOffset);
-            // Serial.print("Lidar 1: ");
-            // lidar1.print_latest_packet();
-
-            // lidar2.deserialize(packetBuffer, packetOffset);
-            // Serial.print("Lidar 2: ");
-            // lidar2.print_latest_packet();
-
-            // virtualSensorManager.updateSensor(SensorType::LIDAR, 1, &lidar1);
-            // virtualSensorManager.updateSensor(SensorType::LIDAR, 2, &lidar2);
-
-            // Serial.print("Lidar 1: ");
-            // virtualSensorManager.getLidar1().print_latest_packet();
-
-            // Serial.print("Lidar 2: ");
-            // virtualSensorManager.getLidar2().print_latest_packet();
-
-            // lidar1.deserialize(packetBuffer, packetOffset);
-            // Serial.print("Lidar 1: ");
-            // lidar1.print_latest_packet();
-
             lidar_sensors[0].deserialize(packetBuffer, packetOffset);
             Serial.print("Lidar 1: ");
             lidar_sensors[0].print_latest_packet();

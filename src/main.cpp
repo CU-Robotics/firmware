@@ -11,7 +11,6 @@
 #include "sensors/LEDBoard.hpp"
 #include "data_packet.hpp"
 #include "constants.hpp"
-#include "comms/virtual_sensor_manager.hpp"
 
 // Loop constants
 #define LOOP_FREQ 1000
@@ -146,8 +145,7 @@ int main()
     bool hive_toggle = false;
 
 
-
-    //VirtualSensorManager virtual_sensor_data = VirtualSensorManager(config);
+    // Data packet
     data_packet packet(config);
     uint8_t buffer[4096];
 
@@ -169,11 +167,9 @@ int main()
 
 
         Serial.println("Packing Data Packet");
-        packet.packDataPacket(buffer, state, ref_data_raw, can_data, config, estimator_manager, lidar1, lidar2);
+        packet.packDataPacket(buffer, state, ref_data_raw, can_data, estimator_manager, lidar1, lidar2);
         Serial.println("Unpacking Data Packet");
         packet.unpackDataPacket(buffer);
-
-        estimator_manager.icm_sensors[0].print();
 
         // read and write comms packets
         comms.ping();
