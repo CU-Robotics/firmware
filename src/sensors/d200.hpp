@@ -193,6 +193,7 @@ class D200LD14P : Sensor{
   public:
     /// @brief constructor and initialization
     /// @param _port pointer to HardwareSerial object to read/write from
+    /// @param _id ID of this specific module
     D200LD14P(HardwareSerial *_port, uint8_t _id);
 
     //default constructor
