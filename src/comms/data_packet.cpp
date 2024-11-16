@@ -1,16 +1,16 @@
 #include "data_packet.hpp"
 
-// --- buff_sensor Methods ---
+// --- BuffEncoderData Methods ---
 
-void buff_sensor::print() {
+void BuffEncoderData::print() {
     Serial.println("Buff Encoder:");
     Serial.print("Angle: ");
     Serial.println(m_angle);
 }
 
-// --- icm_sensor Methods ---
+// --- ICMSensorData Methods ---
 
-void icm_sensor::deserialize(const uint8_t* data, size_t& offset) {
+void ICMSensorData::deserialize(const uint8_t* data, size_t& offset) {
     // Deserialize each field
     memcpy(&accel_X, data + offset, sizeof(accel_X));
     offset += sizeof(accel_X);
@@ -28,7 +28,7 @@ void icm_sensor::deserialize(const uint8_t* data, size_t& offset) {
     offset += sizeof(temperature);
 }
 
-void icm_sensor::print() {
+void ICMSensorData::print() {
     // Display the temperature data, measured in Celsius
     Serial.print("\t\tTemperature ");
     Serial.print(temperature);
@@ -52,9 +52,9 @@ void icm_sensor::print() {
     Serial.println();
 }
 
-// --- rev_sensor Methods ---
+// --- RevSensorData Methods ---
 
-void rev_sensor::deserialize(const uint8_t* data, size_t& offset) {
+void RevSensorData::deserialize(const uint8_t* data, size_t& offset) {
     id = data[offset++]; // Deserialize ID
     memcpy(&ticks, data + offset, sizeof(ticks));
     offset += sizeof(ticks);
@@ -62,7 +62,7 @@ void rev_sensor::deserialize(const uint8_t* data, size_t& offset) {
     offset += sizeof(radians);
 }
 
-void rev_sensor::print() {
+void RevSensorData::print() {
     Serial.println("Rev Encoder:");
     Serial.print("Ticks: ");
     Serial.println(ticks);
@@ -70,9 +70,9 @@ void rev_sensor::print() {
     Serial.println(radians);
 }
 
-// --- tof_sensor Methods ---
+// --- TOFSensorData Methods ---
 
-void tof_sensor::deserialize(const uint8_t* data, size_t& offset) {
+void TOFSensorData::deserialize(const uint8_t* data, size_t& offset) {
     // Deserialize the sensor ID
     id = data[offset++];
 
@@ -81,14 +81,14 @@ void tof_sensor::deserialize(const uint8_t* data, size_t& offset) {
     latest_distance |= data[offset++] << 8;
 }
 
-void tof_sensor::print() {
+void TOFSensorData::print() {
     Serial.println("TOF Sensor:");
     Serial.printf("\tDistance: %u mm\n", latest_distance);
 }
 
-// --- lidar_sensor Methods ---
+// --- LidarSensorData Methods ---
 
-void lidar_sensor::deserialize(const uint8_t* data, size_t& offset) {
+void LidarSensorData::deserialize(const uint8_t* data, size_t& offset) {
     id = data[offset++]; // Deserialize ID
     memcpy(&current_packet, data + offset, sizeof(current_packet));
     offset += sizeof(current_packet);
@@ -98,7 +98,7 @@ void lidar_sensor::deserialize(const uint8_t* data, size_t& offset) {
     offset += D200_NUM_PACKETS_CACHED * sizeof(LidarDataPacketSI);
 }
 
-void lidar_sensor::print_latest_packet() {
+void LidarSensorData::print_latest_packet() {
     LidarDataPacketSI p = packets[current_packet];
     Serial.println("==D200LD14P PACKET==");
     Serial.print("LiDAR speed: ");
@@ -123,11 +123,11 @@ data_packet::data_packet(const Config* config_data) {
     lidar_sensor_count = config_data->num_sensors[4];
 
     // Allocate memory for sensor arrays
-    buff_sensors = new buff_sensor[buff_sensor_count];
-    icm_sensors = new icm_sensor[icm_sensor_count];
-    rev_sensors = new rev_sensor[rev_sensor_count];
-    tof_sensors = new tof_sensor[tof_sensor_count];
-    lidar_sensors = new lidar_sensor[lidar_sensor_count];
+    buff_sensors = new BuffEncoderData[buff_sensor_count];
+    icm_sensors = new ICMSensorData[icm_sensor_count];
+    rev_sensors = new RevSensorData[rev_sensor_count];
+    tof_sensors = new TOFSensorData[tof_sensor_count];
+    lidar_sensors = new LidarSensorData[lidar_sensor_count];
 
     // Initialize sensor IDs to a default value (e.g., 254)
     for (int i = 0; i < buff_sensor_count; ++i) {

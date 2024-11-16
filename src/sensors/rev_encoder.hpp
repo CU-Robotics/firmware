@@ -24,7 +24,11 @@ public:
 
 	/// @brief Construct a new rev_encoder object
 	/// @param encoder_pin the pin number that the encoders signal pin is plugged into
-	RevEncoder(uint8_t encoder_pin) : Sensor(SensorType::REVENC) {};
+	RevEncoder(uint8_t encoder_pin) : Sensor(SensorType::REVENC) {
+		this->in_pin = encoder_pin;
+		pinMode(this->in_pin, INPUT);  // Set the pin used to measure the encoder to be an input
+		freq.begin(this->in_pin, FREQMEASUREMULTI_MARK_ONLY);
+	};
 
 	/// @brief initialize the encoder with the correct pin
 	/// @param encoder_pin the pin number that the encoders signal pin is plugged into
@@ -45,8 +49,8 @@ public:
 	/// @param offset offset to store the position of the serialized data in the buffer
 	void serialize(uint8_t* buffer, size_t& offset)  override;
 
-	/// @brief print the data for debugging
-	void print() {};
+	/// @brief print the encoder details
+	void print();
 };
 
 #endif

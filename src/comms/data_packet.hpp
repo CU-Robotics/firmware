@@ -18,7 +18,7 @@ struct RefereeData {
 };
 
 /// @brief Structure for the buff encoder sensor.
-struct buff_sensor {
+struct BuffEncoderData {
     /// Sensor ID.
     uint8_t id;
     /// Measured angle.
@@ -29,7 +29,7 @@ struct buff_sensor {
 };
 
 /// @brief Structure for the ICM sensor.
-struct icm_sensor {
+struct ICMSensorData {
     /// Sensor ID.
     uint8_t id;
     /// Acceleration in X-axis.
@@ -57,7 +57,7 @@ struct icm_sensor {
 };
 
 /// @brief Structure for the Rev encoder sensor.
-struct rev_sensor {
+struct RevSensorData {
     /// Sensor ID.
     uint8_t id;
     /// Encoder ticks.
@@ -75,7 +75,7 @@ struct rev_sensor {
 };
 
 /// @brief Structure for the TOF (Time-of-Flight) sensor.
-struct tof_sensor {
+struct TOFSensorData {
     /// Sensor ID.
     uint8_t id;
     /// Latest distance measurement.
@@ -91,7 +91,7 @@ struct tof_sensor {
 };
 
 /// @brief Structure for the LiDAR sensor.
-struct lidar_sensor {
+struct LidarSensorData {
     /// Sensor ID.
     uint8_t id;
     /// Index of the current data packet.
@@ -137,15 +137,15 @@ struct data_packet {
     int lidar_sensor_count;
 
     /// Array of buff sensors.
-    buff_sensor* buff_sensors;
+    BuffEncoderData* buff_sensors;
     /// Array of ICM sensors.
-    icm_sensor* icm_sensors;
+    ICMSensorData* icm_sensors;
     /// Array of Rev sensors.
-    rev_sensor* rev_sensors;
+    RevSensorData* rev_sensors;
     /// Array of TOF sensors.
-    tof_sensor* tof_sensors;
+    TOFSensorData* tof_sensors;
     /// Array of LiDAR sensors.
-    lidar_sensor* lidar_sensors;
+    LidarSensorData* lidar_sensors;
 
     /// @brief Getter for RefereeData.
     /// @return RefereeData object.

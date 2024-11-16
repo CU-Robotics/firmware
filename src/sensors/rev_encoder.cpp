@@ -1,10 +1,6 @@
 #include "rev_encoder.hpp"
 
-RevEncoder::RevEncoder(uint8_t encoder_pin) : Sensor(SensorType::REVENC) {
-    this->in_pin = encoder_pin;
-    pinMode(this->in_pin, INPUT);  // Set the pin used to measure the encoder to be an input
-    freq.begin(this->in_pin, FREQMEASUREMULTI_MARK_ONLY);
-}
+
 
 void RevEncoder::init(uint8_t encoder_pin, bool is_relative) {
     this->in_pin = encoder_pin;
