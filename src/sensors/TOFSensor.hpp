@@ -106,7 +106,7 @@ public:
     }
 
 
-
+    /// @brief function to deserialize the TOF sensor data
     void print() {
         Serial.println("TOF Sensor:");
         Serial.printf("\tDistance: %u mm\n", latest_distance);
