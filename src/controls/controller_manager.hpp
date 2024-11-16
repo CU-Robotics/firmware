@@ -12,7 +12,7 @@ private:
     /// @brief Array storing every controller
     Controller* controllers[NUM_ROBOT_CONTROLLERS];
     
-    int num_controllers;
+    int num_controllers = 0;
 
     float outputs[NUM_MOTORS] = { 0 };
 

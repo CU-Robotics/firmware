@@ -32,7 +32,7 @@
 #include "HardwareSerial.h"
 
 #ifndef SERIAL5_TX_BUFFER_SIZE
-#define SERIAL5_TX_BUFFER_SIZE     4096 // number of outgoing bytes to buffer
+#define SERIAL5_TX_BUFFER_SIZE     8096 // number of outgoing bytes to buffer
 #endif
 #ifndef SERIAL5_RX_BUFFER_SIZE
 #define SERIAL5_RX_BUFFER_SIZE     4096 // number of incoming bytes to buffer

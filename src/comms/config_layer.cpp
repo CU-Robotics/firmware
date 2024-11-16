@@ -102,6 +102,7 @@ void Config::fill_data(CommsPacket packets[MAX_CONFIG_PACKETS], uint8_t sizes[MA
             size_t i2 = linear_index % NUM_MOTORS;
             memcpy(&motor_info[i1][i2], packets[i].raw + 8, sub_size);
             index += sub_size;
+            Serial.printf("hello\n");
         }
 
         if(id == yaml_section_id_mappings.at("sensor_info")){
@@ -154,4 +155,72 @@ void Config::fill_data(CommsPacket packets[MAX_CONFIG_PACKETS], uint8_t sizes[MA
             index += sub_size;
         }
     }
+
+    //print estimoator info
+    // for (int i = 0; i < NUM_ESTIMATORS; i++) {
+    //     Serial.printf("estimator %d: ", i);
+    //     for (int j = 0; j < STATE_LEN + 1; j++) {
+    //         Serial.printf("%f, ", estimator_info[i][j]);
+    //     }
+    //     Serial.println();
+    // }
+
+    //print controller info
+    // for(int i = 0; i < NUM_ROBOT_CONTROLLERS; i++){
+    //     Serial.printf("controller %d: ", i);
+    //     for(int j = 0; j < NUM_MOTORS + 1; j++){
+    //         Serial.printf("%f, ", controller_info[i][j]);
+    //     }
+    //     Serial.println();
+    // }
+
+    //print governor types
+    // for(int i = 0; i < STATE_LEN; i++){
+    //     Serial.printf("governor type %d: %f\n", i, governor_types[i]);
+    // }
+
+    //print sensor info
+    // for(int i = 0; i < NUM_SENSORS; i++){
+    //     Serial.printf("sensor %d: ", i);
+    //     for(int j = 0; j < NUM_SENSOR_VALUES + 1; j++){
+    //         Serial.printf("%f, ", sensor_info[i][j]);
+    //     }
+    //     Serial.println();
+    // }
+
+    //print gains
+    // for(int i = 0; i < NUM_ROBOT_CONTROLLERS; i++){
+    //     Serial.printf("gains %d: ", i);
+    //     for(int j = 0; j < NUM_GAINS; j++){
+    //         Serial.printf("%f, ", gains[i][j]);
+    //     }
+    //     Serial.println();
+    // }
+
+    //print gear ratios
+    // for(int i = 0; i < NUM_ROBOT_CONTROLLERS; i++){
+    //     Serial.printf("gear ratios %d: ", i);
+    //     for(int j = 0; j < NUM_MOTORS; j++){
+    //         Serial.printf("%f, ", gear_ratios[i][j]);
+    //     }
+    //     Serial.println();
+    // }
+
+    //print motor info 
+    // for(int i = 0; i < NUM_MOTORS; i++){
+    //     Serial.printf("motor %d: ",  i);
+    //     for(int j = 0; j < 3; j++){
+    //         Serial.printf("%f, ", motor_info[i][j]);
+    //     }
+    //     Serial.println();
+    // }
+
+    // //print reference limits
+    // for(int i = 0; i < STATE_LEN; i++){
+    //     for(int j = 0; j < 3; j++){
+    //         for(int k = 0; k < 2; k++){
+    //             Serial.printf("reference limits %d: %f\n", i, set_reference_limits[i][j][k]);
+    //         }
+    //     }
+    // }
 }

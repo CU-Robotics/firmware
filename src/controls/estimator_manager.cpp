@@ -13,11 +13,11 @@ EstimatorManager::~EstimatorManager() {
 }
 
 void EstimatorManager::init(CANData* _can_data, const Config* _config_data) {
-    if (!config_data) Serial.println("CONFIG DATA IS NULL!!!!!");
 
     // set can and config data pointers
     can_data = _can_data;
     config_data = _config_data;
+    if (!config_data) Serial.println("CONFIG DATA IS NULL!!!!!");
 
     for(int i = 0; i < NUM_SENSORS; i++){
         int type = config_data->sensor_info[i][0];
@@ -80,28 +80,26 @@ void EstimatorManager::init_estimator(int estimator_id) {
 
     switch (estimator_id) {
     case 1:
-        estimators[num_estimators] = new GimbalEstimator(*config_data, &rev_sensors[0], &rev_sensors[1], &rev_sensors[2], &buff_encoders[0], &buff_encoders[1], &icm_sensors[0], can_data);
+        estimators[num_estimators++] = new GimbalEstimator(*config_data, &rev_sensors[0], &rev_sensors[1], &rev_sensors[2], &buff_encoders[0], &buff_encoders[1], &icm_sensors[0], can_data);
         break;
     case 2:
-        estimators[num_estimators] = new FlyWheelEstimator(can_data);
+        estimators[num_estimators++] = new FlyWheelEstimator(can_data);
         break;
     case 3:
-        estimators[num_estimators] = new FeederEstimator(can_data);
+        estimators[num_estimators++] = new FeederEstimator(can_data);
         break;
     case 4:
-        estimators[num_estimators] = new LocalEstimator(can_data);
+        estimators[num_estimators++] = new LocalEstimator(can_data);
         break;
     case 5:
-        estimators[num_estimators] = new SwitcherEstimator(*config_data, can_data, &tof_sensors[0]);
+        estimators[num_estimators++] = new SwitcherEstimator(*config_data, can_data, &tof_sensors[0]);
         break;
     case 6:
-        estimators[num_estimators] = new GimbalEstimatorNoOdom(*config_data, &buff_encoders[0], &buff_encoders[1], &icm_sensors[0], can_data);
+        estimators[num_estimators++] = new GimbalEstimatorNoOdom(*config_data, &buff_encoders[0], &buff_encoders[1], &icm_sensors[0], can_data);
         break;
     default:
         break;
     }
-
-    num_estimators++;
 }
 
 void EstimatorManager::step(float macro_outputs[STATE_LEN][3], float micro_outputs[NUM_MOTORS][MICRO_STATE_LEN], int override) {
@@ -109,6 +107,8 @@ void EstimatorManager::step(float macro_outputs[STATE_LEN][3], float micro_outpu
     float curr_state[STATE_LEN][3] = { 0 };
     memcpy(curr_state, macro_outputs, sizeof(curr_state));
     clear_outputs(macro_outputs, micro_outputs);
+
+    Serial.println("stepping");
 
     for (int i = 0; i < num_estimators; i++) {
         float macro_states[STATE_LEN][3] = { 0 };

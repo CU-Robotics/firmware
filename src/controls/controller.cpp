@@ -88,7 +88,6 @@ void XDriveVelocityController::step(float reference[STATE_LEN][3], float estimat
 
         pidv[i].setpoint = reference[i][1]; 
         pidv[i].measurement = estimate[i][1];
-        pidv[i].K[3] = 1;
         output[i] = pidv[i].filter(dt, false, false)*gear_ratios[i];
     }
     pidp[2].setpoint = reference[2][0];
@@ -115,10 +114,10 @@ void XDriveVelocityController::step(float reference[STATE_LEN][3], float estimat
     outputp[2] = pidp[2].filter(dt, false, false);
     outputv[2] = pidv[2].filter(dt, false, false);
     output[2] = (outputp[2] + outputv[2])*gear_ratios[2];
-
+    Serial.printf("chassis heading output: %f\n, chassis x output: %f\n, chassis y output: %f\n", output[2], output[0], output[1]);
     // Adjust for chassis heading so control is field relative
-    output[0] = output[0]*sin(reference[2][0]) + output[1]*cos(reference[2][0]);
-    output[1] = output[1]*cos(reference[2][0]) - output[0]*sin(reference[2][0]);
+    output[0] = output[0]*sin(estimate[2][0]) + output[1]*cos(estimate[2][0]);
+    output[1] = output[1]*cos(estimate[2][0]) - output[0]*sin(estimate[2][0]);
     // Convert to motor velocities
     motor_velocity[0] = output[0] + output[1] + output[2];
     motor_velocity[1] = output[0] - output[1] + output[2];
@@ -153,9 +152,9 @@ void YawController::step(float reference[STATE_LEN][3], float estimate[STATE_LEN
     pidp.K[0] = gains[0];
     pidp.K[1] = gains[1];
     pidp.K[2] = gains[2];
-    pidv.K[0] = gains[4];
-    pidv.K[1] = gains[5];
-    pidv.K[2] = gains[6];
+    pidv.K[0] = gains[3];
+    pidv.K[1] = gains[4];
+    pidv.K[2] = gains[5];
 
     pidp.setpoint = reference[3][0];
     pidp.measurement = estimate[3][0];
@@ -165,9 +164,11 @@ void YawController::step(float reference[STATE_LEN][3], float estimate[STATE_LEN
 
     output += pidp.filter(dt, true, true); // position wraps
     output += pidv.filter(dt, true, false); // no wrap for velocity
-    output = constrain(output, -1.0, 1.0);
-    outputs[0] = output;
-    outputs[1] = output;
+    output = constrain(output, -0.2, 0.2);
+    outputs[0] = -output;
+    outputs[1] = -output;
+
+    // Serial.printf("Yaw est: %f, yaw ref: %f, yaw output: %f\n", estimate[3][0], reference[3][0], output);
 }
 
 void PitchController::step(float reference[STATE_LEN][3], float estimate[STATE_LEN][3], float micro_estimate[NUM_MOTORS][MICRO_STATE_LEN], float outputs[NUM_MOTORS]){
@@ -190,10 +191,12 @@ void PitchController::step(float reference[STATE_LEN][3], float estimate[STATE_L
 
     output += pidp.filter(dt, true, true); // position wraps
     output += pidv.filter(dt, true, false); // no wrap for velocity
-    output = constrain(output, -1.0, 1.0);
+    output = constrain(output, -0.5, 0.5);
 
-    outputs[0] = output;
+    outputs[0] = -output;
     outputs[1] = output;
+
+    // Serial.printf("Pitch est: %f, pitch ref: %f, pitch output: %f\n", estimate[4][0], reference[4][0], output);
 }
 
 void FlywheelController::step(float reference[STATE_LEN][3], float estimate[STATE_LEN][3], float micro_estimate[NUM_MOTORS][MICRO_STATE_LEN], float outputs[NUM_MOTORS]){

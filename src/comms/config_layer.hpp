@@ -40,7 +40,7 @@ struct Config {
     float robot;
 
     /// @brief matrix that defines type and neccessary values for each sensor
-    float sensor_info[NUM_SENSORS][NUM_SENSOR_VALUES];
+    float sensor_info[NUM_SENSORS][NUM_SENSOR_VALUES + 1];
 
     /// @brief gains matrix
     float gains[NUM_ROBOT_CONTROLLERS][NUM_GAINS];
@@ -48,7 +48,7 @@ struct Config {
     float gear_ratios[NUM_ROBOT_CONTROLLERS][NUM_MOTORS];
 
     /// @brief matrix that contains the type, physical id, and physical bus of each motor
-    int motor_info[NUM_MOTORS][3];
+    float motor_info[NUM_MOTORS][3];
     /// @brief reference limits matrix
     float set_reference_limits[STATE_LEN][3][2];
     

@@ -78,7 +78,7 @@ void print_logo() {
 int main() {
     long long loopc = 0; // Loop counter for heartbeat
 
-    Serial.begin(115200); // the serial monitor is actually always active (for debug use Serial.println & tycmd)
+    Serial.begin(500000); // the serial monitor is actually always active (for debug use Serial.println & tycmd)
     debug.begin(SerialUSB1);
 
     print_logo();
@@ -105,8 +105,11 @@ int main() {
     //estimate micro and macro state
     estimator_manager.init(can_data, config);
 
+    Serial.printf("test\n");
+
     //generate controller outputs based on governed references and estimated state
     controller_manager.init(&can, config);
+
 
     //set reference limits in the reference governor
     governor.set_reference_limits(config->set_reference_limits);
@@ -120,8 +123,8 @@ int main() {
     float motor_inputs[NUM_MOTORS] = { 0 }; //Array for storing controller outputs to send to CAN
 
     // manual controls variables
-    int vtm_pos_x = 0;
-    int vtm_pos_y = 0;
+    float vtm_pos_x = 0;
+    float vtm_pos_y = 0;
     float dr16_pos_x = 0;
     float dr16_pos_y = 0;
     float pos_offset_x = 0;
@@ -133,6 +136,7 @@ int main() {
     // whether we are in hive mode or not
     bool hive_toggle = false;
 
+    Serial.println("Entering main loop...\n");
     // Main loop
     while (true) {
         // read main sensors
@@ -180,6 +184,8 @@ int main() {
         float yaw_target = -dr16.get_r_stick_x() * 1.5
             - dr16_pos_x
             - vtm_pos_x;
+        Serial.printf("Yaw: %f, Pitch: %f, dr16x: %f, dr16y: %f, vtmx: %f, vtmy: %f\n", yaw_target, pitch_target, dr16_pos_x, dr16_pos_y, vtm_pos_x, vtm_pos_y);
+        dr16.print_raw();
         float fly_wheel_target = (dr16.get_r_switch() == 1 || dr16.get_r_switch() == 3) ? 18 : 0; //m/s
         float feeder_target = (((dr16.get_l_mouse_button() || ref.ref_data.kbm_interaction.button_left) && dr16.get_r_switch() != 2) || dr16.get_r_switch() == 1) ? 10 : 0;
 
@@ -216,6 +222,7 @@ int main() {
             hive_toggle = true;
         }
 
+
         // read sensors
         estimator_manager.read_sensors();
 
@@ -224,6 +231,7 @@ int main() {
             incoming->get_hive_override_state(hive_state_offset);
             memcpy(temp_state, hive_state_offset, sizeof(hive_state_offset));
         }
+
 
         // step estimates and construct estimated state
         estimator_manager.step(temp_state, temp_micro_state, incoming->get_hive_override_request());
@@ -239,6 +247,7 @@ int main() {
         governor.set_estimate(temp_state);
         governor.step_reference(target_state, config->governor_types);
         governor.get_reference(temp_reference);
+
 
         // generate motor outputs from controls
         controller_manager.step(temp_reference, temp_state, temp_micro_state);
