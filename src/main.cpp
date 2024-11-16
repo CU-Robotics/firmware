@@ -163,9 +163,9 @@ int main() {
 
 
         //Serial.println("Packing Data Packet");
-        packet.packDataPacket(buffer, state, ref_data_raw, can_data, estimator_manager, lidar1, lidar2);
+        packet.pack_data_packet(buffer, state, ref_data_raw, can_data, estimator_manager, lidar1, lidar2);
         //Serial.println("Unpacking Data Packet");
-        packet.unpackDataPacket(buffer);
+        packet.unpack_data_packet(buffer);
 
         // read and write comms packets
         comms.ping();

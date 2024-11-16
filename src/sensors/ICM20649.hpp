@@ -43,6 +43,9 @@ public:
     /// @param gyro_rate_range new rate range
     void set_gyro_range(int gyro_rate_range);
 
+    /// @brief serialize the data into a buffer
+    /// @param buffer buffer to store the serialized data
+    /// @param offset offset to store the position of the serialized data in the buffer
     void serialize(uint8_t* buffer, size_t& offset) override;
 
 private:

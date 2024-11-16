@@ -68,18 +68,13 @@ public:
     /// @return Read angle (radians)
     inline float get_angle() const { return m_angle; }
 
-    void serialize(uint8_t* buffer, size_t& offset) override {
-        buffer[offset++] = id_;
-        memcpy(buffer + offset, &m_angle, sizeof(m_angle));
-        offset += sizeof(m_angle);
-    }
+    /// @brief Serialize the data into a buffer
+    /// @param buffer Buffer to serialize the data into
+    /// @param offset Offset to store the position of the serialized data in the buffer
+    void serialize(uint8_t* buffer, size_t& offset) override;
 
-
-    void print() {
-        Serial.println("Buff Encoder:");
-        Serial.print("Angle: ");
-        Serial.println(m_angle);
-    }
+    /// @brief Print the data for debugging
+    void print();
 
 private:
     /// @brief Stored Chip Select pin

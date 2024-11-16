@@ -154,6 +154,7 @@ struct D200Calibration {
 /// @brief class for LiDAR driver
 class D200LD14P : Sensor{
   private:
+  
     /// @brief default scanning speed (deg/s) (used internally)
     static const uint16_t DEFAULT_SPEED = 6 * 360;
 

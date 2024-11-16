@@ -1,9 +1,6 @@
 #include "ICM20649.hpp"
 #include <cassert>
 
-// empty constructor
-// ICM20649::ICM20649() {}
-
 // initialize ICM
 void ICM20649::init(CommunicationProtocol protocol) {
     // assign protocol to object.
@@ -111,19 +108,19 @@ void ICM20649::serialize(uint8_t* buffer, size_t& offset) {
     float corrected_gyro_Y = get_gyro_Y();
     float corrected_gyro_Z = get_gyro_Z();
     //  code that prints out raw bytes of the buffer for this sensor
-    Serial.print("ICM20649: ");
-    for (int i = 0; i < 28; i++) {
-        for (int ii = 0; ii <= 7; ii++) {
-            int k = buffer[i + offset] >> ii;
-            if (k & 1) {
-                Serial.print("1");
-            } else {
-                Serial.print("0");
-            }
-            Serial.print(" ");
-        }
-        Serial.println(" ");
-    }
+    // Serial.print("ICM20649: ");
+    // for (int i = 0; i < 28; i++) {
+    //     for (int ii = 0; ii <= 7; ii++) {
+    //         int k = buffer[i + offset] >> ii;
+    //         if (k & 1) {
+    //             Serial.print("1");
+    //         } else {
+    //             Serial.print("0");
+    //         }
+    //         Serial.print(" ");
+    //     }
+    //     Serial.println(" ");
+    // }
 
     memcpy(buffer + offset, &corrected_accel_X, sizeof(corrected_accel_X));
     offset += sizeof(corrected_accel_X);
