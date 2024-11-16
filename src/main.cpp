@@ -10,7 +10,7 @@
 #include <TeensyDebug.h>
 #include "sensors/LEDBoard.hpp"
 #include "data_packet.hpp"
-#include "constants.hpp"
+#include "sensor_constants.hpp"
 
 // Loop constants
 #define LOOP_FREQ 1000

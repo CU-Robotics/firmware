@@ -3,25 +3,45 @@
 #ifndef SENSOR_HPP
 #define SENSOR_HPP
 
-#include "constants.hpp"
+#include "sensor_constants.hpp"
 
+/// @brief Base class for all sensors.
 class Sensor {
 public:
+    /// @brief Constructor to initialize the sensor with a specific type.
+    /// @param type The type of the sensor.
     Sensor(SensorType type) : type_(type), id_(next_id_++) {}
+
+    /// @brief Virtual destructor for the sensor.
     virtual ~Sensor() = default;
 
+    /// @brief Get the type of the sensor.
+    /// @return The type of the sensor.
     SensorType getType() const { return type_; }
+
+    /// @brief Get the ID of the sensor.
+    /// @return The ID of the sensor.
     uint8_t getId() const { return id_; }
 
+    /// @brief Set the ID of the sensor.
+    /// @param id The new ID of the sensor.
     void setId(uint8_t id) { id_ = id; }
 
+    /// @brief Pure virtual function to serialize the sensor data.
+    /// @param buffer Buffer to serialize the data into.
+    /// @param offset Offset to update as data is serialized.
     virtual void serialize(uint8_t* buffer, size_t& offset) = 0;
+
 protected:
-    SensorType type_;
-    uint8_t id_;
+
+    ///The type of the sensor.
+    SensorType type_;  
+    ///The ID of the sensor.
+    uint8_t id_;       
 
 private:
- static uint8_t next_id_;
+     /// Static variable to generate unique IDs for sensors.
+    static uint8_t next_id_; 
 };
 
 #endif // SENSOR_HPP

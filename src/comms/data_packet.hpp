@@ -6,7 +6,7 @@
 #include <vector>
 #include <rm_can.hpp>
 #include "Sensor.hpp"
-#include "constants.hpp"
+#include "sensor_constants.hpp"
 #include "estimator_manager.hpp"
 #include "config_layer.hpp"
 #include "d200.hpp"
