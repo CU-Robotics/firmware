@@ -6,11 +6,16 @@
 #include "utils/timing.hpp"
 #include <TeensyDebug.h>
 
+#include "sensors/can/C620.hpp"
+
 // Loop constants
 #define LOOP_FREQ 1000
 #define HEARTBEAT_FREQ 2
 
 Profiler prof;
+
+FlexCAN_T4<CAN1, RX_SIZE_256, TX_SIZE_16> can_1;
+FlexCAN_T4<CAN2, RX_SIZE_256, TX_SIZE_16> can_2;
 
 Timer loop_timer;
 
@@ -58,11 +63,54 @@ int main() {
 
     print_logo();
 
+    can_2.begin();
+    can_2.setBaudRate(1000000);
+
+    const int num_motors = 2;
+
+    C620 motor1(M3508, 0, 4, 2, &can_2);
+    C620 motor2(M3508, 1, 6, 2, &can_2);
+    Motor* motors[num_motors];
+    motors[0] = new C620(M3508, 0, 4, 2, &can_2);
+    motors[1] = new C620(M3508, 1, 6, 2, &can_2);
+
+    motor1.write_motor_torque(0.05f);
+    motor2.write_motor_torque(0.05f);
+
+    CAN_message_t output_msgs[num_motors];
+
+    motor1.write(output_msgs[0]);
+    motor2.write(output_msgs[1]);
+
+    CAN_message_t combined[2];
+    for (int i = 0; i < num_motors; i++) {
+        uint32_t id = motors[i]->get_id();
+
+        uint32_t buf_id = (id-1) % 4;
+        if ((id-1) / 4) {
+            combined[0].id = output_msgs[i].id;
+            combined[0].buf[buf_id * 2] = output_msgs[i].buf[buf_id * 2];
+            combined[0].buf[buf_id * 2 + 1] = output_msgs[i].buf[buf_id * 2 + 1];
+        } else {
+            combined[1].id = output_msgs[i].id;
+            combined[1].buf[buf_id * 2] = output_msgs[i].buf[buf_id * 2];
+            combined[1].buf[buf_id * 2 + 1] = output_msgs[i].buf[buf_id * 2 + 1];
+        }
+    }
+
+
     // Execute setup functions
     pinMode(13, OUTPUT);
 
     // Main loop
     while (true) {
+        if (loopc % 500 == 0)
+            Serial.printf("Alive %ld\n", loopc);
+        
+        can_2.write(output_msgs[0]);
+        can_2.write(output_msgs[1]);
+
+        
         // LED heartbeat -- linked to loop count to reveal slowdowns and freezes.
         loopc % (int)(1E3 / float(HEARTBEAT_FREQ)) < (int)(1E3 / float(5 * HEARTBEAT_FREQ)) ? digitalWrite(13, HIGH) : digitalWrite(13, LOW);
         loopc++;

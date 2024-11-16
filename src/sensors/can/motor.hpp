@@ -22,9 +22,9 @@ enum MotorType {
 
 /// @brief Defines the motor controller types
 enum MotorControllerType {
-    C610 = 0,
-    C620,
-    INTERNAL,
+    C610_CONTROLLER = 0,
+    C620_CONTROLLER,
+    INTERNAL_CONTROLLER,
     
     // add types above this comment
     NUM_MOTOR_CONTROLLER_TYPES,
@@ -34,11 +34,20 @@ enum MotorControllerType {
 /// @brief An abstract class holding common information for individual CAN-capable motors
 class Motor {
 public:
+    /// @brief Deleted default constructor. Must explicitly construct this object
     Motor() = delete;
+
+    /// @brief Main constructor. Defines the motor and controller type, global ID, id, and can bus
+    /// @param type The physical motor type
+    /// @param controller_type The motor controller type 
+    /// @param gid The global ID, not the per-bus motor ID
+    /// @param id The per-bus motor ID. This is 1-indexed 
+    /// @param bus The CAN bus index/ID
     Motor(MotorType type, MotorControllerType controller_type, uint32_t gid, uint32_t id, uint8_t bus)
         : m_motor_type(type), m_controller_type(controller_type), m_gid(gid), m_id(id), m_bus_id(bus) {}
 
-    virtual ~Motor() = 0;
+    /// @brief Virtual destructor
+    virtual ~Motor() { }
 
 public:
     /// @brief Common read command. Fills given message if successful
@@ -54,8 +63,8 @@ public:
 
     // TODO: how?
     /// @brief Generic write motor function handling only torque. This is the only common interface of all the motors we use
-    /// @param torque The torque value
-    virtual void write_motor_torque(int32_t torque) = 0;
+    /// @param torque The torque value between [-1, 1]
+    virtual void write_motor_torque(float torque) = 0;
 
 public:
     /// @brief Get the motor type
@@ -96,6 +105,12 @@ protected:
 
     /// @brief ID of the CAN bus
     uint8_t m_bus_id = 0;
+
+    /// @brief The output CAN frame. To be sent to the motor
+    CAN_message_t m_output;
+
+    /// @brief The last received CAN frame. Received from the motor
+    CAN_message_t m_input;
 
     // TODO: more common information?
 };
