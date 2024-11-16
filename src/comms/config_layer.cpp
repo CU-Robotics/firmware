@@ -49,6 +49,11 @@ const Config* const ConfigLayer::configure(HIDLayer* comms) {
     return &config;
 }
 
+const Config* const ConfigLayer::configure(EthernetComms* comms){
+    // TODO
+    return &config;
+}
+
 void ConfigLayer::config_SD_init(HIDLayer* comms) {
     // if on robot, we need to wait for ref to send robot_id
     Serial.println("Waiting for ref system to initialize...");

@@ -4,8 +4,6 @@
 
 #include "ethernet_packet.hpp"
 
-namespace Comms {
-
 /// @brief A status struct holding diagnostic data about ethernet comms
 struct EthernetStatus {
 	/// @brief The number of packets sent
@@ -19,5 +17,3 @@ struct EthernetStatus {
 	/// @brief The timestamp of the last successful handshake
 	uint32_t handshake_time = 0;
 };
-
-}	// namespace Comms

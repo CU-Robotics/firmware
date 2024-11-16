@@ -1,7 +1,5 @@
 #include "ethernet_comms.hpp"
 
-namespace Comms {
-
 bool EthernetComms::begin(uint32_t data_rate) {
 	// begin the ethernet library and verify the status of the line
 	uint8_t ethernet_status = qn::Ethernet.begin(m_teensy_ip, m_teensy_netmask, m_teensy_gateway);
@@ -40,7 +38,7 @@ bool EthernetComms::begin(uint32_t data_rate) {
 	// calculate the regulation time
 	// dt = (packet_size * 8 bits) / (data_rate)
 	// this regulation time is generally accurate to the nearest 0.01 mbps
-	float regulation_time = (Comms::ETHERNET_PACKET_MAX_SIZE * 8.f) / (float)(data_rate);
+	float regulation_time = (ETHERNET_PACKET_MAX_SIZE * 8.f) / (float)(data_rate);
 	// round up to the nearest microsecond
 	m_regulation_time = (uint32_t)ceil(regulation_time);
 
@@ -70,7 +68,7 @@ void EthernetComms::loop() {
 	recv_packet(&m_incoming);
 
 	// if we detect a handshake request from Jetson, respond
-	if (m_incoming.header.type == Comms::EthernetPacketType::HANDSHAKE) {
+	if (m_incoming.header.type == EthernetPacketType::HANDSHAKE) {
 		Serial.printf("Handshake received...\n");
 		connect_jetson();
 		Serial.printf("Handshake finished!\n");
@@ -108,8 +106,8 @@ int EthernetComms::connect_jetson() {
 	m_outgoing.clear();
 
 	// assemble the packet to be a HANDSHAKE packet with the ACK flag set
-	m_outgoing.header.type = Comms::EthernetPacketType::HANDSHAKE;
-	m_outgoing.header.flags = Comms::EthernetPacketFlags::ACK;
+	m_outgoing.header.type = EthernetPacketType::HANDSHAKE;
+	m_outgoing.header.flags = EthernetPacketFlags::ACK;
 
 	uint32_t handshake_start = micros();
 
@@ -134,7 +132,7 @@ int EthernetComms::connect_jetson() {
 		// if we received a packet that is not a handshake, call it done
 		// this indicates that khadas received our ACK and is now sending normal data
 		// note that we will lose the first packet sent after a handshake, this is an acceptable loss
-		if (m_incoming.header.type != Comms::EthernetPacketType::HANDSHAKE) {
+		if (m_incoming.header.type != EthernetPacketType::HANDSHAKE) {
 			handshake = true;
 
 			// reset the buffers to prevent infinite running this handshake protocol
@@ -177,7 +175,7 @@ int EthernetComms::connect_jetson() {
 
 bool EthernetComms::send_packet(EthernetPacket& packet) {
 	// attempt to send the packet to the Jetson
-	bool send_status = m_udp_server.send(m_jetson_ip, m_jetson_port, packet.data(), Comms::ETHERNET_PACKET_MAX_SIZE);
+	bool send_status = m_udp_server.send(m_jetson_ip, m_jetson_port, packet.data(), ETHERNET_PACKET_MAX_SIZE);
 	if (!send_status) {
 		// log the fail, this almost always happens when the udp server is not "warmed up"
 		m_status.packets_sent_failed++;
@@ -203,7 +201,7 @@ bool EthernetComms::recv_packet(EthernetPacket* packet) {
 	if (current_buffer_size == -1) {
 		// no packet to be read
 		return false;
-	} else if (current_buffer_size != Comms::ETHERNET_PACKET_MAX_SIZE) {
+	} else if (current_buffer_size != ETHERNET_PACKET_MAX_SIZE) {
 		// half-read, log as a failure
 		m_status.packets_received_failed++;
 	#if defined(COMMS_DEBUG)
@@ -251,5 +249,3 @@ void EthernetComms::check_connection() {
 
 	return;
 }
-
-}	// namespace Comms

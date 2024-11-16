@@ -2,6 +2,7 @@
 #define CONFIG_LAYER
 
 #include "usb_hid.hpp"
+#include "ethernet_comms.hpp"
 #include "../controls/controller.hpp"
 #include "SDManager.hpp"
 
@@ -161,6 +162,8 @@ public:
     /// @return a const pointer const config object holding all the data within the config yaml
     /// @note its double const so its enforced as a read-only object
     const Config* const configure(HIDLayer* comms);
+
+    const Config* const configure(EthernetComms* comms);
 
     /// @brief check incoming packet from the comms layer and update outgoing packet accordingly to request next config packet
     /// @param in incoming comms packet

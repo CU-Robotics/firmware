@@ -16,8 +16,6 @@ namespace qn = qindesign::network;
 // This is very noisy on start up
 // #define COMMS_DEBUG
 
-namespace Comms {
-
 /// @brief Ethernet Communications. This handles all comms between the Jetson and the Teensy via Ethernet
 class EthernetComms {
 public:
@@ -121,5 +119,3 @@ private:
 	/// @brief The outgoing packet buffer
 	EthernetPacket m_outgoing = {};
 };
-
-}	// namespace Comms
