@@ -22,8 +22,8 @@ rm_CAN can;
 RefSystem ref;
 HIDLayer comms;
 
-D200LD14P lidar1(&Serial4);
-D200LD14P lidar2(&Serial5);
+D200LD14P lidar1(&Serial4, 0);
+D200LD14P lidar2(&Serial5, 1);
 
 ConfigLayer config_layer;
 

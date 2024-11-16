@@ -10,7 +10,12 @@ class Sensor {
 public:
     /// @brief Constructor to initialize the sensor with a specific type.
     /// @param type The type of the sensor.
-    Sensor(SensorType type) : type_(type), id_(next_id_++) {}
+    Sensor(SensorType type) : type_(type), id_(next_id_++) {};
+
+    /// @brief Constructor to initialize the sensor with a specific type and ID.
+    /// @param type The type of the sensor.
+    /// @param id The ID of the sensor.
+    Sensor(SensorType type, uint8_t id) : type_(type), id_(id) {};
 
     /// @brief Virtual destructor for the sensor.
     virtual ~Sensor() = default;

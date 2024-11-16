@@ -1,6 +1,6 @@
 #include "d200.hpp"
 
-D200LD14P::D200LD14P(HardwareSerial *_port) : Sensor(SensorType::LIDAR) {
+D200LD14P::D200LD14P(HardwareSerial *_port, uint8_t _id) : Sensor(SensorType::LIDAR, _id) {
   port = _port;
   current_packet = 0;
   port->begin(D200_BAUD);
