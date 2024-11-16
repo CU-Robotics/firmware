@@ -27,7 +27,7 @@
 
 /// @brief Manage all estimators for macro and micro state
 class EstimatorManager {
-public:
+private:
     //sensor arrays
 
     /// @brief array to store robot icm imu's
