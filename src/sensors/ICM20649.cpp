@@ -5,18 +5,15 @@
 // ICM20649::ICM20649() {}
 
 // initialize ICM
-void ICM20649::init(CommunicationProtocol protocol)
-{
+void ICM20649::init(CommunicationProtocol protocol) {
     // assign protocol to object.
     this->protocol = protocol;
     // begin sensor depending on selected protocol
-    switch (protocol)
-    {
+    switch (protocol) {
     case I2C:
     {
         // start I2C communication
-        if (!sensor.begin_I2C())
-        {
+        if (!sensor.begin_I2C()) {
             Serial.println("Failed to begin I2C");
         }
         break;
@@ -26,8 +23,7 @@ void ICM20649::init(CommunicationProtocol protocol)
         // start SPI communication
         int a = sensor.begin_SPI(ICM_CS, ICM_SCK, ICM_MISO, ICM_MOSI);
         Serial.println(a);
-        if (!a)
-        {
+        if (!a) {
             Serial.println("Failed to begin SPI");
         }
         break;
@@ -53,8 +49,7 @@ void ICM20649::init(CommunicationProtocol protocol)
     // gyro_rate = get_gyro_data_rate();
 }
 
-void ICM20649::read()
-{
+void ICM20649::read() {
     // get the event data from the sensor class
     sensor.getEvent(&accel, &gyro, &temp);
 
@@ -73,23 +68,19 @@ void ICM20649::read()
 }
 
 // calculate the approximate acceleration data rate (Hz) from the divisor.
-float ICM20649::get_accel_data_rate()
-{
+float ICM20649::get_accel_data_rate() {
     // equation from Adafruit ICM20649 example code
     return 1125 / (1.0 + sensor.getAccelRateDivisor());
 }
 
 // calculate the approximate gyroscope data rate from the divisor.
-float ICM20649::get_gyro_data_rate()
-{
+float ICM20649::get_gyro_data_rate() {
     // equation from Adafruit ICM20649 example code
     return gyro_rate = 1100 / (1.0 + sensor.getGyroRateDivisor());
 }
 
-void ICM20649::set_gyro_range(int gyro_rate_range)
-{
-    switch (gyro_rate_range)
-    {
+void ICM20649::set_gyro_range(int gyro_rate_range) {
+    switch (gyro_rate_range) {
     default:
         sensor.setGyroRange(ICM20649_GYRO_RANGE_500_DPS);
         break;
@@ -111,8 +102,7 @@ void ICM20649::set_gyro_range(int gyro_rate_range)
 }
 
 // implenet seralize and deserialize
-void ICM20649::serialize(uint8_t *buffer, size_t &offset)
-{
+void ICM20649::serialize(uint8_t* buffer, size_t& offset) {
     //returns the acceleration with the offset applied
     float corrected_accel_X = get_accel_X();
     float corrected_accel_Y = get_accel_Y();
@@ -122,17 +112,12 @@ void ICM20649::serialize(uint8_t *buffer, size_t &offset)
     float corrected_gyro_Z = get_gyro_Z();
     //  code that prints out raw bytes of the buffer for this sensor
     Serial.print("ICM20649: ");
-    for (int i = 0; i < 28; i++)
-    {
-        for (int ii = 0; ii <= 7; ii++)
-        {
+    for (int i = 0; i < 28; i++) {
+        for (int ii = 0; ii <= 7; ii++) {
             int k = buffer[i + offset] >> ii;
-            if (k & 1)
-            {
+            if (k & 1) {
                 Serial.print("1");
-            }
-            else
-            {
+            } else {
                 Serial.print("0");
             }
             Serial.print(" ");

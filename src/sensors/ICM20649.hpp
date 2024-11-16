@@ -30,7 +30,7 @@ public:
     };
 
     /// @brief Constructor. Currently does nothing, use @ref init(CommunicationProtocol) instead for initialization.
-    ICM20649() : sensor() {};
+    ICM20649() : sensor() { };
 
     /// @brief Initialize the sensor with the assigned communication protocol.
     /// @param protocol Which communication protocol to use for this sensor.

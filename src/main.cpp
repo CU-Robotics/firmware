@@ -40,10 +40,8 @@ State state;
 LEDBoard led;
 
 // DONT put anything else in this function. It is not a setup function
-void print_logo()
-{
-    if (Serial)
-    {
+void print_logo() {
+    if (Serial) {
         Serial.println("TEENSY SERIAL START\n\n");
         Serial.print("\033[1;33m");
         Serial.println("                  .:^!?!^.                        ");
@@ -77,8 +75,7 @@ void print_logo()
 }
 
 // Master loop
-int main()
-{
+int main() {
     long long loopc = 0; // Loop counter for heartbeat
 
     Serial.begin(115200); // the serial monitor is actually always active (for debug use Serial.println & tycmd)
@@ -97,11 +94,11 @@ int main()
     comms.init();
 
     // can data pointer so we don't pass around rm_CAN object
-    CANData *can_data = can.get_data();
+    CANData* can_data = can.get_data();
 
     // Config config
     Serial.println("Configuring...");
-    const Config *config = config_layer.configure(&comms);
+    const Config* config = config_layer.configure(&comms);
     Serial.println("Configured!");
 
     // estimate micro and macro state
@@ -114,17 +111,17 @@ int main()
     state.set_reference_limits(config->set_reference_limits);
 
     // variables for use in main
-    float temp_state[STATE_LEN][3] = {0};                      // Temp state array
-    float temp_micro_state[NUM_MOTORS][MICRO_STATE_LEN] = {0}; // Temp micro state array
-    float temp_reference[STATE_LEN][3] = {0};                  // Temp governed state
-    float target_state[STATE_LEN][3] = {0};                    // Temp ungoverned state
-    float hive_state_offset[STATE_LEN][3] = {0};               // Hive offset state
-    float motor_inputs[NUM_MOTORS] = {0};                      // Array for storing controller outputs to send to CAN
+    float temp_state[STATE_LEN][3] = { 0 };                      // Temp state array
+    float temp_micro_state[NUM_MOTORS][MICRO_STATE_LEN] = { 0 }; // Temp micro state array
+    float temp_reference[STATE_LEN][3] = { 0 };                  // Temp governed state
+    float target_state[STATE_LEN][3] = { 0 };                    // Temp ungoverned state
+    float hive_state_offset[STATE_LEN][3] = { 0 };               // Hive offset state
+    float motor_inputs[NUM_MOTORS] = { 0 };                      // Array for storing controller outputs to send to CAN
 
     // create a copy of the position and velocity kinematic matrixes since we'll be updating them
-    float kinematics_pos[NUM_MOTORS][STATE_LEN] = {0}; // Position kinematics
+    float kinematics_pos[NUM_MOTORS][STATE_LEN] = { 0 }; // Position kinematics
     memcpy(kinematics_pos, (*config).kinematics_p, sizeof((*config).kinematics_p));
-    float kinematics_vel[NUM_MOTORS][STATE_LEN] = {0}; // Velocity kinematics
+    float kinematics_vel[NUM_MOTORS][STATE_LEN] = { 0 }; // Velocity kinematics
     memcpy(kinematics_vel, (*config).kinematics_v, sizeof((*config).kinematics_v));
 
     // used in the kinematics matrix
@@ -150,8 +147,7 @@ int main()
     uint8_t buffer[4096];
 
     // Main loop
-    while (true)
-    {
+    while (true) {
         // read main sensors
         can.read();
         dr16.read();
@@ -160,7 +156,7 @@ int main()
         lidar2.read();
 
         // construct ref data packet
-        uint8_t ref_data_raw[180] = {0};
+        uint8_t ref_data_raw[180] = { 0 };
         //ref.get_data_for_comms(ref_data_raw); //ASK: Might need to be uncommented again I forgor💀
 
 
