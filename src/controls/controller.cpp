@@ -26,7 +26,7 @@ void XDrivePositionController::step(float reference[STATE_LEN][3], float estimat
     pidp[2].measurement = estimate[2][0];
     pidv[2].setpoint = reference[2][1]; 
     pidv[2].measurement = estimate[2][1];
-    if(reference[10][0] == 1){ // if state 10 is 1 then chassis heading is position controlled 
+    if(reference[2][2] == 1){ // if state 10 is 1 then chassis heading is position controlled 
         pidp[2].K[0] = gains[6];
         pidp[2].K[1] = gains[7];
         pidp[2].K[2] = gains[8];
@@ -59,8 +59,8 @@ void XDrivePositionController::step(float reference[STATE_LEN][3], float estimat
     // Power limiting
     float power_buffer = ref.ref_data.robot_power_heat.buffer_energy;
     float power_limit_ratio = 1.0;
-    float power_buffer_limit_thresh = gains[3];
-    float power_buffer_critical_thresh = gains[4];
+    float power_buffer_limit_thresh = gains[15];
+    float power_buffer_critical_thresh = gains[16];
     if (power_buffer < power_buffer_limit_thresh) {
         power_limit_ratio = constrain(((power_buffer - power_buffer_critical_thresh) / power_buffer_limit_thresh), 0.0, 1.0);
     }
@@ -107,10 +107,10 @@ void XDriveVelocityController::step(float reference[STATE_LEN][3], float estimat
         pidp[2].K[0] = 0;
         pidp[2].K[1] = 0;
         pidp[2].K[2] = 0;
-        pidv[2].K[0] = 0;
+        pidv[2].K[0] = 1;
         pidv[2].K[1] = 0;
         pidv[2].K[2] = 0;
-        pidv[2].K[3] = 1;
+        pidv[2].K[3] = 0;
     }
     outputp[2] = pidp[2].filter(dt, false, false);
     outputv[2] = pidv[2].filter(dt, false, false);
@@ -128,8 +128,8 @@ void XDriveVelocityController::step(float reference[STATE_LEN][3], float estimat
     // Power limiting
     float power_buffer = ref.ref_data.robot_power_heat.buffer_energy;
     float power_limit_ratio = 1.0;
-    float power_buffer_limit_thresh = gains[6];
-    float power_buffer_critical_thresh = gains[7];
+    float power_buffer_limit_thresh = gains[13];
+    float power_buffer_critical_thresh = gains[14];
     if (power_buffer < power_buffer_limit_thresh) {
         power_limit_ratio = constrain(((power_buffer - power_buffer_critical_thresh) / power_buffer_limit_thresh), 0.0, 1.0);
     }
@@ -202,11 +202,11 @@ void FlywheelController::step(float reference[STATE_LEN][3], float estimate[STAT
     pid_high.K[0] = gains[0];
     pid_high.K[1] = gains[1];
     pid_high.K[2] = gains[2];
-    pid_high.K[3] = gains[3];
+    pid_high.K[3] = reference[5][1];
 
-    pid_high.setpoint = reference[5][0];
-    pid_high.measurement = estimate[5][0];
-    float target_motor_velocity = pid_high.filter(dt, true, false);
+    pid_high.setpoint = reference[5][1];
+    pid_high.measurement = estimate[5][1];
+    float target_motor_velocity = pid_high.filter(dt, true, false)*gear_ratios[0];
     for(int i = 0; i < 2; i++){
         pid_low.K[0] = gains[4];
         pid_low.K[1] = gains[5];
@@ -225,11 +225,11 @@ void FeederController::step(float reference[STATE_LEN][3], float estimate[STATE_
     pid_high.K[0] = gains[0];
     pid_high.K[1] = gains[1];
     pid_high.K[2] = gains[2];
-    pid_high.K[3] = gains[3];
+    pid_high.K[3] = reference[6][1];
 
-    pid_high.setpoint = reference[6][0];
-    pid_high.measurement = estimate[6][0];
-    float output = pid_high.filter(timer.delta(), true, false);
+    pid_high.setpoint = reference[6][1];
+    pid_high.measurement = estimate[6][1];
+    float output = pid_high.filter(timer.delta(), true, false)*gear_ratios[0];
 
     pid_low.K[0] = gains[4];
     pid_low.K[1] = gains[5];
