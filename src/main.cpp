@@ -161,14 +161,14 @@ int main()
 
         // construct ref data packet
         uint8_t ref_data_raw[180] = {0};
-        //ref.get_data_for_comms(ref_data_raw);
+        //ref.get_data_for_comms(ref_data_raw); //ASK: Might need to be uncommented again I forgor💀
 
 
 
 
-        Serial.println("Packing Data Packet");
+        //Serial.println("Packing Data Packet");
         packet.packDataPacket(buffer, state, ref_data_raw, can_data, estimator_manager, lidar1, lidar2);
-        Serial.println("Unpacking Data Packet");
+        //Serial.println("Unpacking Data Packet");
         packet.unpackDataPacket(buffer);
 
         // read and write comms packets
