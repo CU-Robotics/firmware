@@ -14,7 +14,7 @@
 DR16 dr16;
 rm_CAN can;
 Timer loop_timer;
-ICM20649 testicm;
+IMU_filter testicm;
 // DONT put anything else in this function. It is not a setup function
 void print_logo() {
     if (Serial) {
@@ -46,24 +46,16 @@ void print_logo() {
         Serial.println("\033[0m\n");
     }
 }
-
-// Master loop
 int main() {
     Serial.begin(1000000); // the serial monitor is actually always active (for debug use Serial.println & tycmd)
     print_logo();
-
-    // Execute setup functions
-    //pinMode(13, OUTPUT);
-    pinMode(ICM_CS, OUTPUT);
-    digitalWrite(ICM_CS, HIGH);
-    SPI.begin();
+    
 
     
     dr16.init();
     can.init();
+    testicm.init();
     
-    testicm.init(testicm.SPI);
-    testicm.set_gyro_range(4000);
     long long loopc = 0; // Loop counter for heartbeat
 
 
@@ -76,8 +68,8 @@ int main() {
         testicm.read();
         //Testobserver.step(can.get_data(), imu.getdata(), tempobs); // Calculate Observer values
         //Testcontorl.step(tempmotor, ref, tempobs); // Calculate motors motion
-        testicm.print();  
-        
+
+        testicm.print();
         // Write actuators
         /*if (!dr16.is_connected() || dr16.get_l_switch() == 1) {
             // SAFETY ON

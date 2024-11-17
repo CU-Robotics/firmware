@@ -259,9 +259,9 @@ void Adafruit_ICM20X::fillAccelEvent(sensors_event_t *accel,
   accel->type = SENSOR_TYPE_ACCELEROMETER;
   accel->timestamp = timestamp;
 
-  accel->acceleration.x = accX * SENSORS_GRAVITY_EARTH;
-  accel->acceleration.y = accY * SENSORS_GRAVITY_EARTH;
-  accel->acceleration.z = accZ * SENSORS_GRAVITY_EARTH;
+  accel->acceleration.x = accX;
+  accel->acceleration.y = accY;
+  accel->acceleration.z = accZ;
 }
 
 void Adafruit_ICM20X::fillGyroEvent(sensors_event_t *gyro, uint32_t timestamp) {
