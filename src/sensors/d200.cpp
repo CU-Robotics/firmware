@@ -1,8 +1,7 @@
 #include "d200.hpp"
 
-D200LD14P::D200LD14P(HardwareSerial *_port, uint8_t _id) {
+D200LD14P::D200LD14P(HardwareSerial *_port, uint8_t _id) : Sensor(SensorType::LIDAR, _id) {
   port = _port;
-  id = _id;
   current_packet = 0;
   port->begin(D200_BAUD);
 }
@@ -196,4 +195,14 @@ void D200LD14P::print_latest_packet() {
   Serial.println(p.end_angle);
   Serial.print("timestamp: ");
   Serial.println(p.timestamp);
+}
+
+void D200LD14P::serialize(uint8_t* buffer, size_t& offset) {
+  buffer[offset++] = id;
+  memcpy(buffer + offset, &current_packet, sizeof(current_packet));
+  offset += sizeof(current_packet);
+  memcpy(buffer + offset, &cal, sizeof(cal));
+  offset += sizeof(cal);
+  memcpy(buffer + offset, get_packets(), D200_NUM_PACKETS_CACHED * D200_PAYLOAD_SIZE);
+  offset += D200_NUM_PACKETS_CACHED * D200_PAYLOAD_SIZE;
 }
