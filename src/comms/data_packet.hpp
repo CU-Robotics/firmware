@@ -207,7 +207,7 @@ struct comms_data_packet {
     /// CAN bus data.
     CANData canData;
 
-    //dr16 data
+    ///dr16 data
     DR16Data dr16_data;
 
     /// Number of buff sensors.
