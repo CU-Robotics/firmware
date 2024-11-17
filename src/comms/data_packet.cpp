@@ -8,30 +8,66 @@ void BuffEncoderData::print() {
     Serial.println(m_angle);
 }
 
-void DR16::print() {
+void DR16Data::print() {
     Serial.println("DR16 Data:");
     Serial.print("Right Stick X: ");
-    Serial.println(get_r_stick_x());
+    Serial.println(r_stick_x);
     Serial.print("Right Stick Y: ");
-    Serial.println(get_r_stick_y());
+    Serial.println(r_stick_y);
     Serial.print("Left Stick X: ");
-    Serial.println(get_l_stick_x());
+    Serial.println(l_stick_x);
     Serial.print("Left Stick Y: ");
-    Serial.println(get_l_stick_y());
+    Serial.println(l_stick_y);
     Serial.print("Wheel: ");
-    Serial.println(get_wheel());
+    Serial.println(wheel);
     Serial.print("Right Switch: ");
-    Serial.println(get_r_switch());
+    Serial.println(r_switch);
     Serial.print("Left Switch: ");
-    Serial.println(get_l_switch());
+    Serial.println(l_switch);
     Serial.print("Mouse X: ");
-    Serial.println(get_mouse_x());
+    Serial.println(mouse_x);
     Serial.print("Mouse Y: ");
-    Serial.println(get_mouse_y());
+    Serial.println(mouse_y);
     Serial.print("Left Mouse Button: ");
-    Serial.println(get_l_mouse_button());
+    Serial.println(l_mouse_button);
     Serial.print("Right Mouse Button: ");
-    Serial.println(get_r_mouse_button());
+    Serial.println(r_mouse_button);
+    Serial.println();
+    //print keys
+    Serial.println("Keys:");
+    Serial.print("W: ");
+    Serial.println(keys.w);
+    Serial.print("S: ");
+    Serial.println(keys.s);
+    Serial.print("A: ");
+    Serial.println(keys.a);
+    Serial.print("D: ");
+    Serial.println(keys.d);
+    Serial.print("Shift: ");
+    Serial.println(keys.shift);
+    Serial.print("Ctrl: ");
+    Serial.println(keys.ctrl);
+    Serial.print("Q: ");
+    Serial.println(keys.q);
+    Serial.print("E: ");
+    Serial.println(keys.e);
+    Serial.print("R: ");
+    Serial.println(keys.r);
+    Serial.print("F: ");
+    Serial.println(keys.f);
+    Serial.print("G: ");
+    Serial.println(keys.g);
+    Serial.print("Z: ");
+    Serial.println(keys.z);
+    Serial.print("X: ");
+    Serial.println(keys.x);
+    Serial.print("C: ");
+    Serial.println(keys.c);
+    Serial.print("V: ");
+    Serial.println(keys.v);
+    Serial.print("B: ");
+    Serial.println(keys.b);
+    Serial.println();
 }
 
 
