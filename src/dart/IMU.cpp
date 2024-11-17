@@ -6,7 +6,7 @@ void IMU::init() {
   // TODO
 }
 
-IMUData IMU::readData() {
+IMUData IMU::read_data() {
     IMUData data;
     // TODO fill data
     return data;

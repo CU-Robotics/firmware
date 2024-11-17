@@ -7,39 +7,39 @@ FlightController::FlightController(ServoController& sc, IMU& imu, Dartcam& dartc
     yawPID(0.1, 0.01, 0.05, -10, 10) {
 }
 
-void FlightController::setControlMode(ControlMode mode) { currentMode = mode; }
+void FlightController::set_control_mode(ControlMode mode) { currentMode = mode; }
 
 void FlightController::update() {
     switch (currentMode) {
     case FIN_HOLD:
-        holdFinPosition();
+        hold_fin_position();
         break;
     case VELOCITY_VECTOR_ALIGNMENT:
-        alignToVelocityVector();
+        align_to_velocity_vector();
         break;
     case GUIDED:
         guided();
         break;
     case FIN_TEST:
-        finTestMode();
+        fin_test_mode();
         break;
     }
 }
 
 // Mode 1: Fin Hold
-void FlightController::holdFinPosition() {
+void FlightController::hold_fin_position() {
   //  current fin positions
 }
 
 // Mode 2: Velo Vector Stable Flight
-void FlightController::alignToVelocityVector() {
+void FlightController::align_to_velocity_vector() {
   // This is currently just stable flight, will need to be set to the actual
   // velo vector if we want it to fly a true arc.
     float pitchSetpoint = 0.0; // Target pitch angle in degrees
     float yawSetpoint = 0.0;
     float rollSetpoint = 0.0;
 
-    IMUData imuData = imu.readData();
+    IMUData imuData = imu.read_data();
     float currentPitch = imuData.pitch;
     float currentYaw = imuData.yaw;
     float currentRoll = imuData.roll;
@@ -60,16 +60,16 @@ void FlightController::alignToVelocityVector() {
     float leftRudder = yawAdjustment + rollAdjustment;
     float rightRudder = yawAdjustment - rollAdjustment;
 
-    servoController.setServoAngle(0, leftElevator);
-    servoController.setServoAngle(1, rightElevator);
-    servoController.setServoAngle(2, leftRudder);
-    servoController.setServoAngle(3, rightRudder);
+    servoController.set_servo_angle(0, leftElevator);
+    servoController.set_servo_angle(1, rightElevator);
+    servoController.set_servo_angle(2, leftRudder);
+    servoController.set_servo_angle(3, rightRudder);
 }
 
 // Mode 3: Guided
 void FlightController::guided() {
   // Get target pos
-    std::pair<int, int> position = dartcam.getObjectPosition();
+    std::pair<int, int> position = dartcam.get_object_position();
     int x_obj = position.first;
     int y_obj = position.second;
 
@@ -82,39 +82,39 @@ void FlightController::guided() {
     float yaw_adjustment = yawPID.calculate(0, x_deviation);
 
     // Set servo
-    servoController.setAllServos(pitch_adjustment, yaw_adjustment,
+    servoController.set_all_servos(pitch_adjustment, yaw_adjustment,
                                  pitch_adjustment, yaw_adjustment);
 }
 
 // Mode 4: Fin Test Mode
-void FlightController::finTestMode() {
+void FlightController::fin_test_mode() {
 
     static int testStep = 0;
     float testAngle = (testStep % 2 == 0) ? 30 : -30;
 
     if (testStep % 4 == 0) {
-        servoController.setServoAngle(0, testAngle);
+        servoController.set_servo_angle(0, testAngle);
     } else if (testStep % 4 == 1) {
-        servoController.setServoAngle(1, testAngle);
+        servoController.set_servo_angle(1, testAngle);
     } else if (testStep % 4 == 2) {
-        servoController.setServoAngle(2, testAngle);
+        servoController.set_servo_angle(2, testAngle);
     } else {
-        servoController.setServoAngle(3, testAngle);
+        servoController.set_servo_angle(3, testAngle);
     }
 
     testStep++;
 }
 
 // helpers
-void FlightController::maintainLevelRoll() {
+void FlightController::maintain_level_roll() {
     float rollSetpoint = 0.0;
 
-    IMUData imuData = imu.readData();
+    IMUData imuData = imu.read_data();
     float currentRoll = imuData.roll;
 
     float rollAdjustment = rollPID.calculate(rollSetpoint, currentRoll);
 
     // [left_roll, right_roll, other_pitch_yaw]
-    servoController.setServoAngle(0, rollAdjustment);
-    servoController.setServoAngle(1, -rollAdjustment);
+    servoController.set_servo_angle(0, rollAdjustment);
+    servoController.set_servo_angle(1, -rollAdjustment);
 }

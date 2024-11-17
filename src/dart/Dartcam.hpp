@@ -5,7 +5,11 @@
 #include "OV5640.h"
 #include <utility>  // Include for std::pair
 
-#define DARTCAM_BUFFER_SIZE (320 * 240)
+// define buffer width, height, size
+#define DARTCAM_BUFFER_WIDTH 320
+#define DARTCAM_BUFFER_HEIGHT 240
+#define DARTCAM_BUFFER_SIZE (DARTCAM_BUFFER_WIDTH * DARTCAM_BUFFER_HEIGHT)
+
 #define DARTCAM_ID OV5640a
 #define DARTCAM_FRAME_RATE 30
 #define DARTCAM_FORMAT RGB565
@@ -34,9 +38,13 @@ public:
     /// @brief Send the frame buffer data over serial in hexadecimal format.
     void send_frame_serial();
 
+    /// @brief apply a green mask and threshold to a framebuffer (in place)
+    /// @param frame_buffer 
+    void green_threshold(uint16_t frame_buffer[DARTCAM_BUFFER_SIZE]);
+
     /// @brief Get the object's position within the frame.
     /// @return A pair representing the x and y coordinates of the object.
-    std::pair<int, int> getObjectPosition();
+    std::pair<int, int> get_object_position();
 
 private:
     /// @brief ImageSensor object for the OV5640 sensor

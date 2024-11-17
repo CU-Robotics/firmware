@@ -27,10 +27,29 @@ void Dartcam::send_frame_serial() {
     }
 }
 
-std::pair<int, int> Dartcam::getObjectPosition() {
-    // TODO All image capture, object mask/get cords
+void Dartcam::green_threshold(uint16_t frame_buffer[DARTCAM_BUFFER_SIZE]) {
+    int green_mask = 0x07E0; // RGB565 (0b0000011111100000)
+    int green_threshold = 0x07E0 * 0.9; // 90% of the maximum green value
 
-    // Initialize position with an invalid value
+    for (int i = 0; i < DARTCAM_BUFFER_SIZE; i++) {
+        // extract the green component
+        int green_value = frame_buffer[i] & green_mask;
+
+        // theshold the green component
+        if (green_value < green_threshold) {
+            frame_buffer[i] = 0x0000; // set to black if below threshold
+        } else {
+            frame_buffer[i] = green_value; // keep the green component
+        }
+    }
+}
+
+std::pair<int, int> Dartcam::get_object_position() {
+
+    // TODO
+    int max_green = 0;
+
+    // initialize position with an invalid value
     int x_pos = -1;
     int y_pos = -1;
 

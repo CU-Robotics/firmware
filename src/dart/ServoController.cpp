@@ -13,7 +13,7 @@ void ServoController::init() {
   fin3.attach(12);
 }
 
-void ServoController::setServoAngle(int servoIndex, float angle) {
+void ServoController::set_servo_angle(int servoIndex, float angle) {
   switch (servoIndex) {
   case (1):
     fin1.write(angle);
@@ -26,7 +26,7 @@ void ServoController::setServoAngle(int servoIndex, float angle) {
   }
 }
 
-void ServoController::setAllServos(float angle1, float angle2, float angle3,
+void ServoController::set_all_servos(float angle1, float angle2, float angle3,
                                    float angle4) {
   // Update servo positions
   fin1.write(angle1);

@@ -14,7 +14,7 @@ class IMU {
 public:
     IMU();
     void init();
-    IMUData readData();
+    IMUData read_data();
 };
 
 #endif

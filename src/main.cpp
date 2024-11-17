@@ -22,7 +22,7 @@ int main() {
     dartcam.init();
 
     while (true) {
-        flightController.setControlMode(FIN_TEST);
+        flightController.set_control_mode(FIN_TEST);
         flightController.update();
     }
 }
