@@ -8,6 +8,34 @@ void BuffEncoderData::print() {
     Serial.println(m_angle);
 }
 
+void DR16::print() {
+    Serial.println("DR16 Data:");
+    Serial.print("Right Stick X: ");
+    Serial.println(get_r_stick_x());
+    Serial.print("Right Stick Y: ");
+    Serial.println(get_r_stick_y());
+    Serial.print("Left Stick X: ");
+    Serial.println(get_l_stick_x());
+    Serial.print("Left Stick Y: ");
+    Serial.println(get_l_stick_y());
+    Serial.print("Wheel: ");
+    Serial.println(get_wheel());
+    Serial.print("Right Switch: ");
+    Serial.println(get_r_switch());
+    Serial.print("Left Switch: ");
+    Serial.println(get_l_switch());
+    Serial.print("Mouse X: ");
+    Serial.println(get_mouse_x());
+    Serial.print("Mouse Y: ");
+    Serial.println(get_mouse_y());
+    Serial.print("Left Mouse Button: ");
+    Serial.println(get_l_mouse_button());
+    Serial.print("Right Mouse Button: ");
+    Serial.println(get_r_mouse_button());
+}
+
+
+
 // --- ICMSensorData Methods ---
 
 void ICMSensorData::deserialize(const uint8_t* data, size_t& offset) {
@@ -242,7 +270,8 @@ void comms_data_packet::pack_data_packet(
     dr16_data.keys.v = dr16.keys.v;
     dr16_data.keys.b = dr16.keys.b;
 
-
+    //print the dr16 data
+    dr16.print();
     memcpy(packetBuffer + packetOffset, &dr16_data, sizeof(dr16_data));
     packetOffset += sizeof(dr16_data);
 
@@ -271,6 +300,8 @@ void comms_data_packet::pack_data_packet(
         lidar2.serialize(packetBuffer, packetOffset);
     }
 }
+
+
 
 void comms_data_packet::unpack_data_packet(uint8_t packetBuffer[BUFFER_SIZE]) {
     size_t packetOffset = 0;
@@ -305,6 +336,8 @@ void comms_data_packet::unpack_data_packet(uint8_t packetBuffer[BUFFER_SIZE]) {
     memcpy(&dr16_data, packetBuffer + packetOffset, sizeof(dr16_data));
     packetOffset += sizeof(dr16_data);
 
+    //print the dr16 data
+    dr16_data.print();
 
     // Unpack Buff Encoders
     for (int i = 0; i < buff_sensor_count; i++) {

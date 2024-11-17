@@ -57,6 +57,9 @@ struct DR16Data {
     uint32_t fail_time;
     uint32_t prev_time;
     uint32_t disconnect_time;
+
+    /// @brief Function to print the DR16 data.
+    void print();
 };
 
 /// @brief Structure for the buff encoder sensor.
