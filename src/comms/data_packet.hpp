@@ -20,42 +20,79 @@ struct RefereeData {
 
 /// @brief Structure to hold DR16 data.
 struct DR16Data {
+    /// Fail bit indicator.
     uint8_t fail_bit;
+    /// Connection status.
     bool is_connected;
+    /// Input values.
     float input[DR16_INPUT_VALUE_COUNT];
+    /// Right stick X-axis value.
     float r_stick_x;
+    /// Right stick Y-axis value.
     float r_stick_y;
+    /// Left stick X-axis value.
     float l_stick_x;
+    /// Left stick Y-axis value.
     float l_stick_y;
+    /// Wheel value.
     float wheel;
+    /// Left switch value.
     float l_switch;
+    /// Right switch value.
     float r_switch;
+    /// Mouse X-axis value.
     int mouse_x;
+    /// Mouse Y-axis value.
     int mouse_y;
+    /// Left mouse button status.
     bool l_mouse_button;
+    /// Right mouse button status.
     bool r_mouse_button;
+
+    /// @brief Structure to hold key statuses.
     struct Keys {
+        /// W key status.
         bool w;
+        /// S key status.
         bool s;
+        /// A key status.
         bool a;
+        /// D key status.
         bool d;
+        /// Shift key status.
         bool shift;
+        /// Control key status.
         bool ctrl;
+        /// Q key status.
         bool q;
+        /// E key status.
         bool e;
+        /// R key status.
         bool r;
+        /// F key status.
         bool f;
+        /// G key status.
         bool g;
+        /// Z key status.
         bool z;
+        /// X key status.
         bool x;
+        /// C key status.
         bool c;
+        /// V key status.
         bool v;
+        /// B key status.
         bool b;
     };
+    /// Key statuses.
     Keys keys;
+    /// Data validity status.
     bool is_data_valid;
+    /// Fail time.
     uint32_t fail_time;
+    /// Previous time.
     uint32_t prev_time;
+    /// Disconnect time.
     uint32_t disconnect_time;
 
     /// @brief Function to print the DR16 data.
