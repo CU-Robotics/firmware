@@ -1055,7 +1055,7 @@ public:
     void step_states(float output[NUM_MOTORS][MICRO_STATE_LEN], float curr_state[NUM_MOTORS][MICRO_STATE_LEN], int override) {
         for (int i = 0; i < NUM_CAN_BUSES; i++) {
             for (int j = 0; j < NUM_MOTORS_PER_BUS; j++) {
-                output[(i * NUM_MOTORS_PER_BUS) + j][0] = (can_data->get_motor_attribute(i, j + 1, MotorAttribute::SPEED) / 60) * 2 * PI;
+                output[(i * NUM_MOTORS_PER_BUS) + j][1] = (can_data->get_motor_attribute(i, j + 1, MotorAttribute::SPEED) / 60.0) * 2 * PI;
             }
         }
     }

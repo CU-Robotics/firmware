@@ -108,8 +108,6 @@ void EstimatorManager::step(float macro_outputs[STATE_LEN][3], float micro_outpu
     memcpy(curr_state, macro_outputs, sizeof(curr_state));
     clear_outputs(macro_outputs, micro_outputs);
 
-    Serial.println("stepping");
-
     for (int i = 0; i < num_estimators; i++) {
         float macro_states[STATE_LEN][3] = { 0 };
         float micro_states[NUM_MOTORS][MICRO_STATE_LEN] = { 0 };

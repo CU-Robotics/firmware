@@ -7,7 +7,6 @@ void ControllerManager::init(rm_CAN* _can, const Config* config) {
     for (int i = 0; i < NUM_ROBOT_CONTROLLERS; i++) {
         init_controller(config_data->controller_info[i][0], config_data->gains[i], config_data->gear_ratios[i]);
     }
-
     Serial.printf("num controllers: %d\n", num_controllers);
 }
 
@@ -56,7 +55,6 @@ void ControllerManager::step(float macro_reference[STATE_LEN][3], float macro_es
         // iterate through all the motors this controller sets
         for(int j = 0; j < NUM_MOTORS+1; j++) {
             if(config_data->controller_info[i][j + 1] < 0) break;
-            // Serial.printf("controller %d, motor %f, output %f\n", i, config_data->controller_info[i][j+1], outputs[j]);
             actuator_write(config_data->controller_info[i][j+1], outputs[j]);
         }
     }
@@ -80,10 +78,9 @@ void ControllerManager::step(float macro_reference[STATE_LEN][3], float macro_es
 void ControllerManager::actuator_write(int motor_id, float value){
     switch((int) config_data->motor_info[motor_id][MOTOR_INFO_TYPE]) {
     case C610: // 0
-        // Serial.printf("Writing to motor %d, value: %f, motor_type %d, bus: %f, physical id: %f\n", motor_id, value, C610, config_data->motor_info[motor_id][MOTOR_INFO_BUS], config_data->motor_info[motor_id][MOTOR_INFO_ID]);
+        can->write_motor_norm((uint16_t) config_data->motor_info[motor_id][MOTOR_INFO_BUS], (uint16_t) config_data->motor_info[motor_id][MOTOR_INFO_ID], C610, value);
         break;
     case C620: // 1
-        // Serial.printf("Writing to motor %d, value: %f, motor_type %d, bus: %f, physical id: %f\n", motor_id, value, C620, config_data->motor_info[motor_id][MOTOR_INFO_BUS], config_data->motor_info[motor_id][MOTOR_INFO_ID]);
         can->write_motor_norm((uint16_t) config_data->motor_info[motor_id][MOTOR_INFO_BUS], (uint16_t) config_data->motor_info[motor_id][MOTOR_INFO_ID], C620, value);
         break;
     default:

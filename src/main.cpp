@@ -165,10 +165,10 @@ int main() {
         float chassis_pos_x = 0;
         float chassis_pos_y = 0;
         if (config->governor_types[0] == 2) {   // if we should be controlling velocity
-            chassis_vel_x = -dr16.get_l_stick_y() * 5.4
+            chassis_vel_x = dr16.get_l_stick_y() * 5.4
                 + (-ref.ref_data.kbm_interaction.key_w + ref.ref_data.kbm_interaction.key_s) * 2.5
                 + (-dr16.keys.w + dr16.keys.s) * 2.5;
-            chassis_vel_y = dr16.get_l_stick_x() * 5.4
+            chassis_vel_y = -dr16.get_l_stick_x() * 5.4
                 + (ref.ref_data.kbm_interaction.key_d - ref.ref_data.kbm_interaction.key_a) * 2.5
                 + (dr16.keys.d - dr16.keys.a) * 2.5;
         } else if (config->governor_types[0] == 1) { // if we should be controlling position
@@ -184,8 +184,6 @@ int main() {
         float yaw_target = -dr16.get_r_stick_x() * 1.5
             - dr16_pos_x
             - vtm_pos_x;
-        Serial.printf("Yaw: %f, Pitch: %f, dr16x: %f, dr16y: %f, vtmx: %f, vtmy: %f\n", yaw_target, pitch_target, dr16_pos_x, dr16_pos_y, vtm_pos_x, vtm_pos_y);
-        dr16.print_raw();
         float fly_wheel_target = (dr16.get_r_switch() == 1 || dr16.get_r_switch() == 3) ? 18 : 0; //m/s
         float feeder_target = (((dr16.get_l_mouse_button() || ref.ref_data.kbm_interaction.button_left) && dr16.get_r_switch() != 2) || dr16.get_r_switch() == 1) ? 10 : 0;
 

@@ -114,16 +114,15 @@ void XDriveVelocityController::step(float reference[STATE_LEN][3], float estimat
     outputp[2] = pidp[2].filter(dt, false, false);
     outputv[2] = pidv[2].filter(dt, false, false);
     output[2] = (outputp[2] + outputv[2])*gear_ratios[2];
-    Serial.printf("chassis heading output: %f\n, chassis x output: %f\n, chassis y output: %f\n", output[2], output[0], output[1]);
+    // Serial.printf("chassis heading output: %f, chassis x output: %f, chassis y output: %f chassis angle:%f\n", output[2], output[0], output[1], estimate[2][0]);
     // Adjust for chassis heading so control is field relative
-    output[0] = output[0]*sin(estimate[2][0]) + output[1]*cos(estimate[2][0]);
-    output[1] = output[1]*cos(estimate[2][0]) - output[0]*sin(estimate[2][0]);
+    float chassis_heading = estimate[2][0];
     // Convert to motor velocities
-    motor_velocity[0] = output[0] + output[1] + output[2];
-    motor_velocity[1] = output[0] - output[1] + output[2];
-    motor_velocity[2] = -output[0] - output[1] + output[2];
-    motor_velocity[3] = -output[0] + output[1] + output[2];
-
+    motor_velocity[0] = output[0]*cos(chassis_heading) + output[1]*sin(chassis_heading) + output[2];
+    motor_velocity[1] = output[0]*sin(chassis_heading) - output[1]*cos(chassis_heading) + output[2];
+    motor_velocity[2] = -output[0]*cos(chassis_heading) - output[1]*sin(chassis_heading) + output[2];
+    motor_velocity[3] = -output[0]*sin(chassis_heading) + output[1]*cos(chassis_heading) + output[2];
+    // Serial.printf("motor 0: %f, motor 1: %f, motor 2: %f, motor 3: %f\n", motor_velocity[0], motor_velocity[1], motor_velocity[2], motor_velocity[3]);
     // Power limiting
     float power_buffer = ref.ref_data.robot_power_heat.buffer_energy;
     float power_limit_ratio = 1.0;
@@ -142,6 +141,7 @@ void XDriveVelocityController::step(float reference[STATE_LEN][3], float estimat
         pid.K[1] = gains[11];
         pid.K[2] = gains[12];
         outputs[i] = pid.filter(dt, true, false) * power_limit_ratio;
+        // Serial.printf("motor %d error: %f output: %f\n", i, -micro_estimate[i][1] + motor_velocity[i], outputs[i]);
     }
 }
 
@@ -164,7 +164,7 @@ void YawController::step(float reference[STATE_LEN][3], float estimate[STATE_LEN
 
     output += pidp.filter(dt, true, true); // position wraps
     output += pidv.filter(dt, true, false); // no wrap for velocity
-    output = constrain(output, -0.2, 0.2);
+    output = constrain(output, -1.0, 1.0);
     outputs[0] = -output;
     outputs[1] = -output;
 
@@ -182,7 +182,7 @@ void PitchController::step(float reference[STATE_LEN][3], float estimate[STATE_L
     pidv.K[0] = gains[4];
     pidv.K[1] = gains[5];
     pidv.K[2] = gains[6];
-
+    // Serial.printf("pitch angle: %f\n", estimate[4][0]);
     pidp.setpoint = reference[4][0];
     pidp.measurement = estimate[4][0];
 
@@ -191,7 +191,7 @@ void PitchController::step(float reference[STATE_LEN][3], float estimate[STATE_L
 
     output += pidp.filter(dt, true, true); // position wraps
     output += pidv.filter(dt, true, false); // no wrap for velocity
-    output = constrain(output, -0.5, 0.5);
+    output = constrain(output, -1.0, 1.0);
 
     outputs[0] = -output;
     outputs[1] = output;
@@ -209,16 +209,16 @@ void FlywheelController::step(float reference[STATE_LEN][3], float estimate[STAT
 
     pid_high.setpoint = reference[5][1];
     pid_high.measurement = estimate[5][1];
-    float target_motor_velocity = pid_high.filter(dt, true, false)*gear_ratios[0];
+    float target_motor_velocity = pid_high.filter(dt, false, false)*gear_ratios[0];
     for(int i = 0; i < 2; i++){
         pid_low.K[0] = gains[4];
         pid_low.K[1] = gains[5];
         pid_low.K[2] = gains[6];
         pid_low.K[3] = 0;
-        if(i == 1){
-            pid_low.setpoint = -target_motor_velocity;
-        }
-            pid_low.setpoint = target_motor_velocity;
+
+        pid_low.setpoint = -target_motor_velocity;
+        if(i == 1) pid_low.setpoint = target_motor_velocity;
+        
         pid_low.measurement = micro_estimate[i+10][1];
         outputs[i] = pid_low.filter(dt, true, false);
     }
@@ -232,15 +232,16 @@ void FeederController::step(float reference[STATE_LEN][3], float estimate[STATE_
 
     pid_high.setpoint = reference[6][1];
     pid_high.measurement = estimate[6][1];
-    float output = pid_high.filter(timer.delta(), true, false)*gear_ratios[0];
-
-    pid_low.K[0] = gains[4];
-    pid_low.K[1] = gains[5];
-    pid_low.K[2] = gains[6];
+    float output = pid_high.filter(timer.delta(), false, false)*gear_ratios[0];
+    pid_low.K[0] = gains[3];
+    pid_low.K[1] = gains[4];
+    pid_low.K[2] = gains[5];
+    pid_low.K[3] = output*gear_ratios[1];
     
     pid_low.setpoint = output;
     pid_low.measurement = micro_estimate[12][1];
     output = pid_low.filter(timer.delta(), true, false);
+    Serial.printf("Feeder output: %f, ref: %f, FF: %f\n", output, pid_low.setpoint-micro_estimate[12][1], pid_low.K[3]);
     outputs[0] = output;
 }
 
