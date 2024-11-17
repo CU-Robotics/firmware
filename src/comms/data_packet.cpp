@@ -112,9 +112,9 @@ void LidarSensorData::print_latest_packet() {
     Serial.println(p.timestamp);
 }
 
-// --- data_packet Methods ---
+// --- comms_data_packet Methods ---
 
-data_packet::data_packet(const Config* config_data) {
+comms_data_packet::comms_data_packet(const Config* config_data) {
     config = config_data; // Store the configuration data
     buff_sensor_count = config_data->num_sensors[0];
     icm_sensor_count = config_data->num_sensors[1];
@@ -147,7 +147,7 @@ data_packet::data_packet(const Config* config_data) {
     }
 }
 
-data_packet::~data_packet() {
+comms_data_packet::~comms_data_packet() {
     delete[] buff_sensors;
     delete[] icm_sensors;
     delete[] rev_sensors;
@@ -155,22 +155,23 @@ data_packet::~data_packet() {
     delete[] lidar_sensors;
 }
 
-RefereeData data_packet::getRefData() const {
+RefereeData comms_data_packet::getRefData() const {
     return refData;
 }
 
-CANData data_packet::getCanData() const {
+CANData comms_data_packet::getCanData() const {
     return canData;
 }
 
-void data_packet::pack_data_packet(
+void comms_data_packet::pack_data_packet(
     uint8_t packetBuffer[BUFFER_SIZE],
     State robotState,
     uint8_t ref_data_raw[180],
     CANData* canDataPtr,
     EstimatorManager& estimatorManager,
     D200LD14P& lidar1,
-    D200LD14P& lidar2
+    D200LD14P& lidar2,
+    DR16& dr16
 ) {
     size_t packetOffset = 0;
     timestamp = micros(); // Get current time
@@ -203,6 +204,50 @@ void data_packet::pack_data_packet(
     memcpy(packetBuffer + packetOffset, canDataPtr, sizeof(CANData));
     packetOffset += sizeof(CANData);
 
+    //copy dr16 data into the dr16 data struct and then copy that into the packet buffer
+    dr16_data.fail_bit = dr16.is_fail();
+    dr16_data.is_connected = dr16.is_connected();
+    memcpy(dr16_data.input, dr16.get_input(), sizeof(dr16_data.input));
+    dr16_data.r_stick_x = dr16.get_r_stick_x();
+    dr16_data.r_stick_y = dr16.get_r_stick_y();
+    dr16_data.l_stick_x = dr16.get_l_stick_x();
+    dr16_data.l_stick_y = dr16.get_l_stick_y();
+    dr16_data.wheel = dr16.get_wheel();
+    dr16_data.l_switch = dr16.get_l_switch();
+    dr16_data.r_switch = dr16.get_r_switch();
+    dr16_data.mouse_x = dr16.get_mouse_x();
+    dr16_data.mouse_y = dr16.get_mouse_y();
+    dr16_data.l_mouse_button = dr16.get_l_mouse_button();
+    dr16_data.r_mouse_button = dr16.get_r_mouse_button();
+    dr16_data.fail_time = dr16.m_failTime;
+    dr16_data.prev_time = dr16.m_prevTime;
+    dr16_data.disconnect_time = dr16.m_disctTime;
+    dr16_data.is_data_valid = dr16.is_data_valid();
+
+    //just pretend I did this a better way
+    dr16_data.keys.w = dr16.keys.w;
+    dr16_data.keys.s = dr16.keys.s;
+    dr16_data.keys.a = dr16.keys.a;
+    dr16_data.keys.d = dr16.keys.d;
+    dr16_data.keys.shift = dr16.keys.shift;
+    dr16_data.keys.ctrl = dr16.keys.ctrl;
+    dr16_data.keys.q = dr16.keys.q;
+    dr16_data.keys.e = dr16.keys.e;
+    dr16_data.keys.r = dr16.keys.r;
+    dr16_data.keys.f = dr16.keys.f;
+    dr16_data.keys.g = dr16.keys.g;
+    dr16_data.keys.z = dr16.keys.z;
+    dr16_data.keys.x = dr16.keys.x;
+    dr16_data.keys.c = dr16.keys.c;
+    dr16_data.keys.v = dr16.keys.v;
+    dr16_data.keys.b = dr16.keys.b;
+
+
+    memcpy(packetBuffer + packetOffset, &dr16_data, sizeof(dr16_data));
+    packetOffset += sizeof(dr16_data);
+
+
+
     // Serialize sensor data
     for (int i = 0; i < buff_sensor_count; i++) {
         estimatorManager.getBuffSensor(i).serialize(packetBuffer, packetOffset);
@@ -227,7 +272,7 @@ void data_packet::pack_data_packet(
     }
 }
 
-void data_packet::unpack_data_packet(uint8_t packetBuffer[BUFFER_SIZE]) {
+void comms_data_packet::unpack_data_packet(uint8_t packetBuffer[BUFFER_SIZE]) {
     size_t packetOffset = 0;
 
     // Unpack the timestamp, state, and number of sensors
@@ -255,6 +300,11 @@ void data_packet::unpack_data_packet(uint8_t packetBuffer[BUFFER_SIZE]) {
     // Unpack CAN data
     memcpy(&canData, packetBuffer + packetOffset, sizeof(CANData));
     packetOffset += sizeof(CANData);
+
+    // Unpack DR16 data
+    memcpy(&dr16_data, packetBuffer + packetOffset, sizeof(dr16_data));
+    packetOffset += sizeof(dr16_data);
+
 
     // Unpack Buff Encoders
     for (int i = 0; i < buff_sensor_count; i++) {

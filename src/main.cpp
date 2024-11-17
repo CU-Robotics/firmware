@@ -143,7 +143,7 @@ int main() {
 
 
     // Data packet
-    data_packet packet(config);
+    comms_data_packet packet(config);
     uint8_t buffer[4096];
 
     // Main loop
@@ -162,9 +162,8 @@ int main() {
 
 
 
-        //Serial.println("Packing Data Packet");
-        packet.pack_data_packet(buffer, state, ref_data_raw, can_data, estimator_manager, lidar1, lidar2);
-        //Serial.println("Unpacking Data Packet");
+        // pack and unpack data packet
+        packet.pack_data_packet(buffer, state, ref_data_raw, can_data, estimator_manager, lidar1, lidar2, dr16);
         packet.unpack_data_packet(buffer);
 
         // read and write comms packets

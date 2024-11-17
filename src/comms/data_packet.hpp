@@ -10,11 +10,53 @@
 #include "estimator_manager.hpp"
 #include "config_layer.hpp"
 #include "d200.hpp"
+#include "dr16.hpp"
 
 /// @brief Structure to hold referee data.
 struct RefereeData {
     /// Raw data array for the referee data packet.
     uint8_t ref_data_raw[180] = {0};
+};
+
+/// @brief Structure to hold DR16 data.
+struct DR16Data {
+    uint8_t fail_bit;
+    bool is_connected;
+    float input[DR16_INPUT_VALUE_COUNT];
+    float r_stick_x;
+    float r_stick_y;
+    float l_stick_x;
+    float l_stick_y;
+    float wheel;
+    float l_switch;
+    float r_switch;
+    int mouse_x;
+    int mouse_y;
+    bool l_mouse_button;
+    bool r_mouse_button;
+    struct Keys {
+        bool w;
+        bool s;
+        bool a;
+        bool d;
+        bool shift;
+        bool ctrl;
+        bool q;
+        bool e;
+        bool r;
+        bool f;
+        bool g;
+        bool z;
+        bool x;
+        bool c;
+        bool v;
+        bool b;
+    };
+    Keys keys;
+    bool is_data_valid;
+    uint32_t fail_time;
+    uint32_t prev_time;
+    uint32_t disconnect_time;
 };
 
 /// @brief Structure for the buff encoder sensor.
@@ -111,7 +153,7 @@ struct LidarSensorData {
 };
 
 /// @brief Structure for the data packet containing all sensor data and state information.
-struct data_packet {
+struct comms_data_packet {
     /// Pointer to the Config struct storing all configuration data.
     const Config* config;
 
@@ -124,6 +166,9 @@ struct data_packet {
     RefereeData refData;
     /// CAN bus data.
     CANData canData;
+
+    //dr16 data
+    DR16Data dr16_data;
 
     /// Number of buff sensors.
     int buff_sensor_count;
@@ -155,12 +200,12 @@ struct data_packet {
     /// @return CANData object.
     CANData getCanData() const;
 
-    /// @brief Constructor to initialize the data_packet with configuration data.
+    /// @brief Constructor to initialize the comms_data_packet with configuration data.
     /// @param config_data Pointer to the configuration data.
-    data_packet(const Config* config_data);
+    comms_data_packet(const Config* config_data);
 
     /// @brief Destructor to clean up allocated memory.
-    ~data_packet();
+    ~comms_data_packet();
 
     /// @brief Function to pack data into a packet buffer.
     /// @param packetBuffer Buffer to pack the data into.
@@ -170,6 +215,7 @@ struct data_packet {
     /// @param estimatorManager Reference to the EstimatorManager.
     /// @param lidar1 Reference to the first LiDAR sensor.
     /// @param lidar2 Reference to the second LiDAR sensor.
+    /// @param dr16 Reference to the DR16 controller.
     void pack_data_packet(
         uint8_t packetBuffer[BUFFER_SIZE],
         State robotState,
@@ -177,7 +223,8 @@ struct data_packet {
         CANData* canData,
         EstimatorManager& estimatorManager,
         D200LD14P& lidar1,
-        D200LD14P& lidar2
+        D200LD14P& lidar2,
+        DR16& dr16
     );
 
     /// @brief Function to unpack data from a packet buffer.
