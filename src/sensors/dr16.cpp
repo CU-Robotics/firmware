@@ -63,6 +63,7 @@ void DR16::read() {
 					break;
 				// enough zeros have passed but we didnt read an entire packet, start over
 				} else if (zeros > 5) {
+					Serial.printf("Dr16 failed to read enough data to align\n");
 					accumulator = 0;
 				}
 
