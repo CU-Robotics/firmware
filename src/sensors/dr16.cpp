@@ -31,6 +31,8 @@ void DR16::read() {
 	// if we have missed 4 packets, then we need to allign/re-allign
 	// this catches the first read allignment as well
 	if (Serial8.available() > DR16_PACKET_SIZE * 4) {
+		Serial.printf("Aligning dr16 data...\n");
+		
 		// start with the buffer clear
 		Serial8.clear();
 
