@@ -184,7 +184,7 @@ public:
 
     /// @brief check if SD card is available to load from, and wait for ref system initialization
     /// @param comms 
-    void config_SD_init(HIDLayer* comms);
+    void config_SD_init();
 
     /// @brief read packet data from SD card at /config.pack
     /// @param checksum variable to store checksum into (passed by reference in order to use outside of function)

@@ -2,7 +2,7 @@
 
 const Config* const ConfigLayer::configure(HIDLayer* comms) {
     // attempt SD card load
-    config_SD_init(comms);
+    config_SD_init();
     if (configured) return &config;
 
     // if no config on SD, then await transmission
@@ -54,7 +54,7 @@ const Config* const ConfigLayer::configure(EthernetComms* comms){
     return &config;
 }
 
-void ConfigLayer::config_SD_init(HIDLayer* comms) {
+void ConfigLayer::config_SD_init() {
     // if on robot, we need to wait for ref to send robot_id
     Serial.println("Waiting for ref system to initialize...");
     while (ref.ref_data.robot_performance.robot_ID == 0) ref.read();
