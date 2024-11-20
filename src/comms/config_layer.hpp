@@ -62,7 +62,10 @@ struct Config {
     /// @brief fill all config data from packets
     /// @param packets CommsPacket array filled with data from yaml
     /// @param sizes Number of sections for each section
-    void fill_data(CommsPacket packets[MAX_CONFIG_PACKETS], uint8_t sizes[MAX_CONFIG_PACKETS]);
+    template <typename Packet> void fill_data(Packet packets[MAX_CONFIG_PACKETS], uint8_t sizes[MAX_CONFIG_PACKETS]){ 
+        fill_data((uint8_t *)(packets), sizes, sizeof(Packet));   // reinterpret given packet array as byte array
+    }
+    void fill_data(uint8_t *bytes, uint8_t sizes[MAX_CONFIG_PACKETS], int packet_size);
 
     //check yaml for more details on values
     /// @brief robot id sent from hive
