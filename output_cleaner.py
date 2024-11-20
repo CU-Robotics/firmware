@@ -55,7 +55,7 @@ def clean_and_split_txt(input_file, base_output_dir):
     print(f"Processed {len(trial_data)} trials. Files saved in '{output_dir}'.")
 
 # Example usage
-input_file = "60pw-0b.txt"       # Replace with your input file name
+input_file = "80pw-0b.txt"       # Replace with your input file name
 base_output_dir = "organized_trials"  # Replace with your desired base output directory
 clean_and_split_txt(input_file, base_output_dir)
 
