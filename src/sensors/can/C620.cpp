@@ -5,6 +5,7 @@ int C620<CAN_BUS>::read(CAN_message_t& msg) {
     // set m_input from msg
     memcpy(&m_input, &msg, sizeof(CAN_message_t));
 
+    // TODO: can this fail?
     return 1;
 }
 

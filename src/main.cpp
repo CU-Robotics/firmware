@@ -6,6 +6,7 @@
 #include "utils/timing.hpp"
 #include <TeensyDebug.h>
 
+#include "sensors/can/C610.hpp"
 #include "sensors/can/C620.hpp"
 
 // Loop constants
@@ -68,19 +69,17 @@ int main() {
 
     const int num_motors = 2;
 
-    C620 motor1(M3508, 0, 4, 2, &can_2);
-    C620 motor2(M3508, 1, 6, 2, &can_2);
     Motor* motors[num_motors];
-    motors[0] = new C620(M3508, 0, 4, 2, &can_2);
-    motors[1] = new C620(M3508, 1, 6, 2, &can_2);
+    motors[0] = new C610(M2006, 0, 2, 2, &can_2);
+    motors[1] = new C610(M2006, 1, 7, 2, &can_2);
 
-    motor1.write_motor_torque(0.05f);
-    motor2.write_motor_torque(0.05f);
+    motors[0]->write_motor_torque(0.05f);
+    motors[1]->write_motor_torque(0.05f);
 
     CAN_message_t output_msgs[num_motors];
 
-    motor1.write(output_msgs[0]);
-    motor2.write(output_msgs[1]);
+    motors[0]->write(output_msgs[0]);
+    motors[1]->write(output_msgs[1]);
 
     CAN_message_t combined[2];
     for (int i = 0; i < num_motors; i++) {
