@@ -147,7 +147,7 @@ int main() {
     const int chassis_can_bus = 0;
     const int yaw_motor1_id = 5;
     const int yaw_motor2_id = 6;
-    const float impulse_val = 0.80;
+    const float impulse_val = 1.00;
     const int impulse_duration = 100;
     const int num_stable_vals = 100;
     float prev_vals[num_stable_vals];
