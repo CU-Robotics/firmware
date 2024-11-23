@@ -31,6 +31,19 @@ enum MotorControllerType {
     NULL_MOTOR_CONTROLLER_TYPE
 };
 
+/// @brief Unified motor state
+struct MotorState {
+    /// @brief Motor specific torque output. The unit is dependent on the motor but it is normally in a range corresponding to it's ampage
+    int16_t torque = 0;
+    /// @brief Rotational speed of the motor in rad/s, signed
+    float speed = 0;
+    /// @brief Motor specific position output. The unit is dependent on the motor but it is normally in a range corresponding to it's encoder
+    // TODO: unify this to a single unit
+    int16_t position = 0;
+    /// @brief Temperature of the motor in degrees Celsius
+    int8_t temperature = 0; // TODO: why signed?
+};
+
 /// @brief An abstract class holding common information for individual CAN-capable motors
 class Motor {
 public:
@@ -66,6 +79,9 @@ public:
     /// @param torque The torque value between [-1, 1]
     virtual void write_motor_torque(float torque) = 0;
 
+    /// @brief Print the current state of the motor
+    virtual void print_state() = 0;
+
 public:
     /// @brief Get the motor type
     /// @return The motor type
@@ -86,6 +102,10 @@ public:
     /// @brief Get the bus ID
     /// @return The bus ID
     inline uint32_t get_bus_id() const { return m_bus_id; }
+
+    /// @brief Get the current state of the motor
+    /// @return The current state of the motor
+    inline MotorState get_state() const { return m_state; }
 
 protected:
     // TODO: private functions?
@@ -111,6 +131,9 @@ protected:
 
     /// @brief The last received CAN frame. Received from the motor
     CAN_message_t m_input;
+
+    /// @brief The current state of the motor
+    MotorState m_state;
 
     // TODO: more common information?
 };

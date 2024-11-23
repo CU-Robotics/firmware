@@ -1,11 +1,20 @@
 #include "C610.hpp"
 
 template<typename CAN_BUS>
-inline int C610<CAN_BUS>::read(CAN_message_t& msg) {
+int C610<CAN_BUS>::read(CAN_message_t& msg) {
     // TODO: can this fail?
 
     // set m_input from msg
     memcpy(&m_input, &msg, sizeof(CAN_message_t));
+
+    // fill out the motor state buffer
+    m_state.torque = (m_input.buf[4] << 8) | m_input.buf[5];
+
+    int16_t rpm = (m_input.buf[2] << 8) | m_input.buf[3];
+    float rad_per_sec = rpm * ((2 * PI) / 60);
+    m_state.speed = rad_per_sec;
+    m_state.position = (m_input.buf[0] << 8) | m_input.buf[1];
+    m_state.temperature = 0 // we dont get temperature from C610
     
     return 1;
 }

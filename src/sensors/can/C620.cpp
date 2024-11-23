@@ -5,6 +5,15 @@ int C620<CAN_BUS>::read(CAN_message_t& msg) {
     // set m_input from msg
     memcpy(&m_input, &msg, sizeof(CAN_message_t));
 
+    // fill out the motor state buffer
+    m_state.torque = (m_input.buf[4] << 8) | m_input.buf[5];
+    
+    int16_t rpm = (m_input.buf[2] << 8) | m_input.buf[3];
+    float rad_per_sec = rpm * ((2 * PI) / 60);
+    m_state.speed = rad_per_sec;
+    m_state.position = (m_input.buf[0] << 8) | m_input.buf[1];
+    m_state.temperature = m_input.buf[6];
+
     // TODO: can this fail?
     return 1;
 }
