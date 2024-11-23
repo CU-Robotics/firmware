@@ -14,7 +14,7 @@ int C610<CAN_BUS>::read(CAN_message_t& msg) {
     float rad_per_sec = rpm * ((2 * PI) / 60);
     m_state.speed = rad_per_sec;
     m_state.position = (m_input.buf[0] << 8) | m_input.buf[1];
-    m_state.temperature = 0 // we dont get temperature from C610
+    m_state.temperature = 0;    // we dont get temperature from C610
     
     return 1;
 }
@@ -57,6 +57,15 @@ void C610<CAN_BUS>::write_motor_torque(float torque) {
     // fill in the output array
     m_output.buf[motor_id * 2] = (int_torque >> 8) & 0xFF;  // upper byte
     m_output.buf[motor_id * 2 + 1] = int_torque & 0xFF;     // lower byte
+}
+
+template<typename CAN_BUS>
+void C610<CAN_BUS>::print_state() {
+    Serial.printf("C610 Motor %d\n", m_id);
+    Serial.printf("Torque: %d\n", m_state.torque);
+    Serial.printf("Speed: %frad/s\n", m_state.speed);
+    Serial.printf("Position: %d\n", m_state.position);
+    Serial.printf("Temperature: %dC\n", m_state.temperature);
 }
 
 // explicitly declare the three possible types C610 can take

@@ -49,6 +49,9 @@ public:
     /// @param torque A value between [-1, 1] representing the torque range of [-10A, 10A]
     void write_motor_torque(float torque) override;
 
+    /// @brief Print the current state of the motor
+    void print_state() override;
+
 private:
 
 

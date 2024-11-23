@@ -56,6 +56,15 @@ void C620<CAN_BUS>::write_motor_torque(float torque) {
     m_output.buf[motor_id * 2 + 1] = int_torque & 0xFF;     // lower byte
 }
 
+template<typename CAN_BUS>
+void C620<CAN_BUS>::print_state() {
+    Serial.printf("C620 Motor %d\n", m_id);
+    Serial.printf("Torque: %d\n", m_state.torque);
+    Serial.printf("Speed: %frad/s\n", m_state.speed);
+    Serial.printf("Position: %d\n", m_state.position);
+    Serial.printf("Temperature: %dC\n", m_state.temperature);
+}
+
 // explicitly declare the three possible types C620 can take
 
 template class C620<FlexCAN_T4<CAN1, RX_SIZE_256, TX_SIZE_16>>;
