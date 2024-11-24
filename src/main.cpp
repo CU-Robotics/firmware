@@ -8,6 +8,7 @@
 
 #include "sensors/can/C610.hpp"
 #include "sensors/can/C620.hpp"
+#include "sensors/can/MG8016EI6.hpp"
 
 // Loop constants
 #define LOOP_FREQ 1000
@@ -67,36 +68,12 @@ int main() {
     can_2.begin();
     can_2.setBaudRate(1000000);
 
-    const int num_motors = 2;
+    CAN_message_t output_msg;
 
-    Motor* motors[num_motors];
-    motors[0] = new C610(M2006, 0, 2, 2, &can_2);
-    motors[1] = new C610(M2006, 1, 7, 2, &can_2);
-
-    motors[0]->write_motor_torque(0.05f);
-    motors[1]->write_motor_torque(0.05f);
-
-    CAN_message_t output_msgs[num_motors];
-
-    motors[0]->write(output_msgs[0]);
-    motors[1]->write(output_msgs[1]);
-
-    CAN_message_t combined[2];
-    for (int i = 0; i < num_motors; i++) {
-        uint32_t id = motors[i]->get_id();
-
-        uint32_t buf_id = (id-1) % 4;
-        if ((id-1) / 4) {
-            combined[0].id = output_msgs[i].id;
-            combined[0].buf[buf_id * 2] = output_msgs[i].buf[buf_id * 2];
-            combined[0].buf[buf_id * 2 + 1] = output_msgs[i].buf[buf_id * 2 + 1];
-        } else {
-            combined[1].id = output_msgs[i].id;
-            combined[1].buf[buf_id * 2] = output_msgs[i].buf[buf_id * 2];
-            combined[1].buf[buf_id * 2 + 1] = output_msgs[i].buf[buf_id * 2 + 1];
-        }
-    }
-
+    MG8016EI6 motor(MotorType::MG8016E_I6V3, 0, 1, 2, &can_2);
+    
+    motor.write_motor_torque(0.01);
+    motor.write(output_msg);
 
     // Execute setup functions
     pinMode(13, OUTPUT);
@@ -106,9 +83,12 @@ int main() {
         if (loopc % 500 == 0)
             Serial.printf("Alive %ld\n", loopc);
         
-        can_2.write(output_msgs[0]);
-        can_2.write(output_msgs[1]);
+        can_2.write(output_msg);
 
+        // if (loopc > 5000) {
+        //     motor.write_motor_torque(0);
+        //     motor.write(output_msg);
+        // }
         
         // LED heartbeat -- linked to loop count to reveal slowdowns and freezes.
         loopc % (int)(1E3 / float(HEARTBEAT_FREQ)) < (int)(1E3 / float(5 * HEARTBEAT_FREQ)) ? digitalWrite(13, HIGH) : digitalWrite(13, LOW);
