@@ -72,7 +72,7 @@ int main() {
 
     MG8016EI6 motor(MotorType::MG8016E_I6V3, 0, 1, 2, &can_2);
     
-    motor.write_motor_torque(0.01);
+    motor.write_motor_angle(0);
     motor.write(output_msg);
 
     // Execute setup functions
@@ -80,10 +80,18 @@ int main() {
 
     // Main loop
     while (true) {
-        if (loopc % 500 == 0)
+        if (loopc % 500 == 0) {
             Serial.printf("Alive %ld\n", loopc);
+        }
         
+        motor.print_state();
         can_2.write(output_msg);
+
+        CAN_message_t read_msg;
+        if (can_2.read(read_msg)) {
+            motor.read(read_msg);
+        }
+
 
         // if (loopc > 5000) {
         //     motor.write_motor_torque(0);

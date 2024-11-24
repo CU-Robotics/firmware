@@ -2,14 +2,106 @@
 
 template <typename CAN_BUS>
 int MG8016EI6<CAN_BUS>::read(CAN_message_t& msg) {
-    // command IDs that do not return state data:
+    // command IDs that return the base state (temp, torque, speed, angle)
+    // A1, A2, A3, A4, A5, A6, A7, A8, 9C (state 2)
+    // CMD_TORQUE_CONTROL, CMD_SPEED_CONTROL, CMD_MULTI_ANGLE_CONTROL, CMD_MULTI_ANGLE_CONTROL_SPEED_LIMITED,
+    // CMD_ANGLE_CONTROL, CMD_ANGLE_CONTROL_SPEED_LIMITED, CMD_ANGLE_INCREMENT_CONTROL, 
+    // CMD_ANGLE_INCREMENT_CONTROL_SPEED_LIMITED, CMD_READ_STATE_2
+
+    // command IDs that return special state (current, error, etc)
+    // 30, 33, 90, 19, 92 (multi angle), 94 (single angle), 9A/9B (state 1), 9D (state 3)
+    // CMD_READ_PID, CMD_READ_ACCELERATION, CMD_READ_ENCODER, CMD_READ_MULTI_ANGLE,
+    // CMD_READ_ANGLE, CMD_READ_STATE_1, CMD_READ_STATE_3
+
+    // early return if msg ID does not match this motor
+    if (msg.id != m_base_id + m_id) {
+        return 0;
+    }
+
+    uint8_t cmd_byte = msg.buf[0];
+
+    // handle the command
+    switch (cmd_byte) {
+    case CMD_TORQUE_CONTROL:
+    case CMD_SPEED_CONTROL:
+    case CMD_MULTI_ANGLE_CONTROL:
+    case CMD_MULTI_ANGLE_CONTROL_SPEED_LIMITED:
+    case CMD_ANGLE_CONTROL:
+    case CMD_ANGLE_CONTROL_SPEED_LIMITED:
+    case CMD_ANGLE_INCREMENT_CONTROL:
+    case CMD_ANGLE_INCREMENT_CONTROL_SPEED_LIMITED:
+    case CMD_READ_STATE_2: {
+        // read the state
+        m_state.temperature = msg.buf[1];
+        m_state.torque = (int16_t)((msg.buf[3] << 8) | msg.buf[2]);
+        // speed is given in 1dps/LSB
+        // need to conver this to rad/s
+        int16_t speed_dps = (int16_t)((msg.buf[5] << 8) | msg.buf[4]);
+        float speed_rad = speed_dps * (PI / 180);
+        m_state.speed = speed_rad;
+        m_state.position = (uint16_t)((msg.buf[7] << 8) | msg.buf[6]);
+        break;
+    }
+    case CMD_READ_PID: {
+        m_angle_p = msg.buf[2];
+        m_angle_i = msg.buf[3];
+        m_speed_p = msg.buf[4];
+        m_speed_i = msg.buf[5];
+        m_torque_p = msg.buf[6];
+        m_torque_i = msg.buf[7];
+        break;
+    }
+    case CMD_READ_ACCELERATION: {
+        m_acceleration = (int32_t)((msg.buf[3] << 24) | (msg.buf[2] << 16) | (msg.buf[1] << 8) | msg.buf[0]);
+        break;
+    }
+    case CMD_READ_ENCODER: {
+        m_encoder = (uint16_t)((msg.buf[3] << 8) | msg.buf[2]);
+        m_encoder_raw = (uint16_t)((msg.buf[5] << 8) | msg.buf[4]);
+        m_encoder_offset = (uint16_t)((msg.buf[7] << 8) | msg.buf[6]);
+        break;
+    }
+    case CMD_READ_MULTI_ANGLE: {
+        // last byte is discarded
+        // TODO: How to tell if the angle is negative?
+        *(((uint8_t*)(&m_multi_angle) + 0)) = msg.buf[1];
+        *(((uint8_t*)(&m_multi_angle) + 1)) = msg.buf[2];
+        *(((uint8_t*)(&m_multi_angle) + 2)) = msg.buf[3];
+        *(((uint8_t*)(&m_multi_angle) + 3)) = msg.buf[4];
+        *(((uint8_t*)(&m_multi_angle) + 4)) = msg.buf[5];
+        *(((uint8_t*)(&m_multi_angle) + 5)) = msg.buf[6];
+        *(((uint8_t*)(&m_multi_angle) + 6)) = msg.buf[7];
+        break;
+    }
+    case CMD_READ_ANGLE: {
+        m_angle = (uint32_t)((msg.buf[7] << 24) | (msg.buf[6] << 16) | (msg.buf[5] << 8) | msg.buf[4]);
+        break;
+    }
+    case CMD_READ_STATE_1:
+    case CMD_CLEAR_ERROR: {
+        m_voltage = (uint16_t)((msg.buf[4] << 8) | msg.buf[3]);
+        m_error_state.under_voltage = !!(msg.buf[7] & 0x01);
+        m_error_state.over_temperature = !!(msg.buf[7] & 0x08);
+        break;
+    }
+    case CMD_READ_STATE_3: {
+        m_a_phase_current = (int16_t)((msg.buf[3] << 8) | msg.buf[2]);
+        m_b_phase_current = (int16_t)((msg.buf[5] << 8) | msg.buf[4]);
+        m_c_phase_current = (int16_t)((msg.buf[7] << 8) | msg.buf[6]);
+        break;
+    }
+    default:
+        Serial.printf("Unknown command byte: 0x%02X\n", cmd_byte);
+        break;
+    }
+
     return 1;
 }
 
 template<typename CAN_BUS>
 int MG8016EI6<CAN_BUS>::write(CAN_message_t& msg) {
     // TODO: does the caller need my local ID?
-    
+
     memcpy(&msg, &m_output, sizeof(CAN_message_t));
 
     return 0;
@@ -104,7 +196,11 @@ void MG8016EI6<CAN_BUS>::write_motor_angle(float angle, float speed_limit) {
 
 template<typename CAN_BUS>
 void MG8016EI6<CAN_BUS>::print_state() {
-    Serial.printf("Unimplemented\n");
+    Serial.printf("Motor %d\n", m_id);
+    Serial.printf("Temperature: %d\n", m_state.temperature);
+    Serial.printf("Torque: %d\n", m_state.torque);
+    Serial.printf("Speed: %f\n", m_state.speed);
+    Serial.printf("Position: %u\n", m_state.position);
 }
 
 // Command creation functions

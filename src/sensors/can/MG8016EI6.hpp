@@ -49,7 +49,7 @@ public:
     int write(CAN_message_t& msg) override;
 
     /// @brief Write motor torque given a normalized value
-    /// @param torque A value between [-1, 1] representing the torque range of [-10A, 10A]
+    /// @param torque A value between [-1, 1] representing the torque range of [-33A, 33A]
     void write_motor_torque(float torque) override;
 
     /// @brief Write motor speed
@@ -219,6 +219,68 @@ private:
     const int32_t m_max_torque = 2048;
     /// @brief The minimum torque value, corresponds to -33A
     const int32_t m_min_torque = -2048;
+
+    // various special state
+    // TODO: should the PID params be unsigned?
+    /// @brief The angle P value
+    int8_t m_angle_p = 0;
+
+    /// @brief The angle I value
+    int8_t m_angle_i = 0;
+
+    /// @brief The speed P value
+    int8_t m_speed_p = 0;
+
+    /// @brief The speed I value
+    int8_t m_speed_i = 0;
+
+    /// @brief The torque P value
+    int8_t m_torque_p = 0;
+
+    /// @brief The torque I value
+    int8_t m_torque_i = 0;
+
+    /// @brief The acceleration value in 1dps / LSB
+    int32_t m_acceleration = 0;
+
+    /// @brief The encoder value (raw - offset)
+    uint16_t m_encoder = 0;
+
+    /// @brief The encoder raw value
+    uint16_t m_encoder_raw = 0;
+
+    /// @brief The encoder offset value
+    uint16_t m_encoder_offset = 0;
+
+    /// @brief The multi motor angle value in 0.01deg / LSB
+    int64_t m_multi_angle = 0;
+
+    /// @brief The single motor angle value in 0.01deg / LSB, wraps to 0 after (36000 - 1)
+    uint32_t m_angle = 0;
+
+    /// @brief The motor voltage in 0.1V / LSB
+    uint16_t m_voltage = 0;
+
+    /// @brief The error state of the motor
+    struct {
+        /// @brief 0: normal, 1: under voltage error
+        uint8_t under_voltage : 1;
+        // reserved
+        uint8_t : 2;
+        /// @brief 0: normal, 1: over temperature error
+        uint8_t over_temperature : 1;
+        // reserved
+        uint8_t : 4;
+    } m_error_state;
+
+    /// @brief A phase current in 1A / 64LSB
+    int16_t m_a_phase_current = 0;
+    
+    /// @brief B phase current in 1A / 64LSB
+    int16_t m_b_phase_current = 0;
+    
+    /// @brief C phase current in 1A / 64LSB
+    int16_t m_c_phase_current = 0;
 
     // Command command byte definitions
 

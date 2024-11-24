@@ -39,7 +39,7 @@ struct MotorState {
     float speed = 0;
     /// @brief Motor specific position output. The unit is dependent on the motor but it is normally in a range corresponding to it's encoder
     // TODO: unify this to a single unit
-    int16_t position = 0;
+    uint16_t position = 0;
     /// @brief Temperature of the motor in degrees Celsius
     int8_t temperature = 0; // TODO: why signed?
 };
