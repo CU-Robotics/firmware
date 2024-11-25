@@ -65,7 +65,7 @@ public:
     void print_state() override;
 
 public:
-    // TODO: only implementing torque, speed, and angle control for now
+    // TODO: figure out the best way for these to be called since they need to issue a command pretty much immidiately
 
     /// @brief Turn off the motor and clear it's state
     void write_motor_off();

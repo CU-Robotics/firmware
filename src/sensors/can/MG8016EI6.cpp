@@ -62,15 +62,24 @@ int MG8016EI6<CAN_BUS>::read(CAN_message_t& msg) {
         break;
     }
     case CMD_READ_MULTI_ANGLE: {
-        // last byte is discarded
-        // TODO: How to tell if the angle is negative?
-        *(((uint8_t*)(&m_multi_angle) + 0)) = msg.buf[1];
-        *(((uint8_t*)(&m_multi_angle) + 1)) = msg.buf[2];
-        *(((uint8_t*)(&m_multi_angle) + 2)) = msg.buf[3];
-        *(((uint8_t*)(&m_multi_angle) + 3)) = msg.buf[4];
-        *(((uint8_t*)(&m_multi_angle) + 4)) = msg.buf[5];
-        *(((uint8_t*)(&m_multi_angle) + 5)) = msg.buf[6];
-        *(((uint8_t*)(&m_multi_angle) + 6)) = msg.buf[7];
+        // TODO: Does this work?
+        
+        // directly assign the first 7 bytes from the msg buffer (skipping the command byte)
+        // direct assignment due to weirdness with bitshifts on values larger than the word size
+        for (int i = 0; i < 7; i++) {
+            *((uint8_t*)(&m_multi_motor_mode_angle) + i) = msg.buf[i + 1];
+        }
+
+        // sign extend the last byte if needed
+        // we do this because we're given a 7 byte signed value, but directly filling a 8 byte value
+        // would mess up it's value since the sign bit would not be preserved
+        // this essentially performs an arithmetic right shift in a defined way
+        if (msg.buf[7] & 0x80) {
+            *((uint8_t*)(&m_multi_motor_mode_angle) + 7) = 0xFF;
+        } else {
+            *((uint8_t*)(&m_multi_motor_mode_angle) + 7) = 0x00;
+        }
+        
         break;
     }
     case CMD_READ_ANGLE: {
