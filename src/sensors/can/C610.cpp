@@ -2,7 +2,8 @@
 
 template<typename CAN_BUS>
 int C610<CAN_BUS>::read(CAN_message_t& msg) {
-    // TODO: can this fail?
+    // early return if the message ID does not match
+    if (msg.id != m_base_id + m_id) return 0;
 
     // set m_input from msg
     memcpy(&m_input, &msg, sizeof(CAN_message_t));

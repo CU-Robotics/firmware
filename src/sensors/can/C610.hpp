@@ -56,6 +56,9 @@ private:
 
 
 private:
+    /// @brief The base ID of the motor
+    uint32_t m_base_id = 0x200;
+
     /// @brief The CAN bus object
     CAN_BUS* m_can_bus = nullptr;
 

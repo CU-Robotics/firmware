@@ -2,6 +2,9 @@
 
 template<typename CAN_BUS>
 int C620<CAN_BUS>::read(CAN_message_t& msg) {
+    // early return if the message ID does not match
+    if (msg.id != m_base_id + m_id) return 0;
+    
     // set m_input from msg
     memcpy(&m_input, &msg, sizeof(CAN_message_t));
 
@@ -14,7 +17,6 @@ int C620<CAN_BUS>::read(CAN_message_t& msg) {
     m_state.position = (m_input.buf[0] << 8) | m_input.buf[1];
     m_state.temperature = m_input.buf[6];
 
-    // TODO: can this fail?
     return 1;
 }
 

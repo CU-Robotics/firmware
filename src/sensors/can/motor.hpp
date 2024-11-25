@@ -41,7 +41,8 @@ struct MotorState {
     // TODO: unify this to a single unit
     uint16_t position = 0;
     /// @brief Temperature of the motor in degrees Celsius
-    int8_t temperature = 0; // TODO: why signed?
+    /// @note This is signed but it shouldn't matter since normal temperatures wouldn't overflow to negative
+    int8_t temperature = 0;
 };
 
 /// @brief An abstract class holding common information for individual CAN-capable motors
@@ -74,7 +75,6 @@ public:
     /// @note Does not issue a CAN command over the bus
     virtual int write(CAN_message_t& msg) = 0;
 
-    // TODO: how?
     /// @brief Generic write motor function handling only torque. This is the only common interface of all the motors we use
     /// @param torque The torque value between [-1, 1]
     virtual void write_motor_torque(float torque) = 0;
@@ -108,9 +108,6 @@ public:
     inline MotorState get_state() const { return m_state; }
 
 protected:
-    // TODO: private functions?
-
-protected:
     /// @brief What type of motor it is
     MotorType m_motor_type = NULL_MOTOR_TYPE;
 
@@ -135,7 +132,6 @@ protected:
     /// @brief The current state of the motor
     MotorState m_state;
 
-    // TODO: more common information?
 };
 
 #endif // CAN_MOTOR_HPP
