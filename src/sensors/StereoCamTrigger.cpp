@@ -11,7 +11,7 @@ void StereoCamTrigger::track_exposures() {
   
   // update timestamp
   uint32_t prev_timestamp = latest_exposure_timestamp;
-  latest_exposure_timestamp = micros();
+  latest_exposure_timestamp = millis();
   uint32_t delta = latest_exposure_timestamp - prev_timestamp;
 
 #ifdef LOG_STEREO_FPS

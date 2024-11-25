@@ -92,7 +92,7 @@ int main() {
 
         auto* outgoing = comms.get_outgoing_packet();
         outgoing->header.sequence = val;
-        outgoing->header.time_stamp = millis();
+        outgoing->header.time_stamp = stereoCamTrigger.get_latest_exposure_timestamp()  & 0x3FF;
 
         comms.loop();
 
