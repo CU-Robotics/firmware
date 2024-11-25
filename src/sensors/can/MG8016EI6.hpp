@@ -252,11 +252,11 @@ private:
     /// @brief The encoder offset value
     uint16_t m_encoder_offset = 0;
 
-    /// @brief The multi motor angle value in 0.01deg / LSB
-    int64_t m_multi_angle = 0;
+    /// @brief The multi motor angle value in 0.01deg / LSB. This is the cumulative angle from all motors set in multi mode
+    int64_t m_multi_motor_mode_angle = 0;
 
     /// @brief The single motor angle value in 0.01deg / LSB, wraps to 0 after (36000 - 1)
-    uint32_t m_angle = 0;
+    uint32_t m_single_motor_mode_angle = 0;
 
     /// @brief The motor voltage in 0.1V / LSB
     uint16_t m_voltage = 0;

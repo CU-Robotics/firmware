@@ -52,7 +52,7 @@ int MG8016EI6<CAN_BUS>::read(CAN_message_t& msg) {
         break;
     }
     case CMD_READ_ACCELERATION: {
-        m_acceleration = (int32_t)((msg.buf[3] << 24) | (msg.buf[2] << 16) | (msg.buf[1] << 8) | msg.buf[0]);
+        m_acceleration = (int32_t)((msg.buf[7] << 24) | (msg.buf[6] << 16) | (msg.buf[5] << 8) | msg.buf[4]);
         break;
     }
     case CMD_READ_ENCODER: {
@@ -83,7 +83,7 @@ int MG8016EI6<CAN_BUS>::read(CAN_message_t& msg) {
         break;
     }
     case CMD_READ_ANGLE: {
-        m_angle = (uint32_t)((msg.buf[7] << 24) | (msg.buf[6] << 16) | (msg.buf[5] << 8) | msg.buf[4]);
+        m_single_motor_mode_angle = (uint32_t)((msg.buf[7] << 24) | (msg.buf[6] << 16) | (msg.buf[5] << 8) | msg.buf[4]);
         break;
     }
     case CMD_READ_STATE_1:
