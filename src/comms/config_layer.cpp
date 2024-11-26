@@ -166,7 +166,8 @@ void Config::fill_data(CommsPacket packets[MAX_CONFIG_PACKETS], uint8_t sizes[MA
                 size_t i1 = linear_index / STATE_LEN;
                 size_t i2 = linear_index % STATE_LEN;
                 // reinterpret config_location as a float matrix, take pointer to matrix[i1][i2], reinterpret pointer as void *
-                config_location = (void *)(&((float **)(config_location))[i1][i2]);
+                float **float_location = (float **)(config_location);
+                config_location = (void *)(&float_location[i1][i2]);
                 index += sub_size;
                 break;
             case 14:    // reference_limits
