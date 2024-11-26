@@ -24,7 +24,7 @@
 #define CONFIG_PATH "/config.pack"
 
 // define CONFIG_OFF_ROBOT macro when running off of real robot (testing firmware away from actual robot)
-// #define CONFIG_OFF_ROBOT 
+#define CONFIG_OFF_ROBOT 
 
 /// @brief arbitrary cap on config packets that can be received (make sure it's enough)
 const int MAX_CONFIG_PACKETS = 64;
@@ -130,31 +130,31 @@ private:
 
     /// @brief map of yaml section IDs to memory addresses for config data
     /// @note void pointer is used for compatibility with multiple pointer references (float*, float**, float***, etc.)
-    const std::map<uint8_t, void* > yaml_section_id_addresses = {
+    std::map<uint8_t, void* > yaml_section_id_addresses = {
         {0, &robot_id},                                 // robot
         {1, &pitch_angle_at_yaw_imu_calibration},       // pitch_angle_at_yaw_imu_calibration
-        {2, &encoder_offsets},                          // encoder_offsets
-        {3, &yaw_axis_vector},                          // yaw_axis_vector
-        {4, &pitch_axis_vector},                        // pitch_axis_vector
-        {5, &default_gimbal_starting_angles},           // default_gimbal_starting_angles
-        {6, &default_chassis_starting_angles},          // default_chassis_starting_angles
+        {2, encoder_offsets},                           // encoder_offsets
+        {3, yaw_axis_vector},                           // yaw_axis_vector
+        {4, pitch_axis_vector},                         // pitch_axis_vector
+        {5, default_gimbal_starting_angles},            // default_gimbal_starting_angles
+        {6, default_chassis_starting_angles},           // default_chassis_starting_angles
         {7, &length_of_barrel_from_pitch_axis},         // length_of_barrel_from_pitch_axis
         {8, &height_of_pitch_axis},                     // height_of_pitch_axis
         {9, &height_of_camera_above_barrel},            // height_of_camera_above_barrel
         {10, &num_sensors},                             // num_sensors
-        {11, &estimators},                              // estimators
-        {12, &kinematics_p},                            // kinematics_p, check index
-        {13, &kinematics_v},                            // kinematics_v, check index
+        {11, estimators},                               // estimators
+        {12, kinematics_p},                            // kinematics_p, check index
+        {13, kinematics_v},                            // kinematics_v, check index
         {14, &set_reference_limits},                    // reference_limits, check index
-        {15, &controller_types},                        // controller_types
+        {15, controller_types},                         // controller_types
         {16, &gains},                                   // gains, check index
-        {17, &num_states_per_estimator},                // num_states_per_estimator
-        {18, &assigned_states},                         // assigned states, check index
-        {19, &switcher_values},                         // switcher values
-        {20, &drive_conversion_factors},                // drive_conversion_factors
+        {17, num_states_per_estimator},                 // num_states_per_estimator
+        {18, assigned_states},                         // assigned states, check index
+        {19, switcher_values},                          // switcher values
+        {20, drive_conversion_factors},                 // drive_conversion_factors
         {21, &governor_types},                          // governor_types
-        {22, &odom_values},                             // odom_values
-        {23, &encoder_pins}                             // encoder_pins
+        {22, odom_values},                              // odom_values
+        {23, encoder_pins}                              // encoder_pins
     };
 
 };
