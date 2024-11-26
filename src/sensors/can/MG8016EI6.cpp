@@ -1,7 +1,6 @@
 #include "MG8016EI6.hpp"
 
-template <typename CAN_BUS>
-int MG8016EI6<CAN_BUS>::read(CAN_message_t& msg) {
+int MG8016EI6::read(CAN_message_t& msg) {
     // command IDs that return the base state (temp, torque, speed, angle)
     // A1, A2, A3, A4, A5, A6, A7, A8, 9C (state 2)
     // CMD_TORQUE_CONTROL, CMD_SPEED_CONTROL, CMD_MULTI_ANGLE_CONTROL, CMD_MULTI_ANGLE_CONTROL_SPEED_LIMITED,
@@ -107,8 +106,7 @@ int MG8016EI6<CAN_BUS>::read(CAN_message_t& msg) {
     return 1;
 }
 
-template<typename CAN_BUS>
-int MG8016EI6<CAN_BUS>::write(CAN_message_t& msg) {
+int MG8016EI6::write(CAN_message_t& msg) {
     // TODO: does the caller need my local ID?
 
     memcpy(&msg, &m_output, sizeof(CAN_message_t));
@@ -116,8 +114,7 @@ int MG8016EI6<CAN_BUS>::write(CAN_message_t& msg) {
     return 0;
 }
 
-template<typename CAN_BUS>
-void MG8016EI6<CAN_BUS>::write_motor_torque(float torque) {
+void MG8016EI6::write_motor_torque(float torque) {
     // Clamp the torque value
     if (torque > 1.0f) {
         torque = 1.0f;
@@ -139,8 +136,7 @@ void MG8016EI6<CAN_BUS>::write_motor_torque(float torque) {
     }
 }
 
-template<typename CAN_BUS>
-void MG8016EI6<CAN_BUS>::write_motor_speed(float speed) {
+void MG8016EI6::write_motor_speed(float speed) {
     // convert given speed in rad/s to 0.01dps/LSB
 
     // convert from rad/s to dps
@@ -163,8 +159,7 @@ void MG8016EI6<CAN_BUS>::write_motor_speed(float speed) {
     }
 }
 
-template<typename CAN_BUS>
-void MG8016EI6<CAN_BUS>::write_motor_angle(float angle, float speed_limit) {
+void MG8016EI6::write_motor_angle(float angle, float speed_limit) {
     // convert given angle in rad to 0.01deg/LSB
 
     // convert from rad to deg
@@ -203,8 +198,7 @@ void MG8016EI6<CAN_BUS>::write_motor_angle(float angle, float speed_limit) {
     }
 }
 
-template<typename CAN_BUS>
-void MG8016EI6<CAN_BUS>::print_state() {
+void MG8016EI6::print_state() {
     Serial.printf("Motor %d\n", m_id);
     Serial.printf("Temperature: %d\n", m_state.temperature);
     Serial.printf("Torque: %d\n", m_state.torque);
@@ -214,8 +208,7 @@ void MG8016EI6<CAN_BUS>::print_state() {
 
 // Command creation functions
 
-template<typename CAN_BUS>
-void MG8016EI6<CAN_BUS>::create_cmd_motor_off(uint8_t buf[8]) {
+void MG8016EI6::create_cmd_motor_off(uint8_t buf[8]) {
     buf[0] = CMD_MOTOR_OFF;
     buf[1] = 0;
     buf[2] = 0;
@@ -226,8 +219,7 @@ void MG8016EI6<CAN_BUS>::create_cmd_motor_off(uint8_t buf[8]) {
     buf[7] = 0;
 }
 
-template<typename CAN_BUS>
-void MG8016EI6<CAN_BUS>::create_cmd_motor_on(uint8_t buf[8]) {
+void MG8016EI6::create_cmd_motor_on(uint8_t buf[8]) {
     buf[0] = CMD_MOTOR_ON;
     buf[1] = 0;
     buf[2] = 0;
@@ -238,8 +230,7 @@ void MG8016EI6<CAN_BUS>::create_cmd_motor_on(uint8_t buf[8]) {
     buf[7] = 0;
 }
 
-template<typename CAN_BUS>
-void MG8016EI6<CAN_BUS>::create_cmd_motor_stop(uint8_t buf[8]) {
+void MG8016EI6::create_cmd_motor_stop(uint8_t buf[8]) {
     buf[0] = CMD_MOTOR_STOP;
     buf[1] = 0;
     buf[2] = 0;
@@ -250,8 +241,7 @@ void MG8016EI6<CAN_BUS>::create_cmd_motor_stop(uint8_t buf[8]) {
     buf[7] = 0;
 }
 
-template<typename CAN_BUS>
-void MG8016EI6<CAN_BUS>::create_cmd_torque_control(uint8_t buf[8], int16_t torque) {
+void MG8016EI6::create_cmd_torque_control(uint8_t buf[8], int16_t torque) {
     buf[0] = CMD_TORQUE_CONTROL;
     buf[1] = 0;
     buf[2] = 0;
@@ -262,8 +252,7 @@ void MG8016EI6<CAN_BUS>::create_cmd_torque_control(uint8_t buf[8], int16_t torqu
     buf[7] = 0;
 }
 
-template<typename CAN_BUS>
-void MG8016EI6<CAN_BUS>::create_cmd_speed_control(uint8_t buf[8], int32_t speed) {
+void MG8016EI6::create_cmd_speed_control(uint8_t buf[8], int32_t speed) {
     buf[0] = CMD_SPEED_CONTROL;
     buf[1] = 0;
     buf[2] = 0;
@@ -274,8 +263,7 @@ void MG8016EI6<CAN_BUS>::create_cmd_speed_control(uint8_t buf[8], int32_t speed)
     buf[7] = *((uint8_t*)(&speed) + 3);         // high byte
 }
 
-template<typename CAN_BUS>
-void MG8016EI6<CAN_BUS>::create_cmd_multi_angle_control(uint8_t buf[8], int32_t angle) {
+void MG8016EI6::create_cmd_multi_angle_control(uint8_t buf[8], int32_t angle) {
     buf[0] = CMD_MULTI_ANGLE_CONTROL;
     buf[1] = 0;
     buf[2] = 0;
@@ -286,8 +274,7 @@ void MG8016EI6<CAN_BUS>::create_cmd_multi_angle_control(uint8_t buf[8], int32_t 
     buf[7] = *((uint8_t*)(&angle) + 3);         // high byte
 }
 
-template<typename CAN_BUS>
-void MG8016EI6<CAN_BUS>::create_cmd_multi_angle_control_speed_limited(uint8_t buf[8], int32_t angle, uint16_t speed_limit) {
+void MG8016EI6::create_cmd_multi_angle_control_speed_limited(uint8_t buf[8], int32_t angle, uint16_t speed_limit) {
     buf[0] = CMD_MULTI_ANGLE_CONTROL_SPEED_LIMITED;
     buf[1] = 0;
     buf[2] = *((uint8_t*)(&speed_limit) + 0);   // low byte
@@ -298,8 +285,7 @@ void MG8016EI6<CAN_BUS>::create_cmd_multi_angle_control_speed_limited(uint8_t bu
     buf[7] = *((uint8_t*)(&angle) + 3);         // high byte
 }
 
-template<typename CAN_BUS>
-void MG8016EI6<CAN_BUS>::create_cmd_angle_control(uint8_t buf[8], uint32_t angle, uint8_t spin_direction) {
+void MG8016EI6::create_cmd_angle_control(uint8_t buf[8], uint32_t angle, uint8_t spin_direction) {
     buf[0] = CMD_ANGLE_CONTROL;
     buf[1] = spin_direction;
     buf[2] = 0;
@@ -310,8 +296,7 @@ void MG8016EI6<CAN_BUS>::create_cmd_angle_control(uint8_t buf[8], uint32_t angle
     buf[7] = *((uint8_t*)(&angle) + 3);         // high byte
 }
 
-template<typename CAN_BUS>
-void MG8016EI6<CAN_BUS>::create_cmd_angle_control_speed_limited(uint8_t buf[8], uint32_t angle, uint8_t spin_direction, uint16_t speed_limit) {
+void MG8016EI6::create_cmd_angle_control_speed_limited(uint8_t buf[8], uint32_t angle, uint8_t spin_direction, uint16_t speed_limit) {
     buf[0] = CMD_ANGLE_CONTROL_SPEED_LIMITED;
     buf[1] = spin_direction;
     buf[2] = *((uint8_t*)(&speed_limit) + 0);   // low byte
@@ -322,8 +307,7 @@ void MG8016EI6<CAN_BUS>::create_cmd_angle_control_speed_limited(uint8_t buf[8], 
     buf[7] = *((uint8_t*)(&angle) + 3);         // high byte
 }
 
-template<typename CAN_BUS>
-void MG8016EI6<CAN_BUS>::create_cmd_angle_increment_control(uint8_t buf[8], int32_t angle_increment) {
+void MG8016EI6::create_cmd_angle_increment_control(uint8_t buf[8], int32_t angle_increment) {
     buf[0] = CMD_ANGLE_INCREMENT_CONTROL;
     buf[1] = 0;
     buf[2] = 0;
@@ -334,8 +318,7 @@ void MG8016EI6<CAN_BUS>::create_cmd_angle_increment_control(uint8_t buf[8], int3
     buf[7] = *((uint8_t*)(&angle_increment) + 3);   // high byte   
 }
 
-template<typename CAN_BUS>
-void MG8016EI6<CAN_BUS>::create_cmd_angle_increment_control_speed_limited(uint8_t buf[8], int32_t angle_increment, uint16_t speed_limit) {
+void MG8016EI6::create_cmd_angle_increment_control_speed_limited(uint8_t buf[8], int32_t angle_increment, uint16_t speed_limit) {
     buf[0] = CMD_ANGLE_INCREMENT_CONTROL_SPEED_LIMITED;
     buf[1] = 0;
     buf[2] = *((uint8_t*)(&speed_limit) + 0);       // low byte
@@ -346,8 +329,7 @@ void MG8016EI6<CAN_BUS>::create_cmd_angle_increment_control_speed_limited(uint8_
     buf[7] = *((uint8_t*)(&angle_increment) + 3);   // high byte
 }
 
-template<typename CAN_BUS>
-void MG8016EI6<CAN_BUS>::create_cmd_read_pid(uint8_t buf[8]) {
+void MG8016EI6::create_cmd_read_pid(uint8_t buf[8]) {
     buf[0] = CMD_READ_PID;
     buf[1] = 0;
     buf[2] = 0;
@@ -358,8 +340,7 @@ void MG8016EI6<CAN_BUS>::create_cmd_read_pid(uint8_t buf[8]) {
     buf[7] = 0;
 }
 
-template<typename CAN_BUS>
-void MG8016EI6<CAN_BUS>::create_cmd_write_pid(uint8_t buf[8], uint8_t angle_p, uint8_t angle_i, uint8_t speed_p, uint8_t speed_i, uint8_t torque_p, uint8_t torque_i) {
+void MG8016EI6::create_cmd_write_pid(uint8_t buf[8], uint8_t angle_p, uint8_t angle_i, uint8_t speed_p, uint8_t speed_i, uint8_t torque_p, uint8_t torque_i) {
     buf[0] = CMD_WRITE_PID;
     buf[1] = 0;
     buf[2] = angle_p;
@@ -370,8 +351,7 @@ void MG8016EI6<CAN_BUS>::create_cmd_write_pid(uint8_t buf[8], uint8_t angle_p, u
     buf[7] = torque_i;
 }
 
-template<typename CAN_BUS>
-void MG8016EI6<CAN_BUS>::create_cmd_write_pid_rom(uint8_t buf[8], uint8_t angle_p, uint8_t angle_i, uint8_t speed_p, uint8_t speed_i, uint8_t torque_p, uint8_t torque_i) {
+void MG8016EI6::create_cmd_write_pid_rom(uint8_t buf[8], uint8_t angle_p, uint8_t angle_i, uint8_t speed_p, uint8_t speed_i, uint8_t torque_p, uint8_t torque_i) {
     buf[0] = CMD_WRITE_PID_ROM;
     buf[1] = 0;
     buf[2] = angle_p;
@@ -382,8 +362,7 @@ void MG8016EI6<CAN_BUS>::create_cmd_write_pid_rom(uint8_t buf[8], uint8_t angle_
     buf[7] = torque_i;
 }
 
-template<typename CAN_BUS>
-void MG8016EI6<CAN_BUS>::create_cmd_read_acceleration(uint8_t buf[8]) {
+void MG8016EI6::create_cmd_read_acceleration(uint8_t buf[8]) {
     buf[0] = CMD_READ_ACCELERATION;
     buf[1] = 0;
     buf[2] = 0;
@@ -394,8 +373,7 @@ void MG8016EI6<CAN_BUS>::create_cmd_read_acceleration(uint8_t buf[8]) {
     buf[7] = 0;
 }
 
-template<typename CAN_BUS>
-void MG8016EI6<CAN_BUS>::create_cmd_write_acceleration(uint8_t buf[8], int32_t acceleration) {
+void MG8016EI6::create_cmd_write_acceleration(uint8_t buf[8], int32_t acceleration) {
     buf[0] = CMD_WRITE_ACCELERATION;
     buf[1] = 0;
     buf[2] = 0;
@@ -406,8 +384,7 @@ void MG8016EI6<CAN_BUS>::create_cmd_write_acceleration(uint8_t buf[8], int32_t a
     buf[7] = *((uint8_t*)(&acceleration) + 3);   // high byte
 }
 
-template<typename CAN_BUS>
-void MG8016EI6<CAN_BUS>::create_cmd_read_encoder(uint8_t buf[8]) {
+void MG8016EI6::create_cmd_read_encoder(uint8_t buf[8]) {
     buf[0] = CMD_READ_ENCODER;
     buf[1] = 0;
     buf[2] = 0;
@@ -418,8 +395,7 @@ void MG8016EI6<CAN_BUS>::create_cmd_read_encoder(uint8_t buf[8]) {
     buf[7] = 0;
 }
 
-template<typename CAN_BUS>
-void MG8016EI6<CAN_BUS>::create_cmd_write_encoder_zero(uint8_t buf[8], uint16_t encoder_offset) {
+void MG8016EI6::create_cmd_write_encoder_zero(uint8_t buf[8], uint16_t encoder_offset) {
     buf[0] = CMD_WRITE_ENCODER_ZERO;
     buf[1] = 0;
     buf[2] = 0;
@@ -430,8 +406,7 @@ void MG8016EI6<CAN_BUS>::create_cmd_write_encoder_zero(uint8_t buf[8], uint16_t 
     buf[7] = *((uint8_t*)(&encoder_offset) + 1);   // high byte
 }
 
-template<typename CAN_BUS>
-void MG8016EI6<CAN_BUS>::create_cmd_write_position_as_zero(uint8_t buf[8]) {
+void MG8016EI6::create_cmd_write_position_as_zero(uint8_t buf[8]) {
     buf[0] = CMD_WRITE_POSITION_AS_ZERO;
     buf[1] = 0;
     buf[2] = 0;
@@ -442,8 +417,7 @@ void MG8016EI6<CAN_BUS>::create_cmd_write_position_as_zero(uint8_t buf[8]) {
     buf[7] = 0;
 }
 
-template<typename CAN_BUS>
-void MG8016EI6<CAN_BUS>::create_cmd_read_multi_angle(uint8_t buf[8]) {
+void MG8016EI6::create_cmd_read_multi_angle(uint8_t buf[8]) {
     buf[0] = CMD_READ_MULTI_ANGLE;
     buf[1] = 0;
     buf[2] = 0;
@@ -454,8 +428,7 @@ void MG8016EI6<CAN_BUS>::create_cmd_read_multi_angle(uint8_t buf[8]) {
     buf[7] = 0;
 }
 
-template<typename CAN_BUS>
-void MG8016EI6<CAN_BUS>::create_cmd_read_angle(uint8_t buf[8]) {
+void MG8016EI6::create_cmd_read_angle(uint8_t buf[8]) {
     buf[0] = CMD_READ_ANGLE;
     buf[1] = 0;
     buf[2] = 0;
@@ -466,8 +439,7 @@ void MG8016EI6<CAN_BUS>::create_cmd_read_angle(uint8_t buf[8]) {
     buf[7] = 0;
 }
 
-template<typename CAN_BUS>
-void MG8016EI6<CAN_BUS>::create_cmd_read_state_1(uint8_t buf[8]) {
+void MG8016EI6::create_cmd_read_state_1(uint8_t buf[8]) {
     buf[0] = CMD_READ_STATE_1;
     buf[1] = 0;
     buf[2] = 0;
@@ -478,8 +450,7 @@ void MG8016EI6<CAN_BUS>::create_cmd_read_state_1(uint8_t buf[8]) {
     buf[7] = 0;
 }
 
-template<typename CAN_BUS>
-void MG8016EI6<CAN_BUS>::create_cmd_clear_error(uint8_t buf[8]) {
+void MG8016EI6::create_cmd_clear_error(uint8_t buf[8]) {
     buf[0] = CMD_CLEAR_ERROR;
     buf[1] = 0;
     buf[2] = 0;
@@ -490,8 +461,7 @@ void MG8016EI6<CAN_BUS>::create_cmd_clear_error(uint8_t buf[8]) {
     buf[7] = 0;
 }
 
-template<typename CAN_BUS>
-void MG8016EI6<CAN_BUS>::create_cmd_read_state_2(uint8_t buf[8]) {
+void MG8016EI6::create_cmd_read_state_2(uint8_t buf[8]) {
     buf[0] = CMD_READ_STATE_2;
     buf[1] = 0;
     buf[2] = 0;
@@ -502,8 +472,7 @@ void MG8016EI6<CAN_BUS>::create_cmd_read_state_2(uint8_t buf[8]) {
     buf[7] = 0;
 }
 
-template<typename CAN_BUS>
-void MG8016EI6<CAN_BUS>::create_cmd_read_state_3(uint8_t buf[8]) {
+void MG8016EI6::create_cmd_read_state_3(uint8_t buf[8]) {
     buf[0] = CMD_READ_STATE_3;
     buf[1] = 0;
     buf[2] = 0;
@@ -513,9 +482,3 @@ void MG8016EI6<CAN_BUS>::create_cmd_read_state_3(uint8_t buf[8]) {
     buf[6] = 0;
     buf[7] = 0;
 }
-
-// explicitly declare the three possible types C610 can take
-
-template class MG8016EI6<FlexCAN_T4<CAN1, RX_SIZE_256, TX_SIZE_16>>;
-template class MG8016EI6<FlexCAN_T4<CAN2, RX_SIZE_256, TX_SIZE_16>>;
-template class MG8016EI6<FlexCAN_T4<CAN3, RX_SIZE_256, TX_SIZE_16>>;

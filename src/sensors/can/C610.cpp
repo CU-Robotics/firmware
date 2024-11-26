@@ -1,7 +1,6 @@
 #include "C610.hpp"
 
-template<typename CAN_BUS>
-int C610<CAN_BUS>::read(CAN_message_t& msg) {
+int C610::read(CAN_message_t& msg) {
     // early return if the message ID does not match
     if (msg.id != m_base_id + m_id) return 0;
 
@@ -20,8 +19,7 @@ int C610<CAN_BUS>::read(CAN_message_t& msg) {
     return 1;
 }
 
-template<typename CAN_BUS>
-int C610<CAN_BUS>::write(CAN_message_t& msg) {
+int C610::write(CAN_message_t& msg) {
     // TODO: does the caller need my local ID?
 
     // copy the internal m_output into msg
@@ -31,8 +29,7 @@ int C610<CAN_BUS>::write(CAN_message_t& msg) {
     return 1;
 }
 
-template<typename CAN_BUS>
-void C610<CAN_BUS>::write_motor_torque(float torque) {
+void C610::write_motor_torque(float torque) {
     // clamp torque to -1 to 1 just in case. We dont want to overflow the int
     if (torque < -1.0f) torque = -1.0f;
     if (torque > 1.0f) torque = 1.0f;
@@ -60,17 +57,10 @@ void C610<CAN_BUS>::write_motor_torque(float torque) {
     m_output.buf[motor_id * 2 + 1] = int_torque & 0xFF;     // lower byte
 }
 
-template<typename CAN_BUS>
-void C610<CAN_BUS>::print_state() {
+void C610::print_state() {
     Serial.printf("C610 Motor %d\n", m_id);
     Serial.printf("Torque: %d\n", m_state.torque);
     Serial.printf("Speed: %frad/s\n", m_state.speed);
     Serial.printf("Position: %d\n", m_state.position);
     Serial.printf("Temperature: %dC\n", m_state.temperature);
 }
-
-// explicitly declare the three possible types C610 can take
-
-template class C610<FlexCAN_T4<CAN1, RX_SIZE_256, TX_SIZE_16>>;
-template class C610<FlexCAN_T4<CAN2, RX_SIZE_256, TX_SIZE_16>>;
-template class C610<FlexCAN_T4<CAN3, RX_SIZE_256, TX_SIZE_16>>;

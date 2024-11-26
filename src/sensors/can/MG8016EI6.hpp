@@ -9,7 +9,6 @@
 // MG8016E-i6 CAN protocol data sheet
 // http://en.lkmotor.cn/upload/20230706100134f.pdf
 
-template <typename CAN_BUS>
 class MG8016EI6 : public Motor {
 public:
     /// @brief Deleted default constructor, must explicitly construct this object
@@ -21,8 +20,8 @@ public:
     /// @param id The per-bus motor ID. This is 1-indexed
     /// @param bus_id The CAN bus index/ID
     /// @param bus The CAN bus object
-    MG8016EI6(MotorType type, uint32_t gid, uint32_t id, uint8_t bus_id, CAN_BUS* bus)
-        : Motor(type, MotorControllerType::INTERNAL_CONTROLLER, gid, id, bus_id), m_can_bus(bus) {
+    MG8016EI6(MotorType type, uint32_t gid, uint32_t id, uint8_t bus_id)
+        : Motor(type, MotorControllerType::INTERNAL_CONTROLLER, gid, id, bus_id) {
     }
 
     /// @brief Deleted copy constructor, you must not copy this object
@@ -211,9 +210,6 @@ private:
 private:
     /// @brief The base ID for the motor, the true id is this + the motor id
     const uint32_t m_base_id = 0x140;
-
-    /// @brief The CAN bus object
-    CAN_BUS* m_can_bus = nullptr;
 
     /// @brief The maximum torque value, corresponds to 33A
     const int32_t m_max_torque = 2048;

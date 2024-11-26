@@ -20,11 +20,11 @@ enum MotorType {
     NULL_MOTOR_TYPE
 };
 
-/// @brief Defines the motor controller types
+/// @brief Defines the motor controller types. Enum values chosen based on the yaml config specification
 enum MotorControllerType {
     C610_CONTROLLER = 0,
     C620_CONTROLLER,
-    INTERNAL_CONTROLLER,
+    INTERNAL_CONTROLLER,    // TODO: this will need to change to the different motor type
     
     // add types above this comment
     NUM_MOTOR_CONTROLLER_TYPES,

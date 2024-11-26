@@ -6,7 +6,6 @@
 // C620 Data Sheet
 // https://rm-static.djicdn.com/tem/17348/RoboMaster%20C620%20Brushless%20DC%20Motor%20Speed%20Controller%20V1.01.pdf
 
-template <typename CAN_BUS>
 class C620 : public Motor {
 public:
     /// @brief Deleted default constructor, must explicitly construct this object
@@ -18,8 +17,8 @@ public:
     /// @param id The per-bus motor ID. This is 1-indexed
     /// @param bus_id The CAN bus index/ID
     /// @param bus The CAN bus object
-    C620(MotorType type, uint32_t gid, uint32_t id, uint8_t bus_id, CAN_BUS* bus)
-        : Motor(type, MotorControllerType::C620_CONTROLLER, gid, id, bus_id), m_can_bus(bus) {
+    C620(MotorType type, uint32_t gid, uint32_t id, uint8_t bus_id)
+        : Motor(type, MotorControllerType::C620_CONTROLLER, gid, id, bus_id) {
     }
 
     /// @brief Deleted copy constructor
@@ -58,9 +57,6 @@ private:
 private:
     /// @brief The base ID of the motor
     uint32_t m_base_id = 0x200;
-
-    /// @brief The CAN bus object
-    CAN_BUS* m_can_bus = nullptr;
 
     /// @brief The maximum torque value
     const int32_t m_max_torque = 16384;

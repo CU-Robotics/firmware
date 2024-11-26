@@ -10,14 +10,15 @@
 #include "sensors/can/C620.hpp"
 #include "sensors/can/MG8016EI6.hpp"
 
+#include "sensors/can/can_manager.hpp"
+
 // Loop constants
 #define LOOP_FREQ 1000
 #define HEARTBEAT_FREQ 2
 
 Profiler prof;
 
-FlexCAN_T4<CAN1, RX_SIZE_256, TX_SIZE_16> can_1;
-FlexCAN_T4<CAN2, RX_SIZE_256, TX_SIZE_16> can_2;
+CanManager can;
 
 Timer loop_timer;
 
@@ -65,15 +66,27 @@ int main() {
 
     print_logo();
 
-    can_2.begin();
-    can_2.setBaudRate(1000000);
+    can.init();
 
-    CAN_message_t output_msg;
+    float motor_info[CAN_MAX_MOTORS][3] = {
+        { 1,  1, 0 },
+        { 1,  2, 0 },
+        { 1,  3, 0 },
+        { 1,  4, 0 },
+        { 1,  5, 0 },
+        { 1,  6, 0 },
+        { -1, 7, 0 },
+        { -1, 8, 0 },
+        { 1,  1, 1 },
+        { 1,  2, 1 },
+        { 1,  3, 1 },
+        { 1,  4, 1 },
+        { 0,  5, 1 }
+    };
 
-    MG8016EI6 motor(MotorType::MG8016E_I6V3, 0, 1, 2, &can_2);
-    
-    motor.write_motor_angle(0);
-    motor.write(output_msg);
+    printf("%p %p\n", motor_info, &motor_info);
+
+    can.configure(motor_info);
 
     // Execute setup functions
     pinMode(13, OUTPUT);
@@ -84,15 +97,6 @@ int main() {
             Serial.printf("Alive %ld\n", loopc);
         }
         
-        motor.print_state();
-        can_2.write(output_msg);
-
-        CAN_message_t read_msg;
-        if (can_2.read(read_msg)) {
-            motor.read(read_msg);
-        }
-
-
         // if (loopc > 5000) {
         //     motor.write_motor_torque(0);
         //     motor.write(output_msg);
