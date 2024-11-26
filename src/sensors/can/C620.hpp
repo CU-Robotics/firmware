@@ -6,19 +6,19 @@
 // C620 Data Sheet
 // https://rm-static.djicdn.com/tem/17348/RoboMaster%20C620%20Brushless%20DC%20Motor%20Speed%20Controller%20V1.01.pdf
 
+/// @brief C620 controller driver. This manages generating CAN output messages and processing incomming CAN messages into a state array.
+/// @note It's construction is heavily managed since copying this object could alter the actions of CAN (and by extension the robot). This object exists only to be managed by CANManager.
 class C620 : public Motor {
 public:
-    /// @brief Deleted default constructor, must explicitly construct this object
+    /// @brief Deleted default constructor, must explicitly construct this object. Incomplete objects are not allowed
     C620() = delete;
 
-    /// @brief Main constructor. Defines the motor and controller type, global ID, id, and can bus
-    /// @param type The underlying motor type
+    /// @brief Main constructor. Defines the controller type, global ID, id, and can bus
     /// @param gid The global ID, not the per-bus motor ID
     /// @param id The per-bus motor ID. This is 1-indexed
     /// @param bus_id The CAN bus index/ID
-    /// @param bus The CAN bus object
-    C620(MotorType type, uint32_t gid, uint32_t id, uint8_t bus_id)
-        : Motor(type, MotorControllerType::C620_CONTROLLER, gid, id, bus_id) {
+    C620(uint32_t gid, uint32_t id, uint8_t bus_id)
+        : Motor(C620_CONTROLLER, gid, id, bus_id) {
     }
 
     /// @brief Deleted copy constructor
@@ -29,7 +29,7 @@ public:
     /// @return C620&
     C620& operator=(const C620& copy) = delete;
 
-    /// @brief Virtual destructor
+    /// @brief Destructor, does nothing
     ~C620() override { }
 
 public:

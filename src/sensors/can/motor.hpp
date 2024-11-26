@@ -5,30 +5,12 @@
 
 #include <FlexCAN_T4.h>
 
-/// @brief Defines the motor types
-enum MotorType {
-    GIM3505_8 = 0,
-    GIM4310_36,
-    GIM6010_8,
-    GIM8108_9,
-    MG8016E_I6V3,
-    M3508,
-    M2006,
-    
-    // add types above this comment
-    NUM_MOTOR_TYPES,
-    NULL_MOTOR_TYPE
-};
-
 /// @brief Defines the motor controller types. Enum values chosen based on the yaml config specification
 enum MotorControllerType {
-    C610_CONTROLLER = 0,
+    NULL_MOTOR_CONTROLLER_TYPE = 0,
+    C610_CONTROLLER,
     C620_CONTROLLER,
-    INTERNAL_CONTROLLER,    // TODO: this will need to change to the different motor type
-    
-    // add types above this comment
-    NUM_MOTOR_CONTROLLER_TYPES,
-    NULL_MOTOR_CONTROLLER_TYPE
+    MG8016_CONTROLLER,
 };
 
 /// @brief Unified motor state
@@ -57,8 +39,8 @@ public:
     /// @param gid The global ID, not the per-bus motor ID
     /// @param id The per-bus motor ID. This is 1-indexed 
     /// @param bus The CAN bus index/ID
-    Motor(MotorType type, MotorControllerType controller_type, uint32_t gid, uint32_t id, uint8_t bus)
-        : m_motor_type(type), m_controller_type(controller_type), m_gid(gid), m_id(id), m_bus_id(bus) {}
+    Motor(MotorControllerType controller_type, uint32_t gid, uint32_t id, uint8_t bus)
+        : m_controller_type(controller_type), m_gid(gid), m_id(id), m_bus_id(bus) {}
 
     /// @brief Virtual destructor
     virtual ~Motor() { }
@@ -83,10 +65,6 @@ public:
     virtual void print_state() = 0;
 
 public:
-    /// @brief Get the motor type
-    /// @return The motor type
-    inline MotorType get_motor_type() const { return m_motor_type; }
-
     /// @brief Get the motor controller type
     /// @return The motor controller type
     inline MotorControllerType get_controller_type() const { return m_controller_type; }
@@ -108,9 +86,6 @@ public:
     inline MotorState get_state() const { return m_state; }
 
 protected:
-    /// @brief What type of motor it is
-    MotorType m_motor_type = NULL_MOTOR_TYPE;
-
     /// @brief What controller this motor uses
     MotorControllerType m_controller_type = NULL_MOTOR_CONTROLLER_TYPE;
 

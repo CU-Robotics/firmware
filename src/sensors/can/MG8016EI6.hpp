@@ -9,19 +9,19 @@
 // MG8016E-i6 CAN protocol data sheet
 // http://en.lkmotor.cn/upload/20230706100134f.pdf
 
+/// @brief MG8016E-i6v3 controller driver. This manages generating CAN output messages and processing incomming CAN messages into a state array.
+/// @note It's construction is heavily managed since copying this object could alter the actions of CAN (and by extension the robot). This object exists only to be managed by CANManager.
 class MG8016EI6 : public Motor {
 public:
-    /// @brief Deleted default constructor, must explicitly construct this object
+    /// @brief Deleted default constructor, must explicitly construct this object. Incomplete objects are not allowed
     MG8016EI6() = delete;
 
-    /// @brief Main constructor. Defines the motor and controller type, global ID, id, and can bus
-    /// @param type The underlying motor type
+    /// @brief Main constructor. Defines the controller type, global ID, id, and can bus
     /// @param gid The global ID, not the per-bus motor ID
     /// @param id The per-bus motor ID. This is 1-indexed
     /// @param bus_id The CAN bus index/ID
-    /// @param bus The CAN bus object
-    MG8016EI6(MotorType type, uint32_t gid, uint32_t id, uint8_t bus_id)
-        : Motor(type, MotorControllerType::INTERNAL_CONTROLLER, gid, id, bus_id) {
+    MG8016EI6(uint32_t gid, uint32_t id, uint8_t bus_id)
+        : Motor(MG8016_CONTROLLER, gid, id, bus_id) {
     }
 
     /// @brief Deleted copy constructor, you must not copy this object
@@ -32,7 +32,7 @@ public:
     /// @return MG8016E_I6V3&
     MG8016EI6& operator=(const MG8016EI6& copy) = delete;
 
-    /// @brief Virtual destructor
+    /// @brief Destructor, does nothing
     ~MG8016EI6() override { }
 
 public:
