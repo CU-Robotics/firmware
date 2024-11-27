@@ -65,7 +65,7 @@ void ConfigLayer::config_SD_init(HIDLayer* comms) {
         if (configured) {
             Serial.printf("SD load successful!\n");
         } else {
-            Serial.printf("No config packet located, awaiting input from comms....\n");
+            Serial.printf("No config packet located in SD card, awaiting input from comms....\n");
         }
     }
 }
