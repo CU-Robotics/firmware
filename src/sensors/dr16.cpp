@@ -72,9 +72,10 @@ void DR16::read() {
 
 				// maintain having the buffer clear
 				Serial8.clear();
-			// there was a byte sent
 			} else {
-				// reset 0 counter
+				// there was a byte sent
+
+				// reset pause counter
 				pause_windows = 0;
 				// increment that we read a byte
 				accumulator += diff;
