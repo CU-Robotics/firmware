@@ -43,8 +43,9 @@ public:
 
     /// @brief Common write command. This fills the given message if successful. This is used to compile data to be sent over the CAN line
     /// @param msg The message buffer to fill data into
-    /// @return 0 on failure, 1 on success
+    /// @return The index in the buffer where the motor data was written. The MG8016E-i6 driver will always write 8 bytes so this will always return 0
     /// @note Does not issue a CAN command over the bus
+    /// @note Return value is mostly useless for this motor, it will always be 0
     int write(CAN_message_t& msg) override;
 
     /// @brief Write motor torque given a normalized value

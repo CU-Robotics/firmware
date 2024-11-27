@@ -18,7 +18,7 @@
 
 Profiler prof;
 
-CanManager can;
+CANManager can;
 
 Timer loop_timer;
 
@@ -68,23 +68,24 @@ int main() {
 
     can.init();
 
+    // [controller_type, motor_id, bus_id]
+    // controller_type: 
+    // 0: invalid
+    // 1: C610
+    // 2: C620 
+    // 3: MG8016EI6
     float motor_info[CAN_MAX_MOTORS][3] = {
-        { 2,  1, 0 },
-        { 2,  2, 0 },
-        { 2,  3, 0 },
-        { 2,  4, 0 },
-        { 2,  5, 0 },
-        { 2,  6, 0 },
-        { 0, 7, 0 },
-        { 0, 8, 0 },
-        { 2,  1, 1 },
-        { 2,  2, 1 },
-        { 2,  3, 1 },
-        { 2,  4, 1 },
-        { 1,  5, 1 }
+        { 2, 3, 0 },
+        { 2, 4, 0 },
+        { 1, 2, 0 },
+        { 3, 2, 1 }
     };
 
     can.configure(motor_info);
+    can.write_motor_torque(0, 0.1);
+    can.write_motor_torque(2, 0.1);
+    can.write_motor_torque(1, 0.1);
+    can.write_motor_torque(3, 0.01);
 
     // Execute setup functions
     pinMode(13, OUTPUT);
@@ -95,10 +96,10 @@ int main() {
             Serial.printf("Alive %ld\n", loopc);
         }
         
-        // if (loopc > 5000) {
-        //     motor.write_motor_torque(0);
-        //     motor.write(output_msg);
-        // }
+
+        can.write();
+
+        if (loopc > 500) while (1);
         
         // LED heartbeat -- linked to loop count to reveal slowdowns and freezes.
         loopc % (int)(1E3 / float(HEARTBEAT_FREQ)) < (int)(1E3 / float(5 * HEARTBEAT_FREQ)) ? digitalWrite(13, HIGH) : digitalWrite(13, LOW);

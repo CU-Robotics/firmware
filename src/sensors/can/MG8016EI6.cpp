@@ -107,8 +107,6 @@ int MG8016EI6::read(CAN_message_t& msg) {
 }
 
 int MG8016EI6::write(CAN_message_t& msg) {
-    // TODO: does the caller need my local ID?
-
     memcpy(&msg, &m_output, sizeof(CAN_message_t));
 
     return 0;

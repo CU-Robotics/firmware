@@ -40,7 +40,7 @@ public:
 
     /// @brief Common write command. This fills the given message if successful. This is used to compile data to be sent over the CAN line
     /// @param msg The message buffer to fill data into
-    /// @return 0 on failure, 1 on success
+    /// @return The index in the buffer where the motor data was written
     /// @note Does not issue a CAN command over the bus
     int write(CAN_message_t& msg) override;
 

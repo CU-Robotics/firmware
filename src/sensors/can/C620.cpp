@@ -20,12 +20,19 @@ int C620::read(CAN_message_t& msg) {
 }
 
 int C620::write(CAN_message_t& msg) {
-    // TODO: does the caller need my local ID?
+    // set ID
+    msg.id = m_output.id;
 
-    // copy the internal m_output into msg
-    memcpy(&msg, &m_output, sizeof(CAN_message_t));
+    // set only the buffer bytes that correspond to this motor
+    // get the per-struct motor ID
+    uint8_t motor_id = (m_id - 1) % 4;
 
-    return 1;
+    // fill in the output array
+    msg.buf[motor_id * 2] = m_output.buf[motor_id * 2];         // upper byte
+    msg.buf[motor_id * 2 + 1] = m_output.buf[motor_id * 2 + 1]; // lower byte
+
+    // return where in the buffer array the motor data was written
+    return motor_id * 2;
 }
 
 void C620::write_motor_torque(float torque) {
