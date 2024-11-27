@@ -36,8 +36,8 @@ void DR16::read() {
 		// start with the buffer clear
 		Serial8.clear();
 
-		int zeros = 0;
-		int accumulator = 0;
+		int pause_windows = 0; // amount of pause_windows in between full packets
+		int accumulator = 0; // number of bytes read since the last paused window.
 
 		// while we are not alligned
 		while (1) {
@@ -50,19 +50,19 @@ void DR16::read() {
 			// calculate the diff. Should be either 0 or 1 at this speed
 			int diff = Serial8.available() - available;
 
-			// if it was a zero, check to see if enough zeros have passed
+			// if diff was a zero, check to see if enough pause_windows have passed
 			if (diff == 0) {
-				// count the zeros
-				zeros++;
+				// count the pause_windows
+				pause_windows++;
 
-				// if at least 5 zeros have passed, this tells us we are in between dr16 packets since it should have sent a byte by now
+				// if at least 5 pause_windows have passed, this tells us we are in between dr16 packets since it should have sent a byte by now
 				// also check to see if we've actually received a full packet
-				if (zeros > 5 && accumulator == DR16_PACKET_SIZE) {
+				if (pause_windows > 5 && accumulator == DR16_PACKET_SIZE) {
 					Serial.printf("Dr16 aligned\n");
 					
-					break;
-				// enough zeros have passed but we didnt read an entire packet, start over
-				} else if (zeros > 5) {
+					break; // done
+				} else if (pause_windows > 5) {
+					// enough pause_windows have passed but we didnt read an entire packet, start over
 					Serial.printf("Dr16 failed to read enough data to align\n");
 					accumulator = 0;
 				}
@@ -72,7 +72,7 @@ void DR16::read() {
 			// there was a byte sent
 			} else {
 				// reset 0 counter
-				zeros = 0;
+				pause_windows = 0;
 				// increment that we read a byte
 				accumulator += diff;
 				// maintain a clear buffer
