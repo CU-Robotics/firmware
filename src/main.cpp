@@ -108,8 +108,6 @@ int main() {
         // Keep the loop running at the desired rate
         loop_timer.delay_micros((int)(1E6 / (float)(LOOP_FREQ)));
     }
-    
+
     return 0;
 }
-
-
