@@ -153,7 +153,7 @@ $(BUILD_DIR)/%.c.o: %.c
 	@mkdir -p $(dir $@)
 	@echo [Building $<]
 	@$(COMPILER_C) $(CPPFLAGS) $(CFLAGS) -c $< -o $@
-# Disassemble the object file to a .dump file
+    # Disassemble the object file to a .dump file
 	@$(OBJDUMP) -dstz $@ > $@.dump
 
 # Build step for compiling C++ source files
@@ -161,7 +161,7 @@ $(BUILD_DIR)/%.cpp.o: %.cpp
 	@mkdir -p $(dir $@)
 	@echo [Building $<]
 	@$(COMPILER_CPP) $(CPPFLAGS) $(CXXFLAGS) -c $< -o $@
-# Disassemble the object file to a .dump file
+    # Disassemble the object file to a .dump file
 	@$(OBJDUMP) -dstz $@ > $@.dump
 
 
