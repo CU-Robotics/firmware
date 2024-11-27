@@ -448,6 +448,7 @@ public:
 
         for(int i = 0; i < 3; i++){
             curr_rev_raw[i] = rev_enc[i]->get_angle_radians();
+            
             if ((curr_rev_raw[i]-prev_rev_raw[i]) > PI) rev_diff[i] = ((curr_rev_raw[i]-prev_rev_raw[i])-(2*PI));
             else if ((curr_rev_raw[i]-prev_rev_raw[i]) < -PI) rev_diff[i] = ((curr_rev_raw[i]-prev_rev_raw[i])+(2*PI));
             else rev_diff[i] = (curr_rev_raw[i]-prev_rev_raw[i]);
@@ -455,6 +456,7 @@ public:
             odom_pos_diff[i] = rev_diff[i]*odom_wheel_radius;
             total_odom_pos[i] = odom_pos_diff[i]+total_odom_pos[i];
         }
+
 
         chassis_angle = yaw_angle - yaw_enc_angle;
         // chassis_angle = -(total_odom_pos[0] + total_odom_pos[2])/(2*odom_axis_offset_x)+initial_chassis_angle;  

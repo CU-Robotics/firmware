@@ -235,6 +235,7 @@ int main() {
         // step estimates and construct estimated state
         estimator_manager.step(temp_state, temp_micro_state, incoming->get_hive_override_request());
 
+
         // if first loop set target state to estimated state
         if (count_one == 0) {
             temp_state[7][0] = 0;
@@ -246,6 +247,8 @@ int main() {
         governor.set_estimate(temp_state);
         governor.step_reference(target_state, config->governor_types);
         governor.get_reference(temp_reference);
+
+        // Serial.printf("yaw ref: %f, pitch ref: %f\n", temp_reference[3][0], temp_reference[4][0]);
 
 
         // generate motor outputs from controls

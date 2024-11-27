@@ -108,6 +108,7 @@ void EstimatorManager::step(float macro_outputs[STATE_LEN][3], float micro_outpu
     memcpy(curr_state, macro_outputs, sizeof(curr_state));
     clear_outputs(macro_outputs, micro_outputs);
 
+
     for (int i = 0; i < num_estimators; i++) {
         float macro_states[STATE_LEN][3] = { 0 };
         float micro_states[NUM_MOTORS][MICRO_STATE_LEN] = { 0 };
@@ -115,7 +116,8 @@ void EstimatorManager::step(float macro_outputs[STATE_LEN][3], float micro_outpu
         if (!estimators[i]->micro_estimator) {
 
             estimators[i]->step_states(macro_states, curr_state, override);
-            for (int j = 0; j < STATE_LEN; j++) {
+
+            for (int j = 0; j < STATE_LEN + 1; j++) {
                 int index = config_data->estimator_info[i][j + 1]; // j + 1 because the id is in index 0
                 if(index == -1) break;
                 for (int k = 0; k < 3; k++){
@@ -124,7 +126,7 @@ void EstimatorManager::step(float macro_outputs[STATE_LEN][3], float micro_outpu
             }
         } else {
             estimators[i]->step_states(micro_states, curr_state, override);
-            for (int j = 0; j < STATE_LEN; j++) {
+            for (int j = 0; j < NUM_MOTORS + 1; j++) {
                 int index = config_data->estimator_info[i][j + 1]; //0 index is reserved for the id
                 if (index == -1) break;
                 for (int k = 0; k < MICRO_STATE_LEN; k++) {

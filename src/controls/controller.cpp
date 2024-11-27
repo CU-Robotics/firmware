@@ -38,23 +38,24 @@ void XDrivePositionController::step(float reference[STATE_LEN][3], float estimat
         pidp[2].K[0] = 0;
         pidp[2].K[1] = 0;
         pidp[2].K[2] = 0;
-        pidv[2].K[0] = 0;
+        pidv[2].K[0] = 1;
         pidv[2].K[1] = 0;
         pidv[2].K[2] = 0;
-        pidv[2].K[3] = 1;
+        pidv[2].K[3] = 0;
     }
     outputp[2] = pidp[2].filter(dt, false, false);
     outputv[2] = pidv[2].filter(dt, false, false);
     output[2] = (outputp[2] + outputv[2])*gear_ratios[2];
 
-    // Adjust for chassis heading so control is field relative
-    output[0] = output[0]*sin(reference[2][0]) + output[1]*cos(reference[2][0]);
-    output[1] = output[1]*cos(reference[2][0]) - output[0]*sin(reference[2][0]);
+    float chassis_heading = estimate[2][0];
+
     // Convert to motor velocities
-    motor_velocity[0] = output[0] + output[1] + output[2];
-    motor_velocity[1] = output[0] - output[1] + output[2];
-    motor_velocity[2] = -output[0] - output[1] + output[2];
-    motor_velocity[3] = -output[0] + output[1] + output[2];
+    motor_velocity[1] = output[0]*cos(chassis_heading) + output[1]*sin(chassis_heading) + output[2];
+    motor_velocity[2] = output[0]*sin(chassis_heading) - output[1]*cos(chassis_heading) + output[2];
+    motor_velocity[3] = -output[0]*cos(chassis_heading) - output[1]*sin(chassis_heading) + output[2];
+    motor_velocity[0] = -output[0]*sin(chassis_heading) + output[1]*cos(chassis_heading) + output[2];
+
+    // Serial.printf("1: %f, 2: %f, 3: %f, 4: %f\n", motor_velocity[0], motor_velocity[1], motor_velocity[2], motor_velocity[3]);
 
     // Power limiting
     float power_buffer = ref.ref_data.robot_power_heat.buffer_energy;
@@ -64,6 +65,7 @@ void XDrivePositionController::step(float reference[STATE_LEN][3], float estimat
     if (power_buffer < power_buffer_limit_thresh) {
         power_limit_ratio = constrain(((power_buffer - power_buffer_critical_thresh) / power_buffer_limit_thresh), 0.0, 1.0);
     }
+    // Serial.printf("current_hp: %f", ref);
 
     // Low level velocity controller
     for(int i = 0; i < 4; i++){
@@ -193,8 +195,8 @@ void PitchController::step(float reference[STATE_LEN][3], float estimate[STATE_L
     output += pidv.filter(dt, true, false); // no wrap for velocity
     output = constrain(output, -1.0, 1.0);
 
-    outputs[0] = -output;
-    outputs[1] = output;
+    outputs[0] = output * gear_ratios[0];
+    outputs[1] = output * gear_ratios[1];
 
     // Serial.printf("Pitch est: %f, pitch ref: %f, pitch output: %f\n", estimate[4][0], reference[4][0], output);
 }
@@ -241,7 +243,7 @@ void FeederController::step(float reference[STATE_LEN][3], float estimate[STATE_
     pid_low.setpoint = output;
     pid_low.measurement = micro_estimate[12][1];
     output = pid_low.filter(timer.delta(), true, false);
-    Serial.printf("Feeder output: %f, ref: %f, FF: %f\n", output, pid_low.setpoint-micro_estimate[12][1], pid_low.K[3]);
+    // Serial.printf("Feeder output: %f, ref: %f, FF: %f\n", output, pid_low.setpoint-micro_estimate[12][1], pid_low.K[3]);
     outputs[0] = output;
 }
 
