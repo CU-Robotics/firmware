@@ -39,6 +39,8 @@ void DR16::read() {
 		int pause_windows = 0; // amount of pause_windows in between full packets
 		int accumulator = 0; // number of bytes read since the last paused window.
 
+		int tries = 0; // count the number of tries for clearer feedback in case we get stuck aligning.
+
 		// while we are not alligned
 		while (1) {
 			// grab the current size of the recv buffer
@@ -50,10 +52,12 @@ void DR16::read() {
 			// calculate the diff. Should be either 0 or 1 at this speed
 			int diff = Serial8.available() - available;
 
-			// if diff was a zero, check to see if enough pause_windows have passed
+			// if diff was a zero, we hit a pause in the datastream.
 			if (diff == 0) {
 				// count the pause_windows
 				pause_windows++;
+
+				// check to see if enough pause_windows have passed
 
 				// if at least 5 pause_windows have passed, this tells us we are in between dr16 packets since it should have sent a byte by now
 				// also check to see if we've actually received a full packet
@@ -63,7 +67,6 @@ void DR16::read() {
 					break; // done
 				} else if (pause_windows > 5) {
 					// enough pause_windows have passed but we didnt read an entire packet, start over
-					Serial.printf("Dr16 failed to read enough data to align\n");
 					accumulator = 0;
 				}
 
@@ -78,7 +81,10 @@ void DR16::read() {
 				// maintain a clear buffer
 				Serial8.clear();
 			}
+
+			Serial.printf("Dr16 failed to read enough data to align. Tries: %d\n", tries++);
 		}
+
 
 		// even though we are alligned, we have not actually read anything yet, so still return
 		return;
