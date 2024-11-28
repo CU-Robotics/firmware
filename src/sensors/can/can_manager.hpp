@@ -43,8 +43,11 @@ public:
     /// @param motor_info Motor info array from the config yaml. 2D array holding information in the form: CAN_MAX_MOTORS * [motor_controller_type, per_bus_motor_id, bus_id]
     void configure(float motor_info[CAN_MAX_MOTORS][3]);
 
+    /// @brief Read data from all busses and distribute them to the correct motors
     void read();
 
+    /// @brief Issue write commands to all motors on each bus
+    /// @note This issues a CAN command over the bus
     void write();
 
     /// @brief Write a torque command to a specific motor given it's global ID
@@ -53,8 +56,18 @@ public:
     /// @note This does not issue a CAN command over the bus
     void write_motor_torque(uint32_t motor_gid, float torque);
 
-private:
+    /// @brief Print the state of all motors
+    void print_state();
 
+    /// @brief Print the state of a specific motor
+    /// @param motor_gid The global ID of the motor to print the state of
+    void print_motor_state(uint32_t motor_gid);
+
+private:
+    /// @brief Iterates through all the motors and tries to give the message to the correct one
+    /// @param msg The message to distribute
+    /// @return True if the message was distributed, false if it was not
+    bool distribute_msg(CAN_message_t& msg);
 
 private:
     /// @brief CAN bus 1
@@ -63,6 +76,9 @@ private:
     FlexCAN_T4<CAN2, RX_SIZE_256, TX_SIZE_16> m_can2;
     /// @brief CAN bus 3
     FlexCAN_T4<CAN3, RX_SIZE_256, TX_SIZE_16> m_can3;
+
+    /// @brief Array of CAN bus objects for easier access
+    FlexCAN_T4_Base* m_busses[CAN_NUM_BUSSES] = { &m_can1, &m_can2, &m_can3 };
 
     /// @brief Array of generic motor objects
     Motor* m_motors[CAN_MAX_MOTORS] = { nullptr };

@@ -32,7 +32,11 @@ int MG8016EI6::read(CAN_message_t& msg) {
     case CMD_READ_STATE_2: {
         // read the state
         m_state.temperature = msg.buf[1];
-        m_state.torque = (int16_t)((msg.buf[3] << 8) | msg.buf[2]);
+        // torque is given in the signed range [-2048, 2048] which corresponds to [-33A, 33A]
+        // normalize this to [-1, 1]
+        int16_t raw_torque = (int16_t)((msg.buf[3] << 8) | msg.buf[2]);
+        m_state.torque = (float)raw_torque / m_max_torque;
+        
         // speed is given in 1dps/LSB
         // need to conver this to rad/s
         int16_t speed_dps = (int16_t)((msg.buf[5] << 8) | msg.buf[4]);
@@ -197,10 +201,10 @@ void MG8016EI6::write_motor_angle(float angle, float speed_limit) {
 }
 
 void MG8016EI6::print_state() {
-    Serial.printf("Motor %d\n", m_id);
-    Serial.printf("Temperature: %d\n", m_state.temperature);
-    Serial.printf("Torque: %d\n", m_state.torque);
-    Serial.printf("Speed: %f\n", m_state.speed);
+    Serial.printf("MG Motor %d\n", m_id);
+    Serial.printf("Temperature: %d C\n", m_state.temperature);
+    Serial.printf("Torque: %f %%\n", m_state.torque);
+    Serial.printf("Speed: %f rad/s\n", m_state.speed);
     Serial.printf("Position: %u\n", m_state.position);
 }
 

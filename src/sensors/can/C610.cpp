@@ -8,7 +8,8 @@ int C610::read(CAN_message_t& msg) {
     memcpy(&m_input, &msg, sizeof(CAN_message_t));
 
     // fill out the motor state buffer
-    m_state.torque = (m_input.buf[4] << 8) | m_input.buf[5];
+    int16_t torque = (m_input.buf[4] << 8) | m_input.buf[5];
+    m_state.torque = (float)torque / m_max_torque;
 
     int16_t rpm = (m_input.buf[2] << 8) | m_input.buf[3];
     float rad_per_sec = rpm * ((2 * PI) / 60);
@@ -65,8 +66,8 @@ void C610::write_motor_torque(float torque) {
 
 void C610::print_state() {
     Serial.printf("C610 Motor %d\n", m_id);
-    Serial.printf("Torque: %d\n", m_state.torque);
-    Serial.printf("Speed: %frad/s\n", m_state.speed);
+    Serial.printf("Temperature: %d C\n", m_state.temperature);
+    Serial.printf("Torque: %f %%\n", m_state.torque);
+    Serial.printf("Speed: %f rad/s\n", m_state.speed);
     Serial.printf("Position: %d\n", m_state.position);
-    Serial.printf("Temperature: %dC\n", m_state.temperature);
 }

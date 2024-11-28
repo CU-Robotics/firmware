@@ -87,6 +87,18 @@ void CANManager::configure(float motor_info[CAN_MAX_MOTORS][3]) {
     }
 }
 
+void CANManager::read() {
+    // for each bus
+    for (uint32_t bus = 0; bus < CAN_NUM_BUSSES; bus++) {
+        // we want to read all the messages from this bus as there might be many queued up
+        CAN_message_t msg;
+        while (m_busses[bus]->read(msg)) {
+            // distribute the message to the correct motor
+            distribute_msg(msg);
+        }
+    }
+}
+
 void CANManager::write() {
     // for each bus
     for (uint32_t bus = 0; bus < CAN_NUM_BUSSES; bus++) {
@@ -125,28 +137,13 @@ void CANManager::write() {
             }
             case MG8016_CONTROLLER: {
                 CAN_message_t msg;
+
+                // get its message data
                 m_motors[motor]->write(msg);
-
-                // print buffer
-                Serial.printf("buf id %x: ", msg.id);
-                for (int i = 0; i < 8; i++) {
-                    Serial.printf("%02X ", msg.buf[i]);
-                }
-
-                Serial.println();
-
+                
                 // the MG motors dont require msg merging so just write it to the bus
-
                 // write the message to the correct bus
-                if (bus == 0) {
-                    m_can1.write(msg);
-                } else if (bus == 1) {
-                    m_can2.write(msg);
-                } else if (bus == 2) {
-                    m_can3.write(msg);
-                } else {
-                    Serial.printf("CANManager tried to write to an invalid bus: %d\n", bus);
-                }
+                m_busses[bus]->write(msg);
 
                 break;
             }
@@ -158,18 +155,8 @@ void CANManager::write() {
         }
         
         // write the combined messages to the bus
-        if (bus == CAN_1) {
-            m_can1.write(rm_motor_msgs[0]); // first 4 motors
-            m_can1.write(rm_motor_msgs[1]); // last 4 motors
-        } else if (bus == CAN_2) {
-            m_can2.write(rm_motor_msgs[0]);
-            m_can2.write(rm_motor_msgs[1]);
-        } else if (bus == CAN_3) {  // TODO: do we force only non-rm motors on can 3?
-            m_can3.write(rm_motor_msgs[0]);
-            m_can3.write(rm_motor_msgs[1]);
-        } else {
-            Serial.printf("CANManager tried to write to an invalid bus: %d\n", bus);
-        }
+        m_busses[bus]->write(rm_motor_msgs[0]);
+        m_busses[bus]->write(rm_motor_msgs[1]);
     }
 
 }
@@ -189,4 +176,59 @@ void CANManager::write_motor_torque(uint32_t motor_gid, float torque) {
 
     // write the torque to the motor
     m_motors[motor_gid]->write_motor_torque(torque);
+}
+
+void CANManager::print_state() {
+    // for each motor
+    for (uint32_t motor = 0; motor < CAN_MAX_MOTORS; motor++) {
+        // if the motor is null, skip it
+        if (m_motors[motor] == nullptr) {
+            continue;
+        }
+
+        // print the motor state
+        m_motors[motor]->print_state();
+
+        Serial.println();
+    }
+}
+
+void CANManager::print_motor_state(uint32_t motor_gid) {
+    // verify motor ID
+    if (motor_gid >= CAN_MAX_MOTORS) {
+        Serial.printf("CANManager tried to print an invalid motor: %d\n", motor_gid);
+        return;
+    }
+
+    // verify motor exists
+    if (m_motors[motor_gid] == nullptr) {
+        Serial.printf("CANManager tried to print an invalid motor: %d\n", motor_gid);
+        return;
+    }
+
+    // print the motor state
+    m_motors[motor_gid]->print_state();
+}
+
+bool CANManager::distribute_msg(CAN_message_t& msg) {
+    // for each motor
+    for (uint32_t motor = 0; motor < CAN_MAX_MOTORS; motor++) {
+        // if the motor is null, skip it
+        if (m_motors[motor] == nullptr) {
+            continue;
+        }
+
+        // if the motor is on the wrong bus, skip it
+        // msg.bus is 1-indexed but the motor bus_id is 0-indexed
+        if (m_motors[motor]->get_bus_id() != (msg.bus - 1)) {
+            continue;
+        }
+
+        // if the motor can handle the message, give it to the motor
+        if (m_motors[motor]->read(msg)) {
+            return true;
+        }
+    }
+    
+    return false;
 }

@@ -15,8 +15,8 @@ enum MotorControllerType {
 
 /// @brief Unified motor state
 struct MotorState {
-    /// @brief Motor specific torque output. The unit is dependent on the motor but it is normally in a range corresponding to it's ampage
-    int16_t torque = 0;
+    /// @brief Motor specific torque output. Unit is normalized to [-1, 1] representing the signed percentage of max torque
+    float torque = 0;
     /// @brief Rotational speed of the motor in rad/s, signed
     float speed = 0;
     /// @brief Motor specific position output. The unit is dependent on the motor but it is normally in a range corresponding to it's encoder

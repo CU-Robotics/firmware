@@ -82,10 +82,10 @@ int main() {
     };
 
     can.configure(motor_info);
-    can.write_motor_torque(0, 0.1);
+    can.write_motor_torque(0, 0.01);
     can.write_motor_torque(2, 0.1);
-    can.write_motor_torque(1, 0.1);
-    can.write_motor_torque(3, 0.01);
+    can.write_motor_torque(1, 0.01);
+    can.write_motor_torque(3, -0.1);
 
     // Execute setup functions
     pinMode(13, OUTPUT);
@@ -96,11 +96,12 @@ int main() {
             Serial.printf("Alive %ld\n", loopc);
         }
         
-
         can.write();
 
-        if (loopc > 500) while (1);
-        
+        can.read();
+
+        can.print_state();
+
         // LED heartbeat -- linked to loop count to reveal slowdowns and freezes.
         loopc % (int)(1E3 / float(HEARTBEAT_FREQ)) < (int)(1E3 / float(5 * HEARTBEAT_FREQ)) ? digitalWrite(13, HIGH) : digitalWrite(13, LOW);
         loopc++;
