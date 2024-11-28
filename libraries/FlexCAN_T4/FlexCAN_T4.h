@@ -327,6 +327,7 @@ class FlexCAN_T4_Base {
     virtual uint64_t events() = 0;
     virtual int write(const CANFD_message_t &msg) = 0;
     virtual int write(const CAN_message_t &msg) = 0;
+    virtual int read(CAN_message_t &msg) = 0;
     virtual bool isFD() = 0;
     virtual uint8_t getFirstTxBoxSize() = 0;
 };
