@@ -12,10 +12,12 @@ struct IMUData{
     float alpha_X; // Roll axis
     float alpha_Y; // pitch axis
     float alpha_Z; // Yaw axis 
-    float angle_X; // Roll axis
-    float angle_Y; // pitch axis
-    float acclangle_X; // Roll axis
-    float acclangle_Y; // pitch axis 
+    float gyro_roll; // Roll axis
+    float gyro_pitch; // pitch axis
+    float accel_roll; // Roll axis
+    float accel_pitch; // pitch axis
+    float k_roll; // Roll angle filtered by KalmanFilter
+    float k_pitch; // Pitch angle filtered by KalmanFilter 
     float temperature;
     float accel_scale;
 };
@@ -25,14 +27,21 @@ class IMU_filter{
 
         IMUData _imu;
 
-        float _alpha;
-
         Timer timer;
+
+        // Simple filter
+        float _alpha;
+        // Kalman Filter
+        float Q; // Process noise covariance 
+        float R; // Measurement noise covariance
+        std::array<std::array<float, 2>, 2> P; // State covariance matrix
+        std::array<std::array<float, 2>, 2> K; // Kalman gain
     public:
         void init();
         IMUData* getdata();
         void read();
         void print();
         void calibrate_imu();
+        void serial_data_for_plot();
 };
 #endif

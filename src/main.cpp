@@ -69,7 +69,7 @@ int main() {
         //Testobserver.step(can.get_data(), imu.getdata(), tempobs); // Calculate Observer values
         //Testcontorl.step(tempmotor, ref, tempobs); // Calculate motors motion
 
-        testicm.print();
+        testicm.serial_data_for_plot();
         // Write actuators
         /*if (!dr16.is_connected() || dr16.get_l_switch() == 1) {
             // SAFETY ON
