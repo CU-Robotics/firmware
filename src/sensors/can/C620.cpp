@@ -36,6 +36,11 @@ int C620::write(CAN_message_t& msg) {
     return motor_id * 2;
 }
 
+void C620::zero_motor() {
+    // write 0 torque to the output msg
+    write_motor_torque(0.0f);
+}
+
 void C620::write_motor_torque(float torque) {
     // clamp torque to -1 to 1 just in case. We dont want to overflow the int
     if (torque < -1.0f) torque = -1.0f;

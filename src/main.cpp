@@ -82,9 +82,9 @@ int main() {
     };
 
     can.configure(motor_info);
-    can.write_motor_torque(0, 0.01);
+    can.write_motor_torque(0, 0.1);
     can.write_motor_torque(2, 0.1);
-    can.write_motor_torque(1, 0.01);
+    can.write_motor_torque(1, 0.1);
     can.write_motor_torque(3, -0.1);
 
     // Execute setup functions
@@ -101,6 +101,15 @@ int main() {
         can.read();
 
         can.print_state();
+
+        if (loopc >= 5000) {
+            can.safety_mode();
+
+            MG8016EI6* motor = static_cast<MG8016EI6*>(can.get_motor(3));
+            if (motor != nullptr) {
+                motor->write_motor_off();
+            }
+        }
 
         // LED heartbeat -- linked to loop count to reveal slowdowns and freezes.
         loopc % (int)(1E3 / float(HEARTBEAT_FREQ)) < (int)(1E3 / float(5 * HEARTBEAT_FREQ)) ? digitalWrite(13, HIGH) : digitalWrite(13, LOW);

@@ -19,8 +19,10 @@ constexpr uint32_t CAN_3 = 2u;
 // Because of how volatile FlexCAN_T4 objects are, there must only ever exist one instance of this class
 // I'm deleting any copy and assignment constructors that may act to create a new instance
 
+/// @brief The overall manager for the CAN busses and motors
 class CANManager {
 public:
+    /// @brief Default constructor. FlexCAN moment for forcing the definition to be in the cpp
     CANManager();
 
     /// @brief Deleted copy and assignment constructors. This class should only ever have one instance
@@ -50,6 +52,10 @@ public:
     /// @note This issues a CAN command over the bus
     void write();
 
+    /// @brief Issue zero torque commands to all motors
+    /// @note This immediately issues a CAN command over the bus
+    void safety_mode();
+
     /// @brief Write a torque command to a specific motor given it's global ID
     /// @param motor_gid The global ID of the motor to write to
     /// @param torque The normalized torque value to write to the motor in the range [-1, 1]
@@ -62,6 +68,12 @@ public:
     /// @brief Print the state of a specific motor
     /// @param motor_gid The global ID of the motor to print the state of
     void print_motor_state(uint32_t motor_gid);
+
+    /// @brief Get the underlying motor object by ID
+    /// @param motor_gid The global ID of the motor to get
+    /// @return The motor object if it exists, nullptr if it does not
+    /// @note You can use the motor's get_type to determine the type of motor and dynamic_cast to the correct motor type
+    Motor* get_motor(uint32_t motor_gid);
 
 private:
     /// @brief Iterates through all the motors and tries to give the message to the correct one

@@ -57,6 +57,10 @@ public:
     /// @note Does not issue a CAN command over the bus
     virtual int write(CAN_message_t& msg) = 0;
 
+    /// @brief Zero the motor. This is a safety function to ensure the motor is not actively driving
+    /// @note Does not issue a CAN command over the bus
+    virtual void zero_motor() = 0;  // this is virtual because it might differ between motors
+
     /// @brief Generic write motor function handling only torque. This is the only common interface of all the motors we use
     /// @param torque The torque value between [-1, 1]
     virtual void write_motor_torque(float torque) = 0;

@@ -44,6 +44,10 @@ public:
     /// @note Does not issue a CAN command over the bus
     int write(CAN_message_t& msg) override;
 
+    /// @brief Zero the motor. This is a safety function to ensure the motor is not actively driving
+    /// @note Does not issue a CAN command over the bus
+    void zero_motor() override;
+
     /// @brief Write motor torque given a normalized value
     /// @param torque A value between [-1, 1] representing the torque range of [-10A, 10A]
     void write_motor_torque(float torque) override;

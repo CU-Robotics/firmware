@@ -138,6 +138,11 @@ void MG8016EI6::write_motor_torque(float torque) {
     }
 }
 
+void MG8016EI6::zero_motor() {
+    // write 0 torque to the output msg
+    write_motor_torque(0.0f);
+}
+
 void MG8016EI6::write_motor_speed(float speed) {
     // convert given speed in rad/s to 0.01dps/LSB
 
@@ -206,6 +211,42 @@ void MG8016EI6::print_state() {
     Serial.printf("Torque: %f %%\n", m_state.torque);
     Serial.printf("Speed: %f rad/s\n", m_state.speed);
     Serial.printf("Position: %u\n", m_state.position);
+}
+
+void MG8016EI6::write_motor_off() {
+    // create the message
+    uint8_t buf[8];
+    create_cmd_motor_off(buf);
+
+    // fill in the output array
+    m_output.id = m_base_id + m_id;
+    for (int i = 0; i < 8; i++) {
+        m_output.buf[i] = buf[i];
+    }
+}
+
+void MG8016EI6::write_motor_on() {
+    // create the message
+    uint8_t buf[8];
+    create_cmd_motor_on(buf);
+
+    // fill in the output array
+    m_output.id = m_base_id + m_id;
+    for (int i = 0; i < 8; i++) {
+        m_output.buf[i] = buf[i];
+    }
+}
+
+void MG8016EI6::write_motor_stop() {
+    // create the message
+    uint8_t buf[8];
+    create_cmd_motor_stop(buf);
+
+    // fill in the output array
+    m_output.id = m_base_id + m_id;
+    for (int i = 0; i < 8; i++) {
+        m_output.buf[i] = buf[i];
+    }
 }
 
 // Command creation functions

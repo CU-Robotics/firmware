@@ -161,6 +161,22 @@ void CANManager::write() {
 
 }
 
+void CANManager::safety_mode() {
+    // for each motor
+    for (uint32_t motor = 0; motor < CAN_MAX_MOTORS; motor++) {
+        // if the motor is null, skip it
+        if (m_motors[motor] == nullptr) {
+            continue;
+        }
+
+        // call the motor's zero function
+        m_motors[motor]->zero_motor();
+    }
+
+    // write the zero torque commands to the bus
+    write();
+}
+
 void CANManager::write_motor_torque(uint32_t motor_gid, float torque) {
     // verify motor ID
     if (motor_gid >= CAN_MAX_MOTORS) {
@@ -195,7 +211,7 @@ void CANManager::print_state() {
 
 void CANManager::print_motor_state(uint32_t motor_gid) {
     // verify motor ID
-    if (motor_gid >= CAN_MAX_MOTORS) {
+    if (motor_gid > CAN_MAX_MOTORS) {
         Serial.printf("CANManager tried to print an invalid motor: %d\n", motor_gid);
         return;
     }
@@ -208,6 +224,16 @@ void CANManager::print_motor_state(uint32_t motor_gid) {
 
     // print the motor state
     m_motors[motor_gid]->print_state();
+}
+
+Motor* CANManager::get_motor(uint32_t motor_gid) {
+    // verify motor ID is not out of bounds
+    if (motor_gid > CAN_MAX_MOTORS) {
+        Serial.printf("CANManager tried to get an invalid motor: %d\n", motor_gid);
+        return nullptr;
+    }
+    
+    return m_motors[motor_gid];
 }
 
 bool CANManager::distribute_msg(CAN_message_t& msg) {
