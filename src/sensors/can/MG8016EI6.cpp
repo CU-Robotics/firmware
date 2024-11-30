@@ -131,7 +131,7 @@ int MG8016EI6::read(CAN_message_t& msg) {
     return 1;
 }
 
-int MG8016EI6::write(CAN_message_t& msg) {
+int MG8016EI6::write(CAN_message_t& msg) const {
     memcpy(&msg, &m_output, sizeof(CAN_message_t));
 
     return 0;
@@ -226,7 +226,7 @@ void MG8016EI6::write_motor_angle(float angle, float speed_limit) {
     }
 }
 
-void MG8016EI6::print_state() {
+void MG8016EI6::print_state() const {
     Serial.printf("MG Motor %d\n", m_id);
     Serial.printf("Temperature: %d C\n", m_state.temperature);
     Serial.printf("Torque: %f %%\n", m_state.torque);

@@ -45,7 +45,7 @@ public:
     /// @param msg The message buffer to fill data into
     /// @return The index in the buffer where the motor data was written
     /// @note Does not issue a CAN command over the bus
-    int write(CAN_message_t& msg) override;
+    int write(CAN_message_t& msg) const override;
 
     /// @brief Zero the motor. This is a safety function to ensure the motor is not actively driving
     /// @note Does not issue a CAN command over the bus
@@ -56,7 +56,7 @@ public:
     void write_motor_torque(float torque) override;
 
     /// @brief Print the current state of the motor
-    void print_state() override;
+    void print_state() const override;
 
 private:
 

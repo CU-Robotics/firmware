@@ -64,6 +64,13 @@ int main() {
     Serial.begin(115200); // the serial monitor is actually always active (for debug use Serial.println & tycmd)
     debug.begin(SerialUSB1);
 
+    if (CrashReport) {
+        while (1) {
+            Serial.println(CrashReport);
+            delay(1000);
+        }
+    }
+
     print_logo();
 
     can.init();
@@ -100,15 +107,10 @@ int main() {
 
         can.read();
 
-        // can.print_state();
+        can.print_state();
 
         if (loopc >= 5000) {
             can.safety_mode();
-
-            MG8016EI6* motor = static_cast<MG8016EI6*>(can.get_motor(3));
-            if (motor != nullptr) {
-                motor->write_motor_off();
-            }
         }
 
         // LED heartbeat -- linked to loop count to reveal slowdowns and freezes.

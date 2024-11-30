@@ -57,7 +57,7 @@ public:
     /// @param msg The message buffer to fill data into
     /// @return The index into msg buf where the motor data was written
     /// @note Does not issue a CAN command over the bus
-    virtual int write(CAN_message_t& msg) = 0;
+    virtual int write(CAN_message_t& msg) const = 0;
 
     /// @brief Zero the motor. This is a safety function to ensure the motor is not actively driving
     /// @note Does not issue a CAN command over the bus
@@ -69,7 +69,7 @@ public:
     virtual void write_motor_torque(float torque) = 0;
 
     /// @brief Print the current state of the motor
-    virtual void print_state() = 0;
+    virtual void print_state() const = 0;
 
 public:
     /// @brief Get the motor controller type

@@ -49,7 +49,7 @@ public:
     /// @return The index in the buffer where the motor data was written. The MG8016E-i6 driver will always write 8 bytes so this will always return 0
     /// @note Does not issue a CAN command over the bus
     /// @note Return value is mostly useless for this motor, it will always be 0
-    int write(CAN_message_t& msg) override;
+    int write(CAN_message_t& msg) const override;
 
     /// @brief Zero the motor. This is a safety function to ensure the motor is not actively driving
     /// @note Does not issue a CAN command over the bus
@@ -69,7 +69,7 @@ public:
     void write_motor_angle(float angle, float speed_limit = 0);
 
     /// @brief Print the current state of the motor
-    void print_state() override;
+    void print_state() const override;
 
 public:
     /// @brief Turn off the motor and clear it's state

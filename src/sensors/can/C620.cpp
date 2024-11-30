@@ -24,7 +24,7 @@ int C620::read(CAN_message_t& msg) {
     return 1;
 }
 
-int C620::write(CAN_message_t& msg) {
+int C620::write(CAN_message_t& msg) const {
     // set ID
     msg.id = m_output.id;
 
@@ -72,7 +72,7 @@ void C620::write_motor_torque(float torque) {
     m_output.buf[motor_id * 2 + 1] = int_torque & 0xFF;     // lower byte
 }
 
-void C620::print_state() {
+void C620::print_state() const {
     Serial.printf("C620 Motor %d\n", m_id);
     Serial.printf("Temperature: %d C\n", m_state.temperature);
     Serial.printf("Torque: %f %%\n", m_state.torque);

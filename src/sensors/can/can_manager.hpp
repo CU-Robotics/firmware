@@ -3,6 +3,8 @@
 
 #include "motor.hpp"
 
+#include <map>
+
 /// @brief The maximum number of motors that can be connected to the system. Derrived from the max motors per bus assuming bus 3 only holds non-RM motors
 constexpr uint32_t CAN_MAX_MOTORS = 8u + 8u + 32u;
 
@@ -95,8 +97,8 @@ private:
     /// @brief Array of CAN bus objects for easier access
     FlexCAN_T4_Base* m_busses[CAN_NUM_BUSSES] = { &m_can1, &m_can2, &m_can3 };
 
-    /// @brief Array of generic motor objects
-    Motor* m_motors[CAN_MAX_MOTORS] = { nullptr };
+    /// @brief Map of motor global ID to generic motor object
+    std::map<uint32_t, Motor*> m_motor_map;
 
     /// @brief The timeout for motor initialization in milliseconds. Most motors respond within 1-2 ms
     uint32_t m_motor_init_timeout = 250u;
