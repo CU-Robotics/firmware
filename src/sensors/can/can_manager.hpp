@@ -33,7 +33,7 @@ public:
     /// @brief Deleted copy and assignment constructors. This class should only ever have one instance
     /// @param copy The CANManager object to copy
     /// @return CANManager& The reference to this object
-    CANManager& operator=(const CANManager&) = delete;
+    CANManager& operator=(const CANManager& copy) = delete;
 
     /// @brief Destructor, cleans up motor array
     ~CANManager();

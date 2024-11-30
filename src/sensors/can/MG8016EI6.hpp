@@ -285,30 +285,55 @@ private:
 
     // Command command byte definitions
 
+    /// @brief Motor off command ID
     static constexpr uint8_t CMD_MOTOR_OFF = 0x80;
+    /// @brief Motor on command ID
     static constexpr uint8_t CMD_MOTOR_ON = 0x88;
+    /// @brief Motor stop command ID
     static constexpr uint8_t CMD_MOTOR_STOP = 0x81;
+    /// @brief Torque control command ID
     static constexpr uint8_t CMD_TORQUE_CONTROL = 0xA1;
+    /// @brief Speed control command ID
     static constexpr uint8_t CMD_SPEED_CONTROL = 0xA2;
+    /// @brief Multi angle control command ID
     static constexpr uint8_t CMD_MULTI_ANGLE_CONTROL = 0xA3;
+    /// @brief Multi angle control with speed limit command ID
     static constexpr uint8_t CMD_MULTI_ANGLE_CONTROL_SPEED_LIMITED = 0xA4;
+    /// @brief Angle control command ID
     static constexpr uint8_t CMD_ANGLE_CONTROL = 0xA5;
+    /// @brief Angle control with speed limit command ID
     static constexpr uint8_t CMD_ANGLE_CONTROL_SPEED_LIMITED = 0xA6;
+    /// @brief Angle increment control command ID
     static constexpr uint8_t CMD_ANGLE_INCREMENT_CONTROL = 0xA7;
+    /// @brief Angle increment control with speed limit command ID
     static constexpr uint8_t CMD_ANGLE_INCREMENT_CONTROL_SPEED_LIMITED = 0xA8;
+    /// @brief Read PID command ID
     static constexpr uint8_t CMD_READ_PID = 0x30;
+    /// @brief Write PID command ID
     static constexpr uint8_t CMD_WRITE_PID = 0x31;
+    /// @brief Write PID to ROM command ID
     static constexpr uint8_t CMD_WRITE_PID_ROM = 0x32;
+    /// @brief Read acceleration command ID
     static constexpr uint8_t CMD_READ_ACCELERATION = 0x33;
+    /// @brief Write acceleration command ID
     static constexpr uint8_t CMD_WRITE_ACCELERATION = 0x34;
+    /// @brief Read encoder command ID
     static constexpr uint8_t CMD_READ_ENCODER = 0x90;
+    /// @brief Write encoder zero command ID
     static constexpr uint8_t CMD_WRITE_ENCODER_ZERO = 0x91;
+    /// @brief Write position as zero command ID
     static constexpr uint8_t CMD_WRITE_POSITION_AS_ZERO = 0x19;
+    /// @brief Read multi angle command ID
     static constexpr uint8_t CMD_READ_MULTI_ANGLE = 0x92;
+    /// @brief Read angle command ID
     static constexpr uint8_t CMD_READ_ANGLE = 0x94;
+    /// @brief Read state 1 command ID
     static constexpr uint8_t CMD_READ_STATE_1 = 0x9A;
+    /// @brief Clear error command ID
     static constexpr uint8_t CMD_CLEAR_ERROR = 0x9B;
+    /// @brief Read state 2 command ID
     static constexpr uint8_t CMD_READ_STATE_2 = 0x9C;
+    /// @brief Read state 3 command ID
     static constexpr uint8_t CMD_READ_STATE_3 = 0x9D;
 
 };

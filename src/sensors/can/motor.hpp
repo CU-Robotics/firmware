@@ -33,7 +33,6 @@ public:
     Motor() = delete;
 
     /// @brief Main constructor. Defines the motor and controller type, global ID, id, and can bus
-    /// @param type The physical motor type
     /// @param controller_type The motor controller type 
     /// @param gid The global ID, not the per-bus motor ID
     /// @param id The per-bus motor ID. This is 1-indexed 
