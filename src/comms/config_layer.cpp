@@ -155,6 +155,8 @@ void Config::fill_data(CommsPacket packets[MAX_CONFIG_PACKETS], uint8_t sizes[MA
         uint8_t id = packets[i].get_id();
         uint8_t subsec_id = *reinterpret_cast<uint8_t*>(packets[i].raw + 2);
         uint16_t sub_size = *reinterpret_cast<uint16_t*>(packets[i].raw + 6);
+        size_t linear_index = 0, i1 = 0, i2 = 0, i3 = 0;
+        float **float_location = nullptr;
 
         if (subsec_id == 0) index = 0;
         void *config_location = yaml_section_id_addresses.at(id);
@@ -162,28 +164,28 @@ void Config::fill_data(CommsPacket packets[MAX_CONFIG_PACKETS], uint8_t sizes[MA
             case 12:    // kinematics_p
             case 13:    // kinematics_v
             case 18:    // assigned states
-                size_t linear_index = index / sizeof(float);
-                size_t i1 = linear_index / STATE_LEN;
-                size_t i2 = linear_index % STATE_LEN;
+                linear_index = index / sizeof(float);
+                i1 = linear_index / STATE_LEN;
+                i2 = linear_index % STATE_LEN;
                 // reinterpret config_location as a float matrix, take pointer to matrix[i1][i2], reinterpret pointer as void *
-                float **float_location = (float **)(config_location);
+                float_location = (float **)(config_location);
                 config_location = (void *)(&float_location[i1][i2]);
                 index += sub_size;
                 break;
             case 14:    // reference_limits
-                size_t linear_index = index / sizeof(float);
-                size_t i1 = linear_index / (STATE_LEN * 3 * 2);
-                size_t i2 = (linear_index % (STATE_LEN * 3 * 2)) / (3 * 2);
-                size_t i3 = (linear_index % (STATE_LEN * 3 * 2)) % (3 * 2);
+                linear_index = index / sizeof(float);
+                i1 = linear_index / (STATE_LEN * 3 * 2);
+                i2 = (linear_index % (STATE_LEN * 3 * 2)) / (3 * 2);
+                i3 = (linear_index % (STATE_LEN * 3 * 2)) % (3 * 2);
                 memcpy(&set_reference_limits[i1][i2][i3], packets[i].raw + 8, sub_size);
                 index += sub_size;
                 Serial.printf("indices: %d, %d, %d\n", i1, i2, i3);
                 break;
             case 16:    // gains
-                size_t linear_index = index / sizeof(float);
-                size_t i1 = linear_index / (NUM_CONTROLLER_LEVELS * NUM_GAINS);
-                size_t i2 = (linear_index % (NUM_CONTROLLER_LEVELS * NUM_GAINS)) / NUM_GAINS;
-                size_t i3 = (linear_index % (NUM_CONTROLLER_LEVELS * NUM_GAINS)) % NUM_GAINS;
+                linear_index = index / sizeof(float);
+                i1 = linear_index / (NUM_CONTROLLER_LEVELS * NUM_GAINS);
+                i2 = (linear_index % (NUM_CONTROLLER_LEVELS * NUM_GAINS)) / NUM_GAINS;
+                i3 = (linear_index % (NUM_CONTROLLER_LEVELS * NUM_GAINS)) % NUM_GAINS;
                 memcpy(&gains[i1][i2][i3], packets[i].raw + 8, sub_size);
                 index += sub_size;
                 break;
