@@ -33,6 +33,9 @@ public:
     ~C620() override { }
 
 public:
+    /// @brief Initialize the motor by zeroing it
+    void init();
+
     /// @brief Common read command. Fills given message if successful
     /// @param msg The message buffer to fill data into
     /// @return 0 on failure, 1 on success

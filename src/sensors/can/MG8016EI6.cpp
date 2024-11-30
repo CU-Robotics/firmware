@@ -1,5 +1,9 @@
 #include "MG8016EI6.hpp"
 
+void MG8016EI6::init() {
+    write_motor_on();
+}
+
 int MG8016EI6::read(CAN_message_t& msg) {
     // command IDs that return the base state (temp, torque, speed, angle)
     // A1, A2, A3, A4, A5, A6, A7, A8, 9C (state 2)
@@ -103,6 +107,7 @@ int MG8016EI6::read(CAN_message_t& msg) {
         break;
     }
     default:
+        // TODO: the command byte might not actually be unknown (state command replies)
         Serial.printf("Unknown command byte: 0x%02X\n", cmd_byte);
         break;
     }

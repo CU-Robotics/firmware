@@ -1,5 +1,9 @@
 #include "C620.hpp"
 
+void C620::init() {
+    zero_motor();
+}
+
 int C620::read(CAN_message_t& msg) {
     // early return if the message ID does not match
     if (msg.id != m_base_id + m_id) return 0;

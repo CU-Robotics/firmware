@@ -36,6 +36,9 @@ public:
     ~MG8016EI6() override { }
 
 public:
+    /// @brief Initialize the motor by verifying it is on
+    void init() override;
+
     /// @brief Common read command. Fills given message if successful
     /// @param msg The message buffer to fill data into
     /// @return 0 on failure, 1 on success

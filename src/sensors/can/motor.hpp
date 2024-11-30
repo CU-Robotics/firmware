@@ -46,6 +46,9 @@ public:
     virtual ~Motor() { }
 
 public:
+    /// @brief Initialize the motor and perform any startup commands
+    virtual void init() = 0;
+
     /// @brief Common read command. Fills given message if successful
     /// @param msg The message buffer to fill data into
     /// @return 0 on failure, 1 on success
@@ -63,6 +66,7 @@ public:
 
     /// @brief Generic write motor function handling only torque. This is the only common interface of all the motors we use
     /// @param torque The torque value between [-1, 1]
+    /// @note This does not issue a CAN command over the bus
     virtual void write_motor_torque(float torque) = 0;
 
     /// @brief Print the current state of the motor

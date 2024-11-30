@@ -85,6 +85,9 @@ void CANManager::configure(float motor_info[CAN_MAX_MOTORS][3]) {
         // place the new motor in the array
         m_motors[motor_id] = new_motor;
     }
+
+    // verify all motors are online and ready
+    init_motors();
 }
 
 void CANManager::read() {
@@ -94,7 +97,11 @@ void CANManager::read() {
         CAN_message_t msg;
         while (m_busses[bus]->read(msg)) {
             // distribute the message to the correct motor
-            distribute_msg(msg);
+            // if this fails, we've received a message that does not match any motor
+            // how would this happen?
+            if (!distribute_msg(msg)) {
+                Serial.printf("CANManager failed to distribute message: %d\n", msg.id);
+            }
         }
     }
 }
@@ -234,6 +241,65 @@ Motor* CANManager::get_motor(uint32_t motor_gid) {
     }
     
     return m_motors[motor_gid];
+}
+
+void CANManager::init_motors() {
+    // all motors have been created, go through and verify we are getting data from them and call their init functions
+
+    // for each motor
+    for (uint32_t motor = 0; motor < CAN_MAX_MOTORS; motor++) {
+        // if the motor is null, skip it
+        if (m_motors[motor] == nullptr) {
+            continue;
+        }
+
+        // call the motor's init function
+        m_motors[motor]->init();
+    }
+
+    // issue a write command to the bus to push the init commands
+    // this cant easily be placed in the same loop as the init functions since some motors dont allow single writes
+    write();
+
+    // wait for the motors to initialize or timeout
+
+    // maintain a list of motors that have been initialized
+    bool motors_initialized[CAN_MAX_MOTORS] = { false };
+
+    // for each bus, read all messages until all motors have been initialized
+    for (uint32_t bus = 0; bus < CAN_NUM_BUSSES; bus++) {
+        CAN_message_t msg;
+
+        uint32_t start_time = millis();
+        
+        // read all messages from the bus
+        while (millis() - start_time < m_motor_init_timeout || m_busses[bus]->read(msg)) {
+            // for each motor, find the motor that this msg belongs to
+            for (uint32_t motor = 0; motor < CAN_MAX_MOTORS; motor++) {
+                // if the motor is null, skip it
+                if (m_motors[motor] == nullptr) {
+                    continue;
+                }
+
+                if (motors_initialized[motor]) {
+                    continue;
+                }
+
+                // mark the motor as initialized if the message was read
+                if (m_motors[motor]->read(msg)) {
+                    motors_initialized[motor] = true;
+                    Serial.printf("Motor %d initialized\n", motor);
+                }
+            }
+        }
+    }
+
+    // print out any motors that failed to initialize
+    for (uint32_t motor = 0; motor < CAN_MAX_MOTORS; motor++) {
+        if (!motors_initialized[motor] && m_motors[motor] != nullptr) {
+            Serial.printf("Motor %d failed to initialize\n", motor);
+        }
+    }
 }
 
 bool CANManager::distribute_msg(CAN_message_t& msg) {

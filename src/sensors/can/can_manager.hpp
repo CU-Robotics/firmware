@@ -76,6 +76,9 @@ public:
     Motor* get_motor(uint32_t motor_gid);
 
 private:
+    /// @brief Verify that all motors are online and ready
+    void init_motors();
+
     /// @brief Iterates through all the motors and tries to give the message to the correct one
     /// @param msg The message to distribute
     /// @return True if the message was distributed, false if it was not
@@ -94,6 +97,9 @@ private:
 
     /// @brief Array of generic motor objects
     Motor* m_motors[CAN_MAX_MOTORS] = { nullptr };
+
+    /// @brief The timeout for motor initialization in milliseconds. Most motors respond within 1-2 ms
+    uint32_t m_motor_init_timeout = 250u;
 
 };
 

@@ -100,7 +100,7 @@ int main() {
 
         can.read();
 
-        can.print_state();
+        // can.print_state();
 
         if (loopc >= 5000) {
             can.safety_mode();
