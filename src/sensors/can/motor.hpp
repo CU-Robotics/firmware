@@ -20,7 +20,6 @@ struct MotorState {
     /// @brief Rotational speed of the motor in rad/s, signed
     float speed = 0;
     /// @brief Motor specific position output. The unit is dependent on the motor but it is normally in a range corresponding to it's encoder
-    // TODO: unify this to a single unit
     uint16_t position = 0;
     /// @brief Temperature of the motor in degrees Celsius
     /// @note This is signed but it shouldn't matter since normal temperatures wouldn't overflow to negative

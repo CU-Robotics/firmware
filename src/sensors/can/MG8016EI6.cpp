@@ -124,7 +124,6 @@ int MG8016EI6::read(CAN_message_t& msg) {
         break;
     }
     default:
-        // TODO: the command byte might not actually be unknown (state command replies)
         Serial.printf("Unknown command byte: 0x%02X\n", cmd_byte);
         break;
     }

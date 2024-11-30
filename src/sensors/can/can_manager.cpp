@@ -1,11 +1,11 @@
 #include "can_manager.hpp"
 
 // driver includes are here not in header since they're only needed in the implementation
-// TODO: is this a good decision?
 #include "can/C610.hpp"
 #include "can/C620.hpp"
 #include "can/MG8016EI6.hpp"
 
+// FlexCAN_T4 moment
 CANManager::CANManager() { }
 
 CANManager::~CANManager() {
@@ -44,6 +44,8 @@ void CANManager::init() {
 }
 
 void CANManager::configure(float motor_info[CAN_MAX_MOTORS][3]) {
+    // using the motor_info array, create the motors following the config
+    
     // loop through all CAN_MAX_MOTORS
     for (uint32_t motor_id = 0; motor_id < CAN_MAX_MOTORS; motor_id++) {
         // grab the information for this specific motor
@@ -62,17 +64,17 @@ void CANManager::configure(float motor_info[CAN_MAX_MOTORS][3]) {
 
         switch (controller_type) {
         case C610_CONTROLLER: {
-            Serial.printf("Creating C610 Motor: %d\n", motor_id);
+            Serial.printf("Creating C610 Motor: %d on bus %d\n", motor_id, bus_id);
             new_motor = new C610(motor_id, physical_id, bus_id);
             break;
         }
         case C620_CONTROLLER: {
-            Serial.printf("Creating C620 Motor: %d\n", motor_id);
+            Serial.printf("Creating C620 Motor: %d on bus %d\n", motor_id, bus_id);
             new_motor = new C620(motor_id, physical_id, bus_id);
             break;
         }
         case MG8016_CONTROLLER: {
-            Serial.printf("Creating MG Motor: %d\n", motor_id);
+            Serial.printf("Creating MG Motor: %d on bus %d\n", motor_id, bus_id);
             new_motor = new MG8016EI6(motor_id, physical_id, bus_id);
             break;
         }
@@ -165,7 +167,6 @@ void CANManager::write() {
         m_busses[bus]->write(rm_motor_msgs[0]);
         m_busses[bus]->write(rm_motor_msgs[1]);
     }
-
 }
 
 void CANManager::safety_mode() {
@@ -202,7 +203,7 @@ void CANManager::write_motor_torque(uint32_t motor_gid, float torque) {
 }
 
 void CANManager::print_state() {
-    // for each motor
+    // for each motor, print it's state
     for (uint32_t motor = 0; motor < CAN_MAX_MOTORS; motor++) {
         // if the motor is null, skip it
         if (m_motors[motor] == nullptr) {
@@ -246,7 +247,7 @@ Motor* CANManager::get_motor(uint32_t motor_gid) {
 void CANManager::init_motors() {
     // all motors have been created, go through and verify we are getting data from them and call their init functions
 
-    // for each motor
+    // for each motor, call it's init function
     for (uint32_t motor = 0; motor < CAN_MAX_MOTORS; motor++) {
         // if the motor is null, skip it
         if (m_motors[motor] == nullptr) {
@@ -270,9 +271,10 @@ void CANManager::init_motors() {
     for (uint32_t bus = 0; bus < CAN_NUM_BUSSES; bus++) {
         CAN_message_t msg;
 
+        // start the timeout timer
         uint32_t start_time = millis();
         
-        // read all messages from the bus
+        // read all messages from the bus. exit if the timeout is reached and the buffer is empty
         while (millis() - start_time < m_motor_init_timeout || m_busses[bus]->read(msg)) {
             // for each motor, find the motor that this msg belongs to
             for (uint32_t motor = 0; motor < CAN_MAX_MOTORS; motor++) {
@@ -295,9 +297,10 @@ void CANManager::init_motors() {
     }
 
     // print out any motors that failed to initialize
+    // this is not fatal but should be investigated
     for (uint32_t motor = 0; motor < CAN_MAX_MOTORS; motor++) {
         if (!motors_initialized[motor] && m_motors[motor] != nullptr) {
-            Serial.printf("Motor %d failed to initialize\n", motor);
+            Serial.printf("Motor %d on bus %d with id %d failed to initialize\n", motor, m_motors[motor]->get_bus_id(), m_motors[motor]->get_id());
         }
     }
 }

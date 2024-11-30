@@ -107,7 +107,7 @@ private:
     /// @brief Set the motor angle
     /// @param buf Output buffer to write the command to
     /// @param angle The angle value in 0.01deg / LSB
-    // TODO: should angle be signed?
+    // TODO: should angle be signed? The datasheet is conflicting
     void create_cmd_multi_angle_control(uint8_t buf[8], int32_t angle);
 
     /// @brief Set the motor angle with speed limit
@@ -211,7 +211,6 @@ private:
     void create_cmd_read_state_3(uint8_t buf[8]);
 
     // TODO: multi motor commands, will we use them?
-    
 
 private:
     /// @brief The base ID for the motor, the true id is this + the motor id
