@@ -16,6 +16,10 @@ int MG8016EI6::read(CAN_message_t& msg) {
     // CMD_READ_PID, CMD_READ_ACCELERATION, CMD_READ_ENCODER, CMD_READ_MULTI_ANGLE,
     // CMD_READ_ANGLE, CMD_READ_STATE_1, CMD_READ_STATE_3
 
+    // command IDs that dont return anything other than the command echo'd back
+    // 80, 88, 81, 31, 32, 34, 91
+    // CMD_MOTOR_OFF, CMD_MOTOR_ON, CMD_MOTOR_STOP, CMD_WRITE_PID, CMD_WRITE_PID_ROM, CMD_WRITE_ACCELERATION, CMD_WRITE_ENCODER_ZERO
+
     // early return if msg ID does not match this motor
     if (msg.id != m_base_id + m_id) {
         return 0;
@@ -25,6 +29,7 @@ int MG8016EI6::read(CAN_message_t& msg) {
 
     // handle the command
     switch (cmd_byte) {
+    // commands that return the base state
     case CMD_TORQUE_CONTROL:
     case CMD_SPEED_CONTROL:
     case CMD_MULTI_ANGLE_CONTROL:
@@ -49,6 +54,7 @@ int MG8016EI6::read(CAN_message_t& msg) {
         m_state.position = (uint16_t)((msg.buf[7] << 8) | msg.buf[6]);
         break;
     }
+    // commands that return special state
     case CMD_READ_PID: {
         m_angle_p = msg.buf[2];
         m_angle_i = msg.buf[3];
@@ -104,6 +110,17 @@ int MG8016EI6::read(CAN_message_t& msg) {
         m_a_phase_current = (int16_t)((msg.buf[3] << 8) | msg.buf[2]);
         m_b_phase_current = (int16_t)((msg.buf[5] << 8) | msg.buf[4]);
         m_c_phase_current = (int16_t)((msg.buf[7] << 8) | msg.buf[6]);
+        break;
+    }
+    // commands that dont return anything
+    case CMD_MOTOR_OFF:
+    case CMD_MOTOR_ON:
+    case CMD_MOTOR_STOP:
+    case CMD_WRITE_PID:
+    case CMD_WRITE_PID_ROM:
+    case CMD_WRITE_ACCELERATION:
+    case CMD_WRITE_ENCODER_ZERO: {
+        // do nothing
         break;
     }
     default:
