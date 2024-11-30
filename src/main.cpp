@@ -70,6 +70,7 @@ int main() {
         //Testcontorl.step(tempmotor, ref, tempobs); // Calculate motors motion
 
         testicm.serial_data_for_plot();
+        //testicm.print();
         // Write actuators
         /*if (!dr16.is_connected() || dr16.get_l_switch() == 1) {
             // SAFETY ON

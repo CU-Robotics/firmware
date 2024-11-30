@@ -8,35 +8,31 @@ void IMU_filter::init(){
     _icm.set_gyro_range(4000);
     calibrate_imu();
     _alpha = 0.9995;
-    Q = 0.0025;
-    R = 0.3;
+    Q = 0.0017;
+    R = 0.5;
 }
 
-void IMU_filter::read() {
+void IMU_filter::read(){
     _icm.read();
     float dt = timer.delta();
     _imu.accel_X = _icm.get_accel_X() * _imu.accel_scale;
     _imu.accel_Y = _icm.get_accel_Y() * _imu.accel_scale; 
     _imu.accel_Z = _icm.get_accel_Z() * _imu.accel_scale;
-    _imu.alpha_X = _icm.get_gyro_X();
-    _imu.alpha_Y = _icm.get_gyro_Y();
-    _imu.alpha_Z = _icm.get_gyro_Z();
+    _imu.alpha_roll = _icm.get_gyro_X();
+    _imu.alpha_pitch = _icm.get_gyro_Y();
+    _imu.alpha_yaw = _icm.get_gyro_Z();
     // Calculate roll and pitch angle by gravity
     _imu.accel_pitch = -atanf(_imu.accel_X / sqrt(_imu.accel_Y * _imu.accel_Y + _imu.accel_Z * _imu.accel_Z));
     _imu.accel_roll = atanf(_imu.accel_Y / sqrt(_imu.accel_X * _imu.accel_X + _imu.accel_Z * _imu.accel_Z));
-
     // Calculate the roll and pitch rotation speed by rotation matrix
-    float realalpha_roll = _imu.alpha_X + ((sin(_imu.gyro_pitch) * sin(_imu.gyro_roll)) / cos(_imu.gyro_pitch)) * _imu.alpha_Y + _imu.alpha_Z * ((sin(_imu.gyro_pitch) * cos(_imu.gyro_roll)) / cos(_imu.gyro_pitch));
-    float realalpha_pitch = _imu.alpha_Y * cos(_imu.gyro_roll) - _imu.alpha_Z * sin(_imu.gyro_roll);    
+    float realalpha_roll = _imu.alpha_roll + ((sin(_imu.gyro_pitch) * sin(_imu.gyro_roll)) / cos(_imu.gyro_pitch)) * _imu.alpha_pitch + _imu.alpha_yaw * ((sin(_imu.gyro_pitch) * cos(_imu.gyro_roll)) / cos(_imu.gyro_pitch));
+    float realalpha_pitch = _imu.alpha_pitch * cos(_imu.gyro_roll) - _imu.alpha_yaw * sin(_imu.gyro_roll);    
     
 
     // Basic and simple filter to make Accel low pass
-    _alpha = 1 - (0.0008 * SENSORS_GRAVITY_EARTH/sqrt((_imu.accel_X*_imu.accel_X) + (_imu.accel_Y*_imu.accel_Y) + (_imu.accel_Z*_imu.accel_Z)));   
+    _alpha = 1 - (0.0006 * (SENSORS_GRAVITY_EARTH/sqrt((_imu.accel_X*_imu.accel_X) + (_imu.accel_Y*_imu.accel_Y) + (_imu.accel_Z*_imu.accel_Z)))   );   
     _imu.gyro_roll = _alpha * (_imu.gyro_roll + realalpha_roll * dt) + (1.0 - _alpha) * _imu.accel_roll;
     _imu.gyro_pitch = _alpha * (_imu.gyro_pitch + realalpha_pitch * dt) + (1.0 - _alpha) * _imu.accel_pitch;
-    // // Calculate Angle by Gyro
-    // _imu.gyro_roll = _imu.k_roll + (dt * realalpha_roll);
-    // _imu.gyro_pitch = _imu.k_pitch + (dt * realalpha_pitch);
 // Kalman Filter
 
     // Calculate P Matrix
@@ -59,10 +55,6 @@ void IMU_filter::read() {
     P[0][1] = 0;
     P[1][0] = 0;
     P[1][1] = (1 - K[1][1]) * P[1][1];
-
-
-    
-    
     
     _imu.temperature = _icm.get_temperature();
 }
@@ -80,12 +72,12 @@ void IMU_filter::print() {
     Serial.print(_imu.accel_Z);
     Serial.println(" m/s^2 ");
 
-    Serial.print("\t\tGyro X: ");
-    Serial.print(_imu.alpha_X);
-    Serial.print(" \tY: ");
-    Serial.print(_imu.alpha_Y);
-    Serial.print(" \tZ: ");
-    Serial.print(_imu.alpha_Z);
+    Serial.print("\t\tGyro X(Roll): ");
+    Serial.print(_imu.alpha_roll);
+    Serial.print(" \tY(Pitch): ");
+    Serial.print(_imu.alpha_pitch);
+    Serial.print(" \tZ(Yaw): ");
+    Serial.print(_imu.alpha_yaw);
     Serial.println(" radians/s ");
 
     Serial.println(_imu.gyro_roll * RAD_TO_DEG);
@@ -104,6 +96,7 @@ void IMU_filter::print() {
     Serial.println("_imu.accel_pitch");
 }
 void IMU_filter::serial_data_for_plot(){
+    //String dataString = String(String(_imu.gyro_roll) + "," + String(_imu.gyro_pitch));
     String dataString = String(String(_imu.k_roll) + "," + String(_imu.k_pitch));
     Serial.println(dataString);
 }
@@ -132,10 +125,17 @@ void IMU_filter::calibrate_imu(){
     float z = sum_accel_z/CALIBRATION_NUM;
     _imu.accel_scale = SENSORS_GRAVITY_EARTH/sqrt((x*x) + (y*y) + (z*z));
     _icm.set_offsets(sum_x / CALIBRATION_NUM, sum_y / CALIBRATION_NUM, sum_z / CALIBRATION_NUM);
-    _imu.gyro_pitch=-atanf(x / sqrt(y*y + z*z));
-    _imu.gyro_roll=atanf(y / sqrt(z*z));
-    _imu.k_pitch = _imu.gyro_pitch;
-    _imu.k_roll = _imu.gyro_roll;
+    _imu.accel_X = _icm.get_accel_X() * _imu.accel_scale;
+    _imu.accel_Y = _icm.get_accel_Y() * _imu.accel_scale; 
+    _imu.accel_Z = _icm.get_accel_Z() * _imu.accel_scale;
+    _imu.accel_pitch = -atanf(_imu.accel_X / sqrt(_imu.accel_Y * _imu.accel_Y + _imu.accel_Z * _imu.accel_Z));
+    _imu.accel_roll = atanf(_imu.accel_Y / sqrt(_imu.accel_X * _imu.accel_X + _imu.accel_Z * _imu.accel_Z));
+    _imu.gyro_roll = _imu.accel_roll;
+    _imu.gyro_pitch = _imu.accel_pitch;
+
+    _imu.k_roll = _imu.accel_roll;
+    _imu.k_pitch = _imu.accel_pitch;
+    
 }
 
 
