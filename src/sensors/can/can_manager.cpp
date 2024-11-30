@@ -106,19 +106,17 @@ void CANManager::write() {
         // both the c610s and c620s can occupy the same message
         CAN_message_t rm_motor_msgs[2];
 
-        // for each motor
-        for (const auto& motor_instance : m_motor_map) {
-            Motor* motor = motor_instance.second;
-            
+        // for each motor, can be const
+        for (const auto& motor : m_motor_map) {
             // based on the motor type, figure out how to write the message
-            switch (motor->get_controller_type()) {
+            switch (motor.second->get_controller_type()) {
             case C610_CONTROLLER:   // fallthrough
             case C620_CONTROLLER: {
                 // depending on the motor ID, write the message to the correct msg in the array
-                if ((motor->get_id() - 1) / 4) {
-                    motor->write(rm_motor_msgs[1]);   // last 4 motors
+                if ((motor.second->get_id() - 1) / 4) {
+                    motor.second->write(rm_motor_msgs[1]);   // last 4 motors
                 } else {
-                    motor->write(rm_motor_msgs[0]);   // first 4 motors
+                    motor.second->write(rm_motor_msgs[0]);   // first 4 motors
                 }
 
                 // this combined message will be written to the bus after the motor loop
@@ -129,7 +127,7 @@ void CANManager::write() {
                 CAN_message_t msg;
 
                 // get its message data
-                motor->write(msg);
+                motor.second->write(msg);
                 
                 // the MG motors dont require msg merging so just write it to the bus
                 // write the message to the correct bus
@@ -138,7 +136,7 @@ void CANManager::write() {
                 break;
             }
             default: {
-                Serial.printf("CANManager tried to write to a motor of invalid type: %d\n", motor->get_controller_type());
+                Serial.printf("CANManager tried to write to a motor of invalid type: %d\n", motor.second->get_controller_type());
                 break;
             }
             }
