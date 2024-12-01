@@ -160,9 +160,11 @@ public:
     /// @param comms pointer to the HID comms layer for grabbing config packets
     /// @return a const pointer const config object holding all the data within the config yaml
     /// @note its double const so its enforced as a read-only object
-    const Config* const configure(HIDLayer* comms);
+    const Config* const configure(HIDLayer *comms);
 
-    const Config* const configure(EthernetComms* comms);
+    const Config* const reconfigure(HIDLayer *comms);
+
+    const Config* const reconfigure(EthernetComms *comms);
 
     /// @brief check incoming packet from the comms layer and update outgoing packet accordingly to request next config packet
     /// @param in incoming comms packet

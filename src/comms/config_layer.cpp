@@ -1,5 +1,10 @@
 #include "config_layer.hpp"
 
+// good place for this???
+void doReboot() {
+  SCB_AIRCR = 0x05FA0004;
+}
+
 const Config* const ConfigLayer::configure(HIDLayer* comms) {
     // attempt SD card load
     config_SD_init();
@@ -49,10 +54,54 @@ const Config* const ConfigLayer::configure(HIDLayer* comms) {
     return &config;
 }
 
-const Config* const ConfigLayer::configure(EthernetComms* comms){
-    // TODO
+
+const Config* const ConfigLayer::reconfigure(HIDLayer *comms){
+    // disable all CAN before editing config
+
+    Config temp = config;  // store existing config in case new config is not usable
+
+    // reset config arrays
+    memset(config_packets, 0, MAX_CONFIG_PACKETS * sizeof(CommsPacket));
+    memset(subsec_sizes, 0, MAX_CONFIG_PACKETS);
+    configured = false;
+    
+    while (!is_configured()) {
+        comms->ping();
+        process(comms->get_incoming_packet(), comms->get_outgoing_packet());
+    }
+
+    config.fill_data(config_packets, subsec_sizes);
+
+    // verify that config received matches ref system: if not, error out
+#ifndef CONFIG_OFF_ROBOT
+    Serial.printf("Received robot ID from config: %d\nRobot ID from ref system: %d\n", (int)config.robot_id, ref.ref_data.robot_performance.robot_ID);
+    if ((ref.ref_data.robot_performance.robot_ID % 100) != (int)config.robot_id) {
+        Serial.printf("ERROR: IDs do not match!! Check robot_id.cfg and robot settings from ref system!\n");
+        config = temp;
+        return &config;
+    }
+#endif
+
+    // update stored config, msg if successful
+    Serial.println("Attempting to store config...");
+    if (store_config()) Serial.println("Config successfully stored in /config.pack");
+    else {
+        Serial.println("Config not successfully stored (is an SD card inserted?)");    // not a fatal error, can still return
+        sdcard.rm(CONFIG_PATH);     // we do not trust this config anymore
+        config = temp;
+        return &config;
+    }
+
+    // reset teensy
+    doReboot();
+    while(1);
+}
+
+const Config* const ConfigLayer::reconfigure(EthernetComms *comms){
+
     return &config;
 }
+
 
 void ConfigLayer::config_SD_init() {
     // if on robot, we need to wait for ref to send robot_id
@@ -150,10 +199,15 @@ void ConfigLayer::process(CommsPacket* in, CommsPacket* out) {
 }
 
 void Config::fill_data(CommsPacket packets[MAX_CONFIG_PACKETS], uint8_t sizes[MAX_CONFIG_PACKETS]) {
+    // offsets within packets to access particular data (in bytes)
+    static const int subsec_offset = 2;
+    static const int sub_size_offset = 6;
+    static const int data_offset = 8;
+
     for (int i = 0; i < MAX_CONFIG_PACKETS; i++) {
         uint8_t id = packets[i].get_id();
-        uint8_t subsec_id = *reinterpret_cast<uint8_t*>(packets[i].raw + 2);
-        uint16_t sub_size = *reinterpret_cast<uint16_t*>(packets[i].raw + 6);
+        uint8_t subsec_id = *reinterpret_cast<uint8_t*>(packets[i].raw + subsec_offset);
+        uint16_t sub_size = *reinterpret_cast<uint16_t*>(packets[i].raw + sub_size_offset);
 
         if (subsec_id == 0) index = 0;
 
@@ -271,7 +325,7 @@ void Config::fill_data(CommsPacket packets[MAX_CONFIG_PACKETS], uint8_t sizes[MA
             config_location = encoder_pins;
         }
         if(config_location == nullptr) continue;
-        memcpy(config_location, packets[i].raw + 8, sub_size);
+        memcpy(config_location, packets[i].raw + data_offset, sub_size);
     }
 }
 
