@@ -64,6 +64,8 @@ struct Config {
     /// @param sizes Number of sections for each section
     void fill_data(CommsPacket[MAX_CONFIG_PACKETS], uint8_t sizes[MAX_CONFIG_PACKETS]);
 
+    void fill_data(EthernetPacket[MAX_CONFIG_PACKETS], uint8_t sizes[MAX_CONFIG_PACKETS]);
+
     //check yaml for more details on values
     /// @brief robot id sent from hive
     float robot_id;
@@ -125,8 +127,11 @@ private:
 /// @brief Handle seeking and reading configuration packets coming from khadas
 class ConfigLayer {
 private:
-    /// @brief array to save config packets
-    CommsPacket config_packets[MAX_CONFIG_PACKETS];
+    /// @brief array to save config packets from HID
+    CommsPacket config_packets_h[MAX_CONFIG_PACKETS];
+
+    /// @brief array to save config packets from ethernet
+    EthernetPacket config_packets_e[MAX_CONFIG_PACKETS];
 
     /// @brief array to store number of subsections per YAML section
     uint8_t subsec_sizes[MAX_CONFIG_PACKETS] = { 0 };
@@ -179,7 +184,7 @@ public:
     /// @param packets return array of packets
     /// @param sizes return array of sizes
     void get_config_packets(CommsPacket packets[MAX_CONFIG_PACKETS], uint8_t sizes[MAX_CONFIG_PACKETS]) {
-        memcpy(packets, config_packets, sizeof(CommsPacket) * MAX_CONFIG_PACKETS);
+        memcpy(packets, config_packets_h, sizeof(CommsPacket) * MAX_CONFIG_PACKETS);
         memcpy(sizes, subsec_sizes, sizeof(uint8_t) * MAX_CONFIG_PACKETS);
     }
 

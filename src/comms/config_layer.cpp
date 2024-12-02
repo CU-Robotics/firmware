@@ -27,7 +27,7 @@ const Config* const ConfigLayer::configure(HIDLayer* comms) {
     }
 
     // put the data from the packets into the config object
-    config.fill_data(config_packets, subsec_sizes);
+    config.fill_data(config_packets_h, subsec_sizes);
 
     // verify that config received matches ref system: if not, error out
 #ifndef CONFIG_OFF_ROBOT
@@ -56,12 +56,12 @@ const Config* const ConfigLayer::configure(HIDLayer* comms) {
 
 
 const Config* const ConfigLayer::reconfigure(HIDLayer *comms){
-    // disable all CAN before editing config
+    // disable all CAN before editing config (in main!!)
 
     Config temp = config;  // store existing config in case new config is not usable
 
     // reset config arrays
-    memset(config_packets, 0, MAX_CONFIG_PACKETS * sizeof(CommsPacket));
+    memset(config_packets_h, 0, MAX_CONFIG_PACKETS * sizeof(CommsPacket));
     memset(subsec_sizes, 0, MAX_CONFIG_PACKETS);
     configured = false;
     
@@ -70,7 +70,7 @@ const Config* const ConfigLayer::reconfigure(HIDLayer *comms){
         process(comms->get_incoming_packet(), comms->get_outgoing_packet());
     }
 
-    config.fill_data(config_packets, subsec_sizes);
+    config.fill_data(config_packets_h, subsec_sizes);
 
     // verify that config received matches ref system: if not, error out
 #ifndef CONFIG_OFF_ROBOT
@@ -98,8 +98,44 @@ const Config* const ConfigLayer::reconfigure(HIDLayer *comms){
 }
 
 const Config* const ConfigLayer::reconfigure(EthernetComms *comms){
+    // disable all CAN before editing config (in main)
 
-    return &config;
+    Config temp = config;  // store existing config in case new config is not usable
+
+    // reset config arrays
+    memset(config_packets_e, 0, MAX_CONFIG_PACKETS * sizeof(EthernetPacket));
+    memset(subsec_sizes, 0, MAX_CONFIG_PACKETS);
+    configured = false;
+    
+    while (!is_configured()) {
+        // request more ethernet packets
+    }
+
+    config.fill_data(config_packets_e, subsec_sizes);
+
+    // verify that config received matches ref system: if not, error out
+#ifndef CONFIG_OFF_ROBOT
+    Serial.printf("Received robot ID from config: %d\nRobot ID from ref system: %d\n", (int)config.robot_id, ref.ref_data.robot_performance.robot_ID);
+    if ((ref.ref_data.robot_performance.robot_ID % 100) != (int)config.robot_id) {
+        Serial.printf("ERROR: IDs do not match!! Check robot_id.cfg and robot settings from ref system!\n");
+        config = temp;
+        return &config;
+    }
+#endif
+
+    // update stored config, msg if successful
+    Serial.println("Attempting to store config...");
+    if (store_config()) Serial.println("Config successfully stored in /config.pack");
+    else {
+        Serial.println("Config not successfully stored (is an SD card inserted?)");    // not a fatal error, can still return
+        sdcard.rm(CONFIG_PATH);     // we do not trust this config anymore
+        config = temp;
+        return &config;
+    }
+
+    // reset teensy
+    doReboot();
+    while(1);
 }
 
 
@@ -116,7 +152,7 @@ void ConfigLayer::config_SD_init() {
     if (sdcard.exists(CONFIG_PATH)) {
         Serial.printf("Config located on SD in /config.pack, attempting to load from file\n");
 
-        // load sd config into config_packets
+        // load sd config into config_packets_h
         configured = sd_load();
         if (configured) {
             Serial.printf("SD load successful!\n");
@@ -158,7 +194,7 @@ void ConfigLayer::process(CommsPacket* in, CommsPacket* out) {
             // look for the next YAML section
             seek_sec++;
         } else {
-            config_packets[index] = *in;
+            config_packets_h[index] = *in;
             index++;
 
         #ifdef CONFIG_LAYER_DEBUG
@@ -200,6 +236,7 @@ void ConfigLayer::process(CommsPacket* in, CommsPacket* out) {
 
 void Config::fill_data(CommsPacket packets[MAX_CONFIG_PACKETS], uint8_t sizes[MAX_CONFIG_PACKETS]) {
     // offsets within packets to access particular data (in bytes)
+    // offsets are defined by implementation of comms over hive
     static const int subsec_offset = 2;
     static const int sub_size_offset = 6;
     static const int data_offset = 8;
@@ -222,7 +259,6 @@ void Config::fill_data(CommsPacket packets[MAX_CONFIG_PACKETS], uint8_t sizes[MA
             size_t linear_index = index / sizeof(float);
             size_t i1 = linear_index / STATE_LEN;
             size_t i2 = linear_index % STATE_LEN;
-            // memcpy(&kinematics_p[i1][i2], packets[i].raw + 8, sub_size);
             config_location = &kinematics_p[i1][i2];
             index += sub_size;
         }
@@ -230,7 +266,6 @@ void Config::fill_data(CommsPacket packets[MAX_CONFIG_PACKETS], uint8_t sizes[MA
             size_t linear_index = index / sizeof(float);
             size_t i1 = linear_index / STATE_LEN;
             size_t i2 = linear_index % STATE_LEN;
-            // memcpy(&kinematics_v[i1][i2], packets[i].raw + 8, sub_size);
             config_location = &kinematics_v[i1][i2];
             index += sub_size;
         }
@@ -239,7 +274,6 @@ void Config::fill_data(CommsPacket packets[MAX_CONFIG_PACKETS], uint8_t sizes[MA
             size_t i1 = linear_index / (NUM_CONTROLLER_LEVELS * NUM_GAINS);
             size_t i2 = (linear_index % (NUM_CONTROLLER_LEVELS * NUM_GAINS)) / NUM_GAINS;
             size_t i3 = (linear_index % (NUM_CONTROLLER_LEVELS * NUM_GAINS)) % NUM_GAINS;
-            // memcpy(&gains[i1][i2][i3], packets[i].raw + 8, sub_size);
             config_location = &gains[i1][i2][i3];
             // Serial.println(index/sizeof(float));
             index += sub_size;
@@ -248,12 +282,10 @@ void Config::fill_data(CommsPacket packets[MAX_CONFIG_PACKETS], uint8_t sizes[MA
             size_t linear_index = index / sizeof(float);
             size_t i1 = linear_index / STATE_LEN;
             size_t i2 = linear_index % STATE_LEN;
-            // memcpy(&assigned_states[i1][i2], packets[i].raw + 8, sub_size);
             config_location = &assigned_states[i1][i2];
             index += sub_size;
         }
         if (id == yaml_section_id_mappings.at("num_states_per_estimator")) {
-            // memcpy(num_states_per_estimator, packets[i].raw + 8, sub_size);
             config_location = num_states_per_estimator;
         }
         if (id == yaml_section_id_mappings.at("reference_limits")) {
@@ -261,71 +293,168 @@ void Config::fill_data(CommsPacket packets[MAX_CONFIG_PACKETS], uint8_t sizes[MA
             size_t i1 = linear_index / (STATE_LEN * 3 * 2);
             size_t i2 = (linear_index % (STATE_LEN * 3 * 2)) / (3 * 2);
             size_t i3 = (linear_index % (STATE_LEN * 3 * 2)) % (3 * 2);
-            // memcpy(&set_reference_limits[i1][i2][i3], packets[i].raw + 8, sub_size);
             config_location = &set_reference_limits[i1][i2][i3];
             index += sub_size;
             Serial.printf("indices: %d, %d, %d\n", i1, i2, i3);
         }
         if (id == yaml_section_id_mappings.at("yaw_axis_vector")) {
-            // memcpy(yaw_axis_vector, packets[i].raw + 8, sub_size);
             config_location = yaw_axis_vector;
         }
         if (id == yaml_section_id_mappings.at("pitch_axis_vector")) {
-            // memcpy(pitch_axis_vector, packets[i].raw + 8, sub_size);
             config_location = pitch_axis_vector;
         }
         if (id == yaml_section_id_mappings.at("default_gimbal_starting_angles")) {
-            // memcpy(default_gimbal_starting_angles, packets[i].raw + 8, sub_size);
             config_location = default_gimbal_starting_angles;
         }
         if (id == yaml_section_id_mappings.at("default_chassis_starting_angles")) {
-            // memcpy(default_chassis_starting_angles, packets[i].raw + 8, sub_size);
             config_location = default_chassis_starting_angles;
         }
         if (id == yaml_section_id_mappings.at("controller_types")) {
-            // memcpy(controller_types, packets[i].raw + 8, sub_size);
             config_location = controller_types;
         }
         if (id == yaml_section_id_mappings.at("pitch_angle_at_yaw_imu_calibration")) {
-            // memcpy(&pitch_angle_at_yaw_imu_calibration, packets[i].raw + 8, sub_size);
             config_location = &pitch_angle_at_yaw_imu_calibration;
         }
         if (id == yaml_section_id_mappings.at("governor_types")) {
-            // memcpy(governor_types, packets[i].raw + 8, sub_size);
             config_location = governor_types;
         }
         if (id == yaml_section_id_mappings.at("drive_conversion_factors")) {
-            // memcpy(drive_conversion_factors, packets[i].raw + 8, sub_size);
             config_location = drive_conversion_factors;
         }
         if (id == yaml_section_id_mappings.at("estimators")) {
-            // memcpy(estimators, packets[i].raw + 8, sub_size);
             config_location = estimators;
             Serial.println(sub_size);
             Serial.println(estimators[0]);
         }
         if (id == yaml_section_id_mappings.at("odom_values")) {
-            // memcpy(odom_values, packets[i].raw + 8, sub_size);
             config_location = odom_values;
         }
         if (id == yaml_section_id_mappings.at("switcher_values")) {
-            // memcpy(switcher_values, packets[i].raw + 8, sub_size);
             config_location = switcher_values;
         }
         if (id == yaml_section_id_mappings.at("num_sensors")) {
-            // memcpy(&num_sensors, packets[i].raw + 8, sub_size);
             config_location = &num_sensors;
         }
         if (id == yaml_section_id_mappings.at("encoder_offsets")) {
-            // memcpy(encoder_offsets, packets[i].raw + 8, sub_size);
             config_location = encoder_offsets;
         }
         if (id == yaml_section_id_mappings.at("encoder_pins")) {
-            // memcpy(encoder_pins, packets[i].raw + 8, sub_size);
             config_location = encoder_pins;
         }
         if(config_location == nullptr) continue;
         memcpy(config_location, packets[i].raw + data_offset, sub_size);
+    }
+}
+
+void Config::fill_data(EthernetPacket packets[MAX_CONFIG_PACKETS], uint8_t sizes[MAX_CONFIG_PACKETS]) {
+    // offsets within packets to access particular data (in bytes)
+    // offsets are defined by implementation of comms over hive
+    static const int subsec_offset = 2;
+    static const int sub_size_offset = 6;
+    static const int data_offset = 8;
+
+    for (int i = 0; i < MAX_CONFIG_PACKETS; i++) {
+        uint8_t id = packets[i].header.sequence;    // treating sequence ID as a general ID for ethernet packets
+        uint8_t subsec_id = *reinterpret_cast<uint8_t*>(packets[i].payload.data + subsec_offset);
+        uint16_t sub_size = *reinterpret_cast<uint16_t*>(packets[i].payload.data + sub_size_offset);
+
+        if (subsec_id == 0) index = 0;
+
+        void *config_location = nullptr;
+
+        Serial.printf("id: %d, subsec_id: %d, sub_size: %d\n\n", id, subsec_id, sub_size);
+        Serial.println();
+        if (id == yaml_section_id_mappings.at("robot")) {
+            config_location = &robot_id;
+        }
+        if (id == yaml_section_id_mappings.at("kinematics_p")) {
+            size_t linear_index = index / sizeof(float);
+            size_t i1 = linear_index / STATE_LEN;
+            size_t i2 = linear_index % STATE_LEN;
+            config_location = &kinematics_p[i1][i2];
+            index += sub_size;
+        }
+        if (id == yaml_section_id_mappings.at("kinematics_v")) {
+            size_t linear_index = index / sizeof(float);
+            size_t i1 = linear_index / STATE_LEN;
+            size_t i2 = linear_index % STATE_LEN;
+            config_location = &kinematics_v[i1][i2];
+            index += sub_size;
+        }
+        if (id == yaml_section_id_mappings.at("gains")) {
+            size_t linear_index = index / sizeof(float);
+            size_t i1 = linear_index / (NUM_CONTROLLER_LEVELS * NUM_GAINS);
+            size_t i2 = (linear_index % (NUM_CONTROLLER_LEVELS * NUM_GAINS)) / NUM_GAINS;
+            size_t i3 = (linear_index % (NUM_CONTROLLER_LEVELS * NUM_GAINS)) % NUM_GAINS;
+            config_location = &gains[i1][i2][i3];
+            // Serial.println(index/sizeof(float));
+            index += sub_size;
+        }
+        if (id == yaml_section_id_mappings.at("assigned_states")) {
+            size_t linear_index = index / sizeof(float);
+            size_t i1 = linear_index / STATE_LEN;
+            size_t i2 = linear_index % STATE_LEN;
+            config_location = &assigned_states[i1][i2];
+            index += sub_size;
+        }
+        if (id == yaml_section_id_mappings.at("num_states_per_estimator")) {
+            config_location = num_states_per_estimator;
+        }
+        if (id == yaml_section_id_mappings.at("reference_limits")) {
+            size_t linear_index = index / sizeof(float);
+            size_t i1 = linear_index / (STATE_LEN * 3 * 2);
+            size_t i2 = (linear_index % (STATE_LEN * 3 * 2)) / (3 * 2);
+            size_t i3 = (linear_index % (STATE_LEN * 3 * 2)) % (3 * 2);
+            config_location = &set_reference_limits[i1][i2][i3];
+            index += sub_size;
+            Serial.printf("indices: %d, %d, %d\n", i1, i2, i3);
+        }
+        if (id == yaml_section_id_mappings.at("yaw_axis_vector")) {
+            config_location = yaw_axis_vector;
+        }
+        if (id == yaml_section_id_mappings.at("pitch_axis_vector")) {
+            config_location = pitch_axis_vector;
+        }
+        if (id == yaml_section_id_mappings.at("default_gimbal_starting_angles")) {
+            config_location = default_gimbal_starting_angles;
+        }
+        if (id == yaml_section_id_mappings.at("default_chassis_starting_angles")) {
+            config_location = default_chassis_starting_angles;
+        }
+        if (id == yaml_section_id_mappings.at("controller_types")) {
+            config_location = controller_types;
+        }
+        if (id == yaml_section_id_mappings.at("pitch_angle_at_yaw_imu_calibration")) {
+            config_location = &pitch_angle_at_yaw_imu_calibration;
+        }
+        if (id == yaml_section_id_mappings.at("governor_types")) {
+            config_location = governor_types;
+        }
+        if (id == yaml_section_id_mappings.at("drive_conversion_factors")) {
+            config_location = drive_conversion_factors;
+        }
+        if (id == yaml_section_id_mappings.at("estimators")) {
+            config_location = estimators;
+            Serial.println(sub_size);
+            Serial.println(estimators[0]);
+        }
+        if (id == yaml_section_id_mappings.at("odom_values")) {
+            config_location = odom_values;
+        }
+        if (id == yaml_section_id_mappings.at("switcher_values")) {
+            config_location = switcher_values;
+        }
+        if (id == yaml_section_id_mappings.at("num_sensors")) {
+            config_location = &num_sensors;
+        }
+        if (id == yaml_section_id_mappings.at("encoder_offsets")) {
+            config_location = encoder_offsets;
+        }
+        if (id == yaml_section_id_mappings.at("encoder_pins")) {
+            config_location = encoder_pins;
+        }
+        if(config_location == nullptr) continue;
+        memcpy(config_location, packets[i].payload.data + data_offset, sub_size);
     }
 }
 
@@ -346,7 +475,7 @@ bool ConfigLayer::sd_load() {
 
     sdcard.close();
 
-    uint8_t* config_bytes = (uint8_t*)config_packets;
+    uint8_t* config_bytes = (uint8_t*)config_packets_h;
 #ifdef CONFIG_LAYER_DEBUG
     Serial.printf("sd_load: computing checksum for stored config\n");
 #endif
@@ -356,13 +485,13 @@ bool ConfigLayer::sd_load() {
         return false;
     }
 
-    // fill_data fills a Config object using info from config_packets and subsec_sizes
+    // fill_data fills a Config object using info from config_packets_h and subsec_sizes
     // we want to make sure requesting data from ref is reliable, so we load the config
     // if the ID from packets does not match ref, we need to get rid of the config- we use a temp config that we can throw out
     // set config = temp_config if IDs match
     Config temp_config;
 
-    temp_config.fill_data(config_packets, subsec_sizes);
+    temp_config.fill_data(config_packets_h, subsec_sizes);
 
 #ifndef CONFIG_OFF_ROBOT
     if ((ref.ref_data.robot_performance.robot_ID % 100) != (int)received_id) {      // % 100 in case robot is blue team (ID == 101, 102, ...)
@@ -382,7 +511,7 @@ bool ConfigLayer::config_SD_read_packets(uint64_t& checksum) {
     // read checksum and each packet
     // grab first packet and checksum (kept separate in order to validate subsequent checksum values)
     if (sdcard.read((uint8_t*)(&checksum), sizeof(uint64_t)) != sizeof(uint64_t)) return false;
-    if (sdcard.read((uint8_t*)(&config_packets[0]), sizeof(CommsPacket)) != sizeof(CommsPacket)) return false;
+    if (sdcard.read((uint8_t*)(&config_packets_h[0]), sizeof(CommsPacket)) != sizeof(CommsPacket)) return false;
     // read remaining packets
     for (int i = 1; i < MAX_CONFIG_PACKETS; i++) {
         uint64_t temp_checksum;
@@ -394,7 +523,7 @@ bool ConfigLayer::config_SD_read_packets(uint64_t& checksum) {
             Serial.printf("Inconsistent data found in config file, requesting config from hive...\n");
             return false;
         }
-        if (sdcard.read((uint8_t*)(&config_packets[i]), sizeof(CommsPacket)) != sizeof(CommsPacket)) {
+        if (sdcard.read((uint8_t*)(&config_packets_h[i]), sizeof(CommsPacket)) != sizeof(CommsPacket)) {
             Serial.printf("Unexpected mismatch in number of bytes read, requesting config from hive...\n");
             return false;
         }
@@ -431,7 +560,7 @@ bool ConfigLayer::store_config() {
 #ifdef CONFIG_LAYER_DEBUG
     Serial.printf("store_config: computing checksum for received config\n");
 #endif
-    uint8_t* config_bytes = (uint8_t*)config_packets;
+    uint8_t* config_bytes = (uint8_t*)config_packets_h;
     uint64_t checksum = sd_checksum64(config_bytes, config_byte_size);
     checksum += sd_checksum64(subsec_sizes, MAX_CONFIG_PACKETS);
 
@@ -444,7 +573,7 @@ bool ConfigLayer::store_config() {
         // write checksum once
         sdcard.write((uint8_t*)(&checksum), sizeof(uint64_t)); // reinterpret addr of checksum as byte array
         // write one packet
-        sdcard.write((uint8_t*)(&config_packets[i]), sizeof(CommsPacket));
+        sdcard.write((uint8_t*)(&config_packets_h[i]), sizeof(CommsPacket));
     }
     sdcard.write(subsec_sizes, MAX_CONFIG_PACKETS);
 
