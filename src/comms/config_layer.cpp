@@ -69,7 +69,7 @@ void ConfigLayer::config_SD_init(HIDLayer* comms) {
             Serial.printf("SD config load failed, awaiting input from comms....\n");
         }
     } else {
-        Serial.printf("No /config.pack in SD card, awaiting input from comms....\n")
+        Serial.printf("No %s in SD card, awaiting input from comms....\n", CONFIG_PATH);
     }
 }
 
