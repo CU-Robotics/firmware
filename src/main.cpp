@@ -10,6 +10,8 @@
 
 #include <TeensyDebug.h>
 #include "sensors/LEDBoard.hpp"
+#include "data_packet.hpp"
+#include "sensor_constants.hpp"
 
 // Loop constants
 #define LOOP_FREQ 1000
@@ -88,14 +90,14 @@ int main() {
     pinMode(13, OUTPUT);
 
     led.init();
-    //initialize objects
+    // initialize objects
     can.init();
     dr16.init();
     ref.init();
     comms.init();
     stereoCamTrigger.init();
 
-    //can data pointer so we don't pass around rm_CAN object
+    // can data pointer so we don't pass around rm_CAN object
     CANData* can_data = can.get_data();
 
     // Config config
@@ -103,27 +105,27 @@ int main() {
     const Config* config = config_layer.configure(&comms);
     Serial.println("Configured!");
 
-    //estimate micro and macro state
+    // estimate micro and macro state
     estimator_manager.init(can_data, config);
 
-    //generate controller outputs based on governed references and estimated state
+    // generate controller outputs based on governed references and estimated state
     controller_manager.init(config);
 
-    //set reference limits in the reference governor
+    // set reference limits in the reference governor
     state.set_reference_limits(config->set_reference_limits);
 
     // variables for use in main
-    float temp_state[STATE_LEN][3] = { 0 }; // Temp state array
+    float temp_state[STATE_LEN][3] = { 0 };                      // Temp state array
     float temp_micro_state[NUM_MOTORS][MICRO_STATE_LEN] = { 0 }; // Temp micro state array
-    float temp_reference[STATE_LEN][3] = { 0 }; //Temp governed state
-    float target_state[STATE_LEN][3] = { 0 }; //Temp ungoverned state
-    float hive_state_offset[STATE_LEN][3] = { 0 }; //Hive offset state
-    float motor_inputs[NUM_MOTORS] = { 0 }; //Array for storing controller outputs to send to CAN
+    float temp_reference[STATE_LEN][3] = { 0 };                  // Temp governed state
+    float target_state[STATE_LEN][3] = { 0 };                    // Temp ungoverned state
+    float hive_state_offset[STATE_LEN][3] = { 0 };               // Hive offset state
+    float motor_inputs[NUM_MOTORS] = { 0 };                      // Array for storing controller outputs to send to CAN
 
     // create a copy of the position and velocity kinematic matrixes since we'll be updating them
-    float kinematics_pos[NUM_MOTORS][STATE_LEN] = { 0 }; //Position kinematics 
+    float kinematics_pos[NUM_MOTORS][STATE_LEN] = { 0 }; // Position kinematics
     memcpy(kinematics_pos, (*config).kinematics_p, sizeof((*config).kinematics_p));
-    float kinematics_vel[NUM_MOTORS][STATE_LEN] = { 0 }; //Velocity kinematics
+    float kinematics_vel[NUM_MOTORS][STATE_LEN] = { 0 }; // Velocity kinematics
     memcpy(kinematics_vel, (*config).kinematics_v, sizeof((*config).kinematics_v));
 
     // used in the kinematics matrix
@@ -143,6 +145,11 @@ int main() {
     // whether we are in hive mode or not
     bool hive_toggle = false;
 
+
+    // Data packet
+    comms_data_packet packet(config);
+    uint8_t buffer[4096];
+
     // Main loop
     while (true) {
         // read main sensors
@@ -151,6 +158,17 @@ int main() {
         ref.read();
         lidar1.read();
         lidar2.read();
+
+        // construct ref data packet
+        uint8_t ref_data_raw[180] = { 0 };
+        //ref.get_data_for_comms(ref_data_raw); //ASK: Might need to be uncommented again I forgor💀
+
+
+
+
+        // pack and unpack data packet
+        packet.pack_data_packet(buffer, state, ref_data_raw, can_data, estimator_manager, lidar1, lidar2, dr16);
+        packet.unpack_data_packet(buffer);
 
         // read and write comms packets
         comms.ping();
@@ -164,7 +182,7 @@ int main() {
 
         vtm_pos_x += ref.ref_data.kbm_interaction.mouse_speed_x * 0.05 * delta;
         vtm_pos_y += ref.ref_data.kbm_interaction.mouse_speed_y * 0.05 * delta;
-        
+
         float chassis_vel_x = 0;
         float chassis_vel_y = 0;
         float chassis_pos_x = 0;
@@ -298,10 +316,6 @@ int main() {
         lidar2.export_data(lidar_data);
         memcpy(sensor_data.raw + SENSOR_LIDAR2_OFFSET, lidar_data, D200_NUM_PACKETS_CACHED * D200_PAYLOAD_SIZE);
 
-        // construct ref data packet
-        uint8_t ref_data_raw[180] = { 0 };
-        ref.get_data_for_comms(ref_data_raw);
-
         // set the outgoing packet
         outgoing->set_id((uint16_t)loopc);
         outgoing->set_info(0x0000);
@@ -329,8 +343,6 @@ int main() {
         float dt = stall_timer.delta();
         if (dt > 0.002) Serial.printf("Slow loop with dt: %f\n", dt);
     }
-    
+
     return 0;
 }
-
-
