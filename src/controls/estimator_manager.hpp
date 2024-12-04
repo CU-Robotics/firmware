@@ -82,6 +82,35 @@ public:
     /// @param micro_outputs input 2
     void clear_outputs(float macro_outputs[STATE_LEN][3], float micro_outputs[NUM_MOTORS][MICRO_STATE_LEN]);
 
+    /// @brief get the specified buff encoder sensor from the array
+    /// @param index index of the sensor object to get
+    /// @return reference to the buff encoder sensor
+    BuffEncoder& getBuffSensor(int index) {
+        return buff_sensors[index];
+
+    }
+
+    /// @brief get the specified icm sensor from the array
+    /// @param index index of the sensor object to get
+    /// @return reference to the icm sensor
+    ICM20649& getICMSensor(int index) {
+        return icm_sensors[index];
+    }
+
+    /// @brief get the specified rev sensor from the array
+    /// @param index index of the sensor object to get
+    /// @return reference to the rev sensor
+    RevEncoder& getRevSensor(int index) {
+        return rev_sensors[index];
+    }
+
+    /// @brief get the specified tof sensor from the array
+    /// @param index index of the sensor object to get
+    /// @return reference to the tof sensor
+    TOFSensor& getTOFSensor(int index) {
+        return tof_sensors[index];
+    }
+    
 private:
     /// @brief call read for imu's NUM_IMU_CALIBRATION times and then averages returns to calculate offset.
     void calibrate_imus();
