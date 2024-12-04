@@ -73,7 +73,7 @@ void ConfigLayer::config_SD_init(HIDLayer* comms) {
     }
 }
 
-void ConfigLayer::process(HIDPacket* in, HIDPacket* out) {
+void ConfigLayer::process(CommsPacket* in, CommsPacket* out) {
     char* in_raw = in->raw;
     char* out_raw = out->raw;
     int8_t sec_id = in_raw[1];
@@ -145,7 +145,7 @@ void ConfigLayer::process(HIDPacket* in, HIDPacket* out) {
     }
 }
 
-void Config::fill_data(HIDPacket packets[MAX_CONFIG_PACKETS], uint8_t sizes[MAX_CONFIG_PACKETS]) {
+void Config::fill_data(CommsPacket packets[MAX_CONFIG_PACKETS], uint8_t sizes[MAX_CONFIG_PACKETS]) {
     for (int i = 0; i < MAX_CONFIG_PACKETS; i++) {
         uint8_t id = packets[i].get_id();
         uint8_t subsec_id = *reinterpret_cast<uint8_t*>(packets[i].raw + 2);
@@ -249,9 +249,9 @@ void Config::fill_data(HIDPacket packets[MAX_CONFIG_PACKETS], uint8_t sizes[MAX_
 }
 
 bool ConfigLayer::sd_load() {
-    // total size of /config.pack: MAX_CONFIG_PACKETS * (sizeof(HIDPacket) + 1)
+    // total size of /config.pack: MAX_CONFIG_PACKETS * (sizeof(CommsPacket) + 1)
     // num of packets * size of each packet == num of bytes for all packets
-    const int config_byte_size = MAX_CONFIG_PACKETS * sizeof(HIDPacket);
+    const int config_byte_size = MAX_CONFIG_PACKETS * sizeof(CommsPacket);
 
     if (sdcard.open(CONFIG_PATH) != 0) return false;
 
@@ -302,7 +302,7 @@ bool ConfigLayer::config_SD_read_packets(uint64_t& checksum) {
     // read checksum and each packet
     // grab first packet and checksum (kept separate in order to validate subsequent checksum values)
     if (sdcard.read((uint8_t*)(&checksum), sizeof(uint64_t)) != sizeof(uint64_t)) return false;
-    if (sdcard.read((uint8_t*)(&config_packets[0]), sizeof(HIDPacket)) != sizeof(HIDPacket)) return false;
+    if (sdcard.read((uint8_t*)(&config_packets[0]), sizeof(CommsPacket)) != sizeof(CommsPacket)) return false;
     // read remaining packets
     for (int i = 1; i < MAX_CONFIG_PACKETS; i++) {
         uint64_t temp_checksum;
@@ -314,7 +314,7 @@ bool ConfigLayer::config_SD_read_packets(uint64_t& checksum) {
             Serial.printf("Inconsistent data found in config file, requesting config from hive...\n");
             return false;
         }
-        if (sdcard.read((uint8_t*)(&config_packets[i]), sizeof(HIDPacket)) != sizeof(HIDPacket)) {
+        if (sdcard.read((uint8_t*)(&config_packets[i]), sizeof(CommsPacket)) != sizeof(CommsPacket)) {
             Serial.printf("Unexpected mismatch in number of bytes read, requesting config from hive...\n");
             return false;
         }
@@ -328,9 +328,9 @@ bool ConfigLayer::config_SD_read_packets(uint64_t& checksum) {
 }
 
 bool ConfigLayer::store_config() {
-    // total size of /config.pack: MAX_CONFIG_PACKETS * (sizeof(HIDPacket) + 1)
+    // total size of /config.pack: MAX_CONFIG_PACKETS * (sizeof(CommsPacket) + 1)
     // num of packets * size of each packet == num of bytes for all packets
-    const int config_byte_size = MAX_CONFIG_PACKETS * sizeof(HIDPacket);
+    const int config_byte_size = MAX_CONFIG_PACKETS * sizeof(CommsPacket);
     const char* config_path = "/config.pack";
 
     // initialize: erase config.pack if exists, reopen
@@ -364,7 +364,7 @@ bool ConfigLayer::store_config() {
         // write checksum once
         sdcard.write((uint8_t*)(&checksum), sizeof(uint64_t)); // reinterpret addr of checksum as byte array
         // write one packet
-        sdcard.write((uint8_t*)(&config_packets[i]), sizeof(HIDPacket));
+        sdcard.write((uint8_t*)(&config_packets[i]), sizeof(CommsPacket));
     }
     sdcard.write(subsec_sizes, MAX_CONFIG_PACKETS);
 

@@ -172,8 +172,8 @@ int main() {
 
         // read and write comms packets
         comms.ping();
-        HIDPacket* incoming = comms.get_incoming_packet();
-        HIDPacket* outgoing = comms.get_outgoing_packet();
+        CommsPacket* incoming = comms.get_incoming_packet();
+        CommsPacket* outgoing = comms.get_outgoing_packet();
 
         // manual controls on firmware
         float delta = control_input_timer.delta();
