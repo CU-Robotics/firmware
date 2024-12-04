@@ -64,7 +64,7 @@ struct SensorData {
 };
 
 /// @brief An encapsulating data struct managing a HID packet
-struct CommsPacket {
+struct HIDPacket {
 	/// @brief The raw array of bytes of a packet
 	char raw[COMMS_PACKET_SIZE] = { 0 };
 
@@ -137,10 +137,10 @@ public:
 
 	/// @brief Get the packet comming from Khadas
 	/// @return A pointer to the received Khadas packet
-	inline CommsPacket* get_incoming_packet() { return &m_incomingPacket; }
+	inline HIDPacket* get_incoming_packet() { return &m_incomingPacket; }
 	/// @brief Get the packet to Khadas
 	/// @return A pointer to the packet to be sent to Khadas
-	inline CommsPacket* get_outgoing_packet() { return &m_outgoingPacket; }
+	inline HIDPacket* get_outgoing_packet() { return &m_outgoingPacket; }
 
 private:
 	/// @brief Attempt a read on HID
@@ -152,9 +152,9 @@ private:
 
 private:
 	/// @brief An encapsulating struct around the packet received from Khadas
-	CommsPacket m_incomingPacket{};
+	HIDPacket m_incomingPacket{};
 	/// @brief An encapsulating struct around the packet to be sent to Khadas
-	CommsPacket m_outgoingPacket{};
+	HIDPacket m_outgoingPacket{};
 	/// @brief An encapsulating struct around all the sensor data to be sent to Khadas
 	SensorData m_sensorData{};
 

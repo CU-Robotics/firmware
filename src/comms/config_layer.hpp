@@ -59,9 +59,9 @@ static const std::map<std::string, u_int8_t> yaml_section_id_mappings = {
 /// @brief struct to hold configuration data
 struct Config {
     /// @brief fill all config data from packets
-    /// @param packets CommsPacket array filled with data from yaml
+    /// @param packets HIDPacket array filled with data from yaml
     /// @param sizes Number of sections for each section
-    void fill_data(CommsPacket packets[MAX_CONFIG_PACKETS], uint8_t sizes[MAX_CONFIG_PACKETS]);
+    void fill_data(HIDPacket packets[MAX_CONFIG_PACKETS], uint8_t sizes[MAX_CONFIG_PACKETS]);
 
     //check yaml for more details on values
     /// @brief robot id sent from hive
@@ -126,7 +126,7 @@ private:
 class ConfigLayer {
 private:
     /// @brief array to save config packets
-    CommsPacket config_packets[MAX_CONFIG_PACKETS];
+    HIDPacket config_packets[MAX_CONFIG_PACKETS];
 
     /// @brief array to store number of subsections per YAML section
     uint8_t subsec_sizes[MAX_CONFIG_PACKETS] = { 0 };
@@ -165,7 +165,7 @@ public:
     /// @brief check incoming packet from the comms layer and update outgoing packet accordingly to request next config packet
     /// @param in incoming comms packet
     /// @param out outgoing comms packet to write config requests to
-    void process(CommsPacket* in, CommsPacket* out);
+    void process(HIDPacket* in, HIDPacket* out);
 
     /// @brief return configured flag (check if all config packets have been received)
     /// @return the configured flag
@@ -174,8 +174,8 @@ public:
     /// @brief get config and size arrays
     /// @param packets return array of packets
     /// @param sizes return array of sizes
-    void get_config_packets(CommsPacket packets[MAX_CONFIG_PACKETS], uint8_t sizes[MAX_CONFIG_PACKETS]) {
-        memcpy(packets, config_packets, sizeof(CommsPacket) * MAX_CONFIG_PACKETS);
+    void get_config_packets(HIDPacket packets[MAX_CONFIG_PACKETS], uint8_t sizes[MAX_CONFIG_PACKETS]) {
+        memcpy(packets, config_packets, sizeof(HIDPacket) * MAX_CONFIG_PACKETS);
         memcpy(sizes, subsec_sizes, sizeof(uint8_t) * MAX_CONFIG_PACKETS);
     }
 
