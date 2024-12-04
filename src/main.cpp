@@ -320,7 +320,6 @@ int main()
 
         float temp_yaw_ref = temp_reference[3][0];
         float yaw_motor_in = motor_inputs[4];
-        Serial.printf("temp ref yaw: %f\n", temp_yaw_ref);
         memcpy(sensor_data.raw + SENSOR_LIDAR2_OFFSET + D200_NUM_PACKETS_CACHED * D200_PAYLOAD_SIZE, &temp_yaw_ref, sizeof(float));
         memcpy(sensor_data.raw + SENSOR_LIDAR2_OFFSET + D200_NUM_PACKETS_CACHED * D200_PAYLOAD_SIZE + 4, &yaw_motor_in, sizeof(float));
         // set the outgoing packet
