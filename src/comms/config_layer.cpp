@@ -22,7 +22,7 @@ const Config* const ConfigLayer::configure(HIDLayer* comms) {
     }
 
     // put the data from the packets into the config object
-    config.fill_data(config_packets, subsec_sizes);
+    config.fill_data(hid_config_packets, subsec_sizes);
 
     // verify that config received matches ref system: if not, error out
 #ifndef CONFIG_OFF_ROBOT
@@ -61,7 +61,7 @@ void ConfigLayer::config_SD_init(HIDLayer* comms) {
     if (sdcard.exists(CONFIG_PATH)) {
         Serial.printf("Config located on SD in /config.pack, attempting to load from file\n");
 
-        // load sd config into config_packets
+        // load sd config into hid_config_packets
         configured = sd_load();
         if (configured) {
             Serial.printf("SD config load successful!\n");
@@ -105,7 +105,7 @@ void ConfigLayer::process(HIDPacket* in, HIDPacket* out) {
             // look for the next YAML section
             seek_sec++;
         } else {
-            config_packets[index] = *in;
+            hid_config_packets[index] = *in;
             index++;
 
         #ifdef CONFIG_LAYER_DEBUG
@@ -274,7 +274,7 @@ bool ConfigLayer::sd_load() {
 
     sdcard.close();
 
-    uint8_t* config_bytes = (uint8_t*)config_packets;
+    uint8_t* config_bytes = (uint8_t*)hid_config_packets;
 #ifdef CONFIG_LAYER_DEBUG
     Serial.printf("sd_load: computing checksum for stored config\n");
 #endif
@@ -284,13 +284,13 @@ bool ConfigLayer::sd_load() {
         return false;
     }
 
-    // fill_data fills a Config object using info from config_packets and subsec_sizes
+    // fill_data fills a Config object using info from hid_config_packets and subsec_sizes
     // we want to make sure requesting data from ref is reliable, so we load the config
     // if the ID from packets does not match ref, we need to get rid of the config- we use a temp config that we can throw out
     // set config = temp_config if IDs match
     Config temp_config;
 
-    temp_config.fill_data(config_packets, subsec_sizes);
+    temp_config.fill_data(hid_config_packets, subsec_sizes);
 
 #ifndef CONFIG_OFF_ROBOT
     // id check with modulo 100 to account for red and blue teams. Blue is the id + 100. (ID == 101, 102, ...)
@@ -311,7 +311,7 @@ bool ConfigLayer::config_SD_read_packets(uint64_t& checksum) {
     // read checksum and each packet
     // grab first packet and checksum (kept separate in order to validate subsequent checksum values)
     if (sdcard.read((uint8_t*)(&checksum), sizeof(uint64_t)) != sizeof(uint64_t)) return false;
-    if (sdcard.read((uint8_t*)(&config_packets[0]), sizeof(HIDPacket)) != sizeof(HIDPacket)) return false;
+    if (sdcard.read((uint8_t*)(&hid_config_packets[0]), sizeof(HIDPacket)) != sizeof(HIDPacket)) return false;
     // read remaining packets
     for (int i = 1; i < MAX_CONFIG_PACKETS; i++) {
         uint64_t temp_checksum;
@@ -323,7 +323,7 @@ bool ConfigLayer::config_SD_read_packets(uint64_t& checksum) {
             Serial.printf("Inconsistent data found in config file, requesting config from hive...\n");
             return false;
         }
-        if (sdcard.read((uint8_t*)(&config_packets[i]), sizeof(HIDPacket)) != sizeof(HIDPacket)) {
+        if (sdcard.read((uint8_t*)(&hid_config_packets[i]), sizeof(HIDPacket)) != sizeof(HIDPacket)) {
             Serial.printf("Unexpected mismatch in number of bytes read, requesting config from hive...\n");
             return false;
         }
@@ -360,7 +360,7 @@ bool ConfigLayer::store_config() {
 #ifdef CONFIG_LAYER_DEBUG
     Serial.printf("store_config: computing checksum for received config\n");
 #endif
-    uint8_t* config_bytes = (uint8_t*)config_packets;
+    uint8_t* config_bytes = (uint8_t*)hid_config_packets;
     uint64_t checksum = sd_checksum64(config_bytes, config_byte_size);
     checksum += sd_checksum64(subsec_sizes, MAX_CONFIG_PACKETS);
 
@@ -373,7 +373,7 @@ bool ConfigLayer::store_config() {
         // write checksum once
         sdcard.write((uint8_t*)(&checksum), sizeof(uint64_t)); // reinterpret addr of checksum as byte array
         // write one packet
-        sdcard.write((uint8_t*)(&config_packets[i]), sizeof(HIDPacket));
+        sdcard.write((uint8_t*)(&hid_config_packets[i]), sizeof(HIDPacket));
     }
     sdcard.write(subsec_sizes, MAX_CONFIG_PACKETS);
 

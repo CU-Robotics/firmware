@@ -18,7 +18,7 @@
 // config filepath
 // this file has the following structure (defined in store_config()):
 // 1 byte to store robot ID from parsed hive config packets
-// (uint64_t holding the computed checksum for config_packets, followed by a config_packets packet) repeated for all packets in config_packets
+// (uint64_t holding the computed checksum for hid_config_packets, followed by a hid_config_packets packet) repeated for all packets in hid_config_packets
 // lastly, stores bytes of subsec_sizes array
 #define CONFIG_PATH "/config.pack"
 
@@ -126,7 +126,7 @@ private:
 class ConfigLayer {
 private:
     /// @brief array to save config packets
-    HIDPacket config_packets[MAX_CONFIG_PACKETS];
+    HIDPacket hid_config_packets[MAX_CONFIG_PACKETS];
 
     /// @brief array to store number of subsections per YAML section
     uint8_t subsec_sizes[MAX_CONFIG_PACKETS] = { 0 };
@@ -174,8 +174,8 @@ public:
     /// @brief get config and size arrays
     /// @param packets return array of packets
     /// @param sizes return array of sizes
-    void get_config_packets(HIDPacket packets[MAX_CONFIG_PACKETS], uint8_t sizes[MAX_CONFIG_PACKETS]) {
-        memcpy(packets, config_packets, sizeof(HIDPacket) * MAX_CONFIG_PACKETS);
+    void get_hid_config_packets(HIDPacket packets[MAX_CONFIG_PACKETS], uint8_t sizes[MAX_CONFIG_PACKETS]) {
+        memcpy(packets, hid_config_packets, sizeof(HIDPacket) * MAX_CONFIG_PACKETS);
         memcpy(sizes, subsec_sizes, sizeof(uint8_t) * MAX_CONFIG_PACKETS);
     }
 
