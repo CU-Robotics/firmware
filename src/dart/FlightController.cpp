@@ -73,8 +73,8 @@ void FlightController::guided() {
     int x_obj = position.first;
     int y_obj = position.second;
 
-    int x_center = 320; // Assumes a 640x480
-    int y_center = 240;
+    int x_center = DARTCAM_BUFFER_WIDTH; // Assumes a 640x480
+    int y_center = DARTCAM_BUFFER_HEIGHT;
     int x_deviation = x_obj - x_center;
     int y_deviation = y_obj - y_center;
 

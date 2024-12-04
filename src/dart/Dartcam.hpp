@@ -17,9 +17,9 @@
 #define DARTCAM_USE_GPIO false
 
 /// @brief frame buffer 1 for the camera
-extern uint16_t frameBuffer[DARTCAM_BUFFER_SIZE];
+extern uint16_t frame_buffer[DARTCAM_BUFFER_SIZE];
 /// @brief frame buffer 2 for the camera
-extern uint16_t frameBuffer2[DARTCAM_BUFFER_SIZE];
+// extern uint16_t frameBuffer2[DARTCAM_BUFFER_SIZE];
 
 class Dartcam {
 public:
@@ -32,15 +32,8 @@ public:
     /// @brief Read a frame from the camera and put it into the frame buffers.
     void read();
 
-    /// @brief Process the frame data in the buffer.
-    void process_frame();
-
     /// @brief Send the frame buffer data over serial in hexadecimal format.
     void send_frame_serial();
-
-    /// @brief apply a green mask and threshold to a framebuffer (in place)
-    /// @param frame_buffer 
-    void green_threshold(uint16_t frame_buffer[DARTCAM_BUFFER_SIZE]);
 
     /// @brief Get the object's position within the frame.
     /// @return A pair representing the x and y coordinates of the object.

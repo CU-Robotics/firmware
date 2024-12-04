@@ -14,16 +14,27 @@ Dartcam dartcam;
 FlightController flightController(servoCont, imu, dartcam);
 
 int main() {
+    // setup
     Serial.begin(115200);
     debug.begin(SerialUSB1);
     servoCont.init();
-
     imu.init();
     dartcam.init();
 
+    // main loop
     while (true) {
-        flightController.set_control_mode(FIN_TEST);
-        flightController.update();
+        // update framebuffers
+        dartcam.read();
+        std::pair<int, int> pos = dartcam.get_object_position();
+
+        Serial.printf("Object position: (%d, %d)\n", pos.first, pos.second);
+        
+        // // debug finding general direction of target
+        // if (pos.first > 160) {
+        //     Serial.println("(right)");
+        // } else if (pos.first < 160) {
+        //     Serial.println("(left)");
+        // }
     }
 }
 

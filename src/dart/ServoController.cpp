@@ -4,7 +4,7 @@
 
 PWMServo fin1, fin2, fin3, fin4;
 
-ServoController::ServoController() {}
+ServoController::ServoController() { }
 
 void ServoController::init() {
   fin1.attach(9);
