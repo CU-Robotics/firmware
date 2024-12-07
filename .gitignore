@@ -12,6 +12,10 @@ build/
 *.elf
 *.hex
 
+# Ignore the output debug files
+*.dump
+*.map
+
 # Ignore the libraries
 *.a
 
