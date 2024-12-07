@@ -35,96 +35,8 @@ void RefSystem::init() {
 }
 
 void RefSystem::read() {
-    bool mcm_success = true;
-    bool vtm_success = true;
-
-    if(failed_tail_reads > 10) {
-        failed_tail_reads = 0;
-        mcm_header_read = false;
-        mcm_command_ID_read = false;
-        mcm_data_read = false;
-        vtm_header_read = false;
-        vtm_command_ID_read = false;
-        vtm_data_read = false;
-    }
-    // reset buffer and index if we are reading a new packet
-    if (!mcm_header_read) {
-        memset(mcm_raw_buffer, 0, REF_MAX_PACKET_SIZE);
-        mcm_buffer_index = 0;
-    }
-    if (!vtm_header_read) {
-        memset(vtm_raw_buffer, 0, REF_MAX_PACKET_SIZE);
-        vtm_buffer_index = 0;
-    }
-
-    // read header if we haven't already
-    // mcm
-    if (mcm_success && !mcm_header_read) {
-        mcm_success = read_frame_header(&MCM_SERIAL, mcm_raw_buffer, mcm_buffer_index, mcm_curr_frame);
-        mcm_header_read = mcm_success;
-    }
-    // vtm
-    if (vtm_success && !vtm_header_read) {
-        vtm_success = read_frame_header(&VTM_SERIAL, vtm_raw_buffer, vtm_buffer_index, vtm_curr_frame);
-        vtm_header_read = vtm_success;
-    }
-
-    // read ID if we haven't already
-    // mcm
-    if (mcm_success && !mcm_command_ID_read) {
-        mcm_success = read_frame_command_ID(&MCM_SERIAL, mcm_raw_buffer, mcm_buffer_index, mcm_curr_frame);
-        mcm_command_ID_read = mcm_success;
-    }
-    // vtm
-    if (vtm_success && !vtm_command_ID_read) {
-        vtm_success = read_frame_command_ID(&VTM_SERIAL, vtm_raw_buffer, vtm_buffer_index, vtm_curr_frame);
-        vtm_command_ID_read = vtm_success;
-    }
-
-    // read data if we haven't already
-    // mcm
-    if (mcm_success && !mcm_data_read) {
-        mcm_success = read_frame_data(&MCM_SERIAL, mcm_raw_buffer, mcm_buffer_index, mcm_curr_frame);
-        mcm_data_read = mcm_success;
-
-    }
-    // vtm
-    if (vtm_success && !vtm_data_read) {
-        vtm_success = read_frame_data(&VTM_SERIAL, vtm_raw_buffer, vtm_buffer_index, vtm_curr_frame);
-        vtm_data_read = vtm_success;
-    }
-
-    // read tail if all other parts of the frame have been read
-    // mcm
-    if (mcm_success){
-        mcm_success = read_frame_tail(&MCM_SERIAL, mcm_raw_buffer, mcm_buffer_index, mcm_curr_frame);
-        if(!mcm_success) {
-            failed_tail_reads++;
-        } else failed_tail_reads = 0;
-    }
-    // vtm
-    if (vtm_success)
-        vtm_success = read_frame_tail(&VTM_SERIAL, vtm_raw_buffer, vtm_buffer_index, vtm_curr_frame);
-
-    // process data
-    // mcm
-    if (mcm_success) {
-        set_ref_data(mcm_curr_frame, mcm_raw_buffer);
-        // reset flags
-        mcm_header_read = false;
-        mcm_command_ID_read = false;
-        mcm_data_read = false;
-    }
-    // vtm
-
-    if (vtm_success) {
-        set_ref_data(vtm_curr_frame, vtm_raw_buffer);
-        // reset flags
-        vtm_header_read = false;
-        vtm_command_ID_read = false;
-        vtm_data_read = false;
-    }
-
+    read_vtm();
+    read_mcm();
 }
 
 void RefSystem::write(uint8_t* packet, uint8_t length) {
@@ -280,17 +192,17 @@ bool RefSystem::read_frame_data(HardwareSerial* serial, uint8_t raw_buffer[REF_M
     return true;
 }
 
-bool RefSystem::read_frame_tail(HardwareSerial* serial, uint8_t raw_buffer[REF_MAX_PACKET_SIZE * 2], uint16_t& buffer_index, Frame& frame) {
+int RefSystem::read_frame_tail(HardwareSerial* serial, uint8_t raw_buffer[REF_MAX_PACKET_SIZE * 2], uint16_t& buffer_index, Frame& frame) {
     // early return if serial is empty or not full enough
     if (serial->available() < 2)
-        return false;
+        return 0;
 
     // read and verify tail
     int bytes_read = serial->readBytes(raw_buffer + buffer_index, 2);
     if (bytes_read != 2) {
         Serial.println("Couldnt read enough bytes for CRC");
         packets_failed++;
-        return false;
+        return 0;
     }
 
     // store CRC
@@ -299,14 +211,14 @@ bool RefSystem::read_frame_tail(HardwareSerial* serial, uint8_t raw_buffer[REF_M
     if (frame.CRC != generateCRC16(raw_buffer, buffer_index)) {
         Serial.println("Tail failed CRC");
         packets_failed++;
-        return false;
+        return -1;
     }
 
 
     // increment buffer index
     buffer_index = bytes_read;
 
-    return true;
+    return 1;
 }
 
 void RefSystem::set_ref_data(Frame& frame, uint8_t raw_buffer[REF_MAX_PACKET_SIZE * 2]) {
@@ -401,7 +313,6 @@ void RefSystem::set_ref_data(Frame& frame, uint8_t raw_buffer[REF_MAX_PACKET_SIZ
         break;
     case FrameType::KBM_INTERACTION:
         ref_data.kbm_interaction.set_data(frame.data);
-        // ref_data.kbm_interaction.print();
         break;
     case FrameType::SMALL_MAP_RADAR_POSITION:
         ref_data.small_map_radar_position.set_data(frame.data);
@@ -418,5 +329,119 @@ void RefSystem::set_ref_data(Frame& frame, uint8_t raw_buffer[REF_MAX_PACKET_SIZ
     default:
         Serial.println("Unknown Frame Type");
         break;
+    }
+}
+
+void RefSystem::read_vtm() {
+    bool success = true;
+
+    // try to read the header
+    if (success && !vtm_data.header_read) {
+        success = read_frame_header(&VTM_SERIAL, vtm_data.raw_buffer, vtm_data.buffer_index, vtm_data.curr_frame);
+        vtm_data.header_read = success;
+    }
+
+    // try to read the ID
+    if (success && !vtm_data.command_ID_read) {
+        success = read_frame_command_ID(&VTM_SERIAL, vtm_data.raw_buffer, vtm_data.buffer_index, vtm_data.curr_frame);
+        vtm_data.command_ID_read = success;
+    }
+
+    // try to read the data
+    if (success && !vtm_data.data_read) {
+        success = read_frame_data(&VTM_SERIAL, vtm_data.raw_buffer, vtm_data.buffer_index, vtm_data.curr_frame);
+        vtm_data.data_read = success;
+    }
+
+    // try to read the tail
+    if (success && !vtm_data.tail_read) {
+        int tail_ret = read_frame_tail(&VTM_SERIAL, vtm_data.raw_buffer, vtm_data.buffer_index, vtm_data.curr_frame);
+
+        if (tail_ret == 1) {
+            success = true;
+            vtm_data.tail_read = true;
+        } else if (tail_ret == -1) {
+            success = false;
+
+            // crc failed so reset the frame
+            vtm_data.header_read = false;
+            vtm_data.command_ID_read = false;
+            vtm_data.data_read = false;
+            vtm_data.tail_read = false;
+            vtm_data.buffer_index = 0;
+            memset(vtm_data.raw_buffer, 0, REF_MAX_PACKET_SIZE * 2);
+        } else {
+            success = false;
+        }
+    }
+
+    // process the data
+    if (success) {
+        set_ref_data(vtm_data.curr_frame, vtm_data.raw_buffer);
+
+        // reset flags
+        vtm_data.header_read = false;
+        vtm_data.command_ID_read = false;
+        vtm_data.data_read = false;
+        vtm_data.tail_read = false;
+        vtm_data.buffer_index = 0;
+        memset(vtm_data.raw_buffer, 0, REF_MAX_PACKET_SIZE * 2);
+    }
+}
+
+void RefSystem::read_mcm() {
+    bool success = true;
+
+    // try to read the header
+    if (success && !mcm_data.header_read) {
+        success = read_frame_header(&MCM_SERIAL, mcm_data.raw_buffer, mcm_data.buffer_index, mcm_data.curr_frame);
+        mcm_data.header_read = success;
+    }
+
+    // try to read the ID
+    if (success && !mcm_data.command_ID_read) {
+        success = read_frame_command_ID(&MCM_SERIAL, mcm_data.raw_buffer, mcm_data.buffer_index, mcm_data.curr_frame);
+        mcm_data.command_ID_read = success;
+    }
+
+    // try to read the data
+    if (success && !mcm_data.data_read) {
+        success = read_frame_data(&MCM_SERIAL, mcm_data.raw_buffer, mcm_data.buffer_index, mcm_data.curr_frame);
+        mcm_data.data_read = success;
+    }
+
+    // try to read the tail
+    if (success && !mcm_data.tail_read) {
+        int tail_ret = read_frame_tail(&MCM_SERIAL, mcm_data.raw_buffer, mcm_data.buffer_index, mcm_data.curr_frame);
+
+        if (tail_ret == 1) {
+            success = true;
+            mcm_data.tail_read = true;
+        } else if (tail_ret == -1) {
+            success = false;
+
+            // crc failed so reset the frame
+            mcm_data.header_read = false;
+            mcm_data.command_ID_read = false;
+            mcm_data.data_read = false;
+            mcm_data.tail_read = false;
+            mcm_data.buffer_index = 0;
+            memset(mcm_data.raw_buffer, 0, REF_MAX_PACKET_SIZE * 2);
+        } else {
+            success = false;
+        }
+    }
+
+    // process the data
+    if (success) {
+        set_ref_data(mcm_data.curr_frame, mcm_data.raw_buffer);
+
+        // reset flags
+        mcm_data.header_read = false;
+        mcm_data.command_ID_read = false;
+        mcm_data.data_read = false;
+        mcm_data.tail_read = false;
+        mcm_data.buffer_index = 0;
+        memset(mcm_data.raw_buffer, 0, REF_MAX_PACKET_SIZE * 2);
     }
 }

@@ -5,11 +5,14 @@
 
 #include "utils/profiler.hpp"
 #include "sensors/d200.hpp"
+#include "sensors/StereoCamTrigger.hpp"
 #include "controls/estimator_manager.hpp"
 #include "controls/controller_manager.hpp"
 
 #include <TeensyDebug.h>
 #include "sensors/LEDBoard.hpp"
+#include "data_packet.hpp"
+#include "sensor_constants.hpp"
 
 // Loop constants
 #define LOOP_FREQ 1000
@@ -24,6 +27,8 @@ ACS712 current_sensor;
 
 D200LD14P lidar1(&Serial4, 0);
 D200LD14P lidar2(&Serial5, 1);
+
+StereoCamTrigger stereoCamTrigger(60);
 
 ConfigLayer config_layer;
 
@@ -79,7 +84,7 @@ void print_logo() {
 int main() {
     long long loopc = 0; // Loop counter for heartbeat
 
-    Serial.begin(500000); // the serial monitor is actually always active (for debug use Serial.println & tycmd)
+    Serial.begin(112500); // the serial monitor is actually always active (for debug use Serial.println & tycmd)
     debug.begin(SerialUSB1);
 
     print_logo();
@@ -105,8 +110,6 @@ int main() {
 
     //estimate micro and macro state
     estimator_manager.init(can_data, config);
-
-    Serial.printf("test\n");
 
     //generate controller outputs based on governed references and estimated state
     controller_manager.init(&can, config);
@@ -138,6 +141,7 @@ int main() {
     bool hive_toggle = false;
 
     Serial.println("Entering main loop...\n");
+
     // Main loop
     while (true) {
         // read main sensors
@@ -299,5 +303,6 @@ int main() {
         float dt = stall_timer.delta();
         if (dt > 0.002) Serial.printf("Slow loop with dt: %f\n", dt);
     }
+    
     return 0;
 }
