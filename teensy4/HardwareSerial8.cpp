@@ -33,7 +33,7 @@
 #if defined(__IMXRT1062__) && defined(ARDUINO_TEENSY41)
 
 #ifndef SERIAL8_TX_BUFFER_SIZE
-#define SERIAL8_TX_BUFFER_SIZE     8096 // number of outgoing bytes to buffer
+#define SERIAL8_TX_BUFFER_SIZE     4096 // number of outgoing bytes to buffer
 #endif
 #ifndef SERIAL8_RX_BUFFER_SIZE
 #define SERIAL8_RX_BUFFER_SIZE     4096 // number of incoming bytes to buffer
