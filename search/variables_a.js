@@ -1,0 +1,21 @@
+var searchData=
+[
+  ['l_5fmouse_5fbutton_1217',['l_mouse_button',['../classDR16.html#a693d199d1ee1e6de7ce07950e82f1339',1,'DR16::l_mouse_button()'],['../structDR16Data.html#aea26fb7a88ddb48f2c3c3b73b17e70dd',1,'DR16Data::l_mouse_button()']]],
+  ['l_5fstick_5fx_1218',['l_stick_x',['../structDR16Data.html#a0ec7b942592648ae5b24dc707c709b5f',1,'DR16Data']]],
+  ['l_5fstick_5fy_1219',['l_stick_y',['../structDR16Data.html#a27ee28d6e855e880d46baa60b21543df',1,'DR16Data']]],
+  ['l_5fswitch_1220',['l_switch',['../structDR16Data.html#a2082191eb68767f4fd7c85c1d6456b27',1,'DR16Data']]],
+  ['last_5fmotor_5fangle_1221',['last_motor_angle',['../structSwitcherEstimator.html#ad9f9eaf0119b2a5e8db9ac566d33dc7d',1,'SwitcherEstimator']]],
+  ['last_5fnum_5fviolations_1222',['last_num_violations',['../structRefereeWarning.html#aa4cdf9b81528c72ad09e2f9b55a25299',1,'RefereeWarning']]],
+  ['last_5freceived_5frobot_5fid_1223',['last_received_robot_ID',['../structRefereeWarning.html#ac351faf4672d39dddc93672b7fe3d5ce',1,'RefereeWarning']]],
+  ['last_5freceived_5fseverity_1224',['last_received_severity',['../structRefereeWarning.html#ad8acc1eefa0c2c2336daf883334cec1d',1,'RefereeWarning']]],
+  ['latest_5fdistance_1225',['latest_distance',['../classTOFSensor.html#a68c2c6a08e08c1ac585c2a594dc3f3a2',1,'TOFSensor::latest_distance()'],['../structTOFSensorData.html#a745c101e0c02abc1caa92e7e7ddbf30d',1,'TOFSensorData::latest_distance()']]],
+  ['latest_5fexposure_5ftimestamp_1226',['latest_exposure_timestamp',['../classStereoCamTrigger.html#a867da7933c5383dd16e8c0de49103e8a',1,'StereoCamTrigger']]],
+  ['launching_5ffrequency_1227',['launching_frequency',['../structLaunchingStatus.html#ab317eca980c023d574731cdded8a5c6b',1,'LaunchingStatus']]],
+  ['launching_5fmechanism_1228',['launching_mechanism',['../structLaunchingStatus.html#aaa9ccde2b2d1a935f4fdba96bc400997',1,'LaunchingStatus']]],
+  ['launching_5fstatus_1229',['launching_status',['../structRefData.html#a22402c3e12be90eae7a7ec68aa2e61ad',1,'RefData']]],
+  ['leds_1230',['leds',['../classLEDBoard.html#a4ed64524f222dbf1eb4feb1fc635965e',1,'LEDBoard']]],
+  ['lidar_5fsensor_5fcount_1231',['lidar_sensor_count',['../structcomms__data__packet.html#afca9a8a2cae9b9c9f0ab55ed8896db70',1,'comms_data_packet']]],
+  ['lidar_5fsensors_1232',['lidar_sensors',['../structcomms__data__packet.html#a75e6aaac50b47ad56d94f7d466a9458b',1,'comms_data_packet']]],
+  ['lidar_5fspeed_1233',['lidar_speed',['../structLidarDataPacketSI.html#a893fb2a173ab795ff7c8314ae77e7547',1,'LidarDataPacketSI']]],
+  ['linear_5fvelocity_1234',['linear_velocity',['../structFlyWheelEstimator.html#a9f6c3988ebbbfd64d024c2618117d6f2',1,'FlyWheelEstimator']]]
+];

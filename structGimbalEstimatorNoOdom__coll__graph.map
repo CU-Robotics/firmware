@@ -1,0 +1,10 @@
+<map id="GimbalEstimatorNoOdom" name="GimbalEstimatorNoOdom">
+<area shape="rect" id="node1" title="Estimate the yaw, pitch, and chassis heading." alt="" coords="95,275,265,301"/>
+<area shape="rect" id="node2" href="$structEstimator.html" title="Parent estimator struct. All estimators should inherit from this." alt="" coords="5,184,83,211"/>
+<area shape="rect" id="node3" href="$structTimer.html" title="Timing object with blocking capability." alt="" coords="17,81,71,108"/>
+<area shape="rect" id="node4" href="$classBuffEncoder.html" title="Driver for the Buff&#45;Encoder." alt="" coords="94,132,186,159"/>
+<area shape="rect" id="node5" href="$classSensor.html" title="Base class for all sensors." alt="" coords="129,5,191,32"/>
+<area shape="rect" id="node7" href="$classIMUSensor.html" title="Abstract parent class for all IMUSensors, which give acceleration and gyroscope data." alt="" coords="199,81,287,108"/>
+<area shape="rect" id="node6" href="$classICM20649.html" title="Sensor access for an ICM20649 IMU Sensor. Child of the abstract IMUSensor class." alt="" coords="243,184,325,211"/>
+<area shape="rect" id="node8" href="$structCANData.html" title="The purpose of this struct is to be able to pass updated CAN data around without having to pass a rm_..." alt="" coords="349,184,427,211"/>
+</map>
