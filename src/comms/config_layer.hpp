@@ -164,10 +164,6 @@ public:
     /// @note its double const so its enforced as a read-only object
     const Config* const configure(HIDLayer *comms);
 
-    const Config* const reconfigure(HIDLayer *comms);
-
-    const Config* const reconfigure(EthernetComms *comms);
-
     /// @brief check incoming packet from the comms layer and update outgoing packet accordingly to request next config packet
     /// @param in incoming comms packet
     /// @param out outgoing comms packet to write config requests to

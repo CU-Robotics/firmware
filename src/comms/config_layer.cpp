@@ -75,7 +75,7 @@ const Config* const ConfigLayer::configure(HIDLayer* comms) {
     return &config;
 }
 
-void ConfigLayer::config_SD_init(HIDLayer* comms) {
+void ConfigLayer::config_SD_init() {
     // check SD
     if (sdcard.exists(CONFIG_PATH)) {
         Serial.printf("Config located on SD in /config.pack, attempting to load from file\n");
