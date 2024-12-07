@@ -1,17 +1,37 @@
 #include "config_layer.hpp"
 
 const Config* const ConfigLayer::configure(HIDLayer* comms) {
+    // if on robot, we need to wait for ref to send robot_id
+    Serial.println("Waiting for ref system to initialize...");
+
+    off_robot = false;
+
+    uint32_t prev_time = millis();
+    uint32_t delta_time = millis() - prev_time;
+    while (ref.ref_data.robot_performance.robot_ID == 0){
+        ref.read();
+        delta_time = millis() - prev_time;
+        if(delta_time > CONFIG_REF_TIMEOUT) {
+            off_robot = true;
+            break;
+        }
+    }
+    if(!off_robot) Serial.println("Ref system online");
+    else Serial.println("ERROR::ref system timeout detected, running off-robot firmware");
+
+
+
     // attempt SD card load
     config_SD_init(comms);
     if (configured) return &config;
 
     // if no config on SD, then await transmission
     // grab and process all config packets until finished
-    uint32_t prev_time = millis();
-    uint32_t delta_time = 0;
+    prev_time = millis();
+    delta_time = 0;
     while (!is_configured()) {
     #ifdef CONFIG_LAYER_DEBUG
-        if (delta_time >= 2000) {
+        if (delta_time >= 2000) {   // no macro bc this is just a timeout for a small debug message
             Serial.printf("Pinging for config packet....\n");
             prev_time = millis();
         }
@@ -25,22 +45,22 @@ const Config* const ConfigLayer::configure(HIDLayer* comms) {
     config.fill_data(hid_config_packets, subsec_sizes);
 
     // verify that config received matches ref system: if not, error out
-#ifndef CONFIG_OFF_ROBOT
-    Serial.printf("Received robot ID from config: %d\nRobot ID from ref system: %d\n", (int)config.robot_id, ref.ref_data.robot_performance.robot_ID);
-    // id check with modulo 100 to account for red and blue teams. Blue is the id + 100. (ID == 101, 102, ...)
-    if ((ref.ref_data.robot_performance.robot_ID % 100) != (int)config.robot_id) {
-        Serial.printf("ERROR: IDs do not match!! Check robot_id.cfg and robot settings from ref system!\n");
-        if (!CONFIG_ERR_HANDLER(CONFIG_ID_MISMATCH)) {
-            // in current implementation, CONFIG_ERR_HANDLER w/ err code CONFIG_ID_MISMATCH will
-            // enter an infinite while(1) loop-- if that is changed, this loop should be changed accordingly as well
-            while (1) {
-                Serial.println("CONFIG_ERR_HANDLER: exited with error code CONFIG_ID_MISMATCH");
-                Serial.println("if function was modified for case CONFIG_ID_MISMATCH, remove this loop in config_layer.cpp");
-                delay(2000);
+    if(!off_robot){
+        Serial.printf("Received robot ID from config: %d\nRobot ID from ref system: %d\n", (int)config.robot_id, ref.ref_data.robot_performance.robot_ID);
+        // id check with modulo 100 to account for red and blue teams. Blue is the id + 100. (ID == 101, 102, ...)
+        if ((ref.ref_data.robot_performance.robot_ID % 100) != (int)config.robot_id) {
+            Serial.printf("ERROR: IDs do not match!! Check robot_id.cfg and robot settings from ref system!\n");
+            if (!CONFIG_ERR_HANDLER(CONFIG_ID_MISMATCH)) {
+                // in current implementation, CONFIG_ERR_HANDLER w/ err code CONFIG_ID_MISMATCH will
+                // enter an infinite while(1) loop-- if that is changed, this loop should be changed accordingly as well
+                while (1) {
+                    Serial.println("CONFIG_ERR_HANDLER: exited with error code CONFIG_ID_MISMATCH");
+                    Serial.println("if function was modified for case CONFIG_ID_MISMATCH, remove this loop in config_layer.cpp");
+                    delay(2000);
+                }
             }
         }
     }
-#endif
 
 // update stored config, msg if successful
     Serial.println("Attempting to store config...");
@@ -51,12 +71,6 @@ const Config* const ConfigLayer::configure(HIDLayer* comms) {
 }
 
 void ConfigLayer::config_SD_init(HIDLayer* comms) {
-    // if on robot, we need to wait for ref to send robot_id
-    Serial.println("Waiting for ref system to initialize...");
-    while (ref.ref_data.robot_performance.robot_ID == 0) ref.read();
-    Serial.println("Ref system online");
-
-
     // check SD
     if (sdcard.exists(CONFIG_PATH)) {
         Serial.printf("Config located on SD in /config.pack, attempting to load from file\n");
@@ -292,15 +306,15 @@ bool ConfigLayer::sd_load() {
 
     temp_config.fill_data(hid_config_packets, subsec_sizes);
 
-#ifndef CONFIG_OFF_ROBOT
-    // id check with modulo 100 to account for red and blue teams. Blue is the id + 100. (ID == 101, 102, ...)
-    if ((ref.ref_data.robot_performance.robot_ID % 100) != (int)received_id) {      
-        Serial.printf("NOTICE: attempting to load firmware for different robot type! \n");
-        Serial.printf("Current robot ID: %d\nStored config robot ID: %d\n", ref.ref_data.robot_performance.robot_ID, (int)received_id);
-        Serial.println("Requesting config from hive...");
-        return false;
+    if(!off_robot){
+        // id check with modulo 100 to account for red and blue teams. Blue is the id + 100. (ID == 101, 102, ...)
+        if ((ref.ref_data.robot_performance.robot_ID % 100) != (int)received_id) {      
+            Serial.printf("NOTICE: attempting to load firmware for different robot type! \n");
+            Serial.printf("Current robot ID: %d\nStored config robot ID: %d\n", ref.ref_data.robot_performance.robot_ID, (int)received_id);
+            Serial.println("Requesting config from hive...");
+            return false;
+        }
     }
-#endif
 
     config = temp_config;
 

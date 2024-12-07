@@ -22,8 +22,8 @@
 // lastly, stores bytes of subsec_sizes array
 #define CONFIG_PATH "/config.pack"
 
-// define CONFIG_OFF_ROBOT macro when running off of real robot (testing firmware away from actual robot)
-// #define CONFIG_OFF_ROBOT 
+// measures time in ms before config_layer init determines that ref system is unavailable  
+#define CONFIG_REF_TIMEOUT 10000
 
 /// @brief arbitrary cap on config packets that can be received (make sure it's enough)
 const int MAX_CONFIG_PACKETS = 64;
@@ -151,6 +151,8 @@ private:
 
     /// @brief sd card object for interacting with config files
     SDManager sdcard;
+
+    bool off_robot;
 
 public:
     /// @brief default constructor
