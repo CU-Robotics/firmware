@@ -9,6 +9,10 @@
 #include <string>
 #define CONFIG_LAYER_DEBUG
 
+
+#define NUM_SENSOR_VALUES 12
+#define NUM_SENSORS 16
+
 // config err handler macros
 #define CONFIG_RM_FAIL 0
 #define CONFIG_TOUCH_FAIL 1
@@ -25,35 +29,21 @@
 // define CONFIG_OFF_ROBOT macro when running off of real robot (testing firmware away from actual robot)
 // #define CONFIG_OFF_ROBOT 
 
+
 /// @brief arbitrary cap on config packets that can be received (make sure it's enough)
 const int MAX_CONFIG_PACKETS = 64;
 
 /// @brief map section names to YAML section IDs
 static const std::map<std::string, u_int8_t> yaml_section_id_mappings = {
     {"robot", 0},
-    {"pitch_angle_at_yaw_imu_calibration", 1},
-    {"encoder_offsets", 2},
-    {"yaw_axis_vector", 3},
-    {"pitch_axis_vector", 4},
-    {"default_gimbal_starting_angles", 5},
-    {"default_chassis_starting_angles", 6},
-    {"length_of_barrel_from_pitch_axis", 7},
-    {"height_of_pitch_axis", 8},
-    {"height_of_camera_above_barrel", 9},
-    {"num_sensors", 10},
-    {"estimators", 11},
-    {"kinematics_p", 12},
-    {"kinematics_v", 13},
-    {"reference_limits", 14},
-    {"controller_types", 15},
-    {"gains", 16},
-    {"num_states_per_estimator", 17},
-    {"assigned_states", 18},
-    {"switcher_values", 19},
-    {"drive_conversion_factors", 20},
-    {"governor_types", 21},
-    {"odom_values", 22},
-    {"encoder_pins", 23}
+    {"estimator_info", 1},
+    {"controller_info", 2},
+    {"gains", 3},
+    {"motor_info", 4},
+    {"gear_ratios", 5},
+    {"sensor_info", 6},
+    {"reference_limits", 7},
+    {"governor_types", 8},
 };
 
 /// @brief struct to hold configuration data
@@ -63,58 +53,30 @@ struct Config {
     /// @param sizes Number of sections for each section
     void fill_data(CommsPacket packets[MAX_CONFIG_PACKETS], uint8_t sizes[MAX_CONFIG_PACKETS]);
 
-    //check yaml for more details on values
-    /// @brief robot id sent from hive
-    float robot_id;
-    /// @brief number of motors
-    float num_motors;
-    /// @brief number of gains
-    float num_gains;
-    /// @brief number of controller levels
-    float num_controller_levels;
-    /// @brief Encoder offsets for each encoder
-    float encoder_offsets[16];
-    /// @brief number of sensors 
-    float num_sensors[16];
-    /// @brief position kinematics matrix
-    float kinematics_p[NUM_MOTORS][STATE_LEN];
-    /// @brief velocity kinematics matrix
-    float kinematics_v[NUM_MOTORS][STATE_LEN];
+
+    /// @brief robot id
+    float robot;
+
+    /// @brief matrix that defines type and neccessary values for each sensor
+    float sensor_info[NUM_SENSORS][NUM_SENSOR_VALUES + 1];
+
 
     /// @brief gains matrix
-    float gains[NUM_MOTORS][NUM_CONTROLLER_LEVELS][NUM_GAINS];
-    /// @brief assigned states matrix
-    float assigned_states[NUM_ESTIMATORS][STATE_LEN];
-    /// @brief number of states per estimator
-    float num_states_per_estimator[NUM_ESTIMATORS];
+    float gains[NUM_ROBOT_CONTROLLERS][NUM_GAINS];
+    /// @brief gear ratio matrix
+    float gear_ratios[NUM_ROBOT_CONTROLLERS][NUM_MOTORS];
+
+    /// @brief matrix that contains the type, physical id, and physical bus of each motor
+    float motor_info[NUM_MOTORS][3];
     /// @brief reference limits matrix
     float set_reference_limits[STATE_LEN][3][2];
-
-    /// @brief governor types
-    float estimators[NUM_ESTIMATORS];
-
-    /// @brief gyro readings of imu when you spin yaw
-    float yaw_axis_vector[3];
-    /// @brief gyro readings of imu when you spin pitch
-    float pitch_axis_vector[3];
-    /// @brief default gimbal starting angles
-    float default_gimbal_starting_angles[3];
-    /// @brief default chassis starting angles
-    float default_chassis_starting_angles[3];
-    /// @brief controller types
-    float controller_types[NUM_MOTORS][NUM_CONTROLLER_LEVELS];
-    /// @brief values for chassis kinematics/dynamics
-    float drive_conversion_factors[2];
-    /// @brief what pitch angle we have when the the imu calibrates
-    float pitch_angle_at_yaw_imu_calibration;
+    
+    /// @brief the estimator id's and info
+    float estimator_info[NUM_ESTIMATORS][STATE_LEN + 1];
+    /// @brief controller id's and info
+    float controller_info[NUM_ROBOT_CONTROLLERS][NUM_MOTORS + 1];
     /// @brief governor types
     float governor_types[STATE_LEN];
-    /// @brief odom placement values
-    float odom_values[3];
-    /// @brief switcher placement values
-    float switcher_values[2];
-    /// @brief pin numbers on the teensy for the encoders
-    float encoder_pins[2];
 
 private:
     /// @brief keep track of past index for when there are multiple packets for a section
@@ -208,5 +170,7 @@ public:
     /// @return false when error is unrecoverable or fails to recover, true when successfully recovers.
     bool CONFIG_ERR_HANDLER(int err_code);
 };
+
+extern Config config;
 
 #endif

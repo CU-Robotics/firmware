@@ -200,7 +200,7 @@ struct comms_data_packet {
     /// Current time in microseconds.
     uint32_t timestamp;
     /// Robot state.
-    State state;
+    Governor state;
 
     /// Referee data.
     RefereeData refData;
@@ -258,7 +258,7 @@ struct comms_data_packet {
     /// @param dr16 Reference to the DR16 controller.
     void pack_data_packet(
         uint8_t packetBuffer[BUFFER_SIZE],
-        State robotState,
+        Governor robotState,
         uint8_t ref_data_raw[180],
         CANData* canData,
         EstimatorManager& estimatorManager,

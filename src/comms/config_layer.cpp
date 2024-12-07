@@ -26,9 +26,9 @@ const Config* const ConfigLayer::configure(HIDLayer* comms) {
 
     // verify that config received matches ref system: if not, error out
 #ifndef CONFIG_OFF_ROBOT
-    Serial.printf("Received robot ID from config: %d\nRobot ID from ref system: %d\n", (int)config.robot_id, ref.ref_data.robot_performance.robot_ID);
+    Serial.printf("Received robot ID from config: %d\nRobot ID from ref system: %d\n", (int)config.robot, ref.ref_data.robot_performance.robot_ID);
     // id check with modulo 100 to account for red and blue teams. Blue is the id + 100. (ID == 101, 102, ...)
-    if ((ref.ref_data.robot_performance.robot_ID % 100) != (int)config.robot_id) {
+    if ((ref.ref_data.robot_performance.robot_ID % 100) != (int)config.robot) {
         Serial.printf("ERROR: IDs do not match!! Check robot_id.cfg and robot settings from ref system!\n");
         if (!CONFIG_ERR_HANDLER(CONFIG_ID_MISMATCH)) {
             // in current implementation, CONFIG_ERR_HANDLER w/ err code CONFIG_ID_MISMATCH will
@@ -157,41 +157,42 @@ void Config::fill_data(CommsPacket packets[MAX_CONFIG_PACKETS], uint8_t sizes[MA
         Serial.println();
 
         if (id == yaml_section_id_mappings.at("robot")) {
-            memcpy(&robot_id, packets[i].raw + 8, sub_size);
-        }
-        if (id == yaml_section_id_mappings.at("kinematics_p")) {
-            size_t linear_index = index / sizeof(float);
-            size_t i1 = linear_index / STATE_LEN;
-            size_t i2 = linear_index % STATE_LEN;
-            memcpy(&kinematics_p[i1][i2], packets[i].raw + 8, sub_size);
+            memcpy(&robot, packets[i].raw + 8, sub_size);
             index += sub_size;
         }
-        if (id == yaml_section_id_mappings.at("kinematics_v")) {
+
+        if (id == yaml_section_id_mappings.at("motor_info")) {
+
             size_t linear_index = index / sizeof(float);
-            size_t i1 = linear_index / STATE_LEN;
-            size_t i2 = linear_index % STATE_LEN;
-            memcpy(&kinematics_v[i1][i2], packets[i].raw + 8, sub_size);
+            size_t i1 = linear_index / (NUM_MOTORS);
+            size_t i2 = linear_index % NUM_MOTORS;
+            memcpy(&motor_info[i1][i2], packets[i].raw + 8, sub_size);
             index += sub_size;
         }
-        if (id == yaml_section_id_mappings.at("gains")) {
+
+        if(id == yaml_section_id_mappings.at("sensor_info")){
             size_t linear_index = index / sizeof(float);
-            size_t i1 = linear_index / (NUM_CONTROLLER_LEVELS * NUM_GAINS);
-            size_t i2 = (linear_index % (NUM_CONTROLLER_LEVELS * NUM_GAINS)) / NUM_GAINS;
-            size_t i3 = (linear_index % (NUM_CONTROLLER_LEVELS * NUM_GAINS)) % NUM_GAINS;
-            memcpy(&gains[i1][i2][i3], packets[i].raw + 8, sub_size);
-            // Serial.println(index/sizeof(float));
+            size_t i1 = linear_index / (NUM_SENSORS);
+            size_t i2 = linear_index % NUM_SENSORS;
+            memcpy(&sensor_info[i1][i2], packets[i].raw + 8, sub_size);
             index += sub_size;
         }
-        if (id == yaml_section_id_mappings.at("assigned_states")) {
+
+        if(id == yaml_section_id_mappings.at("gains")){
             size_t linear_index = index / sizeof(float);
-            size_t i1 = linear_index / STATE_LEN;
-            size_t i2 = linear_index % STATE_LEN;
-            memcpy(&assigned_states[i1][i2], packets[i].raw + 8, sub_size);
+            size_t i1 = linear_index / (NUM_GAINS);
+            size_t i2 = linear_index % NUM_GAINS;
+            memcpy(&gains[i1][i2], packets[i].raw + 8, sub_size);
             index += sub_size;
         }
-        if (id == yaml_section_id_mappings.at("num_states_per_estimator")) {
-            memcpy(num_states_per_estimator, packets[i].raw + 8, sub_size);
+        if (id == yaml_section_id_mappings.at("gear_ratios")) {
+            size_t linear_index = index / sizeof(float);
+            size_t i1 = linear_index / (NUM_GAINS);
+            size_t i2 = linear_index % NUM_GAINS;
+            memcpy(&gear_ratios[i1][i2], packets[i].raw + 8, sub_size);
+            index += sub_size;
         }
+
         if (id == yaml_section_id_mappings.at("reference_limits")) {
             size_t linear_index = index / sizeof(float);
             size_t i1 = linear_index / (STATE_LEN * 3 * 2);
@@ -199,51 +200,23 @@ void Config::fill_data(CommsPacket packets[MAX_CONFIG_PACKETS], uint8_t sizes[MA
             size_t i3 = (linear_index % (STATE_LEN * 3 * 2)) % (3 * 2);
             memcpy(&set_reference_limits[i1][i2][i3], packets[i].raw + 8, sub_size);
             index += sub_size;
-            Serial.printf("indices: %d, %d, %d\n", i1, i2, i3);
         }
-        if (id == yaml_section_id_mappings.at("yaw_axis_vector")) {
-            memcpy(yaw_axis_vector, packets[i].raw + 8, sub_size);
-        }
-        if (id == yaml_section_id_mappings.at("pitch_axis_vector")) {
-            memcpy(pitch_axis_vector, packets[i].raw + 8, sub_size);
-        }
-        if (id == yaml_section_id_mappings.at("default_gimbal_starting_angles")) {
-            memcpy(default_gimbal_starting_angles, packets[i].raw + 8, sub_size);
-        }
-        if (id == yaml_section_id_mappings.at("default_chassis_starting_angles")) {
-            memcpy(default_chassis_starting_angles, packets[i].raw + 8, sub_size);
-        }
-        if (id == yaml_section_id_mappings.at("controller_types")) {
-            memcpy(controller_types, packets[i].raw + 8, sub_size);
-        }
-        if (id == yaml_section_id_mappings.at("pitch_angle_at_yaw_imu_calibration")) {
-            memcpy(&pitch_angle_at_yaw_imu_calibration, packets[i].raw + 8, sub_size);
+        if (id == yaml_section_id_mappings.at("controller_info")) {
+            size_t linear_index = index / sizeof(float);
+            size_t i1 = linear_index / (NUM_MOTORS);
+            size_t i2 = linear_index % NUM_MOTORS;
+            memcpy(&controller_info[i1][i2], packets[i].raw + 8, sub_size);
+            index += sub_size;
         }
         if (id == yaml_section_id_mappings.at("governor_types")) {
             memcpy(governor_types, packets[i].raw + 8, sub_size);
         }
-        if (id == yaml_section_id_mappings.at("drive_conversion_factors")) {
-            memcpy(drive_conversion_factors, packets[i].raw + 8, sub_size);
-        }
-        if (id == yaml_section_id_mappings.at("estimators")) {
-            memcpy(estimators, packets[i].raw + 8, sub_size);
-            Serial.println(sub_size);
-            Serial.println(estimators[0]);
-        }
-        if (id == yaml_section_id_mappings.at("odom_values")) {
-            memcpy(odom_values, packets[i].raw + 8, sub_size);
-        }
-        if (id == yaml_section_id_mappings.at("switcher_values")) {
-            memcpy(switcher_values, packets[i].raw + 8, sub_size);
-        }
-        if (id == yaml_section_id_mappings.at("num_sensors")) {
-            memcpy(&num_sensors, packets[i].raw + 8, sub_size);
-        }
-        if (id == yaml_section_id_mappings.at("encoder_offsets")) {
-            memcpy(encoder_offsets, packets[i].raw + 8, sub_size);
-        }
-        if (id == yaml_section_id_mappings.at("encoder_pins")) {
-            memcpy(encoder_pins, packets[i].raw + 8, sub_size);
+        if (id == yaml_section_id_mappings.at("estimator_info")) {
+            size_t linear_index = index / sizeof(float);
+            size_t i1 = linear_index / (STATE_LEN);
+            size_t i2 = linear_index % STATE_LEN;
+            memcpy(&estimator_info[i1][i2], packets[i].raw + 8, sub_size);
+            index += sub_size;
         }
     }
 }
@@ -356,9 +329,9 @@ bool ConfigLayer::store_config() {
     checksum += sd_checksum64(subsec_sizes, MAX_CONFIG_PACKETS);
 
     // write robot id byte to ref data so it can be compared directly
-    sdcard.write((uint8_t*)(&config.robot_id), sizeof(float));
+    sdcard.write((uint8_t*)(&config.robot), sizeof(float));
 
-    Serial.printf("Robot ID from config: %d\n", (int)config.robot_id);
+    Serial.printf("Robot ID from config: %d\n", (int)config.robot);
 
     for (int i = 0; i < MAX_CONFIG_PACKETS; i++) {
         // write checksum once
