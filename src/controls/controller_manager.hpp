@@ -34,12 +34,14 @@ public:
     ControllerManager() = default;
 
     /// @brief Initializes controllers with data from the config yaml
+    /// @param _can pointer to the can data struct
     /// @param _config_data read-only config reference storing all config data
     void init(rm_CAN* _can, const Config* _config_data);
 
     /// @brief Populates the corresponding index of the "controllers" array attribute with a controller object
     /// @param controller_type denotes what kind of controller to initialize (see contoller.hpp)
     /// @param gains gains matrix input (see controller.hpp for what each gain means)
+    /// @param gear_ratios gear ratios array, used to relate motor inputs to joint states
     void init_controller(int controller_type, const float gains[NUM_GAINS], const float gear_ratios[NUM_MOTORS]);
 
     /// @brief Steps through controllers and sets the new motor inputs (ie. motor current, torque)

@@ -281,7 +281,6 @@ public:
     /// @param b2 buff encoder 2
     /// @param imu icm encoder
     /// @param data can data from Estimator Manager
-    /// @param n num states this estimator estimates
     GimbalEstimator(Config config_data, RevEncoder* r1, RevEncoder* r2, RevEncoder* r3, BuffEncoder* b1, BuffEncoder* b2, ICM20649* imu, CANData* data);
 
     ~GimbalEstimator() {};
@@ -419,7 +418,6 @@ public:
     /// @param b2 buff encoder 2
     /// @param imu icm encoder
     /// @param data can data from Estimator Manager
-    /// @param n num states this estimator estimates
     GimbalEstimatorNoOdom(Config config_data,BuffEncoder* b1, BuffEncoder* b2, ICM20649* imu, CANData* data);
 
     GimbalEstimatorNoOdom() {};
@@ -543,7 +541,6 @@ private:
 public:
     /// @brief Make new local estimator and set can data pointer and num states
     /// @param c can data pointer from EstimatorManager
-    /// @param ns number of states this estimator estimates
     LocalEstimator(CANData* c);
 
     /// @brief step through each motor and add to micro state
