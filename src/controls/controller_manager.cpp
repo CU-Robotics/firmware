@@ -14,7 +14,7 @@ void ControllerManager::init_controller(int controller_type, const float gains[N
     // intializes controller based on type defined in config yaml
     switch (controller_type) {
     case 0:
-        controllers[num_controllers] = new NullController();
+        if(controllers[num_controllers] == nullptr) controllers[num_controllers] = new NullController();
         break;
     case 1:
         controllers[num_controllers] = new XDrivePositionController();
@@ -38,7 +38,7 @@ void ControllerManager::init_controller(int controller_type, const float gains[N
         controllers[num_controllers] = new SwitcherController();
         break;
     default:
-        controllers[num_controllers] = new NullController();
+        if(controllers[num_controllers] == nullptr) controllers[num_controllers] = new NullController();
         break;
     }
     controllers[num_controllers]->set_gains(gains);
@@ -70,10 +70,6 @@ void ControllerManager::step(float macro_reference[STATE_LEN][3], float macro_es
 //  - [type, phys_id, phys_bus]
 //  - [type, phys_id, phys_bus]
 //  - [type, phys_id, phys_bus]
-
-#define MOTOR_INFO_TYPE 0
-#define MOTOR_INFO_ID 1
-#define MOTOR_INFO_BUS 2
 
 void ControllerManager::actuator_write(int motor_id, float value){
     switch((int) config_data->motor_info[motor_id][MOTOR_INFO_TYPE]) {

@@ -10,27 +10,24 @@
 
 #define NUM_GAINS 24
 #define NUM_ROBOT_CONTROLLERS 12
-#define NUM_CONTROLLER_LEVELS 3
 
 /// @brief Parent controller struct, all controllers should be based off of this.
 struct Controller {
 protected:
-    /// @brief gains for a specific controller
+    /// @brief Gains for this specific controller. Each controller has a unique set of gains that mean different things. Refer to the config yaml for more in depth gains info.
     float gains[NUM_GAINS];
-    /// @brief ratio to help with between motors and joints
+    /// @brief list of numbers to help relate motors to joints so we can take in an error in joint space and output motor current. Refer to config yaml for more info.
     float gear_ratios[NUM_MOTORS];
     /// @brief Timer object so we can use dt in controllers
     Timer timer;
-    /// @brief defines controller inputs and outputs (0 means Macro_state input, micro_state output)
-    /// @note (1 means Micro_state input, motor_current output) (2 means Macro state input, motor_current output)
-    int controller_level;
+
 public:
     /// @brief default constructor
     Controller() {};
 
     /// @brief set the gains for this specific controller
     /// @param _gains gains array of length NUM_GAINS
-    void set_gains(const float _gains[NUM_GAINS]) {
+    inline void set_gains(const float _gains[NUM_GAINS]) {
         for (int i = 0; i < NUM_GAINS; i++){
             gains[i] = _gains[i];
         }
@@ -38,7 +35,7 @@ public:
 
     /// @brief set the gear ratios for this specific controller
     /// @param _gear_ratios gains array of length NUM_MOTORS
-    void set_gear_ratios(const float _gear_ratios[NUM_MOTORS]) {
+    inline void set_gear_ratios(const float _gear_ratios[NUM_MOTORS]) {
         for (int i = 0; i < NUM_MOTORS; i++) gear_ratios[i] = _gear_ratios[i];
     }
 
@@ -56,15 +53,20 @@ public:
 /// @brief Default controller
 struct NullController : public Controller {
 public:
+    /// @brief calculate motor outputs based on reference and estimate
+    /// @param reference current target robot state
+    /// @param estimate current estimate robot state
+    /// @param micro_estimate current micro estimate robot state (state of motors, not joints)
+    /// @param outputs motor outputs
     void step(float reference[STATE_LEN][3], float estimate[STATE_LEN][3], float micro_estimate[NUM_MOTORS][MICRO_STATE_LEN], float outputs[NUM_MOTORS]) {}
 };
 
 /// @brief Position controller for the chassis
 struct XDrivePositionController : public Controller {
 private:
-    /// @brief filter for calculating pid position controller outputs
+    /// @brief filter for calculating pid position controller outputs. 3 for x, y, and chassis angle
     PIDFilter pidp[3];
-    /// @brief filter for calculating pid velocity controller outputs
+    /// @brief filter for calculating pid velocity controller outputs. 3 for x, y, and chassis angle
     PIDFilter pidv[3];
     /// @brief outputs of the pid position controller
     float outputp[4];
@@ -75,13 +77,18 @@ private:
     /// @brief target motor velocity
     float motor_velocity[4];
 public:
-    /// @brief set controller level and make sure it's not low level
-    /// @param _controller_level controller level(if it outputs a torque or a target micro state).
+    /// @brief default
     XDrivePositionController() = default;
 
+    /// @brief calculate motor outputs based on reference and estimate
+    /// @param reference current target robot state
+    /// @param estimate current estimate robot state
+    /// @param micro_estimate current micro estimate robot state (state of motors, not joints)
+    /// @param outputs motor outputs
     void step(float reference[STATE_LEN][3], float estimate[STATE_LEN][3], float micro_estimate[NUM_MOTORS][MICRO_STATE_LEN], float outputs[NUM_MOTORS]);
 
-    void reset() {
+    /// @brief reset the controller
+    inline void reset() {
         Controller::reset();
         for(int i = 0; i < 3; i++){
             pidp[i].sumError = 0.0;
@@ -93,9 +100,9 @@ public:
 /// @brief Controller for all chassis movement, which includes power limiting
 struct XDriveVelocityController : public Controller {
 private:
-    /// @brief filter for calculating pid position controller outputs
+    /// @brief filter for calculating pid position controller outputs. 3 for x, y, and chassis angle
     PIDFilter pidp[3];
-    /// @brief filter for calculating pid velocity controller outputs
+    /// @brief filter for calculating pid velocity controller outputs. 3 for x, y, and chassis angle
     PIDFilter pidv[3];
     /// @brief outputs of the pid position controller
     float outputp[4];
@@ -106,17 +113,18 @@ private:
     /// @brief target motor velocity
     float motor_velocity[4];
 public:
-    /// @brief set controller level and make sure it's a low level controller
-    /// @param _controller_level controller level(if it outputs a torque or a target micro state).
+    /// @brief default
     XDriveVelocityController() = default;
 
     /// @brief take s in a micro_reference of wheel velocity
-    /// @param reference reference
-    /// @param estimate estimate
-    /// @return outputs motor current
+    /// @param reference current target robot state
+    /// @param estimate current robot state estimate
+    /// @param micro_estimate current micro estimate robot state (state of motors, not joints)
+    /// @param outputs current outputs
     void step(float reference[STATE_LEN][3], float estimate[STATE_LEN][3], float micro_estimate[NUM_MOTORS][MICRO_STATE_LEN], float outputs[NUM_MOTORS]);
 
-    void reset() {
+    /// @brief reset the controller
+    inline void reset() {
         Controller::reset();
         for(int i = 0; i < 3; i++){
             pidp[i].sumError = 0.0;
@@ -127,15 +135,24 @@ public:
 
 struct YawController : public Controller {
     private:
+        /// @brief filter for calculating pid position controller outputs
         PIDFilter pidp;
+        /// @brief filter for calculating pid velocity controller outputs
         PIDFilter pidv;
 
     public:
+        /// @brief default constructor
         YawController() = default;
 
+        /// @brief calculate motor outputs based on reference and estimate
+        /// @param reference current target robot state
+        /// @param estimate current estimate robot state
+        /// @param micro_estimate current micro estimate robot state (state of motors, not joints)
+        /// @param outputs motor outputs
         void step(float reference[STATE_LEN][3], float estimate[STATE_LEN][3], float micro_estimate[NUM_MOTORS][MICRO_STATE_LEN], float outputs[NUM_MOTORS]);
 
-        void  reset(){
+        /// @brief reset the controller
+        inline void reset(){
             Controller::reset();
             pidp.sumError = 0.0;
             pidv.sumError = 0.0;
@@ -145,15 +162,22 @@ struct YawController : public Controller {
 struct PitchController : public Controller {
 
     private:
+        /// @brief filter for calculating pid position controller outputs
         PIDFilter pidp;
+        /// @brief filter for calculating pid velocity controller outputs
         PIDFilter pidv;
 
     public:
         PitchController() = default;
-
+        /// @brief calculate motor outputs based on reference and estimate
+        /// @param reference current target robot state
+        /// @param estimate current estimate robot state
+        /// @param micro_estimate current micro estimate robot state (state of motors, not joints)
+        /// @param outputs motor outputs
         void step(float reference[STATE_LEN][3], float estimate[STATE_LEN][3], float micro_estimate[NUM_MOTORS][MICRO_STATE_LEN], float outputs[NUM_MOTORS]);
-
-        void  reset(){
+        
+        /// @brief reset the controller
+        inline void reset(){
             Controller::reset();
             pidp.sumError = 0.0;
             pidv.sumError = 0.0;
@@ -167,11 +191,18 @@ struct FlywheelController : public Controller{
         /// @brief filter for controlling motor velocity
         PIDFilter pid_low;
     public:
+        /// @brief default constructor
         FlywheelController() = default;
 
+        /// @brief calculate motor outputs based on reference and estimate
+        /// @param reference current target robot state
+        /// @param estimate current estimate robot state
+        /// @param micro_estimate current micro estimate robot state (state of motors, not joints)
+        /// @param outputs motor outputs
         void step(float reference[STATE_LEN][3], float estimate[STATE_LEN][3], float micro_estimate[NUM_MOTORS][MICRO_STATE_LEN], float outputs[NUM_MOTORS]);
 
-        void reset(){
+        /// @brief reset the controller
+        inline void reset(){
             Controller:reset();
             pid_high.sumError = 0.0;
             pid_low.sumError = 0.0;
@@ -186,11 +217,18 @@ struct FeederController : public Controller{
         PIDFilter pid_low;
 
     public:
+        /// @brief default constructor
         FeederController() = default;
 
+        /// @brief calculate motor outputs based on reference and estimate
+        /// @param reference current target robot state
+        /// @param estimate current estimate robot state
+        /// @param micro_estimate current micro estimate robot state (state of motors, not joints)
+        /// @param outputs motor outputs
         void step(float reference[STATE_LEN][3], float estimate[STATE_LEN][3], float micro_estimate[NUM_MOTORS][MICRO_STATE_LEN], float outputs[NUM_MOTORS]);
 
-        void reset(){
+        /// @brief reset the controller
+        inline void reset(){
             Controller:reset();
             pid_high.sumError = 0.0;
             pid_low.sumError = 0.0;
@@ -205,16 +243,17 @@ private:
     /// @brief filter for calculating pid velocity controller outputs
     PIDFilter pidv;
 public:
-    /// @brief set controller level and make sure it's not low level
-    SwitcherController() {
-    }
-    /// @brief don't do anything if we get a macro state
-    /// @param reference reference
-    /// @param estimate estimate
-    /// @return 0
+    /// @brief default
+    SwitcherController() {}
+    /// @brief calculate motor outputs based on reference and estimate
+    /// @param reference current target robot state
+    /// @param estimate current estimate robot state
+    /// @param micro_estimate current micro estimate robot state (state of motors, not joints)
+    /// @param outputs motor outputs
     void step(float reference[STATE_LEN][3], float estimate[STATE_LEN][3], float micro_estimate[NUM_MOTORS][MICRO_STATE_LEN], float outputs[NUM_MOTORS]);
 
-    void reset() {
+    /// @brief reset the controller
+    inline void reset() {
         Controller::reset();
         pidp.sumError = 0.0;
         pidv.sumError = 0.0;

@@ -6,14 +6,20 @@
 #include "../sensors/RefSystem.hpp"
 #include "../comms/config_layer.hpp"
 
+#define MOTOR_INFO_TYPE 0
+#define MOTOR_INFO_ID 1
+#define MOTOR_INFO_BUS 2
+
 /// @brief Manage all controllers
 class ControllerManager {
 private:
     /// @brief Array storing every controller
     Controller* controllers[NUM_ROBOT_CONTROLLERS];
     
+    /// @brief number of controllers configured for this robot
     int num_controllers = 0;
 
+    /// @brief array of motor outputs
     float outputs[NUM_MOTORS] = { 0 };
 
     /// @brief config struct to store all config data
