@@ -50,22 +50,22 @@ const Config* const ConfigLayer::configure(HIDLayer* comms) {
     config.fill_data(hid_config_packets, subsec_sizes);
 
     // verify that config received matches ref system: if not, error out
-#ifndef CONFIG_OFF_ROBOT
-    Serial.printf("Received robot ID from config: %d\nRobot ID from ref system: %d\n", (int)config.robot, ref.ref_data.robot_performance.robot_ID);
-    // id check with modulo 100 to account for red and blue teams. Blue is the id + 100. (ID == 101, 102, ...)
-    if ((ref.ref_data.robot_performance.robot_ID % 100) != (int)config.robot) {
-        Serial.printf("ERROR: IDs do not match!! Check robot_id.cfg and robot settings from ref system!\n");
-        if (!CONFIG_ERR_HANDLER(CONFIG_ID_MISMATCH)) {
-            // in current implementation, CONFIG_ERR_HANDLER w/ err code CONFIG_ID_MISMATCH will
-            // enter an infinite while(1) loop-- if that is changed, this loop should be changed accordingly as well
-            while (1) {
-                Serial.println("CONFIG_ERR_HANDLER: exited with error code CONFIG_ID_MISMATCH");
-                Serial.println("if function was modified for case CONFIG_ID_MISMATCH, remove this loop in config_layer.cpp");
-                delay(2000);
+    if(!off_robot){
+        Serial.printf("Received robot ID from config: %d\nRobot ID from ref system: %d\n", (int)config.robot, ref.ref_data.robot_performance.robot_ID);
+        // id check with modulo 100 to account for red and blue teams. Blue is the id + 100. (ID == 101, 102, ...)
+        if ((ref.ref_data.robot_performance.robot_ID % 100) != (int)config.robot) {
+            Serial.printf("ERROR: IDs do not match!! Check robot_id.cfg and robot settings from ref system!\n");
+            if (!CONFIG_ERR_HANDLER(CONFIG_ID_MISMATCH)) {
+                // in current implementation, CONFIG_ERR_HANDLER w/ err code CONFIG_ID_MISMATCH will
+                // enter an infinite while(1) loop-- if that is changed, this loop should be changed accordingly as well
+                while (1) {
+                    Serial.println("CONFIG_ERR_HANDLER: exited with error code CONFIG_ID_MISMATCH");
+                    Serial.println("if function was modified for case CONFIG_ID_MISMATCH, remove this loop in config_layer.cpp");
+                    delay(2000);
+                }
             }
         }
     }
-#endif
 
 // update stored config, msg if successful
     Serial.println("Attempting to store config...");
