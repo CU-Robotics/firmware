@@ -19,11 +19,9 @@
 
 #define NUM_IMU_CALIBRATION 50000
 
-
-
 /// @brief Manage all estimators for macro and micro state
 class EstimatorManager {
-private
+private:
     /// @brief array to store robot icm imu's
     ICM20649 icm_sensors[NUM_SENSOR_TYPE];
     /// @brief array to store robot buff encoders

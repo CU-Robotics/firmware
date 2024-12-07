@@ -26,9 +26,9 @@ const Config* const ConfigLayer::configure(HIDLayer* comms) {
 
     // verify that config received matches ref system: if not, error out
 #ifndef CONFIG_OFF_ROBOT
-    Serial.printf("Received robot ID from config: %d\nRobot ID from ref system: %d\n", (int)config.robot_id, ref.ref_data.robot_performance.robot_ID);
+    Serial.printf("Received robot ID from config: %d\nRobot ID from ref system: %d\n", (int)config.robot, ref.ref_data.robot_performance.robot_ID);
     // id check with modulo 100 to account for red and blue teams. Blue is the id + 100. (ID == 101, 102, ...)
-    if ((ref.ref_data.robot_performance.robot_ID % 100) != (int)config.robot_id) {
+    if ((ref.ref_data.robot_performance.robot_ID % 100) != (int)config.robot) {
         Serial.printf("ERROR: IDs do not match!! Check robot_id.cfg and robot settings from ref system!\n");
         if (!CONFIG_ERR_HANDLER(CONFIG_ID_MISMATCH)) {
             // in current implementation, CONFIG_ERR_HANDLER w/ err code CONFIG_ID_MISMATCH will
@@ -329,9 +329,9 @@ bool ConfigLayer::store_config() {
     checksum += sd_checksum64(subsec_sizes, MAX_CONFIG_PACKETS);
 
     // write robot id byte to ref data so it can be compared directly
-    sdcard.write((uint8_t*)(&config.robot_id), sizeof(float));
+    sdcard.write((uint8_t*)(&config.robot), sizeof(float));
 
-    Serial.printf("Robot ID from config: %d\n", (int)config.robot_id);
+    Serial.printf("Robot ID from config: %d\n", (int)config.robot);
 
     for (int i = 0; i < MAX_CONFIG_PACKETS; i++) {
         // write checksum once
