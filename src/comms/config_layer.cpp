@@ -50,22 +50,22 @@ const Config* const ConfigLayer::configure(HIDLayer* comms) {
     config.fill_data(hid_config_packets, subsec_sizes);
 
     // verify that config received matches ref system: if not, error out
-    if(!off_robot){
-        Serial.printf("Received robot ID from config: %d\nRobot ID from ref system: %d\n", (int)config.robot_id, ref.ref_data.robot_performance.robot_ID);
-        // id check with modulo 100 to account for red and blue teams. Blue is the id + 100. (ID == 101, 102, ...)
-        if ((ref.ref_data.robot_performance.robot_ID % 100) != (int)config.robot_id) {
-            Serial.printf("ERROR: IDs do not match!! Check robot_id.cfg and robot settings from ref system!\n");
-            if (!CONFIG_ERR_HANDLER(CONFIG_ID_MISMATCH)) {
-                // in current implementation, CONFIG_ERR_HANDLER w/ err code CONFIG_ID_MISMATCH will
-                // enter an infinite while(1) loop-- if that is changed, this loop should be changed accordingly as well
-                while (1) {
-                    Serial.println("CONFIG_ERR_HANDLER: exited with error code CONFIG_ID_MISMATCH");
-                    Serial.println("if function was modified for case CONFIG_ID_MISMATCH, remove this loop in config_layer.cpp");
-                    delay(2000);
-                }
+#ifndef CONFIG_OFF_ROBOT
+    Serial.printf("Received robot ID from config: %d\nRobot ID from ref system: %d\n", (int)config.robot, ref.ref_data.robot_performance.robot_ID);
+    // id check with modulo 100 to account for red and blue teams. Blue is the id + 100. (ID == 101, 102, ...)
+    if ((ref.ref_data.robot_performance.robot_ID % 100) != (int)config.robot) {
+        Serial.printf("ERROR: IDs do not match!! Check robot_id.cfg and robot settings from ref system!\n");
+        if (!CONFIG_ERR_HANDLER(CONFIG_ID_MISMATCH)) {
+            // in current implementation, CONFIG_ERR_HANDLER w/ err code CONFIG_ID_MISMATCH will
+            // enter an infinite while(1) loop-- if that is changed, this loop should be changed accordingly as well
+            while (1) {
+                Serial.println("CONFIG_ERR_HANDLER: exited with error code CONFIG_ID_MISMATCH");
+                Serial.println("if function was modified for case CONFIG_ID_MISMATCH, remove this loop in config_layer.cpp");
+                delay(2000);
             }
         }
     }
+#endif
 
 // update stored config, msg if successful
     Serial.println("Attempting to store config...");
@@ -183,41 +183,42 @@ void Config::fill_data(HIDPacket packets[MAX_CONFIG_PACKETS], uint8_t sizes[MAX_
         Serial.printf("id: %d, subsec_id: %d, sub_size: %d\n\n", id, subsec_id, sub_size);
         Serial.println();
         if (id == yaml_section_id_mappings.at("robot")) {
-            config_location = &robot_id;
-        }
-        if (id == yaml_section_id_mappings.at("kinematics_p")) {
-            size_t linear_index = index / sizeof(float);
-            size_t i1 = linear_index / STATE_LEN;
-            size_t i2 = linear_index % STATE_LEN;
-            config_location = &kinematics_p[i1][i2];
+            memcpy(&robot, packets[i].raw + 8, sub_size);
             index += sub_size;
         }
-        if (id == yaml_section_id_mappings.at("kinematics_v")) {
+
+        if (id == yaml_section_id_mappings.at("motor_info")) {
+
             size_t linear_index = index / sizeof(float);
-            size_t i1 = linear_index / STATE_LEN;
-            size_t i2 = linear_index % STATE_LEN;
-            config_location = &kinematics_v[i1][i2];
+            size_t i1 = linear_index / (NUM_MOTORS);
+            size_t i2 = linear_index % NUM_MOTORS;
+            memcpy(&motor_info[i1][i2], packets[i].raw + 8, sub_size);
             index += sub_size;
         }
-        if (id == yaml_section_id_mappings.at("gains")) {
+
+        if(id == yaml_section_id_mappings.at("sensor_info")){
             size_t linear_index = index / sizeof(float);
-            size_t i1 = linear_index / (NUM_CONTROLLER_LEVELS * NUM_GAINS);
-            size_t i2 = (linear_index % (NUM_CONTROLLER_LEVELS * NUM_GAINS)) / NUM_GAINS;
-            size_t i3 = (linear_index % (NUM_CONTROLLER_LEVELS * NUM_GAINS)) % NUM_GAINS;
-            config_location = &gains[i1][i2][i3];
-            // Serial.println(index/sizeof(float));
+            size_t i1 = linear_index / (NUM_SENSORS);
+            size_t i2 = linear_index % NUM_SENSORS;
+            memcpy(&sensor_info[i1][i2], packets[i].raw + 8, sub_size);
             index += sub_size;
         }
-        if (id == yaml_section_id_mappings.at("assigned_states")) {
+
+        if(id == yaml_section_id_mappings.at("gains")){
             size_t linear_index = index / sizeof(float);
-            size_t i1 = linear_index / STATE_LEN;
-            size_t i2 = linear_index % STATE_LEN;
-            config_location = &assigned_states[i1][i2];
+            size_t i1 = linear_index / (NUM_GAINS);
+            size_t i2 = linear_index % NUM_GAINS;
+            memcpy(&gains[i1][i2], packets[i].raw + 8, sub_size);
             index += sub_size;
         }
-        if (id == yaml_section_id_mappings.at("num_states_per_estimator")) {
-            config_location = num_states_per_estimator;
+        if (id == yaml_section_id_mappings.at("gear_ratios")) {
+            size_t linear_index = index / sizeof(float);
+            size_t i1 = linear_index / (NUM_GAINS);
+            size_t i2 = linear_index % NUM_GAINS;
+            memcpy(&gear_ratios[i1][i2], packets[i].raw + 8, sub_size);
+            index += sub_size;
         }
+
         if (id == yaml_section_id_mappings.at("reference_limits")) {
             size_t linear_index = index / sizeof(float);
             size_t i1 = linear_index / (STATE_LEN * 3 * 2);
@@ -225,51 +226,23 @@ void Config::fill_data(HIDPacket packets[MAX_CONFIG_PACKETS], uint8_t sizes[MAX_
             size_t i3 = (linear_index % (STATE_LEN * 3 * 2)) % (3 * 2);
             config_location = &set_reference_limits[i1][i2][i3];
             index += sub_size;
-            Serial.printf("indices: %d, %d, %d\n", i1, i2, i3);
         }
-        if (id == yaml_section_id_mappings.at("yaw_axis_vector")) {
-            config_location = yaw_axis_vector;
-        }
-        if (id == yaml_section_id_mappings.at("pitch_axis_vector")) {
-            config_location = pitch_axis_vector;
-        }
-        if (id == yaml_section_id_mappings.at("default_gimbal_starting_angles")) {
-            config_location = default_gimbal_starting_angles;
-        }
-        if (id == yaml_section_id_mappings.at("default_chassis_starting_angles")) {
-            config_location = default_chassis_starting_angles;
-        }
-        if (id == yaml_section_id_mappings.at("controller_types")) {
-            config_location = controller_types;
-        }
-        if (id == yaml_section_id_mappings.at("pitch_angle_at_yaw_imu_calibration")) {
-            config_location = &pitch_angle_at_yaw_imu_calibration;
+        if (id == yaml_section_id_mappings.at("controller_info")) {
+            size_t linear_index = index / sizeof(float);
+            size_t i1 = linear_index / (NUM_MOTORS);
+            size_t i2 = linear_index % NUM_MOTORS;
+            memcpy(&controller_info[i1][i2], packets[i].raw + 8, sub_size);
+            index += sub_size;
         }
         if (id == yaml_section_id_mappings.at("governor_types")) {
             config_location = governor_types;
         }
-        if (id == yaml_section_id_mappings.at("drive_conversion_factors")) {
-            config_location = drive_conversion_factors;
-        }
-        if (id == yaml_section_id_mappings.at("estimators")) {
-            config_location = estimators;
-            Serial.println(sub_size);
-            Serial.println(estimators[0]);
-        }
-        if (id == yaml_section_id_mappings.at("odom_values")) {
-            config_location = odom_values;
-        }
-        if (id == yaml_section_id_mappings.at("switcher_values")) {
-            config_location = switcher_values;
-        }
-        if (id == yaml_section_id_mappings.at("num_sensors")) {
-            config_location = &num_sensors;
-        }
-        if (id == yaml_section_id_mappings.at("encoder_offsets")) {
-            config_location = encoder_offsets;
-        }
-        if (id == yaml_section_id_mappings.at("encoder_pins")) {
-            config_location = encoder_pins;
+        if (id == yaml_section_id_mappings.at("estimator_info")) {
+            size_t linear_index = index / sizeof(float);
+            size_t i1 = linear_index / (STATE_LEN);
+            size_t i2 = linear_index % STATE_LEN;
+            memcpy(&estimator_info[i1][i2], packets[i].raw + 8, sub_size);
+            index += sub_size;
         }
         if(config_location == nullptr) continue;
         memcpy(config_location, packets[i].raw + data_offset, sub_size);
@@ -384,9 +357,9 @@ bool ConfigLayer::store_config() {
     checksum += sd_checksum64(subsec_sizes, MAX_CONFIG_PACKETS);
 
     // write robot id byte to ref data so it can be compared directly
-    sdcard.write((uint8_t*)(&config.robot_id), sizeof(float));
+    sdcard.write((uint8_t*)(&config.robot), sizeof(float));
 
-    Serial.printf("Robot ID from config: %d\n", (int)config.robot_id);
+    Serial.printf("Robot ID from config: %d\n", (int)config.robot);
 
     for (int i = 0; i < MAX_CONFIG_PACKETS; i++) {
         // write checksum once

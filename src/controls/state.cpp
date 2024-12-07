@@ -1,15 +1,15 @@
 #include "state.hpp"
 
-void State::set_reference(float reference[STATE_LEN][3]) {
+void Governor::set_reference(float reference[STATE_LEN][3]) {
     memcpy(this->reference, reference, sizeof(this->reference));
     Serial.println("Don't use this, bitch 'one time is ok :)'");
 }
 
-void State::get_reference(float reference[STATE_LEN][3]) {
+void Governor::get_reference(float reference[STATE_LEN][3]) {
     memcpy(reference, this->reference, sizeof(this->reference));
 }
 
-void State::step_reference(float ungoverned_reference[STATE_LEN][3], const float governor_type[STATE_LEN]) {
+void Governor::step_reference(float ungoverned_reference[STATE_LEN][3], const float governor_type[STATE_LEN]) {
     float threshold = 0.0005;
     float dt = governor_timer.delta();
     if (count == 0){
@@ -111,11 +111,11 @@ void State::step_reference(float ungoverned_reference[STATE_LEN][3], const float
     }
 }
 
-void State::get_estimate(float estimate[STATE_LEN][3]) {
+void Governor::get_estimate(float estimate[STATE_LEN][3]) {
     memcpy(this->estimate, estimate, sizeof(this->estimate));
 }
 
-void State::set_estimate(float estimate[STATE_LEN][3]) {
+void Governor::set_estimate(float estimate[STATE_LEN][3]) {
     for (int n = 0; n < STATE_LEN; n++) {
         for (int p = 0; p < 3; p++) {
             this->estimate[n][p] = estimate[n][p];
@@ -123,13 +123,13 @@ void State::set_estimate(float estimate[STATE_LEN][3]) {
     }
 }
 
-void State::set_estimate_at_location(float estimate, int row, int col) {
+void Governor::set_estimate_at_location(float estimate, int row, int col) {
     if (row < 0 || row >= STATE_LEN) return; // Avoids a potential crash!
     if (col < 0 || col >= 3) return; // Avoids a potential crash!
     this->estimate[row][col] = estimate;
 }
 
-void State::set_reference_limits(const float reference_limits[STATE_LEN][3][2]) {
+void Governor::set_reference_limits(const float reference_limits[STATE_LEN][3][2]) {
     for (int n = 0; n < STATE_LEN; n++) {
         for (int p = 0; p < 3; p++) {
             this->reference_limits[n][p][0] = reference_limits[n][p][0];

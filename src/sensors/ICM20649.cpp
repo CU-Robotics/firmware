@@ -11,17 +11,16 @@ void ICM20649::init(CommunicationProtocol protocol) {
     {
         // start I2C communication
         if (!sensor.begin_I2C()) {
-            Serial.println("Failed to begin I2C");
+            Serial.println("ICM: Failed to begin I2C");
         }
         break;
     }
     case SPI:
     {
         // start SPI communication
-        int a = sensor.begin_SPI(ICM_CS, ICM_SCK, ICM_MISO, ICM_MOSI);
-        Serial.println(a);
-        if (!a) {
-            Serial.println("Failed to begin SPI");
+        if (!sensor.begin_SPI(ICM_CS, ICM_SCK, ICM_MISO, ICM_MOSI))
+        {
+            Serial.println("ICM: Failed to begin SPI");
         }
         break;
     }
@@ -94,8 +93,6 @@ void ICM20649::set_gyro_range(int gyro_rate_range) {
         sensor.setGyroRange(ICM20649_GYRO_RANGE_4000_DPS);
         break;
     }
-
-    Serial.println(sensor.getGyroRange());
 }
 
 // implenet seralize and deserialize
