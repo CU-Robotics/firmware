@@ -12,17 +12,17 @@
 #define NUM_ESTIMATORS 16
 
 /// @brief Use state estimate and ungoverned reference to generated governed references to be sent to controllers.
-class State {
+class Governor {
 private:
     // This is a sample state (it does not represent every robot):
     // {x, y, psi (chassis angle), theta (yaw angle), phi (pitch angle), feed, flywheel}
     // In this example case, as with all other cases, the unused state rows are kept blank.
 
-    /// @brief State reference, also known as desired state. Stored as a concatenated 2D matrix that
+    /// @brief state reference, also known as desired state. Stored as a concatenated 2D matrix that
     /// @brief can be split into position [0], velocity [1], and acceleration [2] vectors.
     float reference[STATE_LEN][3];
 
-    /// @brief State estimation (from sensors), stored as a concatenated 2D matrix with the same
+    /// @brief state estimation (from sensors), stored as a concatenated 2D matrix with the same
     /// @brief shape as the state reference.
     float estimate[STATE_LEN][3];
 

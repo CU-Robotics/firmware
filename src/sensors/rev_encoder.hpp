@@ -5,6 +5,11 @@
 #ifndef REV_ENCODER_H
 #define REV_ENCODER_H
 
+// Rev encoder pins
+#define REV_ENC_PIN1 2
+#define REV_ENC_PIN2 3
+#define REV_ENC_PIN3 4
+
 /// @brief the class for the Rev Through Bore Encoder(www.revrobotics.com/rev-11-1271/)
 class RevEncoder : public Sensor{
 private:
