@@ -183,7 +183,8 @@ void Config::fill_data(HIDPacket packets[MAX_CONFIG_PACKETS], uint8_t sizes[MAX_
         Serial.printf("id: %d, subsec_id: %d, sub_size: %d\n\n", id, subsec_id, sub_size);
         Serial.println();
         if (id == yaml_section_id_mappings.at("robot")) {
-            memcpy(&robot, packets[i].raw + 8, sub_size);
+            // memcpy(&robot, packets[i].raw + 8, sub_size);
+            config_location = (void *)&robot;
             index += sub_size;
         }
 
@@ -192,7 +193,8 @@ void Config::fill_data(HIDPacket packets[MAX_CONFIG_PACKETS], uint8_t sizes[MAX_
             size_t linear_index = index / sizeof(float);
             size_t i1 = linear_index / (NUM_MOTORS);
             size_t i2 = linear_index % NUM_MOTORS;
-            memcpy(&motor_info[i1][i2], packets[i].raw + 8, sub_size);
+            // memcpy(&motor_info[i1][i2], packets[i].raw + 8, sub_size);
+            config_location = (void *)&motor_info[i1][i2];
             index += sub_size;
         }
 
@@ -200,7 +202,8 @@ void Config::fill_data(HIDPacket packets[MAX_CONFIG_PACKETS], uint8_t sizes[MAX_
             size_t linear_index = index / sizeof(float);
             size_t i1 = linear_index / (NUM_SENSORS);
             size_t i2 = linear_index % NUM_SENSORS;
-            memcpy(&sensor_info[i1][i2], packets[i].raw + 8, sub_size);
+            // memcpy(&sensor_info[i1][i2], packets[i].raw + 8, sub_size);
+            config_location = (void *)&sensor_info[i1][i2];
             index += sub_size;
         }
 
@@ -208,14 +211,16 @@ void Config::fill_data(HIDPacket packets[MAX_CONFIG_PACKETS], uint8_t sizes[MAX_
             size_t linear_index = index / sizeof(float);
             size_t i1 = linear_index / (NUM_GAINS);
             size_t i2 = linear_index % NUM_GAINS;
-            memcpy(&gains[i1][i2], packets[i].raw + 8, sub_size);
+            // memcpy(&gains[i1][i2], packets[i].raw + 8, sub_size);
+            config_location = (void *)&gains[i1][i2];
             index += sub_size;
         }
         if (id == yaml_section_id_mappings.at("gear_ratios")) {
             size_t linear_index = index / sizeof(float);
             size_t i1 = linear_index / (NUM_GAINS);
             size_t i2 = linear_index % NUM_GAINS;
-            memcpy(&gear_ratios[i1][i2], packets[i].raw + 8, sub_size);
+            // memcpy(&gear_ratios[i1][i2], packets[i].raw + 8, sub_size);
+            config_location = (void *)&gear_ratios[i1][i2];
             index += sub_size;
         }
 
@@ -224,24 +229,26 @@ void Config::fill_data(HIDPacket packets[MAX_CONFIG_PACKETS], uint8_t sizes[MAX_
             size_t i1 = linear_index / (STATE_LEN * 3 * 2);
             size_t i2 = (linear_index % (STATE_LEN * 3 * 2)) / (3 * 2);
             size_t i3 = (linear_index % (STATE_LEN * 3 * 2)) % (3 * 2);
-            config_location = &set_reference_limits[i1][i2][i3];
+            config_location = (void *)&set_reference_limits[i1][i2][i3];
             index += sub_size;
         }
         if (id == yaml_section_id_mappings.at("controller_info")) {
             size_t linear_index = index / sizeof(float);
             size_t i1 = linear_index / (NUM_MOTORS);
             size_t i2 = linear_index % NUM_MOTORS;
-            memcpy(&controller_info[i1][i2], packets[i].raw + 8, sub_size);
+            // memcpy(&controller_info[i1][i2], packets[i].raw + 8, sub_size);
+            config_location = (void *)&controller_info[i1][i2];
             index += sub_size;
         }
         if (id == yaml_section_id_mappings.at("governor_types")) {
-            config_location = governor_types;
+            config_location = (void *)governor_types;
         }
         if (id == yaml_section_id_mappings.at("estimator_info")) {
             size_t linear_index = index / sizeof(float);
             size_t i1 = linear_index / (STATE_LEN);
             size_t i2 = linear_index % STATE_LEN;
-            memcpy(&estimator_info[i1][i2], packets[i].raw + 8, sub_size);
+            // memcpy(&estimator_info[i1][i2], packets[i].raw + 8, sub_size);
+            config_location = (void *)&estimator_info[i1][i2];
             index += sub_size;
         }
         if(config_location == nullptr) continue;
