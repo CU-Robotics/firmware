@@ -19,14 +19,11 @@
 
 #define NUM_IMU_CALIBRATION 50000
 
-// Rev encoder pins
-#define REV_ENC_PIN1 2
-#define REV_ENC_PIN2 3
-#define REV_ENC_PIN3 4
+
 
 /// @brief Manage all estimators for macro and micro state
 class EstimatorManager {
-private:
+private
     /// @brief array to store robot icm imu's
     ICM20649 icm_sensors[NUM_SENSOR_TYPE];
     /// @brief array to store robot buff encoders

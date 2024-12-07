@@ -156,6 +156,11 @@ void Config::fill_data(CommsPacket packets[MAX_CONFIG_PACKETS], uint8_t sizes[MA
         Serial.printf("id: %d, subsec_id: %d, sub_size: %d\n", id, subsec_id, sub_size);
         Serial.println();
 
+        if (id == yaml_section_id_mappings.at("robot")) {
+            memcpy(&robot, packets[i].raw + 8, sub_size);
+            index += sub_size;
+        }
+
         if (id == yaml_section_id_mappings.at("motor_info")) {
 
             size_t linear_index = index / sizeof(float);
