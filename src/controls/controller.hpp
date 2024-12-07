@@ -133,6 +133,7 @@ public:
     }
 };
 
+/// @brief Controller for the yaw
 struct YawController : public Controller {
     private:
         /// @brief filter for calculating pid position controller outputs
@@ -158,7 +159,7 @@ struct YawController : public Controller {
             pidv.sumError = 0.0;
         }
 };
-
+/// @brief Controller for the pitch
 struct PitchController : public Controller {
 
     private:
@@ -184,6 +185,7 @@ struct PitchController : public Controller {
         }
 };
 
+/// @brief Controller for the flywheels
 struct FlywheelController : public Controller{
     private:
         /// @brief filter for controlling meters/second
@@ -209,6 +211,7 @@ struct FlywheelController : public Controller{
         }
 };
 
+/// @brief Controls the feeder
 struct FeederController : public Controller{
     private:
         /// @brief filter for controlling balls/sec
