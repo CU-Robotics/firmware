@@ -8,6 +8,7 @@
 #include "sensors/StereoCamTrigger.hpp"
 #include "controls/estimator_manager.hpp"
 #include "controls/controller_manager.hpp"
+#include "ethernet_comms.hpp"
 
 #include <TeensyDebug.h>
 #include "sensors/LEDBoard.hpp"
@@ -44,6 +45,8 @@ ControllerManager controller_manager;
 Governor governor;
 
 LEDBoard led;
+
+Comms::EthernetComms ethernet_comms;
 
 // DONT put anything else in this function. It is not a setup function
 void print_logo() {
@@ -108,6 +111,20 @@ int main() {
     const Config* config = config_layer.configure(&comms);
     Serial.println("Configured!");
 
+    //print sensor counts
+    // Serial.print("Number of Buff Encoders: ");
+    // Serial.println(config->num_of_buffEnc);
+    // Serial.print("Number of Rev Encoders: ");
+    // Serial.println(config->num_of_revEnc);
+    // Serial.print("Number of ICMs: ");
+    // Serial.println(config->num_of_icm);
+    // Serial.print("Number of TOFs: ");
+    // Serial.println(config->num_of_tof);
+    // Serial.print("Number of LiDARs: ");
+    // Serial.println(config->num_of_lidar);
+    // Serial.print("Number of RealSense Cameras: ");
+    // Serial.println(config->num_of_realsense);
+
     //estimate micro and macro state
     estimator_manager.init(can_data, config);
 
@@ -142,6 +159,12 @@ int main() {
 
     Serial.println("Entering main loop...\n");
 
+    //Ethernet Comms Data packet
+    comms_data_packet packet(config);
+    uint8_t buffer[BUFFER_SIZE];
+
+    ethernet_comms.begin();
+
     // Main loop
     while (true) {
         // read main sensors
@@ -151,8 +174,12 @@ int main() {
         lidar1.read();
         lidar2.read();
 
+        
+
         // read and write comms packets
+        //Serial.println(packet.refData.ref_data_raw[0]);
         comms.ping();
+        
         CommsPacket* incoming = comms.get_incoming_packet();
         CommsPacket* outgoing = comms.get_outgoing_packet();
 
@@ -283,6 +310,27 @@ int main() {
         outgoing->set_sensor_data(&sensor_data);
         outgoing->set_ref_data(ref_data_raw);
         outgoing->set_estimated_state(temp_state);
+
+
+        
+        //ref_data_raw[0] = 99; // test to see if the data is being sent
+        // pack data packet
+        packet.pack_data_packet(buffer, governor, ref_data_raw, can_data, estimator_manager, lidar1, lidar2, dr16);
+        packet.print();
+        ethernet_comms.loop();
+        //create and set the outgoing ethernet packet
+        Comms::EthernetPacket* outgoing_packet = ethernet_comms.get_outgoing_packet();
+        memcpy(outgoing_packet->payload.data, buffer, BUFFER_SIZE);
+        outgoing_packet->header.payload_size = BUFFER_SIZE;
+        outgoing_packet->header.time_stamp = micros();
+        outgoing_packet->header.type = Comms::DATA;
+        outgoing_packet->header.flags = Comms::NORMAL;
+
+
+
+
+
+
 
         //  SAFETY MODE
         if (dr16.is_connected() && (dr16.get_l_switch() == 2 || dr16.get_l_switch() == 3) && config_layer.is_configured()) {

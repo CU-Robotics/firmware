@@ -27,7 +27,7 @@
 #define CONFIG_PATH "/config.pack"
 
 // define CONFIG_OFF_ROBOT macro when running off of real robot (testing firmware away from actual robot)
-// #define CONFIG_OFF_ROBOT 
+#define CONFIG_OFF_ROBOT 
 
 
 /// @brief arbitrary cap on config packets that can be received (make sure it's enough)
@@ -60,6 +60,15 @@ struct Config {
     /// @brief matrix that defines type and neccessary values for each sensor
     float sensor_info[NUM_SENSORS][NUM_SENSOR_VALUES + 1];
 
+
+    //these will get set at config time
+    int num_of_buffEnc = 0;
+    int num_of_revEnc = 0;
+    int num_of_icm = 0;
+    int num_of_tof = 0;
+    int num_of_lidar = 0;
+    int num_of_realsense = 0;
+    
 
     /// @brief gains matrix
     float gains[NUM_ROBOT_CONTROLLERS][NUM_GAINS];
@@ -169,6 +178,8 @@ public:
     /// @param err_code error code to identify which behavior to execute
     /// @return false when error is unrecoverable or fails to recover, true when successfully recovers.
     bool CONFIG_ERR_HANDLER(int err_code);
+
+    
 };
 
 extern Config config;

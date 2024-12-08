@@ -18,6 +18,11 @@ struct RefereeData {
     uint8_t ref_data_raw[180] = {0};
 };
 
+struct StateData {
+    float reference[STATE_LEN][3];
+    float estimate[STATE_LEN][3];
+};
+
 /// @brief Structure to hold DR16 data.
 struct DR16Data {
     /// Fail bit indicator.
@@ -197,10 +202,8 @@ struct comms_data_packet {
     /// Pointer to the Config struct storing all configuration data.
     const Config* config;
 
-    /// Current time in microseconds.
-    uint32_t timestamp;
     /// Robot state.
-    Governor state;
+    StateData state;
 
     /// Referee data.
     RefereeData refData;
@@ -210,7 +213,7 @@ struct comms_data_packet {
     ///dr16 data
     DR16Data dr16_data;
 
-    /// Number of buff sensors.
+    /// Number of buff sensors.Buff sensor
     int buff_sensor_count;
     /// Number of ICM sensors.
     int icm_sensor_count;
@@ -242,7 +245,7 @@ struct comms_data_packet {
 
     /// @brief Constructor to initialize the comms_data_packet with configuration data.
     /// @param config_data Pointer to the configuration data.
-    comms_data_packet(const Config* config_data);
+    comms_data_packet(const Config* config);
 
     /// @brief Destructor to clean up allocated memory.
     ~comms_data_packet();
@@ -270,6 +273,9 @@ struct comms_data_packet {
     /// @brief Function to unpack data from a packet buffer.
     /// @param packetBuffer Buffer containing the packed data.
     void unpack_data_packet(uint8_t packetBuffer[BUFFER_SIZE]);
+
+    /// @brief Function to print the data packet.
+    void print();
 };
 
 #endif // DATA_PACKET_HPP
