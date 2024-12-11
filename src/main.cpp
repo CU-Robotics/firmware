@@ -29,22 +29,28 @@ int main() {
     uint32_t last_time = 0;
     while (true) {
         // calculate fps
-        Serial.printf("FPS: %f\n", 1000000.0 / last_time);
+        // Serial.printf("FPS: %f\n", 1000000.0 / last_time);
 
         uint32_t start = micros();
 
         // update framebuffers
-        // dartcam.read();
+        dartcam.read();
         std::pair<int, int> pos = dartcam.get_object_position();
 
-        // Serial.printf("Object position: (%d, %d), frame (%d)\n", pos.first, pos.second, frame);
+        Serial.printf("Object position: (%d, %d)\n", pos.first, pos.second);
 
-        // // debug finding general direction of target
-        // if (pos.first > 160) {
-        //     Serial.println("(right)");
-        // } else if (pos.first < 160) {
-        //     Serial.println("(left)");
-        // }
+        // debug finding general direction of target
+        if (pos.first > DARTCAM_BUFFER_WIDTH / 2) {
+            Serial.println("(left)");
+        } else if (pos.first < DARTCAM_BUFFER_WIDTH / 2) {
+            Serial.println("(right)");
+        }
+        
+        if (pos.second > DARTCAM_BUFFER_HEIGHT / 2) {
+            Serial.println("(up)");
+        } else if (pos.second < DARTCAM_BUFFER_HEIGHT / 2) {
+            Serial.println("(down)");
+        }
 
         last_time = micros() - start;
     }

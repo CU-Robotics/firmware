@@ -28,36 +28,33 @@ void Dartcam::send_frame_serial() {
 }
 
 std::pair<int, int> Dartcam::get_object_position() {
-    const int WIDTH = DARTCAM_BUFFER_WIDTH;
-    const int HEIGHT = DARTCAM_BUFFER_HEIGHT;
-
     int x_sum = 0;
     int y_sum = 0;
-    int count = 0;
+    int green_total = 0;
+    int x = 0;
+    int y = 0;
 
-    const int max_green_value = 63; // 6 bits for green in RGB565
-    const int threshold_value = static_cast<int>(max_green_value * 0.9); // 90% of max green
-    const uint16_t green_mask = 0x07E0; // Mask to extract green component
-
+    // iterate over 1D frame buffer
     for (int i = 0; i < DARTCAM_BUFFER_SIZE; i++) {
-        int green_component = (frame_buffer[i] & green_mask) >> 5;
+        // isolate green component from RGB565
+        int green_component = (frame_buffer[i] & 0x07E0) >> 5;
 
-        if (green_component >= threshold_value) {
-            int x = i % WIDTH;
-            int y = i / WIDTH;
+        // check green component against threshold
+        if (green_component >= static_cast<int>((63 * 0.9))) {
+            // add coordinate to sum for centroid calculation
             x_sum += x;
             y_sum += y;
-            count++;
+            green_total++;
+        }
+
+        // update row and column, 1D style
+        x++;
+        if (x >= DARTCAM_BUFFER_WIDTH) {
+            x = 0;
+            y++;
         }
     }
 
-    int x_pos = -1;
-    int y_pos = -1;
-
-    if (count > 0) {
-        x_pos = x_sum / count;
-        y_pos = y_sum / count;
-    }
-
-    return std::make_pair(x_pos, y_pos);
+    // return centroid of object
+    return std::make_pair(x_sum / green_total, y_sum / green_total);
 }
