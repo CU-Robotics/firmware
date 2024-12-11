@@ -96,18 +96,21 @@ void ImageSensor::setPins(uint8_t mclk_pin, uint8_t pclk_pin, uint8_t vsync_pin,
 
 size_t ImageSensor::readFrame(void *buffer1, size_t cb1, void *buffer2,
                               size_t cb2) {
-    if (!_use_gpio) {
-        if (_cameraInput == CAMERA_INPUT_CSI)
-            return readFrameCSI(buffer1, cb1, buffer2, cb2);
-        else
-            return readFrameFlexIO(buffer1, cb1, buffer2, cb2);
-    } else {
-        if (_hw_config == TEENSY_MICROMOD_FLEXIO_4BIT) {
-            readFrame4BitGPIO(buffer1);
-            return cb1; // not sure what to return here yet...
-        }
-        return readFrameGPIO(buffer1, cb1, buffer2, cb2);
-    }
+    // if (!_use_gpio) { 
+    //     if (_cameraInput == CAMERA_INPUT_CSI)
+    //         return readFrameCSI(buffer1, cb1, buffer2, cb2);
+    //     else
+    //         return readFrameFlexIO(buffer1, cb1, buffer2, cb2);
+    // } else {
+    //     if (_hw_config == TEENSY_MICROMOD_FLEXIO_4BIT) {
+    //         readFrame4BitGPIO(buffer1);
+    //         return cb1; // not sure what to return here yet...
+    //     }
+    //     return readFrameGPIO(buffer1, cb1, buffer2, cb2);
+    // }
+
+    // optimization, since we will always use CSI
+    return readFrameCSI(buffer1, cb1, buffer2, cb2);
 }
 
 // The read and stop continuous typically just call off to the FlexIO
