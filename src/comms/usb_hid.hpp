@@ -167,4 +167,6 @@ private:
 	long long unsigned m_packetsFailed = 0;
 };
 
+extern HIDLayer comms;
+
 #endif // end USB_HID_HPP
