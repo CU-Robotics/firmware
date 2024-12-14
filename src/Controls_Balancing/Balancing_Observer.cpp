@@ -24,18 +24,23 @@ void BalancingObserver::step(CANData* can, IMUData* imu, float obs[9][3]){
     //a_x is not used in anywhere
     float dt = timer.delta();
     // From sensors
-    obs[2][2] = imu->gyro_X;// theta_b                 // need check 
-    obs[3][0] = (obs[2][2] - _theta_b_old)/ dt;// theta_b_dot
+    obs[2][2] = imu->k_pitch;                                   // theta_b    // need check 
+    obs[3][0] = (obs[2][2] - _theta_b_old)/ dt;                 // theta_b_dot
     _theta_b_old = obs[2][2];
 
-    obs[0][2] = imu->gyro_Z; // phi                    // need check
-    obs[1][0] = (obs[0][2] - _phi_old) / dt; // phi_dot    // need check
-    _phi_old = obs[0][2]; // For derivative
-    obs[3][2] = (obs[1][0] - _phi_dot_old) / dt;
 
-    obs[4][0] = imu->gyro_Y;// psi                    // need check 
+//** I don't think we need phi */
+    //obs[0][2] = imu->gyro_Z;                                    // phi        // need check
 
-    obs[7][2] = imu->accel_Z;// a_z                    // need check 
+    obs[1][0] = imu->gyro_Z;                                    // phi_dot    // need check
+    //_phi_old = obs[0][2]; 
+    obs[3][2] = (obs[1][0] - _phi_dot_old) / dt;                // phi_ddot  
+    _phi_dot_old = obs[1][0];
+
+
+    obs[4][0] = imu->k_roll;                                    // psi        // need check 
+
+    obs[7][2] = imu->accel_Z;                                   // a_z        // need check 
 
     
     // float theta_wl = can->get_motor_attribute(L_CAN, L_W_MOTORID, ANGLE); // we don't need this
@@ -44,10 +49,10 @@ void BalancingObserver::step(CANData* can, IMUData* imu, float obs[9][3]){
     float theta_wr_dot = can->get_motor_attribute(R_CAN, R_W_MOTORID, SPEED);
 
 
-    float phi4_l = can->get_motor_attribute(L_CAN, L_FJ_MOTORID, ANGLE);// need check
-    float phi1_l = can->get_motor_attribute(L_CAN, L_BJ_MOTORID, ANGLE);// need check
-    float phi4_r = can->get_motor_attribute(R_CAN, R_FJ_MOTORID, ANGLE);// need check
-    float phi1_r = can->get_motor_attribute(R_CAN, R_BJ_MOTORID, ANGLE);// need check
+    float phi4_l = can->get_motor_attribute(L_CAN, L_FJ_MOTORID, ANGLE);                // need check
+    float phi1_l = can->get_motor_attribute(L_CAN, L_BJ_MOTORID, ANGLE);                // need check
+    float phi4_r = can->get_motor_attribute(R_CAN, R_FJ_MOTORID, ANGLE);                // need check
+    float phi1_r = can->get_motor_attribute(R_CAN, R_BJ_MOTORID, ANGLE);                // need check
 
 
     // obs[0][0] =  (1.0f/2) * (R_w) * (theta_wl + theta_wr); // s // we don't need this 

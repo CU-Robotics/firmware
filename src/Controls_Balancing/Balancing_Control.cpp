@@ -99,7 +99,7 @@ void BalancingControl::step(float output[NUM_MOTORS], float ref[5][3], float obs
     float dx[10];
     dx[0] = ref[0][0] - obs[0][0];
     dx[1] = ref[0][1] - obs[0][1];
-    dx[2] = ref[0][2] - obs[0][2];
+    dx[2] = ref[0][2] - obs[0][2]; //phi yaw angle
     dx[3] = ref[1][0] - obs[1][0];
     dx[4] = ref[1][1] - obs[1][1];
     dx[5] = ref[1][2] - obs[1][2];

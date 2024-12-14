@@ -4,17 +4,17 @@
 #include "../comms/rm_can.hpp"
 #include "../utils/timing.hpp"
 
-//  #include""                !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!We need to make an IMUFilter
+#include "../IMU_Filter.hpp"         
 
 
 #define L_CAN 0         // Need Check
 #define R_CAN 1         // Need Check
 #define L_W_MOTORID 1   // Need Check
-#define L_FJ_MOTORID 2  // Need Check
-#define L_BJ_MOTORID 3  // Need Check
+#define L_FJ_MOTORID 1  // Need Check
+#define L_BJ_MOTORID 2  // Need Check
 #define R_W_MOTORID 1   // Need Check
-#define R_FJ_MOTORID 2  // Need Check
-#define R_BJ_MOTORID 3  // Need Check
+#define R_FJ_MOTORID 1  // Need Check
+#define R_BJ_MOTORID 2  // Need Check
 #define l_a 0   // test
 #define l_u 0   // test
 #define l_l 0   // test
