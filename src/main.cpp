@@ -315,7 +315,7 @@ int main() {
         
         //ref_data_raw[0] = 99; // test to see if the data is being sent
         // pack data packet
-        packet.pack_data_packet(buffer, governor, ref_data_raw, can_data, estimator_manager, lidar1, lidar2, dr16);
+        packet.pack_data_packet(buffer, governor, ref_data_raw, can_data, estimator_manager, lidar1, lidar2, dr16, millis());
         //packet.print();
         //print first 100 bytes of packet
         for(int i = 0; i < 100; i++){

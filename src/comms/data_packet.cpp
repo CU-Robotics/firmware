@@ -236,12 +236,13 @@ void comms_data_packet::pack_data_packet(
     EstimatorManager& estimatorManager,
     D200LD14P& lidar1,
     D200LD14P& lidar2,
-    DR16& dr16
+    DR16& dr16,
+    uint32_t timestamp_in
 ) {
     size_t packetOffset = 0;
 
     //pack timestamp
-    timestamp = millis();
+    timestamp = timestamp_in;
     memcpy(packetBuffer + packetOffset, &timestamp, sizeof(timestamp));
     packetOffset += sizeof(timestamp);
 

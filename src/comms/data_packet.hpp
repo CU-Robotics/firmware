@@ -270,7 +270,8 @@ struct comms_data_packet {
         EstimatorManager& estimatorManager,
         D200LD14P& lidar1,
         D200LD14P& lidar2,
-        DR16& dr16
+        DR16& dr16,
+        uint32_t timestamp_in
     );
 
     /// @brief Function to unpack data from a packet buffer.
