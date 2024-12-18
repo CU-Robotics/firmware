@@ -202,6 +202,9 @@ struct comms_data_packet {
     /// Pointer to the Config struct storing all configuration data.
     const Config* config;
 
+    //timestamp
+    uint32_t timestamp;
+
     /// Robot state.
     StateData state;
 

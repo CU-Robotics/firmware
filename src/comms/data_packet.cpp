@@ -240,6 +240,9 @@ void comms_data_packet::pack_data_packet(
 ) {
     size_t packetOffset = 0;
 
+    //pack timestamp
+    timestamp = millis();
+
     //pack state
     robotState.get_reference(state.reference);
     robotState.get_estimate(state.estimate);
