@@ -242,6 +242,8 @@ void comms_data_packet::pack_data_packet(
 
     //pack timestamp
     timestamp = millis();
+    memcpy(packetBuffer + packetOffset, &timestamp, sizeof(timestamp));
+    packetOffset += sizeof(timestamp);
 
     //pack state
     robotState.get_reference(state.reference);
