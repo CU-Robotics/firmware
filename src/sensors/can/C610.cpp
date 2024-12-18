@@ -12,6 +12,7 @@ int C610::read(CAN_message_t& msg) {
     memcpy(&m_input, &msg, sizeof(CAN_message_t));
 
     // fill out the motor state buffer
+    // input data format is specified in the C610 datasheet (Speed Controller Sending Message Format)
     int16_t torque = (m_input.buf[4] << 8) | m_input.buf[5];
     m_state.torque = (float)torque / m_max_torque;
 
@@ -33,6 +34,7 @@ int C610::write(CAN_message_t& msg) const {
     uint8_t motor_id = (m_id - 1) % 4;
 
     // fill in the output array
+    // message format is specified in the C610 datasheet (Speed Controller Receiving Message Format)
     msg.buf[motor_id * 2] = m_output.buf[motor_id * 2];         // upper byte
     msg.buf[motor_id * 2 + 1] = m_output.buf[motor_id * 2 + 1]; // lower byte
 

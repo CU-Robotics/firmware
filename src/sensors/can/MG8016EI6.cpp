@@ -27,6 +27,8 @@ int MG8016EI6::read(CAN_message_t& msg) {
 
     uint8_t cmd_byte = msg.buf[0];
 
+    // the data format of each of these commands is specified in the MG8016E-i6 CAN protocol datasheet, it is referred to as "Driver Respond"
+
     // handle the command
     switch (cmd_byte) {
     // commands that return the base state
