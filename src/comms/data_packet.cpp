@@ -424,6 +424,10 @@ void comms_data_packet::unpack_data_packet(uint8_t packetBuffer[BUFFER_SIZE]) {
 
 void comms_data_packet::print() {
 
+    //print the timestamp
+    Serial.print("Timestamp: ");
+    Serial.println(timestamp);
+
     // Print the RefereeData
     for (int i = 0; i < 180; i++) {
         Serial.print(refData.ref_data_raw[i]);
