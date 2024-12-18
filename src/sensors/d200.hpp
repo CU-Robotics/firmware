@@ -239,6 +239,9 @@ class D200LD14P : Sensor{
     /// @param buffer buffer to store the serialized data
     /// @param offset offset to store the serialized data
     void serialize(uint8_t* buffer, size_t& offset) override;
+
+    /// @brief return the current packet
+    int get_current_packet_index() {return current_packet;};
 };
 
 #endif // D200_H

@@ -114,6 +114,7 @@ void ICMSensorData::print() {
     Serial.print(gyro_Z);
     Serial.println(" radians/s ");
     Serial.println();
+    Serial.println("at the end of print icm");
 }
 
 // --- RevSensorData Methods ---
@@ -313,24 +314,47 @@ void comms_data_packet::pack_data_packet(
     // Serialize sensor data
     for (int i = 0; i < buff_sensor_count; i++) {
         estimatorManager.get_buff_encoders(i).serialize(packetBuffer, packetOffset);
+        //add the sensor data to the sensor data struct, this is done on firmware to enable print functionality
+        buff_sensors[i].id = estimatorManager.get_buff_encoders(i).getId();
+        buff_sensors[i].m_angle = estimatorManager.get_buff_encoders(i).get_angle();
     }
 
     for (int i = 0; i < icm_sensor_count; i++) {
         estimatorManager.get_icm_sensors(i).serialize(packetBuffer, packetOffset);
+        //add the sensor data to the sensor data struct, this is done on firmware to enable print functionality
+        icm_sensors[i].accel_X = estimatorManager.get_icm_sensors(i).get_accel_X();
+        icm_sensors[i].accel_Y = estimatorManager.get_icm_sensors(i).get_accel_Y();
+        icm_sensors[i].accel_Z = estimatorManager.get_icm_sensors(i).get_accel_Z();
+        icm_sensors[i].gyro_X = estimatorManager.get_icm_sensors(i).get_gyro_X();
+        icm_sensors[i].gyro_Y = estimatorManager.get_icm_sensors(i).get_gyro_Y();
+        icm_sensors[i].gyro_Z = estimatorManager.get_icm_sensors(i).get_gyro_Z();
+        icm_sensors[i].temperature = estimatorManager.get_icm_sensors(i).get_temperature();
+
     }
 
     for (int i = 0; i < rev_sensor_count; i++) {
         estimatorManager.get_rev_sensors(i).serialize(packetBuffer, packetOffset);
+        //add the sensor data to the sensor data struct, this is done on firmware to enable print functionality
+        rev_sensors[i].id = estimatorManager.get_rev_sensors(i).getId();
+        rev_sensors[i].ticks = estimatorManager.get_rev_sensors(i).get_angle_ticks();
+        rev_sensors[i].radians = estimatorManager.get_rev_sensors(i).get_angle_radians();
     }
 
     for (int i = 0; i < tof_sensor_count; i++) {
         estimatorManager.get_tof_sensors(i).serialize(packetBuffer, packetOffset);
+        //add the sensor data to the sensor data struct, this is done on firmware to enable print functionality
+        tof_sensors[i].id = estimatorManager.get_tof_sensors(i).getId();
+        tof_sensors[i].latest_distance = estimatorManager.get_tof_sensors(i).read();
     }
 
     // Serialize LiDAR sensors if they exist
     if (lidar_sensor_count == 2) {
         lidar1.serialize(packetBuffer, packetOffset);
         lidar2.serialize(packetBuffer, packetOffset);
+        lidar_sensors[0].current_packet = lidar1.get_current_packet_index();
+        lidar_sensors[1].current_packet = lidar2.get_current_packet_index();
+        memcpy(lidar_sensors[0].packets,lidar1.get_packets(),sizeof(lidar_sensors[0].packets));
+        memcpy(lidar_sensors[1].packets,lidar2.get_packets(),sizeof(lidar_sensors[1].packets));
     }
 }
 
@@ -427,7 +451,6 @@ void comms_data_packet::print() {
     for (int i = 0; i < icm_sensor_count; i++) {
         icm_sensors[i].print();
     }
-
     // Print the Rev Encoders
     for (int i = 0; i < rev_sensor_count; i++) {
         rev_sensors[i].print();

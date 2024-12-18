@@ -203,6 +203,6 @@ void D200LD14P::serialize(uint8_t* buffer, size_t& offset) {
   offset += sizeof(current_packet);
   memcpy(buffer + offset, &cal, sizeof(cal));
   offset += sizeof(cal);
-  memcpy(buffer + offset, get_packets(), D200_NUM_PACKETS_CACHED * D200_PAYLOAD_SIZE);
-  offset += D200_NUM_PACKETS_CACHED * D200_PAYLOAD_SIZE;
+  memcpy(buffer + offset, get_packets(), 154);
+  offset += 154;
 }
