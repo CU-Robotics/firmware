@@ -316,13 +316,13 @@ int main() {
         //ref_data_raw[0] = 99; // test to see if the data is being sent
         // pack data packet
         packet.pack_data_packet(buffer, governor, ref_data_raw, can_data, estimator_manager, lidar1, lidar2, dr16, millis());
-        //packet.print();
+        packet.print();
         //print first 100 bytes of packet
-        for(int i = 0; i < 100; i++){
-            Serial.print(buffer[i]);
-            Serial.print(" ");
-        }
-        Serial.println();
+        // for(int i = 0; i < 100; i++){
+        //     Serial.print(buffer[i]);
+        //     Serial.print(" ");
+        // }
+        // Serial.println();
         ethernet_comms.loop();
         //create and set the outgoing ethernet packet
         Comms::EthernetPacket* outgoing_packet = ethernet_comms.get_outgoing_packet();
