@@ -246,120 +246,120 @@ void comms_data_packet::pack_data_packet(
     memcpy(packetBuffer + packetOffset, &timestamp, sizeof(timestamp));
     packetOffset += sizeof(timestamp);
 
-    //pack state
-    robotState.get_reference(state.reference);
-    robotState.get_estimate(state.estimate);
-    memcpy(packetBuffer + packetOffset, &state, sizeof(state));
-    packetOffset += sizeof(state);
+    // //pack state
+    // robotState.get_reference(state.reference);
+    // robotState.get_estimate(state.estimate);
+    // memcpy(packetBuffer + packetOffset, &state, sizeof(state));
+    // packetOffset += sizeof(state);
 
-    //pack number of sensors
-    memcpy(packetBuffer + packetOffset, &buff_sensor_count, sizeof(buff_sensor_count));
-    packetOffset += sizeof(buff_sensor_count);
-    memcpy(packetBuffer + packetOffset, &icm_sensor_count, sizeof(icm_sensor_count));
-    packetOffset += sizeof(icm_sensor_count);
-    memcpy(packetBuffer + packetOffset, &rev_sensor_count, sizeof(rev_sensor_count));
-    packetOffset += sizeof(rev_sensor_count);
-    memcpy(packetBuffer + packetOffset, &tof_sensor_count, sizeof(tof_sensor_count));
-    packetOffset += sizeof(tof_sensor_count);
-    memcpy(packetBuffer + packetOffset, &lidar_sensor_count, sizeof(lidar_sensor_count));
-    packetOffset += sizeof(lidar_sensor_count);
+    // //pack number of sensors
+    // memcpy(packetBuffer + packetOffset, &buff_sensor_count, sizeof(buff_sensor_count));
+    // packetOffset += sizeof(buff_sensor_count);
+    // memcpy(packetBuffer + packetOffset, &icm_sensor_count, sizeof(icm_sensor_count));
+    // packetOffset += sizeof(icm_sensor_count);
+    // memcpy(packetBuffer + packetOffset, &rev_sensor_count, sizeof(rev_sensor_count));
+    // packetOffset += sizeof(rev_sensor_count);
+    // memcpy(packetBuffer + packetOffset, &tof_sensor_count, sizeof(tof_sensor_count));
+    // packetOffset += sizeof(tof_sensor_count);
+    // memcpy(packetBuffer + packetOffset, &lidar_sensor_count, sizeof(lidar_sensor_count));
+    // packetOffset += sizeof(lidar_sensor_count);
 
-    // Create the RefereeData
-    memcpy(packetBuffer + packetOffset, ref_data_raw, sizeof(uint8_t) * 180);           // Copy the RefData into the buffer
-    packetOffset += sizeof(sizeof(uint8_t) * 180);
+    // // Create the RefereeData
+    // memcpy(packetBuffer + packetOffset, ref_data_raw, sizeof(uint8_t) * 180);           // Copy the RefData into the buffer
+    // packetOffset += sizeof(sizeof(uint8_t) * 180);
 
-    // Copy CAN data into the buffer
-    memcpy(packetBuffer + packetOffset, canDataPtr, sizeof(CANData));
-    packetOffset += sizeof(CANData);
+    // // Copy CAN data into the buffer
+    // memcpy(packetBuffer + packetOffset, canDataPtr, sizeof(CANData));
+    // packetOffset += sizeof(CANData);
 
-    //copy dr16 data into the dr16 data struct and then copy that into the packet buffer
-    dr16_data.fail_bit = dr16.is_fail();
-    dr16_data.is_connected = dr16.is_connected();
-    memcpy(dr16_data.input, dr16.get_input(), sizeof(dr16_data.input));
-    dr16_data.r_stick_x = dr16.get_r_stick_x();
-    dr16_data.r_stick_y = dr16.get_r_stick_y();
-    dr16_data.l_stick_x = dr16.get_l_stick_x();
-    dr16_data.l_stick_y = dr16.get_l_stick_y();
-    dr16_data.wheel = dr16.get_wheel();
-    dr16_data.l_switch = dr16.get_l_switch();
-    dr16_data.r_switch = dr16.get_r_switch();
-    dr16_data.mouse_x = dr16.get_mouse_x();
-    dr16_data.mouse_y = dr16.get_mouse_y();
-    dr16_data.l_mouse_button = dr16.get_l_mouse_button();
-    dr16_data.r_mouse_button = dr16.get_r_mouse_button();
-    dr16_data.fail_time = dr16.m_failTime;
-    dr16_data.prev_time = dr16.m_prevTime;
-    dr16_data.disconnect_time = dr16.m_disctTime;
-    dr16_data.is_data_valid = dr16.is_data_valid();
+    // //copy dr16 data into the dr16 data struct and then copy that into the packet buffer
+    // dr16_data.fail_bit = dr16.is_fail();
+    // dr16_data.is_connected = dr16.is_connected();
+    // memcpy(dr16_data.input, dr16.get_input(), sizeof(dr16_data.input));
+    // dr16_data.r_stick_x = dr16.get_r_stick_x();
+    // dr16_data.r_stick_y = dr16.get_r_stick_y();
+    // dr16_data.l_stick_x = dr16.get_l_stick_x();
+    // dr16_data.l_stick_y = dr16.get_l_stick_y();
+    // dr16_data.wheel = dr16.get_wheel();
+    // dr16_data.l_switch = dr16.get_l_switch();
+    // dr16_data.r_switch = dr16.get_r_switch();
+    // dr16_data.mouse_x = dr16.get_mouse_x();
+    // dr16_data.mouse_y = dr16.get_mouse_y();
+    // dr16_data.l_mouse_button = dr16.get_l_mouse_button();
+    // dr16_data.r_mouse_button = dr16.get_r_mouse_button();
+    // dr16_data.fail_time = dr16.m_failTime;
+    // dr16_data.prev_time = dr16.m_prevTime;
+    // dr16_data.disconnect_time = dr16.m_disctTime;
+    // dr16_data.is_data_valid = dr16.is_data_valid();
 
-    //just pretend I did this a better way
-    dr16_data.keys.w = dr16.keys.w;
-    dr16_data.keys.s = dr16.keys.s;
-    dr16_data.keys.a = dr16.keys.a;
-    dr16_data.keys.d = dr16.keys.d;
-    dr16_data.keys.shift = dr16.keys.shift;
-    dr16_data.keys.ctrl = dr16.keys.ctrl;
-    dr16_data.keys.q = dr16.keys.q;
-    dr16_data.keys.e = dr16.keys.e;
-    dr16_data.keys.r = dr16.keys.r;
-    dr16_data.keys.f = dr16.keys.f;
-    dr16_data.keys.g = dr16.keys.g;
-    dr16_data.keys.z = dr16.keys.z;
-    dr16_data.keys.x = dr16.keys.x;
-    dr16_data.keys.c = dr16.keys.c;
-    dr16_data.keys.v = dr16.keys.v;
-    dr16_data.keys.b = dr16.keys.b;
+    // //just pretend I did this a better way
+    // dr16_data.keys.w = dr16.keys.w;
+    // dr16_data.keys.s = dr16.keys.s;
+    // dr16_data.keys.a = dr16.keys.a;
+    // dr16_data.keys.d = dr16.keys.d;
+    // dr16_data.keys.shift = dr16.keys.shift;
+    // dr16_data.keys.ctrl = dr16.keys.ctrl;
+    // dr16_data.keys.q = dr16.keys.q;
+    // dr16_data.keys.e = dr16.keys.e;
+    // dr16_data.keys.r = dr16.keys.r;
+    // dr16_data.keys.f = dr16.keys.f;
+    // dr16_data.keys.g = dr16.keys.g;
+    // dr16_data.keys.z = dr16.keys.z;
+    // dr16_data.keys.x = dr16.keys.x;
+    // dr16_data.keys.c = dr16.keys.c;
+    // dr16_data.keys.v = dr16.keys.v;
+    // dr16_data.keys.b = dr16.keys.b;
 
-    memcpy(packetBuffer + packetOffset, &dr16_data, sizeof(dr16_data));
-    packetOffset += sizeof(dr16_data);
+    // memcpy(packetBuffer + packetOffset, &dr16_data, sizeof(dr16_data));
+    // packetOffset += sizeof(dr16_data);
 
 
 
-    // Serialize sensor data
-    for (int i = 0; i < buff_sensor_count; i++) {
-        estimatorManager.get_buff_encoders(i).serialize(packetBuffer, packetOffset);
-        //add the sensor data to the sensor data struct, this is done on firmware to enable print functionality
-        buff_sensors[i].id = estimatorManager.get_buff_encoders(i).getId();
-        buff_sensors[i].m_angle = estimatorManager.get_buff_encoders(i).get_angle();
-    }
+    // // Serialize sensor data
+    // for (int i = 0; i < buff_sensor_count; i++) {
+    //     estimatorManager.get_buff_encoders(i).serialize(packetBuffer, packetOffset);
+    //     //add the sensor data to the sensor data struct, this is done on firmware to enable print functionality
+    //     buff_sensors[i].id = estimatorManager.get_buff_encoders(i).getId();
+    //     buff_sensors[i].m_angle = estimatorManager.get_buff_encoders(i).get_angle();
+    // }
 
-    for (int i = 0; i < icm_sensor_count; i++) {
-        estimatorManager.get_icm_sensors(i).serialize(packetBuffer, packetOffset);
-        //add the sensor data to the sensor data struct, this is done on firmware to enable print functionality
-        icm_sensors[i].accel_X = estimatorManager.get_icm_sensors(i).get_accel_X();
-        icm_sensors[i].accel_Y = estimatorManager.get_icm_sensors(i).get_accel_Y();
-        icm_sensors[i].accel_Z = estimatorManager.get_icm_sensors(i).get_accel_Z();
-        icm_sensors[i].gyro_X = estimatorManager.get_icm_sensors(i).get_gyro_X();
-        icm_sensors[i].gyro_Y = estimatorManager.get_icm_sensors(i).get_gyro_Y();
-        icm_sensors[i].gyro_Z = estimatorManager.get_icm_sensors(i).get_gyro_Z();
-        icm_sensors[i].temperature = estimatorManager.get_icm_sensors(i).get_temperature();
+    // for (int i = 0; i < icm_sensor_count; i++) {
+    //     estimatorManager.get_icm_sensors(i).serialize(packetBuffer, packetOffset);
+    //     //add the sensor data to the sensor data struct, this is done on firmware to enable print functionality
+    //     icm_sensors[i].accel_X = estimatorManager.get_icm_sensors(i).get_accel_X();
+    //     icm_sensors[i].accel_Y = estimatorManager.get_icm_sensors(i).get_accel_Y();
+    //     icm_sensors[i].accel_Z = estimatorManager.get_icm_sensors(i).get_accel_Z();
+    //     icm_sensors[i].gyro_X = estimatorManager.get_icm_sensors(i).get_gyro_X();
+    //     icm_sensors[i].gyro_Y = estimatorManager.get_icm_sensors(i).get_gyro_Y();
+    //     icm_sensors[i].gyro_Z = estimatorManager.get_icm_sensors(i).get_gyro_Z();
+    //     icm_sensors[i].temperature = estimatorManager.get_icm_sensors(i).get_temperature();
 
-    }
+    // }
 
-    for (int i = 0; i < rev_sensor_count; i++) {
-        estimatorManager.get_rev_sensors(i).serialize(packetBuffer, packetOffset);
-        //add the sensor data to the sensor data struct, this is done on firmware to enable print functionality
-        rev_sensors[i].id = estimatorManager.get_rev_sensors(i).getId();
-        rev_sensors[i].ticks = estimatorManager.get_rev_sensors(i).get_angle_ticks();
-        rev_sensors[i].radians = estimatorManager.get_rev_sensors(i).get_angle_radians();
-    }
+    // for (int i = 0; i < rev_sensor_count; i++) {
+    //     estimatorManager.get_rev_sensors(i).serialize(packetBuffer, packetOffset);
+    //     //add the sensor data to the sensor data struct, this is done on firmware to enable print functionality
+    //     rev_sensors[i].id = estimatorManager.get_rev_sensors(i).getId();
+    //     rev_sensors[i].ticks = estimatorManager.get_rev_sensors(i).get_angle_ticks();
+    //     rev_sensors[i].radians = estimatorManager.get_rev_sensors(i).get_angle_radians();
+    // }
 
-    for (int i = 0; i < tof_sensor_count; i++) {
-        estimatorManager.get_tof_sensors(i).serialize(packetBuffer, packetOffset);
-        //add the sensor data to the sensor data struct, this is done on firmware to enable print functionality
-        tof_sensors[i].id = estimatorManager.get_tof_sensors(i).getId();
-        tof_sensors[i].latest_distance = estimatorManager.get_tof_sensors(i).read();
-    }
+    // for (int i = 0; i < tof_sensor_count; i++) {
+    //     estimatorManager.get_tof_sensors(i).serialize(packetBuffer, packetOffset);
+    //     //add the sensor data to the sensor data struct, this is done on firmware to enable print functionality
+    //     tof_sensors[i].id = estimatorManager.get_tof_sensors(i).getId();
+    //     tof_sensors[i].latest_distance = estimatorManager.get_tof_sensors(i).read();
+    // }
 
-    // Serialize LiDAR sensors if they exist
-    if (lidar_sensor_count == 2) {
-        lidar1.serialize(packetBuffer, packetOffset);
-        lidar2.serialize(packetBuffer, packetOffset);
-        lidar_sensors[0].current_packet = lidar1.get_current_packet_index();
-        lidar_sensors[1].current_packet = lidar2.get_current_packet_index();
-        memcpy(lidar_sensors[0].packets,lidar1.get_packets(),sizeof(lidar_sensors[0].packets));
-        memcpy(lidar_sensors[1].packets,lidar2.get_packets(),sizeof(lidar_sensors[1].packets));
-    }
+    // // Serialize LiDAR sensors if they exist
+    // if (lidar_sensor_count == 2) {
+    //     lidar1.serialize(packetBuffer, packetOffset);
+    //     lidar2.serialize(packetBuffer, packetOffset);
+    //     lidar_sensors[0].current_packet = lidar1.get_current_packet_index();
+    //     lidar_sensors[1].current_packet = lidar2.get_current_packet_index();
+    //     memcpy(lidar_sensors[0].packets,lidar1.get_packets(),sizeof(lidar_sensors[0].packets));
+    //     memcpy(lidar_sensors[1].packets,lidar2.get_packets(),sizeof(lidar_sensors[1].packets));
+    // }
 }
 
 
@@ -372,61 +372,61 @@ void comms_data_packet::unpack_data_packet(uint8_t packetBuffer[BUFFER_SIZE]) {
     memcpy(&timestamp, packetBuffer + packetOffset, sizeof(timestamp));
     packetOffset += sizeof(timestamp);
 
-    //unpack state data
-    memcpy(&state_data, packetBuffer + packetOffset, sizeof(state_data));
-    packetOffset += sizeof(state_data);
+    // //unpack state data
+    // memcpy(&state_data, packetBuffer + packetOffset, sizeof(state_data));
+    // packetOffset += sizeof(state_data);
 
-    memcpy(&buff_sensor_count, packetBuffer + packetOffset, sizeof(buff_sensor_count));
-    packetOffset += sizeof(buff_sensor_count);
-    memcpy(&icm_sensor_count, packetBuffer + packetOffset, sizeof(icm_sensor_count));
-    packetOffset += sizeof(icm_sensor_count);
-    memcpy(&rev_sensor_count, packetBuffer + packetOffset, sizeof(rev_sensor_count));
-    packetOffset += sizeof(rev_sensor_count);
-    memcpy(&tof_sensor_count, packetBuffer + packetOffset, sizeof(tof_sensor_count));
-    packetOffset += sizeof(tof_sensor_count);
-    memcpy(&lidar_sensor_count, packetBuffer + packetOffset, sizeof(lidar_sensor_count));
-    packetOffset += sizeof(lidar_sensor_count);
+    // memcpy(&buff_sensor_count, packetBuffer + packetOffset, sizeof(buff_sensor_count));
+    // packetOffset += sizeof(buff_sensor_count);
+    // memcpy(&icm_sensor_count, packetBuffer + packetOffset, sizeof(icm_sensor_count));
+    // packetOffset += sizeof(icm_sensor_count);
+    // memcpy(&rev_sensor_count, packetBuffer + packetOffset, sizeof(rev_sensor_count));
+    // packetOffset += sizeof(rev_sensor_count);
+    // memcpy(&tof_sensor_count, packetBuffer + packetOffset, sizeof(tof_sensor_count));
+    // packetOffset += sizeof(tof_sensor_count);
+    // memcpy(&lidar_sensor_count, packetBuffer + packetOffset, sizeof(lidar_sensor_count));
+    // packetOffset += sizeof(lidar_sensor_count);
 
-    // Unpack the RefereeData
-    memcpy(&refData, packetBuffer + packetOffset, sizeof(refData));
-    packetOffset += sizeof(refData);
+    // // Unpack the RefereeData
+    // memcpy(&refData, packetBuffer + packetOffset, sizeof(refData));
+    // packetOffset += sizeof(refData);
 
-    // Unpack CAN data
-    memcpy(&canData, packetBuffer + packetOffset, sizeof(canData));
-    packetOffset += sizeof(canData);
+    // // Unpack CAN data
+    // memcpy(&canData, packetBuffer + packetOffset, sizeof(canData));
+    // packetOffset += sizeof(canData);
 
 
-    // Unpack DR16 data
-    memcpy(&dr16_data, packetBuffer + packetOffset, sizeof(dr16_data));
-    packetOffset += sizeof(dr16_data);
+    // // Unpack DR16 data
+    // memcpy(&dr16_data, packetBuffer + packetOffset, sizeof(dr16_data));
+    // packetOffset += sizeof(dr16_data);
 
-    // Unpack Buff Encoders
-    for (int i = 0; i < buff_sensor_count; i++) {
-        buff_sensors[i].id = packetBuffer[packetOffset++];
-        memcpy(&buff_sensors[i].m_angle, packetBuffer + packetOffset, 4);
-        packetOffset += 4;
-    }
+    // // Unpack Buff Encoders
+    // for (int i = 0; i < buff_sensor_count; i++) {
+    //     buff_sensors[i].id = packetBuffer[packetOffset++];
+    //     memcpy(&buff_sensors[i].m_angle, packetBuffer + packetOffset, 4);
+    //     packetOffset += 4;
+    // }
 
-    // Unpack ICM Sensors
-    for (int i = 0; i < icm_sensor_count; i++) {
-        icm_sensors[i].deserialize(packetBuffer, packetOffset);
-    }
+    // // Unpack ICM Sensors
+    // for (int i = 0; i < icm_sensor_count; i++) {
+    //     icm_sensors[i].deserialize(packetBuffer, packetOffset);
+    // }
 
-    // Unpack Rev Encoders
-    for (int i = 0; i < rev_sensor_count; i++) {
-        rev_sensors[i].deserialize(packetBuffer, packetOffset);
-    }
+    // // Unpack Rev Encoders
+    // for (int i = 0; i < rev_sensor_count; i++) {
+    //     rev_sensors[i].deserialize(packetBuffer, packetOffset);
+    // }
 
-    // Unpack TOF Sensors
-    for (int i = 0; i < tof_sensor_count; i++) {
-        tof_sensors[i].deserialize(packetBuffer, packetOffset);
-    }
+    // // Unpack TOF Sensors
+    // for (int i = 0; i < tof_sensor_count; i++) {
+    //     tof_sensors[i].deserialize(packetBuffer, packetOffset);
+    // }
 
-    // Unpack LiDAR Sensors
-    if (lidar_sensor_count == 2) {
-        lidar_sensors[0].deserialize(packetBuffer, packetOffset);
-        lidar_sensors[1].deserialize(packetBuffer, packetOffset);
-    }
+    // // Unpack LiDAR Sensors
+    // if (lidar_sensor_count == 2) {
+    //     lidar_sensors[0].deserialize(packetBuffer, packetOffset);
+    //     lidar_sensors[1].deserialize(packetBuffer, packetOffset);
+    // }
 }
 
 void comms_data_packet::print() {
@@ -441,6 +441,9 @@ void comms_data_packet::print() {
         Serial.print(" ");
     }
     Serial.println();
+
+    //print state data
+    
 
     // Print the CANData
     for (int i = 0; i < 2; i++) {
