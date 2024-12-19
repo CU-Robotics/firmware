@@ -319,6 +319,7 @@ int main() {
         packet.pack_data_packet(buffer, governor, ref_data_raw, can_data, estimator_manager, lidar1, lidar2, dr16, millis());
         packet.print();
         packet2.unpack_data_packet(buffer);
+        Serial.println("Packet 2:");
         packet2.print();
         //print first 100 bytes of packet
         // for(int i = 0; i < 100; i++){

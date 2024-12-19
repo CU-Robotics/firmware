@@ -369,9 +369,15 @@ void comms_data_packet::pack_data_packet(
 void comms_data_packet::unpack_data_packet(uint8_t packetBuffer[BUFFER_SIZE]) {
     size_t packetOffset = 0;
 
+    // Unpack the state, and number of sensors
 
-    memcpy(&state, packetBuffer + packetOffset, sizeof(state));
-    packetOffset += sizeof(state);
+    //unpack timestamp
+    memcpy(&timestamp, packetBuffer + packetOffset, 4);
+    packetOffset += 4;
+
+    //unpack state data
+    memcpy(&state_data, packetBuffer + packetOffset, sizeof(state_data));
+    packetOffset += sizeof(state_data);
 
     memcpy(&buff_sensor_count, packetBuffer + packetOffset, sizeof(buff_sensor_count));
     packetOffset += sizeof(buff_sensor_count);
@@ -389,8 +395,9 @@ void comms_data_packet::unpack_data_packet(uint8_t packetBuffer[BUFFER_SIZE]) {
     packetOffset += sizeof(refData);
 
     // Unpack CAN data
-    memcpy(&canData, packetBuffer + packetOffset, sizeof(CANData));
-    packetOffset += sizeof(CANData);
+    memcpy(&canData, packetBuffer + packetOffset, sizeof(canData));
+    packetOffset += sizeof(canData);
+
 
     // Unpack DR16 data
     memcpy(&dr16_data, packetBuffer + packetOffset, sizeof(dr16_data));
@@ -399,8 +406,8 @@ void comms_data_packet::unpack_data_packet(uint8_t packetBuffer[BUFFER_SIZE]) {
     // Unpack Buff Encoders
     for (int i = 0; i < buff_sensor_count; i++) {
         buff_sensors[i].id = packetBuffer[packetOffset++];
-        memcpy(&buff_sensors[i].m_angle, packetBuffer + packetOffset, sizeof(buff_sensors[i].m_angle));
-        packetOffset += sizeof(buff_sensors[i].m_angle);
+        memcpy(&buff_sensors[i].m_angle, packetBuffer + packetOffset, 4);
+        packetOffset += 4;
     }
 
     // Unpack ICM Sensors
