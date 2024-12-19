@@ -264,9 +264,9 @@ void comms_data_packet::pack_data_packet(
     // memcpy(packetBuffer + packetOffset, &lidar_sensor_count, sizeof(lidar_sensor_count));
     // packetOffset += sizeof(lidar_sensor_count);
 
-    // // Create the RefereeData
-    // memcpy(packetBuffer + packetOffset, ref_data_raw, sizeof(uint8_t) * 180);           // Copy the RefData into the buffer
-    // packetOffset += sizeof(sizeof(uint8_t) * 180);
+    // Create the RefereeData
+    memcpy(packetBuffer + packetOffset, ref_data_raw, sizeof(uint8_t) * 180);           // Copy the RefData into the buffer
+    packetOffset += sizeof(sizeof(uint8_t) * 180);
 
     // // Copy CAN data into the buffer
     // memcpy(packetBuffer + packetOffset, canDataPtr, sizeof(CANData));
