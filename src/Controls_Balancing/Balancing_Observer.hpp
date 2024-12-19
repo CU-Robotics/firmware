@@ -3,8 +3,7 @@
 
 #include "../comms/rm_can.hpp"
 #include "../utils/timing.hpp"
-
-#include "../IMU_Filter.hpp"         
+#include "../filters/IMU_Filter.hpp"         
 
 
 #define L_CAN 0         // Need Check

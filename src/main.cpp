@@ -1,7 +1,7 @@
 #include <Arduino.h>
 
 #include "utils/timing.hpp"
-#include "comms/rm_can.hpp"
+#include "comms/can/can_manager.hpp"
 #include "sensors/dr16.hpp"
 #include "filters/IMU_Filter.hpp"
 #include "Controls_Balancing/Balancing_Control.hpp"
