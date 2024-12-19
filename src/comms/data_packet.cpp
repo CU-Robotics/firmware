@@ -267,7 +267,7 @@ void comms_data_packet::pack_data_packet(
     // Create the RefereeData
     memcpy(refData.ref_data_raw, ref_data_raw, sizeof(uint8_t) * 180);           // Copy the RefData into the buffer
     memcpy(packetBuffer + packetOffset, ref_data_raw, sizeof(uint8_t) * 180);           // Copy the RefData into the buffer
-    packetOffset += sizeof(sizeof(uint8_t) * 180);
+    packetOffset += sizeof(uint8_t) * 180;
 
     // Copy CAN data into the buffer
     memcpy(&canData, canDataPtr, sizeof(CANData));
