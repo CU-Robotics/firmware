@@ -268,9 +268,9 @@ void comms_data_packet::pack_data_packet(
     memcpy(packetBuffer + packetOffset, ref_data_raw, sizeof(uint8_t) * 180);           // Copy the RefData into the buffer
     packetOffset += sizeof(sizeof(uint8_t) * 180);
 
-    // // Copy CAN data into the buffer
-    // memcpy(packetBuffer + packetOffset, canDataPtr, sizeof(CANData));
-    // packetOffset += sizeof(CANData);
+    // Copy CAN data into the buffer
+    memcpy(packetBuffer + packetOffset, canDataPtr, sizeof(CANData));
+    packetOffset += sizeof(CANData);
 
     // //copy dr16 data into the dr16 data struct and then copy that into the packet buffer
     // dr16_data.fail_bit = dr16.is_fail();
@@ -387,13 +387,13 @@ void comms_data_packet::unpack_data_packet(uint8_t packetBuffer[BUFFER_SIZE]) {
     // memcpy(&lidar_sensor_count, packetBuffer + packetOffset, sizeof(lidar_sensor_count));
     // packetOffset += sizeof(lidar_sensor_count);
 
-    // // Unpack the RefereeData
-    // memcpy(&refData, packetBuffer + packetOffset, sizeof(refData));
-    // packetOffset += sizeof(refData);
+    // Unpack the RefereeData
+    memcpy(&refData, packetBuffer + packetOffset, sizeof(refData));
+    packetOffset += sizeof(refData);
 
-    // // Unpack CAN data
-    // memcpy(&canData, packetBuffer + packetOffset, sizeof(canData));
-    // packetOffset += sizeof(canData);
+    // Unpack CAN data
+    memcpy(&canData, packetBuffer + packetOffset, sizeof(canData));
+    packetOffset += sizeof(canData);
 
 
     // // Unpack DR16 data
