@@ -12,9 +12,9 @@
 
 // Declare global objects
 DR16 dr16;
-rm_CAN can;
+CANManager can;
 Timer loop_timer;
-IMU_filter testicm;
+IMU_filter icm;
 // DONT put anything else in this function. It is not a setup function
 void print_logo() {
     if (Serial) {
@@ -54,8 +54,7 @@ int main() {
     
     dr16.init();
     can.init();
-    testicm.init();
-    
+    icm.init();
     long long loopc = 0; // Loop counter for heartbeat
 
 
@@ -65,11 +64,24 @@ int main() {
         // Read sensors
         dr16.read();
         can.read();
-        testicm.read();
+        icm.read();
+        
         //Testobserver.step(can.get_data(), imu.getdata(), tempobs); // Calculate Observer values
         //Testcontorl.step(tempmotor, ref, tempobs); // Calculate motors motion
+        icm.serial_data_for_plot();
 
-        testicm.serial_data_for_plot();
+
+
+        //** Temp limit functions -- Will be put inside controller when using*/
+        // Basically I use 90 degree as a limit
+        // so it will be angle A - B <= 90 degree(Need test)
+        // Also the A and B are limited to their limit (Need test)
+
+
+
+
+
+
         //testicm.print();
         // Write actuators
         /*if (!dr16.is_connected() || dr16.get_l_switch() == 1) {
@@ -81,7 +93,6 @@ int main() {
             Serial.println("SAFTYOFF");
             can.write();
         }*/
-        
 
         // LED heartbeat -- linked to loop count to reveal slowdowns and freezes.
         // loopc % (int)(1E3/float(HEARTBEAT_FREQ)) < (int)(1E3/float(5*HEARTBEAT_FREQ)) ? digitalWrite(13, HIGH) : digitalWrite(13, LOW);
