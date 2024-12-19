@@ -208,6 +208,10 @@ struct comms_data_packet {
     /// Robot state.
     StateData state;
 
+    /// State data.
+    StateData state_data;
+
+
     /// Referee data.
     RefereeData refData;
     /// CAN bus data.

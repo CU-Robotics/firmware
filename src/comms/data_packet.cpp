@@ -365,7 +365,6 @@ void comms_data_packet::pack_data_packet(
 }
 
 
-
 void comms_data_packet::unpack_data_packet(uint8_t packetBuffer[BUFFER_SIZE]) {
     size_t packetOffset = 0;
 
