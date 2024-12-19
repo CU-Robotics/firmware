@@ -265,10 +265,8 @@ void comms_data_packet::pack_data_packet(
     packetOffset += sizeof(lidar_sensor_count);
 
     // Create the RefereeData
-    RefereeData RefData;
-    memcpy(RefData.ref_data_raw, ref_data_raw, sizeof(RefData.ref_data_raw)); // Load referee data
-    memcpy(packetBuffer + packetOffset, &RefData, sizeof(RefData));           // Copy the RefData into the buffer
-    packetOffset += sizeof(RefData);
+    memcpy(packetBuffer + packetOffset, ref_data_raw, sizeof(uint8_t) * 180);           // Copy the RefData into the buffer
+    packetOffset += sizeof(sizeof(uint8_t) * 180);
 
     // Copy CAN data into the buffer
     memcpy(packetBuffer + packetOffset, canDataPtr, sizeof(CANData));
@@ -371,8 +369,8 @@ void comms_data_packet::unpack_data_packet(uint8_t packetBuffer[BUFFER_SIZE]) {
     // Unpack the state, and number of sensors
 
     //unpack timestamp
-    memcpy(&timestamp, packetBuffer + packetOffset, 4);
-    packetOffset += 4;
+    memcpy(&timestamp, packetBuffer + packetOffset, sizeof(timestamp));
+    packetOffset += sizeof(timestamp);
 
     //unpack state data
     memcpy(&state_data, packetBuffer + packetOffset, sizeof(state_data));
