@@ -161,6 +161,7 @@ int main() {
 
     //Ethernet Comms Data packet
     comms_data_packet packet(config);
+    comms_data_packet packet2(config);
     uint8_t buffer[BUFFER_SIZE];
 
     ethernet_comms.begin();
@@ -317,6 +318,8 @@ int main() {
         // pack data packet
         packet.pack_data_packet(buffer, governor, ref_data_raw, can_data, estimator_manager, lidar1, lidar2, dr16, millis());
         packet.print();
+        packet2.unpack_data_packet(buffer);
+        packet2.print();
         //print first 100 bytes of packet
         // for(int i = 0; i < 100; i++){
         //     Serial.print(buffer[i]);
