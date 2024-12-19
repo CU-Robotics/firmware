@@ -325,18 +325,18 @@ void comms_data_packet::pack_data_packet(
         buff_sensors[i].m_angle = estimatorManager.get_buff_encoders(i).get_angle();
     }
 
-    // for (int i = 0; i < icm_sensor_count; i++) {
-    //     estimatorManager.get_icm_sensors(i).serialize(packetBuffer, packetOffset);
-    //     //add the sensor data to the sensor data struct, this is done on firmware to enable print functionality
-    //     icm_sensors[i].accel_X = estimatorManager.get_icm_sensors(i).get_accel_X();
-    //     icm_sensors[i].accel_Y = estimatorManager.get_icm_sensors(i).get_accel_Y();
-    //     icm_sensors[i].accel_Z = estimatorManager.get_icm_sensors(i).get_accel_Z();
-    //     icm_sensors[i].gyro_X = estimatorManager.get_icm_sensors(i).get_gyro_X();
-    //     icm_sensors[i].gyro_Y = estimatorManager.get_icm_sensors(i).get_gyro_Y();
-    //     icm_sensors[i].gyro_Z = estimatorManager.get_icm_sensors(i).get_gyro_Z();
-    //     icm_sensors[i].temperature = estimatorManager.get_icm_sensors(i).get_temperature();
+    for (int i = 0; i < icm_sensor_count; i++) {
+        estimatorManager.get_icm_sensors(i).serialize(packetBuffer, packetOffset);
+        //add the sensor data to the sensor data struct, this is done on firmware to enable print functionality
+        icm_sensors[i].accel_X = estimatorManager.get_icm_sensors(i).get_accel_X();
+        icm_sensors[i].accel_Y = estimatorManager.get_icm_sensors(i).get_accel_Y();
+        icm_sensors[i].accel_Z = estimatorManager.get_icm_sensors(i).get_accel_Z();
+        icm_sensors[i].gyro_X = estimatorManager.get_icm_sensors(i).get_gyro_X();
+        icm_sensors[i].gyro_Y = estimatorManager.get_icm_sensors(i).get_gyro_Y();
+        icm_sensors[i].gyro_Z = estimatorManager.get_icm_sensors(i).get_gyro_Z();
+        icm_sensors[i].temperature = estimatorManager.get_icm_sensors(i).get_temperature();
 
-    // }
+    }
 
     // for (int i = 0; i < rev_sensor_count; i++) {
     //     estimatorManager.get_rev_sensors(i).serialize(packetBuffer, packetOffset);
@@ -413,10 +413,10 @@ void comms_data_packet::unpack_data_packet(uint8_t packetBuffer[BUFFER_SIZE]) {
         packetOffset += 4;
     }
 
-    // // Unpack ICM Sensors
-    // for (int i = 0; i < icm_sensor_count; i++) {
-    //     icm_sensors[i].deserialize(packetBuffer, packetOffset);
-    // }
+    // Unpack ICM Sensors
+    for (int i = 0; i < icm_sensor_count; i++) {
+        icm_sensors[i].deserialize(packetBuffer, packetOffset);
+    }
 
     // // Unpack Rev Encoders
     // for (int i = 0; i < rev_sensor_count; i++) {
