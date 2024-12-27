@@ -52,12 +52,14 @@ const Config* const ConfigLayer::configure(HIDLayer* comms) {
 
 void ConfigLayer::config_SD_init(HIDLayer* comms) {
     // if on robot, we need to wait for ref to send robot_id
+#ifndef CONFIG_OFF_ROBOT
     Serial.println("Waiting for ref system to initialize...");
     while (ref.ref_data.robot_performance.robot_ID == 0) ref.read();
     Serial.println("Ref system online");
+#endif
 
 
-    // check SD
+// check SD
     if (sdcard.exists(CONFIG_PATH)) {
         Serial.printf("Config located on SD in /config.pack, attempting to load from file\n");
 
@@ -170,7 +172,7 @@ void Config::fill_data(CommsPacket packets[MAX_CONFIG_PACKETS], uint8_t sizes[MA
             index += sub_size;
         }
 
-        if(id == yaml_section_id_mappings.at("sensor_info")){
+        if (id == yaml_section_id_mappings.at("sensor_info")) {
             size_t linear_index = index / sizeof(float);
             size_t i1 = linear_index / (NUM_SENSORS);
             size_t i2 = linear_index % NUM_SENSORS;
@@ -178,7 +180,7 @@ void Config::fill_data(CommsPacket packets[MAX_CONFIG_PACKETS], uint8_t sizes[MA
             index += sub_size;
         }
 
-        if(id == yaml_section_id_mappings.at("gains")){
+        if (id == yaml_section_id_mappings.at("gains")) {
             size_t linear_index = index / sizeof(float);
             size_t i1 = linear_index / (NUM_GAINS);
             size_t i2 = linear_index % NUM_GAINS;
@@ -258,7 +260,7 @@ bool ConfigLayer::sd_load() {
 
 #ifndef CONFIG_OFF_ROBOT
     // id check with modulo 100 to account for red and blue teams. Blue is the id + 100. (ID == 101, 102, ...)
-    if ((ref.ref_data.robot_performance.robot_ID % 100) != (int)received_id) {      
+    if ((ref.ref_data.robot_performance.robot_ID % 100) != (int)received_id) {
         Serial.printf("NOTICE: attempting to load firmware for different robot type! \n");
         Serial.printf("Current robot ID: %d\nStored config robot ID: %d\n", ref.ref_data.robot_performance.robot_ID, (int)received_id);
         Serial.println("Requesting config from hive...");
