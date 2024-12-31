@@ -78,21 +78,18 @@ int main() {
         // Also the A and B are limited to their limit (Need test)
 
 
-
-
-
-
         //testicm.print();
         // Write actuators
-        /*if (!dr16.is_connected() || dr16.get_l_switch() == 1) {
+        if (!dr16.is_connected() || dr16.get_l_switch() == 1) {
             // SAFETY ON
             // TODO: Reset all controller integrators here
             can.zero();
+            Serial.println("SAFTYON");
         } else if (dr16.is_connected() && dr16.get_l_switch() != 1) {
             // SAFETY OFF
             Serial.println("SAFTYOFF");
             can.write();
-        }*/
+        }
 
         // LED heartbeat -- linked to loop count to reveal slowdowns and freezes.
         // loopc % (int)(1E3/float(HEARTBEAT_FREQ)) < (int)(1E3/float(5*HEARTBEAT_FREQ)) ? digitalWrite(13, HIGH) : digitalWrite(13, LOW);
