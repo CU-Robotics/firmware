@@ -50,7 +50,7 @@ void print_logo() {
     }
 }
 int main() {
-    Serial.begin(115200); // the serial monitor is actually always active (for debug use Serial.println & tycmd)
+    Serial.begin(1000000); // the serial monitor is actually always active (for debug use Serial.println & tycmd)
     debug.begin(SerialUSB1);
     
     if (CrashReport) {
@@ -64,8 +64,8 @@ int main() {
     dr16.init();
     
     icm.init();
-    
-    can.init();
+
+    //can.init();
 
     // [controller_type, motor_id, bus_id]
     // controller_type: 
@@ -82,7 +82,7 @@ int main() {
         {2 , 1 , 0},
         {2 , 2 , 0}
     }; 
-    can.configure(motor_info);
+    //can.configure(motor_info);
     
     // Main loop
     while (true) {
@@ -93,9 +93,9 @@ int main() {
 
         //can.write();
 
-        can.read();
+        //can.read();
 
-        can.print_state();
+        //can.print_state();
 
         //Testobserver.step(can.get_data(), imu.getdata(), tempobs); // Calculate Observer values
         //Testcontorl.step(tempmotor, ref, tempobs); // Calculate motors motion
