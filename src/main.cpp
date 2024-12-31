@@ -1,6 +1,9 @@
 #include <Arduino.h>
 
 #include "utils/timing.hpp"
+#include "comms/can/C610.hpp"
+#include "comms/can/C620.hpp"
+#include "comms/can/MG8016EI6.hpp"
 #include "comms/can/can_manager.hpp"
 #include "sensors/dr16.hpp"
 #include "filters/IMU_Filter.hpp"
@@ -55,8 +58,7 @@ int main() {
     dr16.init();
     can.init();
     icm.init();
-    //long long loopc = 0; // Loop counter for heartbeat
-
+    long long loopc = 0; // Loop counter for heartbeat
 
     // [controller_type, motor_id, bus_id]
     // controller_type: 
@@ -64,16 +66,16 @@ int main() {
     // 1: C610
     // 2: C620 
     // 3: MG8016EI6
+
     float motor_info[CAN_MAX_MOTORS][3] = {
-        { 3, 1, 2 },
-        { 3, 2, 2 },
-        { 3, 3, 2 },
-        { 3, 4, 2 },
-        { 2, 1, 0 },
-        { 2, 2, 0 }
+        {3,1,2},
+        {3,2,2},
+        {3,3,2},
+        {3,4,2},
+        {2,1,0},
+        {2,2,0}
     };
-    can.configure(motor_info);
-    
+    // can.configure(motor_info);
 
 
 
@@ -100,7 +102,7 @@ int main() {
         if (!dr16.is_connected() || dr16.get_l_switch() == 1) {
             // SAFETY ON
             // TODO: Reset all controller integrators here
-            //can.zero();
+            //can.safety_mode();
             Serial.println("SAFTYON");
         } else if (dr16.is_connected() && dr16.get_l_switch() != 1) {
             // SAFETY OFF
