@@ -1,7 +1,7 @@
 #include <Arduino.h>
 
 #include "utils/timing.hpp"
-#include "comms/can/can_manager.hpp"
+//#include "comms/can/can_manager.hpp"
 #include "sensors/dr16.hpp"
 #include "filters/IMU_Filter.hpp"
 #include "Controls_Balancing/Balancing_Control.hpp"
@@ -12,7 +12,7 @@
 
 // Declare global objects
 DR16 dr16;
-CANManager can;
+//CANManager can;
 Timer loop_timer;
 IMU_filter icm;
 // DONT put anything else in this function. It is not a setup function
@@ -53,7 +53,7 @@ int main() {
 
     
     dr16.init();
-    can.init();
+    //can.init();
     icm.init();
     long long loopc = 0; // Loop counter for heartbeat
 
@@ -63,7 +63,7 @@ int main() {
     while (true) {
         // Read sensors
         dr16.read();
-        can.read();
+        //can.read();
         icm.read();
         
         //Testobserver.step(can.get_data(), imu.getdata(), tempobs); // Calculate Observer values
@@ -83,12 +83,12 @@ int main() {
         if (!dr16.is_connected() || dr16.get_l_switch() == 1) {
             // SAFETY ON
             // TODO: Reset all controller integrators here
-            can.zero();
+            //can.zero();
             Serial.println("SAFTYON");
         } else if (dr16.is_connected() && dr16.get_l_switch() != 1) {
             // SAFETY OFF
             Serial.println("SAFTYOFF");
-            can.write();
+            //can.write();
         }
 
         // LED heartbeat -- linked to loop count to reveal slowdowns and freezes.
