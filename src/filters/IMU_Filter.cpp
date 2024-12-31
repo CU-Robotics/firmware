@@ -120,6 +120,7 @@ void IMU_filter::calibrate_imu(){
         sum_y += _icm.get_gyro_Y();
         sum_z += _icm.get_gyro_Z();
     }
+    Serial.println("Calibrating Finish...");
     float x = sum_accel_x/CALIBRATION_NUM;
     float y = sum_accel_y/CALIBRATION_NUM;
     float z = sum_accel_z/CALIBRATION_NUM;
@@ -135,7 +136,7 @@ void IMU_filter::calibrate_imu(){
 
     _imu.k_roll = _imu.accel_roll;
     _imu.k_pitch = _imu.accel_pitch;
-    
+    Serial.println("Calibrating Finish...");
 }
 
 

@@ -32,9 +32,8 @@ void CANManager::init() {
     m_motor_map.clear();
 }
 
-void CANManager::configure(float motor_info[CAN_MAX_MOTORS][3]) {
+void CANManager::configure(float  motor_info[CAN_MAX_MOTORS][3]) {
     // using the motor_info array, create the motors following the config
-    
     // loop through all CAN_MAX_MOTORS
     for (uint32_t motor_id = 0; motor_id < CAN_MAX_MOTORS; motor_id++) {
         // grab the information for this specific motor
@@ -78,7 +77,7 @@ void CANManager::configure(float motor_info[CAN_MAX_MOTORS][3]) {
     }
 
     // verify all motors are online and ready
-    init_motors();
+    //init_motors();
 }
 
 void CANManager::read() {

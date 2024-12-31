@@ -1,5 +1,5 @@
 #include <Arduino.h>
-
+#include <TeensyDebug.h>
 #include "utils/timing.hpp"
 #include "comms/can/C610.hpp"
 #include "comms/can/C620.hpp"
@@ -9,10 +9,10 @@
 #include "filters/IMU_Filter.hpp"
 #include "Controls_Balancing/Balancing_Control.hpp"
 #include "Controls_Balancing/Balancing_Observer.hpp"
-// Loop constants
-#define LOOP_FREQ      1000
-#define HEARTBEAT_FREQ 2
 
+// Loop constants
+#define LOOP_FREQ 1000
+#define HEARTBEAT_FREQ 2
 // Declare global objects
 DR16 dr16;
 CANManager can;
@@ -50,15 +50,22 @@ void print_logo() {
     }
 }
 int main() {
-    Serial.begin(1000000); // the serial monitor is actually always active (for debug use Serial.println & tycmd)
-    print_logo();
+    Serial.begin(115200); // the serial monitor is actually always active (for debug use Serial.println & tycmd)
+    debug.begin(SerialUSB1);
     
+    if (CrashReport) {
+        while (1) {
+            Serial.println(CrashReport);
+            delay(1000);
+        }
+    }
 
-    
+    print_logo();
     dr16.init();
-    can.init();
+    
     icm.init();
-    long long loopc = 0; // Loop counter for heartbeat
+    
+    can.init();
 
     // [controller_type, motor_id, bus_id]
     // controller_type: 
@@ -66,27 +73,33 @@ int main() {
     // 1: C610
     // 2: C620 
     // 3: MG8016EI6
-
+    
     float motor_info[CAN_MAX_MOTORS][3] = {
-        {3,1,2},
-        {3,2,2},
-        {3,3,2},
-        {3,4,2},
-        {2,1,0},
-        {2,2,0}
-    };
-    // can.configure(motor_info);
-
-
-
+        {3 , 1 , 2},
+        {3 , 2 , 2},
+        {3 , 3 , 2},
+        {3 , 4 , 2},
+        {2 , 1 , 0},
+        {2 , 2 , 0}
+    }; 
+    can.configure(motor_info);
+    
     // Main loop
     while (true) {
         // Read sensors
         dr16.read();
-        can.read();
         icm.read();
+
+
+        //can.write();
+
+        can.read();
+
+        can.print_state();
+
         //Testobserver.step(can.get_data(), imu.getdata(), tempobs); // Calculate Observer values
         //Testcontorl.step(tempmotor, ref, tempobs); // Calculate motors motion
+
         icm.serial_data_for_plot();
 
 
@@ -103,20 +116,16 @@ int main() {
             // SAFETY ON
             // TODO: Reset all controller integrators here
             //can.safety_mode();
-            Serial.println("SAFTYON");
+            //Serial.println("SAFTYON");
         } else if (dr16.is_connected() && dr16.get_l_switch() != 1) {
             // SAFETY OFF
-            Serial.println("SAFTYOFF");
+            //Serial.println("SAFTYOFF");
             //can.write();
         }
 
-        // LED heartbeat -- linked to loop count to reveal slowdowns and freezes.
-        // loopc % (int)(1E3/float(HEARTBEAT_FREQ)) < (int)(1E3/float(5*HEARTBEAT_FREQ)) ? digitalWrite(13, HIGH) : digitalWrite(13, LOW);
-        loopc++;
-
 
         // Keep the loop running at the desired rate
-        loop_timer.delay_micros((int)(1E6/(float)(LOOP_FREQ)));
+        loop_timer.delay_micros((int)(1E6 / (float)(LOOP_FREQ)));
     }
     return 0;
 }
