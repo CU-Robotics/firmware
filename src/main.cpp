@@ -116,10 +116,10 @@ int main() {
             // SAFETY ON
             // TODO: Reset all controller integrators here
             //can.safety_mode();
-            //Serial.println("SAFTYON");
+            Serial.println("SAFTYON");
         } else if (dr16.is_connected() && dr16.get_l_switch() != 1) {
             // SAFETY OFF
-            //Serial.println("SAFTYOFF");
+            Serial.println("SAFTYOFF");
             //can.write();
         }
 
