@@ -1,7 +1,7 @@
 #include <Arduino.h>
 
 #include "utils/timing.hpp"
-//#include "comms/can/can_manager.hpp"
+#include "comms/can/can_manager.hpp"
 #include "sensors/dr16.hpp"
 #include "filters/IMU_Filter.hpp"
 #include "Controls_Balancing/Balancing_Control.hpp"
@@ -12,7 +12,7 @@
 
 // Declare global objects
 DR16 dr16;
-//CANManager can;
+CANManager can;
 Timer loop_timer;
 IMU_filter icm;
 // DONT put anything else in this function. It is not a setup function
@@ -53,9 +53,12 @@ int main() {
 
     
     dr16.init();
-    //can.init();
+    can.init();
     icm.init();
     long long loopc = 0; // Loop counter for heartbeat
+    
+    can.configure();
+
 
 
 
@@ -63,7 +66,7 @@ int main() {
     while (true) {
         // Read sensors
         dr16.read();
-        //can.read();
+        can.read();
         icm.read();
         
         //Testobserver.step(can.get_data(), imu.getdata(), tempobs); // Calculate Observer values
