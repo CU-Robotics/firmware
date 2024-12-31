@@ -55,10 +55,25 @@ int main() {
     dr16.init();
     can.init();
     icm.init();
-    long long loopc = 0; // Loop counter for heartbeat
-    
-    can.configure();
+    //long long loopc = 0; // Loop counter for heartbeat
 
+
+    // [controller_type, motor_id, bus_id]
+    // controller_type: 
+    // 0: invalid
+    // 1: C610
+    // 2: C620 
+    // 3: MG8016EI6
+    float motor_info[CAN_MAX_MOTORS][3] = {
+        { 3, 1, 2 },
+        { 3, 2, 2 },
+        { 3, 3, 2 },
+        { 3, 4, 2 },
+        { 2, 1, 0 },
+        { 2, 2, 0 }
+    };
+    can.configure(motor_info);
+    
 
 
 
@@ -68,7 +83,6 @@ int main() {
         dr16.read();
         can.read();
         icm.read();
-        
         //Testobserver.step(can.get_data(), imu.getdata(), tempobs); // Calculate Observer values
         //Testcontorl.step(tempmotor, ref, tempobs); // Calculate motors motion
         icm.serial_data_for_plot();
