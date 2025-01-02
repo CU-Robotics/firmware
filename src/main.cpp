@@ -65,7 +65,7 @@ int main() {
     
     icm.init();
 
-    //can.init();
+    can.init();
 
     // [controller_type, motor_id, bus_id]
     // controller_type: 
@@ -75,10 +75,10 @@ int main() {
     // 3: MG8016EI6
     
     float motor_info[CAN_MAX_MOTORS][3] = {
-        {3 , 1 , 1},
-        {3 , 2 , 1},
-        {3 , 3 , 1},
-        {3 , 4 , 1},
+        {3 , 1 , 2},
+        {3 , 2 , 2},
+        {3 , 3 , 2},
+        {3 , 4 , 2},
         {2 , 1 , 0},
         {2 , 2 , 0}
     }; 
@@ -93,15 +93,12 @@ int main() {
 
         //can.write();
 
-        //can.read();
-
-        //can.print_state();
+        can.read();
+        can.print_state();
 
         //Testobserver.step(can.get_data(), imu.getdata(), tempobs); // Calculate Observer values
         //Testcontorl.step(tempmotor, ref, tempobs); // Calculate motors motion
-
-        icm.serial_data_for_plot();
-
+        icm.print();
 
 
         //** Temp limit functions -- Will be put inside controller when using*/
@@ -115,12 +112,12 @@ int main() {
         if (!dr16.is_connected() || dr16.get_l_switch() == 1) {
             // SAFETY ON
             // TODO: Reset all controller integrators here
-            //can.safety_mode();
+            can.safety_mode();
             Serial.println("SAFTYON");
         } else if (dr16.is_connected() && dr16.get_l_switch() != 1) {
             // SAFETY OFF
             Serial.println("SAFTYOFF");
-            //can.write();
+            can.write();
         }
 
 
