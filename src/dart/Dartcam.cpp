@@ -1,7 +1,7 @@
 #include "Dartcam.hpp"
 
 DMAMEM uint16_t frame_buffer[DARTCAM_BUFFER_SIZE];
-// DMAMEM uint16_t frameBuffer2[DARTCAM_BUFFER_SIZE];
+DMAMEM uint16_t frame_buffer2[DARTCAM_BUFFER_SIZE];
 
 Dartcam::Dartcam() : omni(), camera(omni) { }
 
@@ -15,7 +15,7 @@ void Dartcam::init() {
 }
 
 void Dartcam::read() {
-    camera.readFrame(frame_buffer, sizeof(frame_buffer));
+    camera.readFrame(frame_buffer, sizeof(frame_buffer), frame_buffer2, sizeof(frame_buffer2));
     // Serial.println(frame_buffer[0]);
 }
 
@@ -53,6 +53,10 @@ std::pair<int, int> Dartcam::get_object_position() {
             x = 0;
             y++;
         }
+    }
+
+    if (green_total == 0) {
+        return std::make_pair(-1, -1);
     }
 
     // return centroid of object

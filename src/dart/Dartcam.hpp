@@ -19,7 +19,7 @@
 /// @brief frame buffer 1 for the camera
 extern uint16_t frame_buffer[DARTCAM_BUFFER_SIZE];
 /// @brief frame buffer 2 for the camera
-// extern uint16_t frameBuffer2[DARTCAM_BUFFER_SIZE];
+extern uint16_t frame_buffer2[DARTCAM_BUFFER_SIZE];
 
 class Dartcam {
 public:
