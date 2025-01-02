@@ -75,14 +75,14 @@ int main() {
     // 3: MG8016EI6
     
     float motor_info[CAN_MAX_MOTORS][3] = {
-        {3 , 1 , 2},
-        {3 , 2 , 2},
-        {3 , 3 , 2},
-        {3 , 4 , 2},
+        {3 , 1 , 1},
+        {3 , 2 , 1},
+        {3 , 3 , 1},
+        {3 , 4 , 1},
         {2 , 1 , 0},
         {2 , 2 , 0}
     }; 
-    //can.configure(motor_info);
+    can.configure(motor_info);
     
     // Main loop
     while (true) {

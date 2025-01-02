@@ -25,8 +25,8 @@ void CANManager::init() {
 
     // initialize CAN 3
     // TODO: can CAN 3 act the same as CAN 1/2 since its CANFD?
-    m_can3.begin();
-    m_can3.setBaudRate(1000000u);   // 1Mbit baud
+    //m_can3.begin();
+    //m_can3.setBaudRate(1000000u);   // 1Mbit baud
 
     // destroy any motors in existance and initialize to nullptr
     m_motor_map.clear();
