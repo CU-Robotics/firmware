@@ -2,6 +2,7 @@
 
 #include "git_info.h"
 
+
 #include "utils/profiler.hpp"
 #include "sensors/d200.hpp"
 #include "sensors/StereoCamTrigger.hpp"
@@ -22,6 +23,7 @@ DR16 dr16;
 rm_CAN can;
 RefSystem ref;
 HIDLayer comms;
+ACS712 current_sensor;
 
 D200LD14P lidar1(&Serial4, 0);
 D200LD14P lidar2(&Serial5, 1);
@@ -38,7 +40,8 @@ Timer control_input_timer;
 
 EstimatorManager estimator_manager;
 ControllerManager controller_manager;
-State state;
+
+Governor governor;
 
 LEDBoard led;
 
@@ -81,23 +84,23 @@ void print_logo() {
 int main() {
     long long loopc = 0; // Loop counter for heartbeat
 
-    Serial.begin(115200); // the serial monitor is actually always active (for debug use Serial.println & tycmd)
+    Serial.begin(112500); // the serial monitor is actually always active (for debug use Serial.println & tycmd)
     debug.begin(SerialUSB1);
 
     print_logo();
 
     // Execute setup functions
-    pinMode(13, OUTPUT);
+    pinMode(LED_BUILTIN, OUTPUT);
 
     led.init();
-    // initialize objects
+    //initialize objects
     can.init();
     dr16.init();
     ref.init();
     comms.init();
-    stereoCamTrigger.init();
 
-    // can data pointer so we don't pass around rm_CAN object
+    //can data pointer so we don't pass around rm_CAN object
+    // TODO: extern the can_data object
     CANData* can_data = can.get_data();
 
     // Config config
@@ -105,31 +108,23 @@ int main() {
     const Config* config = config_layer.configure(&comms);
     Serial.println("Configured!");
 
-    // estimate micro and macro state
+    //estimate micro and macro state
     estimator_manager.init(can_data, config);
 
-    // generate controller outputs based on governed references and estimated state
-    controller_manager.init(config);
+    //generate controller outputs based on governed references and estimated state
+    controller_manager.init(&can, config);
 
-    // set reference limits in the reference governor
-    state.set_reference_limits(config->set_reference_limits);
+
+    //set reference limits in the reference governor
+    governor.set_reference_limits(config->set_reference_limits);
 
     // variables for use in main
-    float temp_state[STATE_LEN][3] = { 0 };                      // Temp state array
+    float temp_state[STATE_LEN][3] = { 0 }; // Temp state array
     float temp_micro_state[NUM_MOTORS][MICRO_STATE_LEN] = { 0 }; // Temp micro state array
-    float temp_reference[STATE_LEN][3] = { 0 };                  // Temp governed state
-    float target_state[STATE_LEN][3] = { 0 };                    // Temp ungoverned state
-    float hive_state_offset[STATE_LEN][3] = { 0 };               // Hive offset state
-    float motor_inputs[NUM_MOTORS] = { 0 };                      // Array for storing controller outputs to send to CAN
-
-    // create a copy of the position and velocity kinematic matrixes since we'll be updating them
-    float kinematics_pos[NUM_MOTORS][STATE_LEN] = { 0 }; // Position kinematics
-    memcpy(kinematics_pos, (*config).kinematics_p, sizeof((*config).kinematics_p));
-    float kinematics_vel[NUM_MOTORS][STATE_LEN] = { 0 }; // Velocity kinematics
-    memcpy(kinematics_vel, (*config).kinematics_v, sizeof((*config).kinematics_v));
-
-    // used in the kinematics matrix
-    float chassis_pos_to_motor_error = config->drive_conversion_factors[1];
+    float temp_reference[STATE_LEN][3] = { 0 }; //Temp governed state
+    float target_state[STATE_LEN][3] = { 0 }; //Temp ungoverned state
+    float hive_state_offset[STATE_LEN][3] = { 0 }; //Hive offset state
+    float motor_inputs[NUM_MOTORS] = { 0 }; //Array for storing controller outputs to send to CAN
 
     // manual controls variables
     float vtm_pos_x = 0;
@@ -145,10 +140,7 @@ int main() {
     // whether we are in hive mode or not
     bool hive_toggle = false;
 
-
-    // Data packet
-    comms_data_packet packet(config);
-    uint8_t buffer[4096];
+    Serial.println("Entering main loop...\n");
 
     // Main loop
     while (true) {
@@ -159,39 +151,29 @@ int main() {
         lidar1.read();
         lidar2.read();
 
-        // construct ref data packet
-        uint8_t ref_data_raw[180] = { 0 };
-        //ref.get_data_for_comms(ref_data_raw); //ASK: Might need to be uncommented again I forgor💀
-
-
-
-
-        // pack and unpack data packet
-        packet.pack_data_packet(buffer, state, ref_data_raw, can_data, estimator_manager, lidar1, lidar2, dr16);
-        packet.unpack_data_packet(buffer);
-
         // read and write comms packets
         comms.ping();
         CommsPacket* incoming = comms.get_incoming_packet();
         CommsPacket* outgoing = comms.get_outgoing_packet();
 
         // manual controls on firmware
+
         float delta = control_input_timer.delta();
         dr16_pos_x += dr16.get_mouse_x() * 0.05 * delta;
         dr16_pos_y += dr16.get_mouse_y() * 0.05 * delta;
 
         vtm_pos_x += ref.ref_data.kbm_interaction.mouse_speed_x * 0.05 * delta;
         vtm_pos_y += ref.ref_data.kbm_interaction.mouse_speed_y * 0.05 * delta;
-
+        
         float chassis_vel_x = 0;
         float chassis_vel_y = 0;
         float chassis_pos_x = 0;
         float chassis_pos_y = 0;
         if (config->governor_types[0] == 2) {   // if we should be controlling velocity
-            chassis_vel_x = -dr16.get_l_stick_y() * 5.4
+            chassis_vel_x = dr16.get_l_stick_y() * 5.4
                 + (-ref.ref_data.kbm_interaction.key_w + ref.ref_data.kbm_interaction.key_s) * 2.5
                 + (-dr16.keys.w + dr16.keys.s) * 2.5;
-            chassis_vel_y = dr16.get_l_stick_x() * 5.4
+            chassis_vel_y = -dr16.get_l_stick_x() * 5.4
                 + (ref.ref_data.kbm_interaction.key_d - ref.ref_data.kbm_interaction.key_a) * 2.5
                 + (dr16.keys.d - dr16.keys.a) * 2.5;
         } else if (config->governor_types[0] == 1) { // if we should be controlling position
@@ -230,7 +212,7 @@ int main() {
             incoming->get_target_state(target_state);
             // if you just switched to hive controls, set the reference to the current state
             if (hive_toggle) {
-                state.set_reference(temp_state);
+                governor.set_reference(temp_state);
                 hive_toggle = false;
             }
         }
@@ -243,6 +225,7 @@ int main() {
             hive_toggle = true;
         }
 
+
         // read sensors
         estimator_manager.read_sensors();
 
@@ -252,69 +235,46 @@ int main() {
             memcpy(temp_state, hive_state_offset, sizeof(hive_state_offset));
         }
 
+
         // step estimates and construct estimated state
         estimator_manager.step(temp_state, temp_micro_state, incoming->get_hive_override_request());
+
 
         // if first loop set target state to estimated state
         if (count_one == 0) {
             temp_state[7][0] = 0;
-            state.set_reference(temp_state);
+            governor.set_reference(temp_state);
             count_one++;
         }
 
         // reference govern
-        state.set_estimate(temp_state);
-        state.step_reference(target_state, config->governor_types);
-        state.get_reference(temp_reference);
+        governor.set_estimate(temp_state);
+        governor.step_reference(target_state, config->governor_types);
+        governor.get_reference(temp_reference);
 
-        // Update the kinematics of x,y states, as the kinematics change when chassis angle changes
-        kinematics_vel[0][0] = -sin(temp_state[2][0]) * chassis_pos_to_motor_error;
-        kinematics_vel[0][1] = cos(temp_state[2][0]) * chassis_pos_to_motor_error;
-        // motor 2 back right
-        kinematics_vel[1][0] = cos(temp_state[2][0]) * chassis_pos_to_motor_error;
-        kinematics_vel[1][1] = sin(temp_state[2][0]) * chassis_pos_to_motor_error;
-        // motor 3 back left
-        kinematics_vel[2][0] = sin(temp_state[2][0]) * chassis_pos_to_motor_error;
-        kinematics_vel[2][1] = -cos(temp_state[2][0]) * chassis_pos_to_motor_error;
-        // motor 4 front left
-        kinematics_vel[3][0] = -cos(temp_state[2][0]) * chassis_pos_to_motor_error;
-        kinematics_vel[3][1] = -sin(temp_state[2][0]) * chassis_pos_to_motor_error;
+        // Serial.printf("yaw ref: %f, pitch ref: %f\n", temp_reference[3][0], temp_reference[4][0]);
 
-        // Update the kinematics of x,y states, as the kinematics change when chassis angle changes
-        kinematics_pos[0][0] = -sin(temp_state[2][0]) * chassis_pos_to_motor_error;
-        kinematics_pos[0][1] = cos(temp_state[2][0]) * chassis_pos_to_motor_error;
-        // motor 2 back right
-        kinematics_pos[1][0] = cos(temp_state[2][0]) * chassis_pos_to_motor_error;
-        kinematics_pos[1][1] = sin(temp_state[2][0]) * chassis_pos_to_motor_error;
-        // motor 3 back left
-        kinematics_pos[2][0] = sin(temp_state[2][0]) * chassis_pos_to_motor_error;
-        kinematics_pos[2][1] = -cos(temp_state[2][0]) * chassis_pos_to_motor_error;
-        // motor 4 front left
-        kinematics_pos[3][0] = -cos(temp_state[2][0]) * chassis_pos_to_motor_error;
-        kinematics_pos[3][1] = -sin(temp_state[2][0]) * chassis_pos_to_motor_error;
 
         // generate motor outputs from controls
-        controller_manager.step(temp_reference, temp_state, temp_micro_state, kinematics_pos, kinematics_vel, motor_inputs);
+        controller_manager.step(temp_reference, temp_state, temp_micro_state);
 
-        // set motor outputs from motor_inputs
-        for (int j = 0; j < 2; j++) {
-            for (int i = 0; i < NUM_MOTORS_PER_BUS; i++) {
-                can.write_motor_norm(j, i + 1, C620, motor_inputs[(j * NUM_MOTORS_PER_BUS) + i]);
-                if (j == 1 && i == 4)
-                    can.write_motor_norm(j, i + 1, C610, motor_inputs[(j * NUM_MOTORS_PER_BUS) + i]);
-            }
-        }
 
         // construct sensor data packet
         SensorData sensor_data;
+
         // set dr16 raw data
         memcpy(sensor_data.raw + SENSOR_DR16_OFFSET, dr16.get_raw(), DR16_PACKET_SIZE);
+
         // set lidars
         uint8_t lidar_data[D200_NUM_PACKETS_CACHED * D200_PAYLOAD_SIZE] = { 0 };
         lidar1.export_data(lidar_data);
         memcpy(sensor_data.raw + SENSOR_LIDAR1_OFFSET, lidar_data, D200_NUM_PACKETS_CACHED * D200_PAYLOAD_SIZE);
         lidar2.export_data(lidar_data);
         memcpy(sensor_data.raw + SENSOR_LIDAR2_OFFSET, lidar_data, D200_NUM_PACKETS_CACHED * D200_PAYLOAD_SIZE);
+
+        // construct ref data packet
+        uint8_t ref_data_raw[180] = { 0 };
+        ref.get_data_for_comms(ref_data_raw);
 
         // set the outgoing packet
         outgoing->set_id((uint16_t)loopc);
@@ -343,6 +303,6 @@ int main() {
         float dt = stall_timer.delta();
         if (dt > 0.002) Serial.printf("Slow loop with dt: %f\n", dt);
     }
-
+    
     return 0;
 }
