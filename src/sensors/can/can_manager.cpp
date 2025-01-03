@@ -113,6 +113,7 @@ void CANManager::write() {
             case C610_CONTROLLER:   // fallthrough
             case C620_CONTROLLER: {
                 // depending on the motor ID, write the message to the correct msg in the array
+                // - 1 to get the id into 0-indexed form, then divide by 4 to get the upper or lower half as an index (0, 1)
                 if ((motor.second->get_id() - 1) / 4) {
                     motor.second->write(rm_motor_msgs[1]);   // last 4 motors
                 } else {

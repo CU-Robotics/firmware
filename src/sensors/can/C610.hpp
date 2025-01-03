@@ -3,11 +3,9 @@
 
 #include "motor.hpp"
 
-// C610 Data Sheet
-// https://rm-static.djicdn.com/tem/17348/RoboMaster%20C610%20Brushless%20DC%20Motor%20Speed%20Controller%20User%20Guide.pdf
-
 /// @brief C610 controller driver. This manages generating CAN output messages and processing incomming CAN messages into a state array.
-/// @note It's construction is heavily managed since copying this object could alter the actions of CAN (and by extension the robot). This object exists only to be managed by CANManager.
+/// @brief Datasheet: https://rm-static.djicdn.com/tem/17348/RoboMaster%20C610%20Brushless%20DC%20Motor%20Speed%20Controller%20User%20Guide.pdf
+/// @note It's construction should be closely managed. This object exists only to be managed by CANManager.
 class C610 : public Motor {
 public:
     /// @brief Deleted default constructor, must explicitly construct this object. Incomplete objects are not allowed
@@ -20,14 +18,6 @@ public:
     C610(uint32_t gid, uint32_t id, uint8_t bus_id)
         : Motor(C610_CONTROLLER, gid, id, bus_id) {
     }
-
-    /// @brief Deleted copy constructor, you must not copy this object
-    /// @param copy copy
-    C610(const C610& copy) = delete;
-    /// @brief Deleted copy assignment operator, you must not move/copy this object
-    /// @param copy copy
-    /// @return C610&
-    C610& operator=(const C610& copy) = delete;
 
     /// @brief Destructor, does nothing
     ~C610() override { }

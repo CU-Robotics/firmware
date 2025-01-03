@@ -39,6 +39,7 @@ int C620::write(CAN_message_t& msg) const {
     msg.buf[motor_id * 2 + 1] = m_output.buf[motor_id * 2 + 1]; // lower byte
 
     // return where in the buffer array the motor data was written
+    // this is * 2 because we need the instance in this message where the first byte was edited. See the datasheet
     return motor_id * 2;
 }
 

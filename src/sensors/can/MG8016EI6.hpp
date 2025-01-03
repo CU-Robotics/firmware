@@ -3,14 +3,10 @@
 
 #include "motor.hpp"
 
-// MG8016E-i6 motor data sheet
-// http://en.lkmotor.cn/upload/20230321150047f.pdf
-
-// MG8016E-i6 CAN protocol data sheet
-// http://en.lkmotor.cn/upload/20230706100134f.pdf
-
 /// @brief MG8016E-i6v3 controller driver. This manages generating CAN output messages and processing incomming CAN messages into a state array.
-/// @note It's construction is heavily managed since copying this object could alter the actions of CAN (and by extension the robot). This object exists only to be managed by CANManager.
+/// @brief Motor datasheet: http://en.lkmotor.cn/upload/20230321150047f.pdf
+/// @brief CAN datasheet: http://en.lkmotor.cn/upload/20230706100134f.pdf
+/// @note It's construction should be closely managed. This object exists only to be managed by CANManager.
 class MG8016EI6 : public Motor {
 public:
     /// @brief Deleted default constructor, must explicitly construct this object. Incomplete objects are not allowed
@@ -23,14 +19,6 @@ public:
     MG8016EI6(uint32_t gid, uint32_t id, uint8_t bus_id)
         : Motor(MG8016_CONTROLLER, gid, id, bus_id) {
     }
-
-    /// @brief Deleted copy constructor, you must not copy this object
-    /// @param copy copy
-    MG8016EI6(const MG8016EI6& copy) = delete;
-    /// @brief Deleted copy assignment operator, you must not move/copy this object
-    /// @param copy copy
-    /// @return MG8016E_I6V3&
-    MG8016EI6& operator=(const MG8016EI6& copy) = delete;
 
     /// @brief Destructor, does nothing
     ~MG8016EI6() override { }

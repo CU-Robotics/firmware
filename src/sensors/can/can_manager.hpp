@@ -22,6 +22,16 @@ constexpr uint32_t CAN_3 = 2u;
 // I'm deleting any copy and assignment constructors that may act to create a new instance
 
 /// @brief The overall manager for the CAN busses and motors
+/// @note The construction of FlexCAN_T4 objects in of themselves alters processsor state. 
+/// When these are constructed incorrectly, it will exibit the folowing behavior: 
+///     reads are fine, 
+///     the first write will not hang, the processor will lock up some small (seemingly random) amount of time after the write call. 
+/// Sometimes this even allows lines of code after the first write call to be ran (like prints). 
+/// Examples of incorrect construction of FlexCAN_T4 objects include: 
+///     construction in function scope (including main), 
+///     construction via new (likely, although this is never tested. It is an active issue on FlexCAN_T4's github though), 
+///     and construction via copy/assignment. 
+/// This is why we heavily manage the construction of the CANManager
 class CANManager {
 public:
     /// @brief Default constructor. FlexCAN moment for forcing the definition to be in the cpp
