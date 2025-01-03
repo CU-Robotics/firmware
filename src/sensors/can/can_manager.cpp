@@ -43,7 +43,7 @@ void CANManager::configure(float motor_info[CAN_MAX_MOTORS][3]) {
         int bus_id = (int)motor_info[motor_id][2];
 
         // if the controller type is 0, then this motor is unused and we should process the next one
-        if (controller_type == 0) {
+        if (controller_type == NULL_MOTOR_CONTROLLER_TYPE) {
             continue;
         }
         // else this motor is valid
@@ -69,7 +69,7 @@ void CANManager::configure(float motor_info[CAN_MAX_MOTORS][3]) {
         }
         default: {
             Serial.printf("CANManager tried to create a motor of invalid type: %d\n", controller_type);
-            break;
+            continue;   // continue in order to not call the later map insert since new_motor would be null
         }
         }
 
@@ -149,7 +149,7 @@ void CANManager::write() {
     }
 }
 
-void CANManager::safety_mode() {
+void CANManager::issue_safety_mode() {
     // for each motor, cant be const
     for (auto& motor : m_motor_map) {
         motor.second->zero_motor();
@@ -245,7 +245,7 @@ void CANManager::init_motors() {
     for (uint32_t motor = 0; motor < CAN_MAX_MOTORS; motor++) {
         // if this motor is not initialized and it actually exists, print a warning
         if (!motors_initialized[motor] && m_motor_map.count(motor) != 0) {
-            Serial.printf("Motor %d on bus %d with id %d failed to initialize\n", motor, m_motor_map[motor]->get_bus_id(), m_motor_map[motor]->get_id());
+            Serial.printf("Motor %d on bus %d with id %d failed to initialize within %ums\n", motor, m_motor_map[motor]->get_bus_id(), m_motor_map[motor]->get_id(), m_motor_init_timeout);
         }
     }
 }

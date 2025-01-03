@@ -66,7 +66,7 @@ public:
 
     /// @brief Issue zero torque commands to all motors
     /// @note This immediately issues a CAN command over the bus
-    void safety_mode();
+    void issue_safety_mode();
 
     /// @brief Write a torque command to a specific motor given it's global ID
     /// @param motor_gid The global ID of the motor to write to
