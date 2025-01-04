@@ -1,14 +1,10 @@
 #include <Arduino.h>
 #include <TeensyDebug.h>
 #include "utils/timing.hpp"
-#include "comms/can/C610.hpp"
-#include "comms/can/C620.hpp"
-#include "comms/can/MG8016EI6.hpp"
 #include "comms/can/can_manager.hpp"
 #include "sensors/dr16.hpp"
 #include "filters/IMU_Filter.hpp"
-#include "Controls_Balancing/Balancing_Control.hpp"
-#include "Controls_Balancing/Balancing_Observer.hpp"
+#include "Controls_Balancing/test_balancing.hpp"
 
 // Loop constants
 #define LOOP_FREQ 1000

@@ -26,8 +26,8 @@ struct IMUData{
     float gyro_pitch; // Pitch angle by gyroscope with a simple filter --unit (rad) 
     float accel_roll; // Roll angle by accelration --unit (rad) 
     float accel_pitch; // Pitch angle by accelration --unit (rad) 
-    float k_roll; // Roll angle filtered by KalmanFilter --unit (rad) 
-    float k_pitch; // Pitch angle filtered by KalmanFilter --unit (rad) 
+    float k_roll; // Roll angle filtered by KalmanFilter --unit (rad)   --- This is the result we want
+    float k_pitch; // Pitch angle filtered by KalmanFilter --unit (rad) --- This is the result we want
     float temperature; // --unit (Celsius) 
     float accel_scale;
 };
