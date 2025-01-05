@@ -17,7 +17,7 @@ public:
     /// @param id The per-bus motor ID. This is 1-indexed
     /// @param bus_id The CAN bus index/ID
     MG8016EI6(uint32_t gid, uint32_t id, uint8_t bus_id)
-        : Motor(MG8016_CONTROLLER, gid, id, bus_id) {
+        : Motor(MotorControllerType::MG8016_CONTROLLER, gid, id, bus_id) {
     }
 
     /// @brief Destructor, does nothing

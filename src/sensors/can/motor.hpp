@@ -93,7 +93,7 @@ public:
 
 protected:
     /// @brief What controller this motor uses
-    MotorControllerType m_controller_type = NULL_MOTOR_CONTROLLER_TYPE;
+    MotorControllerType m_controller_type = MotorControllerType::NULL_MOTOR_CONTROLLER_TYPE;
 
     /// @brief The unique global motor ID for this motor. This is not it's per-bus ID
     uint32_t m_gid = 0;
