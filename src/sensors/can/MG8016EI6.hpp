@@ -6,7 +6,7 @@
 /// @brief MG8016E-i6v3 controller driver. This manages generating CAN output messages and processing incomming CAN messages into a state array.
 /// @brief Motor datasheet: http://en.lkmotor.cn/upload/20230321150047f.pdf
 /// @brief CAN datasheet: http://en.lkmotor.cn/upload/20230706100134f.pdf
-/// @note It's construction should be closely managed. This object exists only to be managed by CANManager.
+/// @note Motors must be explicitly constructed to avoid uninitialized parameters. Motors exist to be managed by CANManager.
 class MG8016EI6 : public Motor {
 public:
     /// @brief Deleted default constructor, must explicitly construct this object. Incomplete objects are not allowed

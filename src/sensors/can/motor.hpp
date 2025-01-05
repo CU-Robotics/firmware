@@ -27,6 +27,7 @@ struct MotorState {
 };
 
 /// @brief An abstract class holding common information for individual CAN-capable motors
+/// @note Motors must be explicitly constructed to avoid uninitialized parameters. Motors exist to be managed by CANManager.
 class Motor {
 public:
     /// @brief Deleted default constructor. Must explicitly construct this object

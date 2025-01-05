@@ -5,7 +5,7 @@
 
 /// @brief C620 controller driver. This manages generating CAN output messages and processing incomming CAN messages into a state array.
 /// @brief Datasheet: https://rm-static.djicdn.com/tem/17348/RoboMaster%20C620%20Brushless%20DC%20Motor%20Speed%20Controller%20V1.01.pdf
-/// @note It's construction should be closely managed. This object exists only to be managed by CANManager.
+/// @note Motors must be explicitly constructed to avoid uninitialized parameters. Motors exist to be managed by CANManager.
 class C620 : public Motor {
 public:
     /// @brief Deleted default constructor, must explicitly construct this object. Incomplete objects are not allowed
