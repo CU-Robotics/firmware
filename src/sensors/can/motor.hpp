@@ -6,7 +6,7 @@
 #include <FlexCAN_T4.h>
 
 /// @brief Defines the motor controller types. Enum values chosen based on the yaml config specification
-enum MotorControllerType {
+enum class MotorControllerType {
     NULL_MOTOR_CONTROLLER_TYPE = -1,
     C610_CONTROLLER,
     C620_CONTROLLER,
