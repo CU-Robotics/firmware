@@ -1,5 +1,14 @@
 #include "config_layer.hpp"
 
+extern "C" void reset_teensy(void) {
+    // Register information found in the NXP IM.XRT 1060 reference manual
+	SRC_GPR5 = 0x0BAD00F1;
+    // Register information found in the Arm-v7-m reference manual
+	SCB_AIRCR = 0x05FA0004;
+    // loop go brr
+	while (1);
+}
+
 const Config* const ConfigLayer::configure(HIDLayer* comms) {
     // attempt SD card load
     config_SD_init(comms);
@@ -47,7 +56,71 @@ const Config* const ConfigLayer::configure(HIDLayer* comms) {
     if (store_config()) Serial.println("Config successfully stored in /config.pack");
     else Serial.println("Config not successfully stored (is an SD card inserted?)");    // not a fatal error, can still return
 
+    // blink 4 times quickly to show that we received a config packet and are about to restart
+    for (int i = 0; i < 8; i++) {
+        digitalToggle(13);
+        delay(100);
+    }
+
+    reset_teensy();
+
     return &config;
+}
+
+void ConfigLayer::reconfigure(HIDLayer* comms) {
+    // force it to reconfigure
+    configured = false;
+    
+    uint32_t prev_time = millis();
+    uint32_t delta_time = 0;
+    while (!is_configured()) {
+    #ifdef CONFIG_LAYER_DEBUG
+        if (delta_time >= 2000) {
+            Serial.printf("Pinging for config packet....\n");
+            prev_time = millis();
+        }
+        delta_time = millis() - prev_time;
+    #endif
+        comms->ping();
+        process(comms->get_incoming_packet(), comms->get_outgoing_packet());
+    }
+
+    // put the data from the packets into the config object
+    config.fill_data(config_packets, subsec_sizes);
+
+    // verify that config received matches ref system: if not, error out
+#ifndef CONFIG_OFF_ROBOT
+    Serial.printf("Received robot ID from config: %d\nRobot ID from ref system: %d\n", (int)config.robot, ref.ref_data.robot_performance.robot_ID);
+    // id check with modulo 100 to account for red and blue teams. Blue is the id + 100. (ID == 101, 102, ...)
+    if ((ref.ref_data.robot_performance.robot_ID % 100) != (int)config.robot) {
+        Serial.printf("ERROR: IDs do not match!! Check robot_id.cfg and robot settings from ref system!\n");
+        if (!CONFIG_ERR_HANDLER(CONFIG_ID_MISMATCH)) {
+            // in current implementation, CONFIG_ERR_HANDLER w/ err code CONFIG_ID_MISMATCH will
+            // enter an infinite while(1) loop-- if that is changed, this loop should be changed accordingly as well
+            while (1) {
+                Serial.println("CONFIG_ERR_HANDLER: exited with error code CONFIG_ID_MISMATCH");
+                Serial.println("if function was modified for case CONFIG_ID_MISMATCH, remove this loop in config_layer.cpp");
+                delay(2000);
+            }
+        }
+    }
+#endif
+
+// update stored config, msg if successful
+    Serial.println("Attempting to store config...");
+    if (store_config()) Serial.println("Config successfully stored in /config.pack");
+    else Serial.println("Config not successfully stored (is an SD card inserted?)");    // not a fatal error, can still return
+
+    // blink 4 times quickly to show that we received a config packet and are about to restart
+    for (int i = 0; i < 8; i++) {
+        digitalToggle(13);
+        delay(100);
+    }
+
+    reset_teensy();
+
+    // reset_teensy() never returns
+    __builtin_unreachable();
 }
 
 void ConfigLayer::config_SD_init(HIDLayer* comms) {

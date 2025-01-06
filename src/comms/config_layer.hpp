@@ -7,7 +7,7 @@
 
 #include <map>
 #include <string>
-#define CONFIG_LAYER_DEBUG
+// #define CONFIG_LAYER_DEBUG
 
 
 #define NUM_SENSOR_VALUES 12
@@ -27,7 +27,7 @@
 #define CONFIG_PATH "/config.pack"
 
 // define CONFIG_OFF_ROBOT macro when running off of real robot (testing firmware away from actual robot)
-// #define CONFIG_OFF_ROBOT 
+#define CONFIG_OFF_ROBOT 
 
 
 /// @brief arbitrary cap on config packets that can be received (make sure it's enough)
@@ -123,6 +123,11 @@ public:
     /// @return a const pointer const config object holding all the data within the config yaml
     /// @note its double const so its enforced as a read-only object
     const Config* const configure(HIDLayer* comms);
+
+    /// @brief Grab all incoming config packets, process them, and store them onto the sd card. Then issue a processor reset call.
+    /// @param comms Pointer to the HID comms layer
+    /// @note This function never returns
+    [[noreturn]] void reconfigure(HIDLayer* comms);
 
     /// @brief check incoming packet from the comms layer and update outgoing packet accordingly to request next config packet
     /// @param in incoming comms packet
