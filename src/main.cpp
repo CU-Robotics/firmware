@@ -144,11 +144,11 @@ int main() {
     // Main loop
     while (true) {
         // read main sensors
-        // can.read();
-        // dr16.read();
-        // ref.read();
-        // lidar1.read();
-        // lidar2.read();
+        can.read();
+        dr16.read();
+        ref.read();
+        lidar1.read();
+        lidar2.read();
 
         // read and write comms packets
         comms.ping();
@@ -161,149 +161,147 @@ int main() {
             config_layer.reconfigure(&comms);
         }
 
-        // comms.print_incoming();
-
         if (loopc % 1000 == 0) {
             Serial.println(loopc);
         }
 
-        // // manual controls on firmware
+        // manual controls on firmware
 
-        // float delta = control_input_timer.delta();
-        // dr16_pos_x += dr16.get_mouse_x() * 0.05 * delta;
-        // dr16_pos_y += dr16.get_mouse_y() * 0.05 * delta;
+        float delta = control_input_timer.delta();
+        dr16_pos_x += dr16.get_mouse_x() * 0.05 * delta;
+        dr16_pos_y += dr16.get_mouse_y() * 0.05 * delta;
 
-        // vtm_pos_x += ref.ref_data.kbm_interaction.mouse_speed_x * 0.05 * delta;
-        // vtm_pos_y += ref.ref_data.kbm_interaction.mouse_speed_y * 0.05 * delta;
+        vtm_pos_x += ref.ref_data.kbm_interaction.mouse_speed_x * 0.05 * delta;
+        vtm_pos_y += ref.ref_data.kbm_interaction.mouse_speed_y * 0.05 * delta;
         
-        // float chassis_vel_x = 0;
-        // float chassis_vel_y = 0;
-        // float chassis_pos_x = 0;
-        // float chassis_pos_y = 0;
-        // if (config->governor_types[0] == 2) {   // if we should be controlling velocity
-        //     chassis_vel_x = dr16.get_l_stick_y() * 5.4
-        //         + (-ref.ref_data.kbm_interaction.key_w + ref.ref_data.kbm_interaction.key_s) * 2.5
-        //         + (-dr16.keys.w + dr16.keys.s) * 2.5;
-        //     chassis_vel_y = -dr16.get_l_stick_x() * 5.4
-        //         + (ref.ref_data.kbm_interaction.key_d - ref.ref_data.kbm_interaction.key_a) * 2.5
-        //         + (dr16.keys.d - dr16.keys.a) * 2.5;
-        // } else if (config->governor_types[0] == 1) { // if we should be controlling position
-        //     chassis_pos_x = dr16.get_l_stick_x() * 2 + pos_offset_x;
-        //     chassis_pos_y = dr16.get_l_stick_y() * 2 + pos_offset_y;
-        // }
+        float chassis_vel_x = 0;
+        float chassis_vel_y = 0;
+        float chassis_pos_x = 0;
+        float chassis_pos_y = 0;
+        if (config->governor_types[0] == 2) {   // if we should be controlling velocity
+            chassis_vel_x = dr16.get_l_stick_y() * 5.4
+                + (-ref.ref_data.kbm_interaction.key_w + ref.ref_data.kbm_interaction.key_s) * 2.5
+                + (-dr16.keys.w + dr16.keys.s) * 2.5;
+            chassis_vel_y = -dr16.get_l_stick_x() * 5.4
+                + (ref.ref_data.kbm_interaction.key_d - ref.ref_data.kbm_interaction.key_a) * 2.5
+                + (dr16.keys.d - dr16.keys.a) * 2.5;
+        } else if (config->governor_types[0] == 1) { // if we should be controlling position
+            chassis_pos_x = dr16.get_l_stick_x() * 2 + pos_offset_x;
+            chassis_pos_y = dr16.get_l_stick_y() * 2 + pos_offset_y;
+        }
 
-        // float chassis_spin = dr16.get_wheel() * 25;
-        // float pitch_target = 1.57
-        //     + -dr16.get_r_stick_y() * 0.3
-        //     + dr16_pos_y
-        //     + vtm_pos_y;
-        // float yaw_target = -dr16.get_r_stick_x() * 1.5
-        //     - dr16_pos_x
-        //     - vtm_pos_x;
-        // float fly_wheel_target = (dr16.get_r_switch() == 1 || dr16.get_r_switch() == 3) ? 18 : 0; //m/s
-        // float feeder_target = (((dr16.get_l_mouse_button() || ref.ref_data.kbm_interaction.button_left) && dr16.get_r_switch() != 2) || dr16.get_r_switch() == 1) ? 10 : 0;
+        float chassis_spin = dr16.get_wheel() * 25;
+        float pitch_target = 1.57
+            + -dr16.get_r_stick_y() * 0.3
+            + dr16_pos_y
+            + vtm_pos_y;
+        float yaw_target = -dr16.get_r_stick_x() * 1.5
+            - dr16_pos_x
+            - vtm_pos_x;
+        float fly_wheel_target = (dr16.get_r_switch() == 1 || dr16.get_r_switch() == 3) ? 18 : 0; //m/s
+        float feeder_target = (((dr16.get_l_mouse_button() || ref.ref_data.kbm_interaction.button_left) && dr16.get_r_switch() != 2) || dr16.get_r_switch() == 1) ? 10 : 0;
 
-        // // set manual controls
-        // target_state[0][0] = chassis_pos_x;
-        // target_state[0][1] = chassis_vel_x;
-        // target_state[1][0] = chassis_pos_y;
-        // target_state[1][1] = chassis_vel_y;
-        // target_state[2][1] = chassis_spin;
-        // target_state[3][0] = yaw_target;
-        // target_state[3][1] = 0;
-        // target_state[4][0] = pitch_target;
-        // target_state[4][1] = 0;
+        // set manual controls
+        target_state[0][0] = chassis_pos_x;
+        target_state[0][1] = chassis_vel_x;
+        target_state[1][0] = chassis_pos_y;
+        target_state[1][1] = chassis_vel_y;
+        target_state[2][1] = chassis_spin;
+        target_state[3][0] = yaw_target;
+        target_state[3][1] = 0;
+        target_state[4][0] = pitch_target;
+        target_state[4][1] = 0;
 
-        // target_state[5][1] = fly_wheel_target;
-        // target_state[6][1] = feeder_target;
-        // target_state[7][0] = 1;
+        target_state[5][1] = fly_wheel_target;
+        target_state[6][1] = feeder_target;
+        target_state[7][0] = 1;
 
-        // // if the left switch is all the way down use Hive controls
-        // if (dr16.get_l_switch() == 2) {
-        //     incoming->get_target_state(target_state);
-        //     // if you just switched to hive controls, set the reference to the current state
-        //     if (hive_toggle) {
-        //         governor.set_reference(temp_state);
-        //         hive_toggle = false;
-        //     }
-        // }
-        // // when in teensy control mode reset hive toggle
-        // if (dr16.get_l_switch() == 3) {
-        //     if (!hive_toggle) {
-        //         pos_offset_x = temp_state[0][0];
-        //         pos_offset_y = temp_state[1][0];
-        //     }
-        //     hive_toggle = true;
-        // }
-
-
-        // // read sensors
-        // estimator_manager.read_sensors();
-
-        // // override temp state if needed
-        // if (incoming->get_hive_override_request() == 1) {
-        //     incoming->get_hive_override_state(hive_state_offset);
-        //     memcpy(temp_state, hive_state_offset, sizeof(hive_state_offset));
-        // }
+        // if the left switch is all the way down use Hive controls
+        if (dr16.get_l_switch() == 2) {
+            incoming->get_target_state(target_state);
+            // if you just switched to hive controls, set the reference to the current state
+            if (hive_toggle) {
+                governor.set_reference(temp_state);
+                hive_toggle = false;
+            }
+        }
+        // when in teensy control mode reset hive toggle
+        if (dr16.get_l_switch() == 3) {
+            if (!hive_toggle) {
+                pos_offset_x = temp_state[0][0];
+                pos_offset_y = temp_state[1][0];
+            }
+            hive_toggle = true;
+        }
 
 
-        // // step estimates and construct estimated state
-        // estimator_manager.step(temp_state, temp_micro_state, incoming->get_hive_override_request());
+        // read sensors
+        estimator_manager.read_sensors();
+
+        // override temp state if needed
+        if (incoming->get_hive_override_request() == 1) {
+            incoming->get_hive_override_state(hive_state_offset);
+            memcpy(temp_state, hive_state_offset, sizeof(hive_state_offset));
+        }
 
 
-        // // if first loop set target state to estimated state
-        // if (count_one == 0) {
-        //     temp_state[7][0] = 0;
-        //     governor.set_reference(temp_state);
-        //     count_one++;
-        // }
-
-        // // reference govern
-        // governor.set_estimate(temp_state);
-        // governor.step_reference(target_state, config->governor_types);
-        // governor.get_reference(temp_reference);
-
-        // // Serial.printf("yaw ref: %f, pitch ref: %f\n", temp_reference[3][0], temp_reference[4][0]);
+        // step estimates and construct estimated state
+        estimator_manager.step(temp_state, temp_micro_state, incoming->get_hive_override_request());
 
 
-        // // generate motor outputs from controls
-        // controller_manager.step(temp_reference, temp_state, temp_micro_state);
+        // if first loop set target state to estimated state
+        if (count_one == 0) {
+            temp_state[7][0] = 0;
+            governor.set_reference(temp_state);
+            count_one++;
+        }
+
+        // reference govern
+        governor.set_estimate(temp_state);
+        governor.step_reference(target_state, config->governor_types);
+        governor.get_reference(temp_reference);
+
+        // Serial.printf("yaw ref: %f, pitch ref: %f\n", temp_reference[3][0], temp_reference[4][0]);
 
 
-        // // construct sensor data packet
-        // SensorData sensor_data;
+        // generate motor outputs from controls
+        controller_manager.step(temp_reference, temp_state, temp_micro_state);
 
-        // // set dr16 raw data
-        // memcpy(sensor_data.raw + SENSOR_DR16_OFFSET, dr16.get_raw(), DR16_PACKET_SIZE);
 
-        // // set lidars
-        // uint8_t lidar_data[D200_NUM_PACKETS_CACHED * D200_PAYLOAD_SIZE] = { 0 };
-        // lidar1.export_data(lidar_data);
-        // memcpy(sensor_data.raw + SENSOR_LIDAR1_OFFSET, lidar_data, D200_NUM_PACKETS_CACHED * D200_PAYLOAD_SIZE);
-        // lidar2.export_data(lidar_data);
-        // memcpy(sensor_data.raw + SENSOR_LIDAR2_OFFSET, lidar_data, D200_NUM_PACKETS_CACHED * D200_PAYLOAD_SIZE);
+        // construct sensor data packet
+        SensorData sensor_data;
 
-        // // construct ref data packet
-        // uint8_t ref_data_raw[180] = { 0 };
-        // ref.get_data_for_comms(ref_data_raw);
+        // set dr16 raw data
+        memcpy(sensor_data.raw + SENSOR_DR16_OFFSET, dr16.get_raw(), DR16_PACKET_SIZE);
 
-        // // set the outgoing packet
-        // outgoing->set_id((uint16_t)loopc);
-        // outgoing->set_info(0x0000);
-        // outgoing->set_time(millis() / 1000.0);
-        // outgoing->set_sensor_data(&sensor_data);
-        // outgoing->set_ref_data(ref_data_raw);
-        // outgoing->set_estimated_state(temp_state);
+        // set lidars
+        uint8_t lidar_data[D200_NUM_PACKETS_CACHED * D200_PAYLOAD_SIZE] = { 0 };
+        lidar1.export_data(lidar_data);
+        memcpy(sensor_data.raw + SENSOR_LIDAR1_OFFSET, lidar_data, D200_NUM_PACKETS_CACHED * D200_PAYLOAD_SIZE);
+        lidar2.export_data(lidar_data);
+        memcpy(sensor_data.raw + SENSOR_LIDAR2_OFFSET, lidar_data, D200_NUM_PACKETS_CACHED * D200_PAYLOAD_SIZE);
 
-        // //  SAFETY MODE
-        // if (dr16.is_connected() && (dr16.get_l_switch() == 2 || dr16.get_l_switch() == 3) && config_layer.is_configured()) {
-        //     // SAFETY OFF
-        //     can.write();
-        // } else {
-        //     // SAFETY ON
-        //     // TODO: Reset all controller integrators here
-        //     can.zero();
-        // }
+        // construct ref data packet
+        uint8_t ref_data_raw[180] = { 0 };
+        ref.get_data_for_comms(ref_data_raw);
+
+        // set the outgoing packet
+        outgoing->set_id((uint16_t)loopc);
+        outgoing->set_info(0x0000);
+        outgoing->set_time(millis() / 1000.0);
+        outgoing->set_sensor_data(&sensor_data);
+        outgoing->set_ref_data(ref_data_raw);
+        outgoing->set_estimated_state(temp_state);
+
+        //  SAFETY MODE
+        if (dr16.is_connected() && (dr16.get_l_switch() == 2 || dr16.get_l_switch() == 3) && config_layer.is_configured()) {
+            // SAFETY OFF
+            can.write();
+        } else {
+            // SAFETY ON
+            // TODO: Reset all controller integrators here
+            can.zero();
+        }
 
         // LED heartbeat -- linked to loop count to reveal slowdowns and freezes.
         loopc % (int)(1E3 / float(HEARTBEAT_FREQ)) < (int)(1E3 / float(5 * HEARTBEAT_FREQ)) ? digitalWrite(13, HIGH) : digitalWrite(13, LOW);
