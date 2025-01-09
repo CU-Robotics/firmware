@@ -2,7 +2,7 @@
 
 /// @brief This resets the whole processor and kicks it back to program entry (teensy4/startup.c)
 /// @param void void
-/// @note Dont abuse this function
+/// @note Dont abuse this function, it is not to be used lightly
 extern "C" void reset_teensy(void) {
     // Register information found in the NXP IM.XRT 1060 reference manual
 	SRC_GPR5 = 0x0BAD00F1;
@@ -54,7 +54,7 @@ const Config* const ConfigLayer::configure(HIDLayer* comms) {
     }
 #endif
 
-// update stored config, msg if successful
+    // update stored config, msg if successful
     Serial.println("Attempting to store config...");
     if (store_config()) Serial.println("Config successfully stored in /config.pack");
     else Serial.println("Config not successfully stored (is an SD card inserted?)");    // not a fatal error, can still return
@@ -87,6 +87,7 @@ void ConfigLayer::reconfigure(HIDLayer* comms) {
     seek_subsec = 0;
     index = 0;
     
+    // start the "normal" config process
     uint32_t prev_time = millis();
     uint32_t delta_time = 0;
     while (!is_configured()) {
@@ -122,7 +123,7 @@ void ConfigLayer::reconfigure(HIDLayer* comms) {
     }
 #endif
 
-// update stored config, msg if successful
+    // update stored config, msg if successful
     Serial.println("Attempting to store config...");
     if (store_config()) Serial.println("Config successfully stored in /config.pack");
     else Serial.println("Config not successfully stored (is an SD card inserted?)");    // not a fatal error, can still return
@@ -133,6 +134,7 @@ void ConfigLayer::reconfigure(HIDLayer* comms) {
         delay(100);
     }
 
+    // issue the reboot call
     reset_teensy();
 
     // reset_teensy() never returns
