@@ -1,5 +1,8 @@
 #include "config_layer.hpp"
 
+/// @brief This resets the whole processor and kicks it back to program entry (teensy4/startup.c)
+/// @param void void
+/// @note Dont abuse this function
 extern "C" void reset_teensy(void) {
     // Register information found in the NXP IM.XRT 1060 reference manual
 	SRC_GPR5 = 0x0BAD00F1;
@@ -56,13 +59,21 @@ const Config* const ConfigLayer::configure(HIDLayer* comms) {
     if (store_config()) Serial.println("Config successfully stored in /config.pack");
     else Serial.println("Config not successfully stored (is an SD card inserted?)");    // not a fatal error, can still return
 
-    // blink 4 times quickly to show that we received a config packet and are about to restart
+    // blink 4 times quickly to show that we received a config packet finished processing it
     for (int i = 0; i < 8; i++) {
         digitalToggle(13);
         delay(100);
     }
 
-    reset_teensy();
+    // get the outgoing packet and set it to 0
+    CommsPacket* outgoing = comms->get_outgoing_packet();
+    memset(outgoing->raw, 0, sizeof(outgoing->raw));
+
+    // Hive marks the config process as done once teensy sends a packet with info_bit == 0
+    // Hive then sends a packet back with info_bit == 0 as well, so ping until we get a non-config back
+    while (comms->get_incoming_packet()->raw[3] == 1) {
+        comms->ping();
+    }
 
     return &config;
 }
@@ -70,6 +81,11 @@ const Config* const ConfigLayer::configure(HIDLayer* comms) {
 void ConfigLayer::reconfigure(HIDLayer* comms) {
     // force it to reconfigure
     configured = false;
+
+    // reset the section, subsection, and index vars to defaults since we need to use process() again
+    seek_sec = -1;
+    seek_subsec = 0;
+    index = 0;
     
     uint32_t prev_time = millis();
     uint32_t delta_time = 0;
@@ -216,7 +232,6 @@ void ConfigLayer::process(CommsPacket* in, CommsPacket* out) {
         out_raw[2] = seek_subsec;
         out_raw[3] = 1; // set info bit
 
-        // Serial.printf("Requesting YAML configuration packet: (%u, %u)\n", seek_sec, seek_subsec);
     }
 }
 
