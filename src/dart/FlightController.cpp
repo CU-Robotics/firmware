@@ -69,9 +69,9 @@ void FlightController::align_to_velocity_vector() {
 // Mode 3: Guided
 void FlightController::guided() {
   // Get target pos
-    std::pair<int, int> position = dartcam.get_object_position();
-    int x_obj = position.first;
-    int y_obj = position.second;
+    Position position = dartcam.get_average_position();
+    int x_obj = position.x;
+    int y_obj = position.y;
 
     int x_center = DARTCAM_BUFFER_WIDTH; // Assumes a 640x480
     int y_center = DARTCAM_BUFFER_HEIGHT;

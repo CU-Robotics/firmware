@@ -26,31 +26,26 @@ int main() {
     dartcam.init();
 
     // main loop
-    uint32_t last_time = 0;
     while (true) {
-        uint32_t start = micros();
+        uint32_t start_time = micros();
+        Position obj_pos;
 
         // update framebuffers
         dartcam.read();
 
-        // dartcam.send_frame_serial(); // debug entire frame
+        // log position
+        dartcam.log_position();
 
-        std::pair<int, int> pos = dartcam.get_object_position();
-        Serial.printf("Object position: (%d, %d)\n", pos.first, pos.second); // debug object position
+        obj_pos = dartcam.get_average_position();
+        Serial.printf("\n\nPosition: %d, %d\n", obj_pos.x, obj_pos.y);
 
-        // // to verify we are double buffering, print a middle slice of both frame buffers each frame
-        // for (int i = DARTCAM_BUFFER_SIZE / 2 - 10; i < DARTCAM_BUFFER_SIZE / 2 + 10; i++) {
-        //     Serial.printf("%.4x ", frame_buffer[i]);
-        // }
-        // Serial.printf("\n");
-        // for (int i = DARTCAM_BUFFER_SIZE / 2 - 10; i < DARTCAM_BUFFER_SIZE / 2 + 10; i++) {
-        //     Serial.printf("%.4x ", frame_buffer2[i]);
-        // }
-        // Serial.printf("\n\n");
+        dartcam.print_position_history();
+
+        // print fps using elapsed time
+        Serial.printf("FPS: %f\n", 1000000.0 / (micros() - start_time));
     }
-
-    Serial.println("Done");
 }
+
 
 /* frame over serial for converting into image
 int main() {

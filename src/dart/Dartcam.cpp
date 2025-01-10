@@ -3,7 +3,10 @@
 DMAMEM uint16_t frame_buffer[DARTCAM_BUFFER_SIZE];
 DMAMEM uint16_t frame_buffer2[DARTCAM_BUFFER_SIZE];
 
-Dartcam::Dartcam() : omni(), camera(omni) { }
+Position position_history[POSITION_HISTORY_SIZE];
+
+Dartcam::Dartcam() : history_index(0), omni(), camera(omni) { }
+
 
 void Dartcam::init() {
     camera.debug(false);
@@ -16,38 +19,31 @@ void Dartcam::init() {
 
 void Dartcam::read() {
     camera.readFrame(frame_buffer, sizeof(frame_buffer), frame_buffer2, sizeof(frame_buffer2));
-    // Serial.println(frame_buffer[0]);
 }
 
 void Dartcam::send_frame_serial() {
-    // Serial.write(frame_buffer, sizeof(frame_buffer));
-    // print frame buffer as hex to serial
     for (int i = 0; i < DARTCAM_BUFFER_SIZE; i++) {
-        Serial.printf("%.4x", frame_buffer[i]);
+        Serial.printf("%.4x", frame_buffer[i]); // print 16-bit hex value
     }
 }
 
-std::pair<int, int> Dartcam::get_object_position() {
-    int x_sum = 0;
-    int y_sum = 0;
-    int green_total = 0;
-    int x = 0;
-    int y = 0;
+void Dartcam::log_position() {
+    // future note: consider looking lower in the beginning of flight
+    // and middle/higher as flight goes on.
 
-    // iterate over 1D frame buffer
+    // currently green threshold filters the image and finds the centroid
+    int x_sum = 0, y_sum = 0, green_total = 0;
+    int x = 0, y = 0;
+
     for (int i = 0; i < DARTCAM_BUFFER_SIZE; i++) {
-        // isolate green component from RGB565
-        int green_component = (frame_buffer[i] & 0x07E0) >> 5;
+        int green_component = (frame_buffer[i] & 0x07E0) >> 5; // extract green
 
-        // check green component against threshold
-        if (green_component >= static_cast<int>((63 * 0.9))) {
-            // add coordinate to sum for centroid calculation
+        if (green_component >= static_cast<int>(63 * 0.5)) { // green threshold
             x_sum += x;
             y_sum += y;
             green_total++;
         }
 
-        // update row and column, 1D style
         x++;
         if (x >= DARTCAM_BUFFER_WIDTH) {
             x = 0;
@@ -55,10 +51,42 @@ std::pair<int, int> Dartcam::get_object_position() {
         }
     }
 
+    Position position;
     if (green_total == 0) {
-        return std::make_pair(-1, -1);
+        position = { -1, -1 }; // no green object detected
+    } else {
+        position = { x_sum / green_total, y_sum / green_total };
     }
 
-    // return centroid of object
-    return std::make_pair(x_sum / green_total, y_sum / green_total);
+    // store in circular buffer
+    position_history[history_index] = position;
+    history_index = (history_index + 1) % POSITION_HISTORY_SIZE; // increment and wrap around
+}
+
+Position Dartcam::get_average_position() {
+    int x_sum = 0, y_sum = 0, total = 0;
+
+    for (int i = 0; i < POSITION_HISTORY_SIZE; i++) {
+        if (position_history[i].x == -1 || position_history[i].y == -1) {
+            continue;
+        }
+
+        x_sum += position_history[i].x;
+        y_sum += position_history[i].y;
+        total++;
+    }
+
+    if (total == 0) {
+        return { -1, -1 }; // no valid centroids
+    }
+
+    return { x_sum / total, y_sum / total };
+}
+
+void Dartcam::print_position_history() {
+    Serial.printf("History ------\n");
+    for (int i = 0; i < POSITION_HISTORY_SIZE; i++) {
+        Serial.printf("%d: %d, %d\n", i, position_history[i].x, position_history[i].y);
+    }
+    Serial.printf("\n");
 }
