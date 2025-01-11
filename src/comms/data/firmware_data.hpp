@@ -1,11 +1,10 @@
 #pragma once
 
-#include <doctest/doctest.h>
 #include <vector>
 #include <queue>
 
 #include "comms_data.hpp"
-#include "modules/hive/robot_state.hpp"
+#include "robot_state.hpp"
 
 
 namespace Comms {
@@ -18,7 +17,7 @@ struct FirmwareData : public CommsData {
         struct LidarStuff;
         struct IMUStuff;
     } sensors_data;
-    Hive::RobotState estimated_state;
+    RobotState estimated_state;
 };
 
 } // namespace Comms

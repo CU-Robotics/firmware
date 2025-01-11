@@ -3,7 +3,6 @@
 #include <vector>
 
 #include "comms_data.hpp"
-#include "utils/shapes/point.hpp"
 
 namespace Comms {
 
