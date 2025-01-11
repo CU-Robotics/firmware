@@ -44,27 +44,3 @@ struct RobotState {
     /// @brief The delay in communication between the teensy and the khadas
     double comms_delay = 0;
 };
-
-
-// Vector3 definitions for interpreting robot state 
-struct Vector3 {
-    Vector3();
-    Vector3(RobotState robot_state, int derivative);
-    float x;
-    float y;
-    float z;
-};
-
-Vector3::Vector3() {
-    x = 0;
-    y = 0;
-    z = 0;
-}
-
-Vector3::Vector3(RobotState robot_state, int derivative) {
-    derivative = derivative % ROBOT_STATE_DERIVATIVES_COUNT;    // wrap it to be in bounds. better to just check this but this is quick to implement
-
-    x = robot_state.state[0][derivative];     // x located at [0]
-    y = robot_state.state[1][derivative];     // y located at [1]
-    z = robot_state.state[2][derivative];     // z located at [2]
-}

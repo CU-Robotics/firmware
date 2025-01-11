@@ -12,6 +12,7 @@
 #include <TeensyDebug.h>
 #include "sensors/LEDBoard.hpp"
 #include "data_packet.hpp"
+#include "comms/comms_layer.hpp"
 #include "sensor_constants.hpp"
 
 // Loop constants
@@ -22,7 +23,8 @@
 DR16 dr16;
 rm_CAN can;
 RefSystem ref;
-HIDLayer comms;
+HIDLayer HIDcomms;
+Comms::CommsLayer comms_layer;  // currently only used for ethernet!!
 ACS712 current_sensor;
 
 D200LD14P lidar1(&Serial4, 0);
@@ -97,7 +99,7 @@ int main() {
     can.init();
     dr16.init();
     ref.init();
-    comms.init();
+    HIDcomms.init();
 
     //can data pointer so we don't pass around rm_CAN object
     // TODO: extern the can_data object
@@ -105,7 +107,7 @@ int main() {
 
     // Config config
     Serial.println("Configuring...");
-    const Config* config = config_layer.configure(&comms);
+    const Config* config = config_layer.configure(&HIDcomms);
     Serial.println("Configured!");
 
     //estimate micro and macro state
@@ -151,10 +153,10 @@ int main() {
         lidar1.read();
         lidar2.read();
 
-        // read and write comms packets
-        comms.ping();
-        CommsPacket* incoming = comms.get_incoming_packet();
-        CommsPacket* outgoing = comms.get_outgoing_packet();
+        // read and write HIDcomms packets
+        HIDcomms.ping();
+        CommsPacket* incoming = HIDcomms.get_incoming_packet();
+        CommsPacket* outgoing = HIDcomms.get_outgoing_packet();
 
         // manual controls on firmware
 
