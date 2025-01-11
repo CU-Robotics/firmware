@@ -34,12 +34,10 @@ public:
 // - init functions
 
     CommsLayer() = default;         // default constructor
-    ~CommsLayer();                  // destructor
+    ~CommsLayer() = default;                  // destructor
 
     int init();
-    int destroy();
-    int run();
-    int stop();
+    int loop();
 
 private:
 // - physical layers
@@ -52,10 +50,10 @@ public:
     // take data, convert it into ethernet compatible form (packet sequence)
     // EthernetPayload will incorporate the (optional) given data_type and data_flag, passing them through
     // to the packet headers individually
-    EthernetPayload encode(HiveData data, int data_type = DATA, int data_flag = NORMAL);
+    EthernetPayload encode(FirmwareData data, int data_type = DATA, int data_flag = NORMAL);
 
     // take ethernet packet sequence, convert it into FirmwareData
-    FirmwareData decode(EthernetPayload payload);
+    HiveData decode(EthernetPayload payload);
 
     // transmit a given EthernetPayload
     int transmit(EthernetPayload* payload);

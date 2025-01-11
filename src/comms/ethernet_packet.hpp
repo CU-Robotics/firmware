@@ -60,6 +60,7 @@ enum EthernetPacketType {
 	PRIORITY = 1,
 	HANDSHAKE = 2,
 	DEBUG = 3,
+	EOT = 4,
 };
 
 /// @brief The possible packet flags, these specify the general contents
