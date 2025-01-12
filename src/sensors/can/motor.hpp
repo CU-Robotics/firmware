@@ -7,7 +7,7 @@
 
 /// @brief Defines the motor controller types. Enum values chosen based on the yaml config specification
 enum class MotorControllerType {
-    NULL_MOTOR_CONTROLLER_TYPE = -1,
+    NULL_MOTOR_CONTROLLER_TYPE = 0,
     C610_CONTROLLER,
     C620_CONTROLLER,
     MG8016_CONTROLLER,
