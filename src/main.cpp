@@ -158,9 +158,12 @@ int main() {
         // check whether this packet is a config packet
         if (incoming->raw[3] == 1) {
             Serial.println("\n\nConfig request received, reconfiguring from comms!\n\n");
+            // trigger safety mode
+            can.zero();
             config_layer.reconfigure(&comms);
         }
 
+        // print loopc every second to verify it is still alive
         if (loopc % 1000 == 0) {
             Serial.println(loopc);
         }
