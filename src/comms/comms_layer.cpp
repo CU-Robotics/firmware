@@ -32,9 +32,9 @@ int CommsLayer::init() {
     sequence = 0;
     bool success = Ethernet.begin();
     if (success) {
-        printf("Ethernet socket online\n");
+        Serial.printf("Ethernet socket online\n");
     } else {
-        printf("Ethernet FAILED to initialize, exiting...\n");
+        Serial.printf("Ethernet FAILED to initialize, exiting...\n");
         return -1;
     }
 
