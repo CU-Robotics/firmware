@@ -205,7 +205,7 @@ struct FlywheelController : public Controller{
 
         /// @brief reset the controller
         inline void reset(){
-            Controller:reset();
+            Controller::reset();
             pid_high.sumError = 0.0;
             pid_low.sumError = 0.0;
         }
@@ -232,7 +232,7 @@ struct FeederController : public Controller{
 
         /// @brief reset the controller
         inline void reset(){
-            Controller:reset();
+            Controller::reset();
             pid_high.sumError = 0.0;
             pid_low.sumError = 0.0;
         }
