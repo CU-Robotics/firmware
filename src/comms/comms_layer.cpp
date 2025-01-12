@@ -31,7 +31,7 @@ EthernetPayload::~EthernetPayload() {
 int CommsLayer::init() {
     sequence = 0;
     bool success = Ethernet.begin();
-    if (!success) {
+    if (success) {
         printf("Ethernet socket online\n");
     } else {
         printf("Ethernet FAILED to initialize, exiting...\n");

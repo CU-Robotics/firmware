@@ -100,6 +100,7 @@ int main() {
     dr16.init();
     ref.init();
     HIDcomms.init();
+    comms_layer.init();
 
     //can data pointer so we don't pass around rm_CAN object
     // TODO: extern the can_data object
@@ -157,6 +158,12 @@ int main() {
         HIDcomms.ping();
         CommsPacket* incoming = HIDcomms.get_incoming_packet();
         CommsPacket* outgoing = HIDcomms.get_outgoing_packet();
+
+        // run comms_layer loop function for Ethernet/HID comms (currently only Ethernet)
+        comms_layer.loop();
+        // TODO: later when we receive more important data over Ethernet, do more with comms_layer incoming/outgoing data
+        // probably define this with EthernetPayload/HIDPayload in main, instead of incoming/outgoing data in the object itself
+        
 
         // manual controls on firmware
 

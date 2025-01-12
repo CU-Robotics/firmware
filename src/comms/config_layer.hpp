@@ -26,7 +26,7 @@
 // lastly, stores bytes of subsec_sizes array
 #define CONFIG_PATH "/config.pack"
 
-// define CONFIG_OFF_ROBOT macro when running off of real robot (testing firmware away from actual robot)
+// define CONFIG_OFF_ROBOT macro when running off of real robot 
 // #define CONFIG_OFF_ROBOT 
 
 

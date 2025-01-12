@@ -34,7 +34,7 @@ public:
 // - init functions
 
     CommsLayer() = default;         // default constructor
-    ~CommsLayer() = default;                  // destructor
+    ~CommsLayer() = default;        // destructor
 
     int init();
     int loop();
