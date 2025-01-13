@@ -43,7 +43,26 @@ int CommsLayer::init() {
 }
 
 int CommsLayer::loop() {
-    // TODO
+    Ethernet.loop();
+
+    EthernetPacket p_incoming = ethernet_packet_receive();      // funny function to only read new packets
+    EthernetPacket* p_outgoing = Ethernet.get_outgoing_packet();
+    
+    // handle config packet
+    if(p_incoming.header.flags == Comms::EthernetPacketFlags::CONFIG) {
+        Serial.printf("Config packet received, id = %d, ts = %d\n", p_incoming.header.sequence, p_incoming.header.time_stamp);
+        
+        uint8_t output_buffer[ETHERNET_PACKET_MAX_SIZE];
+        memset(output_buffer, 0, 4096);
+        // set outgoing packet to be data ack
+        *p_outgoing = construct_packet(
+            output_buffer, 
+            0, 
+            Comms::EthernetPacketType::DATA, 
+            Comms::EthernetPacketFlags::ACK, 
+            millis()
+        );
+    }
 
     return 0;
 }
@@ -127,6 +146,46 @@ EthernetPacket CommsLayer::construct_EOT_packet() {
     return eot;
 }
 
+EthernetPacket CommsLayer::ethernet_packet_receive() {
+    // copy current contents of packet buffer into new packet)
+    EthernetPacket incoming;
+    EthernetPacket* incoming_buffer = Ethernet.get_incoming_packet();
+    memcpy(&incoming, incoming_buffer, sizeof(EthernetPacket));
+    if(ethernet_is_valid_packet(incoming)) {
+        // packet is new
+        // write empty (invalid) packet to incoming buffer, and return the incoming new packet
+        // see note in ethernet_is_valid_packet on invalid packet construction
+        uint8_t null_buffer[ETHERNET_PACKET_MAX_SIZE];
+        memset(null_buffer, 0, ETHERNET_PACKET_MAX_SIZE);
+        *incoming_buffer = construct_packet(
+            null_buffer, 
+            0, 
+            Comms::EthernetPacketType::DEBUG,
+            Comms::EthernetPacketFlags::NORMAL,
+            0
+        );
 
+        return incoming;
+    }
+    // invalid packet detected
+    uint8_t null_buffer[ETHERNET_PACKET_MAX_SIZE];
+    memset(null_buffer, 0, ETHERNET_PACKET_MAX_SIZE);
+    EthernetPacket null_packet = construct_packet(
+        null_buffer, 
+        0, 
+        Comms::EthernetPacketType::DEBUG,
+        Comms::EthernetPacketFlags::INVALID,
+        0
+    );
+    return null_packet;
+}
+
+bool CommsLayer::ethernet_is_valid_packet(EthernetPacket packet) {
+    // when we need to "delete" a packet in a buffer, we will simply write an empty 
+    // packet with INVALID flag. this function will detect if a packet is therefore "deleted" (invalid)
+
+
+    return (packet.header.flags == Comms::EthernetPacketFlags::INVALID);
+}
 
 } // namespace Comms    

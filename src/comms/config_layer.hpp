@@ -27,7 +27,7 @@
 #define CONFIG_PATH "/config.pack"
 
 // define CONFIG_OFF_ROBOT macro when running off of real robot 
-// #define CONFIG_OFF_ROBOT 
+#define CONFIG_OFF_ROBOT 
 
 
 /// @brief arbitrary cap on config packets that can be received (make sure it's enough)

@@ -78,6 +78,11 @@ private:
     // construct a packet to determine EOT
     EthernetPacket construct_EOT_packet();
 
+    // receives ethernet packet and removes from m_incoming ethernet packet buffer
+    EthernetPacket ethernet_packet_receive();
+
+    bool ethernet_is_valid_packet(EthernetPacket packet);
+
     // number of packets sent in total
     uint16_t sequence;
 };

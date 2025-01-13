@@ -69,6 +69,7 @@ enum EthernetPacketFlags {
 	CONFIG = 1,
 	STATE_OVERRIDE = 2,
 	ACK = 3,
+	INVALID = 4,
 };
 
 }	// namespace Comms
