@@ -161,7 +161,7 @@ EthernetPacket CommsLayer::ethernet_packet_receive() {
             null_buffer, 
             0, 
             Comms::EthernetPacketType::DEBUG,
-            Comms::EthernetPacketFlags::NORMAL,
+            Comms::EthernetPacketFlags::INVALID,
             0
         );
 
