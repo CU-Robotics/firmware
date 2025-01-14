@@ -7,7 +7,7 @@
 
 #include <map>
 #include <string>
-#define CONFIG_LAYER_DEBUG
+// #define CONFIG_LAYER_DEBUG
 
 
 #define NUM_SENSOR_VALUES 12
@@ -26,7 +26,7 @@
 // lastly, stores bytes of subsec_sizes array
 #define CONFIG_PATH "/config.pack"
 
-// define CONFIG_OFF_ROBOT macro when running off of real robot 
+// define CONFIG_OFF_ROBOT macro when running off of real robot (testing firmware away from actual robot)
 #define CONFIG_OFF_ROBOT 
 
 
@@ -123,6 +123,19 @@ public:
     /// @return a const pointer const config object holding all the data within the config yaml
     /// @note its double const so its enforced as a read-only object
     const Config* const configure(HIDLayer* comms);
+
+    /// @brief Grab all incoming config packets, process them, and store them onto the sd card. Then issue a processor reset call.
+    /// @param comms Pointer to the HID comms layer
+    /// @note This function never returns.
+    /// The reconfig process:
+    ///     1. Teensy boots, looks for a config off the SD card (if it exists)
+    ///         1a. If no SD card exists, it follows the normal configure process
+    ///     2. Teensy configures
+    ///     3. Teensy eventually receives another config request
+    ///     4. Teensy processes this request, stores it to the SD card (if it exists) and reboots
+    ///     5. Goto 1.
+    /// This process works with or without the SD card, although without one makes it a bit slow (double config with the first one wasted)
+    [[noreturn]] void reconfigure(HIDLayer* comms);
 
     /// @brief check incoming packet from the comms layer and update outgoing packet accordingly to request next config packet
     /// @param in incoming comms packet

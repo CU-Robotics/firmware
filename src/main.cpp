@@ -2,7 +2,6 @@
 
 #include "git_info.h"
 
-
 #include "utils/profiler.hpp"
 #include "sensors/d200.hpp"
 #include "sensors/StereoCamTrigger.hpp"
@@ -164,6 +163,19 @@ int main() {
         // TODO: later when we receive more important data over Ethernet, do more with comms_layer incoming/outgoing data
         // probably define this with EthernetPayload/HIDPayload in main, instead of incoming/outgoing data in the object itself
         
+
+        // check whether this packet is a config packet
+        if (incoming->raw[3] == 1) {
+            Serial.println("\n\nConfig request received, reconfiguring from comms!\n\n");
+            // trigger safety mode
+            can.zero();
+            config_layer.reconfigure(&HIDcomms);
+        }
+
+        // print loopc every second to verify it is still alive
+        if (loopc % 1000 == 0) {
+            Serial.println(loopc);
+        }
 
         // manual controls on firmware
 
