@@ -24,7 +24,9 @@
 #define DURATION_NS(cyccnt1, cyccnt2) (CYCLES_TO_NS(cyccnt2 - cyccnt1))
 
 // Accounts for overflow
+#ifndef UINT_MAX        // uhhhhhhh i REALLY hope this doesnt break anything.......!!
 #define UINT_MAX 4294967295
+#endif
 #define CYCCNT_OVERFLOW(duration) (duration > UINT_MAX*0.25 ? UINT_MAX-duration : duration)
 
 /// @brief Timing object with blocking capability

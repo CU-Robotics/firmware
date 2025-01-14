@@ -1,26 +1,8 @@
 #include "comms_layer.hpp"
 
+#include "config_layer.hpp" // ONLY used for sd config storage in teensy_configure(). will be removed eventually
 
 namespace Comms {
-
-//
-// EthernetPayload definitions
-//
-
-EthernetPayload::EthernetPayload() {
-    packets = nullptr;      // do not point to anything initially
-    length = 0;             // len==0 implies that packets is not readable
-}
-
-EthernetPayload::~EthernetPayload() {
-    // want to free all elements of packets
-    // assume length of packets == length. be careful and make sure this value is right!!
-    for (unsigned int i = 0; i < length; i++) {
-        delete& packets[i];
-    }
-}
-
-
 
 //
 // CommsLayer PUBLIC definitions
@@ -38,6 +20,7 @@ int CommsLayer::init() {
         return -1;
     }
 
+    Serial.printf("DEBUG: sizeof configdata: %d\n", sizeof(ConfigData));    // delete me... please...... when you read it for the first time..... please.....
 
     return 0;
 }
@@ -45,23 +28,14 @@ int CommsLayer::init() {
 int CommsLayer::loop() {
     Ethernet.loop();
 
-    EthernetPacket p_incoming = ethernet_packet_receive();      // funny function to only read new packets
-    EthernetPacket* p_outgoing = Ethernet.get_outgoing_packet();
+    EthernetPacket* p_incoming = Ethernet.get_incoming_packet();   
+    // EthernetPacket* p_outgoing = Ethernet.get_outgoing_packet();
     
-    // handle config packet
-    if(p_incoming.header.flags == Comms::EthernetPacketFlags::CONFIG) {
-        Serial.printf("Config packet received, id = %d, ts = %d\n", p_incoming.header.sequence, p_incoming.header.time_stamp);
-        
-        uint8_t output_buffer[ETHERNET_PACKET_MAX_SIZE];
-        memset(output_buffer, 0, 4096);
-        // set outgoing packet to be data ack
-        *p_outgoing = construct_packet(
-            output_buffer, 
-            0, 
-            Comms::EthernetPacketType::DATA, 
-            Comms::EthernetPacketFlags::ACK, 
-            millis()
-        );
+    // check for config packet from ethernet
+    if(p_incoming->header.flags == Comms::EthernetPacketFlags::CONFIG) {
+        // reconfigure and trigger reboot
+        teensy_configure(*p_incoming);
+        while (1) ;     // should NEVER start
     }
 
     return 0;
@@ -72,36 +46,28 @@ int CommsLayer::loop() {
 // - data I/O functions
 
 // take data, convert it into ethernet compatible form (packet sequence)
-EthernetPayload CommsLayer::encode(FirmwareData data, int data_type, int data_flag) {
+EthernetPacket CommsLayer::encode(FirmwareData data, int data_type, int data_flag) {
     // TODO
 
-    // DEBUG: testing EthernetPayload transmission, just need one packet for now
-    EthernetPayload sample;
-    sample.packets = new EthernetPacket;
-    sample.packets[0] = construct_packet((uint8_t*)(&data), sizeof(FirmwareData), data_type, data_flag, 0);
-    sample.type = data_type;
-    sample.flag = data_flag;
-    // sample.section_sizes[0] = sizeof(HiveData);
-
-    return sample;
+    return EthernetPacket();
 }
 
 // take ethernet payload, convert it into TeensyData
-HiveData CommsLayer::decode(EthernetPayload payload) {
+HiveData CommsLayer::decode(EthernetPacket packet) {
     // TODO
     return HiveData();
 }
 
-// transmit a given EthernetPayload
-int CommsLayer::transmit(EthernetPayload* payload) {
+// transmit a given EthernetPacket
+int CommsLayer::transmit(EthernetPacket packet) {
     // TODO
 
     return 0;
 }
 
-// receive an EthernetPayload
+// receive an EthernetPacket
 // nullptr if failed, else success
-EthernetPayload* CommsLayer::receive() {
+EthernetPacket* CommsLayer::receive() {
     // TODO
     return nullptr;
 }
@@ -109,8 +75,20 @@ EthernetPayload* CommsLayer::receive() {
 
 // - config
 
-int CommsLayer::teensy_configure() {
-    // TODO
+int CommsLayer::teensy_configure(EthernetPacket &config_packet) {
+    // decode from packet
+
+    // send ack for config packet
+
+    // write the outgoing packet
+    
+    // store config on SD card
+    // NOTE: currently SD config is handled by config_layer.cpp. this will be phased out
+    // when we replace HID comms and integrate with comms_layer. so, this is CURRENTLY 
+    // going to dump our config_data into a config_layer config object and store that
+    // for config_layer.cpp to handle on reboot. this is GOING to have to be replaced eventually
+
+
     return 0;
 }
 
@@ -144,48 +122,6 @@ EthernetPacket CommsLayer::construct_EOT_packet() {
     eot.header.type = EOT;
 
     return eot;
-}
-
-EthernetPacket CommsLayer::ethernet_packet_receive() {
-    // copy current contents of packet buffer into new packet)
-    EthernetPacket incoming;
-    EthernetPacket* incoming_buffer = Ethernet.get_incoming_packet();
-    memcpy(&incoming, incoming_buffer, sizeof(EthernetPacket));
-    if(ethernet_is_valid_packet(incoming)) {
-        // packet is new
-        // write empty (invalid) packet to incoming buffer, and return the incoming new packet
-        // see note in ethernet_is_valid_packet on invalid packet construction
-        uint8_t null_buffer[ETHERNET_PACKET_MAX_SIZE];
-        memset(null_buffer, 0, ETHERNET_PACKET_MAX_SIZE);
-        *incoming_buffer = construct_packet(
-            null_buffer, 
-            0, 
-            Comms::EthernetPacketType::DEBUG,
-            Comms::EthernetPacketFlags::INVALID,
-            0
-        );
-
-        return incoming;
-    }
-    // invalid packet detected
-    uint8_t null_buffer[ETHERNET_PACKET_MAX_SIZE];
-    memset(null_buffer, 0, ETHERNET_PACKET_MAX_SIZE);
-    EthernetPacket null_packet = construct_packet(
-        null_buffer, 
-        0, 
-        Comms::EthernetPacketType::DEBUG,
-        Comms::EthernetPacketFlags::INVALID,
-        0
-    );
-    return null_packet;
-}
-
-bool CommsLayer::ethernet_is_valid_packet(EthernetPacket packet) {
-    // when we need to "delete" a packet in a buffer, we will simply write an empty 
-    // packet with INVALID flag. this function will detect if a packet is therefore "deleted" (invalid)
-
-
-    return (packet.header.flags == Comms::EthernetPacketFlags::INVALID);
 }
 
 } // namespace Comms    
