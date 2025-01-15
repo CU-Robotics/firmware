@@ -124,8 +124,8 @@ private:
     /// @param frame Frame reference to fill
     /// @param raw_buffer Buffer to read to
     /// @param buffer_index Index into the buffer    
-    /// @return Whether the read was successful or not
-    bool read_frame_tail(HardwareSerial* serial, uint8_t raw_buffer[REF_MAX_PACKET_SIZE * 2], uint16_t& buffer_index, Frame& frame);
+    /// @return The error code of the read. 1 for success, 0 for not enough data, -1 for CRC failure
+    int read_frame_tail(HardwareSerial* serial, uint8_t raw_buffer[REF_MAX_PACKET_SIZE * 2], uint16_t& buffer_index, Frame& frame);
 
     /// @brief Helper function: sets the data in a frame to the ref_data struct
     /// @param frame Frame to read from
@@ -136,47 +136,38 @@ private:
     /// @return The next sequence
     inline uint8_t get_seq() noexcept { seq++;  return seq; }
 
+    /// @brief Read the VTM data
+    void read_vtm();
+
+    /// @brief Read the MCM data
+    void read_mcm();
+
 private:
     /// @brief Current sequence number. Used to send packets
     uint8_t seq = 0;
-    
-    // VTM
 
-    /// @brief Buffer to store frames-in-progress (for vtm packets)
-    /// @note This is * 2 to allow buffer space for the largest frame
-    uint8_t vtm_raw_buffer[REF_MAX_PACKET_SIZE * 2] = { 0 };
+    /// @brief Internal data struct for the RefSystem. This contains all the meta data required to read a frame
+    struct RefInternalData {
+        /// @brief Raw buffer to store incoming data
+        uint8_t raw_buffer[REF_MAX_PACKET_SIZE * 2] = { 0 };
+        /// @brief Index into the raw buffer
+        uint16_t buffer_index = 0;
+        /// @brief Whether the header has been read
+        bool header_read = false;
+        /// @brief Whether the command ID has been read
+        bool command_ID_read = false;
+        /// @brief Whether the data has been read
+        bool data_read = false;
+        /// @brief Whether the tail has been read
+        bool tail_read = false;
+        /// @brief Current frame being read
+        Frame curr_frame {};
+    };
 
-    /// @brief Index into the raw_buffer (for vtm packets)
-    uint16_t vtm_buffer_index = 0;
-
-    /// @brief Whether the header has been successfully read (for vtm packets)
-    bool vtm_header_read = false;
-    /// @brief Whether the command ID has been successfully read (for vtm packets)
-    bool vtm_command_ID_read = false;
-    /// @brief Whether the data has been successfully read (for vtm packets)
-    bool vtm_data_read = false;
-
-    /// @brief Current frame being read (for vtm packets)
-    Frame vtm_curr_frame{};
-
-    // MCM
-
-    /// @brief Buffer to store frames-in-progress (for mcm packets)
-    /// @note This is * 2 to allow buffer space for the largest frame
-    uint8_t mcm_raw_buffer[REF_MAX_PACKET_SIZE * 2] = { 0 };
-
-    /// @brief Index into the raw_buffer (for mcm packets)
-    uint16_t mcm_buffer_index = 0;
-
-    /// @brief Whether the header has been successfully read (for mcm packets)
-    bool mcm_header_read = false;
-    /// @brief Whether the command ID has been successfully read (for mcm packets)
-    bool mcm_command_ID_read = false;
-    /// @brief Whether the data has been successfully read (for mcm packets)
-    bool mcm_data_read = false;
-
-    /// @brief Current frame being read (for mcm packets)
-    Frame mcm_curr_frame{};
+    /// @brief Internal data for the VTM
+    RefInternalData vtm_data {};
+    /// @brief Internal data for the MCM
+    RefInternalData mcm_data {};
 
 public:
     /// @brief Number of inter-robot packets sent
@@ -193,7 +184,7 @@ public:
     uint16_t bytes_sent = 0;
 
     /// @brief struct to store all ref data
-    RefData ref_data{};
+    RefData ref_data {};
 };
 
 extern RefSystem ref;

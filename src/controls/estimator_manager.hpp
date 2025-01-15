@@ -19,21 +19,13 @@
 
 #define NUM_IMU_CALIBRATION 50000
 
-
-// Rev encoder pins
-#define REV_ENC_PIN1 2
-#define REV_ENC_PIN2 3
-#define REV_ENC_PIN3 4
-
 /// @brief Manage all estimators for macro and micro state
 class EstimatorManager {
 private:
-    //sensor arrays
-
     /// @brief array to store robot icm imu's
     ICM20649 icm_sensors[NUM_SENSOR_TYPE];
     /// @brief array to store robot buff encoders
-    BuffEncoder buff_sensors[NUM_SENSOR_TYPE];
+    BuffEncoder buff_encoders[NUM_SENSOR_TYPE];
     /// @brief array to store robot rev encoders
     RevEncoder rev_sensors[NUM_SENSOR_TYPE];
     /// @brief array to store tof sensors
@@ -41,10 +33,6 @@ private:
 
     /// @brief array of robot estimators to estimate full robot state
     Estimator* estimators[STATE_LEN] = { nullptr };
-
-    /// @brief matrix that is number_of_estimators by State_length.
-    /// the values inside the matrix tell the estimator stepper which states to write to for each estimator
-    int applied_states[NUM_ESTIMATORS][STATE_LEN];
 
     /// @brief can data pointer to pass to each estimator so they can use can to estimate state when needed (usually used for micro state).
     CANData* can_data;
@@ -55,6 +43,9 @@ private:
 
     /// @brief current number of estimators
     int num_estimators = 0;
+
+    /// @brief array to store the number of sensors for each sensor type
+    int num_sensors[NUM_SENSORS];
 
 public:
     /// @brief Default constructor, does nothing
@@ -82,19 +73,46 @@ public:
     /// @param micro_outputs input 2
     void clear_outputs(float macro_outputs[STATE_LEN][3], float micro_outputs[NUM_MOTORS][MICRO_STATE_LEN]);
 
+    /// @brief get the specified buff encoder sensor from the array
+    /// @param index index of the sensor object to get
+    /// @return reference to the buff encoder sensor
+    BuffEncoder& get_buff_encoders(int index) {
+        return buff_encoders[index];
+
+    }
+
+    /// @brief get the specified icm sensor from the array
+    /// @param index index of the sensor object to get
+    /// @return reference to the icm sensor
+    ICM20649& get_icm_sensors(int index) {
+        return icm_sensors[index];
+    }
+
+    /// @brief get the specified rev sensor from the array
+    /// @param index index of the sensor object to get
+    /// @return reference to the rev sensor
+    RevEncoder& get_rev_sensors(int index) {
+        return rev_sensors[index];
+    }
+
+    /// @brief get the specified tof sensor from the array
+    /// @param index index of the sensor object to get
+    /// @return reference to the tof sensor
+    TOFSensor& get_tof_sensors(int index) {
+        return tof_sensors[index];
+    }
+    
 private:
     /// @brief call read for imu's NUM_IMU_CALIBRATION times and then averages returns to calculate offset.
     void calibrate_imus();
 
     /// @brief Populates the corresponding index of the "estimators" array attribute with an estimator object.
     /// @param estimator_id id of estimator to init
-    /// @param num_states number of states this estimator should estimate
-    void init_estimator(int estimator_id, int num_states);
+    void init_estimator(int estimator_id);
 
     /// @brief sets the assigned states array use for telling which estimators estimate which states
     /// @param as assigned array
     void assign_states(const float as[NUM_ESTIMATORS][STATE_LEN]);
 };
-
 
 #endif
