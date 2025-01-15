@@ -79,7 +79,7 @@ void CANManager::configure(float  motor_info[CAN_MAX_MOTORS][3]) {
     }
 
     // verify all motors are online and ready
-    //init_motors();
+    init_motors();
 }
 
 void CANManager::read() {

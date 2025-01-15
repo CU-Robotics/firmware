@@ -14,6 +14,7 @@ DR16 dr16;
 CANManager can;
 Timer loop_timer;
 IMU_filter icm;
+balancing_test test_control;
 // DONT put anything else in this function. It is not a setup function
 void print_logo() {
     if (Serial) {
@@ -58,7 +59,7 @@ int main() {
 
     print_logo();
     dr16.init();
-    
+    test_control.init();
     icm.init();
 
     can.init();
@@ -79,32 +80,31 @@ int main() {
         {2 , 2 , 0}
     }; 
     can.configure(motor_info);
-    
+    balancing_sensor_data data;
     // Main loop
     while (true) {
         // Read sensors
         dr16.read();
         icm.read();
 
-
-        //can.write();
-
         can.read();
-        can.print_state();
 
-        //Testobserver.step(can.get_data(), imu.getdata(), tempobs); // Calculate Observer values
-        //Testcontorl.step(tempmotor, ref, tempobs); // Calculate motors motion
+        data.angle_fl = can.get_motor(1)->get_state().position;
+        data.angle_bl = can.get_motor(2)->get_state().position;
+        data.angle_fr = can.get_motor(0)->get_state().position;
+        data.angle_br = can.get_motor(3)->get_state().position;
+        //can.print_state();
+
+        test_control.set_data(data);
+        // test_control.limit_write();
+        test_control.printdata();
+
+        // can.write_motor_torque(1,test_control.getwrite().torque_fl);
+        // can.write_motor_torque(2,test_control.getwrite().torque_bl);
+        // can.write_motor_torque(0,test_control.getwrite().torque_fr);
+        // can.write_motor_torque(3,test_control.getwrite().torque_br);
+
         icm.print();
-
-
-        //** Temp limit functions -- Will be put inside controller when using*/
-        // Basically I use 90 degree as a limit
-        // so it will be angle A - B <= 90 degree(Need test)
-        // Also the A and B are limited to their limit (Need test)
-
-
-        //testicm.print();
-        // Write actuators
         if (!dr16.is_connected() || dr16.get_l_switch() == 1) {
             // SAFETY ON
             // TODO: Reset all controller integrators here
@@ -113,6 +113,7 @@ int main() {
         } else if (dr16.is_connected() && dr16.get_l_switch() != 1) {
             // SAFETY OFF
             Serial.println("SAFTYOFF");
+            test_control.test_write();
             can.write();
         }
 
