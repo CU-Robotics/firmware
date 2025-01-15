@@ -203,6 +203,7 @@
 //         /// @param outputs motor outputs
 //         void step(float reference[STATE_LEN][3], float estimate[STATE_LEN][3], float micro_estimate[NUM_MOTORS][MICRO_STATE_LEN], float outputs[NUM_MOTORS]);
 
+<<<<<<< HEAD
 //         /// @brief reset the controller
 //         inline void reset(){
 //             Controller:reset();
@@ -210,6 +211,15 @@
 //             pid_low.sumError = 0.0;
 //         }
 // };
+=======
+        /// @brief reset the controller
+        inline void reset(){
+            Controller::reset();
+            pid_high.sumError = 0.0;
+            pid_low.sumError = 0.0;
+        }
+};
+>>>>>>> c1dd81737a80a375a5089fb6cc674d4c3e87d430
 
 // /// @brief Controls the feeder
 // struct FeederController : public Controller{
@@ -230,6 +240,7 @@
 //         /// @param outputs motor outputs
 //         void step(float reference[STATE_LEN][3], float estimate[STATE_LEN][3], float micro_estimate[NUM_MOTORS][MICRO_STATE_LEN], float outputs[NUM_MOTORS]);
 
+<<<<<<< HEAD
 //         /// @brief reset the controller
 //         inline void reset(){
 //             Controller:reset();
@@ -237,6 +248,15 @@
 //             pid_low.sumError = 0.0;
 //         }
 // };
+=======
+        /// @brief reset the controller
+        inline void reset(){
+            Controller::reset();
+            pid_high.sumError = 0.0;
+            pid_low.sumError = 0.0;
+        }
+};
+>>>>>>> c1dd81737a80a375a5089fb6cc674d4c3e87d430
 
 // /// @brief Controller for the switcher, which is a fullstate controller with feedforward
 // struct SwitcherController : public Controller {
