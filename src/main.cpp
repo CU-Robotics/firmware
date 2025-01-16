@@ -61,7 +61,6 @@ int main() {
     dr16.init();
     test_control.init();
     icm.init();
-
     can.init();
 
     // [controller_type, motor_id, bus_id]

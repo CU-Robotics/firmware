@@ -29,6 +29,10 @@
 #define l_l 0   // test
 #define R_w 0   // test
 
+/**controller constants */
+#define G_CONSTANT 9.80665f
+#define BOUND true                              // 1 to -1                      
+#define WARP true                               // 360 degree 
 struct balancing_sensor_data
 {
     float angle_fl;
@@ -57,10 +61,10 @@ struct balancing_sensor_data
 
 struct write_data
 {
-    float torque_fl;
-    float torque_bl;
-    float torque_fr;
-    float torque_br;
+    float torque_fl; //ID:2 
+    float torque_bl; //ID:3
+    float torque_fr; //ID:1 
+    float torque_br; //ID:4
     float torque_wl;
     float torque_wr;
 };
@@ -93,9 +97,18 @@ struct observer_data
     float lr_dot_old;
 };
 
+struct ref_data
+{
+    float goal_roll;
+    float goal_l;
+}; 
+
 class balancing_test{
     private:
         Timer timer; 
+        float _dt;
+
+
         /// @brief The PID for psi
         PIDFilter pid1; 
         /// @brief The PID for l
@@ -108,7 +121,7 @@ class balancing_test{
         balancing_sensor_data _data;
         write_data _write;
         observer_data o_data;
-
+        ref_data ref_data;  
     public:
         /// @brief setting all constant array
         void init();
