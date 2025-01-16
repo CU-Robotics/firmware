@@ -37,7 +37,7 @@ public:
 	void init(uint8_t encoder_pin, bool is_relative);
 
 	/// @brief updates ticks and radians to the current angle 
-	void read();
+	void read() override;
 	/// @brief get the last angle of the encoder in ticks
 	/// @return the last angle of the encoder in ticks [0, 1023]
 	float get_angle_ticks();

@@ -2,7 +2,7 @@
 
 const SPISettings BuffEncoder::m_settings = SPISettings(1000000, MT6835_BITORDER, SPI_MODE3);
 
-float BuffEncoder::read() {
+void BuffEncoder::read() {
 
     uint8_t data[6] = { 0 }; // transact 48 bits
 
@@ -24,7 +24,6 @@ float BuffEncoder::read() {
 
     // assign and return angle
     m_angle = radians;
-    return radians;
 }
 
 void BuffEncoder::serialize(uint8_t* buffer, size_t& offset) {

@@ -210,7 +210,7 @@ class D200LD14P : Sensor{
     void stop_motor();
 
     /// @brief read latest packet(s) from D200 module
-    void read();
+    void read() override;
 
     /// @brief get the packet array
     /// @return pointer to start of packet array

@@ -37,6 +37,8 @@ public:
     /// @param offset Offset to update as data is serialized.
     virtual void serialize(uint8_t* buffer, size_t& offset) = 0;
 
+    virtual void read() = 0;
+
 protected:
 
     ///The type of the sensor.
