@@ -8,7 +8,7 @@ extern "C" void reset_teensy(void) {
 	SRC_GPR5 = 0x0BAD00F1;
     // Register information found in the Arm-v7-m reference manual
 	SCB_AIRCR = 0x05FA0004;
-    // loop go brr
+    // loop to catch execution while the reset occurs
 	while (1);
 }
 
@@ -37,7 +37,7 @@ const Config* const ConfigLayer::configure(HIDLayer* comms) {
     config.fill_data(config_packets, subsec_sizes);
 
     // verify that config received matches ref system: if not, error out
-#ifndef CONFIG_OFF_ROBOT
+#ifndef DISREGARD_REF_CONFIG_CHECK
     Serial.printf("Received robot ID from config: %d\nRobot ID from ref system: %d\n", (int)config.robot, ref.ref_data.robot_performance.robot_ID);
     // id check with modulo 100 to account for red and blue teams. Blue is the id + 100. (ID == 101, 102, ...)
     if ((ref.ref_data.robot_performance.robot_ID % 100) != (int)config.robot) {
@@ -56,8 +56,8 @@ const Config* const ConfigLayer::configure(HIDLayer* comms) {
 
     // update stored config, msg if successful
     Serial.println("Attempting to store config...");
-    if (store_config()) Serial.println("Config successfully stored in /config.pack");
-    else Serial.println("Config not successfully stored (is an SD card inserted?)");    // not a fatal error, can still return
+    if (store_config()) Serial.println("\tConfig successfully stored in /config.pack\n");
+    else Serial.println("\tConfig not successfully stored (is an SD card inserted?)\n");    // not a fatal error, can still return
 
     // blink 4 times quickly to show that we received a config packet finished processing it
     for (int i = 0; i < 8; i++) {
@@ -106,7 +106,7 @@ void ConfigLayer::reconfigure(HIDLayer* comms) {
     config.fill_data(config_packets, subsec_sizes);
 
     // verify that config received matches ref system: if not, error out
-#ifndef CONFIG_OFF_ROBOT
+#ifndef DISREGARD_REF_CONFIG_CHECK
     Serial.printf("Received robot ID from config: %d\nRobot ID from ref system: %d\n", (int)config.robot, ref.ref_data.robot_performance.robot_ID);
     // id check with modulo 100 to account for red and blue teams. Blue is the id + 100. (ID == 101, 102, ...)
     if ((ref.ref_data.robot_performance.robot_ID % 100) != (int)config.robot) {
@@ -125,8 +125,8 @@ void ConfigLayer::reconfigure(HIDLayer* comms) {
 
     // update stored config, msg if successful
     Serial.println("Attempting to store config...");
-    if (store_config()) Serial.println("Config successfully stored in /config.pack");
-    else Serial.println("Config not successfully stored (is an SD card inserted?)");    // not a fatal error, can still return
+    if (store_config()) Serial.println("\tConfig successfully stored in /config.pack\n");
+    else Serial.println("\tConfig not successfully stored (is an SD card inserted?)\n");    // not a fatal error, can still return
 
     // blink 4 times quickly to show that we received a config packet and are about to restart
     for (int i = 0; i < 8; i++) {
@@ -143,7 +143,7 @@ void ConfigLayer::reconfigure(HIDLayer* comms) {
 
 void ConfigLayer::config_SD_init(HIDLayer* comms) {
     // if on robot, we need to wait for ref to send robot_id
-#ifndef CONFIG_OFF_ROBOT
+#ifndef DISREGARD_REF_CONFIG_CHECK
     Serial.println("Waiting for ref system to initialize...");
     while (ref.ref_data.robot_performance.robot_ID == 0) ref.read();
     Serial.println("Ref system online");
@@ -245,8 +245,9 @@ void Config::fill_data(CommsPacket packets[MAX_CONFIG_PACKETS], uint8_t sizes[MA
 
         if (subsec_id == 0) index = 0;
 
-        Serial.printf("id: %d, subsec_id: %d, sub_size: %d\n", id, subsec_id, sub_size);
-        Serial.println();
+        if (sub_size != 0) {
+            Serial.printf("id: %d, subsec_id: %d, sub_size: %d\n", id, subsec_id, sub_size);
+        }
 
         if (id == yaml_section_id_mappings.at("robot")) {
             memcpy(&robot, packets[i].raw + 8, sub_size);
@@ -311,6 +312,8 @@ void Config::fill_data(CommsPacket packets[MAX_CONFIG_PACKETS], uint8_t sizes[MA
             index += sub_size;
         }
     }
+
+    Serial.println();
 }
 
 bool ConfigLayer::sd_load() {
@@ -348,7 +351,7 @@ bool ConfigLayer::sd_load() {
 
     temp_config.fill_data(config_packets, subsec_sizes);
 
-#ifndef CONFIG_OFF_ROBOT
+#ifndef DISREGARD_REF_CONFIG_CHECK
     // id check with modulo 100 to account for red and blue teams. Blue is the id + 100. (ID == 101, 102, ...)
     if ((ref.ref_data.robot_performance.robot_ID % 100) != (int)received_id) {
         Serial.printf("NOTICE: attempting to load firmware for different robot type! \n");
@@ -458,15 +461,15 @@ bool ConfigLayer::CONFIG_ERR_HANDLER(int err_code) {
     // make sure that every error case returns a value!
     switch (err_code) {
     case CONFIG_RM_FAIL:
-        Serial.println("CONFIG_ERROR::config failed to remove /config.pack from SD");
+        Serial.println("\tCONFIG_ERROR::config failed to remove /config.pack from SD");
         return false;
 
     case CONFIG_TOUCH_FAIL:
-        Serial.println("CONFIG_ERROR::config failed to create /config.pack on SD");
+        Serial.println("\tCONFIG_ERROR::config failed to create /config.pack on SD");
         return false;
 
     case CONFIG_OPEN_FAIL:
-        Serial.println("CONFIG_ERROR::config failed to open /config.pack from SD");
+        Serial.println("\tCONFIG_ERROR::config failed to open /config.pack from SD");
         return false;
 
     case CONFIG_ID_MISMATCH:
@@ -474,8 +477,8 @@ bool ConfigLayer::CONFIG_ERR_HANDLER(int err_code) {
         delta_time = millis() - prev_time;
         while (1) {
             if (delta_time >= 2000) {
-                Serial.println("CONFIG_ERROR::config from comms does not match from ref system!!");
-                Serial.println("Check robot_id.cfg and robot ID on ref system for inconsistency");
+                Serial.println("\tCONFIG_ERROR::config from comms does not match from ref system!!");
+                Serial.println("\tCheck robot_id.cfg and robot ID on ref system for inconsistency");
                 prev_time = millis();
             }
             delta_time = millis() - prev_time;
@@ -484,7 +487,7 @@ bool ConfigLayer::CONFIG_ERR_HANDLER(int err_code) {
 
     default:
         // default case, in the event that invalid err_code passed
-        Serial.printf("CONFIG_ERR_HANDLER::invalid err_code (%d) passed\n", err_code);
+        Serial.printf("\tCONFIG_ERR_HANDLER::invalid err_code (%d) passed\n", err_code);
         return false;
     }
 
