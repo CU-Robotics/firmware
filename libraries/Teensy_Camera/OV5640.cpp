@@ -785,10 +785,11 @@ uint8_t OV5640::cameraReadRegister(uint16_t reg_addr, uint8_t &reg_data) {
     _wire->write(reg_addr >> 8);
     _wire->write(reg_addr);
     if (_wire->endTransmission(false) != 0) {
-        if (_debug)
+        if (_debug) {
             debug.println("error reading OV5640, address");
             // print what register we're trying to read
             debug.printf("reg_addr = %04x\n", reg_addr);
+        }
         return 0;
     }
     if (_wire->requestFrom(0x3C, 1) < 1) {
