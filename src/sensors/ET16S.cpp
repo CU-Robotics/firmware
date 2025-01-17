@@ -329,6 +329,6 @@ float ET16S::get_channel_fourteen(){
 float ET16S::get_channel_fifteen(){
 	return channel[15].data;
 }
-float ET16S::get_flag_byte(){
-	return channel[16].data;
+float ET16S::get_connection_status(){
+	return is_connected;
 }
