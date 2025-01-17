@@ -10,11 +10,15 @@ void StereoCamTrigger::track_exposures() {
   digitalWrite(TRIG_PIN, LOW);
   
   // update timestamp
+#ifdef LOG_STEREO_FPS
   uint32_t prev_timestamp = latest_exposure_timestamp;
+#endif
+
   latest_exposure_timestamp = micros();
-  uint32_t delta = latest_exposure_timestamp - prev_timestamp;
 
 #ifdef LOG_STEREO_FPS
+  uint32_t delta = latest_exposure_timestamp - prev_timestamp;
+
   // print FPS estimate
   Serial.printf("fps: %f\n", 1/(float(delta) * 1.0e-6));
 #endif
