@@ -6,7 +6,7 @@
 #include "sensors/d200.hpp"
 #include "controls/estimator_manager.hpp"
 #include "controls/controller_manager.hpp"
-
+#include "sensors/ET16S.hpp"
 #include <TeensyDebug.h>
 #include "sensors/LEDBoard.hpp"
 
@@ -15,7 +15,8 @@
 #define HEARTBEAT_FREQ 2
 
 // Declare global objects
-DR16 dr16;
+//DR16 dr16;
+ET16S et16s;
 rm_CAN can;
 RefSystem ref;
 HIDLayer comms;
@@ -84,10 +85,15 @@ int main() {
     // Execute setup functions
     pinMode(13, OUTPUT);
 
-    led.init();
+    //led.init();
     //initialize objects
-    can.init();
-    dr16.init();
+    //can.init();
+    et16s.init();
+	while(true){
+	et16s.read();
+	Serial.print(et16s.get_safety());
+	}
+	/*
     ref.init();
     comms.init();
 
@@ -143,7 +149,7 @@ int main() {
     while (true) {
         // read main sensors
         can.read();
-        dr16.read();
+        et16s.read();
         ref.read();
         lidar1.read();
         lidar2.read();
@@ -325,7 +331,7 @@ int main() {
         float dt = stall_timer.delta();
         if (dt > 0.002) Serial.printf("Slow loop with dt: %f\n", dt);
     }
-    
+    */
     return 0;
 }
 
