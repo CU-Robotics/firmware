@@ -244,6 +244,12 @@ float ET16S::map_raw(input_channel input){
 		
 		if(val==-0.f){val=0;} //used to prevent -0 float
 		break;
+	case input_kind::TRIM:
+		break;
+	case input_kind::INVALID:
+		break;
+	case input_kind::FLAG:
+		break;
 	}
 	
     return val;

@@ -4,7 +4,7 @@
 #include <string>
 //http://www.wflysz.com/wflyftp/ET16S/ET16SENV1.00.pdf
 constexpr uint16_t ET16S_PACKET_SIZE = 25;
-constexpr uint16_t ET16S_INPUT_VALUE_COUNT=16;
+constexpr uint16_t ET16S_INPUT_VALUE_COUNT=17;
 constexpr float max_in=1695;
 constexpr float min_in=352;
 constexpr uint16_t ERROR=0b0000000000001100;
