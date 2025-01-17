@@ -117,11 +117,9 @@ public:
 	/// @return channel 15 data
 	float get_channel_fifteen();
 
-	/// @brief get flag byte
-	/// @return flag byte
-	float get_flag_byte();
-	
-	
+	/// @brief getter for connection status
+	/// @return false if disconnected
+	bool get_connection_status();
 	
 
 	
