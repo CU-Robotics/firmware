@@ -11,6 +11,16 @@
 
 namespace Comms {
 
+// array of ethernet packets for combined transmission
+struct EthernetPackage {
+    EthernetPackage();
+    EthernetPacket packets[MAX_ETHERNET_PACKETS];
+    uint8_t num_packets;
+
+    // these types are shared among all packets
+    EthernetPacketFlags flag;
+};
+
 class CommsLayer {
 public:
 // - init functions
@@ -32,17 +42,17 @@ public:
     // take data, convert it into ethernet compatible form (packet sequence)
     // EthernetPayload will incorporate the (optional) given data_type and data_flag, passing them through
     // to the packet headers individually
-    EthernetPacket encode(FirmwareData data, int data_type = DATA, int data_flag = NORMAL);
+    EthernetPackage encode(FirmwareData data, int data_type = DATA, int data_flag = NORMAL);
 
     // take ethernet packet sequence, convert it into FirmwareData
-    HiveData decode(EthernetPacket payload);
+    HiveData decode(EthernetPackage payload);
 
     // transmit a given EthernetPayload
-    int transmit(EthernetPacket payload);
+    int transmit(EthernetPackage payload);
 
     // receive an EthernetPayload
     // nullptr if failed, else success
-    EthernetPacket* receive();
+    EthernetPackage* receive();
 
 public:
 // - purpose-built comms functions for complex use cases
@@ -50,12 +60,12 @@ public:
     // config functions:
 
     // send full configuration packet over Ethernet, returns < 0 on failure, 0 on success
-    int teensy_configure(EthernetPacket &config_packet);
+    int teensy_configure();
 
 private:
 
     // constructs a packet based on input data
-    EthernetPacket construct_packet(uint8_t* bytes, uint16_t payload_size, uint8_t type, uint8_t flag, uint64_t timestamp);
+    EthernetPacket construct_packet(uint8_t* bytes, uint16_t payload_size, uint8_t type, uint8_t flag);
 
     // construct a packet to determine EOT
     EthernetPacket construct_EOT_packet();
