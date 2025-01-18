@@ -7,8 +7,7 @@
 
 #include <map>
 #include <string>
-// #define CONFIG_LAYER_DEBUG
-
+#define CONFIG_LAYER_DEBUG
 
 #define NUM_SENSOR_VALUES 12
 #define NUM_SENSORS 16
@@ -26,9 +25,8 @@
 // lastly, stores bytes of subsec_sizes array
 #define CONFIG_PATH "/config.pack"
 
-// define DISREGARD_REF_CONFIG_CHECK macro when running off of real robot (testing firmware away from actual robot)
-#define DISREGARD_REF_CONFIG_CHECK 
-
+// define DISABLE_REF_CONFIG_SAFETY_CHECK macro when running off of real robot (testing firmware away from actual robot)
+#define DISABLE_REF_CONFIG_SAFETY_CHECK 
 
 /// @brief arbitrary cap on config packets that can be received (make sure it's enough)
 const int MAX_CONFIG_PACKETS = 64;
@@ -53,13 +51,11 @@ struct Config {
     /// @param sizes Number of sections for each section
     void fill_data(CommsPacket packets[MAX_CONFIG_PACKETS], uint8_t sizes[MAX_CONFIG_PACKETS]);
 
-
     /// @brief robot id
     float robot;
 
     /// @brief matrix that defines type and neccessary values for each sensor
     float sensor_info[NUM_SENSORS][NUM_SENSOR_VALUES + 1];
-
 
     /// @brief gains matrix
     float gains[NUM_ROBOT_CONTROLLERS][NUM_GAINS];
@@ -120,9 +116,10 @@ public:
 
     /// @brief Block until all config packets are read, processed, and set within the returned Config object
     /// @param comms pointer to the HID comms layer for grabbing config packets
+    /// @param config_off_SD Defaulted to true. Whether we should look at the SD card first before pinging comms for a config
     /// @return a const pointer const config object holding all the data within the config yaml
     /// @note its double const so its enforced as a read-only object
-    const Config* const configure(HIDLayer* comms);
+    const Config* const configure(HIDLayer* comms, bool config_off_SD = true);
 
     /// @brief Grab all incoming config packets, process them, and store them onto the sd card. Then issue a processor reset call.
     /// @param comms Pointer to the HID comms layer
