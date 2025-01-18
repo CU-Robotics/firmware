@@ -12,7 +12,6 @@ public:
         Config = 0x01,
         TargetState = 0x02,
         OverrideState = 0x03,
-        // RandomVariables = 0x04,  // is this needed for anything? @ kyle 3
         FirmwareInfo = 0x04,
     } data_header = DataType::NONE;
 

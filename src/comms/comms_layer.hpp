@@ -47,12 +47,12 @@ public:
     // take ethernet packet sequence, convert it into FirmwareData
     HiveData decode(EthernetPackage payload);
 
-    // transmit a given EthernetPayload
+    // transmit a given EthernetPackage
     int transmit(EthernetPackage payload);
 
-    // receive an EthernetPayload
+    // receive an EthernetPackage
     // nullptr if failed, else success
-    EthernetPackage* receive();
+    EthernetPackage receive();
 
 public:
 // - purpose-built comms functions for complex use cases

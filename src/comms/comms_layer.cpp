@@ -73,9 +73,9 @@ int CommsLayer::transmit(EthernetPackage packet) {
 
 // receive an EthernetPacket
 // nullptr if failed, else success
-EthernetPackage* CommsLayer::receive() {
+EthernetPackage CommsLayer::receive() {
     // TODO
-    return nullptr;
+    return EthernetPackage();
 }
 
 
