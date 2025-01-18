@@ -26,7 +26,7 @@
 #define CONFIG_PATH "/config.pack"
 
 // define DISABLE_REF_CONFIG_SAFETY_CHECK macro when running off of real robot (testing firmware away from actual robot)
-#define DISABLE_REF_CONFIG_SAFETY_CHECK 
+// #define DISABLE_REF_CONFIG_SAFETY_CHECK 
 
 /// @brief arbitrary cap on config packets that can be received (make sure it's enough)
 const int MAX_CONFIG_PACKETS = 64;
@@ -152,7 +152,7 @@ public:
     }
 
     /// @brief check if SD card is available to load from, and wait for ref system initialization
-    /// @param comms 
+    /// @param comms Pointer to the HID comms layer
     void config_SD_init(HIDLayer* comms);
 
     /// @brief read packet data from SD card at /config.pack
