@@ -295,7 +295,12 @@ int main() {
         outgoing->set_sensor_data(&sensor_data);
         outgoing->set_ref_data(ref_data_raw);
         outgoing->set_estimated_state(temp_state);
-
+	float dt = stall_timer.delta();
+        if (dt > 0.002) { 
+		Serial.printf("Slow loop with dt: %f\n", dt);
+		can.zero();
+		goto next;
+	}
         //  SAFETY MODE
         if (dr16.is_connected() && (dr16.get_l_switch() == 2 || dr16.get_l_switch() == 3) && config_layer.is_configured()) {
             // SAFETY OFF
@@ -305,6 +310,7 @@ int main() {
             // TODO: Reset all controller integrators here
             can.zero();
         }
+next:
 
         // LED heartbeat -- linked to loop count to reveal slowdowns and freezes.
         loopc % (int)(1E3 / float(HEARTBEAT_FREQ)) < (int)(1E3 / float(5 * HEARTBEAT_FREQ)) ? digitalWrite(13, HIGH) : digitalWrite(13, LOW);
@@ -312,8 +318,7 @@ int main() {
 
         // Keep the loop running at the desired rate
         loop_timer.delay_micros((int)(1E6 / (float)(LOOP_FREQ)));
-        float dt = stall_timer.delta();
-        if (dt > 0.002) Serial.printf("Slow loop with dt: %f\n", dt);
+        
     }
     
     return 0;
