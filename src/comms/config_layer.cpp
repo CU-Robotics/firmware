@@ -1,7 +1,7 @@
 #include "config_layer.hpp"
 
 /// @brief This resets the whole processor and kicks it back to program entry (teensy4/startup.c)
-/// @param void void
+/// @param void specify no arguments (needed in C)
 /// @note Dont abuse this function, it is not to be used lightly
 extern "C" void reset_teensy(void) {
     // Register information found in the NXP IM.XRT 1060 reference manual
