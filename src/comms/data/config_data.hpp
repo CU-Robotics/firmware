@@ -11,7 +11,7 @@
 namespace Comms {
 
 
-// literally JUST a config object right now. for the time being this will be passed through to config_layer
+// literally JUST a config object right now. 
 struct ConfigData {
     /// @brief robot id
     float robot;
