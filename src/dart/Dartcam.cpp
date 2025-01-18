@@ -35,10 +35,13 @@ void Dartcam::log_position() {
     int x_sum = 0, y_sum = 0, green_total = 0;
     int x = 0, y = 0;
 
+    // max green value in RGB565 as an int 63.
+    constexpr int green_threshold = 40;
+
     for (int i = 0; i < DARTCAM_BUFFER_SIZE; i++) {
         int green_component = (frame_buffer[i] & 0x07E0) >> 5; // extract green
 
-        if (green_component >= static_cast<int>(63 * 0.5)) { // green threshold
+        if (green_component >= green_threshold) {
             x_sum += x;
             y_sum += y;
             green_total++;
@@ -86,7 +89,7 @@ Position Dartcam::get_average_position() {
 void Dartcam::print_position_history() {
     Serial.printf("History ------\n");
     for (int i = 0; i < POSITION_HISTORY_SIZE; i++) {
-        Serial.printf("%d: %d, %d\n", i, position_history[i].x, position_history[i].y);
+        Serial.printf("%2d: %4d, %4d\n", i, position_history[i].x, position_history[i].y);
     }
     Serial.printf("\n");
 }
