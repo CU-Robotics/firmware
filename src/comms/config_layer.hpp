@@ -9,7 +9,6 @@
 #include <string>
 #define CONFIG_LAYER_DEBUG
 
-
 #define NUM_SENSOR_VALUES 12
 #define NUM_SENSORS 16
 
@@ -26,9 +25,8 @@
 // lastly, stores bytes of subsec_sizes array
 #define CONFIG_PATH "/config.pack"
 
-// define CONFIG_OFF_ROBOT macro when running off of real robot (testing firmware away from actual robot)
-// #define CONFIG_OFF_ROBOT 
-
+// define DISABLE_REF_CONFIG_SAFETY_CHECK macro when running off of real robot (testing firmware away from actual robot)
+// #define DISABLE_REF_CONFIG_SAFETY_CHECK 
 
 /// @brief arbitrary cap on config packets that can be received (make sure it's enough)
 const int MAX_CONFIG_PACKETS = 64;
@@ -53,13 +51,11 @@ struct Config {
     /// @param sizes Number of sections for each section
     void fill_data(CommsPacket packets[MAX_CONFIG_PACKETS], uint8_t sizes[MAX_CONFIG_PACKETS]);
 
-
     /// @brief robot id
     float robot;
 
     /// @brief matrix that defines type and neccessary values for each sensor
     float sensor_info[NUM_SENSORS][NUM_SENSOR_VALUES + 1];
-
 
     /// @brief gains matrix
     float gains[NUM_ROBOT_CONTROLLERS][NUM_GAINS];
@@ -120,9 +116,23 @@ public:
 
     /// @brief Block until all config packets are read, processed, and set within the returned Config object
     /// @param comms pointer to the HID comms layer for grabbing config packets
+    /// @param config_off_SD Defaulted to true. Whether we should look at the SD card first before pinging comms for a config
     /// @return a const pointer const config object holding all the data within the config yaml
     /// @note its double const so its enforced as a read-only object
-    const Config* const configure(HIDLayer* comms);
+    const Config* const configure(HIDLayer* comms, bool config_off_SD = true);
+
+    /// @brief Grab all incoming config packets, process them, and store them onto the sd card. Then issue a processor reset call.
+    /// @param comms Pointer to the HID comms layer
+    /// @note This function never returns.
+    /// The reconfig process:
+    ///     1. Teensy boots, looks for a config off the SD card (if it exists)
+    ///         1a. If no SD card exists, it follows the normal configure process
+    ///     2. Teensy configures
+    ///     3. Teensy eventually receives another config request
+    ///     4. Teensy processes this request, stores it to the SD card (if it exists) and reboots
+    ///     5. Goto 1.
+    /// This process works with or without the SD card, although without one makes it a bit slow (double config with the first one wasted)
+    [[noreturn]] void reconfigure(HIDLayer* comms);
 
     /// @brief check incoming packet from the comms layer and update outgoing packet accordingly to request next config packet
     /// @param in incoming comms packet
@@ -142,7 +152,7 @@ public:
     }
 
     /// @brief check if SD card is available to load from, and wait for ref system initialization
-    /// @param comms 
+    /// @param comms Pointer to the HID comms layer
     void config_SD_init(HIDLayer* comms);
 
     /// @brief read packet data from SD card at /config.pack

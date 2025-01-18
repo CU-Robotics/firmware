@@ -2,7 +2,6 @@
 
 #include "git_info.h"
 
-
 #include "utils/profiler.hpp"
 #include "sensors/d200.hpp"
 #include "sensors/StereoCamTrigger.hpp"
@@ -155,6 +154,19 @@ int main() {
         comms.ping();
         CommsPacket* incoming = comms.get_incoming_packet();
         CommsPacket* outgoing = comms.get_outgoing_packet();
+
+        // check whether this packet is a config packet
+        if (incoming->raw[3] == 1) {
+            Serial.println("\n\nConfig request received, reconfiguring from comms!\n\n");
+            // trigger safety mode
+            can.zero();
+            config_layer.reconfigure(&comms);
+        }
+
+        // print loopc every second to verify it is still alive
+        if (loopc % 1000 == 0) {
+            Serial.println(loopc);
+        }
 
         // manual controls on firmware
 
