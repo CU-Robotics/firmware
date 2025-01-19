@@ -139,6 +139,10 @@ int SDManager::lseek(int offset, int whence) {
 }
 
 bool SDManager::exists(const char* filepath) {
+    // check whether the sd card is actually there, and if it previously wasn't but is now (ie it got inserted after upload), re-initialize the card
+    // this is a SD.h internal function and is badly named. oh well
+    SDinternal.mediaPresent();
+    
     return SDinternal.exists(filepath);
 }
 

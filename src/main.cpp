@@ -2,7 +2,6 @@
 
 #include "git_info.h"
 
-
 #include "utils/profiler.hpp"
 #include "sensors/d200.hpp"
 #include "sensors/StereoCamTrigger.hpp"
@@ -145,7 +144,7 @@ int main() {
     float temp_reference[STATE_LEN][3] = { 0 }; //Temp governed state
     float target_state[STATE_LEN][3] = { 0 }; //Temp ungoverned state
     float hive_state_offset[STATE_LEN][3] = { 0 }; //Hive offset state
-    float motor_inputs[NUM_MOTORS] = { 0 }; //Array for storing controller outputs to send to CAN
+    // float motor_inputs[NUM_MOTORS] = { 0 }; //Array for storing controller outputs to send to CAN
 
     // manual controls variables
     float vtm_pos_x = 0;
@@ -182,6 +181,19 @@ int main() {
         
         CommsPacket* incoming = comms.get_incoming_packet();
         CommsPacket* outgoing = comms.get_outgoing_packet();
+
+        // check whether this packet is a config packet
+        if (incoming->raw[3] == 1) {
+            Serial.println("\n\nConfig request received, reconfiguring from comms!\n\n");
+            // trigger safety mode
+            can.zero();
+            config_layer.reconfigure(&comms);
+        }
+
+        // print loopc every second to verify it is still alive
+        if (loopc % 1000 == 0) {
+            Serial.println(loopc);
+        }
 
         // manual controls on firmware
 

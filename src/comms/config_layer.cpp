@@ -1,11 +1,23 @@
 #include "config_layer.hpp"
 
-const Config *const ConfigLayer::configure(HIDLayer *comms)
-{
-    // attempt SD card load
-    config_SD_init(comms);
-    if (configured)
-        return &config;
+/// @brief This resets the whole processor and kicks it back to program entry (teensy4/startup.c)
+/// @param void specify no arguments (needed in C)
+/// @note Dont abuse this function, it is not to be used lightly
+extern "C" void reset_teensy(void) {
+    // Register information found in the NXP IM.XRT 1060 reference manual
+	SRC_GPR5 = 0x0BAD00F1;
+    // Register information found in the Arm-v7-m reference manual
+	SCB_AIRCR = 0x05FA0004;
+    // loop to catch execution while the reset occurs
+	while (1);
+}
+
+const Config* const ConfigLayer::configure(HIDLayer* comms, bool config_off_SD) {
+    if (config_off_SD) {
+        // attempt SD card load
+        config_SD_init(comms);
+        if (configured) return &config;
+    }
 
     // if no config on SD, then await transmission
     // grab and process all config packets until finished
@@ -29,7 +41,7 @@ const Config *const ConfigLayer::configure(HIDLayer *comms)
     config.fill_data(config_packets, subsec_sizes);
 
     // verify that config received matches ref system: if not, error out
-#ifndef CONFIG_OFF_ROBOT
+#ifndef DISABLE_REF_CONFIG_SAFETY_CHECK
     Serial.printf("Received robot ID from config: %d\nRobot ID from ref system: %d\n", (int)config.robot, ref.ref_data.robot_performance.robot_ID);
     // id check with modulo 100 to account for red and blue teams. Blue is the id + 100. (ID == 101, 102, ...)
     if ((ref.ref_data.robot_performance.robot_ID % 100) != (int)config.robot)
@@ -51,29 +63,60 @@ const Config *const ConfigLayer::configure(HIDLayer *comms)
 
     // update stored config, msg if successful
     Serial.println("Attempting to store config...");
-    if (store_config())
-        Serial.println("Config successfully stored in /config.pack");
-    else
-        Serial.println("Config not successfully stored (is an SD card inserted?)"); // not a fatal error, can still return
+    if (store_config()) Serial.println("\tConfig successfully stored in /config.pack\n");
+    else Serial.println("\tConfig not successfully stored (is an SD card inserted?)\n");    // not a fatal error, can still return
+
+    // blink 4 times quickly to show that we received a config packet finished processing it
+    for (int i = 0; i < 8; i++) {
+        digitalToggle(13);
+        delay(100);
+    }
+
+    // get the outgoing packet and set it to 0
+    CommsPacket* outgoing = comms->get_outgoing_packet();
+    memset(outgoing->raw, 0, sizeof(outgoing->raw));
+
+    // Hive marks the config process as done once teensy sends a packet with info_bit == 0
+    // Hive then sends a packet back with info_bit == 0 as well, so ping until we get a non-config back
+    while (comms->get_incoming_packet()->raw[3] == 1) {
+        comms->ping();
+    }
 
     // update the num_of_(sensor) variables in the config struct
     return &config;
 }
 
-void ConfigLayer::config_SD_init(HIDLayer *comms)
-{
-#ifndef CONFIG_OFF_ROBOT
+void ConfigLayer::reconfigure(HIDLayer* comms) {
+    // force it to reconfigure
+    configured = false;
 
+    // reset the section, subsection, and index vars to defaults since we need to use process() again
+    seek_sec = -1;
+    seek_subsec = 0;
+    index = 0;
+    
+    // perform a normal config, but dont try to load from the config, just process and store
+    configure(comms, false);
+
+    // issue the reboot call
+    reset_teensy();
+
+    // reset_teensy() never returns
+    __builtin_unreachable();
+}
+
+void ConfigLayer::config_SD_init(HIDLayer* comms) {
     // if on robot, we need to wait for ref to send robot_id
+#ifndef DISABLE_REF_CONFIG_SAFETY_CHECK
     Serial.println("Waiting for ref system to initialize...");
     while (ref.ref_data.robot_performance.robot_ID == 0)
         ref.read();
     Serial.println("Ref system online");
 #endif
 
-    // check SD
-    if (sdcard.exists(CONFIG_PATH))
-    {
+
+// check SD
+    if (sdcard.exists(CONFIG_PATH)) {
         Serial.printf("Config located on SD in /config.pack, attempting to load from file\n");
 
         // load sd config into config_packets
@@ -171,7 +214,6 @@ void ConfigLayer::process(CommsPacket *in, CommsPacket *out)
         out_raw[2] = seek_subsec;
         out_raw[3] = 1; // set info bit
 
-        // Serial.printf("Requesting YAML configuration packet: (%u, %u)\n", seek_sec, seek_subsec);
     }
 }
 
@@ -186,8 +228,9 @@ void Config::fill_data(CommsPacket packets[MAX_CONFIG_PACKETS], uint8_t sizes[MA
         if (subsec_id == 0)
             index = 0;
 
-        Serial.printf("id: %d, subsec_id: %d, sub_size: %d\n", id, subsec_id, sub_size);
-        Serial.println();
+        if (sub_size != 0) {
+            Serial.printf("id: %d, subsec_id: %d, sub_size: %d\n", id, subsec_id, sub_size);
+        }
 
         if (id == yaml_section_id_mappings.at("robot"))
         {
@@ -205,8 +248,7 @@ void Config::fill_data(CommsPacket packets[MAX_CONFIG_PACKETS], uint8_t sizes[MA
             index += sub_size;
         }
 
-        if (id == yaml_section_id_mappings.at("sensor_info"))
-        {
+        if (id == yaml_section_id_mappings.at("sensor_info")) {
             size_t linear_index = index / sizeof(float);
             size_t i1 = linear_index / (NUM_SENSORS);
             size_t i2 = linear_index % NUM_SENSORS;
@@ -214,8 +256,7 @@ void Config::fill_data(CommsPacket packets[MAX_CONFIG_PACKETS], uint8_t sizes[MA
             index += sub_size;
         }
 
-        if (id == yaml_section_id_mappings.at("gains"))
-        {
+        if (id == yaml_section_id_mappings.at("gains")) {
             size_t linear_index = index / sizeof(float);
             size_t i1 = linear_index / (NUM_GAINS);
             size_t i2 = linear_index % NUM_GAINS;
@@ -262,6 +303,9 @@ void Config::fill_data(CommsPacket packets[MAX_CONFIG_PACKETS], uint8_t sizes[MA
         }
     }
 
+    Serial.println();
+
+
     //fill num_of_(sensor) variables with the number of sensors defined for this robot
     for (int i = 0; i < 16; i++)
     {
@@ -293,6 +337,7 @@ void Config::fill_data(CommsPacket packets[MAX_CONFIG_PACKETS], uint8_t sizes[MA
         }
     }
 }
+
 
 
 bool ConfigLayer::sd_load()
@@ -334,10 +379,9 @@ bool ConfigLayer::sd_load()
 
     temp_config.fill_data(config_packets, subsec_sizes);
 
-#ifndef CONFIG_OFF_ROBOT
+#ifndef DISABLE_REF_CONFIG_SAFETY_CHECK
     // id check with modulo 100 to account for red and blue teams. Blue is the id + 100. (ID == 101, 102, ...)
-    if ((ref.ref_data.robot_performance.robot_ID % 100) != (int)received_id)
-    {
+    if ((ref.ref_data.robot_performance.robot_ID % 100) != (int)received_id) {
         Serial.printf("NOTICE: attempting to load firmware for different robot type! \n");
         Serial.printf("Current robot ID: %d\nStored config robot ID: %d\n", ref.ref_data.robot_performance.robot_ID, (int)received_id);
         Serial.println("Requesting config from hive...");
@@ -466,26 +510,24 @@ bool ConfigLayer::CONFIG_ERR_HANDLER(int err_code)
     switch (err_code)
     {
     case CONFIG_RM_FAIL:
-        Serial.println("CONFIG_ERROR::config failed to remove /config.pack from SD");
+        Serial.println("\tCONFIG_ERROR::config failed to remove /config.pack from SD");
         return false;
 
     case CONFIG_TOUCH_FAIL:
-        Serial.println("CONFIG_ERROR::config failed to create /config.pack on SD");
+        Serial.println("\tCONFIG_ERROR::config failed to create /config.pack on SD");
         return false;
 
     case CONFIG_OPEN_FAIL:
-        Serial.println("CONFIG_ERROR::config failed to open /config.pack from SD");
+        Serial.println("\tCONFIG_ERROR::config failed to open /config.pack from SD");
         return false;
 
     case CONFIG_ID_MISMATCH:
         prev_time = millis();
         delta_time = millis() - prev_time;
-        while (1)
-        {
-            if (delta_time >= 2000)
-            {
-                Serial.println("CONFIG_ERROR::config from comms does not match from ref system!!");
-                Serial.println("Check robot_id.cfg and robot ID on ref system for inconsistency");
+        while (1) {
+            if (delta_time >= 2000) {
+                Serial.println("\tCONFIG_ERROR::config from comms does not match from ref system!!");
+                Serial.println("\tCheck robot_id.cfg and robot ID on ref system for inconsistency");
                 prev_time = millis();
             }
             delta_time = millis() - prev_time;
@@ -494,7 +536,7 @@ bool ConfigLayer::CONFIG_ERR_HANDLER(int err_code)
 
     default:
         // default case, in the event that invalid err_code passed
-        Serial.printf("CONFIG_ERR_HANDLER::invalid err_code (%d) passed\n", err_code);
+        Serial.printf("\tCONFIG_ERR_HANDLER::invalid err_code (%d) passed\n", err_code);
         return false;
     }
 }
