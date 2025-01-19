@@ -39,6 +39,7 @@ Timer loop_timer;
 Timer stall_timer;
 Timer control_input_timer;
 
+SensorManager sensor_manager;
 EstimatorManager estimator_manager;
 ControllerManager controller_manager;
 
@@ -111,8 +112,7 @@ int main() {
     const Config* config = config_layer.configure(&comms);
     Serial.println("Configured!");
 
-    //initialize sensors using sensor manager
-    SensorManager sensor_manager;
+    
     sensor_manager.init(config);
 
     //print sensor counts
