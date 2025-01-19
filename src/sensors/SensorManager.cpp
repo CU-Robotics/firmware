@@ -32,27 +32,27 @@ void SensorManager::init(const Config* config_data) {
             num_sensors[type]++;
         }
 
-        //Split up the sensor counts by type
-        switch (type)
-        {
-        case SensorType::BUFFENC:
-            buff_sensor_count++;
-            break;
-        case SensorType::REVENC:
-            rev_sensor_count++;
-            break;
-        case SensorType::ICM:
-            icm_sensor_count++;
-            break;
-        case SensorType::TOF:
-            tof_sensor_count++;
-            break;
-        case SensorType::LIDAR:
-            lidar_sensor_count++;
-            break;
-        default:
-            break;
-        }
+        // //Split up the sensor counts by type
+        // switch (type)
+        // {
+        // case SensorType::BUFFENC:
+        //     buff_sensor_count++;
+        //     break;
+        // case SensorType::REVENC:
+        //     rev_sensor_count++;
+        //     break;
+        // case SensorType::ICM:
+        //     icm_sensor_count++;
+        //     break;
+        // case SensorType::TOF:
+        //     tof_sensor_count++;
+        //     break;
+        // case SensorType::LIDAR:
+        //     lidar_sensor_count++;
+        //     break;
+        // default:
+        //     break;
+        // }
     }
 
     //initilize the sensors
