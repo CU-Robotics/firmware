@@ -109,6 +109,7 @@ struct LidarDataPacket {
   uint16_t timestamp = 0;
 }; */
 
+
 /// @brief data for a LiDAR packet (SI units)
 struct LidarDataPacketSI {
   /// @brief speed of lidar module (rad/s)
@@ -149,6 +150,21 @@ struct D200Calibration {
 
   /// @brief sum of delta times for calibration packets
   int timestamp_delta_sum = 0;
+};
+
+/// @brief Structure for the LiDAR sensor.
+struct LidarSensorData {
+    /// Sensor ID.
+    uint8_t id;
+    /// Index of the current data packet.
+    int current_packet;
+    /// Calibration data.
+    D200Calibration cal;
+    /// Array of cached data packets.
+    LidarDataPacketSI packets[D200_NUM_PACKETS_CACHED];
+
+    /// @brief Function to print the latest LiDAR data packet.
+    void print_latest_packet();
 };
 
 /// @brief class for LiDAR driver
@@ -243,5 +259,22 @@ class D200LD14P : Sensor{
     /// @brief return the current packet
     int get_current_packet_index() {return current_packet;};
 };
+
+void LidarSensorData::print_latest_packet() {
+    LidarDataPacketSI p = packets[current_packet];
+    Serial.println("==D200LD14P PACKET==");
+    Serial.print("LiDAR speed: ");
+    Serial.println(p.lidar_speed);
+    Serial.print("start angle: ");
+    Serial.println(p.start_angle);
+    Serial.println("measurement data: ...");
+    Serial.print("end angle: ");
+    Serial.println(p.end_angle);
+    Serial.print("timestamp: ");
+    Serial.println(p.timestamp);
+}
+
+
+
 
 #endif // D200_H

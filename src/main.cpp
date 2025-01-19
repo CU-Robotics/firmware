@@ -12,8 +12,8 @@
 
 #include <TeensyDebug.h>
 #include "sensors/LEDBoard.hpp"
-#include "data_packet.hpp"
 #include "sensor_constants.hpp"
+#include "SensorManager.hpp"
 
 // Loop constants
 #define LOOP_FREQ 1000
@@ -111,6 +111,10 @@ int main() {
     const Config* config = config_layer.configure(&comms);
     Serial.println("Configured!");
 
+    //initialize sensors using sensor manager
+    SensorManager sensor_manager;
+    sensor_manager.init(config);
+
     //print sensor counts
     // Serial.print("Number of Buff Encoders: ");
     // Serial.println(config->num_of_buffEnc);
@@ -126,7 +130,7 @@ int main() {
     // Serial.println(config->num_of_realsense);
 
     //estimate micro and macro state
-    estimator_manager.init(can_data, config);
+    estimator_manager.init(can_data, config, &sensor_manager);
 
     //generate controller outputs based on governed references and estimated state
     controller_manager.init(&can, config);
@@ -158,11 +162,6 @@ int main() {
     bool hive_toggle = false;
 
     Serial.println("Entering main loop...\n");
-
-    //Ethernet Comms Data packet
-    comms_data_packet packet(config);
-    comms_data_packet packet2(config);
-    uint8_t buffer[BUFFER_SIZE];
 
     ethernet_comms.begin();
 
@@ -255,7 +254,7 @@ int main() {
 
 
         // read sensors
-        estimator_manager.read_sensors();
+        sensor_manager.read();
 
         // override temp state if needed
         if (incoming->get_hive_override_request() == 1) {
@@ -314,27 +313,7 @@ int main() {
 
 
         
-        //ref_data_raw[0] = 99; // test to see if the data is being sent
-        // pack data packet
-        packet.pack_data_packet(buffer, governor, ref_data_raw, can_data, estimator_manager, lidar1, lidar2, dr16, millis());
-        packet.print();
-        packet2.unpack_data_packet(buffer);
-        Serial.println("Packet 2:");
-        packet2.print();
-        //print first 100 bytes of packet
-        // for(int i = 0; i < 100; i++){
-        //     Serial.print(buffer[i]);
-        //     Serial.print(" ");
-        // }
-        // Serial.println();
-        ethernet_comms.loop();
-        //create and set the outgoing ethernet packet
-        Comms::EthernetPacket* outgoing_packet = ethernet_comms.get_outgoing_packet();
-        memcpy(outgoing_packet->payload.data, buffer, BUFFER_SIZE);
-        outgoing_packet->header.payload_size = BUFFER_SIZE;
-        outgoing_packet->header.time_stamp = micros();
-        outgoing_packet->header.type = Comms::DATA;
-        outgoing_packet->header.flags = Comms::NORMAL;
+        
 
 
 

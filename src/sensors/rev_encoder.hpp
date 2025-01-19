@@ -10,6 +10,19 @@
 #define REV_ENC_PIN2 3
 #define REV_ENC_PIN3 4
 
+/// @brief Structure for the Rev encoder sensor.
+struct RevSensorData {
+    /// Sensor ID.
+    uint8_t id;
+    /// Encoder ticks.
+    int ticks;
+    /// Angle in radians.
+    float radians;
+
+    /// @brief Function to print the sensor data.
+    void print();
+};
+
 /// @brief the class for the Rev Through Bore Encoder(www.revrobotics.com/rev-11-1271/)
 class RevEncoder : public Sensor{
 private:

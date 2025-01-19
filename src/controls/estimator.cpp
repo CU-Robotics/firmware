@@ -510,7 +510,7 @@ SwitcherEstimator::SwitcherEstimator(Config config,CANData* c, TOFSensor* tof) {
 void SwitcherEstimator::step_states(float output[STATE_LEN][3], float curr_state[STATE_LEN][3], int override) {
     dt = time.delta();
     //read tof sensor (millimeters)
-    float tof_distance = ((float)(time_of_flight->read()) - tof_sensor_offset)/tof_scale;
+    float tof_distance = ((float)(time_of_flight->get_latest_distance()) - tof_sensor_offset)/tof_scale;
     float angular_velocity_motor = -((((can_data->get_motor_attribute(CAN_2, 6, MotorAttribute::SPEED) / 60)*(2*PI))/36.0)*(5.1))/tof_scale;
     total_motor_angle += (can_data->get_motor_attribute(CAN_2, 6, MotorAttribute::SPEED) * (2*PI/60.0))*dt;
     // float rad_per_switch = 315;

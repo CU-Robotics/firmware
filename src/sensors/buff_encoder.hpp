@@ -88,4 +88,16 @@ private:
 
 };
 
+/// @brief Structure for the buff encoder sensor.
+struct BuffEncoderData {
+    /// Sensor ID.
+    uint8_t id;
+    /// Measured angle.
+    float m_angle;
+
+    /// @brief Function to print the sensor data.
+    void print();
+};
+
+
 #endif

@@ -16,7 +16,7 @@ constexpr size_t MAX_SENSORS = 16;        // Maximum number of sensors
 // **Sensor Types Enumeration**
 
 
-enum class SensorType : uint8_t {
+enum SensorType : uint8_t {
     BUFFENC = 0,
     ICM = 1,
     REVENC = 2,
