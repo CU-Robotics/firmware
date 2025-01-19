@@ -62,15 +62,15 @@ void EstimatorManager::init(CANData* _can_data, const Config* _config_data, Sens
     //     tof_sensors[i].init();
     // }
 
-    // // create and initialize the estimators
-    // for (int i = 0; i < NUM_ESTIMATORS; i++) {
-    //     int id = config_data->estimator_info[i][0];
-    //     // Serial.printf("Init Estimator %d\n", id);
+    // create and initialize the estimators
+    for (int i = 0; i < NUM_ESTIMATORS; i++) {
+        int id = config_data->estimator_info[i][0];
+        // Serial.printf("Init Estimator %d\n", id);
 
-    //     if (id != -1) {
-    //         init_estimator(id);
-    //     }
-    // }
+        if (id != -1) {
+            init_estimator(id);
+        }
+    }
 
     // calibrate the IMUs
     // calibrate_imus();

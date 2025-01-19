@@ -99,15 +99,19 @@ void SensorManager::init(const Config* config_data) {
 void SensorManager::read() {
     for(int i = 0; i < buff_sensor_count; i++) {
         buff_encoders[i].read();
+        Serial.println(buff_encoders[i].print());
     }
     for(int i = 0; i < icm_sensor_count; i++) {
         icm_sensors[i].read();
+        Serial.println(icm_sensors[i].print());
     }
     for(int i = 0; i < rev_sensor_count; i++) {
         rev_sensors[i].read();
+        Serial.println(rev_sensors[i].print());
     }
-    for(int i = 0; i < tof_sensor_count; i++) {
+    for(int i = 0; i < 1; i++) {
         tof_sensors[i].read();
+        Serial.println(tof_sensors[i].print());
     }
     
 }
