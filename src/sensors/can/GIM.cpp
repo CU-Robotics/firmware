@@ -1,0 +1,158 @@
+#include "GIM.hpp"
+
+void GIM::init() {
+    write_motor_on();
+}
+
+int GIM::read(CAN_message_t& msg) {
+    // early return if msg ID does not match this motor
+    if (msg.id != m_base_id + m_id) {
+        return 0;
+    }
+    uint8_t cmd_byte = msg.buf[0];
+
+    switch (cmd_byte) {
+    // commands that return temperature, position, speed, torque
+    case CMD_TORQUE_CONTROL:
+    case CMD_SPEED_CONTROL: {
+
+        // Byte2 is temperature
+        m_state.temperature = msg.buf[2];
+
+        // Byte3–4 (Pos0, Pos1) form a 16-bit position: pos_int = (Pos1 << 8) | Pos0
+        uint16_t pos_int = (msg.buf[4] << 8) | msg.buf[3];
+        float pos_float = (float)pos_int * 25.0f / 65535.0f - 12.5f;
+        m_state.position = pos_float; // Keep it as float, per spec
+
+        // Speed: 12 bits = ST0 (byte 5) as high 8 bits, ST1[7:4] (top nibble) as low 4 bits
+        uint16_t speed_int = ((uint16_t)msg.buf[5] << 4) | (msg.buf[6] >> 4);
+        float speed_float = (float)speed_int * 130.0f / 4095.0f - 65.0f;
+        m_state.speed = speed_float;
+
+        // Torque: 12 bits = ST1[3:0] (low nibble) as high 4 bits, ST2 (byte 7) as low 8 bits
+        // uint16_t torque_int = ((uint16_t)(msg.buf[6] & 0x0F) << 8) | msg.buf[7];
+        // float torque_float =
+        //     (float)torque_int * (450.0f * TORQUE_CONSTANT * GEAR_RATIO) / 4095.0f
+        //     - (225.0f * TORQUE_CONSTANT * GEAR_RATIO);
+        // m_state.torque = torque_float;
+
+    }
+    // commands that don't return anything
+    case CMD_MOTOR_OFF:
+    case CMD_MOTOR_ON:
+    case CMD_MOTOR_STOP: {
+        break;
+    }
+    default:
+        Serial.printf("Unknown command byte: 0x%02X\n", cmd_byte);
+        break;
+    }
+
+    return 1;
+}
+
+int GIM::write(CAN_message_t& msg) const {
+    memcpy(&msg, &m_output, sizeof(CAN_message_t));
+
+    return 0;
+}
+
+void GIM::write_motor_off() {
+    uint8_t buf[8];
+    create_cmd_motor_off(buf);
+
+    m_output.id = m_base_id + m_id;
+    for (int i = 0; i < 8; i++) {
+        m_output.buf[i] = buf[i];
+    }
+}
+
+void GIM::write_motor_on() {
+    uint8_t buf[8];
+    create_cmd_motor_on(buf);
+
+    m_output.id = m_base_id + m_id;
+    for (int i = 0; i < 8; i++) {
+        m_output.buf[i] = buf[i];
+    }
+}
+
+void GIM::write_motor_stop() {
+    uint8_t buf[8];
+    create_cmd_motor_stop(buf);
+
+    m_output.id = m_base_id + m_id;
+    for (int i = 0; i < 8; i++) {
+        m_output.buf[i] = buf[i];
+    }
+}
+
+void GIM::write_motor_torque(float torque, uint32_t duration) {
+    // clamp the torque and convert it to the motor's torque range
+
+    // create the command
+    uint8_t buf[8];
+    create_cmd_torque_control(buf, torque, duration);
+
+    // fill in the output array
+    m_output.id = m_base_id + m_id;
+    for (int i = 0; i < 8; i++) {
+        m_output.buf[i] = buf[i];
+    }
+}
+
+void GIM::create_cmd_retrieve_configuration(uint8_t buf[8], uint8_t conf_type, uint8_t conf_id) {
+    buf[0] = CMD_RETRIEVE_CONFIGURATION;
+    buf[1] = conf_type;
+    buf[2] = conf_id;
+    buf[3] = 0;
+    buf[4] = 0;
+    buf[5] = 0;
+    buf[6] = 0;
+    buf[7] = 0;
+}
+
+// command create functions
+void GIM::create_cmd_motor_off(uint8_t buf[8]) {
+    buf[0] = CMD_MOTOR_OFF;
+    buf[1] = 0;
+    buf[2] = 0;
+    buf[3] = 0;
+    buf[4] = 0;
+    buf[5] = 0;
+    buf[6] = 0;
+    buf[7] = 0;
+}
+
+void GIM::create_cmd_motor_on(uint8_t buf[8]) {
+    buf[0] = CMD_MOTOR_ON;
+    buf[1] = 0;
+    buf[2] = 0;
+    buf[3] = 0;
+    buf[4] = 0;
+    buf[5] = 0;
+    buf[6] = 0;
+    buf[7] = 0;
+}
+
+void GIM::create_cmd_motor_stop(uint8_t buf[8]) {
+    buf[0] = CMD_MOTOR_STOP;
+    buf[1] = 0;
+    buf[2] = 0;
+    buf[3] = 0;
+    buf[4] = 0;
+    buf[5] = 0;
+    buf[6] = 0;
+    buf[7] = 0;
+}
+
+void GIM::create_cmd_torque_control(uint8_t buf[8], float torque, uint32_t duration) {
+    buf[0] = CMD_TORQUE_CONTROL;
+    buf[1] = *((uint8_t*)(&torque) + 0); // low byte
+    buf[2] = *((uint8_t*)(&torque) + 1);
+    buf[3] = *((uint8_t*)(&torque) + 2);
+    buf[4] = *((uint8_t*)(&torque) + 3); // high byte
+    buf[5] = *((uint8_t*)(&duration) + 0); // low byte
+    buf[6] = *((uint8_t*)(&duration) + 1);
+    buf[7] = *((uint8_t*)(&duration) + 2); // high byte
+}

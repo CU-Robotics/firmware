@@ -4,6 +4,7 @@
 #include "can/C610.hpp"
 #include "can/C620.hpp"
 #include "can/MG8016EI6.hpp"
+#include "can/GIM.hpp"
 
 // FlexCAN_T4 moment
 CANManager::CANManager() { }
@@ -66,6 +67,12 @@ void CANManager::configure(float motor_info[CAN_MAX_MOTORS][3]) {
             Serial.printf("Creating MG Motor: %d on bus %d\n", motor_id, bus_id);
             new_motor = new MG8016EI6(motor_id, physical_id, bus_id);
             break;
+        }
+        case MotorControllerType::GIM_CONTROLLER: {
+            // TODO
+
+            Serial.printf("Creating GIM Motor: %d on bus %d\n", motor_id, bus_id);
+            // new_motor = new GIM(motor_id, physical_id, bus_id);
         }
         default: {
             Serial.printf("CANManager tried to create a motor of invalid type: %d\n", controller_type);

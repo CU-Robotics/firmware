@@ -11,6 +11,14 @@ enum class MotorControllerType {
     C610_CONTROLLER,
     C620_CONTROLLER,
     MG8016_CONTROLLER,
+    GIM_CONTROLLER,
+};
+
+enum class MotorType {
+    NULL_MOTOR_TYPE = 0,
+    GIM3505,
+    GIM4310,
+    GIM6010,
 };
 
 /// @brief Unified motor state
