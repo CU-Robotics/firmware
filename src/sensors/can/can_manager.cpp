@@ -32,7 +32,7 @@ void CANManager::init() {
     m_motor_map.clear();
 }
 
-void CANManager::configure(float motor_info[CAN_MAX_MOTORS][3]) {
+void CANManager::configure(const float motor_info[CAN_MAX_MOTORS][3]) {
     // using the motor_info array, create the motors following the config
     
     // loop through all CAN_MAX_MOTORS

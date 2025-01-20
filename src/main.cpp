@@ -19,7 +19,7 @@
 
 // Declare global objects
 DR16 dr16;
-rm_CAN can;
+CANManager can;
 RefSystem ref;
 HIDLayer comms;
 ACS712 current_sensor;
@@ -81,7 +81,7 @@ void print_logo() {
 
 // Master loop
 int main() {
-    long long loopc = 0; // Loop counter for heartbeat
+    uint32_t loopc = 0; // Loop counter for heartbeat
 
     Serial.begin(112500); // the serial monitor is actually always active (for debug use Serial.println & tycmd)
     debug.begin(SerialUSB1);
@@ -98,32 +98,29 @@ int main() {
     ref.init();
     comms.init();
 
-    //can data pointer so we don't pass around rm_CAN object
-    // TODO: extern the can_data object
-    CANData* can_data = can.get_data();
-
     // Config config
     Serial.println("Configuring...");
     const Config* config = config_layer.configure(&comms);
     Serial.println("Configured!");
 
+    can.configure(config->motor_info);
+
     //estimate micro and macro state
-    estimator_manager.init(can_data, config);
+    estimator_manager.init(&can, config);
 
     //generate controller outputs based on governed references and estimated state
     controller_manager.init(&can, config);
-
 
     //set reference limits in the reference governor
     governor.set_reference_limits(config->set_reference_limits);
 
     // variables for use in main
     float temp_state[STATE_LEN][3] = { 0 }; // Temp state array
-    float temp_micro_state[NUM_MOTORS][MICRO_STATE_LEN] = { 0 }; // Temp micro state array
+    float temp_micro_state[CAN_MAX_MOTORS][MICRO_STATE_LEN] = { 0 }; // Temp micro state array
     float temp_reference[STATE_LEN][3] = { 0 }; //Temp governed state
     float target_state[STATE_LEN][3] = { 0 }; //Temp ungoverned state
     float hive_state_offset[STATE_LEN][3] = { 0 }; //Hive offset state
-    // float motor_inputs[NUM_MOTORS] = { 0 }; //Array for storing controller outputs to send to CAN
+    // float motor_inputs[CAN_MAX_MOTORS] = { 0 }; //Array for storing controller outputs to send to CAN
 
     // manual controls variables
     float vtm_pos_x = 0;
@@ -159,7 +156,7 @@ int main() {
         if (incoming->raw[3] == 1) {
             Serial.println("\n\nConfig request received, reconfiguring from comms!\n\n");
             // trigger safety mode
-            can.zero();
+            can.issue_safety_mode();
             config_layer.reconfigure(&comms);
         }
 
@@ -303,7 +300,7 @@ int main() {
         } else {
             // SAFETY ON
             // TODO: Reset all controller integrators here
-            can.zero();
+            can.issue_safety_mode();
         }
 
         // LED heartbeat -- linked to loop count to reveal slowdowns and freezes.

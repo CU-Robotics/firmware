@@ -5,11 +5,14 @@
 
 #include <map>
 
-/// @brief The maximum number of motors that can be connected to the system. Derrived from the max motors per bus assuming bus 3 only holds non-RM motors
-constexpr uint32_t CAN_MAX_MOTORS = 8u + 8u + 32u;
+/// @brief The maximum number of motors that can be connected to a single bus
+constexpr uint32_t CAN_MAX_MOTORS_PER_BUS = 8u;
 
 /// @brief The number of CAN busses that can be used
 constexpr uint32_t CAN_NUM_BUSSES = 3u;
+
+/// @brief The maximum number of motors that can be connected to the system. Derrived from the max motors per bus assuming bus 3 only holds non-RM motors
+constexpr uint32_t CAN_MAX_MOTORS = CAN_NUM_BUSSES * CAN_MAX_MOTORS_PER_BUS;
 
 /// @brief CAN bus 1 ID
 constexpr uint32_t CAN_1 = 0u;
@@ -55,7 +58,7 @@ public:
 
     /// @brief Dynamically create the motor objects based on config data
     /// @param motor_info Motor info array from the config yaml. 2D array holding information in the form: CAN_MAX_MOTORS * [motor_controller_type, per_bus_motor_id, bus_id]
-    void configure(float motor_info[CAN_MAX_MOTORS][3]);
+    void configure(const float motor_info[CAN_MAX_MOTORS][3]);
 
     /// @brief Read data from all busses and distribute them to the correct motors
     void read();

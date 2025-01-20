@@ -215,8 +215,8 @@ void Config::fill_data(CommsPacket packets[MAX_CONFIG_PACKETS], uint8_t sizes[MA
         if (id == yaml_section_id_mappings.at("motor_info")) {
 
             size_t linear_index = index / sizeof(float);
-            size_t i1 = linear_index / (NUM_MOTORS);
-            size_t i2 = linear_index % NUM_MOTORS;
+            size_t i1 = linear_index / (CAN_MAX_MOTORS);
+            size_t i2 = linear_index % CAN_MAX_MOTORS;
             memcpy(&motor_info[i1][i2], packets[i].raw + 8, sub_size);
             index += sub_size;
         }
@@ -254,8 +254,8 @@ void Config::fill_data(CommsPacket packets[MAX_CONFIG_PACKETS], uint8_t sizes[MA
         }
         if (id == yaml_section_id_mappings.at("controller_info")) {
             size_t linear_index = index / sizeof(float);
-            size_t i1 = linear_index / (NUM_MOTORS);
-            size_t i2 = linear_index % NUM_MOTORS;
+            size_t i1 = linear_index / (CAN_MAX_MOTORS);
+            size_t i2 = linear_index % CAN_MAX_MOTORS;
             memcpy(&controller_info[i1][i2], packets[i].raw + 8, sub_size);
             index += sub_size;
         }

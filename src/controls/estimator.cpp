@@ -488,8 +488,7 @@ FeederEstimator::FeederEstimator(CANManager* _can) {
 
 void FeederEstimator::step_states(float output[STATE_LEN][3], float curr_state[STATE_LEN][3], int override) {
     //can
-    // BUG: why / 60?
-    float angular_velocity_motor = can->get_motor_state(CAN_2, 5).speed / 60;
+    float angular_velocity_motor = can->get_motor_state(CAN_2, 5).speed / (2 * PI) / 60;
     float angular_velocity_feeder = angular_velocity_motor / 36;
     balls_per_second_can = angular_velocity_feeder * 8;
 
@@ -539,10 +538,10 @@ LocalEstimator::LocalEstimator(CANManager* _can) {
 }
 
 void LocalEstimator::step_states(float output[CAN_MAX_MOTORS][MICRO_STATE_LEN], float curr_state[CAN_MAX_MOTORS][MICRO_STATE_LEN], int override) {
-    // BUG: figure this out
-    for (int i = 0; i < NUM_CAN_BUSES; i++) {
-        for (int j = 0; j < NUM_MOTORS_PER_BUS; j++) {
-            output[(i * NUM_MOTORS_PER_BUS) + j][1] = (can_data->get_motor_attribute(i, j + 1, MotorAttribute::SPEED) / 60.0) * 2 * PI;
+    for (size_t i = 0; i < CAN_NUM_BUSSES; i++) {
+        for (size_t j = 0; j < CAN_MAX_MOTORS_PER_BUS; j++) {
+            // j + 1 for motor ID on get_motor_state since j starts at 0 but it expects a 1-indexed ID
+            output[(i * CAN_MAX_MOTORS_PER_BUS) + j][1] = can->get_motor_state(i, j + 1).speed;
         }
     }
 }

@@ -205,7 +205,7 @@ struct comms_data_packet {
     /// Referee data.
     RefereeData refData;
     /// CAN bus data.
-    CANData canData;
+    // CANData canData;
 
     ///dr16 data
     DR16Data dr16_data;
@@ -238,7 +238,7 @@ struct comms_data_packet {
 
     /// @brief Getter for CANData.
     /// @return CANData object.
-    CANData getCanData() const;
+    // CANData getCanData() const;
 
     /// @brief Constructor to initialize the comms_data_packet with configuration data.
     /// @param config_data Pointer to the configuration data.
@@ -260,7 +260,7 @@ struct comms_data_packet {
         uint8_t packetBuffer[BUFFER_SIZE],
         Governor robotState,
         uint8_t ref_data_raw[180],
-        CANData* canData,
+        // CANData* canData,
         EstimatorManager& estimatorManager,
         D200LD14P& lidar1,
         D200LD14P& lidar2,
