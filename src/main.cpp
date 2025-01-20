@@ -136,7 +136,15 @@ int main() {
     // whether we are in hive mode or not
     bool hive_toggle = false;
 
+    while (1) {
+        Serial.println("Init done!");
+        can.print_state();
+        
+        can.issue_safety_mode();
+    }
+
     Serial.println("Entering main loop...\n");
+
 
     // Main loop
     while (true) {
