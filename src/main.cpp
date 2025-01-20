@@ -150,6 +150,9 @@ int main() {
         lidar1.read();
         lidar2.read();
 
+        Serial.println(millis());
+        can.print_can(CAN_1, true);
+
         // read and write comms packets
         comms.ping();
         CommsPacket* incoming = comms.get_incoming_packet();
