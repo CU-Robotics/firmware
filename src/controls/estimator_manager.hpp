@@ -1,17 +1,17 @@
 #ifndef ESTIMATOR_H
 #define ESTIMATOR_H
 
-#include "./state.hpp"
-#include "../sensors/dr16.hpp"
-#include "../sensors/ICM20649.hpp"
-#include "../sensors/IMUSensor.hpp"
-#include "../sensors/LSM6DSOX.hpp"
-#include "../sensors/rev_encoder.hpp"
-#include "../sensors/TOFSensor.hpp"
-#include "../sensors/buff_encoder.hpp"
-#include "../sensors/RefSystem.hpp"
+#include "state.hpp"
+#include "sensors/dr16.hpp"
+#include "sensors/ICM20649.hpp"
+#include "sensors/IMUSensor.hpp"
+#include "sensors/LSM6DSOX.hpp"
+#include "sensors/rev_encoder.hpp"
+#include "sensors/TOFSensor.hpp"
+#include "sensors/buff_encoder.hpp"
+#include "sensors/RefSystem.hpp"
 #include "estimator.hpp"
-#include "../comms/rm_can.hpp"
+#include "comms/rm_can.hpp"
 #include <SPI.h>
 
 // maximum number of each sensor (arbitrary)
@@ -34,8 +34,8 @@ private:
     /// @brief array of robot estimators to estimate full robot state
     Estimator* estimators[STATE_LEN] = { nullptr };
 
-    /// @brief can data pointer to pass to each estimator so they can use can to estimate state when needed (usually used for micro state).
-    CANData* can_data;
+    /// @brief can pointer to pass to each estimator so they can use can to estimate state when needed (usually used for micro state).
+    CANManager* can = nullptr;
 
     /// @brief config struct to store all config data
     /// @note this is read only
@@ -55,15 +55,15 @@ public:
     ~EstimatorManager();
 
     /// @brief initialize all sensors and set can_data pointer
-    /// @param can_data reference struct storing all of can data so we dont have to pass rm_can around
+    /// @param can reference struct storing all of can data so we dont have to pass rm_can around
     /// @param config_data read only reference struct storing all the config data
-    void init(CANData* can_data, const Config* config_data);
+    void init(CANManager* can, const Config* config_data);
 
     /// @brief Steps through every estimator and constructs a state array based on current sensor values.
     /// @param state macro state array pointer to be updated.
     /// @param micro_state micro state array pointer to be updated.
     /// @param override true if we want to override the current state with the new state.
-    void step(float state[STATE_LEN][3], float micro_state[NUM_MOTORS][MICRO_STATE_LEN], int override);
+    void step(float state[STATE_LEN][3], float micro_state[CAN_MAX_MOTORS][MICRO_STATE_LEN], int override);
 
     /// @brief read all sensor arrays besides can and dr16(they are in main).
     void read_sensors();
@@ -71,7 +71,7 @@ public:
     /// @brief sets both input arrays to all 0's
     /// @param macro_outputs input 1
     /// @param micro_outputs input 2
-    void clear_outputs(float macro_outputs[STATE_LEN][3], float micro_outputs[NUM_MOTORS][MICRO_STATE_LEN]);
+    void clear_outputs(float macro_outputs[STATE_LEN][3], float micro_outputs[CAN_MAX_MOTORS][MICRO_STATE_LEN]);
 
     /// @brief get the specified buff encoder sensor from the array
     /// @param index index of the sensor object to get
