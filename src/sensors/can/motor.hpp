@@ -38,7 +38,7 @@ public:
     /// @param gid The global ID, not the per-bus motor ID
     /// @param id The per-bus motor ID. This is 1-indexed 
     /// @param bus The CAN bus index/ID
-    Motor(MotorControllerType controller_type, uint32_t gid, uint32_t id, uint8_t bus)
+    Motor(MotorControllerType controller_type, uint32_t gid, uint32_t id, uint32_t bus)
         : m_controller_type(controller_type), m_gid(gid), m_id(id), m_bus_id(bus) {}
 
     /// @brief Virtual destructor
@@ -103,7 +103,7 @@ protected:
     uint32_t m_id = 0;
 
     /// @brief ID of the CAN bus
-    uint8_t m_bus_id = 0;
+    uint32_t m_bus_id = 0;
 
     /// @brief The output CAN frame. To be sent to the motor
     CAN_message_t m_output;

@@ -53,17 +53,17 @@ void CANManager::configure(const float motor_info[CAN_MAX_MOTORS][3]) {
 
         switch (static_cast<MotorControllerType>(controller_type)) {
         case MotorControllerType::C610_CONTROLLER: {
-            Serial.printf("Creating C610 Motor: %d on bus %d\n", motor_id, bus_id);
+            Serial.printf("Creating C610 Motor: %d on bus %d\n", physical_id, bus_id);
             new_motor = new C610(motor_id, physical_id, bus_id);
             break;
         }
         case MotorControllerType::C620_CONTROLLER: {
-            Serial.printf("Creating C620 Motor: %d on bus %d\n", motor_id, bus_id);
+            Serial.printf("Creating C620 Motor: %d on bus %d\n", physical_id, bus_id);
             new_motor = new C620(motor_id, physical_id, bus_id);
             break;
         }
         case MotorControllerType::MG8016_CONTROLLER: {
-            Serial.printf("Creating MG Motor: %d on bus %d\n", motor_id, bus_id);
+            Serial.printf("Creating MG Motor: %d on bus %d\n", physical_id, bus_id);
             new_motor = new MG8016EI6(motor_id, physical_id, bus_id);
             break;
         }
@@ -186,7 +186,7 @@ void CANManager::print_state() {
     // for each motor, print it's state
     for (const auto& motor : m_motor_map) {
         // print the motor state
-        motor.second->print_state();
+        Serial.printf("C %u M %u: %d\n", motor.second->get_bus_id(), motor.second->get_id(), motor.second->get_state().position);
 
         Serial.println();
     }

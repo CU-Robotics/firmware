@@ -136,10 +136,15 @@ int main() {
     // whether we are in hive mode or not
     bool hive_toggle = false;
 
+    uint32_t time1 = 0;
     while (1) {
-        Serial.println("Init done!");
-        can.print_state();
-        
+	    delay(1);
+	    can.read();
+	if (millis() - time1 > 100) {
+            Serial.println("Init done!\n\n");
+            can.print_state(); 
+	    time1 = millis();
+	}
         can.issue_safety_mode();
     }
 
