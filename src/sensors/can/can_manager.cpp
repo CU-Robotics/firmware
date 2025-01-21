@@ -292,10 +292,17 @@ void CANManager::init_motors() {
         while (millis() - start_time < m_motor_init_timeout || m_busses[bus]->read(msg)) {
             // for each motor, find the motor that this msg belongs to
             for (auto& motor : m_motor_map) {
-                // mark the motor as initialized if the message was read
+                // if the bus is wrong, skip this motor
+                // the msg.bus is 1-indexed, the motor bus is 0-indexed
+                if (motor.second->get_bus_id() != (uint32_t)(msg.bus + 1u)) {
+                    continue;
+                }
+                
+                // if the motor can handle the message, give it to the motor
                 if (motor.second->read(msg)) {
-                    motors_initialized[motor.second->get_global_id()] = true;
-                    Serial.printf("Motor %d initialized\n", motor);
+                    // mark this motor as initialized
+                    motors_initialized[motor.first] = true;
+                    Serial.printf("Motor %d on bus %d with id %d initialized\n", motor.first, motor.second->get_bus_id(), motor.second->get_id());
                 }
             }
         }
@@ -314,6 +321,12 @@ void CANManager::init_motors() {
 bool CANManager::distribute_msg(CAN_message_t& msg) {
     // for each motor, cant be const
     for (auto& motor : m_motor_map) {
+        // if the bus is wrong, skip this motor
+        // the msg.bus is 1-indexed, the motor bus is 0-indexed
+        if (motor.second->get_bus_id() != (uint32_t)(msg.bus + 1u)) {
+            continue;
+        }
+        
         // if the motor can handle the message, give it to the motor
         if (motor.second->read(msg)) {
             return true;
