@@ -17,11 +17,13 @@ void CANManager::init() {
     // initialize CAN 1
     m_can1.begin();
     m_can1.setBaudRate(1000000u);   // 1Mbit baud
+    m_can1.enableFIFO(true);
     // TODO: fifo?
 
     // initialize CAN 2
     m_can2.begin();
     m_can2.setBaudRate(1000000u);   // 1Mbit baud
+    m_can2.enableFIFO(true);
 
     // initialize CAN 3
     // TODO: can CAN 3 act the same as CAN 1/2 since its CANFD?
@@ -146,8 +148,8 @@ void CANManager::write() {
         }
         
         // write the combined messages to the bus
-        m_busses[bus]->write(rm_motor_msgs[0]);
-        m_busses[bus]->write(rm_motor_msgs[1]);
+        Serial.printf("Write1 %u: %d\n", bus, m_busses[bus]->write(rm_motor_msgs[0]));
+        Serial.printf("Write2 %u: %d\n", bus, m_busses[bus]->write(rm_motor_msgs[1]));
     }
 }
 
