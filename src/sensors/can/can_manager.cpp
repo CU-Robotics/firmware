@@ -283,41 +283,72 @@ void CANManager::init_motors() {
     // maintain a list of motors that have been initialized
     bool motors_initialized[CAN_MAX_MOTORS] = { false };
 
-    // for each bus, read all messages until all motors have been initialized
-    for (uint32_t bus = 0; bus < CAN_NUM_BUSSES; bus++) {
-        Serial.printf("Initializing motors on bus %d\n", bus);
-        CAN_message_t msg;
+    // // for each bus, read all messages until all motors have been initialized
+    // for (uint32_t bus = 0; bus < CAN_NUM_BUSSES; bus++) {
+    //     Serial.printf("Initializing motors on bus %d\n", bus);
+    //     CAN_message_t msg;
 
-        // start the timeout timer
-        uint32_t start_time = millis();
+    //     // start the timeout timer
+    //     uint32_t start_time = millis();
 
-        int read_ret = 0;
+    //     int read_ret = 0;
         
-        // read all messages from the bus. exit if the timeout is reached and the buffer is empty
-        while (millis() - start_time < m_motor_init_timeout || (read_ret = m_busses[bus]->read(msg)) != 0) {
-            if (read_ret == 1)
-                Serial.printf("Read init: %.4x\t %x\n", msg.id, msg.bus - 1);
-            else 
-                continue;
+    //     // read all messages from the bus. exit if the timeout is reached and the buffer is empty
+    //     while (millis() - start_time < m_motor_init_timeout || (read_ret = m_busses[bus]->read(msg)) != 0) {
+    //         if (read_ret == 1)
+    //             Serial.printf("Read init: %.4x\t %x\n", msg.id, msg.bus - 1);
+    //         else 
+    //             continue;
             
-            // for each motor, find the motor that this msg belongs to
-            for (auto& motor : m_motor_map) {
-                // if the bus is wrong, skip this motor
-                // the msg.bus is 1-indexed, the motor bus is 0-indexed
-                if (motor.second->get_bus_id() != (uint32_t)(msg.bus - 1u)) {
-                    continue;
-                }
+    //         // for each motor, find the motor that this msg belongs to
+    //         for (auto& motor : m_motor_map) {
+    //             // if the bus is wrong, skip this motor
+    //             // the msg.bus is 1-indexed, the motor bus is 0-indexed
+    //             if (motor.second->get_bus_id() != (uint32_t)(msg.bus - 1u)) {
+    //                 continue;
+    //             }
                 
-                // if the motor can handle the message, give it to the motor
-                if (motor.second->read(msg)) {
-                    // mark this motor as initialized
-                    motors_initialized[motor.first] = true;
-                    Serial.printf("Motor %d on bus %d with id %d initialized\n", motor.first, motor.second->get_bus_id(), motor.second->get_id());
+    //             // if the motor can handle the message, give it to the motor
+    //             if (motor.second->read(msg)) {
+    //                 // mark this motor as initialized
+    //                 motors_initialized[motor.first] = true;
+    //                 Serial.printf("Motor %d on bus %d with id %d initialized\n", motor.first, motor.second->get_bus_id(), motor.second->get_id());
+    //             }
+    //         }
+
+    //         Serial.printf("again\n");
+    //     }
+    // }
+
+    uint32_t start_time = millis();
+    while (millis() - start_time < m_motor_init_timeout) {
+        // for each bus
+        for (uint32_t bus = 0; bus < CAN_NUM_BUSSES; bus++) {
+            // we want to read all the messages from this bus as there might be many queued up
+            CAN_message_t msg;
+            while (m_busses[bus]->read(msg)) {
+                Serial.printf("Read: %.4x\t %x\n", msg.id, msg.bus - 1);
+                
+                // for each motor, cant be const
+                for (auto& motor : m_motor_map) {
+                    // if the bus is wrong, skip this motor
+                    // the msg.bus is 1-indexed, the motor bus is 0-indexed
+                    if (motor.second->get_bus_id() != (uint32_t)(msg.bus - 1u)) {
+                        continue;
+                    }
+                    
+                    // if the motor can handle the message, give it to the motor
+                    if (motor.second->read(msg)) {
+                        // mark this motor as initialized
+                        if (!motors_initialized[motor.first]) {
+                            motors_initialized[motor.first] = true;
+                            Serial.printf("Motor %d on bus %d with id %d initialized\n", motor.first, motor.second->get_bus_id(), motor.second->get_id());
+                        }
+                    }
                 }
             }
-
-            Serial.printf("again\n");
         }
+
     }
 
     // print out any motors that failed to initialize using the motors_initialized array
