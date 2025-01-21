@@ -53,18 +53,18 @@ void CANManager::configure(const float motor_info[CAN_MAX_MOTORS][3]) {
 
         switch (static_cast<MotorControllerType>(controller_type)) {
         case MotorControllerType::C610_CONTROLLER: {
-            Serial.printf("Creating C610 Motor: %d on bus %d\n", physical_id, bus_id);
             new_motor = new C610(motor_id, physical_id, bus_id);
+            Serial.printf("Creating C610 Motor: %d on bus %d\n", new_motor->get_id(), new_motor->get_bus_id());
             break;
         }
         case MotorControllerType::C620_CONTROLLER: {
-            Serial.printf("Creating C620 Motor: %d on bus %d\n", physical_id, bus_id);
             new_motor = new C620(motor_id, physical_id, bus_id);
+            Serial.printf("Creating C620 Motor: %d on bus %d\n", new_motor->get_id(), new_motor->get_bus_id());
             break;
         }
         case MotorControllerType::MG8016_CONTROLLER: {
-            Serial.printf("Creating MG Motor: %d on bus %d\n", physical_id, bus_id);
             new_motor = new MG8016EI6(motor_id, physical_id, bus_id);
+            Serial.printf("Creating MG Motor: %d on bus %d\n", new_motor->get_id(), new_motor->get_bus_id());
             break;
         }
         default: {
@@ -87,6 +87,8 @@ void CANManager::read() {
         // we want to read all the messages from this bus as there might be many queued up
         CAN_message_t msg;
         while (m_busses[bus]->read(msg)) {
+            Serial.printf("Read: %.4x\t %x\n", msg.id, msg.bus - 1);
+            
             // distribute the message to the correct motor
             // if this fails, we've received a message that does not match any motor
             // how would this happen?
@@ -283,18 +285,26 @@ void CANManager::init_motors() {
 
     // for each bus, read all messages until all motors have been initialized
     for (uint32_t bus = 0; bus < CAN_NUM_BUSSES; bus++) {
+        Serial.printf("Initializing motors on bus %d\n", bus);
         CAN_message_t msg;
 
         // start the timeout timer
         uint32_t start_time = millis();
+
+        int read_ret = 0;
         
         // read all messages from the bus. exit if the timeout is reached and the buffer is empty
-        while (millis() - start_time < m_motor_init_timeout || m_busses[bus]->read(msg)) {
+        while (millis() - start_time < m_motor_init_timeout || (read_ret = m_busses[bus]->read(msg)) != 0) {
+            if (read_ret == 1)
+                Serial.printf("Read init: %.4x\t %x\n", msg.id, msg.bus - 1);
+            else 
+                continue;
+            
             // for each motor, find the motor that this msg belongs to
             for (auto& motor : m_motor_map) {
                 // if the bus is wrong, skip this motor
                 // the msg.bus is 1-indexed, the motor bus is 0-indexed
-                if (motor.second->get_bus_id() != (uint32_t)(msg.bus + 1u)) {
+                if (motor.second->get_bus_id() != (uint32_t)(msg.bus - 1u)) {
                     continue;
                 }
                 
@@ -305,6 +315,8 @@ void CANManager::init_motors() {
                     Serial.printf("Motor %d on bus %d with id %d initialized\n", motor.first, motor.second->get_bus_id(), motor.second->get_id());
                 }
             }
+
+            Serial.printf("again\n");
         }
     }
 
@@ -323,7 +335,7 @@ bool CANManager::distribute_msg(CAN_message_t& msg) {
     for (auto& motor : m_motor_map) {
         // if the bus is wrong, skip this motor
         // the msg.bus is 1-indexed, the motor bus is 0-indexed
-        if (motor.second->get_bus_id() != (uint32_t)(msg.bus + 1u)) {
+        if (motor.second->get_bus_id() != (uint32_t)(msg.bus - 1u)) {
             continue;
         }
         
