@@ -13,7 +13,7 @@ void ET16S::init() {
 	//InputKind three_switch=THREE_SWITCH;
 	channel[4].kind = InputKind::THREE_SWITCH;
 	//Turn safety on
-	channel[4].data = 1;
+	channel[4].data = FORWARD;
 
 	//configure sticks
 	//right stick horizontal
@@ -53,10 +53,10 @@ void ET16S::read() {
 	set_channel_data();
 	//Check flag byte for disconnect
 	test_connection();
-
-	print_raw_bin(m_inputRaw);
+	//if(channel[5].kind==InputKind::THREE_SWITCH){Serial.print("ITS TRUE");}
+	///print_raw_bin(m_inputRaw);
 	//print_format_bin(16);
-	//print();
+	print();
 	//print_raw();
 }
 
@@ -231,21 +231,19 @@ float ET16S::map_raw(InputChannel input) {
 	}
 	case InputKind::TWO_SWITCH: {
 		if (val == max_in) {
-			val = 2;
+			val = BACKWARD;
 		} else {
-			//Represents switch being down/towards user
-			val = 1;
+			val = FORWARD;
 		}
 		break;
 	}
 	case InputKind::THREE_SWITCH: {
 		if (val == max_in) {
-			val = 3;
+			val = BACKWARD;
 		} else if (val == min_in) {
-			//Represents switch being down/towards user
-			val = 1;
+			val = FORWARD;
 		} else {
-			val = 2;
+			val = MIDDLE;
 		}
 		break;
 	}
@@ -308,58 +306,82 @@ void ET16S::set_config() {
 	channel[13].id = ChannelId::R_DIAL;
 	channel[14].id = ChannelId::L_SLIDER;
 	channel[15].id = ChannelId::UNMAPPED; //channel[15] is non-functional
-	channel[16].id = ChannelId::UNMAPPED;
-
+	channel[16].id = ChannelId::FLAG;
 
 	for (int i=5; i<ET16S_INPUT_VALUE_COUNT;i++){
 		ChannelId id = channel[i].id;
 		switch(id){
 		case ChannelId::L_STICK_X:
 			channel[i].kind = InputKind::STICK;
+			break;
 		case ChannelId::L_STICK_Y:
 			channel[i].kind = InputKind::STICK;
+			break;
 		case ChannelId::R_STICK_X:
 			channel[i].kind = InputKind::STICK;
+			break;
 		case ChannelId::R_STICK_Y:
 			channel[i].kind = InputKind::STICK;
+			break;
 		case ChannelId::L_DIAL:
 			channel[i].kind = InputKind::DIAL;
+			break;
 		case ChannelId::R_DIAL:
 			channel[i].kind = InputKind::DIAL;
+			break;
 		case ChannelId::SWITCH_A:
 			channel[i].kind = InputKind::THREE_SWITCH;
+			break;
 		case ChannelId::SWITCH_B:
 			channel[i].kind = InputKind::THREE_SWITCH;
+			break;
 		case ChannelId::SWITCH_C:
 			channel[i].kind = InputKind::THREE_SWITCH;
+			break;
 		case ChannelId::SWITCH_D:
 			channel[i].kind = InputKind::THREE_SWITCH;
+			break;
 		case ChannelId::SWITCH_E:
 			channel[i].kind = InputKind::THREE_SWITCH;
+			break;
 		case ChannelId::SWITCH_F:
 			channel[i].kind = InputKind::TWO_SWITCH;
+			break;
 		case ChannelId::SWITCH_G:
 			channel[i].kind = InputKind::THREE_SWITCH;
+			break;
 		case ChannelId::SWITCH_H:
 			channel[i].kind = InputKind::TWO_SWITCH;
+			break;
 		case ChannelId::L_SLIDER:
 			channel[i].kind = InputKind::SLIDER;
+			break;
 		case ChannelId::R_SLIDER:
 			channel[i].kind = InputKind::SLIDER;
+			break;
 		case ChannelId::TRIM_1:
 			channel[i].kind = InputKind::TRIM;
+			break;
 		case ChannelId::TRIM_2:
 			channel[i].kind = InputKind::TRIM;
+			break;
 		case ChannelId::TRIM_3:
 			channel[i].kind = InputKind::TRIM;
+			break;
 		case ChannelId::TRIM_4:
 			channel[i].kind = InputKind::TRIM;
+			break;
 		case ChannelId::TRIM_5:
 			channel[i].kind = InputKind::TRIM;
+			break;
 		case ChannelId::TRIM_6:
 			channel[i].kind = InputKind::TRIM;
+			break;
 		case ChannelId::UNMAPPED:
 			channel[i].kind = InputKind::INVALID;
+			break;
+		case ChannelId::FLAG:
+			break;
 			
 	   }
 	}

@@ -20,16 +20,18 @@ constexpr uint16_t ERROR = 0b0000000000001100;
 
 /// @brief organizes the kinds of inputs the transmitter has
 enum class InputKind {
+	INVALID,
 	STICK,
 	TWO_SWITCH,
 	THREE_SWITCH,
 	DIAL,
 	SLIDER,
 	TRIM,
-	FLAG,
-	INVALID
+	FLAG
 };
+/// @brief enum for all possible inputs on transmitter
 enum class ChannelId{
+	UNMAPPED,
 	L_STICK_X,
 	L_STICK_Y,
 	R_STICK_X,
@@ -52,7 +54,15 @@ enum class ChannelId{
 	TRIM_4,
 	TRIM_5,
 	TRIM_6,
-	UNMAPPED
+	FLAG
+};
+/// @brief three switch possible positions
+/// @note for switch on the front plate forward is up
+enum class SwitchPos{
+	INVALID,
+	FORWARD,
+	MIDDLE,
+	BACKWARD
 };
 
 /// @brief stores data and kind of data for the  15 data channels and 1 flag channel
@@ -67,6 +77,7 @@ struct InputChannel {
 	/// @brief stores associated kind of channel
 	InputKind kind = InputKind::INVALID;
 
+	/// @brief stores the specific control on the transmitter
 	ChannelId id = ChannelId::UNMAPPED;
 };
 
