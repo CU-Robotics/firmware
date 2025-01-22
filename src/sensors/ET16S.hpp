@@ -2,11 +2,20 @@
 
 #include <Arduino.h>
 #include <string>
+#include <optional>
 //http://www.wflysz.com/wflyftp/ET16S/ET16SENV1.00.pdf
+
+//channel[15] is broken
+
+/// @brief The size of an SBUS packet is 25 bits
 constexpr uint16_t ET16S_PACKET_SIZE = 25;
+/// @brief There is 16 data bytes and 1 flag byte in each packet
 constexpr uint16_t ET16S_INPUT_VALUE_COUNT = 17;
+/// @brief maximum raw input value for stick,dial,wheel
 constexpr float max_in = 1695;
+/// @brief minimum raw input value for stick,dial,wheel
 constexpr float min_in = 352;
+/// @brief flag byte displaying disconnect (found through testing)
 constexpr uint16_t ERROR = 0b0000000000001100;
 
 /// @brief organizes the kinds of inputs the transmitter has
@@ -15,10 +24,35 @@ enum class InputKind {
 	TWO_SWITCH,
 	THREE_SWITCH,
 	DIAL,
-	WHEEL,
+	SLIDER,
 	TRIM,
 	FLAG,
 	INVALID
+};
+enum class ChannelId{
+	L_STICK_X,
+	L_STICK_Y,
+	R_STICK_X,
+	R_STICK_Y,
+	L_DIAL,
+	R_DIAL,
+	SWITCH_A,
+	SWITCH_B,
+	SWITCH_C,
+	SWITCH_D,
+	SWITCH_E,
+	SWITCH_F,
+	SWITCH_G,
+	SWITCH_H,
+	L_SLIDER,
+	R_SLIDER,
+	TRIM_1,
+	TRIM_2,
+	TRIM_3,
+	TRIM_4,
+	TRIM_5,
+	TRIM_6,
+	UNMAPPED
 };
 
 /// @brief stores data and kind of data for the  15 data channels and 1 flag channel
@@ -32,6 +66,8 @@ struct InputChannel {
 
 	/// @brief stores associated kind of channel
 	InputKind kind = InputKind::INVALID;
+
+	ChannelId id = ChannelId::UNMAPPED;
 };
 
 /// @brief Class for W-Fly transmitter and reciever to gather and map control data
@@ -72,50 +108,80 @@ public:
 	/// @brief get left stick y axis value
 	/// @return (-1 to 1)
 	float get_l_stick_y();
+	
+	/// @brief get switch b value 
+	/// @return switch b value if it exists otherwise return nothing
+	std::optional<float> get_switch_b();
+	
+	/// @brief get switch c value 
+	/// @return switch c value if it exists otherwise return nothing
+	std::optional<float> get_switch_c();
+	
+	/// @brief get switch d value 
+	/// @return switch d value if it exists otherwise return nothing
+	std::optional<float> get_switch_d();
+	
+	/// @brief get switch e value 
+	/// @return switch e value if it exists otherwise return nothing
+	std::optional<float> get_switch_e();
+	
+	/// @brief get switch f value 
+	/// @return switch f value if it exists otherwise return nothing
+	std::optional<float> get_switch_f();
+	
+	/// @brief get switch g value 
+	/// @return switch g value if it exists otherwise return nothing
+	std::optional<float> get_switch_g();
+	
+	/// @brief get switch h value 
+	/// @return switch h value if it exists otherwise return nothing
+	std::optional<float> get_switch_h();
 
-	/// @brief get channel 5 data
-	/// @return channel 5 data
-	float get_channel_five();
+	/// @brief get left slider value
+	/// @return left slider value if it exists otherwise return nothing
+	std::optional<float> get_l_slider();
 
-	/// @brief get channel 6 data
-	/// @return channel 6 data
-	float get_channel_six();
+	/// @brief get right slider value
+	/// @return right slider value if it exists otherwise return nothing
+	std::optional<float> get_r_slider();
 
-	/// @brief get channel 7 data
-	/// @return channel 7 data
-	float get_channel_seven();
+	/// @brief get left dial value
+	/// @return left dial value if it exists otherwise return nothing
+	std::optional<float> get_l_dial();
 
-	/// @brief get channel 8 data
-	/// @return channel 8 data
-	float get_channel_eight();
+	/// @brief get right dial value
+	/// @return right dial value if it exists otherwise return nothing
+	std::optional<float> get_r_dial();
 
-	/// @brief get channel 9 data
-	/// @return channel 9 data
-	float get_channel_nine();
+	/// @brief get trim one value
+	/// @return trim one value if it exists otherwise return nothing
+	std::optional<float> get_trim_one();
 
-	/// @brief get channel 10 data
-	/// @return channel 10 data
-	float get_channel_ten();
+	/// @brief get trim two value
+	/// @return trim two value if it exists otherwise return nothing
+	std::optional<float> get_trim_two();
 
-	/// @brief get channel 11 data
-	/// @return channel 11 data
-	float get_channel_eleven();
+	/// @brief get trim three value
+	/// @return trim three value if it exists otherwise return nothing
+	std::optional<float> get_trim_three();
 
-	/// @brief get channel 12 data
-	/// @return channel 12 data
-	float get_channel_twelve();
+	/// @brief get trim four value
+	/// @return trim four value if it exists otherwise return nothing
+	std::optional<float> get_trim_four();
 
-	/// @brief get channel 13 data
-	/// @return channel 13 data
-	float get_channel_thirteen();
+	/// @brief get trim five value
+	/// @return trim five value if it exists otherwise return nothing
+	std::optional<float> get_trim_five();
 
-	/// @brief get channel 14 data
-	/// @return channel 14 data
-	float get_channel_fourteen();
+	/// @brief get trim six value
+	/// @return trim six value if it exists otherwise return nothing
+	std::optional<float> get_trim_six();
+	
 
-	/// @brief get channel 15 data
-	/// @return channel 15 data
-	float get_channel_fifteen();
+	/// @brief get channel data
+	/// @param chan_num is the channel number from 5-16
+	/// @return channel data
+	float get_channel_data(int chan_num);
 
 	/// @brief getter for connection status
 	/// @return false if disconnected
@@ -131,6 +197,12 @@ private:
 	/// @param input channel to be mapped
 	/// @return mapped value from -1-1 for joysticks,wheels,dials, and 1,2,3 for switches
 	float map_raw(InputChannel input);
+	/// @brief performs mapping calculation for dials,wheels, and joysticks
+	/// @param val is the input value
+	/// @param min_out minimum output value (-1)
+	/// @param max_out maximum ouput value (1)
+	/// @return the output value form -1 to 1
+	float map_math(float val, float min_out, float max_out);
 
 	/// @brief Breaks up data packet into correct 11 bit chunks
 	/// @param m_inputRaw takes in 8 bit chunks of the total data packet
@@ -149,5 +221,40 @@ private:
 	InputChannel channel[ET16S_INPUT_VALUE_COUNT];
 
 	/// @brief signifies whether a disconnect flag has been read
-	bool is_connected;
+	bool is_connected=false;
+	//switch a (safety switch) and joysticks are not configurable
+	/// @brief switch b index
+	std::optional<int> switch_b_num=5;
+	/// @brief switch c index	
+	std::optional<int> switch_c_num=6;
+	/// @brief switch d index	
+	std::optional<int> switch_d_num=7;
+	/// @brief switch e index	
+	std::optional<int> switch_e_num=8;
+	/// @brief switch f index	
+	std::optional<int> switch_f_num=9;
+	/// @brief switch g index	
+	std::optional<int> switch_g_num=10;
+	/// @brief switch h index	
+	std::optional<int> switch_h_num=11;
+	/// @brief right slider index	
+	std::optional<int> r_slider_num=12;
+	/// @brief left slider index	
+	std::optional<int> l_slider_num=14;
+	/// @brief right dial index	
+	std::optional<int> r_dial_num=13;
+	/// @brief left dial index	
+	std::optional<int> l_dial_num;
+	/// @brief trim one index	
+	std::optional<int> trim_one_num;
+	/// @brief trim two index	
+	std::optional<int> trim_two_num;
+	/// @brief trim three index	
+	std::optional<int> trim_three_num;
+	/// @brief trim four index	
+	std::optional<int> trim_four_num;
+	/// @brief trim five index	
+	std::optional<int> trim_five_num;
+	/// @brief trim six index	
+	std::optional<int> trim_six_num;
 };

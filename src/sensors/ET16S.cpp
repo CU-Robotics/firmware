@@ -2,10 +2,6 @@
 
 ET16S::ET16S() { }
 
-//EDITING NOTES::
-//DIAl and WHEEL are backwards left is highest number
-// right is lowest number
-//Probably flip that
 
 void ET16S::init() {
 	Serial8.begin(100000, SERIAL_8E1_RXINV_TXINV);
@@ -24,9 +20,9 @@ void ET16S::init() {
 	channel[0].kind = InputKind::STICK;
 	//right stick vertical
 	channel[1].kind = InputKind::STICK;
-	//left stick horizontal
+	//left stick vertical
 	channel[2].kind = InputKind::STICK;
-	//right stick vertical
+	//right stick horizontal
 	channel[3].kind = InputKind::STICK;
 	//configure remaining channels
 	set_config();
@@ -35,27 +31,22 @@ void ET16S::init() {
 void ET16S::read() {
 	// Raw data stored in array
 	uint8_t m_inputRaw[ET16S_PACKET_SIZE] = { 0 };
+	// Store 2 packets (50 bits) in the buffer to prevent incomplete packet reads
 	if (Serial8.available() < 50) {
 		return;
 	}
-
+	// We read until we find the start byte of the new packet (0x0f)
+	// this ensures we read one packet per loop
 	while (Serial8.peek() != 0x0f) {
 		Serial8.read();
 	}
-
+	// Fill raw input array
 	for (int i = 0; i < ET16S_PACKET_SIZE;i++) {
 		m_inputRaw[i] = Serial8.read();
 	}
 
 	//format raw data
 	format_raw(m_inputRaw);
-	//set joysticks data
-	channel[0].data = map_raw(channel[0]);
-	channel[1].data = map_raw(channel[1]);
-	channel[2].data = map_raw(channel[2]);
-	channel[3].data = map_raw(channel[3]);
-	//set safety data
-	channel[4].data = map_raw(channel[4]);
 	//set flag data
 	channel[16].data = channel[16].raw_format;
 	//set remaining data
@@ -63,14 +54,14 @@ void ET16S::read() {
 	//Check flag byte for disconnect
 	test_connection();
 
-	//print_raw_bin(m_inputRaw);
+	print_raw_bin(m_inputRaw);
 	//print_format_bin(16);
 	//print();
 	//print_raw();
 }
 
 void ET16S::print() {
-	for (int i = 0; i <= 15; i++) {
+	for (int i = 0; i < ET16S_INPUT_VALUE_COUNT; i++) {
 		Serial.print(channel[i].data);
 		Serial.print(" ");
 	}
@@ -103,7 +94,7 @@ void ET16S::print_raw_bin(uint8_t m_inputRaw[ET16S_PACKET_SIZE]) {
 }
 
 void ET16S::print_format_bin(int channel_num) {
-	if (channel_num > 16 || channel_num < 0) {
+	if (channel_num > ET16S_INPUT_VALUE_COUNT || channel_num < 0) {
 		Serial.print("Invalid channel used for print_format_bin. Must be 0-16");
 		return;
 	}
@@ -230,14 +221,12 @@ void ET16S::format_raw(uint8_t m_inputRaw[ET16S_PACKET_SIZE]) {
 }
 
 float ET16S::map_raw(InputChannel input) {
-	float max_out = 1;
-	float min_out = -1;
 	float val = input.raw_format;
 	InputKind kind = input.kind;
 
 	switch (kind) {
 	case InputKind::STICK: {
-		val = min_out + (val - min_in) * (max_out - min_out) / (max_in - min_in);
+		val = map_math(val,-1,1);
 		break;
 	}
 	case InputKind::TWO_SWITCH: {
@@ -262,14 +251,14 @@ float ET16S::map_raw(InputChannel input) {
 	}
 	case InputKind::DIAL: {
 		//Dial values go towards -1 as it is spun left
-		val = max_out - (val - min_in) * (min_out - max_out) / (min_in - max_in);
+		val = -map_math(val,-1,1);
 
 		if (val == -0.f) { val = 0; } //used to prevent -0 float
 		break;
 	}
-	case InputKind::WHEEL: {
+	case InputKind::SLIDER: {
 		//Wheel values go towards -1 as it is spun down
-		val = max_out - (val - min_in) * (min_out - max_out) / (min_in - max_in);
+		val = -map_math(val,-1,1);
 
 		if (val == -0.f) { val = 0; } //used to prevent -0 float
 		break;
@@ -287,26 +276,97 @@ float ET16S::map_raw(InputChannel input) {
 
 	return val;
 }
-
+float ET16S::map_math(float val,float min_out, float max_out){
+	// maps input value from -1 to 1
+	val = min_out + (val - min_in) * (max_out - min_out) / (max_in - min_in);
+	//ensure val is in range 
+	if(val>max_out){
+		val=max_out;
+	}
+	else if (val<min_out){
+		val=min_out;
+	}
+	return val;
+}
 void ET16S::set_config() {
 	//Valid channel types include STICK,TWO_SWITCH_THREE_SWITCH,
-	//DIAL,WHEEL,TRIM,FLAG,INVALID
+	//DIAL,SLIDER,TRIM,FLAG,INVALID
 	//note (trim is not mapped)
-	channel[5].kind = InputKind::THREE_SWITCH;
-	channel[6].kind = InputKind::THREE_SWITCH;
-	channel[7].kind = InputKind::THREE_SWITCH;
-	channel[8].kind = InputKind::THREE_SWITCH;
-	channel[9].kind = InputKind::TWO_SWITCH;
-	channel[10].kind = InputKind::TWO_SWITCH;
-	channel[11].kind = InputKind::THREE_SWITCH;
-	channel[12].kind = InputKind::WHEEL;
-	channel[13].kind = InputKind::DIAL;
-	channel[14].kind = InputKind::DIAL;
-	channel[15].kind = InputKind::INVALID;
+	channel[0].id = ChannelId::R_STICK_X;
+	channel[1].id = ChannelId::R_STICK_Y;
+	channel[2].id = ChannelId::L_STICK_Y;
+	channel[3].id = ChannelId::L_STICK_X;
+	channel[4].id = ChannelId::SWITCH_A;
+	channel[5].id = ChannelId::SWITCH_B;
+	channel[6].id = ChannelId::SWITCH_C;
+	channel[7].id = ChannelId::SWITCH_D;
+	channel[8].id = ChannelId::SWITCH_E;
+	channel[9].id = ChannelId::SWITCH_F;
+	channel[10].id = ChannelId::SWITCH_G;
+	channel[11].id = ChannelId::SWITCH_H;
+	channel[12].id = ChannelId::R_SLIDER;
+	channel[13].id = ChannelId::R_DIAL;
+	channel[14].id = ChannelId::L_SLIDER;
+	channel[15].id = ChannelId::UNMAPPED; //channel[15] is non-functional
+	channel[16].id = ChannelId::UNMAPPED;
+
+
+	for (int i=5; i<ET16S_INPUT_VALUE_COUNT;i++){
+		ChannelId id = channel[i].id;
+		switch(id){
+		case ChannelId::L_STICK_X:
+			channel[i].kind = InputKind::STICK;
+		case ChannelId::L_STICK_Y:
+			channel[i].kind = InputKind::STICK;
+		case ChannelId::R_STICK_X:
+			channel[i].kind = InputKind::STICK;
+		case ChannelId::R_STICK_Y:
+			channel[i].kind = InputKind::STICK;
+		case ChannelId::L_DIAL:
+			channel[i].kind = InputKind::DIAL;
+		case ChannelId::R_DIAL:
+			channel[i].kind = InputKind::DIAL;
+		case ChannelId::SWITCH_A:
+			channel[i].kind = InputKind::THREE_SWITCH;
+		case ChannelId::SWITCH_B:
+			channel[i].kind = InputKind::THREE_SWITCH;
+		case ChannelId::SWITCH_C:
+			channel[i].kind = InputKind::THREE_SWITCH;
+		case ChannelId::SWITCH_D:
+			channel[i].kind = InputKind::THREE_SWITCH;
+		case ChannelId::SWITCH_E:
+			channel[i].kind = InputKind::THREE_SWITCH;
+		case ChannelId::SWITCH_F:
+			channel[i].kind = InputKind::TWO_SWITCH;
+		case ChannelId::SWITCH_G:
+			channel[i].kind = InputKind::THREE_SWITCH;
+		case ChannelId::SWITCH_H:
+			channel[i].kind = InputKind::TWO_SWITCH;
+		case ChannelId::L_SLIDER:
+			channel[i].kind = InputKind::SLIDER;
+		case ChannelId::R_SLIDER:
+			channel[i].kind = InputKind::SLIDER;
+		case ChannelId::TRIM_1:
+			channel[i].kind = InputKind::TRIM;
+		case ChannelId::TRIM_2:
+			channel[i].kind = InputKind::TRIM;
+		case ChannelId::TRIM_3:
+			channel[i].kind = InputKind::TRIM;
+		case ChannelId::TRIM_4:
+			channel[i].kind = InputKind::TRIM;
+		case ChannelId::TRIM_5:
+			channel[i].kind = InputKind::TRIM;
+		case ChannelId::TRIM_6:
+			channel[i].kind = InputKind::TRIM;
+		case ChannelId::UNMAPPED:
+			channel[i].kind = InputKind::INVALID;
+			
+	   }
+	}
 }
 
 void ET16S::set_channel_data() {
-	for (int i = 5; i < ET16S_INPUT_VALUE_COUNT;i++) {
+	for (int i = 0; i < ET16S_INPUT_VALUE_COUNT;i++) {
 		channel[i].data = map_raw(channel[i]);
 	}
 }
@@ -339,51 +399,83 @@ float ET16S::get_l_stick_x() {
 float ET16S::get_l_stick_y() {
 	return channel[3].data;
 }
-
-float ET16S::get_channel_five() {
-	return channel[5].data;
+std::optional<float> ET16S::get_switch_b(){
+	if (switch_b_num.has_value()){ return {}; }
+		return channel[switch_b_num.value()].data;
+}
+std::optional<float> ET16S::get_switch_c(){
+	if (switch_c_num.has_value()){ return {}; }
+	return channel[switch_c_num.value()].data;
+}
+std::optional<float> ET16S::get_switch_d(){
+	if (switch_d_num.has_value()){ return {}; }
+	return channel[switch_d_num.value()].data;
+}
+std::optional<float> ET16S::get_switch_e(){
+	if (switch_e_num.has_value()){ return {}; }
+	return channel[switch_e_num.value()].data;
+}
+std::optional<float> ET16S::get_switch_f(){
+	if (switch_f_num.has_value()){ return {}; }
+	return channel[switch_f_num.value()].data;
+}
+std::optional<float> ET16S::get_switch_g(){
+	if (switch_g_num.has_value()){ return {}; }
+	return channel[switch_g_num.value()].data;
+}
+std::optional<float> ET16S::get_switch_h(){
+	if (switch_h_num.has_value()){ return {}; }
+	return channel[switch_h_num.value()].data;
+}
+std::optional<float> ET16S::get_l_slider(){
+	if (l_slider_num.has_value()){ return {}; }
+	return channel[l_slider_num.value()].data;
+}
+std::optional<float> ET16S::get_r_slider(){
+	if (r_slider_num.has_value()){ return {}; }
+	return channel[r_slider_num.value()].data;
+}
+std::optional<float> ET16S::get_trim_one(){
+	if (trim_one_num.has_value()){ return {}; }
+	return channel[trim_one_num.value()].data;
+}
+std::optional<float> ET16S::get_trim_two(){
+	if (trim_two_num.has_value()){ return {}; }
+	return channel[trim_two_num.value()].data;
+}
+std::optional<float> ET16S::get_trim_three(){
+	if (trim_three_num.has_value()){ return {}; }
+	return channel[trim_three_num.value()].data;
+}
+std::optional<float> ET16S::get_trim_four(){
+	if (trim_four_num.has_value()){ return {}; }
+	return channel[trim_four_num.value()].data;
+}
+std::optional<float> ET16S::get_trim_five(){
+	if (trim_five_num.has_value()){ return {}; }
+	return channel[trim_five_num.value()].data;
+}
+std::optional<float> ET16S::get_trim_six(){
+	if (trim_six_num.has_value()){ return {}; }
+	return channel[trim_six_num.value()].data;
+}
+std::optional<float> ET16S::get_l_dial(){
+	if (l_dial_num.has_value()){ return {}; }
+	return channel[l_dial_num.value()].data;
+}
+std::optional<float> ET16S::get_r_dial(){
+	if (r_dial_num.has_value()){ return {}; }
+	return channel[r_dial_num.value()].data;
 }
 
-float ET16S::get_channel_six() {
-	return channel[6].data;
-}
-
-float ET16S::get_channel_seven() {
-	return channel[7].data;
-}
-
-float ET16S::get_channel_eight() {
-	return channel[8].data;
-}
-
-float ET16S::get_channel_nine() {
-	return channel[9].data;
-}
-
-float ET16S::get_channel_ten() {
-	return channel[10].data;
-}
-
-float ET16S::get_channel_eleven() {
-	return channel[11].data;
-}
-
-float ET16S::get_channel_twelve() {
-	return channel[12].data;
-}
-
-float ET16S::get_channel_thirteen() {
-	return channel[13].data;
-}
-
-float ET16S::get_channel_fourteen() {
-	return channel[14].data;
-}
-
-float ET16S::get_channel_fifteen() {
-	return channel[15].data;
+float ET16S::get_channel_data(int chan_num){
+	if ((chan_num < 4) || (chan_num > 16)){
+		return -2;
+	}
+	return channel[chan_num].data;
 }
 
 bool ET16S::get_connection_status() {
 	return is_connected;
 }
+
