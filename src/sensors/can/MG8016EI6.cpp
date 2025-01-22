@@ -24,7 +24,7 @@ int MG8016EI6::read(CAN_message_t& msg) {
     if (msg.id != m_base_id + m_id) return 0; 
 
     // early return if the bus ID does not match
-    if (msg.bus - 1 != m_bus_id) return 0;
+    if ((uint32_t)(msg.bus - 1) != m_bus_id) return 0;
 
     uint8_t cmd_byte = msg.buf[0];
 

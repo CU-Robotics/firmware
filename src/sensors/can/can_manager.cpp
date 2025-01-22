@@ -29,6 +29,7 @@ void CANManager::init() {
     // TODO: can CAN 3 act the same as CAN 1/2 since its CANFD?
     m_can3.begin();
     m_can3.setBaudRate(1000000u);   // 1Mbit baud
+    m_can3.enableFIFO(true);
 
     // destroy any motors in existance and initialize to nullptr
     m_motor_map.clear();
@@ -93,7 +94,7 @@ void CANManager::read() {
             // if this fails, we've received a message that does not match any motor
             // how would this happen?
             if (!distribute_msg(msg)) {
-                Serial.printf("CANManager failed to distribute message: %d\n", msg.id);
+                Serial.printf("CANManager failed to distribute message: %.4x\n", msg.id);
             }
         }
     }
@@ -108,8 +109,17 @@ void CANManager::write() {
         // both the c610s and c620s can occupy the same message
         CAN_message_t rm_motor_msgs[2];
 
+        // flag to see whether rm motors are even on this bus
+        // we dont want to send a write command to motors that wont be on this bus
+        bool should_send_rm_motors = false;
+
         // for each motor, can be const
         for (const auto& motor : m_motor_map) {
+            // if the motor is not on this bus, skip it
+            if (motor.second->get_bus_id() != bus) {
+                continue;
+            }
+            
             // based on the motor type, figure out how to write the message
             switch (motor.second->get_controller_type()) {
             case MotorControllerType::C610_CONTROLLER:   // fallthrough
@@ -123,6 +133,9 @@ void CANManager::write() {
                 }
 
                 // this combined message will be written to the bus after the motor loop
+
+                // there are rm motors on this bus that need to be written
+                should_send_rm_motors = true;
 
                 break;
             }
@@ -145,9 +158,11 @@ void CANManager::write() {
             }
         }
         
-        // write the combined messages to the bus
-        m_busses[bus]->write(rm_motor_msgs[0]);
-        m_busses[bus]->write(rm_motor_msgs[1]);
+        // write the rm motor messages to the bus
+        if (should_send_rm_motors) {
+            m_busses[bus]->write(rm_motor_msgs[0]);
+            m_busses[bus]->write(rm_motor_msgs[1]);
+        }
     }
 }
 
@@ -296,12 +311,13 @@ void CANManager::init_motors() {
                 // try to distribute the message to the correct motor
                 Motor* motor = distribute_msg(msg);
 
+                // no motor could handle the message so move on
                 if (!motor)
                     continue;
 
                 // if the motor is not initialized, mark it as initialized
-                if (!motors_initialized[motor->get_id()]) {
-                    motors_initialized[motor->get_id()] = true;
+                if (!motors_initialized[motor->get_global_id()]) {
+                    motors_initialized[motor->get_global_id()] = true;
                     Serial.printf("Motor %u on bus %u initialized!\n", motor->get_id(), motor->get_bus_id());
                 }
             }
@@ -310,10 +326,9 @@ void CANManager::init_motors() {
 
     // print out any motors that failed to initialize using the motors_initialized array
     // this is not fatal but should be investigated
-    for (uint32_t motor = 0; motor < CAN_MAX_MOTORS; motor++) {
-        // if this motor is not initialized and it actually exists, print a warning
-        if (!motors_initialized[motor] && m_motor_map.count(motor) != 0) {
-            Serial.printf("Motor %d on bus %d with id %d failed to initialize within %ums\n", motor, m_motor_map[motor]->get_bus_id(), m_motor_map[motor]->get_id(), m_motor_init_timeout);
+    for (auto& motor : m_motor_map) {
+        if (!motors_initialized[motor.second->get_global_id()]) {
+            Serial.printf("Motor %u on bus %u failed to initialize!\n", motor.second->get_id(), motor.second->get_bus_id());
         }
     }
 }
