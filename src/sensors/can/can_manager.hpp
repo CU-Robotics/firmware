@@ -126,8 +126,8 @@ private:
 
     /// @brief Iterates through all the motors and tries to give the message to the correct one
     /// @param msg The message to distribute
-    /// @return True if the message was distributed, false if it was not
-    bool distribute_msg(CAN_message_t& msg);
+    /// @return The motor that successfully read the message or nullptr if no motor read the message
+    Motor* distribute_msg(CAN_message_t& msg);
 
 private:
     /// @brief CAN bus 1

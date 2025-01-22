@@ -138,13 +138,13 @@ int main() {
 
     uint32_t time1 = 0;
     while (1) {
-	    delay(1);
-	    can.read();
-	if (millis() - time1 > 100) {
+        delay(1);
+        can.read();
+        if (millis() - time1 > 100) {
             Serial.println("Init done!\n\n");
-            can.print_state(); 
-	    time1 = millis();
-	}
+            can.print_state();
+            time1 = millis();
+        }
         can.issue_safety_mode();
     }
 
@@ -186,7 +186,7 @@ int main() {
 
         vtm_pos_x += ref.ref_data.kbm_interaction.mouse_speed_x * 0.05 * delta;
         vtm_pos_y += ref.ref_data.kbm_interaction.mouse_speed_y * 0.05 * delta;
-        
+
         float chassis_vel_x = 0;
         float chassis_vel_y = 0;
         float chassis_pos_x = 0;
@@ -325,6 +325,6 @@ int main() {
         float dt = stall_timer.delta();
         if (dt > 0.002) Serial.printf("Slow loop with dt: %f\n", dt);
     }
-    
+
     return 0;
 }
