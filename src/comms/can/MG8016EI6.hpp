@@ -81,6 +81,8 @@ public:
     /// @brief Stop the motor but dont clear it's state
     void write_motor_stop();
 
+    void write_motor_set_zero_ROM();
+
 private:
     /// @brief Turn off the motor and clear it's state
     /// @param buf Output buffer to write the command to

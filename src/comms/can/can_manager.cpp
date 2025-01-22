@@ -119,7 +119,6 @@ void CANManager::write() {
                 } else {
                     motor.second->write(rm_motor_msgs[0]);   // first 4 motors
                 }
-
                 // this combined message will be written to the bus after the motor loop
 
                 break;
@@ -133,7 +132,6 @@ void CANManager::write() {
                 // the MG motors dont require msg merging so just write it to the bus
                 // write the message to the correct bus
                 m_busses[bus]->write(msg);
-
                 break;
             }
             default: {
@@ -161,11 +159,11 @@ void CANManager::safety_mode() {
 
 void CANManager::write_motor_torque(uint32_t motor_gid, float torque) {
     // verify motor ID
+    
     if (m_motor_map.count(motor_gid) == 0) {
         Serial.printf("CANManager tried to write to an invalid motor: %d\n", motor_gid);
         return;
     }
-
     // write the torque to the motor
     m_motor_map[motor_gid]->write_motor_torque(torque);
 }

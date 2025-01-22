@@ -1,8 +1,6 @@
 #include "IMU_Filter.hpp"
 
 void IMU_filter::init(){
-    pinMode(ICM_CS, OUTPUT);
-    digitalWrite(ICM_CS, HIGH);
     SPI.begin();
     _icm.init(_icm.SPI);
     _icm.set_gyro_range(4000);
@@ -47,9 +45,9 @@ void IMU_filter::read(){
     K[1][1] = P[1][1]/(P[1][1] + R);
     // Calculate prediction
     // Roll Angle
-    _imu.k_roll = _imu.gyro_roll + K[0][0] * (_imu.accel_roll - _imu.gyro_roll);
+    _imu.k_roll = (_imu.gyro_roll + K[0][0] * (_imu.accel_roll - _imu.gyro_roll)) ;
     // Pitch Angle
-    _imu.k_pitch = _imu.gyro_pitch + K[1][1] * (_imu.accel_pitch - _imu.gyro_pitch);
+    _imu.k_pitch = (_imu.gyro_pitch + K[1][1] * (_imu.accel_pitch - _imu.gyro_pitch));
     // Update P Matrix
     P[0][0] = (1 - K[0][0]) * P[0][0];
     P[0][1] = 0;
@@ -100,8 +98,8 @@ void IMU_filter::serial_data_for_plot(){
     String dataString = String(String(_imu.k_roll) + "," + String(_imu.k_pitch));
     Serial.println(dataString);
 }
-IMUData* IMU_filter::getdata(){
-    return &_imu;
+IMUData IMU_filter::getdata(){
+    return _imu;
 }
 void IMU_filter::calibrate_imu(){
     Serial.println("Calibrating IMU...");

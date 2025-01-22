@@ -2,6 +2,7 @@
 #include <TeensyDebug.h>
 #include "utils/timing.hpp"
 #include "comms/can/can_manager.hpp"
+#include "comms/can/MG8016EI6.hpp"
 #include "sensors/dr16.hpp"
 #include "filters/IMU_Filter.hpp"
 #include "Controls_Balancing/test_balancing.hpp"
@@ -75,44 +76,75 @@ int main() {
         {3 , 2 , 2},
         {3 , 3 , 2},
         {3 , 4 , 2},
-        {2 , 1 , 0},
-        {2 , 2 , 0}
+        {2 , 1 , 2},
+        {2 , 3 , 2}
     }; 
     can.configure(motor_info);
+    ((MG8016EI6*)can.get_motor(0))->write_motor_set_zero_ROM();
+    ((MG8016EI6*)can.get_motor(1))->write_motor_set_zero_ROM();
+    ((MG8016EI6*)can.get_motor(2))->write_motor_set_zero_ROM();
+    ((MG8016EI6*)can.get_motor(3))->write_motor_set_zero_ROM();
+
+
+
     balancing_sensor_data data;
+    IMUData imu_data;
     // Main loop
     while (true) {
         // Read sensors
         dr16.read();
         icm.read();
-
         can.read();
 
+        imu_data = icm.getdata();
+        data.gyro_pitch = imu_data.alpha_pitch;
+        data.gyro_roll = imu_data.alpha_roll;
+        data.gyro_yew = imu_data.alpha_yaw;
+        data.imu_accel_x = imu_data.accel_X;
+        data.imu_accel_y = imu_data.accel_Y;
+        data.imu_accel_z = imu_data.accel_Z;
+        data.imu_angle_pitch = imu_data.k_pitch;
+        data.imu_angle_roll = imu_data.k_roll;
+        data.angle_fr = can.get_motor(0)->get_state().position;
         data.angle_fl = can.get_motor(1)->get_state().position;
         data.angle_bl = can.get_motor(2)->get_state().position;
-        data.angle_fr = can.get_motor(0)->get_state().position;
         data.angle_br = can.get_motor(3)->get_state().position;
-        //can.print_state();
-
+        data.speed_wl = can.get_motor(4)->get_state().speed;
+        data.speed_wr = can.get_motor(5)->get_state().speed;
+        
         test_control.set_data(data);
-        // test_control.limit_write();
+        test_control.observer();
+        test_control.control_position();
+        can.write_motor_torque(0,test_control.getwrite().torque_fr);
+        can.write_motor_torque(1,test_control.getwrite().torque_fl);
+        can.write_motor_torque(2,test_control.getwrite().torque_bl);
+        can.write_motor_torque(3,test_control.getwrite().torque_br);
+        // can.write_motor_torque(0,-0.02);
+        // can.write_motor_torque(1,0.02);
+        // can.write_motor_torque(2,-0.02);
+        // can.write_motor_torque(3, 0.02);
+        
+        can.write_motor_torque(4,test_control.getwrite().torque_wl);
+        can.write_motor_torque(5,test_control.getwrite().torque_wr);
+
+        //can.write_motor_torque(3,-0.05);
+        // can.write_motor_torque(0,0.05);
+        
+        // can.write_motor_torque(2,0.05);
+        // can.write_motor_torque(1,-0.05);
+        // can.write_motor_torque(5, 0.1);
+        // can.print_state();
+        test_control.print_observer();
         test_control.printdata();
-
-        // can.write_motor_torque(1,test_control.getwrite().torque_fl);
-        // can.write_motor_torque(2,test_control.getwrite().torque_bl);
-        // can.write_motor_torque(0,test_control.getwrite().torque_fr);
-        // can.write_motor_torque(3,test_control.getwrite().torque_br);
-
         icm.print();
         if (!dr16.is_connected() || dr16.get_l_switch() == 1) {
             // SAFETY ON
             // TODO: Reset all controller integrators here
-            can.safety_mode();
             Serial.println("SAFTYON");
+            can.safety_mode();
         } else if (dr16.is_connected() && dr16.get_l_switch() != 1) {
             // SAFETY OFF
             Serial.println("SAFTYOFF");
-            test_control.test_write();
             can.write();
         }
 

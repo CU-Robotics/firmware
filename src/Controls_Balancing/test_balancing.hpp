@@ -6,33 +6,35 @@
 #include "../comms/can/can_manager.hpp"
 //Constants for control
 /** Constants for leg_controller*/
-#define m_b 1                                   //Need test
-#define m_l 1                                   //Need test
-#define R_l 1                                   //Need test
-#define eta_l 1                                 //Need test
+#define m_b 8.1                                  
+#define m_l 0.744                               
+#define R_l 0.224                                   
+#define eta_l 0.4144                            
 
-#define K1_P 1                                  //Need test                                    
-#define K1_I 1                                  //Need test 
-#define K1_D 1                                  //Need test                         
-#define K1_F 1                                  //Need test                         
-#define K2_P 1                                  //Need test                         
-#define K2_I 1                                  //Need test                         
-#define K2_D 1                                  //Need test                         
-#define K2_F 1                                  //Need test                   
+#define K1_P 300                                  //Need test                                    
+#define K1_I 0                                    //Need test 
+#define K1_D 100                                  //Need test                         
+#define K1_F 100                                  //Need test                         
+#define K2_P 180                                  //Need test                         
+#define K2_I 200                                  //Need test                         
+#define K2_D 150                                  //Need test                         
+#define K2_F 100                                  //Need test                   
 
 /** Constants for locomotion_controller*/
 #define P_LOCO_ROW 4
 
 /**observer constants */
-#define l_a 0   // test
-#define l_u 0   // test
-#define l_l 0   // test
-#define R_w 0   // test
+#define l_a 0.07   // test
+#define l_u 0.14   // test
+#define l_l 0.252   // test
+#define R_w 0.05   // test
 
 /**controller constants */
 #define G_CONSTANT 9.80665f
 #define BOUND true                              // 1 to -1                      
 #define WARP true                               // 360 degree 
+#define F_WH_OUTPUT_LIMIT_NUM 20
+#define MGlimit 0.4
 struct balancing_sensor_data
 {
     float angle_fl;
@@ -61,15 +63,16 @@ struct balancing_sensor_data
 
 struct write_data
 {
+    float torque_fr; //ID:1 
     float torque_fl; //ID:2 
     float torque_bl; //ID:3
-    float torque_fr; //ID:1 
     float torque_br; //ID:4
-    float torque_wl;
-    float torque_wr;
+    float torque_wl; //ID:1 
+    float torque_wr; //ID:2
 };
 struct observer_data
 {
+    float s;
     float pitch_dot;
     float yaw_dot;
     float yaw_ddot;
@@ -98,9 +101,20 @@ struct observer_data
 };
 
 struct ref_data
-{
+{   
+    
     float goal_roll;
     float goal_l;
+    float s;
+    float b_speed;
+    float yaw_dot;
+    float pitch;
+    float pitch_dot;
+    float theta_ll;
+    float theta_lr;
+    float theta_ll_dot;
+    float theta_lr_dot;
+
 }; 
 
 class balancing_test{
@@ -116,12 +130,12 @@ class balancing_test{
 
 
         float p[6][P_LOCO_ROW][10];
-
+        float K[4][10];
 
         balancing_sensor_data _data;
         write_data _write;
         observer_data o_data;
-        ref_data ref_data;  
+        ref_data _ref_data;  
     public:
         /// @brief setting all constant array
         void init();
@@ -139,11 +153,15 @@ class balancing_test{
 
         void control_position();
 
+        void simple_control();
+
         void step();
 
         write_data getwrite();
 
         void printdata();
+
+        void print_observer();
 
 };
 

@@ -2,6 +2,7 @@
 
 void MG8016EI6::init() {
     write_motor_on();
+    // write_motor_set_zero_ROM();
 }
 
 int MG8016EI6::read(CAN_message_t& msg) {
@@ -264,6 +265,18 @@ void MG8016EI6::write_motor_stop() {
     // create the message
     uint8_t buf[8];
     create_cmd_motor_stop(buf);
+
+    // fill in the output array
+    m_output.id = m_base_id + m_id;
+    for (int i = 0; i < 8; i++) {
+        m_output.buf[i] = buf[i];
+    }
+}
+
+void MG8016EI6::write_motor_set_zero_ROM() {
+    // create the message
+    uint8_t buf[8];
+    create_cmd_write_position_as_zero(buf);
 
     // fill in the output array
     m_output.id = m_base_id + m_id;

@@ -53,7 +53,7 @@ class IMU_filter{
         void calibrate_imu();
         /// @brief This is a function to get IMUData return
         /// @return An IMUData filled with almost everything from the IMU sensor
-        IMUData* getdata();
+        IMUData getdata();
         /// @brief This is the read function (Also step function) without Yaw and works for +/- 90 degree  
         void read();
         /// @brief Print out data for debugging

@@ -37,7 +37,6 @@ int C620::write(CAN_message_t& msg) const {
     // message format is specified in the C620 datasheet (Speed Controller Receiving Message Format)
     msg.buf[motor_id * 2] = m_output.buf[motor_id * 2];         // upper byte
     msg.buf[motor_id * 2 + 1] = m_output.buf[motor_id * 2 + 1]; // lower byte
-
     // return where in the buffer array the motor data was written
     return motor_id * 2;
 }
@@ -51,12 +50,10 @@ void C620::write_motor_torque(float torque) {
     // clamp torque to -1 to 1 just in case. We dont want to overflow the int
     if (torque < -1.0f) torque = -1.0f;
     if (torque > 1.0f) torque = 1.0f;
-
     // convert given torque from float to 16-bit signed int
     float mapped_torque = torque * m_max_torque;
 
     int16_t int_torque = (int16_t)mapped_torque;
-
     // map the ID
     uint8_t message_id = (m_id - 1) / 4;
 
