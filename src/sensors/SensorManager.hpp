@@ -13,6 +13,8 @@
 #include "buff_encoder.hpp"
 #include "TOFSensor.hpp"
 #include "rev_encoder.hpp"
+#include "sensors/d200.hpp"
+#include <Arduino.h>
 
 
 #define NUM_SENSOR_TYPE 16
@@ -99,15 +101,10 @@ class SensorManager {
     /// @brief array to store tof sensors
     TOFSensor tof_sensors[NUM_SENSOR_TYPE];
 
+    D200LD14P lidar1 = D200LD14P(&Serial4, 0);
+    D200LD14P lidar2 = D200LD14P(&Serial5, 1);
 
-    /// Array of buff sensor data structs.
-    BuffEncoderData* buff_sensors_data;
-    /// Array of ICM sensor data structs.
-    ICMSensorData* icm_sensors_data;
-    /// Array of Rev sensor data structs.
-    RevSensorData* rev_sensors_data;
-    /// Array of TOF sensor data structs.
-    TOFSensorData* tof_sensors_data;
+    
     /// Array of LiDAR sensor data structs.
     LidarSensorData* lidar_sensors_data;
 

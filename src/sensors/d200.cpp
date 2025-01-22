@@ -116,6 +116,12 @@ void D200LD14P::read() {
       }
     }
   }
+
+  //add data to struct
+  lidar_sensor_data.cal = cal;
+  lidar_sensor_data.current_packet = current_packet;
+  lidar_sensor_data.id = id;
+  memcpy(lidar_sensor_data.packets, packets, D200_NUM_PACKETS_CACHED * sizeof(LidarDataPacketSI));
 }
 
 void D200LD14P::flush_packet_buffer() {
@@ -195,14 +201,4 @@ void D200LD14P::print_latest_packet() {
   Serial.println(p.end_angle);
   Serial.print("timestamp: ");
   Serial.println(p.timestamp);
-}
-
-void D200LD14P::serialize(uint8_t* buffer, size_t& offset) {
-  buffer[offset++] = id;
-  memcpy(buffer + offset, &current_packet, sizeof(current_packet));
-  offset += sizeof(current_packet);
-  memcpy(buffer + offset, &cal, sizeof(cal));
-  offset += sizeof(cal);
-  memcpy(buffer + offset, get_packets(), 154);
-  offset += 154;
 }

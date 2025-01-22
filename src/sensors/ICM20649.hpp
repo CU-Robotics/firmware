@@ -35,14 +35,6 @@ struct ICMSensorData {
     float gyro_Z;
     /// Temperature reading.
     float temperature;
-
-    /// @brief Function to deserialize data from a byte array.
-    /// @param data Data to deserialize.
-    /// @param offset Offset to update as data is read.
-    void deserialize(const uint8_t* data, size_t& offset);
-
-    /// @brief Function to print the sensor data.
-    void print();
 };
 
 /// @brief Sensor access for an ICM20649 IMU Sensor. Child of the abstract IMUSensor class.
@@ -71,10 +63,7 @@ public:
     /// @param gyro_rate_range new rate range
     void set_gyro_range(int gyro_rate_range);
 
-    /// @brief serialize the data into a buffer
-    /// @param buffer buffer to store the serialized data
-    /// @param offset offset to store the position of the serialized data in the buffer
-    void serialize(uint8_t* buffer, size_t& offset) override;
+    
 
 private:
     /// @brief sensor object from adafruit libraries.
@@ -95,6 +84,11 @@ private:
 
     /// @brief The selected communication protocol
     CommunicationProtocol protocol;
+
+    ///ICM sensor data.
+    ICMSensorData icm_sensor_data;
 };
+
+
 
 #endif

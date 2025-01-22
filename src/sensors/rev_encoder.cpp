@@ -29,6 +29,12 @@ void RevEncoder::read() {
         this->ticks = frequency % 1024;
         this->radians = (((float)this->ticks) / 1024.0) * M_PI * 2;
     }
+
+    //copy the data to the data struct
+    rev_sensor_data.id = id_;
+    rev_sensor_data.ticks = ticks;
+    rev_sensor_data.radians = radians;
+    
 }
 
 float RevEncoder::get_angle_ticks() {
@@ -37,16 +43,6 @@ float RevEncoder::get_angle_ticks() {
 
 float RevEncoder::get_angle_radians() {
     return (this->radians-starting_value);
-}
-
-void RevEncoder::serialize(uint8_t* buffer, size_t& offset) {
-    buffer[offset++] = id_;
-    memcpy(buffer + offset, &ticks, sizeof(ticks));
-    offset += sizeof(ticks);
-    memcpy(buffer + offset, &radians, sizeof(radians));
-    offset += sizeof(radians);
-    //TODO: starting value and freq if needed
-    
 }
 
 void RevEncoder::print() {

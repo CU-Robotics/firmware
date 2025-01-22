@@ -5,11 +5,6 @@ SensorManager::SensorManager() {
 };
 
 SensorManager::~SensorManager() {
-    delete[] buff_sensors_data;
-    delete[] icm_sensors_data;
-    delete[] rev_sensors_data;
-    delete[] tof_sensors_data;
-    delete[] lidar_sensors_data;
 }
 
 void SensorManager::init(const Config* config_data) {
@@ -20,10 +15,6 @@ void SensorManager::init(const Config* config_data) {
     lidar_sensor_count = config_data->num_of_lidar;
 
     // Allocate memory for sensor arrays
-    buff_sensors_data = new BuffEncoderData[buff_sensor_count];
-    icm_sensors_data = new ICMSensorData[icm_sensor_count];
-    rev_sensors_data = new RevSensorData[rev_sensor_count];
-    tof_sensors_data = new TOFSensorData[tof_sensor_count];
     lidar_sensors_data = new LidarSensorData[lidar_sensor_count];
 
     for(int i = 0; i < NUM_SENSORS; i++){
@@ -32,27 +23,6 @@ void SensorManager::init(const Config* config_data) {
             num_sensors[type]++;
         }
 
-        // //Split up the sensor counts by type
-        // switch (type)
-        // {
-        // case SensorType::BUFFENC:
-        //     buff_sensor_count++;
-        //     break;
-        // case SensorType::REVENC:
-        //     rev_sensor_count++;
-        //     break;
-        // case SensorType::ICM:
-        //     icm_sensor_count++;
-        //     break;
-        // case SensorType::TOF:
-        //     tof_sensor_count++;
-        //     break;
-        // case SensorType::LIDAR:
-        //     lidar_sensor_count++;
-        //     break;
-        // default:
-        //     break;
-        // }
     }
 
     //initilize the sensors
@@ -99,20 +69,26 @@ void SensorManager::init(const Config* config_data) {
 void SensorManager::read() {
     for(int i = 0; i < buff_sensor_count; i++) {
         buff_encoders[i].read();
-        buff_encoders[i].print();
+        //buff_encoders[i].print();
     }
     for(int i = 0; i < icm_sensor_count; i++) {
         icm_sensors[i].read();
-        icm_sensors[i].print();
+        //icm_sensors[i].print();
     }
     for(int i = 0; i < rev_sensor_count; i++) {
         rev_sensors[i].read();
-        rev_sensors[i].print();
+        //rev_sensors[i].print();
     }
     for(int i = 0; i < 1; i++) {
         tof_sensors[i].read();
-        tof_sensors[i].print();
+        //tof_sensors[i].print();
     }
+
+    if(lidar_sensor_count > 0){
+        lidar1.read();
+        lidar2.read();
+    }
+        
     
 }
 

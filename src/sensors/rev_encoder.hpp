@@ -18,9 +18,6 @@ struct RevSensorData {
     int ticks;
     /// Angle in radians.
     float radians;
-
-    /// @brief Function to print the sensor data.
-    void print();
 };
 
 /// @brief the class for the Rev Through Bore Encoder(www.revrobotics.com/rev-11-1271/)
@@ -36,6 +33,8 @@ private:
 	float radians;
 	/// @brief the starting value of the encoder in radians
 	float starting_value = 0;
+	//data structure for the encoder
+	RevSensorData rev_sensor_data;
 public:
 	/// @brief Construct a new rev_encoder object without initializing the encoder
 	RevEncoder() : Sensor(SensorType::REVENC) {};
@@ -57,11 +56,6 @@ public:
 	/// @brief get the last angle of the encoder in radians
 	/// @return the last angle of the encoder in radians [0, 2pi)
 	float get_angle_radians();
-
-	/// @brief serialize the data into a buffer
-	/// @param buffer buffer to store the serialized data
-	/// @param offset offset to store the position of the serialized data in the buffer
-	void serialize(uint8_t* buffer, size_t& offset)  override;
 
 	/// @brief print the encoder details
 	void print();

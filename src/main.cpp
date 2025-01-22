@@ -3,7 +3,6 @@
 #include "git_info.h"
 
 #include "utils/profiler.hpp"
-#include "sensors/d200.hpp"
 #include "sensors/StereoCamTrigger.hpp"
 #include "controls/estimator_manager.hpp"
 #include "controls/controller_manager.hpp"
@@ -25,8 +24,6 @@ RefSystem ref;
 HIDLayer comms;
 ACS712 current_sensor;
 
-D200LD14P lidar1(&Serial4, 0);
-D200LD14P lidar2(&Serial5, 1);
 
 StereoCamTrigger stereoCamTrigger(60);
 
@@ -170,8 +167,7 @@ int main() {
         can.read();
         dr16.read();
         ref.read();
-        lidar1.read();
-        lidar2.read();
+        
 
         
 
@@ -304,12 +300,12 @@ int main() {
         // set dr16 raw data
         memcpy(sensor_data.raw + SENSOR_DR16_OFFSET, dr16.get_raw(), DR16_PACKET_SIZE);
 
-        // set lidars
-        uint8_t lidar_data[D200_NUM_PACKETS_CACHED * D200_PAYLOAD_SIZE] = { 0 };
-        lidar1.export_data(lidar_data);
-        memcpy(sensor_data.raw + SENSOR_LIDAR1_OFFSET, lidar_data, D200_NUM_PACKETS_CACHED * D200_PAYLOAD_SIZE);
-        lidar2.export_data(lidar_data);
-        memcpy(sensor_data.raw + SENSOR_LIDAR2_OFFSET, lidar_data, D200_NUM_PACKETS_CACHED * D200_PAYLOAD_SIZE);
+        // // set lidars
+        // uint8_t lidar_data[D200_NUM_PACKETS_CACHED * D200_PAYLOAD_SIZE] = { 0 };
+        // lidar1.export_data(lidar_data);
+        // memcpy(sensor_data.raw + SENSOR_LIDAR1_OFFSET, lidar_data, D200_NUM_PACKETS_CACHED * D200_PAYLOAD_SIZE);
+        // lidar2.export_data(lidar_data);
+        // memcpy(sensor_data.raw + SENSOR_LIDAR2_OFFSET, lidar_data, D200_NUM_PACKETS_CACHED * D200_PAYLOAD_SIZE);
 
         // construct ref data packet
         uint8_t ref_data_raw[180] = { 0 };

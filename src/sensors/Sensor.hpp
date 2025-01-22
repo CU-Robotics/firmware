@@ -32,11 +32,6 @@ public:
     /// @param id The new ID of the sensor.
     void setId(uint8_t id) { id_ = id; }
 
-    /// @brief Pure virtual function to serialize the sensor data.
-    /// @param buffer Buffer to serialize the data into.
-    /// @param offset Offset to update as data is serialized.
-    virtual void serialize(uint8_t* buffer, size_t& offset) = 0;
-
     virtual void read() = 0;
 
 protected:

@@ -163,8 +163,6 @@ struct LidarSensorData {
     /// Array of cached data packets.
     LidarDataPacketSI packets[D200_NUM_PACKETS_CACHED];
 
-    /// @brief Function to print the latest LiDAR data packet.
-    void print_latest_packet();
 };
 
 /// @brief class for LiDAR driver
@@ -205,6 +203,9 @@ class D200LD14P : Sensor{
     /// @param len length of buffer
     /// @return CRC8 checksum for buffer
     uint8_t calc_checksum(uint8_t *buf, int len);
+
+    //data struct for the LiDAR sensor
+    LidarSensorData lidar_sensor_data;
 
   public:
     /// @brief constructor and initialization
@@ -249,12 +250,6 @@ class D200LD14P : Sensor{
     /// @brief export LiDAR data as byte array for comms. Exports the latest D200_NUM_PACKETS_CACHED packets, for a total size of D200_NUM_PACKETS_CACHED * D200_PAYLOAD_SIZE bytes per export.
     /// @param bytes byte array to write LiDAR data into
     void export_data(uint8_t bytes[D200_NUM_PACKETS_CACHED * D200_PAYLOAD_SIZE]);
-
-
-    /// @brief serialize the LiDAR data
-    /// @param buffer buffer to store the serialized data
-    /// @param offset offset to store the serialized data
-    void serialize(uint8_t* buffer, size_t& offset) override;
 
     /// @brief return the current packet
     int get_current_packet_index() {return current_packet;};

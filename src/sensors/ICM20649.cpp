@@ -61,6 +61,15 @@ void ICM20649::read() {
     gyro_Z = gyro.gyro.z;
 
     temperature = temp.temperature;
+
+    //copy the values to the data struct
+    icm_sensor_data.accel_X = accel_X;
+    icm_sensor_data.accel_Y = accel_Y;
+    icm_sensor_data.accel_Z = accel_Z;
+    icm_sensor_data.gyro_X = gyro_X;
+    icm_sensor_data.gyro_Y = gyro_Y;
+    icm_sensor_data.gyro_Z = gyro_Z;
+    icm_sensor_data.temperature = temperature;
 }
 
 // calculate the approximate acceleration data rate (Hz) from the divisor.
@@ -93,44 +102,4 @@ void ICM20649::set_gyro_range(int gyro_rate_range) {
         sensor.setGyroRange(ICM20649_GYRO_RANGE_4000_DPS);
         break;
     }
-}
-
-// implenet seralize and deserialize
-void ICM20649::serialize(uint8_t* buffer, size_t& offset) {
-    //returns the acceleration with the offset applied
-    float corrected_accel_X = get_accel_X();
-    float corrected_accel_Y = get_accel_Y();
-    float corrected_accel_Z = get_accel_Z();
-    float corrected_gyro_X = get_gyro_X();
-    float corrected_gyro_Y = get_gyro_Y();
-    float corrected_gyro_Z = get_gyro_Z();
-    //  code that prints out raw bytes of the buffer for this sensor
-    // Serial.print("ICM20649: ");
-    // for (int i = 0; i < 28; i++) {
-    //     for (int ii = 0; ii <= 7; ii++) {
-    //         int k = buffer[i + offset] >> ii;
-    //         if (k & 1) {
-    //             Serial.print("1");
-    //         } else {
-    //             Serial.print("0");
-    //         }
-    //         Serial.print(" ");
-    //     }
-    //     Serial.println(" ");
-    // }
-
-    memcpy(buffer + offset, &corrected_accel_X, sizeof(corrected_accel_X));
-    offset += sizeof(corrected_accel_X);
-    memcpy(buffer + offset, &corrected_accel_Y, sizeof(corrected_accel_Y));
-    offset += sizeof(corrected_accel_Y);
-    memcpy(buffer + offset, &corrected_accel_Z, sizeof(corrected_accel_Z));
-    offset += sizeof(corrected_accel_Z);
-    memcpy(buffer + offset, &corrected_gyro_X, sizeof(corrected_gyro_X));
-    offset += sizeof(corrected_gyro_X);
-    memcpy(buffer + offset, &corrected_gyro_Y, sizeof(corrected_gyro_Y));
-    offset += sizeof(corrected_gyro_Y);
-    memcpy(buffer + offset, &corrected_gyro_Z, sizeof(corrected_gyro_Z));
-    offset += sizeof(corrected_gyro_Z);
-    memcpy(buffer + offset, &temperature, sizeof(temperature));
-    offset += sizeof(temperature);
 }

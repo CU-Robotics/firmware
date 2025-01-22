@@ -6,6 +6,16 @@
 #include "Sensor.hpp"
 #include "sensor_constants.hpp"
 
+
+/// @brief Structure for the buff encoder sensor.
+struct BuffEncoderData {
+    /// Sensor ID.
+    uint8_t id;
+    /// Measured angle.
+    float m_angle;
+};
+
+
 // Encoder Registers and Config
 constexpr uint32_t MT6835_OP_READ = 0b0011;
 constexpr uint32_t MT6835_OP_WRITE = 0b0110;
@@ -68,11 +78,6 @@ public:
     /// @return Read angle (radians)
     inline float get_angle() const { return m_angle; }
 
-    /// @brief Serialize the data into a buffer
-    /// @param buffer Buffer to serialize the data into
-    /// @param offset Offset to store the position of the serialized data in the buffer
-    void serialize(uint8_t* buffer, size_t& offset) override;
-
     /// @brief Print the data for debugging
     void print();
 
@@ -86,17 +91,9 @@ private:
     /// @brief The SPI settings of the buff encoders
     static const SPISettings m_settings;
 
-};
+    ///buff sensor data struct.
+    BuffEncoderData buff_sensor_data;
 
-/// @brief Structure for the buff encoder sensor.
-struct BuffEncoderData {
-    /// Sensor ID.
-    uint8_t id;
-    /// Measured angle.
-    float m_angle;
-
-    /// @brief Function to print the sensor data.
-    void print();
 };
 
 

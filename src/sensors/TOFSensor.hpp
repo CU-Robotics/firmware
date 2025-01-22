@@ -19,9 +19,6 @@ struct TOFSensorData {
     uint8_t id;
     /// Latest distance measurement.
     uint16_t latest_distance;
-
-    /// @brief Function to print the sensor data.
-    void print();
 };
 
 /// @brief A time of flight sensor to measure distance in millimeters
@@ -39,6 +36,9 @@ protected:
 
     /// @brief The most recent distance read from the sensor
     uint16_t latest_distance = 0;
+
+    //data structure for the TOF sensor
+    TOFSensorData tof_sensor_data;
 
 public:
     /// @brief Default constructor
@@ -96,22 +96,13 @@ public:
         sensor.VL53L4CD_GetResult(&results);
         latest_distance = results.distance_mm;
 
+        // copy the data to the data struct
+        tof_sensor_data.id = id_;
+        tof_sensor_data.latest_distance = latest_distance;
+
         // swap to the next operation (clearing interrupt)
         should_read = !should_read;
     }
-
-    /// @brief function to serialize the TOF sensor data
-    /// @param buffer  buffer to store the serialized data
-    /// @param offset  offset to store the serialized data
-    void serialize(uint8_t* buffer, size_t& offset) override {
-        // serialize the sensor id
-        buffer[offset++] = id_;
-
-        // serialize the distance
-        buffer[offset++] = latest_distance & 0xFF;
-        buffer[offset++] = (latest_distance >> 8) & 0xFF;
-    }
-
 
     /// @brief function to deserialize the TOF sensor data
     void print() {
