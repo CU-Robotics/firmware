@@ -10,6 +10,20 @@
 /// @brief Motor driver for the GIM motor
 class GIM : public Motor {
 public:
+    /// @brief Deleted default constructor, must explicitly construct this object. Incomplete objects are not allowed
+    GIM() = delete;
+
+    /// @brief Main constructor. Defines the controller type, global ID, id, and can bus
+    /// @param gid The global ID, not the per-bus motor ID
+    /// @param id The per-bus motor ID. This is 1-indexed
+    /// @param bus_id The CAN bus index/ID
+    GIM(uint32_t gid, uint32_t id, uint8_t bus_id)
+        : Motor(MotorControllerType::MG8016_CONTROLLER, gid, id, bus_id) {
+    }
+
+    /// @brief Destructor, does nothing
+    ~GIM() override { }
+public:
     /// @brief Initialize the motor by verifying it is on
     void init() override;
 
@@ -17,12 +31,15 @@ public:
 
     int write(CAN_message_t& msg) const override;
 
+    void zero_motor() override;
+
+    void write_motor_torque(float torque);
+
+    void print_state() const override;
 public:
     void write_motor_on();
 
     void write_motor_off();
-
-    void write_motor_torque(float torque, uint32_t duration);
 
     void write_motor_stop();
 

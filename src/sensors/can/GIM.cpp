@@ -29,6 +29,7 @@ int GIM::read(CAN_message_t& msg) {
         float speed_float = (float)speed_int * 130.0f / 4095.0f - 65.0f;
         m_state.speed = speed_float;
 
+        // TODO
         // Torque: 12 bits = ST1[3:0] (low nibble) as high 4 bits, ST2 (byte 7) as low 8 bits
         // uint16_t torque_int = ((uint16_t)(msg.buf[6] & 0x0F) << 8) | msg.buf[7];
         // float torque_float =
@@ -53,8 +54,41 @@ int GIM::read(CAN_message_t& msg) {
 
 int GIM::write(CAN_message_t& msg) const {
     memcpy(&msg, &m_output, sizeof(CAN_message_t));
-
     return 0;
+}
+
+void GIM::zero_motor() {
+    write_motor_off();
+}
+
+void GIM::write_motor_torque(float torque) {
+    // TODO
+    // clamp the torque and convert it to the motor's torque range
+
+    // for now, im going to take a shot in the dark and say its -1.0f -> 1.0f for this motor
+    if (torque > 1.0f) {
+        torque = 1.0f;
+    } else if (torque < -1.0f) {
+        torque = -1.0f;
+    }
+
+    // create the command
+    uint8_t buf[8];
+    create_cmd_torque_control(buf, torque, 0);
+
+    // fill in the output array
+    m_output.id = m_base_id + m_id;
+    for (int i = 0; i < 8; i++) {
+        m_output.buf[i] = buf[i];
+    }
+}
+
+void GIM::print_state() const {
+    Serial.printf("Motor %d\n", m_id);
+    Serial.printf("  Temperature: %d\n", m_state.temperature);
+    Serial.printf("  Position: %f\n", m_state.position);
+    Serial.printf("  Speed: %f\n", m_state.speed);
+    Serial.printf("  Torque: %f\n", m_state.torque);
 }
 
 void GIM::write_motor_off() {
@@ -87,19 +121,7 @@ void GIM::write_motor_stop() {
     }
 }
 
-void GIM::write_motor_torque(float torque, uint32_t duration) {
-    // clamp the torque and convert it to the motor's torque range
 
-    // create the command
-    uint8_t buf[8];
-    create_cmd_torque_control(buf, torque, duration);
-
-    // fill in the output array
-    m_output.id = m_base_id + m_id;
-    for (int i = 0; i < 8; i++) {
-        m_output.buf[i] = buf[i];
-    }
-}
 
 void GIM::create_cmd_retrieve_configuration(uint8_t buf[8], uint8_t conf_type, uint8_t conf_id) {
     buf[0] = CMD_RETRIEVE_CONFIGURATION;
