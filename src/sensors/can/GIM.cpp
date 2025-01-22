@@ -63,9 +63,8 @@ void GIM::zero_motor() {
 
 void GIM::write_motor_torque(float torque) {
     // TODO
-    // clamp the torque and convert it to the motor's torque range
-
-    // for now, im going to take a shot in the dark and say its -1.0f -> 1.0f for this motor
+    // clamp the motor torque
+    // this depends on the motor type, which needs to be implemented.
     if (torque > 1.0f) {
         torque = 1.0f;
     } else if (torque < -1.0f) {
