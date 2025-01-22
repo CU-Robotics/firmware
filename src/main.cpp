@@ -80,10 +80,10 @@ int main() {
         {2 , 3 , 2}
     }; 
     can.configure(motor_info);
-    ((MG8016EI6*)can.get_motor(0))->write_motor_set_zero_ROM();
-    ((MG8016EI6*)can.get_motor(1))->write_motor_set_zero_ROM();
-    ((MG8016EI6*)can.get_motor(2))->write_motor_set_zero_ROM();
-    ((MG8016EI6*)can.get_motor(3))->write_motor_set_zero_ROM();
+    // ((MG8016EI6*)can.get_motor(0))->write_motor_set_zero_ROM();
+    // ((MG8016EI6*)can.get_motor(1))->write_motor_set_zero_ROM();
+    // ((MG8016EI6*)can.get_motor(2))->write_motor_set_zero_ROM();
+    // ((MG8016EI6*)can.get_motor(3))->write_motor_set_zero_ROM();
 
 
 
