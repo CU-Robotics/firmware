@@ -7,8 +7,6 @@ void ET16S::init() {
 	Serial8.begin(100000, SERIAL_8E1_RXINV_TXINV);
 	Serial8.flush();
 	Serial8.clear();
-	//configure flag byte
-	channel[16].kind = InputKind::FLAG;
 	//configure safety switch
 	//InputKind three_switch=THREE_SWITCH;
 	channel[4].kind = InputKind::THREE_SWITCH;
@@ -381,6 +379,7 @@ void ET16S::set_config() {
 			channel[i].kind = InputKind::INVALID;
 			break;
 		case ChannelId::FLAG:
+			channel[i].kind = InputKind::FLAG;
 			break;
 			
 	   }
@@ -402,7 +401,7 @@ void ET16S::test_connection() {
 	}
 }
 
-uint8_t ET16S::get_safety() {
+uint8_t ET16S::get_safety_switch() {
 	return channel[4].data;
 }
 

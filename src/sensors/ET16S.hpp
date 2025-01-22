@@ -102,7 +102,7 @@ public:
 
 	/// @brief get safety values
 	/// @return safety value(1-3) 1 is safe
-	uint8_t get_safety();
+	uint8_t get_safety_switch();
 
 	/// @brief get right stick x axis value
 	/// @return (-1 to 1)
