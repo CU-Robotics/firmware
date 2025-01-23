@@ -85,13 +85,8 @@ void print_logo() {
 // Master loop
 int main() {
     long long loopc = 0; // Loop counter for heartbeat
-<<<<<<< HEAD
 	
     Serial.begin(115200); // the serial monitor is actually always active (for debug use Serial.println & tycmd)
-=======
-
-    Serial.begin(112500); // the serial monitor is actually always active (for debug use Serial.println & tycmd)
->>>>>>> main
     debug.begin(SerialUSB1);
     print_logo();
 
