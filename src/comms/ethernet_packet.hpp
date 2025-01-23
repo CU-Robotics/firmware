@@ -23,7 +23,7 @@ struct EthernetPacketHeader {
 constexpr uint32_t ETHERNET_PACKET_HEADER_SIZE = (sizeof(Comms::EthernetPacketHeader));
 
 /// @brief The max packet size
-constexpr uint32_t ETHERNET_PACKET_MAX_SIZE = (4096u);
+constexpr uint32_t ETHERNET_PACKET_MAX_SIZE = (6u * 1024u);	// 6KB = 6144 bytes
 
 /// @brief The max packet payload size
 constexpr uint32_t ETHERNET_PACKET_PAYLOAD_MAX_SIZE = (Comms::ETHERNET_PACKET_MAX_SIZE - Comms::ETHERNET_PACKET_HEADER_SIZE);
