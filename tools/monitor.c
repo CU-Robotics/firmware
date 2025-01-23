@@ -60,11 +60,21 @@ int main(int argc __attribute__((unused)), char** argv) {
 
     // allocate the in_buffer
     in_buffer = malloc(read_size);
-    if (in_buffer == NULL) { perror("in_malloc_alloc"); goto cleanup; }
+    if (in_buffer == NULL) { 
+        printf("%s: Failed to allocate in_buffer\n", argv[0]);
+
+        exit_code = EXIT_FAILURE;
+        goto cleanup; 
+    }
 
     // allocate the out_buffer
     out_buffer = malloc(read_size);
-    if (out_buffer == NULL) { perror("out_malloc_alloc"); goto cleanup; }
+    if (out_buffer == NULL) { 
+        printf("%s: Failed to allocate out_buffer\n", argv[0]);
+
+        exit_code = EXIT_FAILURE;
+        goto cleanup; 
+    }
 
     // main loop for reading and printing
     while (1) {
