@@ -1,15 +1,19 @@
-#include <stdio.h>      // printf
-#include <fcntl.h>      // open
-#include <errno.h>      // errno
-#include <stdlib.h>     // malloc
-#include <unistd.h>     // close/read/write
-#include <sys/time.h>   // gettimeofday
-#include <string.h>     // memset
+#include <stdio.h>          // printf
+#include <fcntl.h>          // open
+#include <errno.h>          // errno
+#include <stdlib.h>         // malloc
+#include <unistd.h>         // close/read/write
+#include <sys/time.h>       // gettimeofday
+#include <string.h>         // memset
+#include <linux/limits.h>   // PATH_MAX
 
-#include <fts.h>        // FTS stuff
+#include <fts.h>            // FTS stuff
 
 /// @brief Size of the serial buffers
-const long read_size = 8 * 1024;
+const size_t read_size = 8ul * 1024ul;
+
+/// @brief Max size of the serial path, - 1 for null terminator
+const size_t SERIAL_PATH_SIZE = PATH_MAX - 1;
 
 /// @brief In serial buffer
 char* in_buffer = NULL;
@@ -17,7 +21,7 @@ char* in_buffer = NULL;
 /// @todo Implement writing sometime, this is much more complicated that it seems
 char* out_buffer = NULL;
 
-/// @brief base directory for serial devices on linux
+/// @brief Base directory for serial devices on Linux
 /// @note No clue why FTS needs it in this format but oh well
 char* serial_directory[ ] = { "/dev/serial/by-id/" };
 
@@ -27,16 +31,18 @@ char* serial_directory[ ] = { "/dev/serial/by-id/" };
 int find_teensy_serial_dev(char* serial_path);
 
 // takes no arguments
-int main(int argc, char** argv) {
+int main(int argc __attribute__((unused)), char** argv) {
     int exit_code = EXIT_SUCCESS;
     
     // declare the serial device path
-    char teensy_dev_path[128];
+    char teensy_dev_path[128u];
     memset(teensy_dev_path, 0, 128);
 
     // find the teensy's device path
     if (find_teensy_serial_dev(teensy_dev_path) == -1) {
         printf("%s: Could not find Teensy's serial device\n", argv[0]);
+
+        // no need to clean up as nothing has been allocated yet
         return EXIT_FAILURE;
     }
 
@@ -63,19 +69,16 @@ int main(int argc, char** argv) {
     // main loop for reading and printing
     while (1) {
         // read as much as we can into in_buffer
+        // normally the data is at most chunks of 4KB
         int read_ret = read(dev_serial, in_buffer, read_size);
 
         // if read_ret is positive, it means we read
         // if it is 0, the connection has been lost
         // if it is -1, some unrecoverable error occured
         if (read_ret > 0) {
-            // get current time in milliseconds
-            struct timeval tv;
-            gettimeofday(&tv, NULL);
-            long long time_in_mill = (tv.tv_sec) * 1000 + (tv.tv_usec) / 1000;
-
             in_buffer[read_ret] = 0;
 
+            // print the buffer, do not append a newline
             printf("%s", in_buffer);
         } else if (read_ret == 0) {
             // read returning 0 indicates the serial connection is over (its EOF but on a FIFO stream)
@@ -110,6 +113,7 @@ int main(int argc, char** argv) {
     }
 
     // lil bit of goto buisness
+    // cleanup the buffers and close the serial connection
 cleanup:
     // clean buffer memory
     free(in_buffer);
@@ -121,6 +125,9 @@ cleanup:
     return exit_code;
 }
 
+/// @brief Find the file path for the Teensy's Serial connection
+/// @param serial_path The path to be filled in if found
+/// @return -1 on error, 0 on success
 int find_teensy_serial_dev(char* serial_path) {
     FTS* traversal_pointer = NULL;
     FTSENT* current_file = NULL;
