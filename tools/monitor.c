@@ -35,8 +35,8 @@ int main(int argc __attribute__((unused)), char** argv) {
     int exit_code = EXIT_SUCCESS;
     
     // declare the serial device path
-    char teensy_dev_path[128u];
-    memset(teensy_dev_path, 0, 128);
+    char teensy_dev_path[SERIAL_PATH_SIZE];
+    memset(teensy_dev_path, 0, SERIAL_PATH_SIZE);
 
     // find the teensy's device path
     if (find_teensy_serial_dev(teensy_dev_path) == -1) {
@@ -162,10 +162,10 @@ int find_teensy_serial_dev(char* serial_path) {
                 continue;
             }
 
-            char path_name[128];
+            char path_name[SERIAL_PATH_SIZE];
 
             // convert the symbol path to an actual path
-            int size = readlink(current_file->fts_path, path_name, 128);
+            int size = readlink(current_file->fts_path, path_name, SERIAL_PATH_SIZE);
             if (size == -1) {
                 printf("Readlink failed to find correct path\n");
                 break;
@@ -177,7 +177,7 @@ int find_teensy_serial_dev(char* serial_path) {
             serial_found = 1;
 
             // put the device file path into path_name
-            strncpy(serial_path, path_name, 128);
+            strncpy(serial_path, path_name, SERIAL_PATH_SIZE);
 
             break;
         }
@@ -191,13 +191,13 @@ int find_teensy_serial_dev(char* serial_path) {
 
     // the path that readlink gives us is relative to /dev/serial/by-id (it gives us something like ../../blah)
     // we need to append /dev/serial/by-id/ to the path for it to be functional
-    char full_path[128];
-    memset(full_path, 0, 128);
+    char full_path[SERIAL_PATH_SIZE];
+    memset(full_path, 0, SERIAL_PATH_SIZE);
 
     // sanity check that the sizes of both strings will not overflow
-    int rel_path_size = strlen(serial_path);
-    int base_path_size = strlen("/dev/serial/by-id/");
-    if (rel_path_size + base_path_size > 128) {
+    size_t rel_path_size = strlen(serial_path);
+    size_t base_path_size = strlen("/dev/serial/by-id/");
+    if (rel_path_size + base_path_size > SERIAL_PATH_SIZE) {
         printf("Path size too large\n");
         exit(-1);
     }
@@ -209,7 +209,7 @@ int find_teensy_serial_dev(char* serial_path) {
     printf("Found Teensy's serial path: %s\n", full_path);
 
     // this produces a path like: /dev/serial/by-id/../../blah
-    strncpy(serial_path, full_path, 128);
+    strncpy(serial_path, full_path, SERIAL_PATH_SIZE);
 
     return 0;
 }
