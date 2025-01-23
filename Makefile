@@ -64,10 +64,15 @@ CFLAGS := $(CPU_CFLAGS)
 # Compiler flags for C++ files
 CXXFLAGS := $(CPU_CFLAGS) -std=gnu++17 \
             -felide-constructors -fno-exceptions -fpermissive -fno-rtti \
-            -Wno-error=narrowing -Wno-trigraphs -Wno-comment
+            -Wno-error=narrowing -Wno-trigraphs -Wno-comment -Wall -Werror
 
 # Linker flags, including Teensy-specific linker script
-LINKING_FLAGS = -Wl,--gc-sections,--relax,-Tteensy4/imxrt1062_t41.ld
+# --gc-sections: Remove unused sections to reduce binary size
+# --relax: Allow linker to relax some constraints to sometimes generate smaller code
+# -Tteensy4/imxrt1062_t41.ld: Use the Teensy 4.1 linker script
+# --print-memory-usage: Print memory usage after linking
+# -Map=... and --cref: Generate a cross-reference map file
+LINKING_FLAGS = -Wl,--gc-sections,--relax,-Tteensy4/imxrt1062_t41.ld,--print-memory-usage,-Map=$(BUILD_DIR)/$(TARGET_EXEC).map,--cref
 
 # Set the Arduino path based on the detected operating system
 ifeq ($(UNAME),Darwin)
@@ -114,31 +119,33 @@ build: $(BUILD_DIR)/$(TARGET_EXEC)
 # It depends on all object files and the 'git_scraper' target to ensure
 # that Git information is up-to-date before linking.
 $(BUILD_DIR)/$(TARGET_EXEC): git_scraper $(SRC_OBJS) $(LIBRARY_OBJS) $(TEENSY_OBJS) 
-
-# Invoke the C++ compiler as the linker.
-# - $(COMPILER_CPP): The compiler executable.
-# - $(CPPFLAGS): Preprocessor and common compiler flags.
-# - $(CXXFLAGS): C++ compiler flags.
-# - $(LIBRARY_OBJS), $(TEENSY_OBJS), $(SRC_OBJS): Object files to link.
-# - $(LINKING_FLAGS): Linker flags, including the linker script.
-# - '-o $(BUILD_DIR)/$(TARGET_EXEC).elf': Output the ELF executable to the build directory.
+    # Invoke the C++ compiler as the linker.
+    # - $(COMPILER_CPP): The compiler executable.
+    # - $(CPPFLAGS): Preprocessor and common compiler flags.
+    # - $(CXXFLAGS): C++ compiler flags.
+    # - $(LIBRARY_OBJS), $(TEENSY_OBJS), $(SRC_OBJS): Object files to link.
+    # - $(LINKING_FLAGS): Linker flags, including the linker script.
+    # - '-o $(BUILD_DIR)/$(TARGET_EXEC).elf': Output the ELF executable to the build directory.
 	@$(COMPILER_CPP) $(CPPFLAGS) $(CXXFLAGS) $(LIBRARY_OBJS) $(TEENSY_OBJS) $(SRC_OBJS) $(LINKING_FLAGS) -o $(BUILD_DIR)/$(TARGET_EXEC).elf
 
-# Copy the ELF executable to the root directory.
+    # Copy the ELF executable to the root directory.
 	@cp $(BUILD_DIR)/$(TARGET_EXEC).elf .
 
-# Inform the user that the HEX file is being constructed.
+    # Inform the user that the HEX file is being constructed.
 	@echo [Constructing $(TARGET_EXEC).hex]
 
-# Convert the ELF executable to an Intel HEX format, which is required for uploading to the Teensy board.
-# - '-O ihex': Specifies the output format as Intel HEX.
-# - '-R .eeprom': Removes the .eeprom section from the output, as it's not needed for flashing.
-# - '$(TARGET_EXEC).elf': The input ELF executable.
-# - '$(TARGET_EXEC).hex': The output HEX file.
+    # Convert the ELF executable to an Intel HEX format, which is required for uploading to the Teensy board.
+    # - '-O ihex': Specifies the output format as Intel HEX.
+    # - '-R .eeprom': Removes the .eeprom section from the output, as it's not needed for flashing.
+    # - '$(TARGET_EXEC).elf': The input ELF executable.
+    # - '$(TARGET_EXEC).hex': The output HEX file.
 	@$(OBJCOPY) -O ihex -R .eeprom $(TARGET_EXEC).elf $(TARGET_EXEC).hex
 
-# Ensure the HEX file has execute permissions.
+    # Ensure the HEX file has execute permissions.
 	@chmod +x $(TARGET_EXEC).hex
+
+    # Disassemble the ELF executable to a .dump file
+	@$(OBJDUMP) -dstz $(BUILD_DIR)/$(TARGET_EXEC).elf > $(BUILD_DIR)/$(TARGET_EXEC).dump
 
 
 # Build step for compiling C source files
@@ -146,12 +153,16 @@ $(BUILD_DIR)/%.c.o: %.c
 	@mkdir -p $(dir $@)
 	@echo [Building $<]
 	@$(COMPILER_C) $(CPPFLAGS) $(CFLAGS) -c $< -o $@
+    # Disassemble the object file to a .dump file
+	@$(OBJDUMP) -dstz $@ > $@.dump
 
 # Build step for compiling C++ source files
 $(BUILD_DIR)/%.cpp.o: %.cpp
 	@mkdir -p $(dir $@)
 	@echo [Building $<]
 	@$(COMPILER_CPP) $(CPPFLAGS) $(CXXFLAGS) -c $< -o $@
+    # Disassemble the object file to a .dump file
+	@$(OBJDUMP) -dstz $@ > $@.dump
 
 
 # Phony target to prevent conflicts with files named 'clean' and force a rebuild every time
@@ -160,7 +171,7 @@ $(BUILD_DIR)/%.cpp.o: %.cpp
 # Clean the build directory and remove generated executables
 clean:
 	rm -rf $(BUILD_DIR)
-	rm -rf $(TARGET_EXEC).elf $(TARGET_EXEC).hex 
+	rm -rf $(TARGET_EXEC).elf $(TARGET_EXEC).hex $(TARGET_EXEC).map $(TARGET_EXEC).dump
 
 # Clean only the source object files
 clean_src:

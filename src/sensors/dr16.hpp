@@ -141,6 +141,9 @@ public:
 	/// @return 18-byte packet
 	uint8_t* get_raw() { return m_inputRaw; }
 
+	/// @brief A simple check to see if read data is within expected values
+	/// @return True/false whether data is deemed valid or not
+	bool is_data_valid();
 private:
 	/// @brief Maps the input value to a specified value range
 	/// @param value the input value
@@ -151,9 +154,7 @@ private:
 	/// @return Mapped input in the range of [out_low, out_high]
 	float bounded_map(int value, int in_low, int in_high, int out_low, int out_high);
 
-	/// @brief A simple check to see if read data is within expected values
-	/// @return True/false whether data is deemed valid or not
-	bool is_data_valid();
+	
 
 	/// @brief Keep track of mouse x velocity
 	int16_t mouse_x;

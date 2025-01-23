@@ -13,17 +13,23 @@ EstimatorManager::~EstimatorManager() {
 }
 
 void EstimatorManager::init(CANData* _can_data, const Config* _config_data) {
-    if (!config_data)
-        Serial.println("CONFIG DATA IS NULL!!!!!");
 
     // set can and config data pointers
     can_data = _can_data;
     config_data = _config_data;
+    if (!config_data) Serial.println("CONFIG DATA IS NULL!!!!!");
+
+    for(int i = 0; i < NUM_SENSORS; i++){
+        int type = config_data->sensor_info[i][0];
+        if(type != -1){
+            num_sensors[type]++;
+        }
+    }
 
     // configure pins for the encoders
-    for (int i = 0;i < config_data->num_sensors[0];i++) {
-        pinMode(config_data->encoder_pins[i], OUTPUT);
-        digitalWrite(config_data->encoder_pins[i], HIGH);
+    for (int i = 0;i < num_sensors[0];i++) {
+        pinMode(config_data->sensor_info[i][1], OUTPUT);
+        digitalWrite(config_data->sensor_info[i][1], HIGH);
     }
 
     // configure pins for the ICM
@@ -35,71 +41,65 @@ void EstimatorManager::init(CANData* _can_data, const Config* _config_data) {
     SPI.begin();
 
     // initialize buff encoders
-    for (int i = 0;i < config_data->num_sensors[0];i++) {
-        buff_sensors[i].init(config_data->encoder_pins[i]);
+    for (int i = 0;i < num_sensors[0];i++) {
+        buff_encoders[i].init(config_data->sensor_info[i][1]);
     }
 
     // initialize ICMs
-    for (int i = 0;i < config_data->num_sensors[1];i++) {
+    for (int i = 0; i < num_sensors[2];i++) {
         icm_sensors[i].init(icm_sensors[i].CommunicationProtocol::SPI);
         icm_sensors[i].set_gyro_range(4000);
     }
 
     // initialize rev encoders
-    for (int i = 0;i < config_data->num_sensors[2];i++) {
+    for (int i = 0;i < num_sensors[1];i++) {
         rev_sensors[i].init(REV_ENC_PIN1 + i, true);
     }
 
     // initialize TOFs
-    for (int i = 0;i < config_data->num_sensors[3];i++) {
+    for (int i = 0;i < num_sensors[3];i++) {
         tof_sensors[i].init();
     }
 
     // create and initialize the estimators
     for (int i = 0; i < NUM_ESTIMATORS; i++) {
-        Serial.printf("Init Estimator %d\n", config_data->estimators[i]);
+        int id = config_data->estimator_info[i][0];
+        // Serial.printf("Init Estimator %d\n", id);
 
-        if (config_data->estimators[i] != 0) {
-            init_estimator(config_data->estimators[i], (int)config_data->num_states_per_estimator[i]);
+        if (id != -1) {
+            init_estimator(id);
         }
     }
-
-    // prime the applied state for use in step
-    assign_states(config_data->assigned_states);
 
     // calibrate the IMUs
     calibrate_imus();
 }
 
-void EstimatorManager::init_estimator(int estimator_id, int num_states) {
-    if (!config_data)
-        Serial.println("CONFIG DATA IS NULL!!!!!");
+void EstimatorManager::init_estimator(int estimator_id) {
+    if (!config_data) Serial.println("CONFIG DATA IS NULL!!!!!");
 
     switch (estimator_id) {
     case 1:
-        estimators[num_estimators] = new GimbalEstimator(*config_data, &rev_sensors[0], &rev_sensors[1], &rev_sensors[2], &buff_sensors[0], &buff_sensors[1], &icm_sensors[0], can_data, num_states);
+        estimators[num_estimators++] = new GimbalEstimator(*config_data, &rev_sensors[0], &rev_sensors[1], &rev_sensors[2], &buff_encoders[0], &buff_encoders[1], &icm_sensors[0], can_data);
         break;
-
     case 2:
-        estimators[num_estimators] = new FlyWheelEstimator(can_data, num_states);
+        estimators[num_estimators++] = new FlyWheelEstimator(can_data);
         break;
     case 3:
-        estimators[num_estimators] = new FeederEstimator(can_data, num_states);
+        estimators[num_estimators++] = new FeederEstimator(can_data);
         break;
     case 4:
-        estimators[num_estimators] = new LocalEstimator(can_data, num_states);
+        estimators[num_estimators++] = new LocalEstimator(can_data);
         break;
     case 5:
-        estimators[num_estimators] = new SwitcherEstimator(*config_data, can_data, &tof_sensors[0], num_states);
+        estimators[num_estimators++] = new SwitcherEstimator(*config_data, can_data, &tof_sensors[0]);
         break;
     case 6:
-        estimators[num_estimators] = new GimbalEstimatorNoOdom(*config_data, &buff_sensors[0], &buff_sensors[1], &icm_sensors[0], can_data, num_states);
+        estimators[num_estimators++] = new GimbalEstimatorNoOdom(*config_data, &buff_encoders[0], &buff_encoders[1], &icm_sensors[0], can_data);
         break;
     default:
         break;
     }
-
-    num_estimators++;
 }
 
 void EstimatorManager::step(float macro_outputs[STATE_LEN][3], float micro_outputs[NUM_MOTORS][MICRO_STATE_LEN], int override) {
@@ -108,23 +108,29 @@ void EstimatorManager::step(float macro_outputs[STATE_LEN][3], float micro_outpu
     memcpy(curr_state, macro_outputs, sizeof(curr_state));
     clear_outputs(macro_outputs, micro_outputs);
 
+
     for (int i = 0; i < num_estimators; i++) {
-        int num_states = estimators[i]->get_num_states();
         float macro_states[STATE_LEN][3] = { 0 };
         float micro_states[NUM_MOTORS][MICRO_STATE_LEN] = { 0 };
 
         if (!estimators[i]->micro_estimator) {
 
             estimators[i]->step_states(macro_states, curr_state, override);
-            for (int j = 0; j < num_states; j++) {
-                for (int k = 0; k < 3; k++)
-                    macro_outputs[applied_states[i][j]][k] = macro_outputs[applied_states[i][j]][k] + macro_states[j][k];
+
+            for (int j = 0; j < STATE_LEN + 1; j++) {
+                int index = config_data->estimator_info[i][j + 1]; // j + 1 because the id is in index 0
+                if(index == -1) break;
+                for (int k = 0; k < 3; k++){
+                    macro_outputs[index][k] = macro_states[j][k];
+                }
             }
         } else {
             estimators[i]->step_states(micro_states, curr_state, override);
-            for (int j = 0; j < num_states; j++) {
+            for (int j = 0; j < NUM_MOTORS + 1; j++) {
+                int index = config_data->estimator_info[i][j + 1]; //0 index is reserved for the id
+                if (index == -1) break;
                 for (int k = 0; k < MICRO_STATE_LEN; k++) {
-                    micro_outputs[applied_states[i][j]][k] = micro_outputs[applied_states[i][j]][k] + micro_states[j][k];
+                    micro_outputs[index][k] = micro_states[j][k];
                 }
             }
         }
@@ -144,25 +150,18 @@ void EstimatorManager::clear_outputs(float macro_outputs[STATE_LEN][3], float mi
     }
 }
 
-void EstimatorManager::assign_states(const float as[NUM_ESTIMATORS][STATE_LEN]) {
-    for (int i = 0; i < NUM_ESTIMATORS; i++) {
-        for (int j = 0; j < STATE_LEN; j++) {
-            applied_states[i][j] = (int)as[i][j];
-        }
-    }
-}
 
 void EstimatorManager::read_sensors() {
     if (!config_data)
         Serial.println("CONFIG DATA IS NULL!!!!!");
 
-    for (int i = 0; i < config_data->num_sensors[0]; i++) {
-        buff_sensors[i].read();
+    for (int i = 0; i < num_sensors[0]; i++) {
+        buff_encoders[i].read();
     }
-    for (int i = 0; i < config_data->num_sensors[1]; i++) {
+    for (int i = 0; i < num_sensors[2]; i++) {
         icm_sensors[i].read();
     }
-    for (int i = 0; i < config_data->num_sensors[2]; i++) {
+    for (int i = 0; i < num_sensors[1]; i++) {
         rev_sensors[i].read();
     }
 }
@@ -188,7 +187,6 @@ void EstimatorManager::calibrate_imus() {
         sum_accel_z += icm_sensors[0].get_accel_Z();
     }
 
-    Serial.printf("Calibrated offsets: %f, %f, %f", sum_x / NUM_IMU_CALIBRATION, sum_y / NUM_IMU_CALIBRATION, sum_z / NUM_IMU_CALIBRATION);
-    Serial.println();
+    Serial.printf("Calibrated offsets: %f, %f, %f\n", sum_x / NUM_IMU_CALIBRATION, sum_y / NUM_IMU_CALIBRATION, sum_z / NUM_IMU_CALIBRATION);
     icm_sensors[0].set_offsets(sum_x / NUM_IMU_CALIBRATION, sum_y / NUM_IMU_CALIBRATION, sum_z / NUM_IMU_CALIBRATION);
 }
