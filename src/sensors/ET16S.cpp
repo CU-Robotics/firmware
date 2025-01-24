@@ -11,7 +11,7 @@ void ET16S::init() {
 	//InputKind three_switch=THREE_SWITCH;
 	channel[4].kind = InputKind::THREE_SWITCH;
 	//Turn safety on
-	channel[4].data = FORWARD;
+	channel[4].data = static_cast<float>(SwitchPos::FORWARD);
 
 	//configure sticks
 	//right stick horizontal
@@ -29,8 +29,8 @@ void ET16S::init() {
 void ET16S::read() {
 	// Raw data stored in array
 	uint8_t m_inputRaw[ET16S_PACKET_SIZE] = { 0 };
-	// Store 2 packets (50 bits) in the buffer to prevent incomplete packet reads
-	if (Serial8.available() < 50) {
+	// Store 2 packets (50 bytes) in the buffer to prevent incomplete packet reads
+	if (Serial8.available() < (2*ET16S_PACKET_SIZE)) {
 		return;
 	}
 	// We read until we find the start byte of the new packet (0x0f)
@@ -229,19 +229,19 @@ float ET16S::map_raw(InputChannel input) {
 	}
 	case InputKind::TWO_SWITCH: {
 		if (val == max_in) {
-			val = BACKWARD;
+			val = static_cast<float>(SwitchPos::BACKWARD);
 		} else {
-			val = FORWARD;
+			val = static_cast<float>(SwitchPos::FORWARD);
 		}
 		break;
 	}
 	case InputKind::THREE_SWITCH: {
 		if (val == max_in) {
-			val = BACKWARD;
+			val = static_cast<float>(SwitchPos::BACKWARD);
 		} else if (val == min_in) {
-			val = FORWARD;
+			val = static_cast<float>(SwitchPos::FORWARD);
 		} else {
-			val = MIDDLE;
+			val = static_cast<float>(SwitchPos::MIDDLE);
 		}
 		break;
 	}
@@ -301,8 +301,8 @@ void ET16S::set_config() {
 	channel[10].id = ChannelId::SWITCH_G;
 	channel[11].id = ChannelId::SWITCH_H;
 	channel[12].id = ChannelId::R_SLIDER;
-	channel[13].id = ChannelId::R_DIAL;
 	channel[14].id = ChannelId::L_SLIDER;
+	channel[13].id = ChannelId::R_DIAL;
 	channel[15].id = ChannelId::UNMAPPED; //channel[15] is non-functional
 	channel[16].id = ChannelId::FLAG;
 
@@ -489,9 +489,10 @@ std::optional<float> ET16S::get_r_dial(){
 	return channel[r_dial_num.value()].data;
 }
 
-float ET16S::get_channel_data(int chan_num){
-	if ((chan_num < 4) || (chan_num > 16)){
-		return -2;
+std::optional<float> ET16S::get_channel_data(int chan_num){
+	// Will return nothing if an incorrect channel number is given
+	if ((chan_num < 0) || (chan_num > 16)){
+		return {};
 	}
 	return channel[chan_num].data;
 }

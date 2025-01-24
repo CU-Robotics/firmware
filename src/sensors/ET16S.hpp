@@ -192,7 +192,7 @@ public:
 	/// @brief get channel data
 	/// @param chan_num is the channel number from 5-16
 	/// @return channel data
-	float get_channel_data(int chan_num);
+	std::optional<float> get_channel_data(int chan_num);
 
 	/// @brief getter for connection status
 	/// @return false if disconnected
