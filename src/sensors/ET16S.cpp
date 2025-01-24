@@ -293,9 +293,7 @@ void ET16S::set_config() {
 	channel[2].id = ChannelId::L_STICK_Y;
 	channel[3].id = ChannelId::L_STICK_X;
 	channel[4].id = ChannelId::SWITCH_A;
-
-	if(switch_b_num.has_value()){ channel[5].id = ChannelId::SWITCH_B; }
-
+	channel[5].id = ChannelId::SWITCH_B;
 	channel[6].id = ChannelId::SWITCH_C;
 	channel[7].id = ChannelId::SWITCH_D;
 	channel[8].id = ChannelId::SWITCH_E;
