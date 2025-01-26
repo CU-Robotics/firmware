@@ -84,7 +84,7 @@ int main() {
     // ((MG8016EI6*)can.get_motor(1))->write_motor_set_zero_ROM();
     // ((MG8016EI6*)can.get_motor(2))->write_motor_set_zero_ROM();
     // ((MG8016EI6*)can.get_motor(3))->write_motor_set_zero_ROM();
-
+    // can.write();
 
 
     balancing_sensor_data data;
@@ -100,9 +100,9 @@ int main() {
         data.gyro_pitch = imu_data.alpha_pitch;
         data.gyro_roll = imu_data.alpha_roll;
         data.gyro_yew = imu_data.alpha_yaw;
-        data.imu_accel_x = imu_data.accel_X;
-        data.imu_accel_y = imu_data.accel_Y;
-        data.imu_accel_z = imu_data.accel_Z;
+        data.imu_accel_x = imu_data.world_accel_X;
+        data.imu_accel_y = imu_data.world_accel_Y;
+        data.imu_accel_z = imu_data.world_accel_Z;
         data.imu_angle_pitch = imu_data.k_pitch;
         data.imu_angle_roll = imu_data.k_roll;
         data.angle_fr = can.get_motor(0)->get_state().position;
@@ -137,7 +137,7 @@ int main() {
         test_control.print_observer();
         test_control.printdata();
         icm.print();
-        if (!dr16.is_connected() || dr16.get_l_switch() == 1) {
+        if (!dr16.is_connected() || dr16.get_l_switch() == 1 || test_control.saftymode) {
             // SAFETY ON
             // TODO: Reset all controller integrators here
             Serial.println("SAFTYON");

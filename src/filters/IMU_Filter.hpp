@@ -19,8 +19,14 @@ struct IMUData{
     float accel_X; // acceleration of X axis --unit (m/s^2)
     float accel_Y; // acceleration of Y axis --unit (m/s^2)
     float accel_Z; // acceleration of Z axis --unit (m/s^2)
+    float world_accel_X; // world acceleration of X axis --unit (m/s^2)
+    float world_accel_Y; // world acceleration of Y axis --unit (m/s^2)
+    float world_accel_Z; // world acceleration of Z axis --unit (m/s^2)
     float alpha_roll; // Roll axis rotation velocity --unit (rad/s) 
     float alpha_pitch; // pitch axis rotation velocity --unit (rad/s) 
+    float world_alpha_roll;
+    float world_alpha_pitch;
+    float world_alpha_yaw;
     float alpha_yaw; // Yaw axis rotation velocity --unit (rad/s) 
     float gyro_roll; // Roll angle by gyroscope with a simple filter --unit (rad) 
     float gyro_pitch; // Pitch angle by gyroscope with a simple filter --unit (rad) 

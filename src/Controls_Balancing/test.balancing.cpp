@@ -1,6 +1,10 @@
 #include "test_balancing.hpp"
 
 void balancing_test::init(){
+    slowdalay_help = micros();
+
+
+    saftymode = 0;
     o_data.pitch_dot  = 0;
     o_data.yaw_dot = 0;
     o_data.yaw_ddot = 0;
@@ -15,7 +19,6 @@ void balancing_test::init(){
     o_data.ll_dot_old = 0;
     o_data.lr_old = 0;
     o_data.lr_dot_old = 0;
-
 
     float gain1[4] = {K1_P, K1_I, K1_D, K1_F};
     float gain2[4] = {K2_P, K2_I, K2_D, K2_F};
@@ -54,15 +57,21 @@ void balancing_test::init(){
         }};
     memcpy(p,tempp,sizeof(tempp));
     // For test purpose
-    float tempK[4][10] = {
-        {-0.3157,-0.6659,-0.2234,-0.1460,-4.6021,-0.5745,-1.7850,-0.1971,-3.0104,-0.4326}, 
-        {-0.3157,-0.6659,0.2234,0.1460,-1.7850,-0.1971,-4.6021,-0.5745,-3.0104,-0.4326}, 
-        {0.0557,0.1116,-1.0806,-0.8358,6.7055,0.7714,-7.0740,-0.7067,-222.0533,-7.2328}, 
-        {0.0557,0.1116,1.0806,0.8358,-7.0740,-0.7067,6.7055,0.7714,-222.0533,-7.2328}
-        };
+    // float tempK[4][10] = { //18cm
+    //     {-0.3157,-0.6659,-0.2234,-0.1460,-4.6021,-0.5745,-1.7850,-0.1971,-3.0104,-0.4326}, 
+    //     {-0.3157,-0.6659,0.2234,0.1460,-1.7850,-0.1971,-4.6021,-0.5745,-3.0104,-0.4326}, 
+    //     {0.0557,0.1116,-1.0806,-0.8358,6.7055,0.7714,-7.0740,-0.7067,-222.0533,-7.2328}, 
+    //     {0.0557,0.1116,1.0806,0.8358,-7.0740,-0.7067,6.7055,0.7714,-222.0533,-7.2328}
+    //     };
+    float tempK[4][10] = { //14cm
+        {-0.3156, -0.6698, -0.2668, -0.1803, -4.2308, -0.5405, -1.9738, -0.2102, -3.4205, -0.5236}, 
+        { -0.3156, -0.6698, 0.2668, 0.1803, -1.9738, -0.2102, -4.2308, -0.5405, -3.4205, -0.5236}, 
+        {0.0647, 0.1300, -0.9773, -0.7482, 6.0704, 0.7614, -6.3280, -0.6935, 221.9400, -7.2531}, 
+        {0.0647, 0.1300, 0.9773, 0.7482, -6.3280, -0.6935, 6.0704, 0.7614, -221.9400, -7.2531}
+        };  
     memcpy(K,tempK,sizeof(tempK));
     //ref for test
-    _ref_data.goal_l = 0.18;
+    _ref_data.goal_l = 0.14;
     _ref_data.goal_roll = 0;
     _ref_data.s = 0; 
     _ref_data.b_speed = 0;
@@ -109,17 +118,13 @@ void balancing_test::observer(){
     //_data.angle_br                                            //joint angle back right id:4 
     //_data.angle_fr                                            //joint angle front right id:1
 
-    o_data.pitch_dot = _data.gyro_pitch > 0.05 || _data.gyro_pitch < -0.05 ? _data.gyro_pitch : 0; 
+    o_data.pitch_dot = _data.gyro_pitch > 0.02 || _data.gyro_pitch < -0.02 ? _data.gyro_pitch : 0; 
     // o_data.pitch_dot = (_data.imu_angle_pitch  - o_data.pitch_old) / _dt;        // pitch_dot
-    o_data.yaw_dot = _data.gyro_yew > 0.05 || _data.gyro_yew < -0.05 ? _data.gyro_yew : 0;                                                // yaw_dot    
+    o_data.yaw_dot = _data.gyro_yew > 0.02 || _data.gyro_yew < -0.02 ? _data.gyro_yew : 0;                                                // yaw_dot    
     o_data.yaw_ddot = (o_data.yaw_dot - o_data.yaw_dot_old) / _dt;                   // yaw_ddot 
 
     o_data.pitch_old = _data.imu_angle_pitch; 
     o_data.yaw_dot_old = o_data.yaw_dot; 
-    o_data.b_speed =  (1.0f/2) * (R_w) * (_data.speed_wl + _data.speed_wr); // s_dot //speed
-    o_data.s = o_data.b_speed * _dt;
-    o_data.b_accel = (o_data.b_speed - o_data.b_speed_old) / _dt; //s_ddot //acceleration
-
 
 //---------------------------------------------------------Left Leg Forward Kinematics & Jacobian--------------------------------------------------------------
     float phi4_l =   (360 - _data.angle_fl)* DEG_TO_RAD;
@@ -152,8 +157,10 @@ void balancing_test::observer(){
     o_data.jl[0][1]= -(l_u * cos(phi0l - phi3l) * sin(phi1_l - phi2l)) / (o_data.ll * sin(phi2l - phi3l));
     o_data.jl[1][0] = (l_u * sin(phi0l - phi2l) * sin(phi3l - phi4_l)) / sin(phi2l - phi3l);
     o_data.jl[1][1] = -(l_u * cos(phi0l - phi2l) * sin(phi3l - phi4_l)) / (o_data.ll * sin(phi2l - phi3l));
-
+    
     o_data.theta_ll = (fmod((M_PI_2 + _data.imu_angle_pitch - phi0l + M_PI), 2 * M_PI) - M_PI);
+
+
     
  //----------------------------------------------------Right Leg Forward Kinematics & Jacobian--------------------------------------------------
     float phi4_r = _data.angle_fr * DEG_TO_RAD;
@@ -191,51 +198,39 @@ void balancing_test::observer(){
     o_data.jr[1][1]  = -(l_u * cos(phi0r - phi2r) * sin(phi3r - phi4_r)) / (o_data.lr * sin(phi2r - phi3r));
 
     o_data.theta_lr = (fmod((M_PI_2 + _data.imu_angle_pitch - phi0r + M_PI), (2 * M_PI)) - M_PI);
-//-----------------------------------------------------------Get theta_ll_dot and theta_lr_dot-------------------------------------------------------
-    o_data.theta_ll_dot = (o_data.theta_ll - o_data.theta_ll_old) / _dt;
-    o_data.theta_ll_old = o_data.theta_ll;
-    o_data.theta_lr_dot = (o_data.theta_lr - o_data.theta_lr_old) / _dt;
-    o_data.theta_lr_old = o_data.theta_lr;
 
+//--------------------------------------------------------------b_s and filter for it-----------------------------------------
+    o_data.b_speed =  (1.0f/2) * (R_w) * (_data.speed_wr - _data.speed_wl)/M3508RATIO; // s_dot //speed
+
+
+    o_data.s += o_data.b_speed * _dt; 
+
+    o_data.b_accel = (o_data.b_speed - o_data.b_speed_old) / _dt; //s_ddot //acceleration
+    o_data.b_speed_old = o_data.b_speed;
+
+
+
+    uint32_t timenow = micros();
+    float slowdt = timenow - slowdalay_help;
+    if(slowdt > 200){
+        slowdalay_help = timenow;
+//----------------------------------------------------------Get theta_ll_dot and theta_lr_dot-------------------------------------------------------
+        o_data.theta_ll_dot = abs(o_data.theta_ll - o_data.theta_ll_old) > THETA_FILTER ? (o_data.theta_ll - o_data.theta_ll_old) / slowdt : 0;
+        o_data.theta_ll_old = o_data.theta_ll;
+        o_data.theta_lr_dot = abs(o_data.theta_lr - o_data.theta_lr_old) > THETA_FILTER || (o_data.theta_lr - o_data.theta_lr_old) > 0.0001 ? (o_data.theta_lr - o_data.theta_lr_old) / slowdt : 0;
+        o_data.theta_lr_old = o_data.theta_lr;
 //-----------------------------------------------------------Get ll_ddot and lr_ddot-------------------------------------------------------------------
-    float ll_dot = (o_data.ll - o_data.ll_old) / _dt;
+    float ll_dot = abs(o_data.ll - o_data.ll_old) > THETA_FILTER ? (o_data.ll - o_data.ll_old) / slowdt : 0;
     o_data.ll_old = o_data.ll;
-    o_data.ll_ddot = (ll_dot - o_data.ll_dot_old) / _dt;
+    o_data.ll_ddot = abs(ll_dot - o_data.ll_dot_old) > THETA_FILTER ? (ll_dot - o_data.ll_dot_old) / slowdt : 0;
     o_data.ll_dot_old = ll_dot;
 
-    float lr_dot = (o_data.lr - o_data.lr_old) / _dt;
+    float lr_dot = (o_data.lr - o_data.lr_old) / slowdt;
     o_data.lr_old = o_data.lr;
-    o_data.lr_ddot = (lr_dot - o_data.lr_dot_old) / _dt;
+    o_data.lr_ddot = (lr_dot - o_data.lr_dot_old) / slowdt;
     o_data.lr_dot_old = lr_dot;
+    }
     return;
-}
-
-
-void balancing_test::simple_control(){
-// //------------------------------------------------------------leg_controller------------------------------------------------------
-//     float l = (o_data.ll + o_data.lr) / 2; // Get the average leg length 
-//     float F_psi = pid1.filter(_dt, BOUND, WARP) * (_ref_data.goal_roll - _data.gyro_roll); //Set the PID for roll angle
-//     float F_l = pid2.filter(_dt, BOUND, WARP) * (_ref_data.goal_l - l); //Set the PID for leg length 
-
-//     float iF_r = ((((m_b / 2) + (eta_l * m_l)) * l * o_data.pitch_dot * o_data.b_speed) / 2) / R_l; 
-//     float iF_l = iF_r; 
-
-// //-----------------------------------------------------------------gravity feed forware-------------------------------------------------------------------
-//     float costheta_l = cos(o_data.theta_ll);
-//     float costheta_r = cos(o_data.theta_lr);
-//     float GF_help = (m_b / 2 + m_l * eta_l) * G_CONSTANT;
-//     float gF_l = GF_help * costheta_l; // We calculated the gravity force to left
-//     float gF_r = GF_help * costheta_r; // We calculated the gravity force to right
-
-//     float F_bll = F_psi + F_l + iF_l + gF_l;
-//     float F_blr = -F_psi + F_l + iF_r + gF_r; 
-    
-// //---------------------------------------------------------------The NormalF Left------------------------------------------------------------------------
-//     float F_whl = F_bll * costheta_l + m_l * (G_CONSTANT + _data.imu_accel_z - (1-eta_l) * o_data.ll_ddot * costheta_l);
-// //----------------------------------------------------------------The NormalF Right----------------------------------------------------------------------- 
-//     float F_whr = F_blr * costheta_r + m_l * (G_CONSTANT + _data.imu_accel_z - (1-eta_l) * o_data.lr_ddot * costheta_r);
-
-
 }
 
 
@@ -267,9 +262,9 @@ void balancing_test::control_position(){
     float F_blr = -F_psi + F_l + iF_r + gF_r; 
     
 //---------------------------------------------------------------The NormalF Left------------------------------------------------------------------------
-    float F_whl = F_bll * costheta_l + m_l * (G_CONSTANT + _data.imu_accel_z - (1-eta_l) * o_data.ll_ddot * costheta_l);
+    float F_whl = F_bll * costheta_l + m_l * ( G_CONSTANT + _data.imu_accel_z - (1-eta_l) * o_data.ll_ddot * costheta_l);
 //----------------------------------------------------------------The NormalF Right----------------------------------------------------------------------- 
-    float F_whr = F_blr * costheta_r + m_l * (G_CONSTANT + _data.imu_accel_z - (1-eta_l) * o_data.lr_ddot * costheta_r);
+    float F_whr = F_blr * costheta_r + m_l * ( G_CONSTANT + _data.imu_accel_z - (1-eta_l) * o_data.lr_ddot * costheta_r);
 
     // do nothing check
     if(F_whl < F_WH_OUTPUT_LIMIT_NUM && F_whr < F_WH_OUTPUT_LIMIT_NUM)
@@ -280,7 +275,7 @@ void balancing_test::control_position(){
     float dx[10];
     // dx[0] = 0; //Ignore // s
     dx[0] = _ref_data.s - o_data.s; // s
-    dx[1] = _ref_data.b_speed - o_data.b_speed; // s_dot //speed
+    dx[1] = _ref_data.b_speed - o_data.b_speed; // speed
     dx[2] = 0; //Ignore // yaw
     //dx[2] = ref[0][2] - obs[0][2]; // yaw angle //We don't have this data and don't need it
     dx[3] = _ref_data.yaw_dot - o_data.yaw_dot; // yaw rotational speed
@@ -336,8 +331,15 @@ void balancing_test::control_position(){
         _write.torque_wr = 0;
     }
 //-------------------------------------------------------------Calculate CAN value-----------------------------------------------
-    _write.torque_wl /= -5.0;
-    _write.torque_wr /= 5.0;
+    // float temp = _write.torque_fr;
+    // _write.torque_fr = _write.torque_br; 
+    // _write.torque_br = temp;
+    float temp = _write.torque_fl;
+    _write.torque_fl = _write.torque_bl; 
+    _write.torque_bl = temp;
+    
+    _write.torque_wl /= 5.0;
+    _write.torque_wr /= -5.0;
 
     _write.torque_fl /= -37.0;
     if(_write.torque_fl > MGlimit)
@@ -351,13 +353,13 @@ void balancing_test::control_position(){
     if(_write.torque_bl < -MGlimit)
     _write.torque_bl = -MGlimit;
 
-    _write.torque_fr /= 37.0;
+    _write.torque_fr /= -37.0;
     if(_write.torque_fr > MGlimit)
     _write.torque_fr = MGlimit;
     if(_write.torque_fr < -MGlimit)
     _write.torque_fr = -MGlimit;
 
-    _write.torque_br /= 37.0;
+    _write.torque_br /= -37.0;
     if(_write.torque_br > MGlimit)
     _write.torque_br = MGlimit;
     if(_write.torque_br < -MGlimit)
@@ -368,121 +370,133 @@ return;
 
 
 
-/// @brief Control part
-void balancing_test::control(){
-    /** Initialize all output variables */
-    _write.torque_fr = 0;
-    _write.torque_fl = 0;
-    _write.torque_bl = 0;
-    _write.torque_br = 0;
-    _write.torque_wl = 0;
-    _write.torque_wr = 0;
+// /// @brief Control part
+// void balancing_test::control(){
+//     /** Initialize all output variables */
+//     _write.torque_fr = 0;
+//     _write.torque_fl = 0;
+//     _write.torque_bl = 0;
+//     _write.torque_br = 0;
+//     _write.torque_wl = 0;
+//     _write.torque_wr = 0;
 
-//----------------------------------------------------------------leg_controller---------------------------------------------------------------------
-    float l = (o_data.ll + o_data.lr) / 2; // Get the average leg length 
-    float F_psi = pid1.filter(_dt, BOUND, WARP) * (_ref_data.goal_roll - _data.gyro_roll); //Set the PID for roll angle
-    float F_l = pid2.filter(_dt, BOUND, WARP) * (_ref_data.goal_l - l); //Set the PID for leg length 
+// //----------------------------------------------------------------leg_controller---------------------------------------------------------------------
+//     float l = (o_data.ll + o_data.lr) / 2; // Get the average leg length 
+//     float F_psi = pid1.filter(_dt, BOUND, WARP) * (_ref_data.goal_roll - _data.gyro_roll); //Set the PID for roll angle
+//     float F_l = pid2.filter(_dt, BOUND, WARP) * (_ref_data.goal_l - l); //Set the PID for leg length 
 
-    float iF_r = ((((m_b / 2) + (eta_l * m_l)) * l * o_data.pitch_dot * o_data.b_speed) / 2) / R_l;
-    float iF_l = -iF_r; 
+//     float iF_r = ((((m_b / 2) + (eta_l * m_l)) * l * o_data.pitch_dot * o_data.b_speed) / 2) / R_l;
+//     float iF_l = -iF_r; 
 
-//-----------------------------------------------------------------gravity force forware-------------------------------------------------------------------
-    float costheta_l = cos(o_data.theta_ll);
-    float costheta_r = cos(o_data.theta_lr);
-    float GF_help = (m_b / 2 + m_l * eta_l) * G_CONSTANT;
-    float gF_l = GF_help * costheta_l;
-    float gF_r = GF_help * costheta_r; 
+// //-----------------------------------------------------------------gravity force forware-------------------------------------------------------------------
+//     float costheta_l = cos(o_data.theta_ll);
+//     float costheta_r = cos(o_data.theta_lr);
+//     float GF_help = (m_b / 2 + m_l * eta_l) * G_CONSTANT;
+//     float gF_l = GF_help * costheta_l;
+//     float gF_r = GF_help * costheta_r; 
 
-    float F_bll = F_psi + F_l + iF_l + gF_l;
-    float F_blr = -F_psi + F_l + iF_r + gF_r; 
+//     float F_bll = F_psi + F_l + iF_l + gF_l;
+//     float F_blr = -F_psi + F_l + iF_r + gF_r; 
     
-//---------------------------------------------------------------The NormalF Left------------------------------------------------------------------------
-    float F_whl = F_bll * costheta_l + m_l * (G_CONSTANT + _data.imu_accel_z - (1-eta_l) * o_data.ll_ddot * costheta_l);
-//----------------------------------------------------------------The NormalF Right----------------------------------------------------------------------- 
-    float F_whr = F_blr * costheta_r + m_l * (G_CONSTANT + _data.imu_accel_z - (1-eta_l) * o_data.lr_ddot * costheta_r);
+// //---------------------------------------------------------------The NormalF Left------------------------------------------------------------------------
+//     float F_whl = F_bll * costheta_l + m_l * (G_CONSTANT + _data.imu_accel_z - (1-eta_l) * o_data.ll_ddot * costheta_l);
+// //----------------------------------------------------------------The NormalF Right----------------------------------------------------------------------- 
+//     float F_whr = F_blr * costheta_r + m_l * (G_CONSTANT + _data.imu_accel_z - (1-eta_l) * o_data.lr_ddot * costheta_r);
 
-    // do nothing check
-    if(F_whl < F_WH_OUTPUT_LIMIT_NUM && F_whr < F_WH_OUTPUT_LIMIT_NUM)
-        return;
+//     // do nothing check
+//     if(F_whl < F_WH_OUTPUT_LIMIT_NUM && F_whr < F_WH_OUTPUT_LIMIT_NUM)
+//         return;
 
-//---------------------------------------------------------------locomotion_controller--------------------------------------------------------------------------
-//--------------------------------------------------------------Acceleration Saturation---------------------------------------------------------------------------
-    float dx[10];
-    dx[0] = 0; //Ignore // s
-    //dx[0] = ref[0][0] - obs[0][0]; // s-33A~33A
-    dx[1] = _ref_data.b_speed - o_data.b_speed; // s_dot //speed
-    dx[2] = 0; //Ignore // yaw
-    //dx[2] = ref[0][2] - obs[0][2]; // yaw angle //We don't have this data and don't need it
-    dx[3] = _ref_data.yaw_dot - o_data.yaw_dot; // yaw rotational speed
-    dx[4] = _ref_data.theta_ll - o_data.theta_ll; // theta_ll
-    dx[5] = _ref_data.theta_ll_dot - o_data.theta_ll_dot; // theta_ll_dot
-    dx[6] = _ref_data.theta_lr - o_data.theta_lr; // theta_lr
-    dx[7] = _ref_data.theta_lr_dot - o_data.theta_lr_dot; // theta_lr_dot
-    dx[8] = _ref_data.pitch - _data.gyro_pitch; // pitch
-    dx[9] = _ref_data.pitch_dot - o_data.pitch_dot; // pitch_dot
+// //---------------------------------------------------------------locomotion_controller--------------------------------------------------------------------------
+// //--------------------------------------------------------------Acceleration Saturation---------------------------------------------------------------------------
+//     float dx[10];
+//     dx[0] = 0; //Ignore // s
+//     //dx[0] = ref[0][0] - obs[0][0]; // s-33A~33A
+//     dx[1] = _ref_data.b_speed - o_data.b_speed; // s_dot //speed
+//     dx[2] = 0; //Ignore // yaw
+//     //dx[2] = ref[0][2] - obs[0][2]; // yaw angle //We don't have this data and don't need it
+//     dx[3] = _ref_data.yaw_dot - o_data.yaw_dot; // yaw rotational speed
+//     dx[4] = _ref_data.theta_ll - o_data.theta_ll; // theta_ll
+//     dx[5] = _ref_data.theta_ll_dot - o_data.theta_ll_dot; // theta_ll_dot
+//     dx[6] = _ref_data.theta_lr - o_data.theta_lr; // theta_lr
+//     dx[7] = _ref_data.theta_lr_dot - o_data.theta_lr_dot; // theta_lr_dot
+//     dx[8] = _ref_data.pitch - _data.gyro_pitch; // pitch
+//     dx[9] = _ref_data.pitch_dot - o_data.pitch_dot; // pitch_dot
 
-//----------------------------------------------------------------Leg Length to K------------------------------------------------------------------------------
-    float K[4][10];
-    for(int i = 0; i < P_LOCO_ROW; i++) 
-        for(int j = 0; j < 10; j++) 
-            K[i][j] = p[0][i][j] * o_data.ll * o_data.ll + p[1][i][j] * o_data.ll * o_data.lr + p[2][i][j] * o_data.ll + p[3][i][j] * o_data.lr * o_data.lr + p[4][i][j] * o_data.lr + p[5][i][j];
-    // K is 4x10 matrix 
-    // 4x10 x 10x1 matrix multi (K * dx) 
-    float T_bll = 0;  
-    float T_blr = 0;
+// //----------------------------------------------------------------Leg Length to K------------------------------------------------------------------------------
+//     float K[4][10];
+//     for(int i = 0; i < P_LOCO_ROW; i++) 
+//         for(int j = 0; j < 10; j++) 
+//             K[i][j] = p[0][i][j] * o_data.ll * o_data.ll + p[1][i][j] * o_data.ll * o_data.lr + p[2][i][j] * o_data.ll + p[3][i][j] * o_data.lr * o_data.lr + p[4][i][j] * o_data.lr + p[5][i][j];
+//     // K is 4x10 matrix 
+//     // 4x10 x 10x1 matrix multi (K * dx) 
+//     float T_bll = 0;  
+//     float T_blr = 0;
 
-    for(int i = 0; i < 10; i++){
-        _write.torque_wl += K[0][i] * dx[i];
-        _write.torque_wr += K[1][i] * dx[i];
-        T_bll += K[2][i] * dx[i];
-        T_blr += K[3][i] * dx[i];
-    } 
-
-
-    // // wheels limit //May not be used
-    // if(output[T_LWL_OUTPUT_NUM] > WHEEL_UPPER_LIMIT) output[T_LWL_OUTPUT_NUM] = WHEEL_UPPER_LIMIT;
-    //     else if(output[T_LWL_OUTPUT_NUM] < WHEEL_LOWER_LIMIT) output[T_LWL_OUTPUT_NUM] = WHEEL_LOWER_LIMIT;
-    // if(output[T_LWR_OUTPUT_NUM] > WHEEL_UPPER_LIMIT) output[T_LWR_OUTPUT_NUM] = WHEEL_UPPER_LIMIT;
-    //     else if(output[T_LWR_OUTPUT_NUM] < WHEEL_LOWER_LIMIT) output[T_LWR_OUTPUT_NUM] = WHEEL_LOWER_LIMIT;
+//     for(int i = 0; i < 10; i++){
+//         _write.torque_wl += K[0][i] * dx[i];
+//         _write.torque_wr += K[1][i] * dx[i];
+//         T_bll += K[2][i] * dx[i];
+//         T_blr += K[3][i] * dx[i];
+//     } 
 
 
+//     // // wheels limit //May not be used
+//     // if(output[T_LWL_OUTPUT_NUM] > WHEEL_UPPER_LIMIT) output[T_LWL_OUTPUT_NUM] = WHEEL_UPPER_LIMIT;
+//     //     else if(output[T_LWL_OUTPUT_NUM] < WHEEL_LOWER_LIMIT) output[T_LWL_OUTPUT_NUM] = WHEEL_LOWER_LIMIT;
+//     // if(output[T_LWR_OUTPUT_NUM] > WHEEL_UPPER_LIMIT) output[T_LWR_OUTPUT_NUM] = WHEEL_UPPER_LIMIT;
+//     //     else if(output[T_LWR_OUTPUT_NUM] < WHEEL_LOWER_LIMIT) output[T_LWR_OUTPUT_NUM] = WHEEL_LOWER_LIMIT;
 
-    //2x2 * 2x1 
-    // jl[a][b]   *   F_bll
-    //   [c][d]       T_bll
-    // = [af + bt]
-    //   [cf + dt]
-//--------------------------------------------------------------Left side force---------------------------------------------------------------------------------
-    if(F_whl >= F_WH_OUTPUT_LIMIT_NUM){
-        _write.torque_fl = o_data.jl[0][0] * F_bll + o_data.jl[0][1] * T_bll;
-        _write.torque_bl = o_data.jl[1][0] * F_bll + o_data.jl[1][1] * T_bll;
-    }else{
-        _write.torque_wl = 0;
-    }
-//-----------------------------------------------------------Right side check force------------------------------------------------------------------------------
-    if(F_whr >= F_WH_OUTPUT_LIMIT_NUM){
-        _write.torque_fr = o_data.jr[0][0] * F_blr + o_data.jr[0][1] * T_blr;
-        _write.torque_br = o_data.jr[1][0] * F_blr + o_data.jr[1][1] * T_blr;
-    }else{
-        _write.torque_wr = 0;
-    }
 
-//-------------------------------------------------------------Calculate CAN value-----------------------------------------------
-    _write.torque_wl /= -5.0;
-    _write.torque_wr /= 5.0;
-    _write.torque_fl /= -37.0;
-    _write.torque_bl /= -37.0;
-    _write.torque_fr /= 37.0;
-    _write.torque_br /= 37.0;
 
-return;
-}
+//     //2x2 * 2x1 
+//     // jl[a][b]   *   F_bll
+//     //   [c][d]       T_bll
+//     // = [af + bt]
+//     //   [cf + dt]
+// //--------------------------------------------------------------Left side force---------------------------------------------------------------------------------
+//     if(F_whl >= F_WH_OUTPUT_LIMIT_NUM){
+//         _write.torque_fl = o_data.jl[0][0] * F_bll + o_data.jl[0][1] * T_bll;
+//         _write.torque_bl = o_data.jl[1][0] * F_bll + o_data.jl[1][1] * T_bll;
+//     }else{
+//         _write.torque_wl = 0;
+//     }
+// //-----------------------------------------------------------Right side check force------------------------------------------------------------------------------
+//     if(F_whr >= F_WH_OUTPUT_LIMIT_NUM){
+//         _write.torque_fr = o_data.jr[0][0] * F_blr + o_data.jr[0][1] * T_blr;
+//         _write.torque_br = o_data.jr[1][0] * F_blr + o_data.jr[1][1] * T_blr;
+//     }else{
+//         _write.torque_wr = 0;
+//     }
+
+// //-------------------------------------------------------------Calculate CAN value-----------------------------------------------
+//     _write.torque_wl /= -5.0;
+//     _write.torque_wr /= 5.0;
+//     _write.torque_fl /= -37.0;
+//     _write.torque_bl /= -37.0;
+//     _write.torque_fr /= 37.0;
+//     _write.torque_br /= 37.0;
+
+// return;
+// }
 
 write_data balancing_test::getwrite(){
+
+//-----------------------------------------------------------Safety limit--------------------------------------------------------------------
+    // if(o_data.theta_ll > 0.6 || o_data.theta_ll < -0.6 || o_data.theta_lr > 0.6 || o_data.theta_ll < -0.6){
+    //     _write.torque_fl = 0;
+    //     _write.torque_bl = 0;
+    //     _write.torque_wl = 0;
+    //     _write.torque_fl = 0;
+    //     _write.torque_bl = 0;
+    //     _write.torque_wl = 0;
+    //     saftymode = true;
+    // }
     return _write;
 }
 
 void balancing_test::printdata(){
+    getwrite();
     Serial.print("fr: ");
     Serial.println(_write.torque_fr);
     Serial.print("fl: ");
@@ -518,6 +532,8 @@ void balancing_test::print_observer(){
     Serial.println(o_data.yaw_dot);
     Serial.print("yaw_ddot: ");
     Serial.println(o_data.yaw_ddot);
+    Serial.print("s: ");
+    Serial.println(o_data.s);
     Serial.print("b_speed: ");
     Serial.println(o_data.b_speed);
     Serial.print("b_accel: ");
@@ -535,9 +551,9 @@ void balancing_test::print_observer(){
     Serial.print("theta_lr: ");
     Serial.printf("%E", o_data.theta_lr);
     Serial.print("theta_ll_dot: ");
-    Serial.println(o_data.theta_ll_dot);
+    Serial.printf("%E", o_data.theta_ll_dot);
     Serial.print("theta_lr_dot: ");
-    Serial.println(o_data.theta_lr_dot);
+    Serial.printf("%E", o_data.theta_lr_dot);
     Serial.print("jl: ");
     Serial.print(o_data.jl[0][0]);
     Serial.print(" ");

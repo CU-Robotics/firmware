@@ -22,15 +22,22 @@ void IMU_filter::read(){
     // Calculate roll and pitch angle by gravity
     _imu.accel_pitch = -atanf(_imu.accel_X / sqrt(_imu.accel_Y * _imu.accel_Y + _imu.accel_Z * _imu.accel_Z));
     _imu.accel_roll = atanf(_imu.accel_Y / sqrt(_imu.accel_X * _imu.accel_X + _imu.accel_Z * _imu.accel_Z));
-    // Calculate the roll and pitch rotation speed by rotation matrix
-    float realalpha_roll = _imu.alpha_roll + ((sin(_imu.gyro_pitch) * sin(_imu.gyro_roll)) / cos(_imu.gyro_pitch)) * _imu.alpha_pitch + _imu.alpha_yaw * ((sin(_imu.gyro_pitch) * cos(_imu.gyro_roll)) / cos(_imu.gyro_pitch));
-    float realalpha_pitch = _imu.alpha_pitch * cos(_imu.gyro_roll) - _imu.alpha_yaw * sin(_imu.gyro_roll);    
-    
+    // // Calculate the roll and pitch rotation speed by rotation matrix
+    // float realalpha_roll = _imu.alpha_roll + ((sin(_imu.gyro_pitch) * sin(_imu.gyro_roll)) / cos(_imu.gyro_pitch)) * _imu.alpha_pitch + _imu.alpha_yaw * ((sin(_imu.gyro_pitch) * cos(_imu.gyro_roll)) / cos(_imu.gyro_pitch));
+    // float realalpha_pitch = _imu.alpha_pitch * cos(_imu.gyro_roll) - _imu.alpha_yaw * sin(_imu.gyro_roll);    
+    // Calculate the roll and pitch rotation speed by rotation matrix (use K angle)
 
+    _imu.world_alpha_roll = _imu.alpha_roll + ((sin(_imu.k_pitch) * sin(_imu.k_roll)) / cos(_imu.k_pitch)) * _imu.k_pitch + _imu.alpha_yaw * ((sin(_imu.k_pitch) * cos(_imu.k_roll)) / cos(_imu.k_pitch));
+    _imu.world_alpha_pitch = _imu.alpha_pitch * cos(_imu.k_roll) - _imu.alpha_yaw * sin(_imu.k_roll);  
+    _imu.world_alpha_yaw = _imu.alpha_pitch * (sin(_imu.k_roll)/cos(_imu.k_pitch)) + _imu.alpha_yaw * (cos(_imu.k_roll)/cos(_imu.k_pitch));
+
+    _imu.world_accel_X = -(_imu.accel_X * cos(_imu.k_pitch) + _imu.accel_Y * sin(_imu.k_pitch) * sin(_imu.k_roll) + _imu.accel_Z * sin(_imu.k_pitch) * cos(_imu.k_roll));
+    _imu.world_accel_Y = _imu.accel_Y * cos(_imu.k_roll) - _imu.accel_Z * sin(_imu.k_roll); 
+    _imu.world_accel_Z = - _imu.accel_X * sin(_imu.k_pitch) + _imu.accel_Y * cos(_imu.k_pitch) * sin(_imu.k_roll) + _imu.accel_Z * cos(_imu.k_pitch) * cos(_imu.k_roll) - SENSORS_GRAVITY_EARTH; 
     // Basic and simple filter to make Accel low pass
-    _alpha = 1 - (0.0006 * (SENSORS_GRAVITY_EARTH/sqrt((_imu.accel_X*_imu.accel_X) + (_imu.accel_Y*_imu.accel_Y) + (_imu.accel_Z*_imu.accel_Z)))   );   
-    _imu.gyro_roll = _alpha * (_imu.gyro_roll + realalpha_roll * dt) + (1.0 - _alpha) * _imu.accel_roll;
-    _imu.gyro_pitch = _alpha * (_imu.gyro_pitch + realalpha_pitch * dt) + (1.0 - _alpha) * _imu.accel_pitch;
+    _alpha = 1 - (0.0006 * (SENSORS_GRAVITY_EARTH/sqrt((_imu.accel_X*_imu.accel_X) + (_imu.accel_Y*_imu.accel_Y) + (_imu.accel_Z*_imu.accel_Z))));   
+    _imu.gyro_roll = _alpha * (_imu.gyro_roll + _imu.world_alpha_roll * dt) + (1.0 - _alpha) * _imu.accel_roll;
+    _imu.gyro_pitch = _alpha * (_imu.gyro_pitch + _imu.world_alpha_pitch * dt) + (1.0 - _alpha) * _imu.accel_pitch;
 // Kalman Filter
 
     // Calculate P Matrix
@@ -54,6 +61,13 @@ void IMU_filter::read(){
     P[1][0] = 0;
     P[1][1] = (1 - K[1][1]) * P[1][1];
     
+//----------------------------------------------------------------Calculate Acceleration to the world
+
+
+
+
+
+
     _imu.temperature = _icm.get_temperature();
 }
 
@@ -70,6 +84,14 @@ void IMU_filter::print() {
     Serial.print(_imu.accel_Z);
     Serial.println(" m/s^2 ");
 
+    Serial.print("\t\tWorld Accel X: ");
+    Serial.print(_imu.world_accel_X);
+    Serial.print(" \tY: ");
+    Serial.print(_imu.world_accel_Y);
+    Serial.print(" \tZ: ");
+    Serial.print(_imu.world_accel_Z);
+    Serial.println(" m/s^2 ");
+
     Serial.print("\t\tGyro X(Roll): ");
     Serial.print(_imu.alpha_roll);
     Serial.print(" \tY(Pitch): ");
@@ -78,20 +100,20 @@ void IMU_filter::print() {
     Serial.print(_imu.alpha_yaw);
     Serial.println(" radians/s ");
 
-    Serial.println(_imu.gyro_roll * RAD_TO_DEG);
-    Serial.println("_imu.gyro_roll");
-    Serial.println(_imu.gyro_pitch * RAD_TO_DEG);
-    Serial.println("_imu.gyro_pitch");
+    // Serial.println(_imu.gyro_roll * RAD_TO_DEG);
+    // Serial.println("_imu.gyro_roll");
+    // Serial.println(_imu.gyro_pitch * RAD_TO_DEG);
+    // Serial.println("_imu.gyro_pitch");
 
     Serial.println(_imu.k_roll * RAD_TO_DEG);
     Serial.println("_imu.k_roll");
     Serial.println(_imu.k_pitch * RAD_TO_DEG);
     Serial.println("_imu.k_pitch");
 
-    Serial.println(_imu.accel_roll * RAD_TO_DEG);
-    Serial.println("_imu.accel_roll");
-    Serial.println(_imu.accel_pitch * RAD_TO_DEG);
-    Serial.println("_imu.accel_pitch");
+    // Serial.println(_imu.accel_roll * RAD_TO_DEG);
+    // Serial.println("_imu.accel_roll");
+    // Serial.println(_imu.accel_pitch * RAD_TO_DEG);
+    // Serial.println("_imu.accel_pitch");
 }
 void IMU_filter::serial_data_for_plot(){
     //String dataString = String(String(_imu.gyro_roll) + "," + String(_imu.gyro_pitch));

@@ -11,14 +11,15 @@
 #define R_l 0.224                                   
 #define eta_l 0.4144                            
 
-#define K1_P 300                                  //Need test                                    
+#define K1_P 200                                  //Need test                                    
 #define K1_I 0                                    //Need test 
 #define K1_D 100                                  //Need test                         
-#define K1_F 100                                  //Need test                         
-#define K2_P 180                                  //Need test                         
-#define K2_I 200                                  //Need test                         
+#define K1_F 0                                  //Need test  
+
+#define K2_P 200                                  //Need test                         
+#define K2_I 100                                  //Need test                         
 #define K2_D 150                                  //Need test                         
-#define K2_F 100                                  //Need test                   
+#define K2_F 0                                  //Need test                   
 
 /** Constants for locomotion_controller*/
 #define P_LOCO_ROW 4
@@ -28,13 +29,14 @@
 #define l_u 0.14   // test
 #define l_l 0.252   // test
 #define R_w 0.05   // test
-
+#define M3508RATIO 19
+#define THETA_FILTER 0.0004
 /**controller constants */
 #define G_CONSTANT 9.80665f
 #define BOUND true                              // 1 to -1                      
 #define WARP true                               // 360 degree 
 #define F_WH_OUTPUT_LIMIT_NUM 20
-#define MGlimit 0.4
+#define MGlimit 1
 struct balancing_sensor_data
 {
     float angle_fl;
@@ -121,8 +123,7 @@ class balancing_test{
     private:
         Timer timer; 
         float _dt;
-
-
+        uint32_t slowdalay_help;
         /// @brief The PID for psi
         PIDFilter pid1; 
         /// @brief The PID for l
@@ -136,7 +137,13 @@ class balancing_test{
         write_data _write;
         observer_data o_data;
         ref_data _ref_data;  
+
+
+
+
+
     public:
+        bool saftymode;
         /// @brief setting all constant array
         void init();
         /// @brief Set private data the data from main
