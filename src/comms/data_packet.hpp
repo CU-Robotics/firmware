@@ -235,10 +235,6 @@ struct comms_data_packet {
     /// @return RefereeData object.
     RefereeData getRefData() const;
 
-    /// @brief Getter for CANData.
-    /// @return CANData object.
-    // CANData getCanData() const;
-
     /// @brief Constructor to initialize the comms_data_packet with configuration data.
     /// @param config_data Pointer to the configuration data.
     comms_data_packet(const Config* config_data);
