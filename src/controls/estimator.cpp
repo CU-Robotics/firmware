@@ -541,7 +541,8 @@ void LocalEstimator::step_states(float output[CAN_MAX_MOTORS][MICRO_STATE_LEN], 
     for (size_t i = 0; i < CAN_NUM_BUSSES; i++) {
         for (size_t j = 0; j < CAN_MAX_MOTORS_PER_BUS; j++) {
             // j + 1 for motor ID on get_motor_state since j starts at 0 but it expects a 1-indexed ID
-            output[(i * CAN_MAX_MOTORS_PER_BUS) + j][1] = can->get_motor_state(i, j + 1).speed;
+            if (can->get_motor(i, j + 1))
+                output[(i * CAN_MAX_MOTORS_PER_BUS) + j][1] = can->get_motor_state(i, j + 1).speed;
         }
     }
 }
