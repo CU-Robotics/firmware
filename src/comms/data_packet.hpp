@@ -4,7 +4,6 @@
 #include <cstdint>
 #include <state.hpp>
 #include <vector>
-#include <rm_can.hpp>
 #include "Sensor.hpp"
 #include "sensor_constants.hpp"
 #include "estimator_manager.hpp"

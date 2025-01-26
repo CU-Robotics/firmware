@@ -11,7 +11,6 @@
 #include "sensors/buff_encoder.hpp"
 #include "sensors/RefSystem.hpp"
 #include "estimator.hpp"
-#include "comms/rm_can.hpp"
 #include <SPI.h>
 
 // maximum number of each sensor (arbitrary)
@@ -55,7 +54,7 @@ public:
     ~EstimatorManager();
 
     /// @brief initialize all sensors and set can_data pointer
-    /// @param can reference struct storing all of can data so we dont have to pass rm_can around
+    /// @param can CAN manager pointer to get access to motor state
     /// @param config_data read only reference struct storing all the config data
     void init(CANManager* can, const Config* config_data);
 

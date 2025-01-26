@@ -3,7 +3,6 @@
 
 #include "filters/pid_filter.hpp"
 #include "utils/timing.hpp"
-// #include "comms/rm_can.hpp"
 #include "sensors/can/can_manager.hpp"
 #include "sensors/RefSystem.hpp"
 #include "state.hpp"
