@@ -23,7 +23,13 @@ struct EthernetPacketHeader {
 constexpr uint32_t ETHERNET_PACKET_HEADER_SIZE = (sizeof(Comms::EthernetPacketHeader));
 
 /// @brief The max packet size
-constexpr uint32_t ETHERNET_PACKET_MAX_SIZE = (4096u);
+/// @note The max size this value can be currently is 7392 bytes. This was found through testing and is roughly the size of 5 IP fragments. 
+///       Anything past this value fails to be received fully by Linux. 
+///       I belive the issue is that Teensy is failing to fragment the packet properly. I've only ever seen a max of 5 fragments being sent by Teensy
+///       even though packets could comprise more fragments. I am unsure on where in the QNEthernet stack this is occuring and do not have time to investigate.
+///       6KB is a safe value to use for now, as 7KB is a bit too close for comfort.
+///       A possible work around to this is to run our own fragmentation layer on top of the QNEthernet stack, but this is a lot of work.
+constexpr uint32_t ETHERNET_PACKET_MAX_SIZE = (6u * 1024u);	// 6KB = 6144 bytes
 
 /// @brief The max packet payload size
 constexpr uint32_t ETHERNET_PACKET_PAYLOAD_MAX_SIZE = (Comms::ETHERNET_PACKET_MAX_SIZE - Comms::ETHERNET_PACKET_HEADER_SIZE);
