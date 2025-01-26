@@ -246,7 +246,6 @@ struct comms_data_packet {
     /// @param packetBuffer Buffer to pack the data into.
     /// @param robotState The current state of the robot.
     /// @param ref_data_raw Raw referee data.
-    /// @param canData Pointer to CANData.
     /// @param estimatorManager Reference to the EstimatorManager.
     /// @param lidar1 Reference to the first LiDAR sensor.
     /// @param lidar2 Reference to the second LiDAR sensor.
