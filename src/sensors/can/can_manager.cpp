@@ -94,7 +94,8 @@ void CANManager::read() {
             // if this fails, we've received a message that does not match any motor
             // how would this happen?
             if (!distribute_msg(msg)) {
-                Serial.printf("CANManager failed to distribute message: %.4x\n", msg.id);
+                // - 1 on msg.bus to maintain bus IDs being 0-indexed
+                Serial.printf("CANManager failed to distribute message with raw CAN ID: %.4x on bus: %x\n", msg.id, msg.bus - 1);
             }
         }
     }
@@ -191,7 +192,9 @@ void CANManager::write_motor_torque(uint32_t bus_id, uint32_t motor_id, float to
     // find the motor by bus and ID
     Motor* motor = get_motor(bus_id, motor_id);
     if (!motor) {
+    #ifdef CAN_MANAGER_DEBUG
         Serial.printf("CANManager tried to write to an invalid motor: %d on bus %d\n", motor_id, bus_id);
+    #endif
         return;
     }
 
@@ -203,9 +206,7 @@ void CANManager::print_state() {
     // for each motor, print it's state
     for (const auto& motor : m_motor_map) {
         // print the motor state
-        Serial.printf("B%u M%u: %d\n", motor.second->get_bus_id(), motor.second->get_id(), motor.second->get_state().position);
-
-        Serial.println();
+        motor.second->print_state();
     }
 }
 
@@ -224,7 +225,9 @@ void CANManager::print_motor_state(uint32_t bus_id, uint32_t motor_id) {
     // find the motor by bus and ID
     Motor* motor = get_motor(bus_id, motor_id);
     if (!motor) {
+    #ifdef CAN_MANAGER_DEBUG
         Serial.printf("CANManager tried to print an invalid motor: %d on bus %d\n", motor_id, bus_id);
+    #endif
         return;
     }
 
@@ -252,7 +255,9 @@ Motor* CANManager::get_motor(uint32_t bus_id, uint32_t motor_id) {
     }
 
     // could not find the motor
+#ifdef CAN_MANAGER_DEBUG
     Serial.printf("CANManager tried to get an invalid motor: %d on bus %d\n", motor_id, bus_id);
+#endif
 
     return nullptr;
 }
@@ -272,7 +277,9 @@ MotorState CANManager::get_motor_state(uint32_t bus_id, uint32_t motor_id) {
     // find the motor by bus and ID
     Motor* motor = get_motor(bus_id, motor_id);
     if (!motor) {
+    #ifdef CAN_MANAGER_DEBUG
         Serial.printf("CANManager tried to get the state of an invalid motor: %d on bus %d\n", motor_id, bus_id);
+    #endif
         return MotorState();
     }
 
@@ -318,7 +325,9 @@ void CANManager::init_motors() {
                 // if the motor is not initialized, mark it as initialized
                 if (!motors_initialized[motor->get_global_id()]) {
                     motors_initialized[motor->get_global_id()] = true;
+                #ifdef CAN_MANAGER_DEBUG
                     Serial.printf("Motor %u on bus %u initialized!\n", motor->get_id(), motor->get_bus_id());
+                #endif
                 }
             }
         }
