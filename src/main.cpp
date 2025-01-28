@@ -294,9 +294,10 @@ int main() {
         // check whether this was a slow loop or not
 	    float dt = stall_timer.delta();
         if (dt > 0.002) { 
-	    	Serial.printf("Slow loop with dt: %f\n", dt);
             // zero the can bus just in case
 	    	can.zero();
+		
+	    	Serial.printf("Slow loop with dt: %f\n", dt);
             // mark this as a slow loop to trigger safety mode
 	    	is_slow_loop = true;
 	    }
