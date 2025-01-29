@@ -291,7 +291,7 @@ void balancing_test::control_position(){
 //--------------------------------------------------------------Acceleration Saturation---------------------------------------------------------------------------
     float dx[10];
     // dx[0] = 0; //Ignore // s
-    dx[0] = _ref_data.s - o_data.s; // s
+    dx[0] = _ref_data.s; // s
     dx[1] = _ref_data.b_speed - o_data.b_speed; // speed
     dx[2] = 0; //Ignore // yaw
     //dx[2] = ref[0][2] - obs[0][2]; // yaw angle //We don't have this data and don't need it
@@ -504,7 +504,7 @@ return;
 write_data balancing_test::getwrite(){
 
 //-----------------------------------------------------------Safety limit--------------------------------------------------------------------
-    if(o_data.theta_ll > 0.6 || o_data.theta_ll < -0.6 || o_data.theta_lr > 0.6 || o_data.theta_ll < -0.6){
+    if(o_data.theta_ll > 0.8 || o_data.theta_ll < -0.8 || o_data.theta_lr > 0.8 || o_data.theta_ll < -0.8){
         _write.torque_fl = 0;
         _write.torque_bl = 0;
         _write.torque_wl = 0;

@@ -37,7 +37,7 @@
 #define BOUND true                              // 1 to -1                      
 #define WARP true                               // 360 degree 
 #define F_WH_OUTPUT_LIMIT_NUM 10000000000
-#define MGlimit 1
+#define MGlimit 0.7
 struct balancing_sensor_data
 {
     float angle_fl;
