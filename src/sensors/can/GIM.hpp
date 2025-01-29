@@ -24,16 +24,20 @@ public:
             case MotorType::GIM3505: {
                 torque_constant = 0.52f;
                 gear_ratio = 8.0f; // 8:1
+                max_torque = 1.27f;
                 break;
             }
             case MotorType::GIM4310: {
                 torque_constant = 3.46f;
                 gear_ratio = 36.0f; // 36:1
+                max_torque = 20.16f;
                 break;
             }
             case MotorType::GIM6010: {
                 torque_constant = 0.47f;
                 gear_ratio = 8.0f; // 8:1
+                max_torque = 11.0f;
+
                 break;
             }
             case MotorType::GIM8108: {
@@ -58,6 +62,9 @@ public:
 
     /// @brief The motor's torque constant in Nm/A (determined by "motor_type" in the constructor)
     float torque_constant;
+
+    /// @brief The motor's maximum torque in Nm (determined by "motor_type" in the constructor)
+    float max_torque;
 
 public:
     /// @brief Initialize the motor by verifying it is on
