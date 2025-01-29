@@ -201,22 +201,22 @@ void balancing_test::observer(){
 
     uint32_t timenow = micros();
     float slowdt = timenow - slowdalay_help;
-    if(slowdt > 200){
+    if(slowdt > 20){
         slowdalay_help = timenow;
 //----------------------------------------------------------Get theta_ll_dot and theta_lr_dot-------------------------------------------------------
-        o_data.theta_ll_dot = abs(o_data.theta_ll - o_data.theta_ll_old) > LL_FILTER ? (o_data.theta_ll - o_data.theta_ll_old) / slowdt : 0;
+        o_data.theta_ll_dot = abs(o_data.theta_ll - o_data.theta_ll_old) > THETA_FILTER  ? (o_data.theta_ll - o_data.theta_ll_old) / slowdt : 0;
         o_data.theta_ll_old = o_data.theta_ll;
-        o_data.theta_lr_dot = abs(o_data.theta_lr - o_data.theta_lr_old) > LL_FILTER ? (o_data.theta_lr - o_data.theta_lr_old) / slowdt : 0;
+        o_data.theta_lr_dot = abs(o_data.theta_lr - o_data.theta_lr_old) > THETA_FILTER  ? (o_data.theta_lr - o_data.theta_lr_old) / slowdt : 0;
         o_data.theta_lr_old = o_data.theta_lr;
 //-----------------------------------------------------------Get ll_ddot and lr_ddot-------------------------------------------------------------------
-        float ll_dot = abs(o_data.ll - o_data.ll_old) > THETA_FILTER ? (o_data.ll - o_data.ll_old) / slowdt : 0;
+        float ll_dot = abs(o_data.ll - o_data.ll_old) > LL_FILTER ? (o_data.ll - o_data.ll_old) / slowdt : 0;
         o_data.ll_old = o_data.ll;
-        o_data.ll_ddot = abs(ll_dot - o_data.ll_dot_old) > THETA_FILTER ? (ll_dot - o_data.ll_dot_old) / slowdt : 0;
+        o_data.ll_ddot = abs(ll_dot - o_data.ll_dot_old) > LL_FILTER ? (ll_dot - o_data.ll_dot_old) / slowdt : 0;
         o_data.ll_dot_old = ll_dot;
 
-        float lr_dot = abs(o_data.lr - o_data.lr_old) > THETA_FILTER ? (o_data.lr - o_data.lr_old) / slowdt : 0;
+        float lr_dot = abs(o_data.lr - o_data.lr_old) > LL_FILTER ? (o_data.lr - o_data.lr_old) / slowdt : 0;
         o_data.lr_old = o_data.lr;
-        o_data.lr_ddot = abs(lr_dot - o_data.lr_dot_old) > THETA_FILTER ? (lr_dot - o_data.lr_dot_old) / slowdt : 0;
+        o_data.lr_ddot = abs(lr_dot - o_data.lr_dot_old) > LL_FILTER ? (lr_dot - o_data.lr_dot_old) / slowdt : 0;
         o_data.lr_dot_old = lr_dot;
     }
 //--------------------------------------------------------------b_s and filter for it--------------------------------------------------------
@@ -260,7 +260,6 @@ void balancing_test::control_position(){
 
     float iF_r = ((((m_b / 2) + (eta_l * m_l)) * l * o_data.pitch_dot * o_data.b_speed) / 2) / R_l;
     float iF_l = -iF_r; 
-
 //-----------------------------------------------------------------gravity feed forware-------------------------------------------------------------------
     float costheta_l = cos(o_data.theta_ll);
     float costheta_r = cos(o_data.theta_lr);
