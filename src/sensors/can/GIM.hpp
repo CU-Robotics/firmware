@@ -17,12 +17,47 @@ public:
     /// @param gid The global ID, not the per-bus motor ID
     /// @param id The per-bus motor ID. This is 1-indexed
     /// @param bus_id The CAN bus index/ID
-    GIM(uint32_t gid, uint32_t id, uint8_t bus_id)
-        : Motor(MotorControllerType::MG8016_CONTROLLER, gid, id, bus_id) {
+    GIM(uint32_t gid, uint32_t id, uint8_t bus_id, MotorType motor_type)
+        : Motor(MotorControllerType::MG8016_CONTROLLER, gid, id, bus_id, motor_type) {
+        
+        switch(motor_type) {
+            case MotorType::GIM3505: {
+                torque_constant = 0.52;
+                gear_ratio = 8.0; // 8:1
+                break;
+            }
+            case MotorType::GIM4310: {
+                torque_constant = 3,46;
+                gear_ratio = 36.0; // 36:1
+                break;
+            }
+            case MotorType::GIM6010: {
+                torque_constant = 0.47;
+                gear_ratio = 8.0; // 8:1
+                break;
+            }
+            case MotorType::GIM8108: {
+                // TODO: this motor has two versions and we need to know which one we have. 
+                // torque constant is either 1.83 or 0.96.
+                gear_ratio = 9.0; // 9:1
+                break;
+            }
+            default: {
+                Serial.printf("GIM motor type not recognized: %d\n", motor_type);
+                break;
+            }
+        }
     }
 
     /// @brief Destructor, does nothing
     ~GIM() override { }
+
+    /// @brief The motor's gear ratio (determined by "motor_type" in the constructor)
+    double gear_ratio;
+
+    /// @brief The motor's torque constant in Nm/A (determined by "motor_type" in the constructor)
+    double torque_constant;
+
 public:
     /// @brief Initialize the motor by verifying it is on
     void init() override;
@@ -42,6 +77,7 @@ public:
     void write_motor_off();
 
     void write_motor_stop();
+
 
 private:
     const uint32_t m_base_id = 0x0;

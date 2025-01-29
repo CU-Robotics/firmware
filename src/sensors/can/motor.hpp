@@ -20,6 +20,7 @@ enum class MotorType {
     GIM3505,
     GIM4310,
     GIM6010,
+    GIM8108,
 };
 
 /// @brief Unified motor state
@@ -48,7 +49,7 @@ public:
     /// @param id The per-bus motor ID. This is 1-indexed 
     /// @param bus The CAN bus index/ID
     /// @param motor_type The motor type, defaults to NULL_MOTOR_TYPE if not specified
-    Motor(MotorControllerType controller_type, uint32_t gid, uint32_t id, uint8_t bus, MotorType motor_type = MotorType::NULL_MOTOR_TYPE)
+    Motor(MotorControllerType controller_type, uint32_t gid, uint32_t id, uint8_t bus, MotorType motor_type)
         : m_controller_type(controller_type), m_gid(gid), m_id(id), m_bus_id(bus), m_motor_type(motor_type) { }
 
 /// @brief Virtual destructor
@@ -85,6 +86,10 @@ public:
     /// @brief Get the motor controller type
     /// @return The motor controller type
     inline MotorControllerType get_controller_type() const { return m_controller_type; }
+
+    /// @brief Get the motor type
+    /// @return The motor type
+    inline MotorType get_motor_type() const { return m_motor_type; }
 
     /// @brief Get the global ID
     /// @return The unique global ID
