@@ -89,6 +89,9 @@ void FlightController::guided() {
 // Mode 4: Fin Test Mode
 void FlightController::fin_test_mode() {
 
+    Serial.println("trying to spin servo"); 
+    servoController.set_servo_angle(3, 180);
+
     static int testStep = 0;
     float testAngle = (testStep % 2 == 0) ? 30 : -30;
 

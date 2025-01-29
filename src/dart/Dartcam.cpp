@@ -13,7 +13,7 @@ void Dartcam::init() {
     uint8_t status = camera.begin(DARTCAM_FRAMESIZE, DARTCAM_FORMAT, DARTCAM_FRAME_RATE, DARTCAM_ID, DARTCAM_USE_GPIO);
     if (!status) {
         Serial.println("camera failed to start");
-        while (1) { }; // halt if camera fails to start
+        //while (1) { }; // halt if camera fails to start
     }
 }
 
