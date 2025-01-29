@@ -199,9 +199,21 @@ void balancing_test::observer(){
 
     o_data.theta_lr = (fmod((M_PI_2 + _data.imu_angle_pitch - phi0r + M_PI), (2 * M_PI)) - M_PI);
 
+
+    o_data.llaverage += o_data.ll;
+    o_data.lraverage += o_data.lr;
+    o_data.theta_ll_avg += o_data.theta_ll;
+    o_data.theta_lr_avg += o_data.theta_lr;
+    o_data.avg_count += 1;
+
     uint32_t timenow = micros();
     float slowdt = timenow - slowdalay_help;
     if(slowdt > 20){
+        o_data.llaverage /= o_data.avg_count;
+        o_data.lraverage /= o_data.avg_count;
+        o_data.theta_ll_avg /= o_data.avg_count;
+        o_data.theta_lr_avg /= o_data.avg_count;
+        slowdt /= 1000; // To second
         slowdalay_help = timenow;
 //----------------------------------------------------------Get theta_ll_dot and theta_lr_dot-------------------------------------------------------
         o_data.theta_ll_dot = abs(o_data.theta_ll - o_data.theta_ll_old) > THETA_FILTER  ? (o_data.theta_ll - o_data.theta_ll_old) / slowdt : 0;
@@ -218,6 +230,13 @@ void balancing_test::observer(){
         o_data.lr_old = o_data.lr;
         o_data.lr_ddot = abs(lr_dot - o_data.lr_dot_old) > LL_FILTER ? (lr_dot - o_data.lr_dot_old) / slowdt : 0;
         o_data.lr_dot_old = lr_dot;
+
+
+        o_data.llaverage = 0;
+        o_data.lraverage = 0;
+        o_data.theta_ll_avg = 0;
+        o_data.theta_lr_avg = 0;
+        o_data.avg_count = 0;
     }
 //--------------------------------------------------------------b_s and filter for it--------------------------------------------------------
     _data.speed_wl /= -M3508RATIO;

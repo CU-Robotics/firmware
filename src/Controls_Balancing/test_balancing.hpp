@@ -90,8 +90,13 @@ struct observer_data
     float lr_ddot;
     float theta_ll;
     float theta_lr;
+    float llaverage;
+    float lraverage;
+    float theta_ll_avg;
+    float theta_lr_avg;
     float theta_ll_dot;
     float theta_lr_dot;
+    float avg_count; // count of loop for this slow loop
     float jl[2][2];
     float jr[2][2];
 
