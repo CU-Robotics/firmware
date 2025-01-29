@@ -42,9 +42,9 @@ const Config* const ConfigLayer::configure(HIDLayer* comms, bool config_off_SD) 
 
     // verify that config received matches ref system: if not, error out
 #ifndef DISABLE_REF_CONFIG_SAFETY_CHECK
-    Serial.printf("Received robot ID from config: %d\nRobot ID from ref system: %d\n", (int)config.robot, ref.ref_data.robot_performance.robot_ID);
+    Serial.printf("Received robot ID from config: %d\nRobot ID from ref system: %d\n", (int)config.robot, ref->ref_data.robot_performance.robot_ID);
     // id check with modulo 100 to account for red and blue teams. Blue is the id + 100. (ID == 101, 102, ...)
-    if ((ref.ref_data.robot_performance.robot_ID % 100) != (int)config.robot)
+    if ((ref->ref_data.robot_performance.robot_ID % 100) != (int)config.robot)
     {
         Serial.printf("ERROR: IDs do not match!! Check robot_id.cfg and robot settings from ref system!\n");
         if (!CONFIG_ERR_HANDLER(CONFIG_ID_MISMATCH))
@@ -109,8 +109,8 @@ void ConfigLayer::config_SD_init(HIDLayer* comms) {
     // if on robot, we need to wait for ref to send robot_id
 #ifndef DISABLE_REF_CONFIG_SAFETY_CHECK
     Serial.println("Waiting for ref system to initialize...");
-    while (ref.ref_data.robot_performance.robot_ID == 0)
-        ref.read();
+    while (ref->ref_data.robot_performance.robot_ID == 0)
+        ref->read();
     Serial.println("Ref system online");
 #endif
 
@@ -381,9 +381,9 @@ bool ConfigLayer::sd_load()
 
 #ifndef DISABLE_REF_CONFIG_SAFETY_CHECK
     // id check with modulo 100 to account for red and blue teams. Blue is the id + 100. (ID == 101, 102, ...)
-    if ((ref.ref_data.robot_performance.robot_ID % 100) != (int)received_id) {
+    if ((ref->ref_data.robot_performance.robot_ID % 100) != (int)received_id) {
         Serial.printf("NOTICE: attempting to load firmware for different robot type! \n");
-        Serial.printf("Current robot ID: %d\nStored config robot ID: %d\n", ref.ref_data.robot_performance.robot_ID, (int)received_id);
+        Serial.printf("Current robot ID: %d\nStored config robot ID: %d\n", ref->ref_data.robot_performance.robot_ID, (int)received_id);
         Serial.println("Requesting config from hive...");
         return false;
     }

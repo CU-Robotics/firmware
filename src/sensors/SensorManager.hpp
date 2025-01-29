@@ -15,6 +15,7 @@
 #include "rev_encoder.hpp"
 #include "sensors/d200.hpp"
 #include <Arduino.h>
+#include "RefSystem.hpp"
 
 
 #define NUM_SENSOR_TYPE 16
@@ -56,21 +57,10 @@ class SensorManager {
         // LidarSensor& get_lidar_sensor(int index);
 
 
-        int get_num_sensors(SensorType sensor_type) {
-            switch (sensor_type) {
-                case SensorType::BUFFENC:
-                    return buff_sensor_count;
-                case SensorType::ICM:
-                    return icm_sensor_count;
-                case SensorType::REVENC:
-                    return rev_sensor_count;
-                case SensorType::TOF:
-                    return tof_sensor_count;
-                case SensorType::LIDAR:
-                    return lidar_sensor_count;
-                default:
-                    return 0;
-            }
+        int get_num_sensors(SensorType sensor_type);
+
+        RefSystem* get_ref() {
+            return &ref;
         }
 
         void calibrate_imus();
@@ -104,9 +94,11 @@ class SensorManager {
     D200LD14P lidar1 = D200LD14P(&Serial4, 0);
     D200LD14P lidar2 = D200LD14P(&Serial5, 1);
 
-    
     /// Array of LiDAR sensor data structs.
     LidarSensorData* lidar_sensors_data;
+
+
+    RefSystem ref;
 
 };
 

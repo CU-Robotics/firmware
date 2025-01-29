@@ -20,7 +20,7 @@
 // Declare global objects
 DR16 dr16;
 rm_CAN can;
-RefSystem ref;
+RefSystem* ref;
 HIDLayer comms;
 ACS712 current_sensor;
 
@@ -84,7 +84,7 @@ void print_logo() {
 int main() {
     long long loopc = 0; // Loop counter for heartbeat
 
-    Serial.begin(112500); // the serial monitor is actually always active (for debug use Serial.println & tycmd)
+    Serial.begin(115200); // the serial monitor is actually always active (for debug use Serial.println & tycmd)
     debug.begin(SerialUSB1);
 
     print_logo();
@@ -96,7 +96,6 @@ int main() {
     //initialize objects
     can.init();
     dr16.init();
-    ref.init();
     comms.init();
 
     //can data pointer so we don't pass around rm_CAN object
@@ -110,6 +109,7 @@ int main() {
 
     
     sensor_manager.init(config);
+    ref = sensor_manager.get_ref();
 
     //print sensor counts
     // Serial.print("Number of Buff Encoders: ");
@@ -159,14 +159,16 @@ int main() {
 
     Serial.println("Entering main loop...\n");
 
-    ethernet_comms.begin();
+    //ethernet_comms.begin();
 
     // Main loop
     while (true) {
-        // read main sensors
-        can.read();
-        dr16.read();
-        ref.read();
+        // read sensors
+        sensor_manager.read();
+        prof.print("buff");
+        // read CAN and DR16 -- These are kept out of sensor manager for safety reasons
+        can.read(); 
+        dr16.read(); 
         
 
         
@@ -197,8 +199,8 @@ int main() {
         dr16_pos_x += dr16.get_mouse_x() * 0.05 * delta;
         dr16_pos_y += dr16.get_mouse_y() * 0.05 * delta;
 
-        vtm_pos_x += ref.ref_data.kbm_interaction.mouse_speed_x * 0.05 * delta;
-        vtm_pos_y += ref.ref_data.kbm_interaction.mouse_speed_y * 0.05 * delta;
+        vtm_pos_x += ref->ref_data.kbm_interaction.mouse_speed_x * 0.05 * delta;
+        vtm_pos_y += ref->ref_data.kbm_interaction.mouse_speed_y * 0.05 * delta;
         
         float chassis_vel_x = 0;
         float chassis_vel_y = 0;
@@ -206,10 +208,10 @@ int main() {
         float chassis_pos_y = 0;
         if (config->governor_types[0] == 2) {   // if we should be controlling velocity
             chassis_vel_x = dr16.get_l_stick_y() * 5.4
-                + (-ref.ref_data.kbm_interaction.key_w + ref.ref_data.kbm_interaction.key_s) * 2.5
+                + (-ref->ref_data.kbm_interaction.key_w + ref->ref_data.kbm_interaction.key_s) * 2.5
                 + (-dr16.keys.w + dr16.keys.s) * 2.5;
             chassis_vel_y = -dr16.get_l_stick_x() * 5.4
-                + (ref.ref_data.kbm_interaction.key_d - ref.ref_data.kbm_interaction.key_a) * 2.5
+                + (ref->ref_data.kbm_interaction.key_d - ref->ref_data.kbm_interaction.key_a) * 2.5
                 + (dr16.keys.d - dr16.keys.a) * 2.5;
         } else if (config->governor_types[0] == 1) { // if we should be controlling position
             chassis_pos_x = dr16.get_l_stick_x() * 2 + pos_offset_x;
@@ -225,7 +227,7 @@ int main() {
             - dr16_pos_x
             - vtm_pos_x;
         float fly_wheel_target = (dr16.get_r_switch() == 1 || dr16.get_r_switch() == 3) ? 18 : 0; //m/s
-        float feeder_target = (((dr16.get_l_mouse_button() || ref.ref_data.kbm_interaction.button_left) && dr16.get_r_switch() != 2) || dr16.get_r_switch() == 1) ? 10 : 0;
+        float feeder_target = (((dr16.get_l_mouse_button() || ref->ref_data.kbm_interaction.button_left) && dr16.get_r_switch() != 2) || dr16.get_r_switch() == 1) ? 10 : 0;
 
         // set manual controls
         target_state[0][0] = chassis_pos_x;
@@ -259,10 +261,6 @@ int main() {
             }
             hive_toggle = true;
         }
-
-
-        // read sensors
-        sensor_manager.read();
 
         // override temp state if needed
         if (incoming->get_hive_override_request() == 1) {
@@ -309,7 +307,7 @@ int main() {
 
         // construct ref data packet
         uint8_t ref_data_raw[180] = { 0 };
-        ref.get_data_for_comms(ref_data_raw);
+        ref->get_data_for_comms(ref_data_raw);
 
         // set the outgoing packet
         outgoing->set_id((uint16_t)loopc);
