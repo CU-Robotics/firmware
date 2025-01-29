@@ -216,18 +216,18 @@ void balancing_test::observer(){
         slowdt /= 1000; // To second
         slowdalay_help = timenow;
 //----------------------------------------------------------Get theta_ll_dot and theta_lr_dot-------------------------------------------------------
-        o_data.theta_ll_dot = abs(o_data.theta_ll - o_data.theta_ll_old) > THETA_FILTER  ? (o_data.theta_ll - o_data.theta_ll_old) / slowdt : 0;
-        o_data.theta_ll_old = o_data.theta_ll;
-        o_data.theta_lr_dot = abs(o_data.theta_lr - o_data.theta_lr_old) > THETA_FILTER  ? (o_data.theta_lr - o_data.theta_lr_old) / slowdt : 0;
-        o_data.theta_lr_old = o_data.theta_lr;
+        o_data.theta_ll_dot = abs(o_data.theta_ll_avg - o_data.theta_ll_old) > THETA_FILTER  ? (o_data.theta_ll_avg - o_data.theta_ll_old) / slowdt : 0;
+        o_data.theta_ll_old = o_data.theta_ll_avg;
+        o_data.theta_lr_dot = abs(o_data.theta_lr_avg - o_data.theta_lr_old) > THETA_FILTER  ? (o_data.theta_lr_avg - o_data.theta_lr_old) / slowdt : 0;
+        o_data.theta_lr_old = o_data.theta_lr_avg;
 //-----------------------------------------------------------Get ll_ddot and lr_ddot-------------------------------------------------------------------
-        float ll_dot = abs(o_data.ll - o_data.ll_old) > LL_FILTER ? (o_data.ll - o_data.ll_old) / slowdt : 0;
-        o_data.ll_old = o_data.ll;
+        float ll_dot = abs(o_data.llaverage - o_data.ll_old) > LL_FILTER ? (o_data.llaverage - o_data.ll_old) / slowdt : 0;
+        o_data.ll_old = o_data.llaverage;
         o_data.ll_ddot = abs(ll_dot - o_data.ll_dot_old) > LL_FILTER ? (ll_dot - o_data.ll_dot_old) / slowdt : 0;
         o_data.ll_dot_old = ll_dot;
 
-        float lr_dot = abs(o_data.lr - o_data.lr_old) > LL_FILTER ? (o_data.lr - o_data.lr_old) / slowdt : 0;
-        o_data.lr_old = o_data.lr;
+        float lr_dot = abs(o_data.lraverage - o_data.lr_old) > LL_FILTER ? (o_data.lraverage - o_data.lr_old) / slowdt : 0;
+        o_data.lr_old = o_data.lraverage;
         o_data.lr_ddot = abs(lr_dot - o_data.lr_dot_old) > LL_FILTER ? (lr_dot - o_data.lr_dot_old) / slowdt : 0;
         o_data.lr_dot_old = lr_dot;
 
