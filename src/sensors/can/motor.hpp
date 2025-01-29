@@ -15,12 +15,12 @@ enum class MotorControllerType {
 };
 
 // Todo
-// enum class MotorType {
-//     NULL_MOTOR_TYPE = 0,
-//     GIM3505,
-//     GIM4310,
-//     GIM6010,
-// };
+enum class MotorType {
+    NULL_MOTOR_TYPE = 0,
+    GIM3505,
+    GIM4310,
+    GIM6010,
+};
 
 /// @brief Unified motor state
 struct MotorState {
@@ -47,10 +47,11 @@ public:
     /// @param gid The global ID, not the per-bus motor ID
     /// @param id The per-bus motor ID. This is 1-indexed 
     /// @param bus The CAN bus index/ID
-    Motor(MotorControllerType controller_type, uint32_t gid, uint32_t id, uint8_t bus)
-        : m_controller_type(controller_type), m_gid(gid), m_id(id), m_bus_id(bus) {}
+    /// @param motor_type The motor type, defaults to NULL_MOTOR_TYPE if not specified
+    Motor(MotorControllerType controller_type, uint32_t gid, uint32_t id, uint8_t bus, MotorType motor_type = MotorType::NULL_MOTOR_TYPE)
+        : m_controller_type(controller_type), m_gid(gid), m_id(id), m_bus_id(bus), m_motor_type(motor_type) { }
 
-    /// @brief Virtual destructor
+/// @brief Virtual destructor
     virtual ~Motor() { }
 
 public:
@@ -113,6 +114,9 @@ protected:
 
     /// @brief ID of the CAN bus
     uint8_t m_bus_id = 0;
+
+    /// @brief The motor type
+    MotorType m_motor_type = MotorType::NULL_MOTOR_TYPE;
 
     /// @brief The output CAN frame. To be sent to the motor
     CAN_message_t m_output;
