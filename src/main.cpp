@@ -4,8 +4,7 @@
 #include <memory>
 
 // #include "Dartcam.hpp"
-// #include "FlightController.hpp"
-// #include "IMU.hpp"
+#include "IMU.hpp"
 // #include "PIDController.hpp"
 #include "FlightController.hpp"
 #include "ServoController.hpp"
@@ -18,8 +17,6 @@ IMU imu;
 Dartcam dartcam;
 FlightController flightController(servoCont, imu, dartcam);
 
-// PWMServo fin;
-
 int main() {
   // setup
   Serial.begin(115200);
@@ -27,17 +24,17 @@ int main() {
 
   servoCont.init();
   imu.init();
-
-  flightController.set_control_mode(FIN_TEST);
   dartcam.init();
 
-  // fin.attach(5);
+  flightController.set_control_mode(FIN_TEST);
 
   // main loop
   Serial.println("Entering main loop");
 
   while (true) {
-    flightController.update();
+      
+    imu.print_data();
+    //flightController.update();
     // servoCont.set_all_servos(180, 180, 180, 180);
     // delay(1000);
     // servoCont.set_all_servos(0, 0, 0, 0);
