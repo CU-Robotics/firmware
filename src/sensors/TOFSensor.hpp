@@ -81,7 +81,6 @@ public:
     /// @note Returns the last read value if there is no new data to read
     void read() override {
         // variable to hold the results.
-        Serial.println("Reading TOF Sensor");
         VL53L4CD_Result_t results;
 
         // (Mandatory) interrupt to restart measurements.
@@ -91,6 +90,7 @@ public:
 
             // swap to the next operation (reading)
             should_read = !should_read;
+            return;
         }
 
         // get the results from the sensor, if there is no new data to read, it will automatically send the last read value.
