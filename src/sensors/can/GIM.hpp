@@ -22,24 +22,25 @@ public:
         
         switch(motor_type) {
             case MotorType::GIM3505: {
-                torque_constant = 0.52;
-                gear_ratio = 8.0; // 8:1
+                torque_constant = 0.52f;
+                gear_ratio = 8.0f; // 8:1
                 break;
             }
             case MotorType::GIM4310: {
-                torque_constant = 3,46;
-                gear_ratio = 36.0; // 36:1
+                torque_constant = 3.46f;
+                gear_ratio = 36.0f; // 36:1
                 break;
             }
             case MotorType::GIM6010: {
-                torque_constant = 0.47;
-                gear_ratio = 8.0; // 8:1
+                torque_constant = 0.47f;
+                gear_ratio = 8.0f; // 8:1
                 break;
             }
             case MotorType::GIM8108: {
                 // TODO: this motor has two versions and we need to know which one we have. 
                 // torque constant is either 1.83 or 0.96.
-                gear_ratio = 9.0; // 9:1
+                torque_constant = 0.0f;
+                gear_ratio = 9.0f; // 9:1
                 break;
             }
             default: {
@@ -53,10 +54,10 @@ public:
     ~GIM() override { }
 
     /// @brief The motor's gear ratio (determined by "motor_type" in the constructor)
-    double gear_ratio;
+    float gear_ratio;
 
     /// @brief The motor's torque constant in Nm/A (determined by "motor_type" in the constructor)
-    double torque_constant;
+    float torque_constant;
 
 public:
     /// @brief Initialize the motor by verifying it is on

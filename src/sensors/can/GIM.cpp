@@ -29,13 +29,12 @@ int GIM::read(CAN_message_t& msg) {
         float speed_float = (float)speed_int * 130.0f / 4095.0f - 65.0f;
         m_state.speed = speed_float;
 
-        // TODO
         // Torque: 12 bits = ST1[3:0] (low nibble) as high 4 bits, ST2 (byte 7) as low 8 bits
-        // uint16_t torque_int = ((uint16_t)(msg.buf[6] & 0x0F) << 8) | msg.buf[7];
-        // float torque_float =
-        //     (float)torque_int * (450.0f * TORQUE_CONSTANT * GEAR_RATIO) / 4095.0f
-        //     - (225.0f * TORQUE_CONSTANT * GEAR_RATIO);
-        // m_state.torque = torque_float;
+        uint16_t torque_int = ((uint16_t)(msg.buf[6] & 0x0F) << 8) | msg.buf[7];
+        float torque_float =
+            (float)torque_int * (450.0f * torque_constant * gear_ratio) / 4095.0f
+            - (225.0f * torque_constant * gear_ratio);
+        m_state.torque = torque_float;
 
     }
     // commands that don't return anything
