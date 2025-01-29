@@ -31,7 +31,7 @@ void IMU_filter::read(){
     _imu.world_alpha_pitch = _imu.alpha_pitch * cos(_imu.k_roll) - _imu.alpha_yaw * sin(_imu.k_roll);  
     _imu.world_alpha_yaw = _imu.alpha_pitch * (sin(_imu.k_roll)/cos(_imu.k_pitch)) + _imu.alpha_yaw * (cos(_imu.k_roll)/cos(_imu.k_pitch));
 
-    _imu.world_accel_X = -(_imu.accel_X * cos(_imu.k_pitch) + _imu.accel_Y * sin(_imu.k_pitch) * sin(_imu.k_roll) + _imu.accel_Z * sin(_imu.k_pitch) * cos(_imu.k_roll));
+    _imu.world_accel_X = (_imu.accel_X * cos(_imu.k_pitch) + _imu.accel_Y * sin(_imu.k_pitch) * sin(_imu.k_roll) + _imu.accel_Z * sin(_imu.k_pitch) * cos(_imu.k_roll)); // Seems like it gives wrong data sometimes. Should double check the rotation matrix
     _imu.world_accel_Y = _imu.accel_Y * cos(_imu.k_roll) - _imu.accel_Z * sin(_imu.k_roll); 
     _imu.world_accel_Z = - _imu.accel_X * sin(_imu.k_pitch) + _imu.accel_Y * cos(_imu.k_pitch) * sin(_imu.k_roll) + _imu.accel_Z * cos(_imu.k_pitch) * cos(_imu.k_roll) - SENSORS_GRAVITY_EARTH; 
     // Basic and simple filter to make Accel low pass
@@ -62,11 +62,6 @@ void IMU_filter::read(){
     P[1][1] = (1 - K[1][1]) * P[1][1];
     
 //----------------------------------------------------------------Calculate Acceleration to the world
-
-
-
-
-
 
     _imu.temperature = _icm.get_temperature();
 }

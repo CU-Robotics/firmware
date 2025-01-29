@@ -66,7 +66,7 @@ void balancing_test::init(){
     float tempK[4][10] = { //14cm
         {-0.3156, -0.6698, -0.2668, -0.1803, -4.2308, -0.5405, -1.9738, -0.2102, -3.4205, -0.5236}, 
         { -0.3156, -0.6698, 0.2668, 0.1803, -1.9738, -0.2102, -4.2308, -0.5405, -3.4205, -0.5236}, 
-        {0.0647, 0.1300, -0.9773, -0.7482, 6.0704, 0.7614, -6.3280, -0.6935, 221.9400, -7.2531}, 
+        {0.0647, 0.1300, -0.9773, -0.7482, 6.0704, 0.7614, -6.3280, -0.6935, -221.9400, -7.2531}, 
         {0.0647, 0.1300, 0.9773, 0.7482, -6.3280, -0.6935, 6.0704, 0.7614, -221.9400, -7.2531}
         };  
     memcpy(K,tempK,sizeof(tempK));
@@ -199,37 +199,47 @@ void balancing_test::observer(){
 
     o_data.theta_lr = (fmod((M_PI_2 + _data.imu_angle_pitch - phi0r + M_PI), (2 * M_PI)) - M_PI);
 
-//--------------------------------------------------------------b_s and filter for it-----------------------------------------
-    o_data.b_speed =  (1.0f/2) * (R_w) * (_data.speed_wr - _data.speed_wl)/M3508RATIO; // s_dot //speed
-
-
-    o_data.s += o_data.b_speed * _dt; 
-
-    o_data.b_accel = (o_data.b_speed - o_data.b_speed_old) / _dt; //s_ddot //acceleration
-    o_data.b_speed_old = o_data.b_speed;
-
-
-
     uint32_t timenow = micros();
     float slowdt = timenow - slowdalay_help;
     if(slowdt > 200){
         slowdalay_help = timenow;
 //----------------------------------------------------------Get theta_ll_dot and theta_lr_dot-------------------------------------------------------
-        o_data.theta_ll_dot = abs(o_data.theta_ll - o_data.theta_ll_old) > THETA_FILTER ? (o_data.theta_ll - o_data.theta_ll_old) / slowdt : 0;
+        o_data.theta_ll_dot = abs(o_data.theta_ll - o_data.theta_ll_old) > LL_FILTER ? (o_data.theta_ll - o_data.theta_ll_old) / slowdt : 0;
         o_data.theta_ll_old = o_data.theta_ll;
-        o_data.theta_lr_dot = abs(o_data.theta_lr - o_data.theta_lr_old) > THETA_FILTER || (o_data.theta_lr - o_data.theta_lr_old) > 0.0001 ? (o_data.theta_lr - o_data.theta_lr_old) / slowdt : 0;
+        o_data.theta_lr_dot = abs(o_data.theta_lr - o_data.theta_lr_old) > LL_FILTER ? (o_data.theta_lr - o_data.theta_lr_old) / slowdt : 0;
         o_data.theta_lr_old = o_data.theta_lr;
 //-----------------------------------------------------------Get ll_ddot and lr_ddot-------------------------------------------------------------------
-    float ll_dot = abs(o_data.ll - o_data.ll_old) > THETA_FILTER ? (o_data.ll - o_data.ll_old) / slowdt : 0;
-    o_data.ll_old = o_data.ll;
-    o_data.ll_ddot = abs(ll_dot - o_data.ll_dot_old) > THETA_FILTER ? (ll_dot - o_data.ll_dot_old) / slowdt : 0;
-    o_data.ll_dot_old = ll_dot;
+        float ll_dot = abs(o_data.ll - o_data.ll_old) > THETA_FILTER ? (o_data.ll - o_data.ll_old) / slowdt : 0;
+        o_data.ll_old = o_data.ll;
+        o_data.ll_ddot = abs(ll_dot - o_data.ll_dot_old) > THETA_FILTER ? (ll_dot - o_data.ll_dot_old) / slowdt : 0;
+        o_data.ll_dot_old = ll_dot;
 
-    float lr_dot = (o_data.lr - o_data.lr_old) / slowdt;
-    o_data.lr_old = o_data.lr;
-    o_data.lr_ddot = (lr_dot - o_data.lr_dot_old) / slowdt;
-    o_data.lr_dot_old = lr_dot;
+        float lr_dot = abs(o_data.lr - o_data.lr_old) > THETA_FILTER ? (o_data.lr - o_data.lr_old) / slowdt : 0;
+        o_data.lr_old = o_data.lr;
+        o_data.lr_ddot = abs(lr_dot - o_data.lr_dot_old) > THETA_FILTER ? (lr_dot - o_data.lr_dot_old) / slowdt : 0;
+        o_data.lr_dot_old = lr_dot;
     }
+//--------------------------------------------------------------b_s and filter for it--------------------------------------------------------
+    _data.speed_wl /= -M3508RATIO;
+    _data.speed_wr /= M3508RATIO;
+
+    o_data.b_speed =  (1.0f/2) * (R_w) * (_data.speed_wr + _data.speed_wl); // s_dot //speed
+
+//-------------------------------------------Kalman filter combines imu data and wheel data for real_speed-------------------------------------
+    float alpha1 = min(abs(0.3/o_data.b_speed), 1.0f) * 0.5; // 1st filter for using wheel data more when low speed
+    o_data.imu_speed_x =  (alpha1 * o_data.b_speed) + ((1 - alpha1) * o_data.imu_speed_x); 
+    
+    float alpha = min((0.1 / ((abs(o_data.imu_speed_x) - abs(o_data.b_speed)))), 1.0f) * 0.005; // 2nd filter for using more imu data when both data's difference huge
+    o_data.imu_speed_x =  (alpha * o_data.b_speed) + ((1 - alpha) * o_data.imu_speed_x);
+
+    o_data.imu_speed_x += abs(_data.imu_accel_x) > 0.08 && abs(_data.imu_accel_x) < 1 ? _data.imu_accel_x * _dt : 0; // Not sure why but imu sometimes give crazy data
+
+    o_data.s += o_data.b_speed * _dt; 
+    o_data.imu_s += o_data.imu_speed_x * _dt;
+    
+    o_data.b_accel = (o_data.b_speed - o_data.b_speed_old) / _dt; //s_ddot //acceleration
+    o_data.b_speed_old = o_data.b_speed;
+
     return;
 }
 
@@ -263,11 +273,18 @@ void balancing_test::control_position(){
     
 //---------------------------------------------------------------The NormalF Left------------------------------------------------------------------------
     float F_whl = F_bll * costheta_l + m_l * ( G_CONSTANT + _data.imu_accel_z - (1-eta_l) * o_data.ll_ddot * costheta_l);
+
 //----------------------------------------------------------------The NormalF Right----------------------------------------------------------------------- 
     float F_whr = F_blr * costheta_r + m_l * ( G_CONSTANT + _data.imu_accel_z - (1-eta_l) * o_data.lr_ddot * costheta_r);
 
+
+    Serial.print("F_whl: ");
+    Serial.printf("%E", F_whl);
+    Serial.print("F_whr: ");
+    Serial.printf("%E", F_whr);
+    Serial.printf("\n");
     // do nothing check
-    if(F_whl < F_WH_OUTPUT_LIMIT_NUM && F_whr < F_WH_OUTPUT_LIMIT_NUM)
+    if(F_whl > F_WH_OUTPUT_LIMIT_NUM && F_whr > F_WH_OUTPUT_LIMIT_NUM)
         return;
 
 //---------------------------------------------------------------locomotion_controller--------------------------------------------------------------------------
@@ -297,7 +314,7 @@ void balancing_test::control_position(){
 
     for(int i = 0; i < 10; i++){
         _write.torque_wl += K[0][i] * dx[i];
-        _write.torque_wr += K[1][i] * dx[i];
+        _write.torque_wr -= K[1][i] * dx[i];
         T_bll += K[2][i] * dx[i];
         T_blr += K[3][i] * dx[i];
     } 
@@ -309,7 +326,11 @@ void balancing_test::control_position(){
     // if(output[T_LWR_OUTPUT_NUM] > WHEEL_UPPER_LIMIT) output[T_LWR_OUTPUT_NUM] = WHEEL_UPPER_LIMIT;
     //     else if(output[T_LWR_OUTPUT_NUM] < WHEEL_LOWER_LIMIT) output[T_LWR_OUTPUT_NUM] = WHEEL_LOWER_LIMIT;
 
-
+    Serial.print("T_bll: ");
+    Serial.printf("%E", T_bll);
+    Serial.print("T_blr: ");
+    Serial.printf("%E", T_blr);
+    Serial.printf("\n");
 
     //2x2 * 2x1 
     // jl[a][b]   *   F_bll
@@ -317,14 +338,14 @@ void balancing_test::control_position(){
     // = [af + bt]
     //   [cf + dt]
 //--------------------------------------------------------------Left side force---------------------------------------------------------------------------------
-    if(F_whl >= F_WH_OUTPUT_LIMIT_NUM){
+    if(F_whl <= F_WH_OUTPUT_LIMIT_NUM){
         _write.torque_fl = o_data.jl[0][0] * F_bll + o_data.jl[0][1] * T_bll;
         _write.torque_bl = o_data.jl[1][0] * F_bll + o_data.jl[1][1] * T_bll;
     }else{
         _write.torque_wl = 0;
     }
 //-----------------------------------------------------------Right side check force------------------------------------------------------------------------------
-    if(F_whr >= F_WH_OUTPUT_LIMIT_NUM){
+    if(F_whr <= F_WH_OUTPUT_LIMIT_NUM){
         _write.torque_fr = o_data.jr[0][0] * F_blr + o_data.jr[0][1] * T_blr;
         _write.torque_br = o_data.jr[1][0] * F_blr + o_data.jr[1][1] * T_blr;
     }else{
@@ -334,12 +355,12 @@ void balancing_test::control_position(){
     // float temp = _write.torque_fr;
     // _write.torque_fr = _write.torque_br; 
     // _write.torque_br = temp;
-    float temp = _write.torque_fl;
-    _write.torque_fl = _write.torque_bl; 
-    _write.torque_bl = temp;
+    // float temp = _write.torque_fl;
+    // _write.torque_fl = _write.torque_bl; 
+    // _write.torque_bl = temp;
     
     _write.torque_wl /= 5.0;
-    _write.torque_wr /= -5.0;
+    _write.torque_wr /= 5.0;
 
     _write.torque_fl /= -37.0;
     if(_write.torque_fl > MGlimit)
@@ -353,13 +374,13 @@ void balancing_test::control_position(){
     if(_write.torque_bl < -MGlimit)
     _write.torque_bl = -MGlimit;
 
-    _write.torque_fr /= -37.0;
+    _write.torque_fr /= 37.0;
     if(_write.torque_fr > MGlimit)
     _write.torque_fr = MGlimit;
     if(_write.torque_fr < -MGlimit)
     _write.torque_fr = -MGlimit;
 
-    _write.torque_br /= -37.0;
+    _write.torque_br /= 37.0;
     if(_write.torque_br > MGlimit)
     _write.torque_br = MGlimit;
     if(_write.torque_br < -MGlimit)
@@ -483,15 +504,15 @@ return;
 write_data balancing_test::getwrite(){
 
 //-----------------------------------------------------------Safety limit--------------------------------------------------------------------
-    // if(o_data.theta_ll > 0.6 || o_data.theta_ll < -0.6 || o_data.theta_lr > 0.6 || o_data.theta_ll < -0.6){
-    //     _write.torque_fl = 0;
-    //     _write.torque_bl = 0;
-    //     _write.torque_wl = 0;
-    //     _write.torque_fl = 0;
-    //     _write.torque_bl = 0;
-    //     _write.torque_wl = 0;
-    //     saftymode = true;
-    // }
+    if(o_data.theta_ll > 0.6 || o_data.theta_ll < -0.6 || o_data.theta_lr > 0.6 || o_data.theta_ll < -0.6){
+        _write.torque_fl = 0;
+        _write.torque_bl = 0;
+        _write.torque_wl = 0;
+        _write.torque_fl = 0;
+        _write.torque_bl = 0;
+        _write.torque_wl = 0;
+        saftymode = true;
+    }
     return _write;
 }
 
@@ -532,10 +553,18 @@ void balancing_test::print_observer(){
     Serial.println(o_data.yaw_dot);
     Serial.print("yaw_ddot: ");
     Serial.println(o_data.yaw_ddot);
+    Serial.print("speed_wl ");
+    Serial.println(_data.speed_wl);
+    Serial.print("speed_wr ");
+    Serial.println(_data.speed_wr);
     Serial.print("s: ");
     Serial.println(o_data.s);
     Serial.print("b_speed: ");
     Serial.println(o_data.b_speed);
+    Serial.print("imu_s: ");
+    Serial.println(o_data.imu_s);
+    Serial.print("imu_speed: ");
+    Serial.println(o_data.imu_speed_x);
     Serial.print("b_accel: ");
     Serial.println(o_data.b_accel);
     Serial.print("ll: ");

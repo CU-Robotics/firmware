@@ -30,12 +30,13 @@
 #define l_l 0.252   // test
 #define R_w 0.05   // test
 #define M3508RATIO 19
-#define THETA_FILTER 0.0004
+#define LL_FILTER 0.00001
+#define THETA_FILTER 0.0005
 /**controller constants */
 #define G_CONSTANT 9.80665f
 #define BOUND true                              // 1 to -1                      
 #define WARP true                               // 360 degree 
-#define F_WH_OUTPUT_LIMIT_NUM 20
+#define F_WH_OUTPUT_LIMIT_NUM 10000000000
 #define MGlimit 1
 struct balancing_sensor_data
 {
@@ -57,6 +58,7 @@ struct balancing_sensor_data
     float imu_accel_x;
     float imu_accel_y;
     float imu_accel_z;
+
     float gyro_pitch;
     float gyro_roll;
     float gyro_yew;
@@ -79,6 +81,8 @@ struct observer_data
     float yaw_dot;
     float yaw_ddot;
     float b_speed;
+    float imu_speed_x;
+    float imu_s;
     float b_accel;
     float ll;
     float lr;

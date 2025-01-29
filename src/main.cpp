@@ -119,20 +119,9 @@ int main() {
         can.write_motor_torque(1,test_control.getwrite().torque_fl);
         can.write_motor_torque(2,test_control.getwrite().torque_bl);
         can.write_motor_torque(3,test_control.getwrite().torque_br);
-        // can.write_motor_torque(0,-0.02);
-        // can.write_motor_torque(1,0.02);
-        // can.write_motor_torque(2,-0.02);
-        // can.write_motor_torque(3, 0.02);
-        
         can.write_motor_torque(4,test_control.getwrite().torque_wl);
         can.write_motor_torque(5,test_control.getwrite().torque_wr);
 
-        //can.write_motor_torque(3,-0.05);
-        // can.write_motor_torque(0,0.05);
-        
-        // can.write_motor_torque(2,0.05);
-        // can.write_motor_torque(1,-0.05);
-        // can.write_motor_torque(5, 0.1);
         // can.print_state();
         test_control.print_observer();
         test_control.printdata();
