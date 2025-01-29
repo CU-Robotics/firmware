@@ -208,7 +208,7 @@ void balancing_test::observer(){
 
     uint32_t timenow = micros();
     float slowdt = timenow - slowdalay_help;
-    if(slowdt > 20){
+    if(slowdt > 20 || slowdt < -100){
         o_data.llaverage /= o_data.avg_count;
         o_data.lraverage /= o_data.avg_count;
         o_data.theta_ll_avg /= o_data.avg_count;
