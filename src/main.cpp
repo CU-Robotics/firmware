@@ -8,6 +8,7 @@
 // #include "PIDController.hpp"
 #include "FlightController.hpp"
 #include "ServoController.hpp"
+#include "usb_serial.h"
 // #include "profiler.hpp"
 
 // Profiler prof;
@@ -26,21 +27,22 @@ int main() {
   imu.init();
   dartcam.init();
 
-  flightController.set_control_mode(FIN_TEST);
+  Serial.println("Entering fliight control mode: TEST_GYRO_LEVEL");
+  flightController.set_control_mode(TEST_GYRO_LEVEL);
 
   // main loop
   Serial.println("Entering main loop");
 
   while (true) {
-      
-    imu.print_data();
-    //flightController.update();
-    // servoCont.set_all_servos(180, 180, 180, 180);
-    // delay(1000);
-    // servoCont.set_all_servos(0, 0, 0, 0);
-    // delay(1000);
-    //  flightController.update();
-    //  flightController.set_control_mode(FIN_TEST);
+
+    // imu.print_data();
+    flightController.update();
+    //  servoCont.set_all_servos(180, 180, 180, 180);
+    //  delay(1000);
+    //  servoCont.set_all_servos(0, 0, 0, 0);
+    //  delay(1000);
+    //   flightController.update();
+    //   flightController.set_control_mode(FIN_TEST);
 
     // fin.write(180);
     // delay(2000);
