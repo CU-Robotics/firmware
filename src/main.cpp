@@ -18,6 +18,10 @@ IMU imu;
 Dartcam dartcam;
 FlightController flightController(servoCont, imu, dartcam);
 
+// commet this out to use production main
+#define CHOOSE_TEST_MAIN
+
+#ifdef CHOOSE_TEST_MAIN
 int main() {
   // setup
   Serial.begin(115200);
@@ -69,6 +73,51 @@ int main() {
     */
   }
 }
+
+#else
+
+int main() {
+  // setup
+  Serial.begin(115200);
+  debug.begin(SerialUSB1);
+
+  Serial.println("Starting systems...");
+  servoCont.init();
+  imu.init();
+  dartcam.init();
+
+  // TODO find a better way to controll states?
+  bool rail = true;
+  bool level = false;
+  bool guided = false;
+  bool grounded = false;
+
+  Serial.println("Entering flight control mode: RAIL");
+  // flightController.set_control_mode(RAIL);
+  while (rail) {
+    flightController.update();
+  }
+
+  level = true;
+  flightController.set_control_mode(TEST_GYRO_LEVEL);
+  while (level) {
+    flightController.update();
+  }
+
+  guided = true;
+  flightController.set_control_mode(GUIDED);
+  while (guided) {
+    flightController.update();
+  }
+
+  grounded = true;
+  // flightController.set_control_mode(GROUNDED);
+  while (grounded) {
+    flightController.update();
+  }
+}
+
+#endif
 
 /* frame over serial for converting into image
 int main() {
