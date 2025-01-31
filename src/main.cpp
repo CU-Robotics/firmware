@@ -12,6 +12,7 @@
 #include "sensors/LEDBoard.hpp"
 #include "data_packet.hpp"
 #include "comms/comms_layer.hpp"
+#include "comms/data/comms_data.hpp"
 #include "sensor_constants.hpp"
 
 // Loop constants
@@ -162,6 +163,7 @@ int main() {
         comms_layer.loop();
         // TODO: later when we receive more important data over Ethernet, do more with comms_layer incoming/outgoing data
         // probably define this with EthernetPayload/HIDPayload in main, instead of incoming/outgoing data in the object itself
+        
         
 
         // check whether this packet is a config packet

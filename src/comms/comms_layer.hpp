@@ -1,8 +1,7 @@
 #pragma once
 
 #include "ethernet_comms.hpp"
-#include "data/firmware_data.hpp"
-#include "data/hive_data.hpp"
+#include "data/comms_data.hpp"
 
 #define MAX_ETHERNET_PACKETS 128        // TODO: stop making up numbers
 
@@ -43,6 +42,7 @@ private:
     // data outgoing to be sent over a particular medium, TODO make this a multi-layer queue
     CommsData* data_outgoing_ethernet;
     CommsData* data_outgoing_HID;
+
 
     // sequence number
     uint32_t sequence;

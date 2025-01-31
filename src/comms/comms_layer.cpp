@@ -1,7 +1,5 @@
 #include "comms_layer.hpp"
 
-#include "config_layer.hpp" 
-
 namespace Comms {
 
 
@@ -26,28 +24,16 @@ int CommsLayer::init() {
 
 int CommsLayer::loop() {
     Ethernet.loop();
-
-    // EthernetPacket* p_incoming = Ethernet.get_incoming_packet();   
-    // EthernetPacket* p_outgoing = Ethernet.get_outgoing_packet();
     
     return 0;
 }
 
 void CommsLayer::send(CommsData* data, PhysicalMedium medium) {
-    switch(medium) {
-    case PhysicalMedium::Ethernet:
-        data_outgoing_ethernet = data;
-        break;
-    case PhysicalMedium::HID:
-        data_outgoing_HID = data;
-        break;
-    }
-    return;
+    
 }
 
 HiveData CommsLayer::receive(PhysicalMedium medium) {
-
-
+    // todo rest of this
     return HiveData();
 }
 
@@ -56,6 +42,7 @@ HiveData CommsLayer::receive(PhysicalMedium medium) {
 //
 // CommsLayer PRIVATE definitions
 //
+
 
 
 
