@@ -7,19 +7,7 @@
 #define MAX_ETHERNET_PACKETS 128        // TODO: stop making up numbers
 
 
-// purpose: translation between data structs and byte streams for transmission over physical layers (Ethernet)
-
 namespace Comms {
-
-// array of ethernet packets for combined transmission
-struct EthernetPackage {
-    EthernetPackage();
-    EthernetPacket packets[MAX_ETHERNET_PACKETS];
-    uint8_t num_packets;
-
-    // these types are shared among all packets
-    EthernetPacketFlags flag;
-};
 
 class CommsLayer {
 public:
@@ -39,39 +27,27 @@ private:
 public:
 // - data I/O functions
 
-    // take data, convert it into ethernet compatible form (packet sequence)
-    // EthernetPayload will incorporate the (optional) given data_type and data_flag, passing them through
-    // to the packet headers individually
-    EthernetPackage encode(FirmwareData data, int data_type = DATA, int data_flag = NORMAL);
+    // give CommsLayer a piece of data to send out
+    void send(CommsData* data, PhysicalMedium medium);
 
-    // take ethernet packet sequence, convert it into FirmwareData
-    HiveData decode(EthernetPackage payload);
-
-    // transmit a given EthernetPackage
-    int transmit(EthernetPackage payload);
-
-    // receive an EthernetPackage
-    // nullptr if failed, else success
-    EthernetPackage receive();
-
-public:
-// - purpose-built comms functions for complex use cases
-
-    // config functions:
-
-    // send full configuration packet over Ethernet, returns < 0 on failure, 0 on success
-    int teensy_configure();
+    // pull a piece of data that CommsLayer is ready to provide
+    HiveData receive(PhysicalMedium medium);
+    
 
 private:
 
-    // constructs a packet based on input data
-    EthernetPacket construct_packet(uint8_t* bytes, uint16_t payload_size, uint8_t type, uint8_t flag);
+    // data incoming to be output, TODO make this a queue so we can store many data packets! (or probably a LL)
+    CommsData* data_incoming_ethernet;
+    CommsData* data_incoming_HID;
 
-    // construct a packet to determine EOT
-    EthernetPacket construct_EOT_packet();
+    // data outgoing to be sent over a particular medium, TODO make this a multi-layer queue
+    CommsData* data_outgoing_ethernet;
+    CommsData* data_outgoing_HID;
 
-    // number of packets sent in total
-    uint16_t sequence;
+    // sequence number
+    uint32_t sequence;
+
+    
 };
 
 } // namespace Comms

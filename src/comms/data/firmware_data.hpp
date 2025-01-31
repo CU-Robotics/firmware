@@ -10,14 +10,7 @@
 namespace Comms {
 
 struct FirmwareData : public CommsData {
-    FirmwareData() {
-        data_header = DataType::FirmwareInfo;   // always want firmware to specify its data header by default
-    }
-    struct SensorsData {
-        struct LidarStuff;
-        struct IMUStuff;
-    } sensors_data;
-    RobotState estimated_state;
+    // TODO: define structs for firmware outgoing data
 };
 
 } // namespace Comms

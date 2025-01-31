@@ -5,7 +5,7 @@
 
 namespace Comms {
 
-struct HiveData : public CommsData {
+struct HiveData{
     ConfigData config_data;
     RobotState target_state;
     RobotState override_state;
