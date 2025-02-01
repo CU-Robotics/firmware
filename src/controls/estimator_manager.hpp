@@ -61,6 +61,7 @@ public:
     /// @brief initialize all sensors and set can_data pointer
     /// @param can_data reference struct storing all of can data so we dont have to pass rm_can around
     /// @param config_data read only reference struct storing all the config data
+    /// @param sensor_manager pointer to the sensor manager to read sensor data
     void init(CANData* can_data, const Config* config_data, SensorManager* sensor_manager);
 
     /// @brief Steps through every estimator and constructs a state array based on current sensor values.

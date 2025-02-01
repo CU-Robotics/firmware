@@ -24,6 +24,8 @@
 /// @brief Class to manage sensors on the robot
 class SensorManager {
 public:
+    /// @brief Array to store all sensors
+    /// @note This array not being used
     Sensor* sensors[MAX_SENSORS];
 
     /// @brief Constructor for the SensorManager class
