@@ -14,6 +14,7 @@ enum class TypeLabel : uint8_t {
     NONE = 0x00,
     TargetState = 0x11,
     OverrideState = 0x22,
+    LoggingData = 0x33,
     // TODO rest of types for final data structs
 };
 
@@ -31,17 +32,8 @@ enum class Priority : uint8_t {
 /// @brief base class for all data structs that want to be sent over comms.
 struct CommsData {
 public:
-    CommsData(TypeLabel type_label, PhysicalMedium physical_medium, Priority priority, uint16_t size) {
-        this->type_label = type_label;
-        this->physical_medium = physical_medium;
-        this->priority = priority;
-        this->size = size;
-    }
-
     uint16_t size;
     TypeLabel type_label;
-
-    PhysicalMedium physical_medium;
     Priority priority;
 };
 
@@ -74,12 +66,15 @@ struct ConfigData {
 
 struct FirmwareData : public CommsData {
     // TODO: define structs for firmware outgoing data
+    char my_str[128];
 };
 
-struct HiveData{
+struct HiveData : public CommsData {
     ConfigData config_data;
     RobotState target_state;
     RobotState override_state;
+
+    char my_str[128];
 };
 
 } // namespace Comms
