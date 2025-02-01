@@ -82,7 +82,7 @@ void print_logo() {
 
 // Master loop
 int main() {
-    long long loopc = 0; // Loop counter for heartbeat
+    uint32_t loopc = 0; // Loop counter for heartbeat
 
     Serial.begin(115200); // the serial monitor is actually always active (for debug use Serial.println & tycmd)
     debug.begin(SerialUSB1);
@@ -130,7 +130,6 @@ int main() {
 
     //generate controller outputs based on governed references and estimated state
     controller_manager.init(&can, config);
-
 
     //set reference limits in the reference governor
     governor.set_reference_limits(config->set_reference_limits);
@@ -253,6 +252,7 @@ int main() {
                 hive_toggle = false;
             }
         }
+
         // when in teensy control mode reset hive toggle
         if (dr16.get_l_switch() == 3) {
             if (!hive_toggle) {
@@ -268,10 +268,8 @@ int main() {
             memcpy(temp_state, hive_state_offset, sizeof(hive_state_offset));
         }
 
-
         // step estimates and construct estimated state
         estimator_manager.step(temp_state, temp_micro_state, incoming->get_hive_override_request());
-
 
         // if first loop set target state to estimated state
         if (count_one == 0) {
@@ -285,12 +283,8 @@ int main() {
         governor.step_reference(target_state, config->governor_types);
         governor.get_reference(temp_reference);
 
-        // Serial.printf("yaw ref: %f, pitch ref: %f\n", temp_reference[3][0], temp_reference[4][0]);
-
-
         // generate motor outputs from controls
         controller_manager.step(temp_reference, temp_state, temp_micro_state);
-
 
         // construct sensor data packet
         SensorData sensor_data;
@@ -316,19 +310,23 @@ int main() {
         outgoing->set_sensor_data(&sensor_data);
         outgoing->set_ref_data(ref_data_raw);
         outgoing->set_estimated_state(temp_state);
+      
+        bool is_slow_loop = false;
 
-
+        // check whether this was a slow loop or not
+	    float dt = stall_timer.delta();
+        if (dt > 0.002) { 
+            // zero the can bus just in case
+	    	can.zero();
+		
+	    	Serial.printf("Slow loop with dt: %f\n", dt);
+            // mark this as a slow loop to trigger safety mode
+	    	is_slow_loop = true;
+	    }
         
-        
-
-
-
-
-
-
 
         //  SAFETY MODE
-        if (dr16.is_connected() && (dr16.get_l_switch() == 2 || dr16.get_l_switch() == 3) && config_layer.is_configured()) {
+        if (dr16.is_connected() && (dr16.get_l_switch() == 2 || dr16.get_l_switch() == 3) && config_layer.is_configured() && !is_slow_loop) {
             // SAFETY OFF
             can.write();
         } else {
@@ -343,8 +341,6 @@ int main() {
 
         // Keep the loop running at the desired rate
         loop_timer.delay_micros((int)(1E6 / (float)(LOOP_FREQ)));
-        float dt = stall_timer.delta();
-        if (dt > 0.002) Serial.printf("Slow loop with dt: %f\n", dt);
     }
     
     return 0;
