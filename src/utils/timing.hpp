@@ -3,83 +3,28 @@
 
 #include <Arduino.h>
 
-// Some generic converters
-#define MS_TO_US(ms) 	(ms * 1000)
-#define MS_TO_NS(ms) 	(ms * 1000000)
-#define US_TO_NS(us) 	(us * 1000)
-#define US_TO_MS(us) 	(us / 1000)
-#define NS_TO_US(ns) 	(ns / 1000)
-#define NS_TO_MS(ns) 	(ns / 1000000)
+// Time conversion helpers
+#define NS_TO_US(ns)    (ns / 1e3f)
+#define NS_TO_MS(ns)    (ns / 1e6f)
+#define NS_TO_S(ns)     (ns / 1e9f)
 
-// pass ARM_DWT_CYCNT to this to get the timing down to nanoseconds
-#define CYCLES_TO_S(cycles)   (CYCCNT_OVERFLOW(cycles)*(F_CPU))
-#define CYCLES_TO_MS(cycles)  (CYCCNT_OVERFLOW(cycles)*(1E3/F_CPU))
-#define CYCLES_TO_US(cycles)  (CYCCNT_OVERFLOW(cycles)*(1E6/F_CPU))
-#define CYCLES_TO_NS(cycles)  (CYCCNT_OVERFLOW(cycles)*(1E9/F_CPU))
+#define US_TO_NS(us)    (us * 1e3f)
+#define US_TO_MS(us)    (us / 1e3f)
+#define US_TO_S(us)     (us / 1e6f)
 
-// Get time duration from two cycle counts
-#define DURATION_S(cyccnt1, cyccnt2)  (CYCLES_TO_S(cyccnt2 - cyccnt1))
-#define DURATION_MS(cyccnt1, cyccnt2) (CYCLES_TO_MS(cyccnt2 - cyccnt1))
-#define DURATION_US(cyccnt1, cyccnt2) (CYCLES_TO_US(cyccnt2 - cyccnt1))
-#define DURATION_NS(cyccnt1, cyccnt2) (CYCLES_TO_NS(cyccnt2 - cyccnt1))
+#define MS_TO_S(ms)     (ms / 1e3f)
+#define MS_TO_US(ms)    (ms * 1e3f)
+#define MS_TO_NS(ms)    (ms * 1e6f)
 
-// Accounts for overflow
-#define UINT_MAX 4294967295
-#define CYCCNT_OVERFLOW(duration) (duration > UINT_MAX*0.25 ? UINT_MAX-duration : duration)
-
-// Timer
-// + start()
-// + delay_millis(uint32_t duration)
-// + delay_micros(uint32_t duration)
-// + delta()
-// + delta_millis()
-// + delta_micros()
-
-// /// @brief Timing object with blocking capability
-// struct Timer {
-//     /// @brief start time
-//     uint32_t t = ARM_DWT_CYCCNT;
-
-//     /// @brief Start time
-//     void start_timer() { t = ARM_DWT_CYCCNT; }
-
-//     /// @brief Helper to pause for a duration. Duration starts
-//     /// @param duration microseconds to wait (from when any other timing function was called)
-//     void delay_micros(uint32_t duration) {
-//         while (DURATION_US(t, ARM_DWT_CYCCNT) < duration) {}
-//         start_timer();
-//     }
-
-//     /// @brief Helper to pause for a duration. Duration starts when startTimer() is called.
-//     /// @param duration milliseconds to wait (from when any other timing function was called)
-//     void delay_millis(uint32_t duration) {
-//         while (DURATION_MS(t, ARM_DWT_CYCCNT) < duration) {}
-//         start_timer();
-//     }
-
-//     /// @brief delta of clock
-//     /// @return deltaTime: (float) The time since the last delta call.
-//     float delta() {
-//         float delta = DURATION_US(t, ARM_DWT_CYCCNT) / (float)(1E6);
-//         start_timer();
-//         return delta;
-//     }
-
-//     /// @brief delta of clock in microseconds
-//     /// @return deltaTime: (float) The time since the last delta call.
-//     float delta_micros() {
-//         float delta = DURATION_US(t, ARM_DWT_CYCCNT);
-//         start_timer();
-//         return delta;
-//     }
-// };
-
-
+#define S_TO_MS(s)      (s * 1e3f)
+#define S_TO_US(s)      (s * 1e6f)
+#define S_TO_NS(s)      (s * 1e9f)
 
 struct Timer {
     /// @brief Last recorded time, used in duration calculations
     uint32_t start_time = micros();
 
+    /// @brief Default constructor, starts the timer
     Timer() { start(); }
 
     /// @brief Start the timer from the current time
@@ -104,7 +49,7 @@ struct Timer {
     /// @note Other calls like delay will cause this function to return the delta since that call
     /// @return The delta in s since last timer method call
     float delta() {
-        float delta = get_elapsed() / 1e6f;    // time in s since last start() call
+        float delta = US_TO_S(get_elapsed());    // time in s since last start() call
         start();    // restart the timer for next run
         return delta;
     }
@@ -122,7 +67,7 @@ struct Timer {
     /// @note Other calls like delay will cause this function to return the delta since that call
     /// @return The delta in ms since last timer method call
     float delta_millis() {
-        float delta = get_elapsed() / 1e3f;  // time in ms since last start() call
+        float delta = US_TO_MS(get_elapsed());  // time in ms since last start() call
         start();    // restart the timer for next run
         return delta;
     }

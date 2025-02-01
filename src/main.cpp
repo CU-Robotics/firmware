@@ -33,10 +33,6 @@ ConfigLayer config_layer;
 
 Profiler prof;
 
-Timer loop_timer;
-Timer stall_timer;
-Timer control_input_timer;
-
 EstimatorManager estimator_manager;
 ControllerManager controller_manager;
 
@@ -137,6 +133,10 @@ int main() {
 
     // whether we are in hive mode or not
     bool hive_toggle = false;
+
+    Timer loop_timer;
+    Timer stall_timer;
+    Timer control_input_timer;
 
     Serial.println("Entering main loop...\n");
 
