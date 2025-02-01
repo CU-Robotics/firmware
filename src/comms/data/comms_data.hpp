@@ -11,10 +11,18 @@
 namespace Comms {
 
 enum class TypeLabel : uint8_t {
+    // default type
     NONE = 0x00,
+
+    // Hive types
     TargetState = 0x11,
     OverrideState = 0x22,
     LoggingData = 0x33,
+    ExampleHive = 0x44,
+
+    // Firmware types
+    ExampleFW = 0x55,
+
     // TODO rest of types for final data structs
 };
 
@@ -64,17 +72,45 @@ struct ConfigData {
     float governor_types[STATE_LEN];
 };
 
-struct FirmwareData : public CommsData {
-    // TODO: define structs for firmware outgoing data
+// Firmware struct types
+
+struct FirmwareString : public CommsData {
+    FirmwareString() {
+        type_label = TypeLabel::ExampleFW;
+        size = sizeof(FirmwareString);
+        priority = Priority::Medium;
+        memset(my_str, 0, 128);
+    }
     char my_str[128];
 };
 
-struct HiveData : public CommsData {
+
+
+// Hive struct types
+
+struct HiveString : public CommsData {
+    HiveString() {
+        type_label = TypeLabel::ExampleHive;
+        size = sizeof(HiveString);
+        priority = Priority::Medium;
+        memset(my_str, 0, 128);
+    }
+    char my_str[128];
+};
+
+
+// Megastruct defs
+struct FirmwareData {
+    // TODO: define structs for firmware outgoing data
+    FirmwareString fw_str;
+};
+
+struct HiveData  {
     ConfigData config_data;
     RobotState target_state;
     RobotState override_state;
 
-    char my_str[128];
+    HiveString hive_str;
 };
 
 } // namespace Comms

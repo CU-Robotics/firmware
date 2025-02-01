@@ -29,32 +29,27 @@ int CommsLayer::loop() {
 
 
     // give Ethernet loop outgoing data,
-    *eth_outgoing_ptr = encode(data_outgoing_ethernet, PhysicalMedium::Ethernet);
+    *eth_outgoing_ptr = encode(data_outgoing_ethernet);
     
     // run Ethernet loop,
     Ethernet.loop();
 
     // and get incoming data from Ethernet loop
-    data_incoming_ethernet = decode(*eth_incoming_ptr, PhysicalMedium::Ethernet);
+    data_incoming_ethernet = decode(*eth_incoming_ptr);
 
     return 0;
 }
 
 void CommsLayer::send(CommsData&& data, PhysicalMedium medium) {
+    // passthrough with rvalue to main send
     send(data, medium);
 }
 
 void CommsLayer::send(CommsData& data, PhysicalMedium medium) {
-    // TODO: FirmwareData is not an atomic data structure, 
-    // but we treat it as such for now
-
     data_outgoing_ethernet = &data;
 }
 
 HiveData CommsLayer::receive(PhysicalMedium medium) {
-    // TODO: HiveData needs to pull blocks out of the queue and reconstruct them,
-    // but for now we treat HiveData as an atomic data structure
-
     return data_incoming_ethernet;
 }
 
@@ -65,20 +60,34 @@ HiveData CommsLayer::receive(PhysicalMedium medium) {
 //
 
 
-EthernetPacket CommsLayer::encode(CommsData *source_data, PhysicalMedium medium) {
+EthernetPacket CommsLayer::encode(CommsData *source_data) {
+    
     // encode the CommsData found at data_outgoing_ethernet
     EthernetPacket retval;
 
-    // we are literally just going to memcpy into retval
+    // we don't really care what kind of data source_data is,
+    // we just need its size
     retval.header.payload_size = source_data->size;
+    if(source_data->priority == Priority::High) retval.header.flags = EthernetPacketType::PRIORITY; // set priority if appropriate
     memcpy(retval.payload.data, source_data, source_data->size);
 
     return retval;
 }
 
-HiveData CommsLayer::decode(EthernetPacket source_packet, PhysicalMedium medium) {
+HiveData CommsLayer::decode(EthernetPacket source_packet) {
     // decode the EthernetPacket found at data_incoming_ethernet
-    return HiveData();
+    HiveData retval;
+    
+    // construct a CommsData object to test for source_packet payload properties
+    CommsData test_data;
+    memcpy(&test_data, source_packet.payload.data, sizeof(CommsData));
+
+    // figure out what we just pulled from source_packet
+    if(test_data.type_label == TypeLabel::ExampleHive){
+        memcpy(retval.hive_str.my_str, source_packet.payload.data, sizeof(HiveString));
+    }
+
+    return retval;
 }
 
 

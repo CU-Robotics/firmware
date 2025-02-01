@@ -163,13 +163,16 @@ int main() {
         comms_layer.loop();
         // TODO: later when we receive more important data over Ethernet, do more with comms_layer incoming/outgoing data
         // probably define this with EthernetPayload/HIDPayload in main, instead of incoming/outgoing data in the object itself
-        char send_to_hive[128] = "hello from teensy\0";
-        Comms::FirmwareData data_to_send;
-        memcpy(data_to_send.my_str, send_to_hive, 128);
-        comms_layer.send(data_to_send, Comms::PhysicalMedium::Ethernet);
-        Comms::HiveData data_returning = comms_layer.receive(Comms::PhysicalMedium::Ethernet);
+        
+        
+        // test commslayer, send string
+        Comms::FirmwareString fw_str;
+        strcat(fw_str.my_str, "hello from teensy\0");
+        comms_layer.send(fw_str, Comms::PhysicalMedium::Ethernet);
 
-        Serial.printf("retrieved from hive: %s\n", data_returning.my_str);
+        // test commslayer, receive string
+        Comms::HiveData data_returning = comms_layer.receive(Comms::PhysicalMedium::Ethernet);
+        Serial.printf("retrieved from hive: %s\n", data_returning.hive_str.my_str);
         
 
         // check whether this packet is a config packet

@@ -36,9 +36,9 @@ public:
 
 private:
 
-    EthernetPacket encode(CommsData *source_data, PhysicalMedium medium);
+    EthernetPacket encode(CommsData *source_data);
 
-    HiveData decode(EthernetPacket source_packet, PhysicalMedium medium);
+    HiveData decode(EthernetPacket source_packet);
 
 
     // data incoming to be output, TODO make this a queue so we can store many data packets! (or probably a LL)
