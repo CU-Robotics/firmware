@@ -27,16 +27,17 @@ int CommsLayer::loop() {
     EthernetPacket *eth_outgoing_ptr = Ethernet.get_outgoing_packet();
     EthernetPacket *eth_incoming_ptr = Ethernet.get_incoming_packet();
 
-
     // give Ethernet loop outgoing data,
-    *eth_outgoing_ptr = encode(data_outgoing_ethernet);
-    
+    if(data_outgoing_ethernet != nullptr){
+        *eth_outgoing_ptr = encode(data_outgoing_ethernet);
+    }
+
     // run Ethernet loop,
     Ethernet.loop();
 
     // and get incoming data from Ethernet loop
     data_incoming_ethernet = decode(*eth_incoming_ptr);
-
+    
     return 0;
 }
 
@@ -84,7 +85,7 @@ HiveData CommsLayer::decode(EthernetPacket source_packet) {
 
     // figure out what we just pulled from source_packet
     if(test_data.type_label == TypeLabel::ExampleHive){
-        memcpy(retval.hive_str.my_str, source_packet.payload.data, sizeof(HiveString));
+        memcpy(&retval.hive_str, source_packet.payload.data, sizeof(HiveString));
     }
 
     return retval;

@@ -169,10 +169,9 @@ int main() {
         Comms::FirmwareString fw_str;
         strcat(fw_str.my_str, "hello from teensy\0");
         comms_layer.send(fw_str, Comms::PhysicalMedium::Ethernet);
-
         // test commslayer, receive string
         Comms::HiveData data_returning = comms_layer.receive(Comms::PhysicalMedium::Ethernet);
-        Serial.printf("retrieved from hive: %s\n", data_returning.hive_str.my_str);
+        if(data_returning.hive_str.my_str != NULL) Serial.printf("retrieved from hive: %s\n", data_returning.hive_str.my_str);
         
 
         // check whether this packet is a config packet
