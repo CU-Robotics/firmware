@@ -104,7 +104,7 @@ struct Timer {
     /// @note Other calls like delay will cause this function to return the delta since that call
     /// @return The delta in s since last timer method call
     float delta() {
-        float delta = get_elapsed() / 100000.f;    // time in s since last start() call
+        float delta = get_elapsed() / 1e6f;    // time in s since last start() call
         start();    // restart the timer for next run
         return delta;
     }
@@ -122,7 +122,7 @@ struct Timer {
     /// @note Other calls like delay will cause this function to return the delta since that call
     /// @return The delta in ms since last timer method call
     float delta_millis() {
-        float delta = get_elapsed() / 1000.f;  // time in ms since last start() call
+        float delta = get_elapsed() / 1e3f;  // time in ms since last start() call
         start();    // restart the timer for next run
         return delta;
     }
