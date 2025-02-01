@@ -67,7 +67,13 @@ HiveData CommsLayer::receive(PhysicalMedium medium) {
 
 EthernetPacket CommsLayer::encode(CommsData *source_data, PhysicalMedium medium) {
     // encode the CommsData found at data_outgoing_ethernet
-    return EthernetPacket();
+    EthernetPacket retval;
+
+    // we are literally just going to memcpy into retval
+    retval.header.payload_size = source_data->size;
+    memcpy(retval.payload.data, source_data, source_data->size);
+
+    return retval;
 }
 
 HiveData CommsLayer::decode(EthernetPacket source_packet, PhysicalMedium medium) {
