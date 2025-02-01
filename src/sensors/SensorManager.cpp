@@ -35,6 +35,7 @@ void SensorManager::init(const Config *config_data) {
         pinMode(config_data->sensor_info[i][1], OUTPUT);
         digitalWrite(config_data->sensor_info[i][1], HIGH);
     }
+
     // initialize buff encoders
     for (int i = 0; i < num_sensors[0]; i++)
     {
@@ -71,7 +72,6 @@ void SensorManager::init(const Config *config_data) {
 }
 
 void SensorManager::read() {
-    uint32_t start = micros();
     prof.begin("buff");
     for (int i = 0; i < buff_sensor_count; i++) {
         buff_encoders[i].read();
@@ -94,46 +94,25 @@ void SensorManager::read() {
 
     // read ref system
     ref.read();
-    uint32_t end = micros();
-
-    uint32_t start2 = micros();
     for (int i = 0; i < 1; i++) {
         tof_sensors[i].read();
         // tof_sensors[i].print();
     }
-
-    uint32_t end2 = micros();
-
-    Serial.printf("Time to read sensors: %lu\n", end - start);
-    Serial.printf("Time to read TOF: %lu\n", end2 - start2);
-
     
 }
 
-/// @brief get the specified buff encoder sensor from the array
-/// @param index index of the sensor object to get
-/// @return reference to the buff encoder sensor
     BuffEncoder* SensorManager::get_buff_encoder(int index) {
         return &buff_encoders[index];
 }
 
-/// @brief get the specified icm sensor from the array
-/// @param index index of the sensor object to get
-/// @return reference to the icm sensor
     ICM20649* SensorManager::get_icm_sensor(int index) {
         return &icm_sensors[index];
     }
 
-/// @brief get the specified rev sensor from the array
-/// @param index index of the sensor object to get
-/// @return reference to the rev sensor
     RevEncoder* SensorManager::get_rev_sensor(int index) {
         return &rev_sensors[index];
     }
 
-/// @brief get the specified tof sensor from the array
-/// @param index index of the sensor object to get
-/// @return reference to the tof sensor
     TOFSensor* SensorManager::get_tof_sensor(int index) {
         return &tof_sensors[index];
     }
