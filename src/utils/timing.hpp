@@ -20,6 +20,7 @@
 #define S_TO_US(s)      (s * 1e6f)
 #define S_TO_NS(s)      (s * 1e9f)
 
+/// @brief Timer class. Operates based on micros() and provides a simple interface for timing operations
 struct Timer {
     /// @brief Last recorded time, used in duration calculations
     uint32_t start_time = micros();
