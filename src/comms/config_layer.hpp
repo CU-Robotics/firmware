@@ -54,33 +54,45 @@ struct Config {
     /// @brief robot id
     float robot;
 
-    /// @brief matrix that defines type and neccessary values for each sensor
+    /// @brief matrix that defines type and necessary values for each sensor
     float sensor_info[NUM_SENSORS][NUM_SENSOR_VALUES + 1];
 
-
-    //these will get set at config time
+    /// @brief Number of buffer encoders
     int num_of_buffEnc = 0;
+
+    /// @brief Number of revolution encoders
     int num_of_revEnc = 0;
+
+    /// @brief Number of ICM sensors
     int num_of_icm = 0;
+
+    /// @brief Number of TOF sensors
     int num_of_tof = 0;
+
+    /// @brief Number of LiDAR sensors
     int num_of_lidar = 0;
+
+    /// @brief Number of RealSense sensors
     int num_of_realsense = 0;
-    
 
     /// @brief gains matrix
     float gains[NUM_ROBOT_CONTROLLERS][NUM_GAINS];
+
     /// @brief gear ratio matrix
     float gear_ratios[NUM_ROBOT_CONTROLLERS][NUM_MOTORS];
 
     /// @brief matrix that contains the type, physical id, and physical bus of each motor
     float motor_info[NUM_MOTORS][3];
+
     /// @brief reference limits matrix
     float set_reference_limits[STATE_LEN][3][2];
-    
+
     /// @brief the estimator id's and info
     float estimator_info[NUM_ESTIMATORS][STATE_LEN + 1];
+
     /// @brief controller id's and info
     float controller_info[NUM_ROBOT_CONTROLLERS][NUM_MOTORS + 1];
+
     /// @brief governor types
     float governor_types[STATE_LEN];
 

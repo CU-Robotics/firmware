@@ -20,6 +20,8 @@
 #define NUM_SENSOR_TYPE 16
 #define NUM_IMU_CALIBRATION 50000
 
+/// @class SensorManager
+/// @brief Class to manage sensors on the robot
 class SensorManager {
 public:
     Sensor* sensors[MAX_SENSORS];

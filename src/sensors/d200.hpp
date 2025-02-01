@@ -205,6 +205,7 @@ class D200LD14P : Sensor{
     uint8_t calc_checksum(uint8_t *buf, int len);
 
     //data struct for the LiDAR sensor
+    /// @brief struct storing data from lidar data packet (native units).
     LidarSensorData lidar_sensor_data;
 
   public:
@@ -252,6 +253,7 @@ class D200LD14P : Sensor{
     void export_data(uint8_t bytes[D200_NUM_PACKETS_CACHED * D200_PAYLOAD_SIZE]);
 
     /// @brief return the current packet
+    /// @return the current packet index
     int get_current_packet_index() {return current_packet;};
 };
 

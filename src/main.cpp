@@ -111,19 +111,6 @@ int main() {
     sensor_manager.init(config);
     ref = sensor_manager.get_ref();
 
-    //print sensor counts
-    // Serial.print("Number of Buff Encoders: ");
-    // Serial.println(config->num_of_buffEnc);
-    // Serial.print("Number of Rev Encoders: ");
-    // Serial.println(config->num_of_revEnc);
-    // Serial.print("Number of ICMs: ");
-    // Serial.println(config->num_of_icm);
-    // Serial.print("Number of TOFs: ");
-    // Serial.println(config->num_of_tof);
-    // Serial.print("Number of LiDARs: ");
-    // Serial.println(config->num_of_lidar);
-    // Serial.print("Number of RealSense Cameras: ");
-    // Serial.println(config->num_of_realsense);
 
     //estimate micro and macro state
     estimator_manager.init(can_data, config, &sensor_manager);
@@ -164,7 +151,6 @@ int main() {
     while (true) {
         // read sensors
         sensor_manager.read();
-        prof.print("buff");
         // read CAN and DR16 -- These are kept out of sensor manager for safety reasons
         can.read(); 
         dr16.read(); 
@@ -173,7 +159,6 @@ int main() {
         
 
         // read and write comms packets
-        //Serial.println(packet.refData.ref_data_raw[0]);
         comms.ping();
         
         CommsPacket* incoming = comms.get_incoming_packet();

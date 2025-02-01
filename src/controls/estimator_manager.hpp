@@ -38,6 +38,7 @@ private:
     /// @brief can data pointer to pass to each estimator so they can use can to estimate state when needed (usually used for micro state).
     CANData* can_data;
 
+    /// @brief pointer to the sensor manager to read sensor data
     SensorManager* sensor_manager;
 
     /// @brief config struct to store all config data

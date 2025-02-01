@@ -37,7 +37,7 @@ protected:
     /// @brief The most recent distance read from the sensor
     uint16_t latest_distance = 0;
 
-    //data structure for the TOF sensor
+    /// @brief struct storing data from TOF sensor
     TOFSensorData tof_sensor_data;
 
 public:
@@ -77,7 +77,6 @@ public:
     }
 
     /// @brief function to get the distance to the object from the VL53L4CD sensor.
-    /// @return distance (mm) from sensor to object at an instant
     /// @note Returns the last read value if there is no new data to read
     void read() override {
         // variable to hold the results.

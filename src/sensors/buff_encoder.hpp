@@ -70,7 +70,6 @@ public:
     void init(int cs) { m_CS = cs; };
 
     /// @brief Read via SPI the current angle of the encoder
-    /// @return Read angle (radians)
     /// @note Returns and sets m_angle when it reads
     void read() override;
 

@@ -33,7 +33,7 @@ private:
 	float radians;
 	/// @brief the starting value of the encoder in radians
 	float starting_value = 0;
-	//data structure for the encoder
+	/// @brief the data structure for the encoder
 	RevSensorData rev_sensor_data;
 public:
 	/// @brief Construct a new rev_encoder object without initializing the encoder
