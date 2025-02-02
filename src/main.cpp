@@ -107,7 +107,7 @@ int main() {
     const Config* config = config_layer.configure(&comms);
     Serial.println("Configured!");
 
-    
+
     sensor_manager.init(config);
     ref = sensor_manager.get_ref();
 
@@ -152,15 +152,15 @@ int main() {
         // read sensors
         sensor_manager.read();
         // read CAN and DR16 -- These are kept out of sensor manager for safety reasons
-        can.read(); 
-        dr16.read(); 
-        
+        can.read();
+        dr16.read();
 
-        
+
+
 
         // read and write comms packets
         comms.ping();
-        
+
         CommsPacket* incoming = comms.get_incoming_packet();
         CommsPacket* outgoing = comms.get_outgoing_packet();
 
@@ -185,7 +185,7 @@ int main() {
 
         vtm_pos_x += ref->ref_data.kbm_interaction.mouse_speed_x * 0.05 * delta;
         vtm_pos_y += ref->ref_data.kbm_interaction.mouse_speed_y * 0.05 * delta;
-        
+
         float chassis_vel_x = 0;
         float chassis_vel_y = 0;
         float chassis_pos_x = 0;
@@ -295,20 +295,20 @@ int main() {
         outgoing->set_sensor_data(&sensor_data);
         outgoing->set_ref_data(ref_data_raw);
         outgoing->set_estimated_state(temp_state);
-      
+
         bool is_slow_loop = false;
 
         // check whether this was a slow loop or not
-	    float dt = stall_timer.delta();
-        if (dt > 0.002) { 
+        float dt = stall_timer.delta();
+        if (dt > 0.002) {
             // zero the can bus just in case
-	    	can.zero();
-		
-	    	Serial.printf("Slow loop with dt: %f\n", dt);
+            can.zero();
+
+            Serial.printf("Slow loop with dt: %f\n", dt);
             // mark this as a slow loop to trigger safety mode
-	    	is_slow_loop = true;
-	    }
-        
+            is_slow_loop = true;
+        }
+
 
         //  SAFETY MODE
         if (dr16.is_connected() && (dr16.get_l_switch() == 2 || dr16.get_l_switch() == 3) && config_layer.is_configured() && !is_slow_loop) {
@@ -327,6 +327,6 @@ int main() {
         // Keep the loop running at the desired rate
         loop_timer.delay_micros((int)(1E6 / (float)(LOOP_FREQ)));
     }
-    
+
     return 0;
 }

@@ -8,7 +8,7 @@ SensorManager::SensorManager() {
 SensorManager::~SensorManager() {
 }
 
-void SensorManager::init(const Config *config_data) {
+void SensorManager::init(const Config* config_data) {
     buff_sensor_count = config_data->num_of_buffEnc;
     icm_sensor_count = config_data->num_of_icm;
     rev_sensor_count = config_data->num_of_revEnc;
@@ -18,11 +18,9 @@ void SensorManager::init(const Config *config_data) {
     // Allocate memory for sensor arrays
     lidar_sensors_data = new LidarSensorData[lidar_sensor_count];
 
-    for (int i = 0; i < NUM_SENSORS; i++)
-    {
+    for (int i = 0; i < NUM_SENSORS; i++) {
         int type = config_data->sensor_info[i][0];
-        if (type != -1)
-        {
+        if (type != -1) {
             num_sensors[type]++;
         }
     }
@@ -30,15 +28,13 @@ void SensorManager::init(const Config *config_data) {
     // initilize the sensors
 
     // configure pins for the encoders
-    for (int i = 0; i < num_sensors[0]; i++)
-    {
+    for (int i = 0; i < num_sensors[0]; i++) {
         pinMode(config_data->sensor_info[i][1], OUTPUT);
         digitalWrite(config_data->sensor_info[i][1], HIGH);
     }
 
     // initialize buff encoders
-    for (int i = 0; i < num_sensors[0]; i++)
-    {
+    for (int i = 0; i < num_sensors[0]; i++) {
         buff_encoders[i].init(config_data->sensor_info[i][1]);
     }
 
@@ -98,24 +94,24 @@ void SensorManager::read() {
         tof_sensors[i].read();
         // tof_sensors[i].print();
     }
-    
+
 }
 
-    BuffEncoder* SensorManager::get_buff_encoder(int index) {
-        return &buff_encoders[index];
+BuffEncoder* SensorManager::get_buff_encoder(int index) {
+    return &buff_encoders[index];
 }
 
-    ICM20649* SensorManager::get_icm_sensor(int index) {
-        return &icm_sensors[index];
-    }
+ICM20649* SensorManager::get_icm_sensor(int index) {
+    return &icm_sensors[index];
+}
 
-    RevEncoder* SensorManager::get_rev_sensor(int index) {
-        return &rev_sensors[index];
-    }
+RevEncoder* SensorManager::get_rev_sensor(int index) {
+    return &rev_sensors[index];
+}
 
-    TOFSensor* SensorManager::get_tof_sensor(int index) {
-        return &tof_sensors[index];
-    }
+TOFSensor* SensorManager::get_tof_sensor(int index) {
+    return &tof_sensors[index];
+}
 
 void SensorManager::calibrate_imus() {
     Serial.println("Calibrating IMU's...");
@@ -143,8 +139,7 @@ void SensorManager::calibrate_imus() {
 }
 
 int SensorManager::get_num_sensors(SensorType sensor_type) {
-    switch (sensor_type)
-    {
+    switch (sensor_type) {
     case SensorType::BUFFENC:
         return buff_sensor_count;
     case SensorType::ICM:

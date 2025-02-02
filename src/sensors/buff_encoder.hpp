@@ -55,15 +55,15 @@ constexpr int YAW_BUFF_CS = 37;
 constexpr int PITCH_BUFF_CS = 36;
 
 /// @brief Driver for the Buff-Encoder
-class BuffEncoder : public Sensor{
+class BuffEncoder : public Sensor {
 public:
     /// @brief 
     /// @param 
-    BuffEncoder() : Sensor(SensorType::BUFFENC) {};
+    BuffEncoder() : Sensor(SensorType::BUFFENC) { };
 
     /// @brief Initialize the encoder object with the specific Chip Select pin
     /// @param cs The Chip Select pin
-    BuffEncoder(int cs) : Sensor(SensorType::BUFFENC),  m_CS(cs) {};
+    BuffEncoder(int cs) : Sensor(SensorType::BUFFENC), m_CS(cs) { };
 
     /// @brief initialize sensor with new cs(if needed)
     /// @param cs input Chip Select pin

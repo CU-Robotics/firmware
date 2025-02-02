@@ -12,16 +12,16 @@
 
 /// @brief Structure for the Rev encoder sensor.
 struct RevSensorData {
-    /// Sensor ID.
-    uint8_t id;
-    /// Encoder ticks.
-    int ticks;
-    /// Angle in radians.
-    float radians;
+	/// Sensor ID.
+	uint8_t id;
+	/// Encoder ticks.
+	int ticks;
+	/// Angle in radians.
+	float radians;
 };
 
 /// @brief the class for the Rev Through Bore Encoder(www.revrobotics.com/rev-11-1271/)
-class RevEncoder : public Sensor{
+class RevEncoder : public Sensor {
 private:
 	/// @brief the pin number that the encoder's signal pin is plugged into
 	uint8_t in_pin;
@@ -37,7 +37,7 @@ private:
 	RevSensorData rev_sensor_data;
 public:
 	/// @brief Construct a new rev_encoder object without initializing the encoder
-	RevEncoder() : Sensor(SensorType::REVENC) {};
+	RevEncoder() : Sensor(SensorType::REVENC) { };
 
 	/// @brief Construct a new rev_encoder object
 	/// @param encoder_pin the pin number that the encoders signal pin is plugged into

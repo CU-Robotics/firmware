@@ -202,7 +202,7 @@ public:
     /// @return false when error is unrecoverable or fails to recover, true when successfully recovers.
     bool CONFIG_ERR_HANDLER(int err_code);
 
-    
+
 };
 
 extern Config config;

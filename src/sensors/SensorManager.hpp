@@ -29,14 +29,14 @@ public:
     Sensor* sensors[MAX_SENSORS];
 
     /// @brief Constructor for the SensorManager class
-        SensorManager();
+    SensorManager();
 
-    /// @brief Destructor for the SensorManager class
-        ~SensorManager();
+/// @brief Destructor for the SensorManager class
+    ~SensorManager();
 
-    /// @brief Initialize the sensor manager with configuration data
-    /// @param config_data pointer to configuration data
-    void init(const Config *config_data);
+/// @brief Initialize the sensor manager with configuration data
+/// @param config_data pointer to configuration data
+    void init(const Config* config_data);
 
     /// @brief Read all sensor data
     void read();
@@ -44,22 +44,22 @@ public:
     /// @brief Get the specified buff encoder sensor from the array
     /// @param index index of the sensor object to get
     /// @return pointer to the buff encoder sensor
-    BuffEncoder *get_buff_encoder(int index);
+    BuffEncoder* get_buff_encoder(int index);
 
     /// @brief Get the specified ICM sensor from the array
     /// @param index index of the sensor object to get
     /// @return pointer to the ICM sensor
-    ICM20649 *get_icm_sensor(int index);
+    ICM20649* get_icm_sensor(int index);
 
     /// @brief Get the specified REV sensor from the array
     /// @param index index of the sensor object to get
     /// @return pointer to the REV sensor
-    RevEncoder *get_rev_sensor(int index);
+    RevEncoder* get_rev_sensor(int index);
 
     /// @brief Get the specified TOF sensor from the array
     /// @param index index of the sensor object to get
     /// @return pointer to the TOF sensor
-    TOFSensor *get_tof_sensor(int index);
+    TOFSensor* get_tof_sensor(int index);
 
     /// @brief Get the number of sensors of the specified type
     /// @param sensor_type the type of sensor
@@ -68,7 +68,7 @@ public:
 
     /// @brief Get the referee system
     /// @return pointer to the referee system
-    RefSystem *get_ref() {
+    RefSystem* get_ref() {
         return &ref;
     }
 
@@ -115,7 +115,7 @@ private:
     D200LD14P lidar2;
 
     /// @brief Array of LiDAR sensor data structs
-    LidarSensorData *lidar_sensors_data;
+    LidarSensorData* lidar_sensors_data;
 
     /// @brief Referee system
     RefSystem ref;
