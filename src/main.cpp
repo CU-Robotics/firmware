@@ -36,6 +36,7 @@ Profiler prof;
 Timer loop_timer;
 Timer stall_timer;
 Timer control_input_timer;
+Timer loop_actual;
 
 EstimatorManager estimator_manager;
 ControllerManager controller_manager;
@@ -145,6 +146,7 @@ int main() {
 
     // Main loop
     while (true) {
+        loop_actual.start_timer();
         // read main sensors
         can.read();
         dr16.read();
@@ -318,8 +320,9 @@ int main() {
 
         // check whether this was a slow loop or not
 	    float dt = stall_timer.delta();
+        float dt_actual = loop_actual.delta();
         
-        Serial.printf("Loop %d, dt: %f\n", loopc, dt);
+        Serial.printf("Loop %d, actual dt: %f\n", loopc, dt_actual);
         if (dt > 0.002) { 
             // zero the can bus just in case
 	    	can.zero();
