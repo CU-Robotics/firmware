@@ -177,10 +177,13 @@ void rm_CAN::print_output() {
         for (int j = 0; j < NUM_MESSAGE_IDS; j++) {
             Serial.printf("Message: %x\t", m_output[i][j].id);
 
-            for (int k = 0; k < 4; k++) {
-                Serial.printf("%d ", *((int16_t*)(m_output[i][j].buf) + k));
+            uint8_t high, low;
+            for (int k = 0; k < CAN_MESSAGE_SIZE; k += 2) {
+                high = m_output[i][j].buf[k];
+                low = m_output[i][j].buf[k + 1];
+                int16_t combined = combine_bytes(high, low);
+                Serial.printf("%d\t", combined);
             }
-            Serial.println();
         }
     }
     Serial.println();
