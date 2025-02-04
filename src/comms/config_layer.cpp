@@ -274,6 +274,31 @@ void Config::fill_data(CommsPacket packets[MAX_CONFIG_PACKETS], uint8_t sizes[MA
     Serial.println();
 }
 
+void Config::print() const {
+    Serial.printf("Config:\n");
+    Serial.printf("\tRobot ID: %f\n", robot);
+    Serial.printf("\tSensor Info:\n");
+    for (int i = 0; i < NUM_SENSORS; i++) {
+        Serial.printf("\t\tSensor %d: %f %f %f %f\n", i, sensor_info[i][0], sensor_info[i][1], sensor_info[i][2], sensor_info[i][3]);
+    }
+    Serial.printf("\tGains:\n");
+    for (int i = 0; i < NUM_ROBOT_CONTROLLERS; i++) {
+        Serial.printf("\t\tController %d: %f %f %f %f %f %f %f %f\n", i, gains[i][0], gains[i][1], gains[i][2], gains[i][3], gains[i][4], gains[i][5], gains[i][6], gains[i][7]);
+    }
+    Serial.printf("\tGear Ratios:\n");
+    for (int i = 0; i < NUM_ROBOT_CONTROLLERS; i++) {
+        Serial.printf("\t\tController %d: %f %f %f %f %f %f %f %f\n", i, gear_ratios[i][0], gear_ratios[i][1], gear_ratios[i][2], gear_ratios[i][3], gear_ratios[i][4], gear_ratios[i][5], gear_ratios[i][6], gear_ratios[i][7]);
+    }
+    Serial.printf("\tMotor Info:\n");
+    for (int i = 0; i < NUM_MOTORS; i++) {
+        Serial.printf("\t\tMotor %d: %f %f %f\n", i, motor_info[i][0], motor_info[i][1], motor_info[i][2]);
+    }
+    Serial.printf("\tReference Limits:\n");
+    for (int i = 0; i < STATE_LEN; i++) {
+        Serial.printf("\t\tState %d: %f %f %f %f %f %f\n", i, set_reference_limits[i][0][0], set_reference_limits[i][0][1], set_reference_limits[i][1][0], set_reference_limits[i][1][1], set_reference_limits[i][2][0], set_reference_limits[i][2][1]);
+    }
+}
+
 bool ConfigLayer::sd_load() {
     // total size of /config.pack: MAX_CONFIG_PACKETS * (sizeof(CommsPacket) + 1)
     // num of packets * size of each packet == num of bytes for all packets
