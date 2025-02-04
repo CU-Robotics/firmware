@@ -40,7 +40,7 @@ int main() {
   while (true) {
 
     // imu.print_data();
-    flightController.update();
+     flightController.update();
     //  servoCont.set_all_servos(180, 180, 180, 180);
     //  delay(1000);
     //  servoCont.set_all_servos(0, 0, 0, 0);
