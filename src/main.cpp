@@ -269,7 +269,7 @@ int main() {
             count_one++;
         }
 
-        Serial.printf("Target state:\n");
+        Serial.printf("Estimated state:\n");
         for (int i = 0; i < 8; i++) {
             Serial.printf("\t%d: %f %f %f\n", i, temp_state[i][0], temp_state[i][1], temp_state[i][2]);
         }

@@ -184,7 +184,9 @@ void rm_CAN::print_output() {
                 int16_t combined = combine_bytes(high, low);
                 Serial.printf("%d\t", combined);
             }
+            Serial.printf("\n\t");
         }
+        Serial.println();
     }
     Serial.println();
 }
