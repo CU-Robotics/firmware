@@ -177,8 +177,8 @@ void rm_CAN::print_output() {
         for (int j = 0; j < NUM_MESSAGE_IDS; j++) {
             Serial.printf("Message: %x\t", m_output[i][j].id);
 
-            for (int k = 0; k < CAN_MESSAGE_SIZE; k++) {
-                Serial.printf("%x ", m_output[i][j].buf[k]);
+            for (int k = 0; k < 4; k++) {
+                Serial.printf("%d ", *((int16_t*)(m_output[i][j].buf) + k));
             }
             Serial.println();
         }

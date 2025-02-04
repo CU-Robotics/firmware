@@ -62,12 +62,6 @@ void ControllerManager::step(float macro_reference[STATE_LEN][3], float macro_es
             actuator_write(config_data->controller_info[i][j+1], outputs[j]);
         }
     }
-
-    // print output
-    Serial.printf("Overall controller outputs:\n");
-    for(int i = 0; i < NUM_MOTORS; i++) {
-        Serial.printf("Motor %d: %f\n", i, outputs[i]);
-    }
 }
 
 // motor_info[Global ID][type, Physical ID, Physical Bus]

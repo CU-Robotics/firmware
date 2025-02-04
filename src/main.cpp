@@ -287,6 +287,8 @@ int main() {
         // generate motor outputs from controls
         controller_manager.step(temp_reference, temp_state, temp_micro_state);
 
+        can.print_output();
+
         // construct sensor data packet
         SensorData sensor_data;
 
@@ -316,8 +318,8 @@ int main() {
 
         // check whether this was a slow loop or not
 	    float dt = stall_timer.delta();
-        Serial.printf("Loop %d, dt: %f\n", loopc, dt);
         
+        Serial.printf("Loop %d, dt: %f\n", loopc, dt);
         if (dt > 0.002) { 
             // zero the can bus just in case
 	    	can.zero();
