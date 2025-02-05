@@ -83,9 +83,11 @@ void SensorManager::read() {
     }
     Serial.println("Done reading rev encoders");
     if (lidar_sensor_count > 0) {
+        Serial.println("Reading LiDAR sensors");
         lidar1.read();
         lidar2.read();
     }
+    Serial.println("Done reading LiDAR sensors");
 
     // read ref system
     Serial.println("Reading ref system");
