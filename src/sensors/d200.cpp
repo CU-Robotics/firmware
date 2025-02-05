@@ -37,12 +37,9 @@ void D200LD14P::stop_motor() {
 
 void D200LD14P::read() {
   // consume bytes until we reach a start character (only relevant for startup)
-  Serial.println("Start of read");
   while (port->available() && port->peek() != D200_START_CHAR) {
     port->read();
   }
-
-  Serial.println("Past port available");
 
   // read packet by packet
   while (port->available() >= D200_DATA_PACKET_LEN) {
@@ -76,7 +73,6 @@ void D200LD14P::read() {
     // parse packet
     current_packet = (current_packet+1) % D200_NUM_PACKETS_CACHED;
     LidarDataPacketSI *p = &packets[current_packet];
-    Serial.println("Parsing packet");
     // (alignments of values from dev manual: https://files.waveshare.com/upload/9/99/LD14P_Development_Manual.pdf)
     uint16_t lidar_speed = (buf[3] << 8) | buf[2];
     uint16_t start_angle = (buf[5] << 8) | buf[4];
@@ -118,7 +114,6 @@ void D200LD14P::read() {
         p->points[i].intensity = buf[base + 2]; // units are ambiguous (not documented)
       }
     }
-    Serial.println("End of parsing packet");
   }
 
   //add data to struct

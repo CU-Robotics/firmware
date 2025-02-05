@@ -150,7 +150,6 @@ int main() {
     // Main loop
     while (true) {
         // read sensors
-        Serial.println("Reading sensors");
         sensor_manager.read();
         // read CAN and DR16 -- These are kept out of sensor manager for safety reasons
         can.read();

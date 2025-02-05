@@ -70,9 +70,6 @@ void SensorManager::init(const Config* config_data) {
 
     // initialize LiDARs
     if (lidar_sensor_count > 0) {
-        // D200LD14P lidar1(&Serial4, 0);
-        // D200LD14P lidar2(&Serial5, 1);
-
         lidar1 = new D200LD14P(&Serial4, 0);
         lidar2 = new D200LD14P(&Serial5, 1);
 
@@ -91,28 +88,26 @@ void SensorManager::read() {
         icm_sensors[i]->read();
         icm_sensors[i]->print();
     }
-    Serial.println("Reading rev encoders");
+    
     for (int i = 0; i < rev_sensor_count; i++) {
         rev_sensors[i]->read();
         rev_sensors[i]->print();
     }
-    Serial.println("Done reading rev encoders");
+    
     if (lidar_sensor_count > 0) {
-        Serial.println("Reading LiDAR sensors");
         lidar1->read();
         lidar2->read();
     }
-    Serial.println("Done reading LiDAR sensors");
+    
 
     // read ref system
-    Serial.println("Reading ref system");
+    
     ref.read();
-    Serial.println("Reading TOF sensors");
+    
     for (int i = 0; i < 1; i++) {
         tof_sensors[i]->read();
         tof_sensors[i]->print();
     }
-    Serial.println("Done reading TOF sensors");
 }
 
 BuffEncoder* SensorManager::get_buff_encoder(int index) {
