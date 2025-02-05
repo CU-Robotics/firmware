@@ -24,9 +24,8 @@
 /// @brief Class to manage sensors on the robot
 class SensorManager {
 public:
-    /// @brief Array to store all sensors
-    /// @note This array not being used
-    Sensor* sensors[MAX_SENSORS];
+    /// @brief Vector to store all sensors
+    std::vector<Sensor*> sensors;
 
     /// @brief Constructor for the SensorManager class
     SensorManager();
@@ -41,25 +40,30 @@ public:
     /// @brief Read all sensor data
     void read();
 
-    /// @brief Get the specified buff encoder sensor from the array
-    /// @param index index of the sensor object to get
-    /// @return pointer to the buff encoder sensor
-    BuffEncoder* get_buff_encoder(int index);
+    // /// @brief Get the specified buff encoder sensor from the array
+    // /// @param index index of the sensor object to get
+    // /// @return pointer to the buff encoder sensor
+    // BuffEncoder* get_buff_encoder(int index);
 
-    /// @brief Get the specified ICM sensor from the array
-    /// @param index index of the sensor object to get
-    /// @return pointer to the ICM sensor
-    ICM20649* get_icm_sensor(int index);
+    // /// @brief Get the specified ICM sensor from the array
+    // /// @param index index of the sensor object to get
+    // /// @return pointer to the ICM sensor
+    // ICM20649* get_icm_sensor(int index);
 
-    /// @brief Get the specified REV sensor from the array
-    /// @param index index of the sensor object to get
-    /// @return pointer to the REV sensor
-    RevEncoder* get_rev_sensor(int index);
+    // /// @brief Get the specified REV sensor from the array
+    // /// @param index index of the sensor object to get
+    // /// @return pointer to the REV sensor
+    // RevEncoder* get_rev_sensor(int index);
 
-    /// @brief Get the specified TOF sensor from the array
+    // /// @brief Get the specified TOF sensor from the array
+    // /// @param index index of the sensor object to get
+    // /// @return pointer to the TOF sensor
+    // TOFSensor* get_tof_sensor(int index);
+
+    /// @brief Get the specified sensor from the sensor array
+    /// @param sensor_type the type of sensor
     /// @param index index of the sensor object to get
-    /// @return pointer to the TOF sensor
-    TOFSensor* get_tof_sensor(int index);
+    Sensor* get_sensor(SensorType sensor_type, int index);
 
     /// @brief Get the number of sensors of the specified type
     /// @param sensor_type the type of sensor
