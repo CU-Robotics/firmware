@@ -201,6 +201,7 @@ int find_teensy_serial_dev(char* serial_path) {
     // open the base directory
     if ((traversal_pointer = fts_open(serial_directory, fts_options, NULL)) == NULL) {
         printf("Failed to open path: %s\n", *serial_directory);
+        fts_close(traversal_pointer);
         return -1;
     }
 
@@ -208,6 +209,7 @@ int find_teensy_serial_dev(char* serial_path) {
     child_files = fts_children(traversal_pointer, 0);
     if (child_files == NULL) {
         printf("No files to traverse in %s directory\n", *serial_directory);
+        fts_close(traversal_pointer);
         return -1;
     }
 
@@ -245,6 +247,8 @@ int find_teensy_serial_dev(char* serial_path) {
         }
     }
 
+    fts_close(traversal_pointer);
+
     // could not find a path to the correct serial
     if (!serial_found) {
         // printf("Could not find Teensy's serial path\n");
@@ -261,6 +265,7 @@ int find_teensy_serial_dev(char* serial_path) {
     size_t base_path_size = strlen("/dev/serial/by-id/");
     if (rel_path_size + base_path_size > SERIAL_PATH_SIZE) {
         printf("Path size too large\n");
+        fts_close(traversal_pointer);
         exit(-1);
     }
 
