@@ -427,6 +427,10 @@ public:
     /// @param data can data from Estimator Manager
     GimbalEstimatorNoOdom(Config config_data,BuffEncoder* b1, BuffEncoder* b2, ICM20649* imu, CANData* data);
 
+    /// @brief estimate the state of the gimbal
+    /// @param config_data inputted sensor values from khadas yaml
+    /// @param sensor_manager sensor manager object
+    /// @param data can data from Estimator Manager
     GimbalEstimatorNoOdom(Config config_data, SensorManager* sensor_manager, CANData* data);
 
     GimbalEstimatorNoOdom() {};
