@@ -76,11 +76,12 @@ void SensorManager::read() {
         icm_sensors[i].read();
          icm_sensors[i].print();
     }
+    Serial.println("Reading rev encoders");
     for (int i = 0; i < rev_sensor_count; i++) {
         rev_sensors[i].read();
          rev_sensors[i].print();
     }
-
+    Serial.println("Done reading rev encoders");
     if (lidar_sensor_count > 0) {
         lidar1.read();
         lidar2.read();
@@ -88,11 +89,12 @@ void SensorManager::read() {
 
     // read ref system
     ref.read();
+    Serial.println("Reading TOF sensors");
     for (int i = 0; i < 1; i++) {
         tof_sensors[i].read();
         tof_sensors[i].print();
     }
-
+    Serial.println("Done reading TOF sensors");
 }
 
 BuffEncoder* SensorManager::get_buff_encoder(int index) {
