@@ -2,7 +2,7 @@
 
 const SPISettings BuffEncoder::m_settings = SPISettings(1000000, MT6835_BITORDER, SPI_MODE3);
 
-void BuffEncoder::read() {
+bool BuffEncoder::read() {
 
     uint8_t data[6] = { 0 }; // transact 48 bits
 
@@ -27,6 +27,7 @@ void BuffEncoder::read() {
 
     //add angle to the data struct
     buff_sensor_data.m_angle = m_angle;
+    return true;
 }
 
 

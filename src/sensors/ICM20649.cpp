@@ -45,7 +45,7 @@ void ICM20649::init(CommunicationProtocol protocol) {
     // gyro_rate = get_gyro_data_rate();
 }
 
-void ICM20649::read() {
+bool ICM20649::read() {
     // get the event data from the sensor class
     sensor.getEvent(&accel, &gyro, &temp);
 
@@ -70,6 +70,7 @@ void ICM20649::read() {
     icm_sensor_data.gyro_Y = gyro_Y;
     icm_sensor_data.gyro_Z = gyro_Z;
     icm_sensor_data.temperature = temperature;
+    return true;
 }
 
 // calculate the approximate acceleration data rate (Hz) from the divisor.

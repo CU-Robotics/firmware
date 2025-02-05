@@ -71,7 +71,8 @@ public:
 
     /// @brief Read via SPI the current angle of the encoder
     /// @note Returns and sets m_angle when it reads
-    void read() override;
+    /// @return true if successful, false if no data available
+    bool read() override;
 
     /// @brief Get the angle of the last read function
     /// @return Read angle (radians)

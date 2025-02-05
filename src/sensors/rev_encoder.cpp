@@ -19,7 +19,7 @@ void RevEncoder::init(uint8_t encoder_pin, bool is_relative) {
     }
 }
 
-void RevEncoder::read() {
+bool RevEncoder::read() {
     while (this->freq.available() > 1) {
         this->freq.read();
     }
@@ -29,11 +29,11 @@ void RevEncoder::read() {
         this->ticks = frequency % 1024;
         this->radians = (((float)this->ticks) / 1024.0) * M_PI * 2;
     }
-
     //copy the data to the data struct
     rev_sensor_data.id = id_;
     rev_sensor_data.ticks = ticks;
     rev_sensor_data.radians = radians;
+    return true;
     
 }
 

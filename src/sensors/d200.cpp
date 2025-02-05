@@ -35,7 +35,7 @@ void D200LD14P::stop_motor() {
   port->write(D200_STOP_CMD, D200_CMD_PACKET_LEN);
 }
 
-void D200LD14P::read() {
+bool D200LD14P::read() {
   // consume bytes until we reach a start character (only relevant for startup)
   while (port->available() && port->peek() != D200_START_CHAR) {
     port->read();
@@ -121,6 +121,7 @@ void D200LD14P::read() {
   lidar_sensor_data.current_packet = current_packet;
   lidar_sensor_data.id = id;
   memcpy(lidar_sensor_data.packets, packets, D200_NUM_PACKETS_CACHED * sizeof(LidarDataPacketSI));
+  return true;
 }
 
 void D200LD14P::flush_packet_buffer() {

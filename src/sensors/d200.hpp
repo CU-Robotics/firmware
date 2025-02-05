@@ -228,7 +228,8 @@ public:
   void stop_motor();
 
   /// @brief read latest packet(s) from D200 module
-  void read() override;
+  /// @return true if successful, false if no data available
+  bool read() override;
 
   /// @brief get the packet array
   /// @return pointer to start of packet array

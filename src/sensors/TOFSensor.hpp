@@ -78,7 +78,8 @@ public:
 
     /// @brief function to get the distance to the object from the VL53L4CD sensor.
     /// @note Returns the last read value if there is no new data to read
-    void read() override {
+    /// @return true if successful, false if no data available
+    bool read() override {
         // variable to hold the results.
         VL53L4CD_Result_t results;
 
@@ -89,7 +90,7 @@ public:
 
             // swap to the next operation (reading)
             should_read = !should_read;
-            return;
+            return false;
         }
 
         // get the results from the sensor, if there is no new data to read, it will automatically send the last read value.
@@ -102,6 +103,7 @@ public:
 
         // swap to the next operation (clearing interrupt)
         should_read = !should_read;
+        return true;
     }
 
     /// @brief function to deserialize the TOF sensor data

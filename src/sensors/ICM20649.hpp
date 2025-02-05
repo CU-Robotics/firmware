@@ -57,7 +57,7 @@ public:
     void init(CommunicationProtocol protocol);
 
     /// @copydoc IMUSensor::read()    
-    void read() override;
+    bool read() override;
 
     /// @brief set teh gyro rate range of the sensor
     /// @param gyro_rate_range new rate range
