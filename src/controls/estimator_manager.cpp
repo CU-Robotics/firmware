@@ -81,7 +81,7 @@ void EstimatorManager::init_estimator(int estimator_id) {
 
     switch (estimator_id) {
     case 1:
-        estimators[num_estimators++] = new GimbalEstimator(*config_data, sensor_manager->get_rev_sensor(0), sensor_manager->get_rev_sensor(1), sensor_manager->get_rev_sensor(2), sensor_manager->get_buff_encoder(0), sensor_manager->get_buff_encoder(1), sensor_manager->get_icm_sensor(0), can_data);
+        estimators[num_estimators++] = new GimbalEstimator(*config_data, sensor_manager, can_data);
         break;
     case 2:
         estimators[num_estimators++] = new FlyWheelEstimator(can_data);
@@ -96,7 +96,7 @@ void EstimatorManager::init_estimator(int estimator_id) {
         estimators[num_estimators++] = new SwitcherEstimator(*config_data, can_data, sensor_manager->get_tof_sensor(0));
         break;
     case 6:
-        estimators[num_estimators++] = new GimbalEstimatorNoOdom(*config_data, sensor_manager->get_buff_encoder(0), sensor_manager->get_buff_encoder(1), sensor_manager->get_icm_sensor(0), can_data);
+        estimators[num_estimators++] = new GimbalEstimatorNoOdom(*config_data, sensor_manager, can_data);        
         break;
     default:
         break;

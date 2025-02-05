@@ -10,6 +10,7 @@
 #include "../sensors/rev_encoder.hpp"
 #include "../sensors/ICM20649.hpp"
 #include "../sensors/TOFSensor.hpp"
+#include "../sensors/SensorManager.hpp"
 
 
 
@@ -283,6 +284,12 @@ public:
     /// @param data can data from Estimator Manager
     GimbalEstimator(Config config_data, RevEncoder* r1, RevEncoder* r2, RevEncoder* r3, BuffEncoder* b1, BuffEncoder* b2, ICM20649* imu, CANData* data);
 
+    /// @brief estimate the state of the gimbal
+    /// @param config_data inputted sensor values from khadas yaml
+    /// @param sensor_manager sensor manager object
+    /// @param data can data from Estimator Manager
+    GimbalEstimator(Config config_data, SensorManager* sensor_manager, CANData* data);
+
     ~GimbalEstimator() {};
   
     /// @brief calculate estimated states and add to output array
@@ -419,6 +426,8 @@ public:
     /// @param imu icm encoder
     /// @param data can data from Estimator Manager
     GimbalEstimatorNoOdom(Config config_data,BuffEncoder* b1, BuffEncoder* b2, ICM20649* imu, CANData* data);
+
+    GimbalEstimatorNoOdom(Config config_data, SensorManager* sensor_manager, CANData* data);
 
     GimbalEstimatorNoOdom() {};
   

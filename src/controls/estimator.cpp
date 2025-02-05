@@ -33,6 +33,38 @@ GimbalEstimator::GimbalEstimator(Config config_data, RevEncoder* r1, RevEncoder*
         roll_axis_spherical[0] = 1;  // rho (1 for a spherical)
 }
 
+GimbalEstimator::GimbalEstimator(Config config_data, SensorManager* sensor_manager, CANData* data) {
+        buff_enc_yaw = sensor_manager->get_buff_encoder(0); // sensor object definitions
+        buff_enc_pitch = sensor_manager->get_buff_encoder(1);
+        rev_enc[0] = sensor_manager->get_rev_sensor(0);
+        rev_enc[1] = sensor_manager->get_rev_sensor(1);
+        rev_enc[2] = sensor_manager->get_rev_sensor(2);
+        can_data = data;
+        icm_imu = sensor_manager->get_icm_sensor(0);
+        YAW_ENCODER_OFFSET = config_data.sensor_info[0][2];
+        PITCH_ENCODER_OFFSET = config_data.sensor_info[1][2];
+
+        yaw_angle = config_data.sensor_info[2][2];
+        pitch_angle = config_data.sensor_info[2][3];
+        roll_angle = config_data.sensor_info[2][4];
+        chassis_angle = 0;
+        imu_yaw_axis_vector[0] = config_data.sensor_info[2][5];
+        imu_yaw_axis_vector[1] = config_data.sensor_info[2][6];
+        imu_yaw_axis_vector[2] = config_data.sensor_info[2][7];
+        imu_pitch_axis_vector[0] = config_data.sensor_info[2][8];
+        imu_pitch_axis_vector[1] = config_data.sensor_info[2][9];
+        imu_pitch_axis_vector[2] = config_data.sensor_info[2][10];
+        starting_pitch_angle = config_data.sensor_info[2][1];
+
+        odom_wheel_radius = config_data.sensor_info[3][2];
+        odom_axis_offset_x = config_data.sensor_info[3][1];
+        odom_axis_offset_y = config_data.sensor_info[4][1];
+        // definitions for spherical coordinates of new axis in the imu refrence frame
+        yaw_axis_spherical[0] = 1;   // rho (1 for a spherical)
+        pitch_axis_spherical[0] = 1; // rho (1 for a spherical)
+        roll_axis_spherical[0] = 1;  // rho (1 for a spherical)
+}
+
 void GimbalEstimator::step_states(float output[STATE_LEN][3], float curr_state[STATE_LEN][3], int override) {
         float pitch_enc_angle = (-buff_enc_pitch->get_angle()) - PITCH_ENCODER_OFFSET;
         while (pitch_enc_angle >= PI)
@@ -260,6 +292,35 @@ GimbalEstimatorNoOdom::GimbalEstimatorNoOdom(Config config_data, BuffEncoder* b1
     buff_enc_pitch = b2;
     can_data = data;
     icm_imu = imu;
+    YAW_ENCODER_OFFSET = config_data.sensor_info[0][2];
+    PITCH_ENCODER_OFFSET = config_data.sensor_info[1][2];
+
+    yaw_angle = config_data.sensor_info[2][2];
+    pitch_angle = config_data.sensor_info[2][3];
+    roll_angle = config_data.sensor_info[2][4];
+    chassis_angle = 0;
+    imu_yaw_axis_vector[0] = config_data.sensor_info[2][5];
+    imu_yaw_axis_vector[1] = config_data.sensor_info[2][6];
+    imu_yaw_axis_vector[2] = config_data.sensor_info[2][7];
+    imu_pitch_axis_vector[0] = config_data.sensor_info[2][8];
+    imu_pitch_axis_vector[1] = config_data.sensor_info[2][9];
+    imu_pitch_axis_vector[2] = config_data.sensor_info[2][10];
+    starting_pitch_angle = config_data.sensor_info[2][1];
+
+    odom_wheel_radius = config_data.sensor_info[3][2];
+    odom_axis_offset_x = config_data.sensor_info[3][1];
+    odom_axis_offset_y = config_data.sensor_info[4][1];
+    // definitions for spherical coordinates of new axis in the imu refrence frame
+    yaw_axis_spherical[0] = 1;   // rho (1 for a spherical)
+    pitch_axis_spherical[0] = 1; // rho (1 for a spherical)
+    roll_axis_spherical[0] = 1;  // rho (1 for a spherical)
+}
+
+GimbalEstimatorNoOdom::GimbalEstimatorNoOdom(Config config_data, SensorManager* sensor_manager, CANData* data) {
+    buff_enc_yaw = sensor_manager->get_buff_encoder(0); // sensor object definitions
+    buff_enc_pitch = sensor_manager->get_buff_encoder(1);
+    can_data = data;
+    icm_imu = sensor_manager->get_icm_sensor(0);
     YAW_ENCODER_OFFSET = config_data.sensor_info[0][2];
     PITCH_ENCODER_OFFSET = config_data.sensor_info[1][2];
 
@@ -544,3 +605,4 @@ void LocalEstimator::step_states(float output[NUM_MOTORS][MICRO_STATE_LEN], floa
         }
     }
 }
+
