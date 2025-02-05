@@ -16,7 +16,9 @@
 #define HEARTBEAT_FREQ 2
 
 // Declare global objects
-DR16 dr16;
+Timer loop_timer;
+Timer stall_timer;
+
 // DONT put anything else in this function. It is not a setup function
 void print_logo() {
     if (Serial) {
@@ -61,24 +63,13 @@ int main() {
 
     print_logo();
     
-    // INIT 
-    dr16.init();
 
     // Main loop
     while (true) {
-        // READ FUNCTION
-        dr16.read();
         
 
-        //  SAFETY MODE
-        if (dr16.is_connected() && (dr16.get_l_switch() == 2 || dr16.get_l_switch() == 3) && config_layer.is_configured()) {
-            // SAFETY OFF
-            can.write();
-        } else {
-            // SAFETY ON
-            // TODO: Reset all controller integrators here
-            can.zero();
-        }
+
+
 
         // // LED heartbeat -- linked to loop count to reveal slowdowns and freezes.
         // loopc % (int)(1E3 / float(HEARTBEAT_FREQ)) < (int)(1E3 / float(5 * HEARTBEAT_FREQ)) ? digitalWrite(13, HIGH) : digitalWrite(13, LOW);
