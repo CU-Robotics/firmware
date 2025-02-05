@@ -1,5 +1,10 @@
 #include "FlightController.hpp"
 #include "IMU.hpp"
+#include "IMU_Filter.hpp"
+#include "usb_serial.h"
+
+IMU_filter icmF;
+IMUDataF imu_data;
 
 FlightController::FlightController(ServoController &sc, IMU &imu,
                                    Dartcam &dartcam)
@@ -32,6 +37,7 @@ void FlightController::update() {
   }
 }
 
+void FlightController::init() { icmF.init(); }
 // Mode 1: Fin Hold
 void FlightController::hold_fin_position() {
   //  current fin positions
@@ -115,35 +121,43 @@ void FlightController::fin_test_mode() {
 }
 
 void FlightController::test_gyro_level() {
-  float pitchSetpoint = 0.0; // Target pitch angle in degrees
-  float yawSetpoint = 0.0;
-  float rollSetpoint = 0.0;
+  // float pitchSetpoint = 0.0; // Target pitch angle in degrees
+  //  float yawSetpoint = 0.0;
+  // float rollSetpoint = 0.0;
 
-  IMUData imuData = imu.read_data();
-  float currentPitch = imuData.pitch;
-  float currentYaw = imuData.yaw;
-  float currentRoll = imuData.roll;
+  icmF.read();
 
-  float pitchAdjustment =
-      pitchPID.calculate(pitchSetpoint, currentPitch);             // For pitch
-  float yawAdjustment = yawPID.calculate(yawSetpoint, currentYaw); // For yaw
-  float rollAdjustment =
-      rollPID.calculate(rollSetpoint, currentRoll); // For roll stability
+  imu_data = icmF.getdata();
+  float currentPitch = imu_data.k_pitch;
+  // float currentYaw = imu_data.;
+  // float currentRoll = imu_data.k_roll;
 
-  // - Servo 0: Left Elevator
-  // - Servo 1: Right Elevator
-  // - Servo 2: Left Rudder
-  // - Servo 3: Right Rudder
+  // Serial.println(currentPitch);
+  servoController.set_servo_angle(2, currentPitch * 100);
 
-  float leftElevator = pitchAdjustment + rollAdjustment;
-  float rightElevator = pitchAdjustment - rollAdjustment;
-  float leftRudder = yawAdjustment + rollAdjustment;
-  float rightRudder = yawAdjustment - rollAdjustment;
+  /**
 
-  servoController.set_servo_angle(0, leftElevator);
-  servoController.set_servo_angle(1, rightElevator);
-  servoController.set_servo_angle(2, leftRudder);
-  servoController.set_servo_angle(3, rightRudder);
+    float pitchAdjustment =
+        pitchPID.calculate(pitchSetpoint, currentPitch); // For pitch
+    // float yawAdjustment = yawPID.calculate(yawSetpoint, currentYaw); // For
+    yaw float rollAdjustment = rollPID.calculate(rollSetpoint, currentRoll); //
+    For roll stability
+
+    // - Servo 0: Left Elevator
+    // - Servo 1: Right Elevator
+    // - Servo 2: Left Rudder
+    // - Servo 3: Right Rudder
+
+    float leftElevator = pitchAdjustment + rollAdjustment;
+    float rightElevator = pitchAdjustment - rollAdjustment;
+    // float leftRudder = yawAdjustment + rollAdjustment;
+    // float rightRudder = yawAdjustment - rollAdjustment;
+
+    servoController.set_servo_angle(0, leftElevator);
+    servoController.set_servo_angle(1, rightElevator);
+    // servoController.set_servo_angle(2, leftRudder);
+    // servoController.set_servo_angle(3, rightRudder);
+    */
 }
 
 // helpers

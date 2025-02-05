@@ -4,8 +4,7 @@
 #include "Dartcam.hpp"
 #include "IMU.hpp"
 #include "PIDController.hpp"
-#include "ServoController.hpp"
-
+#include "ServoController.hpp" 
 enum ControlMode {
   FIN_HOLD,
   VELOCITY_VECTOR_ALIGNMENT,
@@ -16,10 +15,10 @@ enum ControlMode {
 
 class FlightController {
 public:
-  FlightController(ServoController &servoController, IMU &imu,
-                   Dartcam &dartcam);
+  FlightController(ServoController &servoController, IMU &imu, Dartcam &dartcam);
   void update();
   void set_control_mode(ControlMode mode);
+  void init();
 
 private:
   ServoController &servoController;
