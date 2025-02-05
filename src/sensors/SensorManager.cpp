@@ -88,6 +88,7 @@ void SensorManager::read() {
     }
 
     // read ref system
+    Serial.println("Reading ref system");
     ref.read();
     Serial.println("Reading TOF sensors");
     for (int i = 0; i < 1; i++) {
