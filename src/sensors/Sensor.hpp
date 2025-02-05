@@ -33,6 +33,7 @@ public:
     void setId(uint8_t id) { id_ = id; }
 
     /// @brief Read the sensor data.
+    /// @return true if successful, false if no data available
     virtual bool read() = 0;
 
 protected:
