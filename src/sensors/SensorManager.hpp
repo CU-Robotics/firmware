@@ -24,9 +24,8 @@
 /// @brief Class to manage sensors on the robot
 class SensorManager {
 public:
-    /// @brief Array to store all sensors
-    /// @note This array not being used
-    Sensor* sensors[MAX_SENSORS];
+    /// @brief Vector to store all sensors
+    std::vector<Sensor*> sensors;
 
     /// @brief Constructor for the SensorManager class
     SensorManager();
@@ -109,11 +108,12 @@ private:
     TOFSensor tof_sensors[NUM_SENSOR_TYPE];
 
     /// @brief First LiDAR sensor
-    D200LD14P lidar1;
+    D200LD14P* lidar1;
 
     /// @brief Second LiDAR sensor
-    D200LD14P lidar2;
+    D200LD14P* lidar2;
 
+    
     /// @brief Array of LiDAR sensor data structs
     LidarSensorData* lidar_sensors_data;
 
