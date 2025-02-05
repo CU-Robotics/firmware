@@ -96,16 +96,16 @@ private:
     int num_sensors[NUM_SENSORS];
 
     /// @brief Array to store robot ICM IMUs
-    ICM20649 icm_sensors[NUM_SENSOR_TYPE];
+    ICM20649* icm_sensors[NUM_SENSOR_TYPE];
 
     /// @brief Array to store robot buff encoders
-    BuffEncoder buff_encoders[NUM_SENSOR_TYPE];
+    BuffEncoder* buff_encoders[NUM_SENSOR_TYPE];
 
     /// @brief Array to store robot rev encoders
-    RevEncoder rev_sensors[NUM_SENSOR_TYPE];
+    RevEncoder* rev_sensors[NUM_SENSOR_TYPE];
 
     /// @brief Array to store TOF sensors
-    TOFSensor tof_sensors[NUM_SENSOR_TYPE];
+    TOFSensor* tof_sensors[NUM_SENSOR_TYPE];
 
     /// @brief First LiDAR sensor
     D200LD14P* lidar1;
