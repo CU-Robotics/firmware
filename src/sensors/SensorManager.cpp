@@ -18,7 +18,6 @@ void SensorManager::init(const Config* config_data) {
     // Allocate memory for sensor arrays
     lidar_sensors_data = new LidarSensorData[lidar_sensor_count];
 
-    //This is here for the old way to get the number of sensors, use the <sensor_type>_count variables instead, you will be much happier
     for (int i = 0; i < NUM_SENSORS; i++) {
         int type = config_data->sensor_info[i][0];
         if (type != -1) {
@@ -29,20 +28,14 @@ void SensorManager::init(const Config* config_data) {
     // initilize the sensors
 
     // configure pins for the encoders
-    for (int i = 0; i < buff_sensor_count; i++) {
+    for (int i = 0; i < num_sensors[0]; i++) {
         pinMode(config_data->sensor_info[i][1], OUTPUT);
         digitalWrite(config_data->sensor_info[i][1], HIGH);
     }
 
     // initialize buff encoders
-    // for (int i = 0; i < num_sensors[0]; i++) {
-    //     buff_encoders[i].init(config_data->sensor_info[i][1]);
-    // }
-
-    for(int i = 0; i < buff_sensor_count; i++) {
-       BuffEncoder* buff_encoder = new BuffEncoder(config_data->sensor_info[i][1]);
-       buff_encoder->setId(i);
-       sensors.push_back(buff_encoder);
+    for (int i = 0; i < num_sensors[0]; i++) {
+        buff_encoders[i].init(config_data->sensor_info[i][1]);
     }
 
     // configure pins for the ICM
@@ -54,33 +47,20 @@ void SensorManager::init(const Config* config_data) {
     SPI.begin();
 
     // initialize ICMs
-    for (int i = 0; i < icm_sensor_count; i++) {
-        ICM20649* icm_sensor = new ICM20649();
-        icm_sensor->init(icm_sensor->CommunicationProtocol::SPI);
-        icm_sensor->set_gyro_range(4000);
-        icm_sensor->setId(i);
-        sensors.push_back(icm_sensor);
-        // icm_sensors[i].init(icm_sensors[i].CommunicationProtocol::SPI);
-        // icm_sensors[i].set_gyro_range(4000);
+    for (int i = 0; i < num_sensors[2]; i++) {
+        icm_sensors[i].init(icm_sensors[i].CommunicationProtocol::SPI);
+        icm_sensors[i].set_gyro_range(4000);
     }
     calibrate_imus();
 
     // initialize rev encoders
-    for (int i = 0; i < rev_sensor_count; i++) {
-        RevEncoder* rev_encoder = new RevEncoder();
-        rev_encoder->init(REV_ENC_PIN1 + i, true);
-        rev_encoder->setId(i);
-        sensors.push_back(rev_encoder);
-        // rev_sensors[i].init(REV_ENC_PIN1 + i, true);
+    for (int i = 0; i < num_sensors[1]; i++) {
+        rev_sensors[i].init(REV_ENC_PIN1 + i, true);
     }
 
     // initialize TOFs
-    for (int i = 0; i < tof_sensor_count; i++) {
-        TOFSensor* tof_sensor = new TOFSensor();
-        tof_sensor->init();
-        tof_sensor->setId(i);
-        sensors.push_back(tof_sensor);
-        // tof_sensors[i].init();
+    for (int i = 0; i < num_sensors[3]; i++) {
+        tof_sensors[i].init();
     }
 
     // initialize refereree system
@@ -88,65 +68,50 @@ void SensorManager::init(const Config* config_data) {
 }
 
 void SensorManager::read() {
+    prof.begin("buff");
+    for (int i = 0; i < buff_sensor_count; i++) {
+        buff_encoders[i].read();
+        // buff_encoders[i].print();
+    }
+    prof.end("buff");
+    for (int i = 0; i < icm_sensor_count; i++) {
+        icm_sensors[i].read();
+        // icm_sensors[i].print();
+    }
+    for (int i = 0; i < rev_sensor_count; i++) {
+        rev_sensors[i].read();
+        // rev_sensors[i].print();
+    }
+
+    if (lidar_sensor_count > 0) {
+        lidar1.read();
+        lidar2.read();
+    }
+
     // read ref system
     ref.read();
-
-    // read sensors
-    for (Sensor* sensor : sensors) {
-
-        sensor->read();
+    for (int i = 0; i < 1; i++) {
+        tof_sensors[i].read();
+        // tof_sensors[i].print();
     }
-
-    // for (int i = 0; i < buff_sensor_count; i++) {
-    //     buff_encoders[i].read();
-    //     // buff_encoders[i].print();
-    // }
-    // for (int i = 0; i < icm_sensor_count; i++) {
-    //     icm_sensors[i].read();
-    //     // icm_sensors[i].print();
-    // }
-    // for (int i = 0; i < rev_sensor_count; i++) {
-    //     rev_sensors[i].read();
-    //     // rev_sensors[i].print();
-    // }
-
-    // if (lidar_sensor_count > 0) {
-    //     lidar1.read();
-    //     lidar2.read();
-    // }
-
-    
-    // for (int i = 0; i < 1; i++) {
-    //     tof_sensors[i].read();
-    //     // tof_sensors[i].print();
-    // }
 
 }
 
-// BuffEncoder* SensorManager::get_buff_encoder(int index) {
-//     return &buff_encoders[index];
-// }
-
-// ICM20649* SensorManager::get_icm_sensor(int index) {
-//     return &icm_sensors[index];
-// }
-
-// RevEncoder* SensorManager::get_rev_sensor(int index) {
-//     return &rev_sensors[index];
-// }
-
-// TOFSensor* SensorManager::get_tof_sensor(int index) {
-//     return &tof_sensors[index];
-// }
-
-Sensor* SensorManager::get_sensor(SensorType sensor_type, int index) {
-    for(Sensor* sensor : sensors) {
-        if(sensor->getType() == sensor_type && sensor->getId() == index) {
-            return sensor;
-        }
-    }
+BuffEncoder* SensorManager::get_buff_encoder(int index) {
+    return &buff_encoders[index];
 }
 
+ICM20649* SensorManager::get_icm_sensor(int index) {
+    return &icm_sensors[index];
+}
+
+RevEncoder* SensorManager::get_rev_sensor(int index) {
+    return &rev_sensors[index];
+}
+
+TOFSensor* SensorManager::get_tof_sensor(int index) {
+    return &tof_sensors[index];
+}
 
 void SensorManager::calibrate_imus() {
     Serial.println("Calibrating IMU's...");
@@ -159,8 +124,7 @@ void SensorManager::calibrate_imus() {
     float sum_accel_z = 0;
 
     for (int i = 0; i < NUM_IMU_CALIBRATION; i++) {
-        //icm_sensors[0].read();
-        get_sensor(SensorType::ICM, 0)->read();
+        icm_sensors[0].read();
         sum_x += icm_sensors[0].get_gyro_X();
         sum_y += icm_sensors[0].get_gyro_Y();
         sum_z += icm_sensors[0].get_gyro_Z();
