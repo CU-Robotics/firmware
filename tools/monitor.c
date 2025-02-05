@@ -5,12 +5,14 @@
 #include <unistd.h>         // close/read/write
 #include <sys/time.h>       // gettimeofday
 #include <string.h>         // memset
-#include <linux/limits.h>   // PATH_MAX
 #include <time.h>           // time, tm, mktime, localtime
 #include <stdarg.h>         // va_list
 #include <sys/stat.h>       // mkdir
 
 #include <fts.h>            // FTS stuff
+
+/// @brief Max path size 
+#define PATH_MAX 4096
 
 /// @brief Size of the serial buffers
 const size_t read_size = 8ul * 1024ul;
@@ -45,7 +47,7 @@ char* log_directory[ ] = { "tools/teensy_logs/" };
 /// @return -1 on error, 0 on success
 int find_teensy_serial_dev(char* serial_path);
 
-/// @brief Open the correctly named log file
+/// @brief Create and open a new log file with the correct name. If there are too many log files, replace the oldest one
 /// @return The file pointer to the log file to be written to or NULL on error
 FILE* open_correct_log_file();
 
@@ -73,12 +75,20 @@ int main(int argc __attribute__((unused)), char** argv) {
     memset(teensy_dev_path, 0, SERIAL_PATH_SIZE);
 
     // find the teensy's device path
-    if (find_teensy_serial_dev(teensy_dev_path) == -1) {
-        printf("%s: Could not find Teensy's serial device\n", argv[0]);
+    printf("Looking for Teensy's serial device...\n");
 
-        // no need to clean up as nothing has been allocated yet
-        return EXIT_FAILURE;
+    // loop to find the serial device. time is used to print a message every second
+    // we dont use sleep because we want to immediately connect as soon as the device is found
+    time_t start_time = time(NULL);
+
+    while (find_teensy_serial_dev(teensy_dev_path) == -1) {
+        if (time(NULL) - start_time >= 1) {
+            printf("Could not find Teensy's serial path. Retrying...\n");
+            start_time = time(NULL);
+        }
     }
+
+    printf("Found Teensy's serial device: %s\n", teensy_dev_path);
 
     // try to open the file
     int dev_flags = O_RDWR | O_NOCTTY | O_TRUNC;
@@ -118,6 +128,8 @@ int main(int argc __attribute__((unused)), char** argv) {
         exit_code = EXIT_FAILURE;
         goto cleanup;
     }
+
+    printf("Monitoring Teensy's serial device...\n");
 
     // main loop for reading and printing
     while (1) {
@@ -255,8 +267,6 @@ int find_teensy_serial_dev(char* serial_path) {
     // construct the full path from the base and the symlink's relative path
     strcpy(full_path, "/dev/serial/by-id/");
     strcat(full_path, serial_path);
-
-    printf("Found Teensy's serial path: %s\n", full_path);
 
     // this produces a path like: /dev/serial/by-id/../../blah
     strncpy(serial_path, full_path, SERIAL_PATH_SIZE);
