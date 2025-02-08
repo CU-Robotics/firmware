@@ -230,11 +230,7 @@ void MG8016EI6::write_motor_angle(float angle, float speed_limit) {
 }
 
 void MG8016EI6::print_state() const {
-    Serial.printf("MG Motor %d\n", m_id);
-    Serial.printf("Temperature: %d C\n", m_state.temperature);
-    Serial.printf("Torque: %f %%\n", m_state.torque);
-    Serial.printf("Speed: %f rad/s\n", m_state.speed);
-    Serial.printf("Position: %u\n", m_state.position);
+    Serial.printf("Bus: %x\tID: %x\tTemp: %.2dc\tTorque: % 4.3f\tSpeed: % 6.2f\tPos: %5.5d\n", m_bus_id, m_id, m_state.temperature, m_state.torque, m_state.speed, m_state.position);
 }
 
 void MG8016EI6::write_motor_off() {

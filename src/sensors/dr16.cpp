@@ -194,7 +194,7 @@ float* DR16::get_input() {
 }
 
 void DR16::print() {
-	Serial.printf("%.4f\t%.4f\t%.4f\t%.4f\t%.4f\t%.4f\t%.4f\n", m_input[0], m_input[1], m_input[2], m_input[3], m_input[4], m_input[5], m_input[6]);
+	Serial.printf("RStick X: %.2f\tRStick Y: %.2f\tLStick X: %.2f\tLStick Y: %.2f\tWheel: %.2f\tRSwitch: %.2f\tLSwitch: %.2f\n", m_input[0], m_input[1], m_input[2], m_input[3], m_input[4], m_input[5], m_input[6]);
 }
 
 void DR16::print_raw() {

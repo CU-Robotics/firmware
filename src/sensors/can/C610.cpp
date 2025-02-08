@@ -80,9 +80,5 @@ void C610::write_motor_torque(float torque) {
 }
 
 void C610::print_state() const {
-    Serial.printf("C610 Motor %d\n", m_id);
-    Serial.printf("Temperature: %d C\n", m_state.temperature);
-    Serial.printf("Torque: %f %%\n", m_state.torque);
-    Serial.printf("Speed: %f rad/s\n", m_state.speed);
-    Serial.printf("Position: %d\n", m_state.position);
+    Serial.printf("Bus: %x\tID: %x\tTemp: %.2dc\tTorque: % 4.3f\tSpeed: % 6.2f\tPos: %5.5d\n", m_bus_id, m_id, m_state.temperature, m_state.torque, m_state.speed, m_state.position);
 }
