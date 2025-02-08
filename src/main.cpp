@@ -18,7 +18,7 @@
 // Declare global objects
 Timer loop_timer;
 Timer stall_timer;
-
+ICM20649 imu;
 // DONT put anything else in this function. It is not a setup function
 void print_logo() {
     if (Serial) {
@@ -63,10 +63,15 @@ int main() {
 
     print_logo();
     
+    SPI.begin();
+    imu.init(imu.SPI);
+    imu.set_gyro_range(4000);
+    imu.calibration_all();
 
     // Main loop
     while (true) {
-        
+        imu.read();
+        imu.print();
 
 
 

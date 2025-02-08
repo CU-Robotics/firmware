@@ -100,3 +100,4 @@ void ICM20649::set_gyro_range(int gyro_rate_range) {
 
     Serial.println(sensor.getGyroRange());
 }
+

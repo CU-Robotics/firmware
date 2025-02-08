@@ -11,11 +11,11 @@
 /// @brief CS (Chip Select) pin for SPI mode
 #define ICM_CS 10
 /// @brief SDA/MOSI (Serial Data In) (Microcontroller Out Sensor In) pin for software-SPI mode
-#define ICM_MOSI 26
+#define ICM_MOSI 11
 /// @brief AD0/MISO/SD0 (Serial Data Out) (Microcontroller In Sensor Out) pin for software-SPI mode
-#define ICM_MISO 39
+#define ICM_MISO 12
 /// @brief SCL/SCK (SPI Clock) pin for software-SPI mode
-#define ICM_SCK 27
+#define ICM_SCK 13
 
 /// @brief Sensor access for an ICM20649 IMU Sensor. Child of the abstract IMUSensor class.
 /// @note supports I2C and SPI communication. 

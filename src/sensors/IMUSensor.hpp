@@ -6,11 +6,13 @@
 
 #include <Adafruit_Sensor.h>
 
+#define CALIBRATION_NUM 100000
+
 /// @brief Abstract parent class for all IMUSensors, which give acceleration and gyroscope data. 
 class IMUSensor {
 public:
     /// @brief read values from the sensor. Call this to update sensor data before accessing them from the getters. 
-    virtual void read() = 0;
+    virtual void read();
 
     /// @brief Get the temperature of the sensor
     /// @return temperature in Celcius
@@ -18,15 +20,15 @@ public:
 
     /// @brief Get the acceleration of the sensor in its local x axis.
     /// @return acceleration m/s^2
-    inline float get_accel_X() { return accel_X; };
+    inline float get_accel_X() { return accel_X * scale_accel; };
 
     /// @brief Get the acceleration of the sensor in its local y axis
     /// @return acceleration m/s^2
-    inline float get_accel_Y() { return accel_Y; };
+    inline float get_accel_Y() { return accel_Y * scale_accel; };
 
     /// @brief Get the acceleration of the sensor in its local z axis
     /// @return acceleration m/s^2
-    inline float get_accel_Z() { return accel_Z; };
+    inline float get_accel_Z() { return accel_Z * scale_accel; };
 
     /// @brief Get the change in gyroscope orientation relative to the x axis
     /// @return gryoscope x in radians/s
@@ -50,8 +52,14 @@ public:
         offset_Z = z;
     }
 
+    inline void set_scale(float a){
+        scale_accel = a;
+    }
+
     /// @brief Print out all IMU data to Serial for debugging purposes
     void print();
+
+    void calibration_all();
 
 protected:
     // sensor events to read from
@@ -88,6 +96,7 @@ protected:
     /// @brief offset z value
     float offset_Z = 0;
 
+    float scale_accel = 1;
     /// @brief temperature value
     float temperature = 0;
 };

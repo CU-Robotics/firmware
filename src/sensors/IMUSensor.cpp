@@ -24,3 +24,31 @@ void IMUSensor::print() {
 	Serial.println(" radians/s ");
 	Serial.println();
 }
+
+void IMUSensor::calibration_all(){
+	Serial.println("Calibrating IMU...");
+    float sum_accel_x = 0;
+    float sum_accel_y = 0;
+    float sum_accel_z = 0;
+    float sum_x = 0;
+    float sum_y = 0;
+    float sum_z = 0;
+    for (int i = 0; i < CALIBRATION_NUM; i++){
+        read();
+        sum_accel_x += accel_X;
+        sum_accel_y += accel_Y;
+        sum_accel_z += accel_Z;
+        sum_x += gyro_X;
+        sum_y += gyro_Y;
+        sum_z += gyro_Z;
+    }
+    float x = sum_accel_x/CALIBRATION_NUM;
+    float y = sum_accel_y/CALIBRATION_NUM;
+    float z = sum_accel_z/CALIBRATION_NUM;
+    scale_accel = SENSORS_GRAVITY_EARTH/sqrt((x*x) + (y*y) + (z*z));
+    set_offsets(sum_x / CALIBRATION_NUM, sum_y / CALIBRATION_NUM, sum_z / CALIBRATION_NUM);
+    accel_X = accel_X * scale_accel;
+    accel_Y = accel_Y * scale_accel; 
+    accel_Z = accel_Z * scale_accel;
+    Serial.println("Calibrating Finish...");
+}
