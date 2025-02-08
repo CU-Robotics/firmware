@@ -227,6 +227,8 @@ void FlywheelController::step(float reference[STATE_LEN][3], float estimate[STAT
 }
 
 void FeederController::step(float reference[STATE_LEN][3], float estimate[STATE_LEN][3], float micro_estimate[NUM_MOTORS][MICRO_STATE_LEN], float outputs[NUM_MOTORS]){
+    float dt = timer.delta();
+
     pid_high.K[0] = gains[0];
     pid_high.K[1] = gains[1];
     pid_high.K[2] = gains[2];
@@ -234,7 +236,7 @@ void FeederController::step(float reference[STATE_LEN][3], float estimate[STATE_
 
     pid_high.setpoint = reference[6][1];
     pid_high.measurement = estimate[6][1];
-    float output = pid_high.filter(timer.delta(), false, false)*gear_ratios[0];
+    float output = pid_high.filter(dt, false, false)*gear_ratios[0];
     pid_low.K[0] = gains[3];
     pid_low.K[1] = gains[4];
     pid_low.K[2] = gains[5];
@@ -242,7 +244,7 @@ void FeederController::step(float reference[STATE_LEN][3], float estimate[STATE_
     
     pid_low.setpoint = output;
     pid_low.measurement = micro_estimate[12][1];
-    output = pid_low.filter(timer.delta(), true, false);
+    output = pid_low.filter(dt, true, false);
     // Serial.printf("Feeder output: %f, ref: %f, FF: %f\n", output, pid_low.setpoint-micro_estimate[12][1], pid_low.K[3]);
     outputs[0] = output;
 }

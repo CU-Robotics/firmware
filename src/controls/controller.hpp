@@ -44,10 +44,10 @@ public:
     /// @param estimate current macro state estimate
     /// @param micro_estimate current micro state estimate
     /// @param outputs array of new motor inputs
-    virtual void step(float reference[STATE_LEN][3], float estimate[STATE_LEN][3], float micro_estimate[NUM_MOTORS][MICRO_STATE_LEN], float outputs[NUM_MOTORS]);
+    virtual void step(float reference[STATE_LEN][3], float estimate[STATE_LEN][3], float micro_estimate[NUM_MOTORS][MICRO_STATE_LEN], float outputs[NUM_MOTORS]) {}
 
     /// @brief Resets integrators/timers
-    virtual void reset() { timer.start_timer(); }
+    virtual void reset() { timer.start(); }
 };
 
 /// @brief Default controller
