@@ -34,7 +34,6 @@ void BuffEncoder::serialize(uint8_t* buffer, size_t& offset) {
 }
 
 void BuffEncoder::print() {
-    Serial.println("Buff Encoder:");
-    Serial.print("Angle: ");
+    Serial.printf("Buff Encoder:\n\t");
     Serial.println(m_angle);
 }
