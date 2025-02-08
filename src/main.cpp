@@ -174,7 +174,6 @@ int main() {
         // manual controls on firmware
 
         float delta = control_input_timer.delta();
-	Serial.printf("Delta: %f\n", delta);
         dr16_pos_x += dr16.get_mouse_x() * 0.05 * delta;
         dr16_pos_y += dr16.get_mouse_y() * 0.05 * delta;
 
