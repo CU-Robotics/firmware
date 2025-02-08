@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# verify that the backup monitor is compiled
+gcc ./tools/monitor.c -Wall -Wextra -Wpedantic -Werror -Wshadow -o ./tools/custom_monitor
+
 # handle sigint in a strange way to not break tycmd monitor
 trap 'exit 0' INT;
 
@@ -14,8 +17,9 @@ tty_path=$(./tools/get_tty_path.sh *-if00)
 if [ -n "$tty_path" ]; then
 	echo "Monitoring Teensy on $tty_path"
 
-	# Start the monitor, if this fails its likely because monitor is acting up and a terminal restart is needed
-	tycmd monitor --board="-Teensy@$tty_path" || echo "Failed to monitor: Restart your terminal and try again"
+	# Start the monitor, if it fails, try the backup monitor
+    # If both monitors fail, the teensy is likely in an invalid state and not listening to the serial port. Click the button and reflash to fix.
+	tycmd monitor --reconnect --board="-Teensy@$tty_path" || ./tools/custom_monitor || echo "Failed to monitor."
 
 	exit 0
 else

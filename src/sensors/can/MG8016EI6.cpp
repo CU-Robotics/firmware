@@ -21,9 +21,10 @@ int MG8016EI6::read(CAN_message_t& msg) {
     // CMD_MOTOR_OFF, CMD_MOTOR_ON, CMD_MOTOR_STOP, CMD_WRITE_PID, CMD_WRITE_PID_ROM, CMD_WRITE_ACCELERATION, CMD_WRITE_ENCODER_ZERO
 
     // early return if msg ID does not match this motor
-    if (msg.id != m_base_id + m_id) {
-        return 0;
-    }
+    if (msg.id != m_base_id + m_id) return 0; 
+
+    // early return if the bus ID does not match
+    if ((uint32_t)(msg.bus - 1) != m_bus_id) return 0;
 
     uint8_t cmd_byte = msg.buf[0];
 

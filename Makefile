@@ -64,7 +64,7 @@ CFLAGS := $(CPU_CFLAGS)
 # Compiler flags for C++ files
 CXXFLAGS := $(CPU_CFLAGS) -std=gnu++17 \
             -felide-constructors -fno-exceptions -fpermissive -fno-rtti \
-            -Wno-error=narrowing -Wno-trigraphs -Wno-comment
+            -Wno-error=narrowing -Wno-trigraphs -Wno-comment -Wall -Werror
 
 # Linker flags, including Teensy-specific linker script
 # --gc-sections: Remove unused sections to reduce binary size

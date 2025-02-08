@@ -4,7 +4,6 @@
 #include <cstdint>
 #include <state.hpp>
 #include <vector>
-#include <rm_can.hpp>
 #include "Sensor.hpp"
 #include "sensor_constants.hpp"
 #include "estimator_manager.hpp"
@@ -205,7 +204,7 @@ struct comms_data_packet {
     /// Referee data.
     RefereeData refData;
     /// CAN bus data.
-    CANData canData;
+    // CANData canData;
 
     ///dr16 data
     DR16Data dr16_data;
@@ -236,10 +235,6 @@ struct comms_data_packet {
     /// @return RefereeData object.
     RefereeData getRefData() const;
 
-    /// @brief Getter for CANData.
-    /// @return CANData object.
-    CANData getCanData() const;
-
     /// @brief Constructor to initialize the comms_data_packet with configuration data.
     /// @param config_data Pointer to the configuration data.
     comms_data_packet(const Config* config_data);
@@ -251,7 +246,6 @@ struct comms_data_packet {
     /// @param packetBuffer Buffer to pack the data into.
     /// @param robotState The current state of the robot.
     /// @param ref_data_raw Raw referee data.
-    /// @param canData Pointer to CANData.
     /// @param estimatorManager Reference to the EstimatorManager.
     /// @param lidar1 Reference to the first LiDAR sensor.
     /// @param lidar2 Reference to the second LiDAR sensor.
@@ -260,7 +254,7 @@ struct comms_data_packet {
         uint8_t packetBuffer[BUFFER_SIZE],
         Governor robotState,
         uint8_t ref_data_raw[180],
-        CANData* canData,
+        // CANData* canData,
         EstimatorManager& estimatorManager,
         D200LD14P& lidar1,
         D200LD14P& lidar2,

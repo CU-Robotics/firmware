@@ -9,16 +9,16 @@ struct PIDFilter {
     /// @brief gains
     float K[4] = { 0.0 }; // P, I, D, F
     /// @brief integrated error
-    float sumError;
+    float sumError = 0;
     /// @brief previous error
-    float prevError;
+    float prevError = 0;
 
     /// @brief target
-    float setpoint;
+    float setpoint = 0;
     /// @brief estimate
-    float measurement;
+    float measurement = 0;
     /// @brief feedforward component
-    float feedForward;
+    float feedForward = 0;
 
     /// @brief calculate pidf output
     /// @param dt delta time

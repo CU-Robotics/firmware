@@ -118,7 +118,7 @@ protected:
     uint32_t m_id = 0;
 
     /// @brief ID of the CAN bus
-    uint8_t m_bus_id = 0;
+    uint32_t m_bus_id = 0;
 
     /// @brief The motor type
     MotorType m_motor_type = MotorType::NULL_MOTOR_TYPE;

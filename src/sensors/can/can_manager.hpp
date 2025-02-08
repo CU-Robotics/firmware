@@ -5,11 +5,17 @@
 
 #include <map>
 
-/// @brief The maximum number of motors that can be connected to the system. Derrived from the max motors per bus assuming bus 3 only holds non-RM motors
-constexpr uint32_t CAN_MAX_MOTORS = 8u + 8u + 32u;
+/// @brief Debug flag to enable verbose logging. This can get quite noisy so it is off by default. Critical errors are still printed regardless of flag
+// #define CAN_MANAGER_DEBUG
+
+/// @brief The maximum number of motors that can be connected to a single bus
+constexpr uint32_t CAN_MAX_MOTORS_PER_BUS = 8u;
 
 /// @brief The number of CAN busses that can be used
 constexpr uint32_t CAN_NUM_BUSSES = 3u;
+
+/// @brief The maximum number of motors that can be connected to the system. Derrived from the max motors per bus assuming bus 3 only holds non-RM motors
+constexpr uint32_t CAN_MAX_MOTORS = CAN_NUM_BUSSES * CAN_MAX_MOTORS_PER_BUS;
 
 /// @brief CAN bus 1 ID
 constexpr uint32_t CAN_1 = 0u;
@@ -55,7 +61,7 @@ public:
 
     /// @brief Dynamically create the motor objects based on config data
     /// @param motor_info Motor info array from the config yaml. 2D array holding information in the form: CAN_MAX_MOTORS * [motor_controller_type, per_bus_motor_id, bus_id]
-    void configure(float motor_info[CAN_MAX_MOTORS][3]);
+    void configure(const float motor_info[CAN_MAX_MOTORS][3]);
 
     /// @brief Read data from all busses and distribute them to the correct motors
     void read();
@@ -74,6 +80,13 @@ public:
     /// @note This does not issue a CAN command over the bus
     void write_motor_torque(uint32_t motor_gid, float torque);
 
+    /// @brief Write a torque command to a specific motor given it's bus and motor ID
+    /// @param bus_id The bus ID of the motor to write to
+    /// @param motor_id The motor ID on the bus to write to
+    /// @param torque The normalized torque value to write to the motor in the range [-1, 1]
+    /// @note This does not issue a CAN command over the bus
+    void write_motor_torque(uint32_t bus_id, uint32_t motor_id, float torque);
+
     /// @brief Print the state of all motors
     void print_state();
 
@@ -81,11 +94,34 @@ public:
     /// @param motor_gid The global ID of the motor to print the state of
     void print_motor_state(uint32_t motor_gid);
 
+    /// @brief Print the state of a specific motor
+    /// @param bus_id The bus ID of the motor to print the state of
+    /// @param motor_id The motor ID on the bus to print the state of
+    void print_motor_state(uint32_t bus_id, uint32_t motor_id);
+
     /// @brief Get the underlying motor object by ID
     /// @param motor_gid The global ID of the motor to get
     /// @return The motor object if it exists, nullptr if it does not
     /// @note You can use the motor's get_type to determine the type of motor and dynamic_cast to the correct motor type
     Motor* get_motor(uint32_t motor_gid);
+
+    /// @brief Get the underlying motor object by bus and motor ID
+    /// @param bus_id The bus ID of the motor to get
+    /// @param motor_id The motor ID on the bus to get
+    /// @return The motor object if it exists, nullptr if it does not
+    /// @note You can use the motor's get_type to determine the type of motor and dynamic_cast to the correct motor type
+    Motor* get_motor(uint32_t bus_id, uint32_t motor_id);
+
+    /// @brief Get the state of a specific motor by global ID
+    /// @param motor_gid The global ID of the motor to get the state of
+    /// @return The state of the motor
+    MotorState get_motor_state(uint32_t motor_gid);
+
+    /// @brief Get the state of a specific motor by bus and motor ID
+    /// @param bus_id The bus ID of the motor to get the state of
+    /// @param motor_id The motor ID on the bus to get the state of
+    /// @return The state of the motor
+    MotorState get_motor_state(uint32_t bus_id, uint32_t motor_id);
 
 private:
     /// @brief Verify that all motors are online and ready
@@ -93,8 +129,8 @@ private:
 
     /// @brief Iterates through all the motors and tries to give the message to the correct one
     /// @param msg The message to distribute
-    /// @return True if the message was distributed, false if it was not
-    bool distribute_msg(CAN_message_t& msg);
+    /// @return The motor that successfully read the message or nullptr if no motor read the message
+    Motor* distribute_msg(CAN_message_t& msg);
 
 private:
     /// @brief CAN bus 1
