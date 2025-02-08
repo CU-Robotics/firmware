@@ -60,8 +60,8 @@ public:
     void init();
 
     /// @brief Dynamically create the motor objects based on config data
-    /// @param motor_info Motor info array from the config yaml. 2D array holding information in the form: CAN_MAX_MOTORS * [motor_controller_type, per_bus_motor_id, bus_id]
-    void configure(const float motor_info[CAN_MAX_MOTORS][3]);
+    /// @param motor_info Motor info array from the config yaml. 2D array holding information in the form: CAN_MAX_MOTORS * [motor_controller_type, per_bus_motor_id, bus_id, motor_type]
+    void configure(const float motor_info[CAN_MAX_MOTORS][4]);
 
     /// @brief Read data from all busses and distribute them to the correct motors
     void read();
