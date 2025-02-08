@@ -62,8 +62,8 @@ struct Config {
     /// @brief gear ratio matrix
     float gear_ratios[NUM_ROBOT_CONTROLLERS][CAN_MAX_MOTORS];
 
-    /// @brief matrix that contains the type, physical id, and physical bus of each motor
-    float motor_info[CAN_MAX_MOTORS][3];
+    /// @brief matrix that contains the motor controller type, per-bus motor id, bus id, and motor type
+    float motor_info[CAN_MAX_MOTORS][4];
     /// @brief reference limits matrix
     float set_reference_limits[STATE_LEN][3][2];
     

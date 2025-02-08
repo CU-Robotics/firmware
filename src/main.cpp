@@ -92,9 +92,9 @@ int main() {
     can.init();
 
     // CTRL type, motor ID, bus ID
-    // CTRL type: 0 = none, 1 = C610, 2 = C620, 3 = MG8016
-    float motor_info[24][3] = {
-        {2, 1, 1},
+    // CTRL type: 0 = none, 1 = C610, 2 = C620, 3 = MG8016, 4 = GIM
+    float motor_info[24][4] = {
+        {2, 1, 1, 0},
     };
 
     can.configure(motor_info);
