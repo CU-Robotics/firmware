@@ -2,8 +2,10 @@
 
 #include "ethernet_comms.hpp"
 #include "data/comms_data.hpp"
+#include "data/packet_payload.hpp"
 
-#define MAX_ETHERNET_PACKETS 128        // TODO: stop making up numbers
+#define MAX_ETHERNET_PACKETS    128        // TODO: stop making up numbers
+#define MAX_HID_PACKETS         128
 
 
 namespace Comms {
@@ -16,6 +18,7 @@ public:
     ~CommsLayer() = default;        // destructor
 
     int init();
+    int init(bool e_Ethernet, bool e_HID);
     int loop();
 
 private:
@@ -27,31 +30,29 @@ public:
 // - data I/O functions
 
     // give CommsLayer a piece of data to send out
-    void send(CommsData&& data, PhysicalMedium medium);
-    void send(CommsData& data, PhysicalMedium medium);
+    void send(CommsData* data, PhysicalMedium medium);
 
     // pull a piece of data that CommsLayer is ready to provide
     HiveData receive(PhysicalMedium medium);
-    
+
+    EthernetPacket encode();
+
+    void decode(EthernetPacket source_packet);
+
 
 private:
-
-    EthernetPacket encode(CommsData *source_data);
-
-    HiveData decode(EthernetPacket source_packet);
-
 
     // data incoming to be output, TODO make this a queue so we can store many data packets! (or probably a LL)
     HiveData data_incoming_ethernet;
 
-    // data outgoing to be sent over a particular medium, TODO make this a multi-layer queue
-    CommsData* data_outgoing_ethernet;
+    PacketPayload data_outgoing_ethernet;
 
 
     // sequence number
     uint32_t sequence;
 
-    
+    bool enable_Ethernet;
+    bool enable_HID;
 };
 
 } // namespace Comms
