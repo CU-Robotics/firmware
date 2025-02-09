@@ -51,8 +51,8 @@ void RevEncoder::serialize(uint8_t* buffer, size_t& offset) {
 
 void RevEncoder::print() {
     Serial.println("Rev Encoder:");
-    Serial.print("Ticks: ");
+    Serial.print("\tTicks: ");
     Serial.println(ticks);
-    Serial.print("Radians: ");
+    Serial.print("\tRadians: ");
     Serial.println(radians);
 }
