@@ -34,10 +34,6 @@ ConfigLayer config_layer;
 
 Profiler prof;
 
-Timer loop_timer;
-Timer stall_timer;
-Timer control_input_timer;
-
 EstimatorManager estimator_manager;
 ControllerManager controller_manager;
 
@@ -124,6 +120,9 @@ int main() {
     //set reference limits in the reference governor
     governor.set_reference_limits(config->set_reference_limits);
 
+    // print all of config
+    config->print();
+
     // variables for use in main
     float temp_state[STATE_LEN][3] = { 0 }; // Temp state array
     float temp_micro_state[NUM_MOTORS][MICRO_STATE_LEN] = { 0 }; // Temp micro state array
@@ -146,10 +145,15 @@ int main() {
     // whether we are in hive mode or not
     bool hive_toggle = false;
 
+    Timer loop_timer;
+    Timer stall_timer;
+    Timer control_input_timer;
+
     Serial.println("Entering main loop...\n");
 
     // Main loop
     while (true) {
+        stall_timer.start();
         // read main sensors
         can.read();
         transmitter->read();
@@ -248,8 +252,18 @@ int main() {
         // read sensors
         estimator_manager.read_sensors();
 
+        // print dr16
+        Serial.printf("DR16:\n\t");
+        dr16.print();
+
+        Serial.printf("Target state:\n");
+        for (int i = 0; i < 8; i++) {
+            Serial.printf("\t%d: %f %f %f\n", i, target_state[i][0], target_state[i][1], target_state[i][2]);
+        }
+        
         // override temp state if needed
         if (incoming->get_hive_override_request() == 1) {
+            Serial.printf("Overriding state with hive state\n");
             incoming->get_hive_override_state(hive_state_offset);
             memcpy(temp_state, hive_state_offset, sizeof(hive_state_offset));
         }
@@ -264,13 +278,25 @@ int main() {
             count_one++;
         }
 
+        Serial.printf("Estimated state:\n");
+        for (int i = 0; i < 8; i++) {
+            Serial.printf("\t%d: %f %f %f\n", i, temp_state[i][0], temp_state[i][1], temp_state[i][2]);
+        }
+
         // reference govern
         governor.set_estimate(temp_state);
         governor.step_reference(target_state, config->governor_types);
         governor.get_reference(temp_reference);
 
+        Serial.printf("Reference state:\n");
+        for (int i = 0; i < 8; i++) {
+            Serial.printf("\t%d: %f %f %f\n", i, temp_reference[i][0], temp_reference[i][1], temp_reference[i][2]);
+        }
+
         // generate motor outputs from controls
         controller_manager.step(temp_reference, temp_state, temp_micro_state);
+
+        can.print_output();
 
         // construct sensor data packet
         SensorData sensor_data;
@@ -300,7 +326,8 @@ int main() {
         bool is_slow_loop = false;
 
         // check whether this was a slow loop or not
-	    float dt = stall_timer.delta();
+	float dt = stall_timer.delta();
+        Serial.printf("Loop %d, dt: %f\n", loopc, dt);
         if (dt > 0.002) { 
             // zero the can bus just in case
 	    	can.zero();
@@ -314,10 +341,12 @@ int main() {
         if (transmitter->is_connected() && (transmitter->get_l_switch() == 2 || transmitter->get_l_switch() == 3) && config_layer.is_configured() && !is_slow_loop) {
             // SAFETY OFF
             can.write();
+            Serial.printf("Can write\n");
         } else {
             // SAFETY ON
             // TODO: Reset all controller integrators here
             can.zero();
+            Serial.printf("Can zero\n");
         }
 
         // LED heartbeat -- linked to loop count to reveal slowdowns and freezes.
