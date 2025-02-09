@@ -32,7 +32,6 @@ bool BuffEncoder::read() {
 
 
 void BuffEncoder::print() {
-    Serial.println("Buff Encoder:");
-    Serial.print("Angle: ");
+    Serial.printf("Buff Encoder:\n\t");
     Serial.println(m_angle);
 }

@@ -47,8 +47,8 @@ float RevEncoder::get_angle_radians() {
 
 void RevEncoder::print() {
     Serial.println("Rev Encoder:");
-    Serial.print("Ticks: ");
+    Serial.print("\tTicks: ");
     Serial.println(ticks);
-    Serial.print("Radians: ");
+    Serial.print("\tRadians: ");
     Serial.println(radians);
 }
