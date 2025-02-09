@@ -96,36 +96,21 @@ int main() {
 	Transmitter* transmitter = nullptr;
 	TransmitterType t_type = transmitter->who_am_i();
 	if (t_type == TransmitterType::DR16){
-		DR16 dr16;
 		transmitter = new DR16;
 	}
 	else if (t_type == TransmitterType::ET16S){
-		ET16S wfly;
 		transmitter = new ET16S;
 	}
-	Serial.println();
-	Serial.print("size of DR16:");
-	Serial.print(sizeof(DR16));
-	Serial.println();
-	Serial.print("size of ET16S:");
-	Serial.print(sizeof(ET16S));
-	Serial.println();
-	Serial.print("size of Transmitter:");
-	Serial.print(sizeof(Transmitter));
-
     can.init();
     transmitter->init();
     ref.init();
     comms.init();
 
-
-
 	
     //can data pointer so we don't pass around rm_CAN object
     // TODO: extern the can_data object
     CANData* can_data = can.get_data();
-
-	
+   
     // Config config
     Serial.println("Configuring...");
     const Config* config = config_layer.configure(&comms);
