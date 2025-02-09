@@ -219,7 +219,7 @@ void balancing_test::observer(){
 
     uint32_t timenow = millis();
     float slowdt = timenow - slowdalay_help;
-    if(slowdt > 20 || slowdt < -100){
+    if(slowdt > 5 || slowdt < -100){
         o_data.llaverage /= o_data.avg_count;
         o_data.lraverage /= o_data.avg_count;
         o_data.theta_ll_avg /= o_data.avg_count;
