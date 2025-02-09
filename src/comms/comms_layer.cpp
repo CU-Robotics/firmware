@@ -52,8 +52,16 @@ int CommsLayer::loop() {
     return 0;
 }
 
-void CommsLayer::send(CommsData* data, PhysicalMedium medium) {
-
+bool CommsLayer::send(CommsData* data, PhysicalMedium medium) {
+    switch(medium){
+    case PhysicalMedium::Ethernet:
+        return data_outgoing_ethernet.add(data);
+        break;
+    case PhysicalMedium::HID:
+        // return data_outgoing_HID.add(data);
+        break;    
+    }
+    return false;
 }
 
 HiveData CommsLayer::receive(PhysicalMedium medium) {
@@ -73,6 +81,8 @@ EthernetPacket CommsLayer::encode() {
 
     data_outgoing_ethernet.construct_data();
     uint8_t* packet_buffer = data_outgoing_ethernet.data();
+
+    Serial.printf("Total bytes in payload: %d\n", data_outgoing_ethernet.size());
 
     memcpy(retval.payload.data, packet_buffer, data_outgoing_ethernet.size());
 

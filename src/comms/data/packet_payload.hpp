@@ -5,6 +5,8 @@
 
 #include "comms_data.hpp"
 
+#define MAX_QUEUE_SIZE 32
+
 namespace Comms {
 
 /// @brief Constructs and stores the data part of a packet we want to send over a physical layer.
@@ -34,7 +36,7 @@ public:
     /// @note This function will automatically free the data pointed to, assuming it is heap-allocated.
     /// @note This function should, in general, only be called by the send() method of the Container template class.
     /// @note *data pointer MUST be heap allocated, otherwise you WILL cause invalid free errors!!!!!*
-    void add(CommsData* data);
+    bool add(CommsData* data);
 
     /// @brief Returns a pointer to the raw constructed data after construct_data() is called.
     /// @return Pointer to the raw byte array

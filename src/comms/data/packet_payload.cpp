@@ -26,13 +26,17 @@ void PacketPayload::construct_data() {
     // fill_logging_data_from_queue(logging_send_queue);
 }
 
-void PacketPayload::add(CommsData* data) {
+bool PacketPayload::add(CommsData* data) {
     switch (data->priority) {
     case Priority::High: {
+        if(high_priority_send_queue.size() >= MAX_QUEUE_SIZE) return false;
         high_priority_send_queue.push(data);
+        return true;
         break;
     } case Priority::Medium: {
+        if(medium_priority_send_queue.size() >= MAX_QUEUE_SIZE) return false;
         medium_priority_send_queue.push(data);
+        return true;
         break;
     }
     // } case Priority::Logging: {
@@ -41,6 +45,7 @@ void PacketPayload::add(CommsData* data) {
     //     logging_send_queue.push(logging);
     //     break;
     }
+    return false;
 }
 
 uint8_t* PacketPayload::data() {

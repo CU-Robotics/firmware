@@ -30,7 +30,7 @@ public:
 // - data I/O functions
 
     // give CommsLayer a piece of data to send out
-    void send(CommsData* data, PhysicalMedium medium);
+    bool send(CommsData* data, PhysicalMedium medium);
 
     // pull a piece of data that CommsLayer is ready to provide
     HiveData receive(PhysicalMedium medium);
@@ -45,7 +45,7 @@ private:
     // data incoming to be output, TODO make this a queue so we can store many data packets! (or probably a LL)
     HiveData data_incoming_ethernet;
 
-    PacketPayload data_outgoing_ethernet;
+    PacketPayload data_outgoing_ethernet = PacketPayload(ETHERNET_PACKET_PAYLOAD_MAX_SIZE);
 
 
     // sequence number
