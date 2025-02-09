@@ -162,15 +162,22 @@ int main() {
         CommsPacket* incoming = HIDcomms.get_incoming_packet();
         CommsPacket* outgoing = HIDcomms.get_outgoing_packet();
 
-        Comms::FWSample1* sample_send = new Comms::FWSample1;
-        sample_send->num = 121212;
-        if(!comms_layer.send(sample_send, Comms::PhysicalMedium::Ethernet)) Serial.printf("ERROR: failed to add data\n");
+        Comms::FWSample1* sample_send1 = new Comms::FWSample1;
+        Comms::FWSample2* sample_send2 = new Comms::FWSample2;
+        Comms::FWSample3* sample_send3 = new Comms::FWSample3;
+        
+        sample_send1->num = millis();
+        sample_send2->num = millis() + 15;
+        sample_send3->num = millis() + 45;
+
+        comms_layer.send(sample_send1, Comms::PhysicalMedium::Ethernet);
+        comms_layer.send(sample_send2, Comms::PhysicalMedium::Ethernet);
+        comms_layer.send(sample_send3, Comms::PhysicalMedium::Ethernet);
+
 
 
         // run comms_layer loop function for Ethernet/HID comms (currently only Ethernet)
         comms_layer.loop();
-        
-        // delete sending_data;
 
         // check whether this packet is a config packet
         if (incoming->raw[3] == 1) {

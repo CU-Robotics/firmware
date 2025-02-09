@@ -38,8 +38,11 @@ int CommsLayer::loop() {
         EthernetPacket *eth_incoming_ptr = Ethernet.get_incoming_packet();
 
         // give Ethernet loop outgoing data,
-        EthernetPacket outgoing = encode();
-        *eth_outgoing_ptr = outgoing;
+        if(data_outgoing_ethernet.size() != 0){
+            EthernetPacket outgoing = encode();
+            *eth_outgoing_ptr = outgoing;
+        }
+        
 
         // run Ethernet loop,
         Ethernet.loop();
@@ -65,7 +68,16 @@ bool CommsLayer::send(CommsData* data, PhysicalMedium medium) {
 }
 
 HiveData CommsLayer::receive(PhysicalMedium medium) {
-    return data_incoming_ethernet;
+    EthernetPacket *incoming_buffer = Ethernet.get_incoming_packet();
+    switch (medium){
+    case PhysicalMedium::Ethernet:
+        *incoming_buffer = EthernetPacket();
+        return data_incoming_ethernet;
+        break;
+    case PhysicalMedium::HID:
+        break;
+    }
+    return HiveData();
 }
 
 

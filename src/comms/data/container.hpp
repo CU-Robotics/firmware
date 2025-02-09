@@ -18,7 +18,8 @@ public:
         T* send_ptr = new T;
         memcpy(send_ptr, &data, sizeof(T));
 
-        comms_layer->send(send_ptr, PhysicalMedium::Ethernet);
+        // TODO: how do we access the comms_layer object in a way that makes sense...?
+        // comms_layer->send(send_ptr, PhysicalMedium::Ethernet);
     }
 
     /// @brief Data object to be sent over comms
