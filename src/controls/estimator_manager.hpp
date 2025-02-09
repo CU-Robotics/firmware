@@ -23,14 +23,6 @@
 /// @brief Manage all estimators for macro and micro state
 class EstimatorManager {
 private:
-    // /// @brief array to store robot icm imu's
-    // ICM20649 icm_sensors[NUM_SENSOR_TYPE];
-    // /// @brief array to store robot buff encoders
-    // BuffEncoder buff_encoders[NUM_SENSOR_TYPE];
-    // /// @brief array to store robot rev encoders
-    // RevEncoder rev_sensors[NUM_SENSOR_TYPE];
-    // /// @brief array to store tof sensors
-    // TOFSensor tof_sensors[NUM_SENSOR_TYPE];
 
     /// @brief array of robot estimators to estimate full robot state
     Estimator* estimators[STATE_LEN] = { nullptr };
@@ -47,9 +39,6 @@ private:
 
     /// @brief current number of estimators
     int num_estimators = 0;
-
-    // /// @brief array to store the number of sensors for each sensor type
-    // int num_sensors[NUM_SENSORS];
 
 public:
     /// @brief Default constructor, does nothing
@@ -70,19 +59,13 @@ public:
     /// @param override true if we want to override the current state with the new state.
     void step(float state[STATE_LEN][3], float micro_state[NUM_MOTORS][MICRO_STATE_LEN], int override);
 
-    // /// @brief read all sensor arrays besides can and dr16(they are in main).
-    // void read_sensors();
-
     /// @brief sets both input arrays to all 0's
     /// @param macro_outputs input 1
     /// @param micro_outputs input 2
     void clear_outputs(float macro_outputs[STATE_LEN][3], float micro_outputs[NUM_MOTORS][MICRO_STATE_LEN]);
 
 
-
 private:
-    // /// @brief call read for imu's NUM_IMU_CALIBRATION times and then averages returns to calculate offset.
-    // void calibrate_imus();
 
     /// @brief Populates the corresponding index of the "estimators" array attribute with an estimator object.
     /// @param estimator_id id of estimator to init

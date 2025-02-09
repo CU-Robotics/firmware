@@ -1,38 +1,5 @@
 #include "estimator.hpp"
 
-
-GimbalEstimator::GimbalEstimator(Config config_data, RevEncoder* r1, RevEncoder* r2, RevEncoder* r3, BuffEncoder* b1, BuffEncoder* b2, ICM20649* imu, CANData* data) {
-        buff_enc_yaw = b1; // sensor object definitions
-        buff_enc_pitch = b2;
-        rev_enc[0] = r1;
-        rev_enc[1] = r2;
-        rev_enc[2] = r3;
-        can_data = data;
-        icm_imu = imu;
-        YAW_ENCODER_OFFSET = config_data.sensor_info[0][2];
-        PITCH_ENCODER_OFFSET = config_data.sensor_info[1][2];
-
-        yaw_angle = config_data.sensor_info[2][2];
-        pitch_angle = config_data.sensor_info[2][3];
-        roll_angle = config_data.sensor_info[2][4];
-        chassis_angle = 0;
-        imu_yaw_axis_vector[0] = config_data.sensor_info[2][5];
-        imu_yaw_axis_vector[1] = config_data.sensor_info[2][6];
-        imu_yaw_axis_vector[2] = config_data.sensor_info[2][7];
-        imu_pitch_axis_vector[0] = config_data.sensor_info[2][8];
-        imu_pitch_axis_vector[1] = config_data.sensor_info[2][9];
-        imu_pitch_axis_vector[2] = config_data.sensor_info[2][10];
-        starting_pitch_angle = config_data.sensor_info[2][1];
-
-        odom_wheel_radius = config_data.sensor_info[3][2];
-        odom_axis_offset_x = config_data.sensor_info[3][1];
-        odom_axis_offset_y = config_data.sensor_info[4][1];
-        // definitions for spherical coordinates of new axis in the imu refrence frame
-        yaw_axis_spherical[0] = 1;   // rho (1 for a spherical)
-        pitch_axis_spherical[0] = 1; // rho (1 for a spherical)
-        roll_axis_spherical[0] = 1;  // rho (1 for a spherical)
-}
-
 GimbalEstimator::GimbalEstimator(Config config_data, SensorManager* sensor_manager, CANData* data) {
         buff_enc_yaw = sensor_manager->get_buff_encoder(0); // sensor object definitions
         buff_enc_pitch = sensor_manager->get_buff_encoder(1);

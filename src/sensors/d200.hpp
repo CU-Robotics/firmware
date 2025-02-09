@@ -258,21 +258,5 @@ public:
   int get_current_packet_index() { return current_packet; };
 };
 
-// void LidarSensorData::print_latest_packet() {
-//     LidarDataPacketSI p = packets[current_packet];
-//     Serial.println("==D200LD14P PACKET==");
-//     Serial.print("LiDAR speed: ");
-//     Serial.println(p.lidar_speed);
-//     Serial.print("start angle: ");
-//     Serial.println(p.start_angle);
-//     Serial.println("measurement data: ...");
-//     Serial.print("end angle: ");
-//     Serial.println(p.end_angle);
-//     Serial.print("timestamp: ");
-//     Serial.println(p.timestamp);
-// }
-
-
-
 
 #endif // D200_H

@@ -4,7 +4,6 @@
 #include "Sensor.hpp"
 #include "sensor_constants.hpp"
 #include "config_layer.hpp"
-#include "config_layer.hpp"
 #include "d200.hpp"
 #include "dr16.hpp"
 #include "ICM20649.hpp"
@@ -24,8 +23,6 @@
 /// @brief Class to manage sensors on the robot
 class SensorManager {
 public:
-    /// @brief Vector to store all sensors
-    std::vector<Sensor*> sensors;
 
     /// @brief Constructor for the SensorManager class
     SensorManager();
@@ -68,7 +65,7 @@ public:
     /// @brief Get the referee system
     /// @return pointer to the referee system
     RefSystem* get_ref() {
-        return &ref;
+        return ref;
     }
 
     /// @brief Calibrate the IMUs
@@ -118,7 +115,7 @@ private:
     LidarSensorData* lidar_sensors_data;
 
     /// @brief Referee system
-    RefSystem ref;
+    RefSystem* ref;
 };
 
 #endif // SENSOR_MANAGER_HPP

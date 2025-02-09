@@ -18,49 +18,7 @@ void EstimatorManager::init(CANData* _can_data, const Config* _config_data, Sens
     can_data = _can_data;
     config_data = _config_data;
     sensor_manager = _sensor_manager;
-    // if (!config_data) Serial.println("CONFIG DATA IS NULL!!!!!");
-
-    // for(int i = 0; i < NUM_SENSORS; i++){
-    //     int type = config_data->sensor_info[i][0];
-    //     if(type != -1){
-    //         num_sensors[type]++;
-    //     }
-    // }
-
-    // // configure pins for the encoders
-    // for (int i = 0;i < num_sensors[0];i++) {
-    //     pinMode(config_data->sensor_info[i][1], OUTPUT);
-    //     digitalWrite(config_data->sensor_info[i][1], HIGH);
-    // }
-
-    // // configure pins for the ICM
-    // pinMode(ICM_CS, OUTPUT);
-    // digitalWrite(ICM_CS, HIGH);
-
-    // // start SPI
-    // Serial.println("Starting SPI");
-    // SPI.begin();
-
-    // // initialize buff encoders
-    // for (int i = 0;i < num_sensors[0];i++) {
-    //     buff_encoders[i].init(config_data->sensor_info[i][1]);
-    // }
-
-    // // initialize ICMs
-    // for (int i = 0; i < num_sensors[2];i++) {
-    //     icm_sensors[i].init(icm_sensors[i].CommunicationProtocol::SPI);
-    //     icm_sensors[i].set_gyro_range(4000);
-    // }
-
-    // // initialize rev encoders
-    // for (int i = 0;i < num_sensors[1];i++) {
-    //     rev_sensors[i].init(REV_ENC_PIN1 + i, true);
-    // }
-
-    // // initialize TOFs
-    // for (int i = 0;i < num_sensors[3];i++) {
-    //     tof_sensors[i].init();
-    // }
+    if (!config_data) Serial.println("CONFIG DATA IS NULL!!!!!");
 
     // create and initialize the estimators
     for (int i = 0; i < NUM_ESTIMATORS; i++) {
@@ -71,9 +29,6 @@ void EstimatorManager::init(CANData* _can_data, const Config* _config_data, Sens
             init_estimator(id);
         }
     }
-
-    // calibrate the IMUs
-    // calibrate_imus();
 }
 
 void EstimatorManager::init_estimator(int estimator_id) {
@@ -150,20 +105,3 @@ void EstimatorManager::clear_outputs(float macro_outputs[STATE_LEN][3], float mi
         }
     }
 }
-
-
-// void EstimatorManager::read_sensors() {
-//     if (!config_data)
-//         Serial.println("CONFIG DATA IS NULL!!!!!");
-
-//     for (int i = 0; i < num_sensors[0]; i++) {
-//         buff_encoders[i].read();
-//     }
-//     for (int i = 0; i < num_sensors[2]; i++) {
-//         icm_sensors[i].read();
-//     }
-//     for (int i = 0; i < num_sensors[1]; i++) {
-//         rev_sensors[i].read();
-//     }
-// }
-

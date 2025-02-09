@@ -45,8 +45,6 @@ void SensorManager::init(const Config* config_data) {
 
     // initialize ICMs
     for (int i = 0; i < icm_sensor_count; i++) {
-        // icm_sensors[i].init(icm_sensors[i].CommunicationProtocol::SPI);
-        // icm_sensors[i].set_gyro_range(4000);
         icm_sensors[i] = new ICM20649();
         icm_sensors[i]->init(icm_sensors[i]->CommunicationProtocol::SPI);
         icm_sensors[i]->set_gyro_range(4000);
@@ -56,14 +54,12 @@ void SensorManager::init(const Config* config_data) {
 
     // initialize rev encoders
     for (int i = 0; i < rev_sensor_count; i++) {
-        // rev_sensors[i].init(REV_ENC_PIN1 + i, true);
         rev_sensors[i] = new RevEncoder();
         rev_sensors[i]->init(REV_ENC_PIN1 + i, true);
     }
 
     // initialize TOFs
     for (int i = 0; i < tof_sensor_count; i++) {
-        // tof_sensors[i].init();
         tof_sensors[i] = new TOFSensor();
         tof_sensors[i]->init();
     }
@@ -76,7 +72,7 @@ void SensorManager::init(const Config* config_data) {
     }
 
     // initialize refereree system
-    ref.init();
+    ref->init();
 }
 
 void SensorManager::read() {
@@ -102,7 +98,7 @@ void SensorManager::read() {
 
     // read ref system
     
-    ref.read();
+    ref->read();
     
     for (int i = 0; i < 1; i++) {
         tof_sensors[i]->read();

@@ -275,17 +275,6 @@ private:
 public:
     /// @brief estimate the state of the gimbal
     /// @param config_data inputted sensor values from khadas yaml
-    /// @param r1 rev encoder 1
-    /// @param r2 rev encoder 2
-    /// @param r3 rev encoder 3
-    /// @param b1 buff encoder 1
-    /// @param b2 buff encoder 2
-    /// @param imu icm encoder
-    /// @param data can data from Estimator Manager
-    GimbalEstimator(Config config_data, RevEncoder* r1, RevEncoder* r2, RevEncoder* r3, BuffEncoder* b1, BuffEncoder* b2, ICM20649* imu, CANData* data);
-
-    /// @brief estimate the state of the gimbal
-    /// @param config_data inputted sensor values from khadas yaml
     /// @param sensor_manager sensor manager object
     /// @param data can data from Estimator Manager
     GimbalEstimator(Config config_data, SensorManager* sensor_manager, CANData* data);
