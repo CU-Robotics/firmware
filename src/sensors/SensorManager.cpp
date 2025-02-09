@@ -28,10 +28,6 @@ void SensorManager::init(const Config* config_data) {
     for (int i = 0; i < buff_sensor_count; i++) {
         pinMode(config_data->sensor_info[i][1], OUTPUT);
         digitalWrite(config_data->sensor_info[i][1], HIGH);
-    }
-
-    // initialize buff encoders
-    for (int i = 0; i < buff_sensor_count; i++) {
         buff_encoders[i] = new BuffEncoder(config_data->sensor_info[i][1]);
     }
 
