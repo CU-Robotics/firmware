@@ -88,29 +88,17 @@ struct FirmwareString : public CommsData {
 
 // Hive struct types
 
-struct HiveString : public CommsData {
-    HiveString() {
-        type_label = TypeLabel::ExampleHive;
-        size = sizeof(HiveString);
-        priority = Priority::Medium;
-        memset(my_str, 0, 128);
-    }
-    char my_str[128];
-};
 
 
 // Megastruct defs
 struct FirmwareData {
     // TODO: define structs for firmware outgoing data
-    FirmwareString fw_str;
 };
 
 struct HiveData  {
     ConfigData config_data;
     RobotState target_state;
     RobotState override_state;
-
-    HiveString hive_str;
 };
 
 } // namespace Comms

@@ -4,17 +4,20 @@
 #include <cstdint>		// for access to fixed-width types
 #include "Arduino.h"	// for access to HardwareSerial defines
 
-constexpr uint16_t DR16_PACKET_SIZE = 18;	// the size in bytes of a DR16-Receiver packet
-constexpr uint16_t DR16_INPUT_VALUE_COUNT = 7;	// the size in floats of the normalized input
+constexpr uint16_t DR16_PACKET_SIZE = 18;				// the size in bytes of a DR16-Receiver packet
+constexpr uint16_t DR16_INPUT_VALUE_COUNT = 7;			// the size in floats of the normalized input
 
 constexpr uint16_t DR16_CONTROLLER_INPUT_HIGH = 1684;	// the maximum joystick input value
-constexpr uint16_t DR16_CONTROLLER_INPUT_LOW = 364;	// the minimum joystick input value
+constexpr uint16_t DR16_CONTROLLER_INPUT_LOW = 364;		// the minimum joystick input value
 constexpr uint16_t DR16_CONTROLLER_INPUT_ZERO = 1024;	// the medium joystick input value
 
-constexpr uint16_t DR16_CONTROLLER_SWITCH_HIGH = 3;	// the maximum switch input value
-constexpr uint16_t DR16_CONTROLLER_SWITCH_LOW = 1;	// the minimum switch input value
+constexpr uint16_t DR16_CONTROLLER_SWITCH_HIGH = 3;		// the maximum switch input value
+constexpr uint16_t DR16_CONTROLLER_SWITCH_LOW = 1;		// the minimum switch input value
 
-constexpr uint32_t DR16_FAIL_STATE_TIMEOUT = 250000;
+constexpr uint32_t DR16_FAIL_STATE_TIMEOUT = 250000;	// time in us since last data packet that signifies a controller timeout
+
+constexpr uint32_t DR16_ALIGNMENT_TIMEOUT = 25000;					// max time in us that the alignment can take
+constexpr uint32_t DR16_ALIGNMENT_LONG_INTERVAL_THRESHOLD = 1000; 	// time in us that signifies a packet break rather than just another incoming byte
 
 /// DR16 Packet Structure
 /// (translated from this: https://rm-static.djicdn.com/tem/17348/4.RoboMaster%20%E6%9C%BA%E5%99%A8%E4%BA%BA%E4%B8%93%E7%94%A8%E9%81%A5%E6%8E%A7%E5%99%A8%EF%BC%88%E6%8E%A5%E6%94%B6%E6%9C%BA%EF%BC%89%E7%94%A8%E6%88%B7%E6%89%8B%E5%86%8C.pdf)

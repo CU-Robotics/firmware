@@ -52,6 +52,9 @@ struct Config {
     /// @param sizes Number of sections for each section
     void fill_data(CommsPacket packets[MAX_CONFIG_PACKETS], uint8_t sizes[MAX_CONFIG_PACKETS]);
 
+    /// @brief print all config data
+    void print() const;
+
     /// @brief robot id
     float robot;
 

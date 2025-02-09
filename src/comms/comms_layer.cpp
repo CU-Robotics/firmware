@@ -66,11 +66,6 @@ EthernetPacket CommsLayer::encode(CommsData *source_data) {
     // encode the CommsData found at data_outgoing_ethernet
     EthernetPacket retval;
 
-    // we don't really care what kind of data source_data is,
-    // we just need its size
-    retval.header.payload_size = source_data->size;
-    if(source_data->priority == Priority::High) retval.header.flags = EthernetPacketType::PRIORITY; // set priority if appropriate
-    memcpy(retval.payload.data, source_data, source_data->size);
 
     return retval;
 }
@@ -79,14 +74,6 @@ HiveData CommsLayer::decode(EthernetPacket source_packet) {
     // decode the EthernetPacket found at data_incoming_ethernet
     HiveData retval;
     
-    // construct a CommsData object to test for source_packet payload properties
-    CommsData test_data;
-    memcpy(&test_data, source_packet.payload.data, sizeof(CommsData));
-
-    // figure out what we just pulled from source_packet
-    if(test_data.type_label == TypeLabel::ExampleHive){
-        memcpy(&retval.hive_str, source_packet.payload.data, sizeof(HiveString));
-    }
 
     return retval;
 }
