@@ -109,6 +109,10 @@ int main() {
         data.angle_fl = can.get_motor(1)->get_state().position;
         data.angle_bl = can.get_motor(2)->get_state().position;
         data.angle_br = can.get_motor(3)->get_state().position;
+        data.speed_fr = can.get_motor(0)->get_state().speed;
+        data.speed_fl = can.get_motor(1)->get_state().speed;
+        data.speed_bl = can.get_motor(2)->get_state().speed;
+        data.speed_br = can.get_motor(3)->get_state().speed;
         data.speed_wl = can.get_motor(4)->get_state().speed;
         data.speed_wr = can.get_motor(5)->get_state().speed;
         
