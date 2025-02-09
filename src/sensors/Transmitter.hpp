@@ -18,7 +18,7 @@ public:
 	/// @note utilizes the counting byte at the end of every element
 	/// @return TransmitterType 
 	static TransmitterType who_am_i();
-	virtual void read() {}
+	virtual void read() {Serial.print("we not in here");}
 	virtual void init() {}
 	virtual void print() {}
 	virtual void zero() {}

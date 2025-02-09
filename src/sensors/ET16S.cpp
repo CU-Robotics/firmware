@@ -42,7 +42,6 @@ void ET16S::read() {
 	for (int i = 0; i < ET16S_PACKET_SIZE;i++) {
 		m_inputRaw[i] = Serial8.read();
 	}
-
 	//format raw data
 	format_raw(m_inputRaw);
 	//set flag data
@@ -51,7 +50,7 @@ void ET16S::read() {
 	set_channel_data();
 	//Check flag byte for disconnect
 	test_connection();
-	print_raw_bin(m_inputRaw);
+	//print_raw_bin(m_inputRaw);
 	//print_format_bin(16);
 	//print();
 	//print_raw();
