@@ -125,7 +125,7 @@ int main() {
         // can.print_state();
         test_control.print_observer();
         test_control.printdata();
-        icm.print();
+        // icm.print();
         if (!dr16.is_connected() || dr16.get_l_switch() == 1 || test_control.saftymode) {
             // SAFETY ON
             // TODO: Reset all controller integrators here

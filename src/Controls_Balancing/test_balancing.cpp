@@ -69,9 +69,20 @@ void balancing_test::init(){
         {0.0647, 0.1300, -0.9773, -0.7482, 6.0704, 0.7614, -6.3280, -0.6935, -221.9400, -7.2531}, 
         {0.0647, 0.1300, 0.9773, 0.7482, -6.3280, -0.6935, 6.0704, 0.7614, -221.9400, -7.2531}
         };  
+    float tempK[4][10] = { //18cm
+        {-0.4067, -1.0474,  0.2169,  0.2144, -6.9541, -0.7964,  0.3102, -0.0582,   7.6073, -0.1897}, 
+        {-0.4067, -1.0474, -0.2169, -0.2144,  0.3102, -0.0582, -6.9541, -0.7964,   7.6073, -0.1897}, 
+        {-0.0356, -0.0950, -0.4804, -0.3670,  1.6239,  0.1489, -3.0520, -0.2545, -74.4254, -3.1695}, 
+        {-0.0356, -0.0950,  0.4804,  0.3670, -3.0520, -0.2545,  1.6239,  0.1489, -74.4254, -3.1695}
+        };  
+
+   
+   
+   
+   
     memcpy(K,tempK,sizeof(tempK));
     //ref for test
-    _ref_data.goal_l = 0.14;
+    _ref_data.goal_l = 0.18;
     _ref_data.goal_roll = 0;
     _ref_data.s = 0; 
     _ref_data.b_speed = 0;
@@ -206,7 +217,7 @@ void balancing_test::observer(){
     o_data.theta_lr_avg += o_data.theta_lr;
     o_data.avg_count += 1;
 
-    uint32_t timenow = micros();
+    uint32_t timenow = millis();
     float slowdt = timenow - slowdalay_help;
     if(slowdt > 20 || slowdt < -100){
         o_data.llaverage /= o_data.avg_count;
@@ -616,4 +627,8 @@ void balancing_test::print_observer(){
     Serial.print(" ");
     Serial.println(o_data.jr[1][1]);
 
+}
+
+void balancing_test::print_visual(){
+    return ;
 }
