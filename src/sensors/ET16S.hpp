@@ -3,6 +3,7 @@
 #include <Arduino.h>
 #include <string>
 #include <optional>
+#include "./Transmitter.hpp"
 //http://www.wflysz.com/wflyftp/ET16S/ET16SENV1.00.pdf
 
 //channel[15] is broken
@@ -82,7 +83,7 @@ struct InputChannel {
 };
 
 /// @brief Class for W-Fly transmitter and reciever to gather and map control data
-class ET16S {
+class ET16S : public Transmitter {
 public:
 	/// @brief Constructor, left empty
 	ET16S();
@@ -196,8 +197,15 @@ public:
 
 	/// @brief getter for connection status
 	/// @return false if disconnected
-	bool get_connection_status();
+	bool is_connected();
 
+	float get_l_switch();
+
+	float get_r_switch();
+
+	float get_wheel();
+	
+	
 private:
 	/// @brief prints the entire raw binary data packet exactly as it is recieved
 	/// @param m_inputRaw raw bit array
@@ -232,7 +240,7 @@ private:
 	InputChannel channel[ET16S_INPUT_VALUE_COUNT];
 
 	/// @brief signifies whether a disconnect flag has been read
-	bool is_connected=false;
+	bool is_connect=false;
 	//switch a (safety switch) and joysticks are not configurable
 	/// @brief switch b index
 	std::optional<int> switch_b_num=5;

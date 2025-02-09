@@ -3,6 +3,7 @@
 
 #include <cstdint>		// for access to fixed-width types
 #include "Arduino.h"	// for access to HardwareSerial defines
+#include "./Transmitter.hpp"
 
 constexpr uint16_t DR16_PACKET_SIZE = 18;	// the size in bytes of a DR16-Receiver packet
 constexpr uint16_t DR16_INPUT_VALUE_COUNT = 7;	// the size in floats of the normalized input
@@ -60,7 +61,7 @@ constexpr uint32_t DR16_FAIL_STATE_TIMEOUT = 250000;
 // wheel	|	Wheel Axis				|	[364 - 1024 - 1684]
 
 /// @brief Wrapper for reading and mapping input from the DR16-Receiver and associated controller
-class DR16 {
+class DR16 : public Transmitter {
 public:
 	/// @brief Constructor, left empty
 	DR16();

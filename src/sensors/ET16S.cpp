@@ -1,5 +1,5 @@
 #include "ET16S.hpp"
-
+#include "ET16S.hpp"
 ET16S::ET16S() { }
 
 
@@ -51,10 +51,9 @@ void ET16S::read() {
 	set_channel_data();
 	//Check flag byte for disconnect
 	test_connection();
-	//if(channel[5].kind==InputKind::THREE_SWITCH){Serial.print("ITS TRUE");}
-	///print_raw_bin(m_inputRaw);
+	print_raw_bin(m_inputRaw);
 	//print_format_bin(16);
-	print();
+	//print();
 	//print_raw();
 }
 
@@ -395,9 +394,9 @@ void ET16S::set_channel_data() {
 void ET16S::test_connection() {
 	uint16_t flag_byte = channel[16].data;
 	if (flag_byte & ERROR) {
-		is_connected = false;
+		is_connect = false;
 	} else {
-		is_connected = true;
+		is_connect = true;
 	}
 }
 
@@ -490,14 +489,22 @@ std::optional<float> ET16S::get_r_dial(){
 }
 
 std::optional<float> ET16S::get_channel_data(int chan_num){
-	// Will return nothing if an incorrect channel number is given
+	// Will return nothing if an incorrect channel  number is given
 	if ((chan_num < 0) || (chan_num > 16)){
 		return {};
 	}
 	return channel[chan_num].data;
 }
 
-bool ET16S::get_connection_status() {
-	return is_connected;
+bool ET16S::is_connected() {
+	return is_connect;
 }
-
+float ET16S::get_l_switch(){
+	return static_cast<float>(get_safety_switch());
+}
+float ET16S::get_r_switch(){
+	return channel[switch_d_num.value()].data;
+}
+float ET16S::get_wheel(){
+	return channel[l_slider_num.value()].data;
+}
