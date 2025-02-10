@@ -5,10 +5,9 @@ void GIM::init() {
 }
 
 int GIM::read(CAN_message_t& msg) {
-    // early return if msg ID does not match this motor
-    if (msg.id != m_base_id + m_id) {
-        return 0;
-    }
+    // check the msg id and bus to see if this msg is for this motor
+    if (!check_msg_id(msg)) return 0;
+
     uint8_t cmd_byte = msg.buf[0];
 
     switch (cmd_byte) {
@@ -76,14 +75,6 @@ void GIM::write_motor_torque(float torque) {
     for (int i = 0; i < 8; i++) {
         m_output.buf[i] = buf[i];
     }
-}
-
-void GIM::print_state() const {
-    Serial.printf("Motor %d\n", m_id);
-    Serial.printf("  Temperature: %d\n", m_state.temperature);
-    Serial.printf("  Position: %f\n", m_state.position);
-    Serial.printf("  Speed: %f\n", m_state.speed);
-    Serial.printf("  Torque: %f\n", m_state.torque);
 }
 
 void GIM::write_motor_off() {

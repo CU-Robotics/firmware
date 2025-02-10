@@ -33,10 +33,6 @@ ConfigLayer config_layer;
 
 Profiler prof;
 
-Timer loop_timer;
-Timer stall_timer;
-Timer control_input_timer;
-
 EstimatorManager estimator_manager;
 ControllerManager controller_manager;
 
@@ -91,24 +87,33 @@ int main() {
 
     can.init();
 
-    // CTRL type, motor ID, bus ID
-    // CTRL type: 0 = none, 1 = C610, 2 = C620, 3 = MG8016, 4 = GIM
+    // CTRL type, motor ID, bus ID, motor type
+    // CTRL type: 0 = none, 1 = C610, 2 = C620, 3 = MG8016, 4 = GIM, 5 = SDC104
     float motor_info[24][4] = {
-        {2, 1, 1, 0},
+        {5, 4, 1, 0},
     };
 
     can.configure(motor_info);
+
+    Timer loop_timer;
+    Timer stall_timer;
+    Timer control_input_timer;
 
     Serial.println("Entering main loop...\n");
 
     // Main loop
     while (true) {
+        stall_timer.start();
         // read main sensors
         can.read();
 
-        can.write_motor_torque(CAN_2, 1, 0.1);
+        can.write_motor_torque(CAN_2, 4, 0.5);
+
+        can.print_state();
 
         can.write();
+
+        Serial.printf("dt: %f\n", stall_timer.delta_micros());
 
         // Keep the loop running at the desired rate
         loop_timer.delay_micros((int)(1E6 / (float)(LOOP_FREQ)));

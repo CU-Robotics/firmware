@@ -20,11 +20,8 @@ int MG8016EI6::read(CAN_message_t& msg) {
     // 80, 88, 81, 31, 32, 34, 91
     // CMD_MOTOR_OFF, CMD_MOTOR_ON, CMD_MOTOR_STOP, CMD_WRITE_PID, CMD_WRITE_PID_ROM, CMD_WRITE_ACCELERATION, CMD_WRITE_ENCODER_ZERO
 
-    // early return if msg ID does not match this motor
-    if (msg.id != m_base_id + m_id) return 0; 
-
-    // early return if the bus ID does not match
-    if ((uint32_t)(msg.bus - 1) != m_bus_id) return 0;
+    // check the msg id and bus to see if this msg is for this motor
+    if (!check_msg_id(msg)) return 0;
 
     uint8_t cmd_byte = msg.buf[0];
 
@@ -227,14 +224,6 @@ void MG8016EI6::write_motor_angle(float angle, float speed_limit) {
     for (int i = 0; i < 8; i++) {
         m_output.buf[i] = buf[i];
     }
-}
-
-void MG8016EI6::print_state() const {
-    Serial.printf("MG Motor %d\n", m_id);
-    Serial.printf("Temperature: %d C\n", m_state.temperature);
-    Serial.printf("Torque: %f %%\n", m_state.torque);
-    Serial.printf("Speed: %f rad/s\n", m_state.speed);
-    Serial.printf("Position: %u\n", m_state.position);
 }
 
 void MG8016EI6::write_motor_off() {

@@ -17,7 +17,7 @@ public:
     /// @param id The per-bus motor ID. This is 1-indexed
     /// @param bus_id The CAN bus index/ID
     MG8016EI6(uint32_t gid, uint32_t id, uint8_t bus_id, MotorType motor_type)
-        : Motor(MotorControllerType::MG8016_CONTROLLER, gid, id, bus_id, motor_type) {
+        : Motor(MotorControllerType::MG8016, gid, id, bus_id, motor_type) {
     }
 
     /// @brief Destructor, does nothing
@@ -55,9 +55,6 @@ public:
     /// @param angle The angle value in radians
     /// @param speed_limit The speed limit in radians per second, 0 is no limit, must be positive
     void write_motor_angle(float angle, float speed_limit = 0);
-
-    /// @brief Print the current state of the motor
-    void print_state() const override;
 
 public:
     /// @brief Turn off the motor and clear it's state

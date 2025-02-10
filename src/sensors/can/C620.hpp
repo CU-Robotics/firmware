@@ -16,7 +16,7 @@ public:
     /// @param id The per-bus motor ID. This is 1-indexed
     /// @param bus_id The CAN bus index/ID
     C620(uint32_t gid, uint32_t id, uint8_t bus_id, MotorType motor_type)
-        : Motor(MotorControllerType::C620_CONTROLLER, gid, id, bus_id, motor_type) {
+        : Motor(MotorControllerType::C620, gid, id, bus_id, motor_type) {
     }
 
     /// @brief Destructor, does nothing
@@ -44,9 +44,6 @@ public:
     /// @brief Write motor torque given a normalized value
     /// @param torque A value between [-1, 1] representing the torque range of [-20A, 20A]
     void write_motor_torque(float torque) override;
-
-    /// @brief Print the current state of the motor
-    void print_state() const override;
 
 private:
 

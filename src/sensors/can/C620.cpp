@@ -5,11 +5,8 @@ void C620::init() {
 }
 
 int C620::read(CAN_message_t& msg) {
-    // early return if the message ID does not match
-    if (msg.id != m_base_id + m_id) return 0;
-
-    // early return if the bus ID does not match
-    if ((uint32_t)(msg.bus - 1) != m_bus_id) return 0;
+    // check the msg id and bus to see if this msg is for this motor
+    if (!check_msg_id(msg)) return 0;
     
     // set m_input from msg
     memcpy(&m_input, &msg, sizeof(CAN_message_t));
@@ -76,12 +73,4 @@ void C620::write_motor_torque(float torque) {
     // fill in the output array
     m_output.buf[motor_id * 2] = (int_torque >> 8) & 0xFF;  // upper byte
     m_output.buf[motor_id * 2 + 1] = int_torque & 0xFF;     // lower byte
-}
-
-void C620::print_state() const {
-    Serial.printf("C620 Motor %d\n", m_id);
-    Serial.printf("Temperature: %d C\n", m_state.temperature);
-    Serial.printf("Torque: %f %%\n", m_state.torque);
-    Serial.printf("Speed: %f rad/s\n", m_state.speed);
-    Serial.printf("Position: %d\n", m_state.position);
 }

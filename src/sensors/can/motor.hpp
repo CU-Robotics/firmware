@@ -8,10 +8,11 @@
 /// @brief Defines the motor controller types. Enum values chosen based on the yaml config specification
 enum class MotorControllerType {
     NULL_MOTOR_CONTROLLER_TYPE = 0,
-    C610_CONTROLLER,
-    C620_CONTROLLER,
-    MG8016_CONTROLLER,
-    GIM_CONTROLLER,
+    C610,
+    C620,
+    MG8016,
+    GIM,
+    SDC104,
 };
 
 // Todo
@@ -30,6 +31,7 @@ struct MotorState {
     /// @brief Rotational speed of the motor in rad/s, signed
     float speed = 0;
     /// @brief Motor specific position output. The unit is dependent on the motor but it is normally in a range corresponding to it's encoder
+    // TODO: This should be in radians and be a float
     uint16_t position = 0;
     /// @brief Temperature of the motor in degrees Celsius
     /// @note This is signed but it shouldn't matter since normal temperatures wouldn't overflow to negative
@@ -80,7 +82,9 @@ public:
     virtual void write_motor_torque(float torque) = 0;
 
     /// @brief Print the current state of the motor
-    virtual void print_state() const = 0;
+    virtual void print_state() const {
+        Serial.printf("Bus: %x\tID: %x\tTemp: %.2dc\tTorque: % 4.3f%%\tSpeed: % 6.2frad/s\tPos: %5.5d?\n", m_bus_id, m_id, m_state.temperature, m_state.torque, m_state.speed, m_state.position);
+    }
 
 public:
     /// @brief Get the motor controller type
@@ -106,6 +110,25 @@ public:
     /// @brief Get the current state of the motor
     /// @return The current state of the motor
     inline MotorState get_state() const { return m_state; }
+
+protected:
+    /// @brief Check if the message is for this motor
+    /// @param msg The message to check
+    /// @return True if the message is for this motor, false otherwise
+    inline virtual bool check_msg_id(const CAN_message_t& msg) const {
+        // early return if msg ID does not match
+        if (msg.id != m_gid + m_id) {
+            return false;
+        }
+
+        // early return if the bus does not match
+        // msg.bus is 1-indexed
+        if ((uint32_t)(msg.bus - 1) != m_bus_id) {
+            return false;
+        }
+
+        return true;
+    }
 
 protected:
     /// @brief What controller this motor uses
