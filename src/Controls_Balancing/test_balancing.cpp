@@ -168,17 +168,8 @@ void balancing_test::observer(){
     o_data.jl[0][1]= -(l_u * cos(phi0l - phi3l) * sin(phi1_l - phi2l)) / (o_data.ll * sin(phi2l - phi3l));
     o_data.jl[1][0] = (l_u * sin(phi0l - phi2l) * sin(phi3l - phi4_l)) / sin(phi2l - phi3l);
     o_data.jl[1][1] = -(l_u * cos(phi0l - phi2l) * sin(phi3l - phi4_l)) / (o_data.ll * sin(phi2l - phi3l));
-    
-    float phi2_dot_l = (l_u * ((_data.speed_bl * sphi1_l - _data.speed_fl * sphi4_l) * cos(phi3l) + (_data.speed_fl * cphi4_l - _data.speed_bl * cphi1_l) * sin(phi3l))) / (l_l * (phi3l - phi2l));
 
-    float xC_dot_l = -(l_u * _data.speed_bl * sphi1_l + l_l * phi2_dot_l * sin(phi2l));
-    float yC_dot_l = (l_u * _data.speed_bl * cphi1_l + l_l * phi2_dot_l * cos(phi2l));
-
-    o_data.theta_ll_dot = ((helpingl*yC_dot_l) + (yCl * xC_dot_l)) / (helpingl * helpingl + yCl * yCl);
-
-    o_data.ll = sqrt(xC_dot_l * xC_dot_l + yC_dot_l * yC_dot_l);
-
-    o_data.theta_ll = (fmod((M_PI_2 + _data.imu_angle_pitch - phi0l + M_PI), 2 * M_PI) - M_PI);
+    o_data.theta_ll = (fmod((M_PI_2 + _data.imu_angle_pitch - phi0l), 2 * M_PI));
 
 
     
@@ -217,7 +208,19 @@ void balancing_test::observer(){
     o_data.jr[1][0]  = (l_u * sin(phi0r - phi2r) * sin(phi3r - phi4_r)) / sin(phi2r - phi3r);
     o_data.jr[1][1]  = -(l_u * cos(phi0r - phi2r) * sin(phi3r - phi4_r)) / (o_data.lr * sin(phi2r - phi3r));
 
-    o_data.theta_lr = (fmod((M_PI_2 + _data.imu_angle_pitch - phi0r + M_PI), (2 * M_PI)) - M_PI);
+    o_data.theta_lr = (fmod((M_PI_2 + _data.imu_angle_pitch - phi0r), (2 * M_PI)));
+
+//----------------------------------------------------Calculate Theta_of_leg for both leg--------------------------------------
+    float phi2_dot_l = (l_u * ((_data.speed_bl * sphi1_l - _data.speed_fl * sphi4_l) * cos(phi3l) + (_data.speed_fl * cphi4_l - _data.speed_bl * cphi1_l) * sin(phi3l))) / (l_l * (phi3l - phi2l));
+    float xC_dot_l = -(l_u * _data.speed_bl * sphi1_l + l_l * phi2_dot_l * sin(phi2l));
+    float yC_dot_l = (l_u * _data.speed_bl * cphi1_l + l_l * phi2_dot_l * cos(phi2l));
+    o_data.theta_ll_dot = (((helpingl*yC_dot_l) + (yCl * xC_dot_l)) / (helpingl * helpingl + yCl * yCl)) - _data.gyro_pitch;
+
+    float phi2_dot_r = (l_u * ((_data.speed_bl * sphi1r - _data.speed_fl * sphi4r) * cos(phi3l) + (_data.speed_fl * cphi4r - _data.speed_bl * cphi1r) * sin(phi3l))) / (l_l * (phi3l - phi2l));
+    float xC_dot_r = -(l_u * _data.speed_bl * sphi1r + l_l * phi2_dot_r * sin(phi2l));
+    float yC_dot_r = (l_u * _data.speed_bl * cphi1r + l_l * phi2_dot_l * cos(phi2l));
+    o_data.theta_lr_dot = (((helpingr*yC_dot_r) + (yCl * xC_dot_r)) / (helpingr * helpingr + yCl * yCl)) - _data.gyro_pitch;
+
 
 
     // o_data.llaverage += o_data.ll;
@@ -238,8 +241,8 @@ void balancing_test::observer(){
 //----------------------------------------------------------Get theta_ll_dot and theta_lr_dot-------------------------------------------------------
         // o_data.theta_ll_dot = abs(o_data.theta_ll_avg - o_data.theta_ll_old) > THETA_FILTER  ? (o_data.theta_ll_avg - o_data.theta_ll_old) / slowdt : 0;
         // o_data.theta_ll_old = o_data.theta_ll_avg;
-        o_data.theta_lr_dot = abs(o_data.theta_lr_avg - o_data.theta_lr_old) > THETA_FILTER  ? (o_data.theta_lr_avg - o_data.theta_lr_old) / slowdt : 0;
-        o_data.theta_lr_old = o_data.theta_lr_avg;
+        // o_data.theta_lr_dot = abs(o_data.theta_lr_avg - o_data.theta_lr_old) > THETA_FILTER  ? (o_data.theta_lr_avg - o_data.theta_lr_old) / slowdt : 0;
+        // o_data.theta_lr_old = o_data.theta_lr_avg;
 //-----------------------------------------------------------Get ll_ddot and lr_ddot-------------------------------------------------------------------
         // float ll_dot = abs(o_data.llaverage - o_data.ll_old) > LL_FILTER ? (o_data.llaverage - o_data.ll_old) / slowdt : 0;
         // o_data.ll_old = o_data.llaverage;
