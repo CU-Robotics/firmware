@@ -210,15 +210,15 @@ void balancing_test::observer(){
 
     o_data.theta_lr = (fmod((M_PI_2 + _data.imu_angle_pitch - phi0r), (2 * M_PI)));
 
-//----------------------------------------------------Calculate Theta_of_leg for both leg--------------------------------------
-    float phi2_dot_l = (l_u * ((_data.speed_bl * sphi1_l - _data.speed_fl * sphi4_l) * cos(phi3l) + (_data.speed_fl * cphi4_l - _data.speed_bl * cphi1_l) * sin(phi3l))) / (l_l * (phi3l - phi2l));
-    float xC_dot_l = -(l_u * _data.speed_bl * sphi1_l + l_l * phi2_dot_l * sin(phi2l));
-    float yC_dot_l = (l_u * _data.speed_bl * cphi1_l + l_l * phi2_dot_l * cos(phi2l));
+//----------------------------------------------------Calculate Theta_of_leg_dot for both leg--------------------------------------
+    float phi2_dot_l = (l_u * ((-_data.speed_bl * sphi1_l + _data.speed_fl * sphi4_l) * cos(phi3l) + (-_data.speed_fl * cphi4_l + _data.speed_bl * cphi1_l) * sin(phi3l))) / (l_l * (phi3l - phi2l));
+    float xC_dot_l = -(l_u * -_data.speed_bl * sphi1_l + l_l * phi2_dot_l * sin(phi2l));
+    float yC_dot_l = (l_u * -_data.speed_bl * cphi1_l + l_l * phi2_dot_l * cos(phi2l));
     o_data.theta_ll_dot = (((helpingl*yC_dot_l) + (yCl * xC_dot_l)) / (helpingl * helpingl + yCl * yCl)) - _data.gyro_pitch;
 
-    float phi2_dot_r = (l_u * ((_data.speed_bl * sphi1r - _data.speed_fl * sphi4r) * cos(phi3l) + (_data.speed_fl * cphi4r - _data.speed_bl * cphi1r) * sin(phi3l))) / (l_l * (phi3l - phi2l));
-    float xC_dot_r = -(l_u * _data.speed_bl * sphi1r + l_l * phi2_dot_r * sin(phi2l));
-    float yC_dot_r = (l_u * _data.speed_bl * cphi1r + l_l * phi2_dot_l * cos(phi2l));
+    float phi2_dot_r = (l_u * ((_data.speed_br * sphi1r - _data.speed_fr * sphi4r) * cos(phi3l) + (_data.speed_fr * cphi4r - _data.speed_br * cphi1r) * sin(phi3l))) / (l_l * (phi3l - phi2l));
+    float xC_dot_r = -(l_u * _data.speed_br * sphi1r + l_l * phi2_dot_r * sin(phi2l));
+    float yC_dot_r = (l_u * _data.speed_br * cphi1r + l_l * phi2_dot_l * cos(phi2l));
     o_data.theta_lr_dot = (((helpingr*yC_dot_r) + (yCl * xC_dot_r)) / (helpingr * helpingr + yCl * yCl)) - _data.gyro_pitch;
 
 
@@ -267,7 +267,7 @@ void balancing_test::observer(){
 
     o_data.b_speed =  (1.0f/2) * (R_w) * (_data.speed_wr + _data.speed_wl); // s_dot //speed
 
-//-------------------------------------------Kalman filter combines imu data and wheel data for real_speed-------------------------------------
+//-------------------------------------------motion estimate and filter-------------------------------------
     float alpha1 = min(abs(0.3/o_data.b_speed), 1.0f) * 0.5; // 1st filter for using wheel data more when low speed
     o_data.imu_speed_x =  (alpha1 * o_data.b_speed) + ((1 - alpha1) * o_data.imu_speed_x); 
     
