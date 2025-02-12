@@ -216,18 +216,18 @@ int main() {
         float fly_wheel_target = (transmitter->get_r_switch() == 1 || transmitter->get_r_switch() == 3) ? 18 : 0; //m/s
         float feeder_target = (((transmitter->get_l_mouse_button() || ref.ref_data.kbm_interaction.button_left) && transmitter->get_r_switch() != 2) || transmitter->get_r_switch() == 1) ? 10 : 0;
 
-		Serial.print("get_l_stick_y:  ");
-		Serial.println(transmitter->get_l_stick_y());
-		Serial.print("transmitter_get_l_stick_x:  ");
-		Serial.println(transmitter->get_l_stick_x());
-		Serial.print("get_r_stick_y:  ");
-		Serial.println(transmitter->get_r_stick_y());
-		Serial.print("transmitter_get_r_stick_x:  ");
-		Serial.println(transmitter->get_r_stick_x());
-		Serial.print("get_mouse_x");
-		Serial.println(transmitter->get_mouse_x());
-		Serial.print("get_mouse_y");
-		Serial.println(transmitter->get_mouse_y());
+		Serial.print("chassis_pos_x:  ");
+		Serial.println(transmitter->chassis_pos_x());
+		Serial.print("chassis_pos_y  ");
+		Serial.println(transmitter->chassis_pos_y());
+		Serial.print("chassis_vel_x:  ");
+		Serial.println(transmitter->chassis_vel_x());
+		Serial.print("chassis_vel_y:  ");
+		Serial.println(transmitter->chassis_vel_y());
+		Serial.print("vtm_pos_x");
+		Serial.println(transmitter->vtm_pos_x());
+		Serial.print("vtm_pos_y");
+		Serial.println(transmitter->vtm_pos_y());
 		
         // set manual controls
         target_state[0][0] = chassis_pos_x;
