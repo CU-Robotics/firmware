@@ -160,7 +160,8 @@ int main() {
         ref.read();
         lidar1.read();
         lidar2.read();
-
+		//TEMP Print Transmitter data
+		//transmitter->print();
         // read and write comms packets
         comms.ping();
         CommsPacket* incoming = comms.get_incoming_packet();
@@ -168,7 +169,7 @@ int main() {
 
         // check whether this packet is a config packet
         if (incoming->raw[3] == 1) {
-            Serial.println("\n\nConfig request received, reconfiguring from comms!\n\n");
+            //Serial.println("\n\nConfig request received, reconfiguring from comms!\n\n");
             // trigger safety mode
             can.zero();
             config_layer.reconfigure(&comms);
@@ -176,7 +177,7 @@ int main() {
 
         // print loopc every second to verify it is still alive
         if (loopc % 1000 == 0) {
-            Serial.println(loopc);
+            //Serial.println(loopc);
         }
 
         // manual controls on firmware
@@ -253,17 +254,17 @@ int main() {
         estimator_manager.read_sensors();
 
         // print dr16
-        Serial.printf("DR16:\n\t");
-        transmitter->print();
+        //Serial.printf("DR16:\n\t");
+        //transmitter->print();
 
-        Serial.printf("Target state:\n");
+        //Serial.printf("Target state:\n");
         for (int i = 0; i < 8; i++) {
-            Serial.printf("\t%d: %f %f %f\n", i, target_state[i][0], target_state[i][1], target_state[i][2]);
+            //Serial.printf("\t%d: %f %f %f\n", i, target_state[i][0], target_state[i][1], target_state[i][2]);
         }
         
         // override temp state if needed
         if (incoming->get_hive_override_request() == 1) {
-            Serial.printf("Overriding state with hive state\n");
+            //Serial.printf("Overriding state with hive state\n");
             incoming->get_hive_override_state(hive_state_offset);
             memcpy(temp_state, hive_state_offset, sizeof(hive_state_offset));
         }
@@ -278,9 +279,9 @@ int main() {
             count_one++;
         }
 
-        Serial.printf("Estimated state:\n");
+        //Serial.printf("Estimated state:\n");
         for (int i = 0; i < 8; i++) {
-            Serial.printf("\t%d: %f %f %f\n", i, temp_state[i][0], temp_state[i][1], temp_state[i][2]);
+            //Serial.printf("\t%d: %f %f %f\n", i, temp_state[i][0], temp_state[i][1], temp_state[i][2]);
         }
 
         // reference govern
@@ -288,15 +289,15 @@ int main() {
         governor.step_reference(target_state, config->governor_types);
         governor.get_reference(temp_reference);
 
-        Serial.printf("Reference state:\n");
+        //Serial.printf("Reference state:\n");
         for (int i = 0; i < 8; i++) {
-            Serial.printf("\t%d: %f %f %f\n", i, temp_reference[i][0], temp_reference[i][1], temp_reference[i][2]);
+            //Serial.printf("\t%d: %f %f %f\n", i, temp_reference[i][0], temp_reference[i][1], temp_reference[i][2]);
         }
 
         // generate motor outputs from controls
         controller_manager.step(temp_reference, temp_state, temp_micro_state);
 
-        can.print_output();
+        //can.print_output();
 
         // construct sensor data packet
         SensorData sensor_data;
@@ -327,12 +328,12 @@ int main() {
 
         // check whether this was a slow loop or not
 	float dt = stall_timer.delta();
-        Serial.printf("Loop %d, dt: %f\n", loopc, dt);
+	//Serial.printf("Loop %d, dt: %f\n", loopc, dt);
         if (dt > 0.002) { 
             // zero the can bus just in case
 	    	can.zero();
 		
-	    	Serial.printf("Slow loop with dt: %f\n", dt);
+			//	Serial.printf("Slow loop with dt: %f\n", dt);
             // mark this as a slow loop to trigger safety mode
 	    	is_slow_loop = true;
 	    }
@@ -341,12 +342,12 @@ int main() {
         if (transmitter->is_connected() && (transmitter->get_l_switch() == 2 || transmitter->get_l_switch() == 3) && config_layer.is_configured() && !is_slow_loop) {
             // SAFETY OFF
             can.write();
-            Serial.printf("Can write\n");
+			// Serial.printf("Can write\n");
         } else {
             // SAFETY ON
             // TODO: Reset all controller integrators here
             can.zero();
-            Serial.printf("Can zero\n");
+			//       Serial.printf("Can zero\n");
         }
 
         // LED heartbeat -- linked to loop count to reveal slowdowns and freezes.
