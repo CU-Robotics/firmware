@@ -97,6 +97,7 @@ int main() {
     can.init();
     dr16.init();
     comms.init();
+    ref = sensor_manager.get_ref();
 
     //can data pointer so we don't pass around rm_CAN object
     // TODO: extern the can_data object
@@ -109,7 +110,7 @@ int main() {
 
 
     sensor_manager.init(config);
-    ref = sensor_manager.get_ref();
+    
 
 
     //estimate micro and macro state
