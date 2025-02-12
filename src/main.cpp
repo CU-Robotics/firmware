@@ -216,6 +216,11 @@ int main() {
         float fly_wheel_target = (transmitter->get_r_switch() == 1 || transmitter->get_r_switch() == 3) ? 18 : 0; //m/s
         float feeder_target = (((transmitter->get_l_mouse_button() || ref.ref_data.kbm_interaction.button_left) && transmitter->get_r_switch() != 2) || transmitter->get_r_switch() == 1) ? 10 : 0;
 
+		Serial.print("yaw_target: ");
+		Serial.println(yaw_target);
+		Serial.print("transmitter_pos_y:  ");
+		Serial.println(transmitter_pos_y);
+		
         // set manual controls
         target_state[0][0] = chassis_pos_x;
         target_state[0][1] = chassis_vel_x;
