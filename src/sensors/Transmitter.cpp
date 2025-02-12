@@ -15,13 +15,14 @@ TransmitterType Transmitter::who_am_i() {
 	while(counter != 5){
 		raw_input[24] = 0;
 		if (Serial8.available() < (2*ET16S_PACKET_SIZE)) {
+			if (((milli() - start_time) < timeout) { return TransmitterType::ET16S }
 			continue;
 		}
 		// We read until we find the start byte of the new packet (0x0f)
 		// this ensures we read one packet per loop 
-		uint32_t start_time = micros();
+		uint32_t start_time = milli();
 		uint32_t timeout = 100; // Times out after 100 microseconds
-		while ((Serial8.peek() != 0x0f) && ((micros() - start_time) < timeout)) {
+		while ((Serial8.peek() != 0x0f) && ((milli() - start_time) < timeout)) {
 			Serial8.read();
 		}
 		// Fill raw input array

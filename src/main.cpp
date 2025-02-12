@@ -24,6 +24,7 @@ rm_CAN can;
 RefSystem ref;
 HIDLayer comms;
 ACS712 current_sensor;
+Transmitter* transmitter = nullptr;
 
 D200LD14P lidar1(&Serial4, 0);
 D200LD14P lidar2(&Serial5, 1);
@@ -89,7 +90,6 @@ int main() {
     pinMode(LED_BUILTIN, OUTPUT);
 
     led.init();
-	Transmitter* transmitter = nullptr;
 	TransmitterType t_type = transmitter->who_am_i();
 	if (t_type == TransmitterType::DR16){
 		transmitter = new DR16;
@@ -302,7 +302,7 @@ int main() {
         SensorData sensor_data;
 
         // set transmitter raw data
-        //memcpy(sensor_data.raw + SENSOR_TRANSMITTER_OFFSET, transmitter->get_raw(), TRANSMITTER_PACKET_SIZE);
+        //memcpy(sensor_data.raw + SENSOR_DR16_OFFSET, transmitter->get_raw(), DR16_PACKET_SIZE);
 
         // set lidars
         uint8_t lidar_data[D200_NUM_PACKETS_CACHED * D200_PAYLOAD_SIZE] = { 0 };

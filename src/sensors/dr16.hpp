@@ -161,14 +161,14 @@ private:
 	
 
 	/// @brief Keep track of mouse x velocity
-	int16_t mouse_x;
+	int16_t mouse_x = 0;
 	/// @brief Keep track of mouse y velocity
-	int16_t mouse_y;
+	int16_t mouse_y = 0;
 
 	/// @brief Keep track of left mouse button status
-	bool l_mouse_button;
+	bool l_mouse_button = 0;
 	/// @brief Keep track of right mouse button status
-	bool r_mouse_button;
+	bool r_mouse_button = 0;
 
 public:
 
