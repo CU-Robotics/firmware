@@ -59,18 +59,10 @@ void GIM::zero_motor() {
     write_motor_off();
 }
 
-void GIM::write_motor_torque(float torque) {
-    if (torque < -1.0f) torque = -1.0f;
-    if (torque > 1.0f) torque = 1.0f;
-
-    // map the -1f to 1f torque value to the actual torque value for this specific motor
-    float mapped_torque = torque * max_torque;
-
-    // create the command
+void GIM::write_motor_on() {
     uint8_t buf[8];
-    create_cmd_torque_control(buf, mapped_torque, 0);
+    create_cmd_start_motor(buf);
 
-    // fill in the output array
     m_output.id = m_base_id + m_id;
     for (int i = 0; i < 8; i++) {
         m_output.buf[i] = buf[i];
@@ -87,10 +79,18 @@ void GIM::write_motor_off() {
     }
 }
 
-void GIM::write_motor_on() {
-    uint8_t buf[8];
-    create_cmd_start_motor(buf);
+void GIM::write_motor_torque(float torque) {
+    if (torque < -1.0f) torque = -1.0f;
+    if (torque > 1.0f) torque = 1.0f;
 
+    // map the -1f to 1f torque value to the actual torque value for this specific motor
+    float mapped_torque = torque * max_torque;
+
+    // create the command
+    uint8_t buf[8];
+    create_cmd_torque_control(buf, mapped_torque, 0);
+
+    // fill in the output array
     m_output.id = m_base_id + m_id;
     for (int i = 0; i < 8; i++) {
         m_output.buf[i] = buf[i];
