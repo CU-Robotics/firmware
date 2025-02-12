@@ -254,7 +254,7 @@ int main() {
 
         // print dr16
         Serial.printf("DR16:\n\t");
-        dr16.print();
+        transmitter.print();
 
         Serial.printf("Target state:\n");
         for (int i = 0; i < 8; i++) {
