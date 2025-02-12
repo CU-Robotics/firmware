@@ -68,6 +68,7 @@ void SensorManager::init(const Config* config_data) {
     }
 
     // initialize refereree system
+    ref = new RefSystem();
     ref->init();
 }
 
