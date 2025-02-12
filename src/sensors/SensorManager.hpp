@@ -57,10 +57,16 @@ public:
     /// @return pointer to the TOF sensor
     TOFSensor* get_tof_sensor(int index);
 
+    /// @brief Get the specified LiDAR sensor
+    /// @param index index of the sensor object to get, 1 or 2
+    /// @return pointer to the LiDAR sensor
+    D200LD14P* get_lidar_sensor(int index);
+
     /// @brief Get the number of sensors of the specified type
     /// @param sensor_type the type of sensor
     /// @return number of sensors of that type
     int get_num_sensors(SensorType sensor_type);
+
 
     /// @brief Get the referee system
     /// @return pointer to the referee system

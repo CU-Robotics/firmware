@@ -118,6 +118,20 @@ TOFSensor* SensorManager::get_tof_sensor(int index) {
     return tof_sensors[index];
 }
 
+D200LD14P* SensorManager::get_lidar_sensor(int index)
+{
+    if (index == 1)
+    {
+        return lidar1;
+    }
+    else if(index == 2)
+    {
+        return lidar2;
+    } else {
+        return nullptr;
+    }
+}
+
 void SensorManager::calibrate_imus() {
     Serial.println("Calibrating IMU's...");
     float sum_x = 0;
