@@ -217,17 +217,17 @@ int main() {
         float feeder_target = (((transmitter->get_l_mouse_button() || ref.ref_data.kbm_interaction.button_left) && transmitter->get_r_switch() != 2) || transmitter->get_r_switch() == 1) ? 10 : 0;
 
 		Serial.print("chassis_pos_x:  ");
-		Serial.println(transmitter->chassis_pos_x());
+		Serial.println(chassis_pos_x);
 		Serial.print("chassis_pos_y  ");
-		Serial.println(transmitter->chassis_pos_y());
+		Serial.println(chassis_pos_y);
 		Serial.print("chassis_vel_x:  ");
-		Serial.println(transmitter->chassis_vel_x());
+		Serial.println(chassis_vel_x);
 		Serial.print("chassis_vel_y:  ");
-		Serial.println(transmitter->chassis_vel_y());
+		Serial.println(chassis_vel_y);
 		Serial.print("vtm_pos_x");
-		Serial.println(transmitter->vtm_pos_x());
+		Serial.println(vtm_pos_x);
 		Serial.print("vtm_pos_y");
-		Serial.println(transmitter->vtm_pos_y());
+		Serial.println(vtm_pos_y);
 		
         // set manual controls
         target_state[0][0] = chassis_pos_x;
