@@ -2,7 +2,9 @@
 #include "../utils/profiler.hpp"
 
 SensorManager::SensorManager() {
-    return;
+     // initialize refereree system
+    ref = new RefSystem();
+    ref->init();
 };
 
 SensorManager::~SensorManager() {
@@ -67,9 +69,7 @@ void SensorManager::init(const Config* config_data) {
 
     }
 
-    // initialize refereree system
-    ref = new RefSystem();
-    ref->init();
+   
 }
 
 void SensorManager::read() {
