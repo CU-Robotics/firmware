@@ -1,9 +1,9 @@
 #include "estimator_manager.hpp"
 
 EstimatorManager::~EstimatorManager() {
-    Serial.println("Ending SPI");
+	//  Serial.println("Ending SPI");
     SPI.end();
-    Serial.println("SPI Ended");
+	// Serial.println("SPI Ended");
 
     for (int i = 0; i < STATE_LEN; i++) {
         if (estimators[i] == nullptr)
@@ -153,24 +153,24 @@ void EstimatorManager::clear_outputs(float macro_outputs[STATE_LEN][3], float mi
 
 void EstimatorManager::read_sensors() {
     if (!config_data)
-        Serial.println("CONFIG DATA IS NULL!!!!!");
+		//  Serial.println("CONFIG DATA IS NULL!!!!!");
 
     for (int i = 0; i < num_sensors[0]; i++) {
         buff_encoders[i].read();
-        buff_encoders[i].print();
+		// buff_encoders[i].print();
     }
     for (int i = 0; i < num_sensors[2]; i++) {
         icm_sensors[i].read();
-        icm_sensors[i].print();
+		// icm_sensors[i].print();
     }
     for (int i = 0; i < num_sensors[1]; i++) {
         rev_sensors[i].read();
-        rev_sensors[i].print();
+		//  rev_sensors[i].print();
     }
 }
 
 void EstimatorManager::calibrate_imus() {
-    Serial.println("Calibrating IMU's...");
+	// Serial.println("Calibrating IMU's...");
     float sum_x = 0;
     float sum_y = 0;
     float sum_z = 0;
@@ -190,6 +190,6 @@ void EstimatorManager::calibrate_imus() {
         sum_accel_z += icm_sensors[0].get_accel_Z();
     }
 
-    Serial.printf("Calibrated offsets: %f, %f, %f\n", sum_x / NUM_IMU_CALIBRATION, sum_y / NUM_IMU_CALIBRATION, sum_z / NUM_IMU_CALIBRATION);
+    //Serial.printf("Calibrated offsets: %f, %f, %f\n", sum_x / NUM_IMU_CALIBRATION, sum_y / NUM_IMU_CALIBRATION, sum_z / NUM_IMU_CALIBRATION);
     icm_sensors[0].set_offsets(sum_x / NUM_IMU_CALIBRATION, sum_y / NUM_IMU_CALIBRATION, sum_z / NUM_IMU_CALIBRATION);
 }
