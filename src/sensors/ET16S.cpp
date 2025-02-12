@@ -52,7 +52,7 @@ void ET16S::read() {
 	test_connection();
 	//print_raw_bin(m_inputRaw);
 	//print_format_bin(16);
-	print();
+	//print();
 	//print_raw();
 }
 
