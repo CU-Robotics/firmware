@@ -10,7 +10,7 @@ void ServoController::init() {
   fin1.attach(2);
   fin2.attach(3);
   fin3.attach(4);
-  fin3.attach(5);
+  fin4.attach(5);
 }
 
 void ServoController::set_servo_angle(int servoIndex, float angle) {

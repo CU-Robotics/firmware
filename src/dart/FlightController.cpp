@@ -4,7 +4,7 @@
 #include "usb_serial.h"
 
 IMU_filter icmF;
-IMUDataF imu_data;
+IMUData imu_data;
 
 FlightController::FlightController(ServoController &sc, IMU &imu,
                                    Dartcam &dartcam)
@@ -37,7 +37,11 @@ void FlightController::update() {
   }
 }
 
-void FlightController::init() { icmF.init(); }
+void FlightController::init() {
+  // icmF.init();
+  servoController.set_all_servos(90, 90, 90, 90);
+  delay(1000);
+}
 // Mode 1: Fin Hold
 void FlightController::hold_fin_position() {
   //  current fin positions
@@ -123,17 +127,17 @@ void FlightController::fin_test_mode() {
 void FlightController::test_gyro_level() {
   // float pitchSetpoint = 0.0; // Target pitch angle in degrees
   //  float yawSetpoint = 0.0;
-  // float rollSetpoint = 0.0;
+  float rollSetpoint = 90;
 
-  icmF.read();
+  imu_data = imu.read_data();
 
-  imu_data = icmF.getdata();
-  float currentPitch = imu_data.k_pitch;
+  float currentRoll = imu_data.accelX;
   // float currentYaw = imu_data.;
   // float currentRoll = imu_data.k_roll;
 
-  // Serial.println(currentPitch);
-  servoController.set_servo_angle(2, currentPitch * 100);
+  Serial.println(currentRoll);
+  servoController.set_servo_angle(2, (currentRoll * 10) + rollSetpoint);
+  servoController.set_servo_angle(3, -1 * (currentRoll * 10 + rollSetpoint));
 
   /**
 

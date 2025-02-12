@@ -28,30 +28,37 @@ int main() {
   Serial.begin(115200);
   debug.begin(SerialUSB1);
 
+  if (CrashReport) {
+    while (!Serial)
+      ;
+    Serial.println(CrashReport);
+    while (1)
+      ;
+  }
+
   servoCont.init();
   imu.init();
   dartcam.init();
   flightController.init();
 
-
-  Serial.println("Entering fliight control mode: TEST_GYRO_LEVEL");
+  Serial.println("Entering flight control mode: TEST_GYRO_LEVEL");
   flightController.set_control_mode(TEST_GYRO_LEVEL);
 
   // main loop
   Serial.println("Entering main loop");
 
-
   while (true) {
 
-    // imu.print_data();
-     flightController.update();
-      //dartcam.send_frame_serial();
-    //  servoCont.set_all_servos(180, 180, 180, 180);
-    //  delay(1000);
-    //  servoCont.set_all_servos(0, 0, 0, 0);
-    //  delay(1000);
-    //   flightController.update();
-    //   flightController.set_control_mode(FIN_TEST);
+    // Serial.println("in loop");
+    imu.print_data();
+    flightController.update();
+    //   dartcam.send_frame_serial();
+    //    servoCont.set_all_servos(180, 180, 180, 180);
+    //    delay(1000);
+    //    servoCont.set_all_servos(0, 0, 0, 0);
+    //    delay(1000);
+    //     flightController.update();
+    //     flightController.set_control_mode(FIN_TEST);
 
     // fin.write(180);
     // delay(2000);
