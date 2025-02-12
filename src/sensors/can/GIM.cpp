@@ -37,9 +37,9 @@ int GIM::read(CAN_message_t& msg) {
 
     }
     // commands that don't return anything
-    case CMD_MOTOR_OFF:
-    case CMD_MOTOR_ON:
-    case CMD_MOTOR_STOP: {
+    case CMD_STOP_MOTOR:
+    case CMD_START_MOTOR:
+    case CMD_STOP_CONTROL: {
         break;
     }
     default:
@@ -79,7 +79,7 @@ void GIM::write_motor_torque(float torque) {
 
 void GIM::write_motor_off() {
     uint8_t buf[8];
-    create_cmd_motor_off(buf);
+    create_cmd_stop_motor(buf);
 
     m_output.id = m_base_id + m_id;
     for (int i = 0; i < 8; i++) {
@@ -89,7 +89,7 @@ void GIM::write_motor_off() {
 
 void GIM::write_motor_on() {
     uint8_t buf[8];
-    create_cmd_motor_on(buf);
+    create_cmd_start_motor(buf);
 
     m_output.id = m_base_id + m_id;
     for (int i = 0; i < 8; i++) {
@@ -99,7 +99,7 @@ void GIM::write_motor_on() {
 
 void GIM::write_motor_stop() {
     uint8_t buf[8];
-    create_cmd_motor_stop(buf);
+    create_cmd_stop_control(buf);
 
     m_output.id = m_base_id + m_id;
     for (int i = 0; i < 8; i++) {
@@ -108,6 +108,7 @@ void GIM::write_motor_stop() {
 }
 
 
+// command create functions
 
 void GIM::create_cmd_retrieve_configuration(uint8_t buf[8], uint8_t conf_type, uint8_t conf_id) {
     buf[0] = CMD_RETRIEVE_CONFIGURATION;
@@ -120,9 +121,8 @@ void GIM::create_cmd_retrieve_configuration(uint8_t buf[8], uint8_t conf_type, u
     buf[7] = 0;
 }
 
-// command create functions
-void GIM::create_cmd_motor_off(uint8_t buf[8]) {
-    buf[0] = CMD_MOTOR_OFF;
+void GIM::create_cmd_start_motor(uint8_t buf[8]) {
+    buf[0] = CMD_START_MOTOR;
     buf[1] = 0;
     buf[2] = 0;
     buf[3] = 0;
@@ -132,8 +132,8 @@ void GIM::create_cmd_motor_off(uint8_t buf[8]) {
     buf[7] = 0;
 }
 
-void GIM::create_cmd_motor_on(uint8_t buf[8]) {
-    buf[0] = CMD_MOTOR_ON;
+void GIM::create_cmd_stop_motor(uint8_t buf[8]) {
+    buf[0] = CMD_STOP_MOTOR;
     buf[1] = 0;
     buf[2] = 0;
     buf[3] = 0;
@@ -143,8 +143,8 @@ void GIM::create_cmd_motor_on(uint8_t buf[8]) {
     buf[7] = 0;
 }
 
-void GIM::create_cmd_motor_stop(uint8_t buf[8]) {
-    buf[0] = CMD_MOTOR_STOP;
+void GIM::create_cmd_stop_control(uint8_t buf[8]) {
+    buf[0] = CMD_STOP_CONTROL;
     buf[1] = 0;
     buf[2] = 0;
     buf[3] = 0;
@@ -152,6 +152,17 @@ void GIM::create_cmd_motor_stop(uint8_t buf[8]) {
     buf[5] = 0;
     buf[6] = 0;
     buf[7] = 0;
+}
+
+void GIM::create_cmd_speed_control(uint8_t buf[8], float speed, uint32_t duration) {
+    buf[0] = CMD_SPEED_CONTROL;
+    buf[1] = *((uint8_t*)(&speed) + 0); // low byte
+    buf[2] = *((uint8_t*)(&speed) + 1);
+    buf[3] = *((uint8_t*)(&speed) + 2);
+    buf[4] = *((uint8_t*)(&speed) + 3); // high byte
+    buf[5] = *((uint8_t*)(&duration) + 0); // low byte
+    buf[6] = *((uint8_t*)(&duration) + 1);
+    buf[7] = *((uint8_t*)(&duration) + 2); // high byte
 }
 
 void GIM::create_cmd_torque_control(uint8_t buf[8], float torque, uint32_t duration) {
@@ -160,6 +171,17 @@ void GIM::create_cmd_torque_control(uint8_t buf[8], float torque, uint32_t durat
     buf[2] = *((uint8_t*)(&torque) + 1);
     buf[3] = *((uint8_t*)(&torque) + 2);
     buf[4] = *((uint8_t*)(&torque) + 3); // high byte
+    buf[5] = *((uint8_t*)(&duration) + 0); // low byte
+    buf[6] = *((uint8_t*)(&duration) + 1);
+    buf[7] = *((uint8_t*)(&duration) + 2); // high byte
+}
+
+void GIM::create_cmd_position_control(uint8_t buf[8], float position, uint32_t duration) {
+    buf[0] = CMD_POSITION_CONTROL;
+    buf[1] = *((uint8_t*)(&position) + 0); // low byte
+    buf[2] = *((uint8_t*)(&position) + 1);
+    buf[3] = *((uint8_t*)(&position) + 2);
+    buf[4] = *((uint8_t*)(&position) + 3); // high byte
     buf[5] = *((uint8_t*)(&duration) + 0); // low byte
     buf[6] = *((uint8_t*)(&duration) + 1);
     buf[7] = *((uint8_t*)(&duration) + 2); // high byte
