@@ -11,12 +11,12 @@ TransmitterType Transmitter::who_am_i() {
 
 	int counter = 0; //How many sequential elements have been found
 	
-	uint32_t start_time = milli();
+	uint32_t start_time = millis();
 	uint32_t timeout = 100; // Times out after 100 microseconds
 	while(counter != 5){
 		raw_input[24] = 0;
 		if (Serial8.available() < (2*ET16S_PACKET_SIZE)) {
-			if (((millis() - start_time) < timeout) { return TransmitterType::ET16S }
+			if ((millis() - start_time) < timeout) { return TransmitterType::ET16S; }
 			continue;
 		}
 		// We read until we find the start byte of the new packet (0x0f)
