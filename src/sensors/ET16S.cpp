@@ -50,9 +50,9 @@ void ET16S::read() {
 	set_channel_data();
 	//Check flag byte for disconnect
 	test_connection();
-	print_raw_bin(m_inputRaw);
+	//print_raw_bin(m_inputRaw);
 	//print_format_bin(16);
-	//print();
+	print();
 	//print_raw();
 }
 

@@ -121,7 +121,7 @@ int main() {
     governor.set_reference_limits(config->set_reference_limits);
 
     // print all of config
-    config->print();
+    //config->print();
 
     // variables for use in main
     float temp_state[STATE_LEN][3] = { 0 }; // Temp state array
