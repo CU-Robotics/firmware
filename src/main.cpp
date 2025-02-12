@@ -224,10 +224,10 @@ int main() {
 		Serial.println(chassis_vel_x);
 		Serial.print("chassis_vel_y:  ");
 		Serial.println(chassis_vel_y);
-		Serial.print("vtm_pos_x");
-		Serial.println(vtm_pos_x);
-		Serial.print("vtm_pos_y");
-		Serial.println(vtm_pos_y);
+		Serial.print("pos_offset_x: ");
+		Serial.println(pos_offset_x);
+		Serial.print("pos_offset_y: ");
+		Serial.println(pos_offset_y);
 		
         // set manual controls
         target_state[0][0] = chassis_pos_x;
