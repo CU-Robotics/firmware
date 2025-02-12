@@ -23,12 +23,12 @@ void LSM6DSOX::read() {
         // could increase efficiency by specifying which values we need, and only assigning values to the object's members from that. 
         // However, getEvent will read all values from the sensor regardless, and assigning these values is very fast
 
-    accel_X = accel.acceleration.x;
-    accel_Y = accel.acceleration.y;
-    accel_Z = accel.acceleration.z;
-    gyro_X = gyro.gyro.x;
-    gyro_Y = gyro.gyro.y;
-    gyro_Z = gyro.gyro.z;
+    data.accel_X = accel.acceleration.x;
+    data.accel_Y = accel.acceleration.y;
+    data.accel_Z = accel.acceleration.z;
+    data.gyro_X = gyro.gyro.x;
+    data.gyro_Y = gyro.gyro.y;
+    data.gyro_Z = gyro.gyro.z;
 
-    temperature = temp.temperature;
+    data.temperature = temp.temperature;
 }

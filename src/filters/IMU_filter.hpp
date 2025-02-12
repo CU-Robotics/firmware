@@ -11,20 +11,26 @@ class IMU_filter{
 
         float Q; //process noise for angle
         float R; //process noise for accelerometer
-
+        float chi_square; //Chi-squared test
         std::array<std::array<float, 4>, 4> P; // estimate covariance
         std::array<std::array<float, 4>, 4> K; // Kalman gain
-
+        IMU_data filtered_data;
+        void inverse3x3(float mat[3][3], float inv[3][3]); 
     public:
         /// @brief Initalize everything including filter constant
-        void init_EKF_6axis(IMU_data, float, float);
+        void init_EKF_6axis(IMU_data); // Not work
         
-        void step_EKF_6axis(IMU_data, float);
+        void step_EKF_6axis(IMU_data, float); // Not work 
+
+        void init_Kalman_Mahony(IMU_data);
+
+        void step_Kalman_Mahony(IMU_data, float);
+
         /// @brief Print out data for debugging
         void print();
         /// @brief Print out data for a Python 3D visulize function
         void serial_data_for_plot();
 
-        
+        IMU_data* get_filter_data();
 };
 #endif

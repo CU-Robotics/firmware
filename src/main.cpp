@@ -7,6 +7,7 @@
 #include "sensors/StereoCamTrigger.hpp"
 #include "controls/estimator_manager.hpp"
 #include "controls/controller_manager.hpp"
+#include "filters/IMU_filter.hpp"
 
 #include <TeensyDebug.h>
 #include "sensors/LEDBoard.hpp"
@@ -19,6 +20,7 @@
 Timer loop_timer;
 Timer stall_timer;
 ICM20649 imu;
+IMU_filter imu_filter;
 // DONT put anything else in this function. It is not a setup function
 void print_logo() {
     if (Serial) {
@@ -67,15 +69,16 @@ int main() {
     imu.init(imu.SPI);
     imu.set_gyro_range(4000);
     imu.calibration_all();
-
+    imu_filter.init_EKF_6axis(imu.get_data());
     // Main loop
     while (true) {
         imu.read();
         imu.fix_raw_data();
         imu.print();
-
-
-
+        float main_dt = loop_timer.delta();
+        imu_filter.step_EKF_6axis(imu.get_data(), main_dt);
+        IMU_data* filtered_data = imu_filter.get_filter_data();
+        Serial.printf("Filtered Data: Pitch: %f, Roll: %f, Yaw: %f\n", filtered_data->pitch, filtered_data->roll, filtered_data->yaw);
 
         // // LED heartbeat -- linked to loop count to reveal slowdowns and freezes.
         // loopc % (int)(1E3 / float(HEARTBEAT_FREQ)) < (int)(1E3 / float(5 * HEARTBEAT_FREQ)) ? digitalWrite(13, HIGH) : digitalWrite(13, LOW);

@@ -26,7 +26,11 @@ struct IMU_data{
 
     /// @brief temperature value
     float temperature = 0;
-}
+
+    float pitch = 0;
+    float roll = 0;
+    float yaw = 0;
+};
 
 /// @brief Abstract parent class for all IMUSensors, which give acceleration and gyroscope data. 
 class IMUSensor {
@@ -40,27 +44,27 @@ public:
 
     /// @brief Get the acceleration of the sensor in its local x axis.
     /// @return acceleration m/s^2
-    inline float get_accel_X() { return data.accel_X * scale_accel; };
+    inline float get_accel_X() { return data.accel_X; };
 
     /// @brief Get the acceleration of the sensor in its local y axis
     /// @return acceleration m/s^2
-    inline float get_accel_Y() { return data.accel_Y * scale_accel; };
+    inline float get_accel_Y() { return data.accel_Y; };
 
     /// @brief Get the acceleration of the sensor in its local z axis
     /// @return acceleration m/s^2
-    inline float get_accel_Z() { return data.accel_Z * scale_accel; };
+    inline float get_accel_Z() { return data.accel_Z; };
 
     /// @brief Get the change in gyroscope orientation relative to the x axis
     /// @return gryoscope x in radians/s
-    inline float get_gyro_X() { return data.gyro_X - offset_X; };
+    inline float get_gyro_X() { return data.gyro_X; };
 
     /// @brief Get the change in gyroscope orientation relative to the y axis
     /// @return gyroscope y in radians/s
-    inline float get_gyro_Y() { return data.gyro_Y - offset_Y; };
+    inline float get_gyro_Y() { return data.gyro_Y;};
 
     /// @brief Get the change in gyroscope orientation relative to the z axis
     /// @return gyroscope z in radians/s
-    inline float get_gyro_Z() { return data.gyro_Z - offset_Z; };
+    inline float get_gyro_Z() { return data.gyro_Z;};
 
     IMU_data get_data();
 
@@ -85,6 +89,7 @@ public:
 
     void calibration_all();
 
+    void calibration_Z();
 protected:
     // sensor events to read from
 
