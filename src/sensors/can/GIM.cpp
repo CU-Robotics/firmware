@@ -110,6 +110,39 @@ void GIM::write_motor_stop() {
 
 // command create functions
 
+void GIM::create_cmd_reset_configuration(uint8_t buf[8]) {
+    buf[0] = CMD_RESET_CONFIGURATION;
+    buf[1] = 0;
+    buf[2] = 0;
+    buf[3] = 0;
+    buf[4] = 0;
+    buf[5] = 0;
+    buf[6] = 0;
+    buf[7] = 0;
+}
+
+void GIM::create_cmd_refresh_configuration(uint8_t buf[8]) {
+    buf[0] = CMD_REFRESH_CONFIGURATION;
+    buf[1] = 0;
+    buf[2] = 0;
+    buf[3] = 0;
+    buf[4] = 0;
+    buf[5] = 0;
+    buf[6] = 0;
+    buf[7] = 0;
+}
+
+void GIM::create_cmd_modify_configuration(uint8_t buf[8], uint8_t conf_type, uint8_t conf_id, uint32_t data) {
+    buf[0] = CMD_MODIFY_CONFIGURATION;
+    buf[1] = conf_type;
+    buf[2] = conf_id;
+    buf[3] = 0;
+    buf[4] = *((uint8_t*)(&data) + 0); // low byte
+    buf[5] = *((uint8_t*)(&data) + 1);
+    buf[6] = *((uint8_t*)(&data) + 2);
+    buf[7] = *((uint8_t*)(&data) + 3); // high byte
+}
+
 void GIM::create_cmd_retrieve_configuration(uint8_t buf[8], uint8_t conf_type, uint8_t conf_id) {
     buf[0] = CMD_RETRIEVE_CONFIGURATION;
     buf[1] = conf_type;
@@ -143,15 +176,15 @@ void GIM::create_cmd_stop_motor(uint8_t buf[8]) {
     buf[7] = 0;
 }
 
-void GIM::create_cmd_stop_control(uint8_t buf[8]) {
-    buf[0] = CMD_STOP_CONTROL;
-    buf[1] = 0;
-    buf[2] = 0;
-    buf[3] = 0;
-    buf[4] = 0;
-    buf[5] = 0;
-    buf[6] = 0;
-    buf[7] = 0;
+void GIM::create_cmd_torque_control(uint8_t buf[8], float torque, uint32_t duration) {
+    buf[0] = CMD_TORQUE_CONTROL;
+    buf[1] = *((uint8_t*)(&torque) + 0); // low byte
+    buf[2] = *((uint8_t*)(&torque) + 1);
+    buf[3] = *((uint8_t*)(&torque) + 2);
+    buf[4] = *((uint8_t*)(&torque) + 3); // high byte
+    buf[5] = *((uint8_t*)(&duration) + 0); // low byte
+    buf[6] = *((uint8_t*)(&duration) + 1);
+    buf[7] = *((uint8_t*)(&duration) + 2); // high byte
 }
 
 void GIM::create_cmd_speed_control(uint8_t buf[8], float speed, uint32_t duration) {
@@ -165,16 +198,6 @@ void GIM::create_cmd_speed_control(uint8_t buf[8], float speed, uint32_t duratio
     buf[7] = *((uint8_t*)(&duration) + 2); // high byte
 }
 
-void GIM::create_cmd_torque_control(uint8_t buf[8], float torque, uint32_t duration) {
-    buf[0] = CMD_TORQUE_CONTROL;
-    buf[1] = *((uint8_t*)(&torque) + 0); // low byte
-    buf[2] = *((uint8_t*)(&torque) + 1);
-    buf[3] = *((uint8_t*)(&torque) + 2);
-    buf[4] = *((uint8_t*)(&torque) + 3); // high byte
-    buf[5] = *((uint8_t*)(&duration) + 0); // low byte
-    buf[6] = *((uint8_t*)(&duration) + 1);
-    buf[7] = *((uint8_t*)(&duration) + 2); // high byte
-}
 
 void GIM::create_cmd_position_control(uint8_t buf[8], float position, uint32_t duration) {
     buf[0] = CMD_POSITION_CONTROL;
@@ -185,4 +208,104 @@ void GIM::create_cmd_position_control(uint8_t buf[8], float position, uint32_t d
     buf[5] = *((uint8_t*)(&duration) + 0); // low byte
     buf[6] = *((uint8_t*)(&duration) + 1);
     buf[7] = *((uint8_t*)(&duration) + 2); // high byte
+}
+
+
+void GIM::create_cmd_stop_control(uint8_t buf[8]) {
+    buf[0] = CMD_STOP_CONTROL;
+    buf[1] = 0;
+    buf[2] = 0;
+    buf[3] = 0;
+    buf[4] = 0;
+    buf[5] = 0;
+    buf[6] = 0;
+    buf[7] = 0;
+}
+
+void GIM::create_cmd_modify_parameter(uint8_t buf[8], uint8_t param_id, uint32_t data) {
+    buf[0] = CMD_MODIFY_PARAMETER;
+    buf[1] = param_id;
+    buf[2] = 0;
+    buf[3] = 0;
+    buf[4] = *((uint8_t*)(&data) + 0); // low byte
+    buf[5] = *((uint8_t*)(&data) + 1);
+    buf[6] = *((uint8_t*)(&data) + 2);
+    buf[7] = *((uint8_t*)(&data) + 3); // high byte
+}
+
+void GIM::create_cmd_retrieve_parameter(uint8_t buf[8], uint8_t param_id) {
+    buf[0] = CMD_RETRIEVE_PARAMETER;
+    buf[1] = param_id;
+    buf[2] = 0;
+    buf[3] = 0;
+    buf[4] = 0;
+    buf[5] = 0;
+    buf[6] = 0;
+    buf[7] = 0;
+}
+
+void GIM::create_cmd_get_version(uint8_t buf[8]) {
+    buf[0] = CMD_GET_VERSION;
+    buf[1] = 0;
+    buf[2] = 0;
+    buf[3] = 0;
+    buf[4] = 0;
+    buf[5] = 0;
+    buf[6] = 0;
+    buf[7] = 0;
+}
+
+void GIM::create_cmd_get_fault(uint8_t buf[8]) {
+    buf[0] = CMD_GET_FAULT;
+    buf[1] = 0;
+    buf[2] = 0;
+    buf[3] = 0;
+    buf[4] = 0;
+    buf[5] = 0;
+    buf[6] = 0;
+    buf[7] = 0;
+}
+
+void GIM::create_cmd_acknowledge_fault(uint8_t buf[8]) {
+    buf[0] = CMD_ACKNOWLEDGE_FAULT;
+    buf[1] = 0;
+    buf[2] = 0;
+    buf[3] = 0;
+    buf[4] = 0;
+    buf[5] = 0;
+    buf[6] = 0;
+    buf[7] = 0;
+}
+
+void GIM::create_cmd_retrieve_indicator(uint8_t buf[8], uint8_t indicator_id) {
+    buf[0] = CMD_RETRIEVE_INDICATOR;
+    buf[1] = indicator_id;
+    buf[2] = 0;
+    buf[3] = 0;
+    buf[4] = 0;
+    buf[5] = 0;
+    buf[6] = 0;
+    buf[7] = 0;
+}
+
+void GIM::create_cmd_calibration(uint8_t buf[8], uint8_t calibration_type) {
+    buf[0] = CMD_CALIBRATION;
+    buf[1] = calibration_type;
+    buf[2] = 0;
+    buf[3] = 0;
+    buf[4] = 0;
+    buf[5] = 0;
+    buf[6] = 0;
+    buf[7] = 0;
+}
+
+void GIM::create_cmd_update_firmware(uint8_t buf[8], uint8_t indicator_id) {
+    buf[0] = CMD_UPDATE_FIRMWARE;
+    buf[1] = indicator_id;
+    buf[2] = 0;
+    buf[3] = 0;
+    buf[4] = 0;
+    buf[5] = 0;
+    buf[6] = 0;
+    buf[7] = 0;
 }

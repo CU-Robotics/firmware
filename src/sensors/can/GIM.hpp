@@ -173,6 +173,8 @@ private:
     void create_cmd_calibration(uint8_t buf[8], uint8_t calibration_type);
 
     /// @brief Create an update firmware command
+    /// @param buf Output buffer to write command to
+    /// @param indicator_id the documentation doesn't say what this is for. niche command anyways.
     void create_cmd_update_firmware(uint8_t buf[8], uint8_t indicator_id);
 
     // Command byte definitions:
