@@ -71,6 +71,7 @@ int main() {
     // Main loop
     while (true) {
         imu.read();
+        imu.fix_raw_data();
         imu.print();
 
 

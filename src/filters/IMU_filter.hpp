@@ -8,11 +8,18 @@ class IMU_filter{
         Timer timer;
 
         float x[4];
+
+        float Q; //process noise for angle
+        float R; //process noise for accelerometer
+
+        std::array<std::array<float, 4>, 4> P; // estimate covariance
+        std::array<std::array<float, 4>, 4> K; // Kalman gain
+
     public:
         /// @brief Initalize everything including filter constant
-        void init_EKF_6axis(IMU_data);
+        void init_EKF_6axis(IMU_data, float, float);
         
-        void step_EKF_6axis(IMU_data);
+        void step_EKF_6axis(IMU_data, float);
         /// @brief Print out data for debugging
         void print();
         /// @brief Print out data for a Python 3D visulize function
