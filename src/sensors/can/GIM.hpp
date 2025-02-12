@@ -24,27 +24,31 @@ public:
         case MotorType::GIM3505: {
             torque_constant = 0.52f;
             gear_ratio = 8.0f; // 8:1
-            max_torque = 1.27f;
+            max_torque = 1.27f; // Nm
+            max_speed = 225.0f; // RPM
             break;
         }
         case MotorType::GIM4310: {
             torque_constant = 3.46f;
             gear_ratio = 36.0f; // 36:1
-            max_torque = 20.16f;
+            max_torque = 20.16f; // Nm
+            max_speed = 63.0f; // RPM
             break;
         }
         case MotorType::GIM6010: {
             torque_constant = 0.47f;
             gear_ratio = 8.0f; // 8:1
-            max_torque = 11.0f;
-
+            max_torque = 11.0f; // Nm
+            max_speed = 420.0f; // RPM
             break;
         }
         case MotorType::GIM8108: {
             // TODO: this motor has two versions and we need to know which one we have. 
-            // torque constant is either 1.83 or 0.96.
-            torque_constant = 0.0f;
+            // torque constant is either 1.83 or 0.96. going with the lower values for now
+            torque_constant = 0.96f;
             gear_ratio = 9.0f; // 9:1
+            max_torque = 25.73; // Nm     TODO: max torque and max speed also need to be set according to the sub-model of this motor.
+            max_speed = 227.0f; // RPM
             break;
         }
         default: {
@@ -66,6 +70,9 @@ public:
     /// @brief The motor's maximum torque in Nm (determined by "motor_type" in the constructor)
     float max_torque;
 
+    /// @brief The motor's maximum speed in RPM (determined by "motor_type" in the constructor)
+    float max_speed;
+
 public:
     /// @brief Initialize the motor by verifying it is on
     void init() override;
@@ -76,7 +83,15 @@ public:
 
     void zero_motor() override;
 
+    /// @brief Write the motor's torque
+    /// @param torque Torque from -1.0f to 1.0f. This gets clamped into this range and then scaled to the motor type's max torque.
     void write_motor_torque(float torque);
+
+    /// @brief Write the motor's speed
+    /// @param speed Speed from -1.0f to 1.0f. This gets clamped into this range and then scaled to the individual motor type's max speed.
+    void write_motor_speed(float speed);
+
+    void write_motor_position(float position);
 
 public:
     void write_motor_on();

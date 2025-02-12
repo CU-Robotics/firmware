@@ -97,10 +97,44 @@ void GIM::write_motor_torque(float torque) {
     }
 }
 
+void GIM::write_motor_speed(float speed) {
+    // clamp speed argument from -1.0f to 1.0f
+    if (speed < -1.0f) speed = -1.0f;
+    if (speed > 1.0f) speed = 1.0f;
+
+    // convert motor max RPM to max rad_per_sec
+    float max_rad_per_sec = max_speed * (2.0f * PI / 60.0f);
+
+    float mapped_rad_per_sec = speed * max_rad_per_sec;
+
+    // create the command
+    uint8_t buf[8];
+    create_cmd_speed_control(buf, mapped_rad_per_sec, 0); // hardcore 0 duration until we find out what it does
+
+    // fill the output
+    m_output.id = m_base_id + m_id;
+    for (int i = 0; i < 8; i++) {
+        m_output.buf[i] = buf[i];
+    }
+}
+
+void GIM::write_motor_position(float position) {
+    // create the command
+    uint8_t buf[8];
+    create_cmd_position_control(buf, position, 0); // hardcore 0 duration until we find out what it does
+
+    // fill the output
+    m_output.id = m_base_id + m_id;
+    for (int i = 0; i < 8; i++) {
+        m_output.buf[i] = buf[i];
+    }
+}
+
 void GIM::write_motor_stop() {
     uint8_t buf[8];
     create_cmd_stop_control(buf);
 
+    // fill the output
     m_output.id = m_base_id + m_id;
     for (int i = 0; i < 8; i++) {
         m_output.buf[i] = buf[i];
