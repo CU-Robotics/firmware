@@ -15,6 +15,8 @@
 
 #define ACCEL_SENSITIVITY 
 #define CALIBRATION_NUM 100000
+
+#define Error_PITCH 0.0174533
 struct IMUData{
     float accel_X; // acceleration of X axis --unit (m/s^2)
     float accel_Y; // acceleration of Y axis --unit (m/s^2)
