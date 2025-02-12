@@ -1,6 +1,19 @@
 #include "IMUSensor.hpp"
 
-// default implementation for printing data
+IMU_data IMUSensor::get_data(){
+    return data;
+}
+
+void IMUSensor::fix_raw_data(){
+    data.accel_X *= scale_accel;
+    data.accel_Y *= scale_accel;
+    data.accel_Z *= scale_accel;
+    data.gyro_X -= offset_X;
+    data.gyro_Y -= offset_Y;
+    data.gyro_Z -= offset_Z;
+    return;
+}
+
 void IMUSensor::print() {
 	// Display the temperature data, measured in Celcius
 	Serial.print("\t\tTemperature ");
