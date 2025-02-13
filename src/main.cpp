@@ -97,24 +97,24 @@ int main() {
         can.read();
 
         imu_data = icm.getdata();
-        data.gyro_pitch = imu_data.alpha_pitch;
-        data.gyro_roll = imu_data.alpha_roll;
+        data.gyro_pitch = -imu_data.alpha_pitch;
+        data.gyro_roll = -imu_data.alpha_roll;
         data.gyro_yew = imu_data.alpha_yaw;
         data.imu_accel_x = imu_data.world_accel_X;
         data.imu_accel_y = imu_data.world_accel_Y;
         data.imu_accel_z = imu_data.world_accel_Z;
-        data.imu_angle_pitch = imu_data.k_pitch;
-        data.imu_angle_roll = imu_data.k_roll;
+        data.imu_angle_pitch = -imu_data.k_pitch;
+        data.imu_angle_roll = -imu_data.k_roll;
         data.angle_fr = can.get_motor(0)->get_state().position;
         data.angle_fl = can.get_motor(1)->get_state().position;
         data.angle_bl = can.get_motor(2)->get_state().position;
         data.angle_br = can.get_motor(3)->get_state().position;
-        data.speed_fr = can.get_motor(0)->get_state().speed;
-        data.speed_fl = can.get_motor(1)->get_state().speed;
-        data.speed_bl = can.get_motor(2)->get_state().speed;
-        data.speed_br = can.get_motor(3)->get_state().speed;
-        data.speed_wl = can.get_motor(4)->get_state().speed;
-        data.speed_wr = can.get_motor(5)->get_state().speed;
+        data.speed_fr = can.get_motor(0)->get_state().speed/ MG8016RATIO;
+        data.speed_fl = can.get_motor(1)->get_state().speed/ MG8016RATIO;;
+        data.speed_bl = can.get_motor(2)->get_state().speed/ MG8016RATIO;;
+        data.speed_br = can.get_motor(3)->get_state().speed/ MG8016RATIO;;
+        data.speed_wl = can.get_motor(4)->get_state().speed/ MG8016RATIO;;
+        data.speed_wr = can.get_motor(5)->get_state().speed/ MG8016RATIO;;
         
         test_control.set_data(data);
         test_control.observer();

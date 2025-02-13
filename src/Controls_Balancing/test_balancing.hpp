@@ -30,6 +30,7 @@
 #define l_l 0.252   // test
 #define R_w 0.05   // test
 #define M3508RATIO 19
+#define MG8016RATIO 6
 #define LL_FILTER 0.0005
 #define THETA_FILTER 0.00001
 /**controller constants */
