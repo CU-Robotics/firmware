@@ -1,7 +1,10 @@
 #!/bin/bash
 
 # verify that the backup monitor is compiled
-gcc ./tools/monitor.c -Wall -Wextra -Wpedantic -Werror -Wshadow -o ./tools/custom_monitor
+# TODO: The monitor currently only supports Linux
+if [ "$(uname)" == "Linux" ]; then
+	gcc ./tools/monitor.c -Wall -Wextra -Wpedantic -Werror -Wshadow -o ./tools/custom_monitor
+fi
 
 # handle sigint in a strange way to not break tycmd monitor
 trap 'exit 0' INT;
