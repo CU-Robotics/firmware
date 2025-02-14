@@ -14,7 +14,7 @@ trap 'exit 0' INT;
 # where * is a number
 # The important part is the "if00" at the end, its interface number 00
 
-tty_path=$(./tools/get_tty_path.sh *-if00)
+tty_path=$(./tools/get_tty_path.sh)
 
 # If the tty path is not empty, we can start the monitor
 if [ -n "$tty_path" ]; then
