@@ -77,10 +77,20 @@ public:
     /// @brief Initialize the motor by verifying it is on
     void init() override;
 
+    /// @brief Common read command.
+    /// @param msg The message buffer to fill data into
+    /// @return 0 on failure, 1 on success
     int read(CAN_message_t& msg) override;
 
+    /// @brief Common write command. This fills the given message if successful. This is used to compile data to be sent over the CAN line
+    /// @param msg The message buffer to fill data into
+    /// @return The index in the buffer where the motor data was written. The MG8016E-i6 driver will always write 8 bytes so this will always return 0
+    /// @note Does not issue a CAN command over the bus
+    /// @note Return value is mostly useless for this motor, it will always be 0
     int write(CAN_message_t& msg) const override;
 
+    /// @brief Zero the motor. This is a safety function to ensure the motor is not actively driving
+    /// @note Does not issue a CAN command over the bus
     void zero_motor() override;
 
     /// @brief Write the motor's torque
@@ -94,10 +104,13 @@ public:
     void write_motor_position(float position);
 
 public:
+    /// @brief Turn on the motor
     void write_motor_on();
 
+    /// @brief Turn off the motor and clear its state
     void write_motor_off();
 
+    /// @brief Stop the motor but don't clear its state
     void write_motor_stop();
 
 
