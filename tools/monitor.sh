@@ -1,10 +1,7 @@
 #!/bin/bash
 
 # verify that the backup monitor is compiled
-# TODO: The monitor currently only supports Linux
-if [ "$(uname)" == "Linux" ]; then
-	gcc ./tools/monitor.c -Wall -Wextra -Wpedantic -Werror -Wshadow -o ./tools/custom_monitor
-fi
+gcc ./tools/monitor.c -Wall -Wextra -Wpedantic -Werror -Wshadow -o ./tools/custom_monitor
 
 # handle sigint in a strange way to not break tycmd monitor
 trap 'exit 0' INT;
@@ -22,7 +19,7 @@ if [ -n "$tty_path" ]; then
 
 	# Start the monitor, if it fails, try the backup monitor
     # If both monitors fail, the teensy is likely in an invalid state and not listening to the serial port. Click the button and reflash to fix.
-	tycmd monitor --reconnect --board="-Teensy@$tty_path" || ./tools/custom_monitor || echo "Failed to monitor."
+	./tools/custom_monitor $tty_path || tycmd monitor --reconnect --board="-Teensy@$tty_path" || echo "Failed to monitor."
 
 	exit 0
 else

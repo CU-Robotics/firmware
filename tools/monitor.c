@@ -5,9 +5,11 @@
 #include <unistd.h>         // close/read/write
 #include <sys/time.h>       // gettimeofday
 #include <string.h>         // memset
-#include <linux/limits.h>   // PATH_MAX
 
 #include <fts.h>            // FTS stuff
+
+/// @brief Max path size for the serial device
+#define PATH_MAX 4096
 
 /// @brief Size of the serial buffers
 const size_t read_size = 8ul * 1024ul;
@@ -38,12 +40,17 @@ int main(int argc __attribute__((unused)), char** argv) {
     char teensy_dev_path[SERIAL_PATH_SIZE];
     memset(teensy_dev_path, 0, SERIAL_PATH_SIZE);
 
-    // find the teensy's device path
-    if (find_teensy_serial_dev(teensy_dev_path) == -1) {
-        printf("%s: Could not find Teensy's serial device\n", argv[0]);
-
-        // no need to clean up as nothing has been allocated yet
-        return EXIT_FAILURE;
+    if (argc == 2) {
+        printf("Attempting to open teensy at %s\n", argv[1]);
+        strncpy(teensy_dev_path, argv[1], SERIAL_PATH_SIZE);
+    } else {
+        // find the teensy's device path
+        if (find_teensy_serial_dev(teensy_dev_path) == -1) {
+            printf("%s: Could not find Teensy's serial device\n", argv[0]);
+    
+            // no need to clean up as nothing has been allocated yet
+            return EXIT_FAILURE;
+        }
     }
 
     // try to open the file
