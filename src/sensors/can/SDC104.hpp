@@ -266,7 +266,7 @@ private:
 
     // unimplemented
     // void create_cmd_disable_can(CAN_message_t& msg);
-    
+
     /// @brief Create a save configuration command
     /// @param msg The msg to fill in
     void create_cmd_save_configuration(CAN_message_t& msg);
@@ -312,7 +312,9 @@ private:
         ENCODER = 1,
         CONTROL = 3,
         SYSTEM = 4
-    } m_error_request_type = ErrorRequestType::MOTOR;
+    };
+    /// @brief The current error request type
+    ErrorRequestType m_error_request_type = ErrorRequestType::MOTOR;
 
     /// @brief The motor error state
     uint64_t m_motor_exception = 0;
