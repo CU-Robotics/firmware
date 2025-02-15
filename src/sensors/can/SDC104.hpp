@@ -307,7 +307,7 @@ private:
     } m_heartbeat;
 
     /// @brief What error type is currently being requested
-    /// 0: motor abnormality, 1: encoder exception, 3: control exception, 4: system exception
+    /// @note 0: motor abnormality, 1: encoder exception, 3: control exception, 4: system exception
     enum class ErrorRequestType {
         MOTOR = 0,
         ENCODER = 1,
