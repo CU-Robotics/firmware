@@ -3,12 +3,10 @@
 void balancing_test::init(){
     slowdalay_help = micros();
 
-
     saftymode = 0;
     o_data.pitch_dot  = 0;
     o_data.yaw_dot = 0;
     o_data.yaw_ddot = 0;
-
 
     o_data.pitch_old = 0;
     o_data.yaw_dot_old = 0;
@@ -24,38 +22,36 @@ void balancing_test::init(){
     float gain2[4] = {K2_P, K2_I, K2_D, K2_F};
     pid1.set_K(gain1);
     pid2.set_K(gain2);
-    float tempp[6][P_LOCO_ROW][10] = {{
-        {0,0,0,0,0,0,0,0,0,0}, // torque_wl
-        {0,0,0,0,0,0,0,0,0,0}, // torque_wr
-        {0,0,0,0,0,0,0,0,0,0}, // T_bll
-        {0,0,0,0,0,0,0,0,0,0}},// T_blr
+
+    // p matrix for average leg length
+    float tempp[P_LOCO_ROW][4][10] = {
         {
-        {0,0,0,0,0,0,0,0,0,0},  
-        {0,0,0,0,0,0,0,0,0,0}, 
-        {0,0,0,0,0,0,0,0,0,0}, 
-        {0,0,0,0,0,0,0,0,0,0}},
+            {-73.848505, -151.089613, -6.068041, -1.952158, 10.911271, 13.838933, -18.107184, 13.119426, -1.021653, -16.582812, },
+            {-73.848505, -151.089613, 6.068041, 1.952158, -18.107184, 13.119426, 10.911271, 13.838933, -1.021653, -16.582812, },
+            {296.121464, 641.240903, -35.103478, -10.351650, 608.605484, 40.265488, 555.062183, 44.728448, -8.233883, -63.226927, },
+            {296.121464, 641.240903, 35.103478, 10.351650, 555.062183, 44.728448, 608.605484, 40.265488, -8.233883, -63.226927, },
+        },
         {
-        {0,0,0,0,0,0,0,0,0,0},  
-        {0,0,0,0,0,0,0,0,0,0}, 
-        {0,0,0,0,0,0,0,0,0,0}, 
-        {0,0,0,0,0,0,0,0,0,0}},
+            {83.224686, 172.705821, 3.356445, 1.232907, 21.518723, -12.695385, 48.708160, -11.037238, -4.176761, 12.225869, },
+            {83.224686, 172.705821, -3.356445, -1.232907, 48.708160, -11.037238, 21.518723, -12.695385, -4.176761, 12.225869, },
+            {-233.399785, -510.677931, 47.922676, 14.199417, -597.683313, -48.768034, -498.077322, -53.404711, 5.193691, 70.379136, },
+            {-233.399785, -510.677931, -47.922676, -14.199417, -498.077322, -53.404711, -597.683313, -48.768034, 5.193691, 70.379136, },
+        },
         {
-        {0,0,0,0,0,0,0,0,0,0},  
-        {0,0,0,0,0,0,0,0,0,0}, 
-        {0,0,0,0,0,0,0,0,0,0}, 
-        {0,0,0,0,0,0,0,0,0,0}},
+            {-35.649174, -76.448322, 2.091659, 0.662241, -48.608089, -3.491023, -44.048522, -3.085554, 4.224984, -1.593664, },
+            {-35.649174, -76.448322, -2.091659, -0.662241, -44.048522, -3.085554, -48.608089, -3.491023, 4.224984, -1.593664, },
+            {44.540363, 100.521896, -25.553965, -8.122012, 211.929224, 25.196332, 119.560228, 22.377394, 2.912889, -29.118372, },
+            {44.540363, 100.521896, 25.553965, 8.122012, 119.560228, 22.377394, 211.929224, 25.196332, 2.912889, -29.118372, },
+        },
         {
-        {0,0,0,0,0,0,0,0,0,0},  
-        {0,0,0,0,0,0,0,0,0,0}, 
-        {0,0,0,0,0,0,0,0,0,0}, 
-        {0,0,0,0,0,0,0,0,0,0}},
-        {
-        {0,0,0,0,0,0,0,0,0,0},  
-        {0,0,0,0,0,0,0,0,0,0}, 
-        {0,0,0,0,0,0,0,0,0,0}, 
-        {0,0,0,0,0,0,0,0,0,0}
-        }};
+            {3.507067, 7.255959, -1.681419, -0.434956, 1.663422, 0.098835, 1.535239, 0.130738, -0.392370, -0.495047, },
+            {3.507067, 7.255959, 1.681419, 0.434956, 1.535239, 0.130738, 1.663422, 0.098835, -0.392370, -0.495047, },
+            {8.136661, 17.921959, -0.768818, -0.284471, 7.376691, 1.096476, 7.084931, 0.447353, -7.337519, 2.300633, },
+            {8.136661, 17.921959, 0.768818, 0.284471, 7.084931, 0.447353, 7.376691, 1.096476, -7.337519, 2.300633, },
+        },
+    };
     memcpy(p,tempp,sizeof(tempp));
+    
     // For test purpose
     // float tempK[4][10] = { //18cm
     //     {-0.3157,-0.6659,-0.2234,-0.1460,-4.6021,-0.5745,-1.7850,-0.1971,-3.0104,-0.4326}, 
@@ -69,6 +65,7 @@ void balancing_test::init(){
     //     {0.0647, 0.1300, -0.9773, -0.7482, 6.0704, 0.7614, -6.3280, -0.6935, -221.9400, -7.2531}, 
     //     {0.0647, 0.1300, 0.9773, 0.7482, -6.3280, -0.6935, 6.0704, 0.7614, -221.9400, -7.2531}
     //     };  
+
     // float tempK[4][10] = { //18cm
     //     {-0.4067, -1.0474,  0.2169,  0.2144, -6.9541, -0.7964,  0.3102, -0.0582,   7.6073, -0.1897}, 
     //     {-0.4067, -1.0474, -0.2169, -0.2144,  0.3102, -0.0582, -6.9541, -0.7964,   7.6073, -0.1897}, 
@@ -76,21 +73,8 @@ void balancing_test::init(){
     //     {-0.0356, -0.0950,  0.4804,  0.3670, -3.0520, -0.2545,  1.6239,  0.1489, -74.4254, -3.1695}
     //     };  
 
-    float tempK[4][10] = { //18cm
-        {-0.4031, -1.0389,  0.0000,  0.1558, -6.6671, -0.7727,  0.0472, -0.0758,  11.1508,  1.3020}, 
-        {-0.4031, -1.0389, -0.0000, -0.1558,  0.0472, -0.0758, -6.6671, -0.7727,  11.1508,  1.3020}, 
-        {-0.0644, -0.1681, -0.0000, -0.2430,  0.9638,  0.0850, -2.6859, -0.2399, -62.3428, -9.4462}, 
-        {-0.0644, -0.1681,  0.0000,  0.2430, -2.6859, -0.2399,  0.9638,  0.0850, -62.3428, -9.4462}
-        };  
-   
-   
-   
-   
-   
-   
-   
-   
-    memcpy(K,tempK,sizeof(tempK));
+    // memcpy(K,tempK,sizeof(tempK));
+
     //ref for test
     _ref_data.goal_l = 0.18;
     _ref_data.goal_roll = 0;
@@ -335,6 +319,13 @@ void balancing_test::control_position(){
 //----------------------------------------------------------------The NormalF Right----------------------------------------------------------------------- 
     float F_whr = F_blr * costheta_r + m_l * ( G_CONSTANT + _data.imu_accel_z - (1-eta_l) * o_data.lr_ddot * costheta_r);
 
+
+    Serial.print("F_whl: ");
+    Serial.printf("%E", F_whl);
+    Serial.println();
+    Serial.print("F_whr: ");
+    Serial.printf("%E", F_whr);
+    Serial.println();
     // do nothing check
     if(F_whl > F_WH_OUTPUT_LIMIT_NUM && F_whr > F_WH_OUTPUT_LIMIT_NUM)
         return;
@@ -343,11 +334,11 @@ void balancing_test::control_position(){
 //--------------------------------------------------------------Acceleration Saturation---------------------------------------------------------------------------
     float dx[10];
     // dx[0] = 0; //Ignore // s
-    dx[0] = 0; // s
+    dx[0] = _ref_data.s- o_data.s; // s
     dx[1] = _ref_data.b_speed - o_data.b_speed; // speed
     dx[2] = 0; //Ignore // yaw
     //dx[2] = ref[0][2] - obs[0][2]; // yaw angle //We don't have this data and don't need it
-    dx[3] = _ref_data.yaw_dot - o_data.yaw_dot; // yaw rotational speed
+    dx[3] = _ref_data.yaw_dot - o_data.yaw_dot; // yaw rotational speed in deg
     dx[4] = _ref_data.theta_ll - o_data.theta_ll; // theta_ll
     dx[5] = _ref_data.theta_ll_dot - o_data.theta_ll_dot; // theta_ll_dot
     dx[6] = _ref_data.theta_lr - o_data.theta_lr; // theta_lr
@@ -356,11 +347,19 @@ void balancing_test::control_position(){
     dx[9] = _ref_data.pitch_dot - o_data.pitch_dot; // pitch_dot
 
 //----------------------------------------------------------------Leg Length to K------------------------------------------------------------------------------
-    // for(int i = 0; i < P_LOCO_ROW; i++) 
+    // K from Full scale LQR
+    // for(int i = 0; i < 4; i++) 
     //     for(int j = 0; j < 10; j++) 
     //         K[i][j] = p[0][i][j] * o_data.ll * o_data.ll + p[1][i][j] * o_data.ll * o_data.lr + p[2][i][j] * o_data.ll + p[3][i][j] * o_data.lr * o_data.lr + p[4][i][j] * o_data.lr + p[5][i][j];
     // K is 4x10 matrix 
     // 4x10 x 10x1 matrix multi (K * dx) 
+
+    //K from single leg Length LQR
+    for(int i = 0; i < 4; i++) 
+        for(int j = 0; j < 10; j++) 
+            K[i][j] = p[0][i][j] * l * l * l + p[1][i][j] * l * l + p[2][i][j] * l + p[3][i][j];
+
+    
     float T_bll = 0;  
     float T_blr = 0;
 
@@ -377,6 +376,13 @@ void balancing_test::control_position(){
     //     else if(output[T_LWL_OUTPUT_NUM] < WHEEL_LOWER_LIMIT) output[T_LWL_OUTPUT_NUM] = WHEEL_LOWER_LIMIT;
     // if(output[T_LWR_OUTPUT_NUM] > WHEEL_UPPER_LIMIT) output[T_LWR_OUTPUT_NUM] = WHEEL_UPPER_LIMIT;
     //     else if(output[T_LWR_OUTPUT_NUM] < WHEEL_LOWER_LIMIT) output[T_LWR_OUTPUT_NUM] = WHEEL_LOWER_LIMIT;
+
+    Serial.print("T_bll: ");
+    Serial.printf("%E", T_bll);
+    Serial.println();
+    Serial.print("T_blr: ");
+    Serial.printf("%E", T_blr);
+    Serial.println();
 
     //2x2 * 2x1 
     // jl[a][b]   *   F_bll
@@ -405,32 +411,42 @@ void balancing_test::control_position(){
     // _write.torque_fl = _write.torque_bl; 
     // _write.torque_bl = temp;
     
+    
+    if(_write.torque_wl > WHEEL_MOTOR_limit)
+    _write.torque_wl = WHEEL_MOTOR_limit;
+    if(_write.torque_wl < -WHEEL_MOTOR_limit)
+    _write.torque_wl = -WHEEL_MOTOR_limit;
     _write.torque_wl /= 5.0;
+    
+    if(_write.torque_wr > WHEEL_MOTOR_limit)
+    _write.torque_wr = WHEEL_MOTOR_limit;
+    if(_write.torque_wr < -WHEEL_MOTOR_limit)
+    _write.torque_wr = -WHEEL_MOTOR_limit;
     _write.torque_wr /= 5.0;
-
-    _write.torque_fl /= -37.0;
+    
     if(_write.torque_fl > MGlimit)
     _write.torque_fl = MGlimit;
     if(_write.torque_fl < -MGlimit)
     _write.torque_fl = -MGlimit;
+    _write.torque_fl /= -37.0;
 
-    _write.torque_bl /= -37.0;
     if(_write.torque_bl > MGlimit)
     _write.torque_bl = MGlimit;
     if(_write.torque_bl < -MGlimit)
     _write.torque_bl = -MGlimit;
+    _write.torque_bl /= -37.0;
 
-    _write.torque_fr /= 37.0;
     if(_write.torque_fr > MGlimit)
     _write.torque_fr = MGlimit;
     if(_write.torque_fr < -MGlimit)
     _write.torque_fr = -MGlimit;
-
-    _write.torque_br /= 37.0;
+    _write.torque_fr /= 37.0;
+    
     if(_write.torque_br > MGlimit)
     _write.torque_br = MGlimit;
     if(_write.torque_br < -MGlimit)
     _write.torque_br = -MGlimit;
+    _write.torque_br /= 37.0;
 return;
 }
 
@@ -507,7 +523,6 @@ return;
 //         T_blr += K[3][i] * dx[i];
 //     } 
 
-
 //     // // wheels limit //May not be used
 //     // if(output[T_LWL_OUTPUT_NUM] > WHEEL_UPPER_LIMIT) output[T_LWL_OUTPUT_NUM] = WHEEL_UPPER_LIMIT;
 //     //     else if(output[T_LWL_OUTPUT_NUM] < WHEEL_LOWER_LIMIT) output[T_LWL_OUTPUT_NUM] = WHEEL_LOWER_LIMIT;
@@ -564,18 +579,18 @@ write_data balancing_test::getwrite(){
 
 void balancing_test::printdata(){
     getwrite();
-    Serial.print("fr: ");
-    Serial.println(_write.torque_fr);
-    Serial.print("fl: ");
-    Serial.println(_write.torque_fl);
-    Serial.print("bl: ");
-    Serial.println(_write.torque_bl);
-    Serial.print("br: ");
-    Serial.println(_write.torque_br);
-    Serial.print("wl: ");
-    Serial.println(_write.torque_wl);
-    Serial.print("wr: ");
-    Serial.println(_write.torque_wr);
+    Serial.print("torque_fr: ");
+    Serial.println(_write.torque_fr * 37);
+    Serial.print("torque_fl: ");
+    Serial.println(_write.torque_fl * 37);
+    Serial.print("torque_bl: ");
+    Serial.println(_write.torque_bl * 37);
+    Serial.print("torque_br: ");
+    Serial.println(_write.torque_br * 37);
+    Serial.print("torque_wl: ");
+    Serial.println(_write.torque_wl * 5);
+    Serial.print("torque_wr: ");
+    Serial.println(_write.torque_wr * 5);
 }
 void balancing_test::print_observer(){
     // float pitch_dot;
@@ -594,11 +609,11 @@ void balancing_test::print_observer(){
     // float jl[2][2];
     // float jr[2][2];
     Serial.print("pitch_dot: ");
-    Serial.println(o_data.pitch_dot);
+    Serial.println(o_data.pitch_dot*57.29578);
     Serial.print("yaw_dot: ");
-    Serial.println(o_data.yaw_dot);
+    Serial.println(o_data.yaw_dot*57.29578);
     Serial.print("yaw_ddot: ");
-    Serial.println(o_data.yaw_ddot);
+    Serial.println(o_data.yaw_ddot*57.29578);
     Serial.print("speed_wl ");
     Serial.println(_data.speed_wl);
     Serial.print("speed_wr ");
@@ -613,22 +628,28 @@ void balancing_test::print_observer(){
     Serial.println(o_data.imu_speed_x);
     Serial.print("b_accel: ");
     Serial.println(o_data.b_accel);
-    Serial.print("ll: ");
+    Serial.print("leglength ll: ");
     Serial.printf("%E", o_data.ll);
-    Serial.print("lr: ");
+    Serial.println();
+    Serial.print("leglength lr: ");
     Serial.printf("%E", o_data.lr);
+    Serial.println();
     Serial.print("ll_ddot: ");
     Serial.println(o_data.ll_ddot);
     Serial.print("lr_ddot: ");
     Serial.println(o_data.lr_ddot);
     Serial.print("theta_ll: ");
-    Serial.println(o_data.theta_ll * RAD_TO_DEG);
+    Serial.printf("%E", o_data.theta_ll*57.29578);
+    Serial.println();
     Serial.print("theta_lr: ");
-    Serial.println(o_data.theta_lr * RAD_TO_DEG);
+    Serial.printf("%E", o_data.theta_lr*57.29578);
+    Serial.println();
     Serial.print("theta_ll_dot: ");
-    Serial.println(o_data.theta_ll_dot * RAD_TO_DEG);
+    Serial.printf("%E", o_data.theta_ll_dot*57.29578);
+    Serial.println();
     Serial.print("theta_lr_dot: ");
-    Serial.println(o_data.theta_lr_dot * RAD_TO_DEG);
+    Serial.printf("%E", o_data.theta_lr_dot*57.29578);
+    Serial.println();
     Serial.print("jl: ");
     Serial.print(o_data.jl[0][0]);
     Serial.print(" ");

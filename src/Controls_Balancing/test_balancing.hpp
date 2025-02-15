@@ -38,7 +38,8 @@
 #define BOUND true                              // 1 to -1                      
 #define WARP true                               // 360 degree 
 #define F_WH_OUTPUT_LIMIT_NUM 10000000000
-#define MGlimit 1
+#define MGlimit 12
+#define WHEEL_MOTOR_limit 2
 struct balancing_sensor_data
 {
     float angle_fl;
@@ -140,7 +141,7 @@ class balancing_test{
         PIDFilter pid2; 
 
 
-        float p[6][P_LOCO_ROW][10];
+        float p[P_LOCO_ROW][4][10];
         float K[4][10];
 
         balancing_sensor_data _data;

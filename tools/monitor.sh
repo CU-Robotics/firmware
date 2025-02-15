@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # verify that the backup monitor is compiled
-gcc ./tools/monitor.c -Wall -Wextra -Wpedantic -Werror -Wshadow -o ./tools/custom_monitor
+# gcc ./tools/monitor.c -Wall -Wextra -Wpedantic -Werror -Wshadow -o ./tools/custom_monitor
 
 # handle sigint in a strange way to not break tycmd monitor
 trap 'exit 0' INT;
