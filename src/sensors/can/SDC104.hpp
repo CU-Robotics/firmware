@@ -13,7 +13,7 @@ public:
     /// @param gid The global ID, not the per-bus motor ID
     /// @param id The per-bus motor ID. This is 1-indexed
     /// @param bus_id The CAN bus index/ID
-    /// @param motor_type The motor type
+    /// @param motor_type The motor type (not used for SDC104, do not specify)
     SDC104(uint32_t gid, uint32_t id, uint8_t bus_id, MotorType motor_type)
         : Motor(MotorControllerType::SDC104, gid, id, bus_id, motor_type) {
     }
@@ -32,6 +32,7 @@ private:
         CLOSED_LOOP_CONTROL = 8
     };
 
+    /// @brief The current control mode
     enum class ControlMode : uint32_t {
         VOLTAGE = 0,
         TORQUE = 1,
@@ -39,6 +40,7 @@ private:
         POSITION = 3
     };
 
+    /// @brief The current input mode
     enum class InputMode : uint32_t {
         IDLE = 0,
         DIRECT = 1,
@@ -264,7 +266,9 @@ private:
 
     // unimplemented
     // void create_cmd_disable_can(CAN_message_t& msg);
-
+    
+    /// @brief Create a save configuration command
+    /// @param msg The msg to fill in
     void create_cmd_save_configuration(CAN_message_t& msg);
 
 private:

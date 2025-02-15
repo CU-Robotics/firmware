@@ -17,6 +17,7 @@ public:
     /// @param gid The global ID, not the per-bus motor ID
     /// @param id The per-bus motor ID. This is 1-indexed
     /// @param bus_id The CAN bus index/ID
+    /// @param motor_type The motor type, used for GIM to determine gear ratio, max torque, max speed, and torque constant
     GIM(uint32_t gid, uint32_t id, uint8_t bus_id, MotorType motor_type)
         : Motor(MotorControllerType::MG8016, gid, id, bus_id, motor_type) {
 
@@ -101,6 +102,8 @@ public:
     /// @param speed Speed from -1.0f to 1.0f. This gets clamped into this range and then scaled to the individual motor type's max speed.
     void write_motor_speed(float speed);
 
+    /// @brief Write the motor's position
+    /// @param position Position in radians
     void write_motor_position(float position);
 
 public:
@@ -115,6 +118,7 @@ public:
 
 
 private:
+    /// @brief The base ID of the motor
     const uint32_t m_base_id = 0x0;
 
     /// @brief Creates a command to reset the motor's configuration
@@ -198,6 +202,7 @@ private:
 
     /// @brief Create a calibration command
     /// @param buf Output buffer to write command to
+    /// @param calibration_type 1 byte calibration type, 0x00 phase order calibration, 0x01 encoder calibration 
     void create_cmd_calibration(uint8_t buf[8], uint8_t calibration_type);
 
     /// @brief Create an update firmware command
