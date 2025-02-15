@@ -90,7 +90,7 @@ int main() {
     // CTRL type, motor ID, bus ID, motor type
     // CTRL type: 0 = none, 1 = C610, 2 = C620, 3 = MG8016, 4 = GIM, 5 = SDC104
     float motor_info[24][4] = {
-        {5, 4, 1, 0},
+        {4, 8, 1, 1},
     };
 
     can.configure(motor_info);
@@ -107,13 +107,13 @@ int main() {
         // read main sensors
         can.read();
 
-        can.write_motor_torque(CAN_2, 4, 0.5);
+        can.write_motor_torque(CAN_2, 8, 1.f);
 
-        can.print_state();
+        // can.print_state();
 
         can.write();
 
-        Serial.printf("dt: %f\n", stall_timer.delta_micros());
+        // Serial.printf("dt: %f\n", stall_timer.delta_micros());
 
         // Keep the loop running at the desired rate
         loop_timer.delay_micros((int)(1E6 / (float)(LOOP_FREQ)));

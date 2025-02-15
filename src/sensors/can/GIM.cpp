@@ -14,7 +14,6 @@ int GIM::read(CAN_message_t& msg) {
     // commands that return temperature, position, speed, torque
     case CMD_TORQUE_CONTROL:
     case CMD_SPEED_CONTROL: {
-
         // Byte2 is temperature
         m_state.temperature = msg.buf[2];
 
@@ -56,7 +55,8 @@ int GIM::write(CAN_message_t& msg) const {
 }
 
 void GIM::zero_motor() {
-    write_motor_off();
+    // stop the motor
+    write_motor_torque(0.f);
 }
 
 void GIM::write_motor_on() {
@@ -102,14 +102,12 @@ void GIM::write_motor_speed(float speed) {
     if (speed < -1.0f) speed = -1.0f;
     if (speed > 1.0f) speed = 1.0f;
 
-    // convert motor max RPM to max rad_per_sec
-    float max_rad_per_sec = max_speed * (2.0f * PI / 60.0f);
-
-    float mapped_rad_per_sec = speed * max_rad_per_sec;
+    // map speed to the motor's max speed
+    float mapped_rpm = speed * max_speed;
 
     // create the command
     uint8_t buf[8];
-    create_cmd_speed_control(buf, mapped_rad_per_sec, 0); // hardcore 0 duration until we find out what it does
+    create_cmd_speed_control(buf, mapped_rpm, 0); // hardcore 0 duration until we find out what it does
 
     // fill the output
     m_output.id = m_base_id + m_id;
