@@ -2,7 +2,7 @@
 #define CONFIG_LAYER
 
 #include "usb_hid.hpp"
-#include "../controls/controller.hpp"
+#include "controls/controller.hpp"
 #include "SDManager.hpp"
 
 #include <map>
@@ -63,17 +63,17 @@ struct Config {
     /// @brief gains matrix
     float gains[NUM_ROBOT_CONTROLLERS][NUM_GAINS];
     /// @brief gear ratio matrix
-    float gear_ratios[NUM_ROBOT_CONTROLLERS][NUM_MOTORS];
+    float gear_ratios[NUM_ROBOT_CONTROLLERS][CAN_MAX_MOTORS];
 
     /// @brief matrix that contains the type, physical id, and physical bus of each motor
-    float motor_info[NUM_MOTORS][3];
+    float motor_info[CAN_MAX_MOTORS][3];
     /// @brief reference limits matrix
     float set_reference_limits[STATE_LEN][3][2];
     
     /// @brief the estimator id's and info
     float estimator_info[NUM_ESTIMATORS][STATE_LEN + 1];
     /// @brief controller id's and info
-    float controller_info[NUM_ROBOT_CONTROLLERS][NUM_MOTORS + 1];
+    float controller_info[NUM_ROBOT_CONTROLLERS][CAN_MAX_MOTORS + 1];
     /// @brief governor types
     float governor_types[STATE_LEN];
 
