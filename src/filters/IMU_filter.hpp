@@ -6,6 +6,7 @@
 class IMU_filter{
     private:
         Timer timer;
+        float dt;
 
         float x[4];
 
@@ -18,13 +19,13 @@ class IMU_filter{
         void inverse3x3(float mat[3][3], float inv[3][3]); 
     public:
         /// @brief Initalize everything including filter constant
-        void init_EKF_6axis(IMU_data); // Not work
+        void init_EKF_6axis(IMU_data);
         
-        void step_EKF_6axis(IMU_data, float); // Not work 
+        int step_EKF_6axis(IMU_data); 
 
         void init_Kalman_Mahony(IMU_data);
 
-        void step_Kalman_Mahony(IMU_data, float);
+        void step_Kalman_Mahony(IMU_data);
 
         /// @brief Print out data for debugging
         void print();

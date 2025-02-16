@@ -55,31 +55,49 @@ void print_logo() {
         Serial.println("\033[0m\n");
     }
 }
+//////////////Example of using IMU_filter////////////////
+// Please updata the IMU_filter.cpp and IMU_filter.hpp in the filters folder
+// And IMUSensor.cpp and IMUSensor.hpp in the sensors folder
+// And All the Sensor's hpp and cpp file in the sensors folder
+// INIT section
+    // SPI.begin(); // Start SPI for IMU
+    // imu.init(imu.SPI); // Initialize IMU 
+    // imu.set_gyro_range(4000); // Set gyro range to 4000 dps
+    // imu.calibration_all(); // Calibrate IMU
+    // imu_filter.init_EKF_6axis(imu.get_data()); // Initialize EKF filter
+// LOOP section
+    // imu.read();
+    // imu.fix_raw_data();
+    // imu_filter.step_EKF_6axis(imu.get_data());
+    // IMU_data* filtered_data = imu_filter.get_filter_data();
+// Good luck!!! And feel free to ask me (Github: OAOjim / Name: YiChun(Jim) Liao) any question
+////////////////Example of using IMU_filter////////////////
 
 // Master loop
 int main() {
     long long loopc = 0; // Loop counter for heartbeat
-
     Serial.begin(115200); // the serial monitor is actually always active (for debug use Serial.println & tycmd)
     debug.begin(SerialUSB1);
 
     print_logo();
     
-    SPI.begin();
-    imu.init(imu.SPI);
-    imu.set_gyro_range(4000);
-    imu.calibration_all();
-    imu_filter.init_EKF_6axis(imu.get_data());
+    SPI.begin(); // Start SPI for IMU
+    imu.init(imu.SPI); // Initialize IMU 
+    imu.set_gyro_range(4000); // Set gyro range to 4000 dps
+    imu.calibration_all(); // Calibrate IMU
+    imu_filter.init_EKF_6axis(imu.get_data()); // Initialize EKF filter
     // Main loop
+    bool skip = true;
     while (true) {
         imu.read();
         imu.fix_raw_data();
-        imu.print();
-        float main_dt = loop_timer.delta();
-        imu_filter.step_EKF_6axis(imu.get_data(), main_dt);
-        IMU_data* filtered_data = imu_filter.get_filter_data();
-        Serial.printf("Filtered Data: Pitch: %f, Roll: %f, Yaw: %f\n", filtered_data->pitch, filtered_data->roll, filtered_data->yaw);
-
+        // imu.print();
+        if(skip){
+            imu_filter.step_EKF_6axis(imu.get_data());
+            IMU_data* filtered_data = imu_filter.get_filter_data();
+            Serial.printf("Pitch: %f, Roll:%f,Yaw: %f\n", filtered_data->pitch, filtered_data->roll, filtered_data->yaw);
+        }
+        
         // // LED heartbeat -- linked to loop count to reveal slowdowns and freezes.
         // loopc % (int)(1E3 / float(HEARTBEAT_FREQ)) < (int)(1E3 / float(5 * HEARTBEAT_FREQ)) ? digitalWrite(13, HIGH) : digitalWrite(13, LOW);
         // loopc++;

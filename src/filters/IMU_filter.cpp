@@ -1,45 +1,67 @@
 #include "IMU_filter.hpp"
 
 void IMU_filter::init_EKF_6axis(IMU_data data){
-    // For unit Quaternions, The seperation of garvity is what q_i, q_j, q_k should be
-    float invvector = 1.0f/sqrt(data.accel_X * data.accel_X + data.accel_Y * data.accel_Y + data.accel_Z * data.accel_Z);
-    x[0] = 0;
-    x[1] = data.accel_X * invvector;
-    x[2] = data.accel_Y * invvector;
-    x[3] = data.accel_Z * invvector;//This is the initial quaterions
+    // Set a initial value for x with 1000 meaning all angles 0;
+    x[0] = 1;
+    x[1] = 0;
+    x[2] = 0;
+    x[3] = 0;
+    // float invvector = 1.0f/sqrt(data.accel_X * data.accel_X + data.accel_Y * data.accel_Y + data.accel_Z * data.accel_Z);
+    // x[1]= data.accel_X * invvector;
+    // x[2] = data.accel_Y * invvector;
+    // x[3] = data.accel_Z * invvector;//This is the unit gravity
+    // x[0] = 0;   
 
     //Since the weight of Q and R for all element should be the same
-    Q = 0.01;
-    R = 1000000;
-    chi_square = 0.01;
+    Q = 1;
+    R = 10000;
+    chi_square = 1;
     P[0] = {10000,0,0,0};
     P[1] = {0,10000,0,0};
     P[2] = {0,0,10000,0};
     P[3] = {0,0,0,10000};    
 }
 
-void IMU_filter::step_EKF_6axis(IMU_data data, float dt){
+int IMU_filter::step_EKF_6axis(IMU_data data){
     // For unit Quaternions, The seperation of garvity is what q_i, q_j, q_k should be
-    
-    float invvector = 1.0f/sqrt(data.accel_X * data.accel_X + data.accel_Y * data.accel_Y + data.accel_Z * data.accel_Z);
-    data.accel_X = data.accel_X * invvector;
-    data.accel_Y = data.accel_Y * invvector;
-    data.accel_Z = data.accel_Z * invvector;//This is the unit gravity
+    dt = timer.delta();
+    float gravity_now = sqrt(data.accel_X * data.accel_X + data.accel_Y * data.accel_Y + data.accel_Z * data.accel_Z);
+    float recipNorm = 1.0f/gravity_now;
+    data.accel_X = data.accel_X * recipNorm;
+    data.accel_Y = data.accel_Y * recipNorm;
+    data.accel_Z = data.accel_Z * recipNorm;//This is the unit gravity
+
+    // Convert gyro to world related frame
+
+
 
     //Helping numbers for F
-    float helpgx = (data.gyro_X ) * 0.5f;
-    float helpgy = (data.gyro_Y ) * 0.5f;
-    float helpgz = (data.gyro_Z ) * 0.5f;
-    Serial.printf("helpgx: %f, helpgy: %f, helpgz: %f\n", helpgx, helpgy, helpgz);
-    // Predict for x
-    Serial.printf("1.x[0]: %f, x[1]: %f, x[2]: %f, x[3]: %f\n", x[0], x[1], x[2], x[3]);
-    Serial.printf("1.pitch: %f",atan2f(2.0f*(x[0]*x[1] + x[2]*x[3]), 2.0f*(x[0]*x[0] - x[3]*x[3] - 1.0f)) * RAD_TO_DEG);
-    x[0] = x[0]          - x[1]*helpgx   - x[2]*helpgy   - x[3]*helpgz   ;
-    x[1] = x[0]*helpgx   + x[1]          + x[2]*helpgz   - x[3]*helpgy   ;
-    x[2] = x[0]*helpgy   - x[1]*helpgz   + x[2]          + x[3]*helpgx   ;
-    x[3] = x[0]*helpgz   + x[1]*helpgy   - x[2]*helpgx   + x[3]          ;
-    Serial.printf("2.x[0]: %f, x[1]: %f, x[2]: %f, x[3]: %f\n", x[0], x[1], x[2], x[3]);
-    Serial.printf("2.pitch: %f",atan2f(2.0f*(x[0]*x[1] + x[2]*x[3]), 2.0f*(x[0]*x[0] - x[3]*x[3] - 1.0f)) * RAD_TO_DEG);
+    float helpgx = (data.gyro_X * dt) * 0.5f;
+    float helpgy = (data.gyro_Y * dt) * 0.5f;
+    float helpgz = (data.gyro_Z * dt) * 0.5f;
+    // Predict for x 
+    float x0 = x[0];
+    float x1 = x[1];
+    float x2 = x[2];
+    float x3 = x[3];
+
+    x[0] = x0          - x1*helpgx   - x2*helpgy   - x3*helpgz   ;
+    x[1] = x0*helpgx   + x1          + x2*helpgz   - x3*helpgy   ;
+    x[2] = x0*helpgy   - x1*helpgz   + x2          + x3*helpgx   ;
+    x[3] = x0*helpgz   + x1*helpgy   - x2*helpgx   + x3          ; 
+
+    recipNorm = 1.0f/sqrt(x[0] * x[0] + x[1] * x[1] + x[2] * x[2] + x[3] * x[3]);
+    x[0] *= recipNorm;
+    x[1] *= recipNorm;
+    x[2] *= recipNorm;
+    x[3] *= recipNorm;
+
+    // unit x
+    // float invqua = 1/sqrt(x[0]*x[0] + x[1]*x[1] + x[2]*x[2] + x[3]*x[3]);
+    // x[0] = x[0] * invqua;
+    // x[1] = x[1] * invqua;
+    // x[2] = x[2] * invqua;
+    // x[3] = x[3] * invqua;
     // predict for P
     float F[4][4] = {
         {1, -helpgx, -helpgy, -helpgz},
@@ -55,23 +77,8 @@ void IMU_filter::step_EKF_6axis(IMU_data data, float dt){
     float F_transpose[4][4] = {0};
     float FxP[4][4] = {0};
     float PxF_transpose[4][4] = {0};
-    // Calculate FxP and PxF_transpose
-    // for(int i = 0; i < 4; i++){
-    //     for(int j = 0; j < 4; j++){
-    //         for(int k = 0; k < 4; k++){
-    //             FxP[i][j] += F[i][k] * P[k][j];
-    //             PxF_transpose[i][j] += P[i][k] * F[j][k];  
-    //         }
-    //     }
-    // }
-    // for(int i = 0; i < 4; i++){
-    //     for(int j = 0; j < 4; j++){
-    //         P[i][j] += FxP[i][j] + PxF_transpose[i][j];
-    //         if (i == j){
-    //             P[i][j] += Q * dt;
-    //         }
-    //     }
-    // }
+    
+    // Calculate FxPxF_transpose
     for(int i = 0; i < 4; i++){
         for(int j = 0; j < 4; j++){
             for(int k = 0; k < 4; k++){
@@ -81,18 +88,16 @@ void IMU_filter::step_EKF_6axis(IMU_data data, float dt){
     }
     for(int i = 0; i < 4; i++){
         for(int j = 0; j < 4; j++){
+            P[i][j] = 0;
             for(int k = 0; k < 4; k++){
-                P[i][j] += FxP[i][k] * P[j][k]; 
+                P[i][j] += FxP[i][k] * F[j][k]; // P = F*P*F^T + Q
                 if (i == j){
                     P[i][j] += Q * dt;
                 }
             }
         }
     }
-
-
-    
-    // Updata
+    // // Updata
     float H[3][4] = {
         {-2*x[2], 2*x[3], -2*x[0], 2*x[1]},
         {2*x[1], 2*x[0], 2*x[3], 2*x[2]},
@@ -125,7 +130,6 @@ void IMU_filter::step_EKF_6axis(IMU_data data, float dt){
     float HPH_transpose_inv[3][3] = {0};
     inverse3x3(HPH_transpose, HPH_transpose_inv);
     float K[4][3] = {0};
-
     for(int i = 0; i < 4; i++){
         for(int j = 0; j < 3; j++){
             for(int k = 0; k < 3; k++){
@@ -137,23 +141,26 @@ void IMU_filter::step_EKF_6axis(IMU_data data, float dt){
     float g[3] = {
         data.accel_X - 2*(x[1]*x[3] - x[0]*x[2]),
         data.accel_Y - 2*(x[2]*x[3] + x[0]*x[1]),
-        data.accel_Z - 1 - 2*(x[1]*x[1] + x[2]*x[2]) 
+        data.accel_Z - (1 - 2*(x[1]*x[1] + x[2]*x[2])) 
     };
-    float temp[3] = {0};
-    for (int i = 0; i < 3; i++) {
-        for (int j = 0; j < 3; j++) {
-            temp[i] += g[j] * HPH_transpose_inv[j][i];
-        }
-    }
-    float r = temp[0] * g[0] + temp[1] * g[1] + temp[2] * g[2];
-    if (r < 0.1){
+
+    if (gravity_now > 9.7 && gravity_now < 9.9){
         // Updata x
-        for(int i = 0; i < 3; i++){
+        for(int i = 1; i < 3; i++){
             x[i] += K[i][0] * g[0] + K[i][1] * g[1] + K[i][2] * g[2];
         }
+        recipNorm = 1.0f/sqrt(x[0] * x[0] + x[1] * x[1] + x[2] * x[2] + x[3] * x[3]);
+        x[0] *= recipNorm;
+        x[1] *= recipNorm;
+        x[2] *= recipNorm;
+        x[3] *= recipNorm;
         // Update P
         float KH[4][4] = {0};
-        float I_KH[4][4] = {0};
+        float I[4][4] = {0};
+        for(int i = 0; i < 4; i++){
+            I[i][i] = 1.0f;
+        }
+
         for(int i = 0; i < 4; i++){
             for(int j = 0; j < 4; j++){
                 for(int k = 0; k < 3; k++){
@@ -165,26 +172,32 @@ void IMU_filter::step_EKF_6axis(IMU_data data, float dt){
         for(int i = 0; i < 4; i++){
             for(int j = 0; j < 4; j++){
                 for(int k = 0; k < 4; k++){
-                    temp2[i][j] += KH[i][j] * P[k][j];
+                    temp2[i][j] += (I[i][k] - KH[i][k]) * P[k][j];
                 }
             }
         }
         for(int i = 0; i < 4; i++){
             for(int j = 0; j < 4; j++){
-                P[i][j] -= temp2[i][j];
+                P[i][j] = temp2[i][j];
             }
         }
     }
-    float invqua = 1/sqrt(x[0]*x[0] + x[1]*x[1] + x[2]*x[2] + x[3]*x[3]);
-    x[0] = x[0] * invqua;
-    x[1] = x[1] * invqua;
-    x[2] = x[2] * invqua;
-    x[3] = x[3] * invqua;
-
     filtered_data = data;
-    filtered_data.pitch = atan2f(2.0f*(x[0]*x[1] + x[2]*x[3]), 2.0f*(x[0]*x[0] - x[3]*x[3] - 1.0f)) * RAD_TO_DEG;
-    filtered_data.roll = asinf(-2.0f*(x[1]*x[3] - x[0]*x[2]))* RAD_TO_DEG;
-    filtered_data.yaw = atan2f(2.0f*(x[0]*x[3] + x[1]*x[2]), 2.0f*(x[0]*x[0] - x[1]*x[1] - 1.0f))* RAD_TO_DEG;
+    filtered_data.pitch = (atan2f(2.0f * (x[0] * x[1] + x[2] * x[3]), 1.0f - 2.0f * (x[1] * x[1] + x[2] * x[2])));
+    if(abs(filtered_data.pitch) > M_PI_2) {
+        filtered_data.roll = -(asinf(2.0f * (x[0]*x[2] - x[1]*x[3])));
+        if(filtered_data.roll > 0) {
+            filtered_data.roll -= M_PI;
+        } else {
+            filtered_data.roll += M_PI;
+        }
+    }else{
+        filtered_data.roll =  asinf(2.0f * (x[0]*x[2] - x[1]*x[3]));
+    }
+    filtered_data.yaw = atan2f(2.0f*(x[0]*x[3] + x[1]*x[2]), 1.0f - 2.0f*(x[2]*x[2] + x[3]*x[3]));
+    Serial.printf("%f,%f,%f,%f\n", x[0], x[1], x[2], x[3]);
+    return 0;
+
 }
 
 IMU_data* IMU_filter::get_filter_data(){
@@ -198,6 +211,10 @@ void IMU_filter::inverse3x3(float mat[3][3], float inv[3][3]) {
 
     if (det == 0) {
         // Matrix is not invertible
+        for (int i = 0; i < 3; i++)
+            for (int j = 0; j < 3; j++)
+                inv[i][j] = mat[i][j];
+        
         return;
     }
 
