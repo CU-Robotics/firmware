@@ -95,7 +95,7 @@ int main() {
         if(skip){
             imu_filter.step_EKF_6axis(imu.get_data());
             IMU_data* filtered_data = imu_filter.get_filter_data();
-            Serial.printf("Pitch: %f, Roll:%f,Yaw: %f\n", filtered_data->pitch, filtered_data->roll, filtered_data->yaw);
+            Serial.printf("Pitch: %f, Roll:%f,Yaw: %f\n", filtered_data->pitch * RAD_TO_DEG, filtered_data->roll * RAD_TO_DEG, filtered_data->yaw * RAD_TO_DEG);
         }
         
         // // LED heartbeat -- linked to loop count to reveal slowdowns and freezes.
