@@ -12,7 +12,7 @@ void IMU_filter::init_EKF_6axis(IMU_data data){
         x[0] = cosf(data.accel_Z/2.0f);
         x[1] = data.accel_Y * sin_halfangle / axis_norm;
         x[2] = -data.accel_X * sin_halfangle / axis_norm;
-        x[3] = 0;
+        x[3] = 1 - x[0] * x[0] - x[1] * x[1] - x[2] * x[2];
     }else{
         x[0] = 1;
         x[1] = 0;
