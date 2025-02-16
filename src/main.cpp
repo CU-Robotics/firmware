@@ -18,7 +18,7 @@
 
 // Declare global objects
 DR16 dr16;
-rm_CAN can;
+CANManager can;
 RefSystem ref;
 HIDLayer hid_comms;
 Comms::EthernetComms ecomms;
@@ -95,8 +95,10 @@ int main() {
     const Config* config = config_layer.configure(&hid_comms);
     Serial.println("Configured!");
 
+    can.configure(config->motor_info);
+
     //estimate micro and macro state
-    estimator_manager.init(can_data, config);
+    estimator_manager.init(&can, config);
 
     //generate controller outputs based on governed references and estimated state
     controller_manager.init(&can, config);
@@ -109,11 +111,11 @@ int main() {
 
     // variables for use in main
     float temp_state[STATE_LEN][3] = { 0 }; // Temp state array
-    float temp_micro_state[NUM_MOTORS][MICRO_STATE_LEN] = { 0 }; // Temp micro state array
+    float temp_micro_state[CAN_MAX_MOTORS][MICRO_STATE_LEN] = { 0 }; // Temp micro state array
     float temp_reference[STATE_LEN][3] = { 0 }; //Temp governed state
     float target_state[STATE_LEN][3] = { 0 }; //Temp ungoverned state
     float hive_state_offset[STATE_LEN][3] = { 0 }; //Hive offset state
-    // float motor_inputs[NUM_MOTORS] = { 0 }; //Array for storing controller outputs to send to CAN
+    // float motor_inputs[CAN_MAX_MOTORS] = { 0 }; //Array for storing controller outputs to send to CAN
 
     // manual controls variables
     float vtm_pos_x = 0;
@@ -160,7 +162,7 @@ int main() {
         if (incoming->raw[3] == 1) {
             Serial.println("\n\nConfig request received, reconfiguring from comms!\n\n");
             // trigger safety mode
-            can.zero();
+            can.issue_safety_mode();
             config_layer.reconfigure(&hid_comms);
         }
 
@@ -177,7 +179,7 @@ int main() {
 
         vtm_pos_x += ref.ref_data.kbm_interaction.mouse_speed_x * 0.05 * delta;
         vtm_pos_y += ref.ref_data.kbm_interaction.mouse_speed_y * 0.05 * delta;
-        
+
         float chassis_vel_x = 0;
         float chassis_vel_y = 0;
         float chassis_pos_x = 0;
@@ -320,7 +322,7 @@ int main() {
         Serial.printf("Loop %d, dt: %f\n", loopc, dt);
         if (dt > 0.002) { 
             // zero the can bus just in case
-	    	can.zero();
+	    	can.issue_safety_mode();
 		
 	    	Serial.printf("Slow loop with dt: %f\n", dt);
             // mark this as a slow loop to trigger safety mode
@@ -346,6 +348,6 @@ int main() {
         // Keep the loop running at the desired rate
         loop_timer.delay_micros((int)(1E6 / (float)(LOOP_FREQ)));
     }
-    
+
     return 0;
 }

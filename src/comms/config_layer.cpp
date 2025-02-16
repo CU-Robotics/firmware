@@ -263,8 +263,8 @@ void Config::fill_data(CommsPacket packets[MAX_CONFIG_PACKETS], uint8_t sizes[MA
         if (id == yaml_section_id_mappings.at("motor_info")) {
 
             size_t linear_index = index / sizeof(float);
-            size_t i1 = linear_index / (NUM_MOTORS);
-            size_t i2 = linear_index % NUM_MOTORS;
+            size_t i1 = linear_index / (CAN_MAX_MOTORS);
+            size_t i2 = linear_index % CAN_MAX_MOTORS;
             memcpy(&motor_info[i1][i2], packets[i].raw + 8, sub_size);
             index += sub_size;
         }
@@ -302,8 +302,8 @@ void Config::fill_data(CommsPacket packets[MAX_CONFIG_PACKETS], uint8_t sizes[MA
         }
         if (id == yaml_section_id_mappings.at("controller_info")) {
             size_t linear_index = index / sizeof(float);
-            size_t i1 = linear_index / (NUM_MOTORS);
-            size_t i2 = linear_index % NUM_MOTORS;
+            size_t i1 = linear_index / (CAN_MAX_MOTORS);
+            size_t i2 = linear_index % CAN_MAX_MOTORS;
             memcpy(&controller_info[i1][i2], packets[i].raw + 8, sub_size);
             index += sub_size;
         }
@@ -326,18 +326,18 @@ void Config::print() const {
     Serial.printf("Config:\n");
     Serial.printf("Robot ID: %.3f\n", robot);
     Serial.printf("Controller Info:\n");
-    for (int i = 0; i < NUM_ROBOT_CONTROLLERS; i++) {
+    for (size_t i = 0; i < NUM_ROBOT_CONTROLLERS; i++) {
         Serial.printf("\tController %d: ", i);
-        for (int j = 0; j < NUM_MOTORS; j++) {
+        for (size_t j = 0; j < CAN_MAX_MOTORS; j++) {
             Serial.printf("%.3f ", controller_info[i][j]);
         }
         Serial.println();
     }
     // gains
     Serial.printf("Gains:\n");
-    for (int i = 0; i < NUM_ROBOT_CONTROLLERS; i++) {
+    for (size_t i = 0; i < NUM_ROBOT_CONTROLLERS; i++) {
         Serial.printf("\tController %d: ", i);
-        for (int j = 0; j < NUM_GAINS; j++) {
+        for (size_t j = 0; j < NUM_GAINS; j++) {
             Serial.printf("%.3f ", gains[i][j]);
         }
         Serial.println();
@@ -345,9 +345,9 @@ void Config::print() const {
 
     // gear ratios
     Serial.printf("Gear Ratios:\n");
-    for (int i = 0; i < NUM_ROBOT_CONTROLLERS; i++) {
+    for (size_t i = 0; i < NUM_ROBOT_CONTROLLERS; i++) {
         Serial.printf("\tController %d: ", i);
-        for (int j = 0; j < NUM_MOTORS; j++) {
+        for (size_t j = 0; j < CAN_MAX_MOTORS; j++) {
             Serial.printf("%.3f ", gear_ratios[i][j]);
         }
         Serial.println();
@@ -355,9 +355,9 @@ void Config::print() const {
 
     // sensor info
     Serial.printf("Sensor Info:\n");
-    for (int i = 0; i < NUM_SENSORS; i++) {
+    for (size_t i = 0; i < NUM_SENSORS; i++) {
         Serial.printf("\tSensor %d: ", i);
-        for (int j = 0; j < NUM_SENSOR_VALUES; j++) {
+        for (size_t j = 0; j < NUM_SENSOR_VALUES; j++) {
             Serial.printf("%.3f ", sensor_info[i][j]);
         }
         Serial.println();
@@ -365,9 +365,9 @@ void Config::print() const {
 
     // estimator info
     Serial.printf("Estimator Info:\n");
-    for (int i = 0; i < NUM_ESTIMATORS; i++) {
+    for (size_t i = 0; i < NUM_ESTIMATORS; i++) {
         Serial.printf("\tEstimator %d: ", i);
-        for (int j = 0; j < STATE_LEN; j++) {
+        for (size_t j = 0; j < STATE_LEN; j++) {
             Serial.printf("%.3f ", estimator_info[i][j]);
         }
         Serial.println();
@@ -375,15 +375,15 @@ void Config::print() const {
 
     // governor types
     Serial.printf("Governor Types:\n");
-    for (int i = 0; i < STATE_LEN; i++) {
+    for (size_t i = 0; i < STATE_LEN; i++) {
         Serial.printf("\tState %d: %.3f\n", i, governor_types[i]);
     }
 
     // motor info
     Serial.printf("Motor Info:\n");
-    for (int i = 0; i < NUM_MOTORS; i++) {
+    for (size_t i = 0; i < CAN_MAX_MOTORS; i++) {
         Serial.printf("\tMotor %d: ", i);
-        for (int j = 0; j < 3; j++) {
+        for (size_t j = 0; j < 3; j++) {
             Serial.printf("%.3f ", motor_info[i][j]);
         }
         Serial.println();
