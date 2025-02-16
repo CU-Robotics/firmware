@@ -216,7 +216,7 @@ void qnethernet_hal_check_core_locking(const char *file, int line,
 // TCP options
 
 #ifndef LWIP_TCP
-#define LWIP_TCP                   (LWIP_IPV4 || LWIP_IPV6)  /* 1 */
+#define LWIP_TCP                      0  /* 1 */
 #endif  // !LWIP_TCP
 // #define TCP_TTL                    IP_DEFAULT_TTL
 // #define TCP_MAXRTX                 12

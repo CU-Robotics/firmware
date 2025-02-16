@@ -157,15 +157,15 @@ void EstimatorManager::read_sensors() {
 
     for (int i = 0; i < num_sensors[0]; i++) {
         buff_encoders[i].read();
-        buff_encoders[i].print();
+        // buff_encoders[i].print();
     }
     for (int i = 0; i < num_sensors[2]; i++) {
         icm_sensors[i].read();
-        icm_sensors[i].print();
+        // icm_sensors[i].print();
     }
     for (int i = 0; i < num_sensors[1]; i++) {
         rev_sensors[i].read();
-        rev_sensors[i].print();
+        // rev_sensors[i].print();
     }
 }
 

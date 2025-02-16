@@ -2,18 +2,15 @@
 
 #include "git_info.h"
 
-#include "utils/profiler.hpp"
 #include "sensors/d200.hpp"
 #include "sensors/StereoCamTrigger.hpp"
 #include "controls/estimator_manager.hpp"
 #include "controls/controller_manager.hpp"
 
 #include <TeensyDebug.h>
-#include "sensors/LEDBoard.hpp"
 #include "data_packet.hpp"
-#include "comms/comms_layer.hpp"
-#include "comms/data/comms_data.hpp"
-#include "sensor_constants.hpp"
+
+#include "comms/ethernet_comms.hpp"
 
 // Loop constants
 #define LOOP_FREQ 1000
@@ -23,8 +20,8 @@
 DR16 dr16;
 rm_CAN can;
 RefSystem ref;
-HIDLayer HIDcomms;
-Comms::CommsLayer comms_layer;  // currently only used for ethernet!!
+HIDLayer hid_comms;
+Comms::EthernetComms ecomms;
 ACS712 current_sensor;
 
 D200LD14P lidar1(&Serial4, 0);
@@ -34,14 +31,10 @@ StereoCamTrigger stereoCamTrigger(60);
 
 ConfigLayer config_layer;
 
-Profiler prof;
-
 EstimatorManager estimator_manager;
 ControllerManager controller_manager;
 
 Governor governor;
-
-LEDBoard led;
 
 // DONT put anything else in this function. It is not a setup function
 void print_logo() {
@@ -84,27 +77,22 @@ int main() {
 
     Serial.begin(112500); // the serial monitor is actually always active (for debug use Serial.println & tycmd)
     debug.begin(SerialUSB1);
-
+    
     print_logo();
-
+    
     // Execute setup functions
     pinMode(LED_BUILTIN, OUTPUT);
-
-    led.init();
+    
     //initialize objects
     can.init();
     dr16.init();
     ref.init();
-    HIDcomms.init();
-    comms_layer.init();
-
-    //can data pointer so we don't pass around rm_CAN object
-    // TODO: extern the can_data object
-    CANData* can_data = can.get_data();
-
+    hid_comms.init();
+    ecomms.begin();
+    
     // Config config
     Serial.println("Configuring...");
-    const Config* config = config_layer.configure(&HIDcomms);
+    const Config* config = config_layer.configure(&hid_comms);
     Serial.println("Configured!");
 
     //estimate micro and macro state
@@ -145,6 +133,7 @@ int main() {
     Timer stall_timer;
     Timer control_input_timer;
 
+
     Serial.println("Entering main loop...\n");
 
     // Main loop
@@ -157,34 +146,22 @@ int main() {
         lidar1.read();
         lidar2.read();
 
-        // read and write HIDcomms packets
-        HIDcomms.ping();
-        CommsPacket* incoming = HIDcomms.get_incoming_packet();
-        CommsPacket* outgoing = HIDcomms.get_outgoing_packet();
+        ecomms.loop();
+        // auto eth_incoming = ecomms.get_incoming_packet();
+        auto eth_outgoing = ecomms.get_outgoing_packet();
+        eth_outgoing->header.sequence = loopc;
 
-        Comms::FWSample1* sample_send1 = new Comms::FWSample1;
-        Comms::FWSample2* sample_send2 = new Comms::FWSample2;
-        Comms::FWSample3* sample_send3 = new Comms::FWSample3;
-        
-        sample_send1->num = millis();
-        sample_send2->num = millis() + 15;
-        sample_send3->num = millis() + 45;
-
-        comms_layer.send(sample_send1, Comms::PhysicalMedium::Ethernet);
-        comms_layer.send(sample_send2, Comms::PhysicalMedium::Ethernet);
-        comms_layer.send(sample_send3, Comms::PhysicalMedium::Ethernet);
-
-
-
-        // run comms_layer loop function for Ethernet/HID comms (currently only Ethernet)
-        comms_layer.loop();
+        // read and write comms packets
+        hid_comms.ping();
+        CommsPacket* incoming = hid_comms.get_incoming_packet();
+        CommsPacket* outgoing = hid_comms.get_outgoing_packet();
 
         // check whether this packet is a config packet
         if (incoming->raw[3] == 1) {
             Serial.println("\n\nConfig request received, reconfiguring from comms!\n\n");
             // trigger safety mode
             can.zero();
-            config_layer.reconfigure(&HIDcomms);
+            config_layer.reconfigure(&hid_comms);
         }
 
         // print loopc every second to verify it is still alive
@@ -266,13 +243,13 @@ int main() {
         estimator_manager.read_sensors();
 
         // print dr16
-        Serial.printf("DR16:\n\t");
-        dr16.print();
+        // Serial.printf("DR16:\n\t");
+        // dr16.print();
 
-        Serial.printf("Target state:\n");
-        for (int i = 0; i < 8; i++) {
-            Serial.printf("\t%d: %f %f %f\n", i, target_state[i][0], target_state[i][1], target_state[i][2]);
-        }
+        // Serial.printf("Target state:\n");
+        // for (int i = 0; i < 8; i++) {
+        //     Serial.printf("\t%d: %f %f %f\n", i, target_state[i][0], target_state[i][1], target_state[i][2]);
+        // }
         
         // override temp state if needed
         if (incoming->get_hive_override_request() == 1) {
@@ -291,25 +268,25 @@ int main() {
             count_one++;
         }
 
-        Serial.printf("Estimated state:\n");
-        for (int i = 0; i < 8; i++) {
-            Serial.printf("\t%d: %f %f %f\n", i, temp_state[i][0], temp_state[i][1], temp_state[i][2]);
-        }
+        // Serial.printf("Estimated state:\n");
+        // for (int i = 0; i < 8; i++) {
+        //     Serial.printf("\t%d: %f %f %f\n", i, temp_state[i][0], temp_state[i][1], temp_state[i][2]);
+        // }
 
         // reference govern
         governor.set_estimate(temp_state);
         governor.step_reference(target_state, config->governor_types);
         governor.get_reference(temp_reference);
 
-        Serial.printf("Reference state:\n");
-        for (int i = 0; i < 8; i++) {
-            Serial.printf("\t%d: %f %f %f\n", i, temp_reference[i][0], temp_reference[i][1], temp_reference[i][2]);
-        }
+        // Serial.printf("Reference state:\n");
+        // for (int i = 0; i < 8; i++) {
+        //     Serial.printf("\t%d: %f %f %f\n", i, temp_reference[i][0], temp_reference[i][1], temp_reference[i][2]);
+        // }
 
         // generate motor outputs from controls
         controller_manager.step(temp_reference, temp_state, temp_micro_state);
 
-        can.print_output();
+        // can.print_state();
 
         // construct sensor data packet
         SensorData sensor_data;
@@ -339,7 +316,7 @@ int main() {
         bool is_slow_loop = false;
 
         // check whether this was a slow loop or not
-	float dt = stall_timer.delta();
+        float dt = stall_timer.delta();
         Serial.printf("Loop %d, dt: %f\n", loopc, dt);
         if (dt > 0.002) { 
             // zero the can bus just in case
@@ -354,12 +331,12 @@ int main() {
         if (dr16.is_connected() && (dr16.get_l_switch() == 2 || dr16.get_l_switch() == 3) && config_layer.is_configured() && !is_slow_loop) {
             // SAFETY OFF
             can.write();
-            Serial.printf("Can write\n");
+            // Serial.printf("Can write\n");
         } else {
             // SAFETY ON
             // TODO: Reset all controller integrators here
-            can.zero();
-            Serial.printf("Can zero\n");
+            can.issue_safety_mode();
+            // Serial.printf("Can zero\n");
         }
 
         // LED heartbeat -- linked to loop count to reveal slowdowns and freezes.
