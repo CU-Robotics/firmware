@@ -1,25 +1,24 @@
 #ifndef ESTIMATORS_H
 #define ESTIMATORS_H
 
-#include "../comms/rm_can.hpp"
+#include "sensors/can/can_manager.hpp"
 #include "state.hpp"
-#include "../sensors/RefSystem.hpp"
-#include "../comms/config_layer.hpp"
+#include "sensors/RefSystem.hpp"
+#include "comms/config_layer.hpp"
 
-#include "../sensors/buff_encoder.hpp"
-#include "../sensors/rev_encoder.hpp"
-#include "../sensors/ICM20649.hpp"
-#include "../sensors/TOFSensor.hpp"
-#include "../sensors/SensorManager.hpp"
-
+#include "sensors/buff_encoder.hpp"
+#include "sensors/rev_encoder.hpp"
+#include "sensors/ICM20649.hpp"
+#include "sensors/TOFSensor.hpp"
+#include "sensors/SensorManager.hpp"
 
 
 /// @brief Parent estimator struct. All estimators should inherit from this.
 struct Estimator {
 public:
-    Estimator() {};
+    Estimator() { };
 
-    virtual ~Estimator() {};
+    virtual ~Estimator() { };
 
     /// @brief step the current state(s) and update the estimate array accordingly
     /// @param outputs estimated state array to update with certain estimated states
@@ -64,7 +63,7 @@ protected:
     /// @param v_A Vector A (3x1)
     /// @param v_B Vector B (3x1)
     /// @param output Cross product output vector (3x1)
-    void __crossProduct(float v_A[], float v_B[], float output[]) {
+    void __crossProduct(float v_A[ ], float v_B[ ], float output[ ]) {
         output[0] = v_A[1] * v_B[2] - v_A[2] * v_B[1];
         output[1] = -(v_A[0] * v_B[2] - v_A[2] * v_B[0]);
         output[2] = v_A[0] * v_B[1] - v_A[1] * v_B[0];
@@ -75,7 +74,7 @@ protected:
     /// @param input_vector Vector to be rotated
     /// @param theta Angle to rotate (Rad)
     /// @param output New rotated vector
-    void __rotateVector3D(float unit_vector[], float input_vector[], float theta, float output[]) {
+    void __rotateVector3D(float unit_vector[ ], float input_vector[ ], float theta, float output[ ]) {
         float unit_cross_input[3];
         __crossProduct(unit_vector, input_vector, unit_cross_input);
         output[0] = (input_vector[0] * cos(theta)) + (unit_cross_input[0] * sin(theta)) + (unit_vector[0] * __vectorProduct(unit_vector, input_vector, 3) * (1 - cos(theta)));
@@ -224,19 +223,19 @@ private:
     /// @brief global roll angle
     float global_roll_angle = 0;
     /// @brief current rev encoder raw value
-    float curr_rev_raw[3] = {0};
+    float curr_rev_raw[3] = { 0 };
 
     /// @brief previous rev encoder raw value
-    float prev_rev_raw[3] = {0};
+    float prev_rev_raw[3] = { 0 };
 
     /// @brief total meters travelled by each odom wheel
-    float total_odom_pos[3] = {0};
+    float total_odom_pos[3] = { 0 };
 
     /// @brief rev encoder difference
-    float rev_diff[3] = {0};
+    float rev_diff[3] = { 0 };
 
     /// @brief odom pos difference
-    float odom_pos_diff[3] = {0};
+    float odom_pos_diff[3] = { 0 };
     /// @brief previous chassis angle
     float prev_chassis_angle = 0;
     /// @brief odom pod offset from the center of the robot
@@ -261,8 +260,8 @@ private:
     BuffEncoder* buff_enc_pitch;
     /// @brief Odom encoder values
     RevEncoder* rev_enc[3];
-    /// @brief can data pointer from EstimatorManager
-    CANData* can_data;
+    /// @brief can pointer from EstimatorManager
+    CANManager* can;
     /// @brief icm imu
     ICM20649* icm_imu;
 
@@ -275,17 +274,15 @@ private:
 public:
     /// @brief estimate the state of the gimbal
     /// @param config_data inputted sensor values from khadas yaml
-    /// @param sensor_manager sensor manager object
+    /// @param sensor_manager sensor manager object 
     /// @param data can data from Estimator Manager
-    GimbalEstimator(Config config_data, SensorManager* sensor_manager, CANData* data);
-
-    ~GimbalEstimator() {};
+    GimbalEstimator(Config config_data, SensorManager* sensor_manager, CANManager* can);
   
     /// @brief calculate estimated states and add to output array
     /// @param output output array to add estimated states to
     /// @param curr_state current state array to update with new state
     /// @param override true if we want to override the current state with the new state
-    void step_states(float output[STATE_LEN][3], float curr_state[STATE_LEN][3], int override) override; 
+    void step_states(float output[STATE_LEN][3], float curr_state[STATE_LEN][3], int override) override;
 };
 
 /// @brief Estimate the yaw, pitch, and chassis heading
@@ -363,19 +360,19 @@ private:
     /// @brief global roll angle
     float global_roll_angle = 0;
     /// @brief current rev encoder raw value
-    float curr_rev_raw[3] = {0};
+    float curr_rev_raw[3] = { 0 };
 
     /// @brief previous rev encoder raw value
-    float prev_rev_raw[3] = {0};
+    float prev_rev_raw[3] = { 0 };
 
     /// @brief total meters travelled by each odom wheel
-    float total_odom_pos[3] = {0};
+    float total_odom_pos[3] = { 0 };
 
     /// @brief rev encoder difference
-    float rev_diff[3] = {0};
+    float rev_diff[3] = { 0 };
 
     /// @brief odom pos difference
-    float odom_pos_diff[3] = {0};
+    float odom_pos_diff[3] = { 0 };
     /// @brief previous chassis angle
     float prev_chassis_angle = 0;
     /// @brief odom pod offset from the center of the robot
@@ -399,8 +396,8 @@ private:
     /// @brief buff encoder on the pitch
     BuffEncoder* buff_enc_pitch;
 
-    /// @brief can data pointer from EstimatorManager
-    CANData* can_data;
+    /// @brief can pointer from EstimatorManager
+    CANManager* can;
     /// @brief icm imu
     ICM20649* icm_imu;
 
@@ -410,17 +407,9 @@ private:
 public:
     /// @brief estimate the state of the gimbal
     /// @param config_data inputted sensor values from khadas yaml
-    /// @param b1 buff encoder 1
-    /// @param b2 buff encoder 2
-    /// @param imu icm encoder
-    /// @param data can data from Estimator Manager
-    GimbalEstimatorNoOdom(Config config_data,BuffEncoder* b1, BuffEncoder* b2, ICM20649* imu, CANData* data);
-
-    /// @brief estimate the state of the gimbal
-    /// @param config_data inputted sensor values from khadas yaml
-    /// @param sensor_manager sensor manager object
-    /// @param data can data from Estimator Manager
-    GimbalEstimatorNoOdom(Config config_data, SensorManager* sensor_manager, CANData* data);
+    /// @param sensor_manager sensor manager object 
+    /// @param can can from Estimator Manager
+    GimbalEstimatorNoOdom(Config config_data, SensorManager* sensor_manager, CANManager* can);
 
     GimbalEstimatorNoOdom() {};
   
@@ -434,11 +423,11 @@ public:
 /// @brief Estimate the state of the flywheels as meters/second of balls exiting the barrel.
 struct FlyWheelEstimator : public Estimator {
 private:
-    /// @brief can data pointer from EstimatorManager
-    CANData* can_data;
+    /// @brief can pointer from EstimatorManager
+    CANManager* can;
     /// @brief calculated flywheel state from ref
     float projectile_speed_ref;
-  
+
     /// @brief calculated flywheel state from can
     float linear_velocity;
     /// @brief can weight for weighted average
@@ -449,10 +438,10 @@ private:
 
 public:
     /// @brief make new flywheel estimator and set can data pointer and num states
-    /// @param c can data pointer from EstimatorManager
-    FlyWheelEstimator(CANData* c);
-  
-    ~FlyWheelEstimator() {};
+    /// @param can can pointer from EstimatorManager
+    FlyWheelEstimator(CANManager* can);
+
+    ~FlyWheelEstimator() { };
 
     /// @brief generate estimated states and replace in output array
     /// @param output array to be updated with the calculated states
@@ -464,8 +453,8 @@ public:
 /// @brief Estimate the state of the feeder in balls/s
 struct FeederEstimator : public Estimator {
 private:
-    /// @brief can data pointer from EstimatorManager
-    CANData* can_data;
+    /// @brief can pointer from EstimatorManager
+    CANManager* can;
 
     /// @brief balls per second calculated from ref
     float balls_per_second_ref;
@@ -481,10 +470,10 @@ private:
 
 public:
     /// @brief make new feeder estimator and set can_data pointer and num_states
-    /// @param c can data pointer from EstimatorManager
-    FeederEstimator(CANData* c);
+    /// @param can can pointer from EstimatorManager
+    FeederEstimator(CANManager* can);
 
-    ~FeederEstimator() {};
+    ~FeederEstimator() { };
 
     /// @brief calculate state updates
     /// @param output updated balls per second of feeder
@@ -496,8 +485,8 @@ public:
 /// @brief Estimate the state of the switcher in millimeters
 struct SwitcherEstimator : public Estimator {
 private:
-    /// @brief can data pointer from EstimatorManager
-    CANData* can_data;
+    /// @brief can pointer from EstimatorManager
+    CANManager* can;
 
     /// @brief TOF sensor pointer from EstimatorManager
     TOFSensor* time_of_flight;
@@ -522,9 +511,9 @@ private:
 public:
     /// @brief make new barrel switcher estimator and set can_data pointer and num_states
     /// @param config config data from yaml
-    /// @param c can data pointer from EstimatorManager
+    /// @param can can pointer from EstimatorManager
     /// @param tof time of flight sensor object
-    SwitcherEstimator(Config config,CANData* c,TOFSensor* tof);
+    SwitcherEstimator(Config config, CANManager* can, TOFSensor* tof);
 
     /// @brief calculate state updates
     /// @param output updated balls per second of feeder
@@ -536,20 +525,20 @@ public:
 /// @brief This estimator estimates our "micro" state which is stores all the motor velocities(in rad/s), whereas the other estimators estimate "macro" state which stores robot joints
 struct LocalEstimator : public Estimator {
 private:
-    /// @brief can data from EstimatorManager
-    CANData* can_data;
+    /// @brief can from EstimatorManager
+    CANManager* can;
 
 
 public:
     /// @brief Make new local estimator and set can data pointer and num states
-    /// @param c can data pointer from EstimatorManager
-    LocalEstimator(CANData* c);
+    /// @param can can pointer from EstimatorManager
+    LocalEstimator(CANManager* can);
 
     /// @brief step through each motor and add to micro state
     /// @param output entire micro state 
     /// @param curr_state current micro state
     /// @param override override flag
-    void step_states(float output[NUM_MOTORS][MICRO_STATE_LEN], float curr_state[NUM_MOTORS][MICRO_STATE_LEN], int override);
+    void step_states(float output[CAN_MAX_MOTORS][MICRO_STATE_LEN], float curr_state[CAN_MAX_MOTORS][MICRO_STATE_LEN], int override);
 };
 
 #endif

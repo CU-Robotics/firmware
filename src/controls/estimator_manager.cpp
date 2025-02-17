@@ -12,10 +12,10 @@ EstimatorManager::~EstimatorManager() {
     }
 }
 
-void EstimatorManager::init(CANData* _can_data, const Config* _config_data, SensorManager* _sensor_manager) {
+void EstimatorManager::init(CANManager* _can, const Config* _config_data, SensorManager* _sensor_manager) {
 
     // set can and config data pointers
-    can_data = _can_data;
+    can = _can;
     config_data = _config_data;
     sensor_manager = _sensor_manager;
     if (!config_data) Serial.println("CONFIG DATA IS NULL!!!!!");
@@ -36,29 +36,29 @@ void EstimatorManager::init_estimator(int estimator_id) {
 
     switch (estimator_id) {
     case 1:
-        estimators[num_estimators++] = new GimbalEstimator(*config_data, sensor_manager, can_data);
+        estimators[num_estimators++] = new GimbalEstimator(*config_data, sensor_manager, can);
         break;
     case 2:
-        estimators[num_estimators++] = new FlyWheelEstimator(can_data);
+        estimators[num_estimators++] = new FlyWheelEstimator(can);
         break;
     case 3:
-        estimators[num_estimators++] = new FeederEstimator(can_data);
+        estimators[num_estimators++] = new FeederEstimator(can);
         break;
     case 4:
-        estimators[num_estimators++] = new LocalEstimator(can_data);
+        estimators[num_estimators++] = new LocalEstimator(can);
         break;
     case 5:
-        estimators[num_estimators++] = new SwitcherEstimator(*config_data, can_data, sensor_manager->get_tof_sensor(0));
+        estimators[num_estimators++] = new SwitcherEstimator(*config_data, can, sensor_manager->get_tof_sensor(0));
         break;
     case 6:
-        estimators[num_estimators++] = new GimbalEstimatorNoOdom(*config_data, sensor_manager, can_data);        
+        estimators[num_estimators++] = new GimbalEstimatorNoOdom(*config_data, sensor_manager, can);        
         break;
     default:
         break;
     }
 }
 
-void EstimatorManager::step(float macro_outputs[STATE_LEN][3], float micro_outputs[NUM_MOTORS][MICRO_STATE_LEN], int override) {
+void EstimatorManager::step(float macro_outputs[STATE_LEN][3], float micro_outputs[CAN_MAX_MOTORS][MICRO_STATE_LEN], int override) {
     // clear output
     float curr_state[STATE_LEN][3] = { 0 };
     memcpy(curr_state, macro_outputs, sizeof(curr_state));
@@ -67,7 +67,7 @@ void EstimatorManager::step(float macro_outputs[STATE_LEN][3], float micro_outpu
 
     for (int i = 0; i < num_estimators; i++) {
         float macro_states[STATE_LEN][3] = { 0 };
-        float micro_states[NUM_MOTORS][MICRO_STATE_LEN] = { 0 };
+        float micro_states[CAN_MAX_MOTORS][MICRO_STATE_LEN] = { 0 };
 
         if (!estimators[i]->micro_estimator) {
 
@@ -82,7 +82,7 @@ void EstimatorManager::step(float macro_outputs[STATE_LEN][3], float micro_outpu
             }
         } else {
             estimators[i]->step_states(micro_states, curr_state, override);
-            for (int j = 0; j < NUM_MOTORS + 1; j++) {
+            for (size_t j = 0; j < CAN_MAX_MOTORS + 1; j++) {
                 int index = config_data->estimator_info[i][j + 1]; //0 index is reserved for the id
                 if (index == -1) break;
                 for (int k = 0; k < MICRO_STATE_LEN; k++) {
@@ -93,13 +93,13 @@ void EstimatorManager::step(float macro_outputs[STATE_LEN][3], float micro_outpu
     }
 }
 
-void EstimatorManager::clear_outputs(float macro_outputs[STATE_LEN][3], float micro_outputs[NUM_MOTORS][MICRO_STATE_LEN]) {
+void EstimatorManager::clear_outputs(float macro_outputs[STATE_LEN][3], float micro_outputs[CAN_MAX_MOTORS][MICRO_STATE_LEN]) {
     for (int i = 0; i < STATE_LEN; i++) {
         for (int j = 0; j < 3; j++) {
             macro_outputs[i][j] = 0;
         }
     }
-    for (int i = 0; i < NUM_MOTORS; i++) {
+    for (size_t i = 0; i < CAN_MAX_MOTORS; i++) {
         for (int j = 0; j < MICRO_STATE_LEN; j++) {
             micro_outputs[i][j] = 0;
         }
