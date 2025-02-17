@@ -13,10 +13,6 @@ struct PIDFilter {
     /// @brief previous error
     float prevError = 0;
 
-    /// @brief target
-    float setpoint = 0;
-    /// @brief estimate
-    float measurement = 0;
     /// @brief feedforward component
     float feedForward = 0;
 
@@ -25,7 +21,7 @@ struct PIDFilter {
     /// @param bound bound from -1 to 1
     /// @param wrap wrap at 2*pi
     /// @return pidf output
-    float filter(float dt, bool bound, bool wrap) {
+    float filter(float dt, bool bound, bool wrap, float setpoint, float measurement) {
         float error = setpoint - measurement;
         if (error > PI && wrap) error -= 2 * PI;
         if (error < -PI && wrap) error += 2 * PI;
