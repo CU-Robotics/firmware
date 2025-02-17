@@ -44,12 +44,10 @@ public:
             break;
         }
         case MotorType::GIM8108: {
-            // TODO: this motor has two versions and we need to know which one we have. 
-            // torque constant is either 1.83 or 0.96. going with the lower values for now
-            torque_constant = 0.96f;
+            torque_constant = 1.83f;
             gear_ratio = 9.0f; // 9:1
-            max_torque = 25.73; // Nm     TODO: max torque and max speed also need to be set according to the sub-model of this motor.
-            max_speed = 227.0f; // RPM
+            max_torque = 27.38; // Nm
+            max_speed = 242.0f; // RPM
             break;
         }
         default: {
