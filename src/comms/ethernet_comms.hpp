@@ -112,6 +112,8 @@ private:
 	const uint32_t m_connection_timeout = 500000;
 	/// @brief The handshake timeout in microseconds
 	const uint32_t m_handshake_timeout = 1000000;
+	/// @brief The UDP warmup timeout in microseconds
+	const uint32_t m_warmup_timeout = 5000000;
 
 	/// @brief The current status of the comms
 	EthernetStatus m_status = {};

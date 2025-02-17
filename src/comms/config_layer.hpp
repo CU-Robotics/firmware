@@ -4,7 +4,6 @@
 #include "usb_hid.hpp"
 #include "controls/controller.hpp"
 #include "SDManager.hpp"
-#include "comms_layer.hpp"
 
 #include <map>
 #include <string>
@@ -86,14 +85,12 @@ private:
 
 /// @brief Handle seeking and reading configuration packets coming from khadas
 class ConfigLayer {
-public:
+private:
     /// @brief array to save config packets
     CommsPacket config_packets[MAX_CONFIG_PACKETS];
 
     /// @brief array to store number of subsections per YAML section
     uint8_t subsec_sizes[MAX_CONFIG_PACKETS] = { 0 };
-
-private:
 
     /// @brief number of YAML sections
     uint16_t num_sec;

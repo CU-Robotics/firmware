@@ -47,9 +47,22 @@ bool EthernetComms::begin(uint32_t data_rate) {
 	// warm up the UDP server
 	// when the server first starts up, there is a time period of when it establishes some sort of a connection
 	// this just waits until our send commands return success (the line is ready)
+	uint32_t warmup_start = micros();
 	while (!send_packet(m_outgoing)) {
 		qn::Ethernet.loop();
 		delayMicroseconds(m_regulation_time);
+
+		// If the warmup takes too long, timeout
+		// this does not mean the ethernet is not working, just that the server never got a response from Linux
+		// this is generally a problem with the Linux side, not the Teensy
+		// (the ethernet cable might be disconnected or the Linux side is not running)
+		if (micros() - warmup_start >= m_warmup_timeout) {
+			Serial.printf("UDP server warmup failed!\n");
+			Serial.printf("Is the ethernet cable connected?\n");
+
+			return false;
+		}
+
 	}
 
 	// ethernet is now setup and udp server is online
