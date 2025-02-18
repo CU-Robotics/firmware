@@ -91,8 +91,8 @@ int main() {
         write_to_leds(val);
 
         auto* outgoing = comms.get_outgoing_packet();
-        outgoing->header.sequence = val;
-        outgoing->header.time_stamp = stereoCamTrigger.get_latest_exposure_timestamp()  & 0x3FF;
+        outgoing->header.sequence = stereoCamTrigger.get_latest_exposure_timestamp() & 0x3FF;
+        outgoing->header.time_stamp = millis();
 
         comms.loop();
 
