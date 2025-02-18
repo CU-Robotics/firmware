@@ -83,9 +83,6 @@ struct write_data
 struct observer_data
 {
     float s;
-    float pitch_dot;
-    float yaw_dot;
-    float yaw_ddot;
     float b_speed;
     float imu_speed_x;
     float imu_s;
@@ -106,8 +103,6 @@ struct observer_data
     float jl[2][2];
     float jr[2][2];
 
-    float pitch_old;
-    float yaw_dot_old;
     float theta_ll_old;
     float theta_lr_old;
     float b_speed_old;
@@ -172,8 +167,6 @@ class balancing_test{
         void observer();
 
         void control();
-
-        void control_position();
 
         void simple_control();
 

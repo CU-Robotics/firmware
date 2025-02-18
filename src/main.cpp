@@ -4,7 +4,8 @@
 #include "comms/can/can_manager.hpp"
 #include "comms/can/MG8016EI6.hpp"
 #include "sensors/dr16.hpp"
-#include "filters/IMU_Filter.hpp"
+#include "sensors/ICM20649.hpp"
+#include "filters/IMU_filter.hpp"
 #include "Controls_Balancing/test_balancing.hpp"
 
 // Loop constants
@@ -14,7 +15,8 @@
 DR16 dr16;
 CANManager can;
 Timer loop_timer;
-IMU_filter icm;
+ICM20649 icm;
+IMU_filter imu_filter;
 balancing_test test_control;
 // DONT put anything else in this function. It is not a setup function
 void print_logo() {
@@ -50,20 +52,21 @@ void print_logo() {
 int main() {
     Serial.begin(1000000); // the serial monitor is actually always active (for debug use Serial.println & tycmd)
     debug.begin(SerialUSB1);
-    
     if (CrashReport) {
         while (1) {
             Serial.println(CrashReport);
             delay(1000);
         }
     }
-
     print_logo();
     dr16.init();
     test_control.init();
-    icm.init();
     can.init();
-
+    SPI.begin(); // Start SPI for IMU
+    icm.init(icm.SPI); // Initialize IMU 
+    icm.set_gyro_range(4000); // Set gyro range to 4000 dps
+    icm.calibration_all(); // Calibrate IMU
+    imu_filter.init_EKF_6axis(icm.get_data()); // Initialize EKF filter
     // [controller_type, motor_id, bus_id]
     // controller_type: 
     // 0: invalid
@@ -88,37 +91,37 @@ int main() {
 
 
     balancing_sensor_data data;
-    IMUData imu_data;
     // Main loop
     while (true) {
         // Read sensors
         dr16.read();
         icm.read();
+        icm.fix_raw_data(); // Fix the bias and scale factor
         can.read();
 
-        imu_data = icm.getdata();
-        data.gyro_pitch = -imu_data.alpha_pitch;
-        data.gyro_roll = -imu_data.alpha_roll;
-        data.gyro_yew = imu_data.alpha_yaw;
-        data.imu_accel_x = imu_data.world_accel_X;
-        data.imu_accel_y = imu_data.world_accel_Y;
-        data.imu_accel_z = imu_data.world_accel_Z;
-        data.imu_angle_pitch = -imu_data.k_pitch;
-        data.imu_angle_roll = -imu_data.k_roll;
-        data.angle_fr = can.get_motor(0)->get_state().position;
-        data.angle_fl = can.get_motor(1)->get_state().position;
-        data.angle_bl = can.get_motor(2)->get_state().position;
-        data.angle_br = can.get_motor(3)->get_state().position;
-        data.speed_fr = can.get_motor(0)->get_state().speed/ MG8016RATIO;
-        data.speed_fl = can.get_motor(1)->get_state().speed/ MG8016RATIO;;
-        data.speed_bl = can.get_motor(2)->get_state().speed/ MG8016RATIO;;
-        data.speed_br = can.get_motor(3)->get_state().speed/ MG8016RATIO;;
-        data.speed_wl = can.get_motor(4)->get_state().speed/ MG8016RATIO;;
-        data.speed_wr = can.get_motor(5)->get_state().speed/ MG8016RATIO;;
-        
-        test_control.set_data(data);
+        imu_filter.step_EKF_6axis(icm.get_data());
+        IMU_data* filtered_data = imu_filter.get_filter_data();
+        data.gyro_roll = -filtered_data->gyro_pitch; // Roll is Y meaning the pitch from IMU filter -- right(+) 
+        data.gyro_pitch = filtered_data->gyro_roll; // Pitch is X meaning this is roll from IMU filter -- front(+)
+        data.gyro_yew = -filtered_data->gyro_yaw; // clockwise (+)
+        data.imu_accel_x = -filtered_data->accel_world_X; // Front (+)
+        data.imu_accel_y = filtered_data->accel_world_Y; // Right (+)
+        data.imu_accel_z = -filtered_data->accel_world_Z; // up (+)
+        data.imu_angle_pitch = -filtered_data->roll;  // Front(+)
+        data.imu_angle_roll = -filtered_data->pitch; // Right(+)
+        data.angle_fr = can.get_motor(0)->get_state().position; // see from robot outor side clockwise (+) 
+        data.angle_fl = can.get_motor(1)->get_state().position; // see from robot outor side clockwise (+)
+        data.angle_bl = can.get_motor(2)->get_state().position; // see from robot outor side clockwise (+)
+        data.angle_br = can.get_motor(3)->get_state().position; // see from robot outor side clockwise (+)
+        data.speed_fr = can.get_motor(0)->get_state().speed/ MG8016RATIO; // see from robot outor side clockwise (+)
+        data.speed_fl = can.get_motor(1)->get_state().speed/ MG8016RATIO; // see from robot outor side clockwise (+)
+        data.speed_bl = can.get_motor(2)->get_state().speed/ MG8016RATIO; // see from robot outor side clockwise (+)
+        data.speed_br = can.get_motor(3)->get_state().speed/ MG8016RATIO; // see from robot outor side clockwise (+)
+        data.speed_wl = can.get_motor(4)->get_state().speed/ M3508RATIO; // see from robot outor side clockwise (+)
+        data.speed_wr = can.get_motor(5)->get_state().speed/ M3508RATIO; // see from robot outor side clockwise (+)
+        test_control.set_data(data); 
         test_control.observer();
-        test_control.control_position();
+        test_control.control();
         can.write_motor_torque(0,test_control.getwrite().torque_fr);
         can.write_motor_torque(1,test_control.getwrite().torque_fl);
         can.write_motor_torque(2,test_control.getwrite().torque_bl);
@@ -127,9 +130,9 @@ int main() {
         can.write_motor_torque(5,test_control.getwrite().torque_wr);
 
         // can.print_state();
-        test_control.print_observer();
-        test_control.printdata();
-        // icm.print();
+        // test_control.print_observer();
+        // test_control.printdata();
+        
         if (!dr16.is_connected() || dr16.get_l_switch() == 1 || test_control.saftymode) {
             // SAFETY ON
             // TODO: Reset all controller integrators here
