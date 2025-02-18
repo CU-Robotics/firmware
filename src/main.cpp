@@ -59,6 +59,22 @@ void print_logo() {
 // Please updata the IMU_filter.cpp and IMU_filter.hpp in the filters folder
 // And IMUSensor.cpp and IMUSensor.hpp in the sensors folder
 // And All the Sensor's hpp and cpp file in the sensors folder
+// float accel_X = 0; //acceleration raw value
+// float accel_Y = 0;
+// float accel_Z = 0;
+// float gyro_X = 0; //raw gyroscope value (rad/s) x(along roll) y(along pitch) z(up-down)
+// float gyro_Y = 0;
+// float gyro_Z = 0; 
+// float temperature = 0; //(c)
+// float pitch = 0; //Angle (rad)
+// float roll = 0;
+// float yaw = 0;
+// float accel_world_X = 0; //Acceleration in world frame (m/s)
+// float accel_world_Y = 0;
+// float accel_world_Z = 0;
+// float gyro_pitch = 0; //Filtered angular velocity (rad/s)
+// float gyro_roll = 0;
+// float gyro_yaw = 0;
 // INIT section
     // SPI.begin(); // Start SPI for IMU
     // imu.init(imu.SPI); // Initialize IMU 
@@ -96,6 +112,8 @@ int main() {
             imu_filter.step_EKF_6axis(imu.get_data());
             IMU_data* filtered_data = imu_filter.get_filter_data();
             Serial.printf("Pitch: %f, Roll:%f,Yaw: %f\n", filtered_data->pitch * RAD_TO_DEG, filtered_data->roll * RAD_TO_DEG, filtered_data->yaw * RAD_TO_DEG);
+            Serial.printf("Gyro Pitch: %f, Gyro Roll: %f, Gyro Yaw: %f\n", filtered_data->gyro_pitch, filtered_data->gyro_roll, filtered_data->gyro_yaw);
+            Serial.printf("World Accel X: %f, World Accel Y: %f, World Accel Z: %f\n", filtered_data->accel_world_X, filtered_data->accel_world_Y, filtered_data->accel_world_Z);
         }
         
         // // LED heartbeat -- linked to loop count to reveal slowdowns and freezes.

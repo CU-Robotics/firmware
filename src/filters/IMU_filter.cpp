@@ -35,13 +35,9 @@ int IMU_filter::step_EKF_6axis(IMU_data data){
     dt = timer.delta();
     float gravity_now = sqrt(data.accel_X * data.accel_X + data.accel_Y * data.accel_Y + data.accel_Z * data.accel_Z);
     float recipNorm = 1.0f/gravity_now;
-    data.accel_X = data.accel_X * recipNorm;
-    data.accel_Y = data.accel_Y * recipNorm;
-    data.accel_Z = data.accel_Z * recipNorm;//This is the unit gravity
-
-    // Convert gyro to world related frame
-
-
+    float unit_accel_X = data.accel_X * recipNorm;
+    float unit_accel_Y = data.accel_Y * recipNorm;
+    float unit_accel_Z = data.accel_Z * recipNorm;//This is the unit gravity
 
     //Helping numbers for F
     float helpgx = (data.gyro_X * dt) * 0.5f;
@@ -147,9 +143,9 @@ int IMU_filter::step_EKF_6axis(IMU_data data){
     }
     // caulculate the error between the predicted and the measured
     float g[3] = {
-        data.accel_X - 2*(x[1]*x[3] - x[0]*x[2]),
-        data.accel_Y - 2*(x[2]*x[3] + x[0]*x[1]),
-        data.accel_Z - (1 - 2*(x[1]*x[1] + x[2]*x[2])) 
+        unit_accel_X - 2*(x[1]*x[3] - x[0]*x[2]),
+        unit_accel_Y - 2*(x[2]*x[3] + x[0]*x[1]),
+        unit_accel_Z - (1 - 2*(x[1]*x[1] + x[2]*x[2])) 
     };
 
     if (gravity_now > 9.7 && gravity_now < 9.9){
@@ -190,7 +186,10 @@ int IMU_filter::step_EKF_6axis(IMU_data data){
             }
         }
     }
-    filtered_data = data;
+    float temp1 = filtered_data.pitch;
+    float temp2 = filtered_data.roll;
+    float temp3 = filtered_data.yaw;
+    filtered_data = data; // Reset all filtered data to the raw data
     filtered_data.pitch = (atan2f(2.0f * (x[0] * x[1] + x[2] * x[3]), 1.0f - 2.0f * (x[1] * x[1] + x[2] * x[2])));
     if(abs(filtered_data.pitch) > M_PI_2) {
         filtered_data.roll = -(asinf(2.0f * (x[0]*x[2] - x[1]*x[3])));
@@ -203,6 +202,13 @@ int IMU_filter::step_EKF_6axis(IMU_data data){
         filtered_data.roll =  asinf(2.0f * (x[0]*x[2] - x[1]*x[3]));
     }
     filtered_data.yaw = atan2f(2.0f*(x[0]*x[3] + x[1]*x[2]), 1.0f - 2.0f*(x[2]*x[2] + x[3]*x[3]));
+    filtered_data.gyro_yaw = (temp3 - filtered_data.yaw)/dt;
+    filtered_data.gyro_roll = (temp2 - filtered_data.roll)/dt;
+    filtered_data.gyro_pitch = (temp1 - filtered_data.pitch)/dt;
+    // Convert to the original
+    filtered_data.accel_world_X = filtered_data.accel_X * (1-2*(x[2]*x[2] + x[3]*x[3])) + filtered_data.accel_Y * (2*(x[1]*x[2] - x[3]*x[0])) + filtered_data.accel_Z * (2*(x[1]*x[3] + x[0]*x[2]));
+    filtered_data.accel_world_Y = filtered_data.accel_X * (2*(x[1]*x[2] + x[3]*x[0])) + filtered_data.accel_Y * (1-2*(x[1]*x[1] + x[3]*x[3])) + filtered_data.accel_Z * (2*(x[2]*x[3] - x[1]*x[0]));
+    filtered_data.accel_world_Z = filtered_data.accel_X * (2*(x[1]*x[3] - x[2]*x[0])) + filtered_data.accel_Y * (2*(x[2]*x[3] + x[1]*x[0])) + filtered_data.accel_Z * (1 - 2*(x[1]*x[1] + x[2]*x[2])) - SENSORS_GRAVITY_EARTH;
     Serial.printf("%f,%f,%f,%f\n", x[0], x[1], x[2], x[3]);
     return 0;
 

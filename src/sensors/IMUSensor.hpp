@@ -10,26 +10,27 @@
 
 
 struct IMU_data{
-    /// @brief acceleration x value 
-    float accel_X = 0;
-    /// @brief acceleration y value
-    float accel_Y = 0;
-    /// @brief acceleration z value
-    float accel_Z = 0;
+float accel_X = 0; //acceleration raw value
+float accel_Y = 0;
+float accel_Z = 0;
 
-    /// @brief gyroscope x value
-    float gyro_X = 0;
-    /// @brief gyroscope y value
-    float gyro_Y = 0;
-    /// @brief gyroscope z value
-    float gyro_Z = 0;
+float gyro_X = 0; //raw gyroscope value (rad/s) x(along roll) y(along pitch) z(up-down)
+float gyro_Y = 0;
+float gyro_Z = 0; 
 
-    /// @brief temperature value
-    float temperature = 0;
+float temperature = 0; //(c)
 
-    float pitch = 0;
-    float roll = 0;
-    float yaw = 0;
+float pitch = 0; //Angle (rad)
+float roll = 0;
+float yaw = 0;
+
+float accel_world_X = 0; //Acceleration in world frame (m/s)
+float accel_world_Y = 0;
+float accel_world_Z = 0;
+
+float gyro_pitch = 0; //Filtered angular velocity (rad/s)
+float gyro_roll = 0;
+float gyro_yaw = 0;
 };
 
 /// @brief Abstract parent class for all IMUSensors, which give acceleration and gyroscope data. 

@@ -17,6 +17,9 @@ class IMU_filter{
         std::array<std::array<float, 4>, 4> K; // Kalman gain
         IMU_data filtered_data;
         void inverse3x3(float mat[3][3], float inv[3][3]); 
+
+        
+
     public:
         /// @brief Initalize everything including filter constant
         void init_EKF_6axis(IMU_data);
