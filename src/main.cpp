@@ -6,7 +6,6 @@
 #include "sensors/StereoCamTrigger.hpp"
 #include "controls/estimator_manager.hpp"
 #include "controls/controller_manager.hpp"
-#include "ethernet_comms.hpp"
 
 #include <TeensyDebug.h>
 #include "sensors/LEDBoard.hpp"
@@ -24,7 +23,6 @@ RefSystem* ref;
 HIDLayer comms;
 ACS712 current_sensor;
 
-
 StereoCamTrigger stereoCamTrigger(60);
 
 ConfigLayer config_layer;
@@ -38,8 +36,6 @@ ControllerManager controller_manager;
 Governor governor;
 
 LEDBoard led;
-
-Comms::EthernetComms ethernet_comms;
 
 // DONT put anything else in this function. It is not a setup function
 void print_logo() {
@@ -100,12 +96,11 @@ int main() {
     const Config* config = config_layer.configure(&comms);
     Serial.println("Configured!");
 
+    // configure motors
     can.configure(config->motor_info);
 
-
+    // initialize sensors
     sensor_manager.init(config);
-
-
 
     //estimate micro and macro state
     estimator_manager.init(&can, config, &sensor_manager);
@@ -141,25 +136,23 @@ int main() {
     // whether we are in hive mode or not
     bool hive_toggle = false;
 
+    // main loop timers
     Timer loop_timer;
     Timer stall_timer;
     Timer control_input_timer;
 
     Serial.println("Entering main loop...\n");
 
-    //ethernet_comms.begin();
-
     // Main loop
     while (true) {
+        // start main loop time timer
         stall_timer.start();
+        
         // read sensors
         sensor_manager.read();
         // read CAN and DR16 -- These are kept out of sensor manager for safety reasons
         can.read();
         dr16.read();
-
-
-
 
         // read and write comms packets
         comms.ping();
