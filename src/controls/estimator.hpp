@@ -275,7 +275,7 @@ public:
     /// @brief estimate the state of the gimbal
     /// @param config_data inputted sensor values from khadas yaml
     /// @param sensor_manager sensor manager object 
-    /// @param data can data from Estimator Manager
+    /// @param can can data from Estimator Manager
     GimbalEstimator(Config config_data, SensorManager* sensor_manager, CANManager* can);
   
     /// @brief calculate estimated states and add to output array
