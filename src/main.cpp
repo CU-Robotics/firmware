@@ -25,6 +25,7 @@ RefSystem ref;
 HIDLayer comms;
 ACS712 current_sensor;
 Transmitter* transmitter = nullptr;
+ET16S wfly;
 
 D200LD14P lidar1(&Serial4, 0);
 D200LD14P lidar2(&Serial5, 1);
@@ -98,7 +99,7 @@ int main() {
 		transmitter = new ET16S;
 	}
     can.init();
-    transmitter->init();
+    wfly.init();
     ref.init();
     comms.init();
 
@@ -156,12 +157,12 @@ int main() {
         stall_timer.start();
         // read main sensors
         can.read();
-        transmitter->read();
+        wfly.read();
         ref.read();
         lidar1.read();
         lidar2.read();
 		//TEMP Print Transmitter data
-		//transmitter->print();
+		//wfly.print();
         // read and write comms packets
         comms.ping();
         CommsPacket* incoming = comms.get_incoming_packet();
@@ -183,8 +184,8 @@ int main() {
         // manual controls on firmware
 
         float delta = control_input_timer.delta();
-        transmitter_pos_x += transmitter->get_mouse_x() * 0.05 * delta;
-        transmitter_pos_y += transmitter->get_mouse_y() * 0.05 * delta;
+        transmitter_pos_x += wfly.get_mouse_x() * 0.05 * delta;
+        transmitter_pos_y += wfly.get_mouse_y() * 0.05 * delta;
 
         vtm_pos_x += ref.ref_data.kbm_interaction.mouse_speed_x * 0.05 * delta;
         vtm_pos_y += ref.ref_data.kbm_interaction.mouse_speed_y * 0.05 * delta;
@@ -194,27 +195,27 @@ int main() {
         float chassis_pos_x = 0;
         float chassis_pos_y = 0;
         if (config->governor_types[0] == 2) {   // if we should be controlling velocity
-            chassis_vel_x = transmitter->get_l_stick_y() * 5.4
+            chassis_vel_x = wfly.get_l_stick_y() * 5.4
                 + (-ref.ref_data.kbm_interaction.key_w + ref.ref_data.kbm_interaction.key_s) * 2.5
-                + (-transmitter->keys.w + transmitter->keys.s) * 2.5;
-            chassis_vel_y = -transmitter->get_l_stick_x() * 5.4
+                + (-wfly.keys.w + wfly.keys.s) * 2.5;
+            chassis_vel_y = -wfly.get_l_stick_x() * 5.4
                 + (ref.ref_data.kbm_interaction.key_d - ref.ref_data.kbm_interaction.key_a) * 2.5
-                + (transmitter->keys.d - transmitter->keys.a) * 2.5;
+                + (wfly.keys.d - wfly.keys.a) * 2.5;
         } else if (config->governor_types[0] == 1) { // if we should be controlling position
-            chassis_pos_x = transmitter->get_l_stick_x() * 2 + pos_offset_x;
-            chassis_pos_y = transmitter->get_l_stick_y() * 2 + pos_offset_y;
+            chassis_pos_x = wfly.get_l_stick_x() * 2 + pos_offset_x;
+            chassis_pos_y = wfly.get_l_stick_y() * 2 + pos_offset_y;
         }
 
-        float chassis_spin = transmitter->get_wheel() * 25;
+        float chassis_spin = wfly.get_wheel() * 25;
         float pitch_target = 1.57
-            + -transmitter->get_r_stick_y() * 0.3
+            + -wfly.get_r_stick_y() * 0.3
             + transmitter_pos_y
             + vtm_pos_y;
-        float yaw_target = -transmitter->get_r_stick_x() * 1.5
+        float yaw_target = -wfly.get_r_stick_x() * 1.5
             - transmitter_pos_x
             - vtm_pos_x;
-        float fly_wheel_target = (transmitter->get_r_switch() == 1 || transmitter->get_r_switch() == 3) ? 18 : 0; //m/s
-        float feeder_target = (((transmitter->get_l_mouse_button() || ref.ref_data.kbm_interaction.button_left) && transmitter->get_r_switch() != 2) || transmitter->get_r_switch() == 1) ? 10 : 0;
+        float fly_wheel_target = (wfly.get_r_switch() == 1 || wfly.get_r_switch() == 3) ? 18 : 0; //m/s
+        float feeder_target = (((wfly.get_l_mouse_button() || ref.ref_data.kbm_interaction.button_left) && wfly.get_r_switch() != 2) || wfly.get_r_switch() == 1) ? 10 : 0;
 
 		Serial.print("chassis_pos_x:  ");
 		Serial.println(chassis_pos_x);
@@ -245,7 +246,7 @@ int main() {
         target_state[7][0] = 1;
 
         // if the left switch is all the way down use Hive controls
-        if (transmitter->get_l_switch() == 2) {
+        if (wfly.get_l_switch() == 2) {
             incoming->get_target_state(target_state);
             // if you just switched to hive controls, set the reference to the current state
             if (hive_toggle) {
@@ -255,7 +256,7 @@ int main() {
         }
 
         // when in teensy control mode reset hive toggle
-        if (transmitter->get_l_switch() == 3) {
+        if (wfly.get_l_switch() == 3) {
             if (!hive_toggle) {
                 pos_offset_x = temp_state[0][0];
                 pos_offset_y = temp_state[1][0];
@@ -268,7 +269,7 @@ int main() {
 
         // print dr16
         //Serial.printf("DR16:\n\t");
-        //transmitter->print();
+        //wfly.print();
 
         //Serial.printf("Target state:\n");
         for (int i = 0; i < 8; i++) {
@@ -316,7 +317,7 @@ int main() {
         SensorData sensor_data;
 
         // set transmitter raw data
-        //memcpy(sensor_data.raw + SENSOR_DR16_OFFSET, transmitter->get_raw(), DR16_PACKET_SIZE);
+        //memcpy(sensor_data.raw + SENSOR_DR16_OFFSET, wfly.get_raw(), DR16_PACKET_SIZE);
 
         // set lidars
         uint8_t lidar_data[D200_NUM_PACKETS_CACHED * D200_PAYLOAD_SIZE] = { 0 };
@@ -352,7 +353,7 @@ int main() {
 	    }
         
         //  SAFETY MODE
-        if (transmitter->is_connected() && (transmitter->get_l_switch() == 2 || transmitter->get_l_switch() == 3) && config_layer.is_configured() && !is_slow_loop) {
+        if (wfly.is_connected() && (wfly.get_l_switch() == 2 || wfly.get_l_switch() == 3) && config_layer.is_configured() && !is_slow_loop) {
             // SAFETY OFF
             can.write();
 			// Serial.printf("Can write\n");
