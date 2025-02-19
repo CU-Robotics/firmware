@@ -83,6 +83,7 @@ void SensorManager::read() {
     }
     
     for (int i = 0; i < rev_sensor_count; i++) {
+        Serial.println("Reading rev sensor");
         rev_sensors[i]->read();
         rev_sensors[i]->print();
     }
