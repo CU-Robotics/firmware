@@ -290,9 +290,9 @@ int main() {
         //Serial.printf("DR16:\n\t");
         //wfly.print();
 
-        Serial.printf("Target state:\n");
+        //Serial.printf("Target state:\n");
         for (int i = 0; i < 8; i++) {
-            Serial.printf("\t%d: %f %f %f\n", i, target_state[i][0], target_state[i][1], target_state[i][2]);
+            //Serial.printf("\t%d: %f %f %f\n", i, target_state[i][0], target_state[i][1], target_state[i][2]);
         }
         
         // override temp state if needed
@@ -312,9 +312,9 @@ int main() {
             count_one++;
         }
 
-        //Serial.printf("Estimated state:\n");
+        Serial.printf("Estimated state:\n");
         for (int i = 0; i < 8; i++) {
-            //Serial.printf("\t%d: %f %f %f\n", i, temp_state[i][0], temp_state[i][1], temp_state[i][2]);
+            Serial.printf("\t%d: %f %f %f\n", i, temp_state[i][0], temp_state[i][1], temp_state[i][2]);
         }
 
         // reference govern

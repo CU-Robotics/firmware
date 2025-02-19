@@ -238,14 +238,17 @@ float ET16S::map_raw(InputChannel input) {
 	}
 	case InputKind::THREE_SWITCH: {
 		if (val == max_in) {
-			val = static_cast<float>(SwitchPos::BACKWARD);
-		} else if (val == min_in) {
-			//val = static_cast<float>(SwitchPos::FORWARD);
+			//val = static_cast<float>(SwitchPos::BACKWARD);
 			//bad fix this
 			val = static_cast<float>(SwitchPos::MIDDLE);
+		} else if (val == min_in) {
+			val = static_cast<float>(SwitchPos::FORWARD);
+		
+
 		} else {
 			//val = static_cast<float>(SwitchPos::MIDDLE);
-			val = static_cast<float>(SwitchPos::FORWARD);
+			//BAD FIX THIS
+			val = static_cast<float>(SwitchPos::BACKWARD);
 		}
 		break;
 	}
