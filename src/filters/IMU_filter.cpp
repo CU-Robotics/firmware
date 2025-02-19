@@ -53,19 +53,13 @@ int IMU_filter::step_EKF_6axis(IMU_data data){
     x[1] = x0*helpgx   + x1          + x2*helpgz   - x3*helpgy   ;
     x[2] = x0*helpgy   - x1*helpgz   + x2          + x3*helpgx   ;
     x[3] = x0*helpgz   + x1*helpgy   - x2*helpgx   + x3          ; 
-
+    // unit x
     recipNorm = 1.0f/sqrt(x[0] * x[0] + x[1] * x[1] + x[2] * x[2] + x[3] * x[3]);
     x[0] *= recipNorm;
     x[1] *= recipNorm;
     x[2] *= recipNorm;
     x[3] *= recipNorm;
 
-    // unit x
-    // float invqua = 1/sqrt(x[0]*x[0] + x[1]*x[1] + x[2]*x[2] + x[3]*x[3]);
-    // x[0] = x[0] * invqua;
-    // x[1] = x[1] * invqua;
-    // x[2] = x[2] * invqua;
-    // x[3] = x[3] * invqua;
     // predict for P
     float F[4][4] = {
         {1, -helpgx, -helpgy, -helpgz},
@@ -78,9 +72,7 @@ int IMU_filter::step_EKF_6axis(IMU_data data){
     // [(dt*gy)/2, -(dt*gz)/2,          1,  (dt*gx)/2]
     // [(dt*gz)/2,  (dt*gy)/2, -(dt*gx)/2,          1] Jacobian function F state transition model
 
-    float F_transpose[4][4] = {0};
     float FxP[4][4] = {0};
-    float PxF_transpose[4][4] = {0};
     
     // Calculate FxPxF_transpose
     for(int i = 0; i < 4; i++){
@@ -209,7 +201,6 @@ int IMU_filter::step_EKF_6axis(IMU_data data){
     filtered_data.accel_world_X = filtered_data.accel_X * (1-2*(x[2]*x[2] + x[3]*x[3])) + filtered_data.accel_Y * (2*(x[1]*x[2] - x[3]*x[0])) + filtered_data.accel_Z * (2*(x[1]*x[3] + x[0]*x[2]));
     filtered_data.accel_world_Y = filtered_data.accel_X * (2*(x[1]*x[2] + x[3]*x[0])) + filtered_data.accel_Y * (1-2*(x[1]*x[1] + x[3]*x[3])) + filtered_data.accel_Z * (2*(x[2]*x[3] - x[1]*x[0]));
     filtered_data.accel_world_Z = filtered_data.accel_X * (2*(x[1]*x[3] - x[2]*x[0])) + filtered_data.accel_Y * (2*(x[2]*x[3] + x[1]*x[0])) + filtered_data.accel_Z * (1 - 2*(x[1]*x[1] + x[2]*x[2])) - SENSORS_GRAVITY_EARTH;
-    Serial.printf("%f,%f,%f,%f\n", x[0], x[1], x[2], x[3]);
     return 0;
 
 }

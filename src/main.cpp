@@ -107,14 +107,10 @@ int main() {
     while (true) {
         imu.read();
         imu.fix_raw_data();
-        // imu.print();
-        if(skip){
-            imu_filter.step_EKF_6axis(imu.get_data());
-            IMU_data* filtered_data = imu_filter.get_filter_data();
-            Serial.printf("Pitch: %f, Roll:%f,Yaw: %f\n", filtered_data->pitch * RAD_TO_DEG, filtered_data->roll * RAD_TO_DEG, filtered_data->yaw * RAD_TO_DEG);
-            Serial.printf("Gyro Pitch: %f, Gyro Roll: %f, Gyro Yaw: %f\n", filtered_data->gyro_pitch, filtered_data->gyro_roll, filtered_data->gyro_yaw);
-            Serial.printf("World Accel X: %f, World Accel Y: %f, World Accel Z: %f\n", filtered_data->accel_world_X, filtered_data->accel_world_Y, filtered_data->accel_world_Z);
-        }
+
+        imu_filter.step_EKF_6axis(imu.get_data());
+        IMU_data* filtered_data = imu_filter.get_filter_data();
+        
         
         // // LED heartbeat -- linked to loop count to reveal slowdowns and freezes.
         // loopc % (int)(1E3 / float(HEARTBEAT_FREQ)) < (int)(1E3 / float(5 * HEARTBEAT_FREQ)) ? digitalWrite(13, HIGH) : digitalWrite(13, LOW);
