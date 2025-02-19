@@ -101,7 +101,7 @@ void SensorManager::read() {
     
     ref->read();
     Serial.println("Done ref");
-    Serial.println(tof_sensor_count)
+    Serial.println(tof_sensor_count);
     for (int i = 0; i < tof_sensor_count; i++) {
         Serial.println("Reading tof sensor");
         tof_sensors[i]->read();
