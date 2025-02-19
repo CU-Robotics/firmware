@@ -58,7 +58,7 @@ public:
     TOFSensor* get_tof_sensor(int index);
 
     /// @brief Get the specified LiDAR sensor
-    /// @param index index of the sensor object to get, 1 or 2
+    /// @param index index of the sensor object to get, 0 or 1
     /// @return pointer to the LiDAR sensor
     D200LD14P* get_lidar_sensor(int index);
 
