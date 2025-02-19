@@ -12,8 +12,9 @@ TransmitterType Transmitter::who_am_i() {
 	int counter = 0; //How many sequential elements have been found
 	
 	uint32_t start_time = millis();
-	uint32_t timeout = 100; // Times out after 100 microseconds
+	uint32_t timeout = 500; // Times out after 100 microseconds
 	while(counter != 5){
+		start_time = millis();
 		raw_input[24] = 0;
 		if (Serial8.available() < (2*ET16S_PACKET_SIZE)) {
 			if ((millis() - start_time) > timeout) { Serial.println("found dr16 by timeout"); return TransmitterType::DR16; }
