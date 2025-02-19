@@ -1,17 +1,19 @@
 #pragma once
 
-#include <WDT_T4/Wathdog_t4.h>
+#include <WDT_T4/Watchdog_t4.h>
 
 
 /// @brief watchdog callback to indicate trigger has occured
 void watchdog_callback(){
+        Serial.println("CALLBACK");
         Serial.println(millis());
 }
 
 /// @brief This watchdog timer restarts the CPU if the trigger variable has not been sensed after the timout time, this is used to safely exits out when a software error occurs
 class Watchdog{
 private:
-    /// @brief tigger variable is used to reference how long a trigger should happen, this is in seconds, range: (0, 128), the callback will be called, note that 0 is actually 0.5 seconds, 128 seconds is actually 127.5 seconds(subtract )
+    /// @brief tigger variable is used as a warning that a trigger should happen (callback time - trigger time) = time the callback will be triggered, this is in seconds, range: (0, 128), the callback will be called,
+    /// @note that 0 is actually 0.5 seconds, 128 seconds is actually 127.5 seconds(subtract )
     double trigger = 0;
     /// @brief  timout varible is used to reference after a certain amount a time if the watchdog has not been fed it will restart the CPU, units: seconds, range: (0, 128)
     double timeout = 1;
@@ -43,6 +45,36 @@ public:
     /// @brief this stops the watchdog, to stop using it if no longer needed
     void watchdog_stop(){
         wdt.reset();
+    }
+    /// @brief This function is to set up the configuration of the watchdog, this is what the watchdog will be restricted to
+    /// @param trigger The trigger variable, is in seconds, that will call the callback function for the watchdog when it is trigger seconds away from a timeout
+    /// @param timeout The timeout variable is the time, in seconds, when the cpu will be reset if a feed to the watchdog timer hasn't been recieved between the current time and the current time - timeout
+    void watchdog_set(double trigger, double timeout)
+    {
+        this->timeout = timeout;
+        this->trigger = trigger;
+        this->config.trigger = trigger;
+        this->config.timeout = timeout;
+        this->config.callback = watchdog_callback;
+    }
+    /// @brief This function is to help debug and verify your timeout has the values of trigger and timeout that you expect, will print it to the serial terminal
+    void watchdog_getconfig()
+    {
+        Serial.println("Trigger");
+        Serial.println(this->config.trigger);
+        Serial.println("Timeout");
+        Serial.println(this->config.timeout);
+    }
+    /// @brief this function is to recongiure the trigger and timeout values, if you need the watchdog for another use than previouly
+    /// @param trigger (0-128 seconds)The trigger variable, is in seconds, that will call the callback function for the watchdog when it is trigger seconds away from a timeout
+    /// @param timeout (0-128 seconds)The timeout variable is the time, in seconds, when the cpu will be reset if a feed to the watchdog timer hasn't been recieved between the current time and the current time - timeout
+    void watchdog_reconfigure(double trigger, double timeout)
+    {
+        this->timeout = timeout;
+        this->trigger = trigger;
+        this->config.trigger = trigger;
+        this->config.timeout = timeout;
+        wdt.feed();
     }
     /// @brief this feeds the wathdog and restats the time to avoid the timeout indicating software is working correctly, when this is called before a timeout, no CPU reset occurs 
     void wathdog_feed(){
