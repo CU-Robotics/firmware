@@ -4,13 +4,8 @@ void balancing_test::init(){
     slowdalay_help = micros();
 
     saftymode = 0;
-    o_data.theta_ll_old = 0;
-    o_data.theta_lr_old = 0;
     o_data.b_speed_old = 0;
-    o_data.ll_old = 0;
-    o_data.ll_dot_old = 0;
-    o_data.lr_old = 0;
-    o_data.lr_dot_old = 0;
+
 
     //PID1:roll, PID2:Leg length
     float gain1[4] = {K1_P, K1_I, K1_D, K1_F};
@@ -190,29 +185,22 @@ void balancing_test::observer(){
     float xC_dot_l = -(l_u * (-_data.speed_bl) * sphi1_l + l_l * phi2_dot_l * sin(phi2l));
     float yC_dot_l = (l_u * (-_data.speed_bl) * cphi1_l + l_l * phi2_dot_l * cos(phi2l));
     o_data.theta_ll_dot = (yC_dot_l*helpingl - xC_dot_l*yCl) < 0 ? (sqrt(xC_dot_l * xC_dot_l + yC_dot_l * yC_dot_l)/sqrt(helpingl*helpingl + yCl*yCl)) - _data.gyro_pitch : -(sqrt(xC_dot_l * xC_dot_l + yC_dot_l * yC_dot_l)/sqrt(helpingl*helpingl + yCl*yCl)) - _data.gyro_pitch;
+    o_data.ll_dot = sqrt(xC_dot_l * xC_dot_l + yC_dot_l * yC_dot_l);
     // o_data.theta_ll_dot = -(((helpingl*yC_dot_l) + (yCl * xC_dot_l)) / (helpingl * helpingl + yCl * yCl)) - _data.gyro_pitch;
 
     float phi2_dot_r = (l_u * ((-_data.speed_br * sphi1r + _data.speed_fr * sphi4r) * cos(phi3r) + (_data.speed_br * cphi1r - _data.speed_fr * cphi4r) * sin(phi3r))) / (l_l * sin(phi2r - phi3r));
     float xC_dot_r = -(l_u * _data.speed_br * sphi1r + l_l * phi2_dot_r * sin(phi2r));
     float yC_dot_r = (l_u * _data.speed_br * cphi1r + l_l * phi2_dot_r * cos(phi2r));
     o_data.theta_lr_dot = (yC_dot_r*helpingr - xC_dot_r*yCr) < 0 ? (sqrt(xC_dot_r * xC_dot_r + yC_dot_r * yC_dot_r)/sqrt(helpingr*helpingr + yCr*yCr)) - _data.gyro_pitch : -(sqrt(xC_dot_r * xC_dot_r + yC_dot_r * yC_dot_r)/sqrt(helpingr*helpingr + yCr*yCr)) - _data.gyro_pitch;
+    o_data.lr_dot = sqrt(xC_dot_r * xC_dot_r + yC_dot_r * yC_dot_r);
     // o_data.theta_lr_dot = -(((helpingr*yC_dot_r) + (yCr * xC_dot_r)) / (helpingr * helpingr + yCr * yCr)) - _data.gyro_pitch;
 //--------------------------------------------------------------b_s and filter for it--------------------------------------------------------
-    o_data.b_speed =  (1.0f/2) * (R_w) * (_data.speed_wr - _data.speed_wl); // s_dot //speed
-//-------------------------------------------motion estimate and filter (I will update this soon) ---------------------------------------------------------------------
-    float alpha1 = min(abs(0.3/o_data.b_speed), 1.0f) * 0.5; // 1st filter for using wheel data more when low speed
-    o_data.imu_speed_x =  (alpha1 * o_data.b_speed) + ((1 - alpha1) * o_data.imu_speed_x); 
-    
-    float alpha = min((0.1 / ((abs(o_data.imu_speed_x) - abs(o_data.b_speed)))), 1.0f) * 0.005; // 2nd filter for using more imu data when both data's difference huge
-    o_data.imu_speed_x =  (alpha * o_data.b_speed) + ((1 - alpha) * o_data.imu_speed_x);
+    o_data.b_speed =  (R_w) * (_data.speed_wr - _data.speed_wl) ; // s_dot //speed
+//- (1/2) * (o_data.ll*(o_data.theta_ll_dot + _data.imu_angle_pitch)*cos(phi0l) + o_data.lr*(o_data.theta_lr_dot + _data.imu_angle_pitch)*cos(phi0r)) - (1/2)* (o_data.ll_dot * sin(phi0l) + o_data.lr_dot * sin(phi0r))
+//-------------------------------------------filter by a falman filter (I will update this soon) ---------------------------------------------------------------------
+    // For the x we have [v,a]^T 
+    // predict
 
-    o_data.imu_speed_x += abs(_data.imu_accel_x) > 0.08 && abs(_data.imu_accel_x) < 1 ? _data.imu_accel_x * _dt : 0; // Not sure why but imu sometimes give crazy data
-
-    o_data.s += o_data.b_speed * _dt; 
-    o_data.imu_s += o_data.imu_speed_x * _dt;
-    
-    o_data.b_accel = (o_data.b_speed - o_data.b_speed_old) / _dt; //s_ddot //acceleration
-    o_data.b_speed_old = o_data.b_speed;
 
     return;
 }

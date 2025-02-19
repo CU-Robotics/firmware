@@ -93,23 +93,17 @@ struct observer_data
     float lr_ddot;
     float theta_ll;
     float theta_lr;
-    float llaverage;
-    float lraverage;
-    float theta_ll_avg;
-    float theta_lr_avg;
+    float ll_dot;
+    float lr_dot;
     float theta_ll_dot;
     float theta_lr_dot;
     float avg_count; // count of loop for this slow loop
     float jl[2][2];
     float jr[2][2];
 
-    float theta_ll_old;
-    float theta_lr_old;
+    float right_wheel_speed;
+    float left_wheel_speed;
     float b_speed_old;
-    float ll_old;
-    float ll_dot_old;
-    float lr_old;
-    float lr_dot_old;
 };
 
 struct ref_data
