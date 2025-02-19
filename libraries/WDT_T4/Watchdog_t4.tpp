@@ -1,4 +1,4 @@
-#include <Wathdog_t4.h>
+#include <Watchdog_t4.h>
 #include "Arduino.h"
 
 #define WDOGb_WCR(b)		(*(volatile uint16_t*)(b))
@@ -6,7 +6,7 @@
 #define WDOGb_WRSR(b)		(*(volatile uint16_t*)(b+0x4))
 #define WDOGb_WICR(b)		(*(volatile uint16_t*)(b+0x6))
 #define WDOGb_WMCR(b)		(*(volatile uint16_t*)(b+0x8))
-#define WDOGb_CS(b)		(*(volatile uint16_t*)(b))
+#define WDOGb_CS(b)		  (*(volatile uint16_t*)(b))
 #define WDOGb_CNT(b)		(*(volatile uint16_t*)(b+0x4))
 #define WDOGb_CNT32(b)	(*(volatile uint32_t*)(b+0x4))
 #define WDOGb_TOVAL(b)	(*(volatile uint16_t*)(b+0x8))
