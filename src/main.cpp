@@ -94,6 +94,9 @@ int main() {
     ref.init();
     comms.init();
 
+    // TRIGGER TESTING: REMOVE
+    stereoCamTrigger.init();
+
     //can data pointer so we don't pass around rm_CAN object
     // TODO: extern the can_data object
     CANData* can_data = can.get_data();

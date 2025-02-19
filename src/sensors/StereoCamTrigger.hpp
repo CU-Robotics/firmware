@@ -5,13 +5,13 @@
 #include <avr/interrupt.h>
 
 /// @brief define to enable FPS logging in the timer interrupt callback (debugging)
-// #define LOG_STEREO_FPS
+#define LOG_STEREO_FPS
 
 /// @brief GPIO pin number to send trigger signal to USB cameras. Can change as needed
 const int TRIG_PIN = 32;
 
 /// @brief desired pulse width of trigger signal in micros (minimum pulse width is 10 micros - check See3CAM datasheet)
-const int TRIG_PULSE_WIDTH = 10;
+const int TRIG_PULSE_WIDTH = 15;
 
 /// @brief class to manage triggering synchronized exposures for dual USB cameras
 class StereoCamTrigger {
@@ -26,7 +26,7 @@ class StereoCamTrigger {
     bool stopped = true;
     
     /// @brief current state of the GPIO trigger pin (HIGH or LOW)
-    volatile int trig_pin_state = LOW;
+    volatile int trig_pin_state = LOW;   
     
     /// @brief timestamp of the last time an exposure was triggered (last time signal was set to HIGH)
     volatile uint32_t latest_exposure_timestamp = 0;
