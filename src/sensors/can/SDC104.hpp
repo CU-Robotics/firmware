@@ -281,6 +281,12 @@ private:
     /// @brief The motor's torque constant in Nm/A
     float m_torque_constant = 0.47f;
 
+    /// @brief The motor's gear ratio, 8:1
+    float m_gear_ratio = 8.0f;
+
+    /// @brief The motor's maximum speed in RPM
+    float m_max_speed = 420.0f;
+
     // Motor specific state
     /// @brief Motor heartbeat data
     struct {

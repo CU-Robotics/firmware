@@ -1,13 +1,12 @@
 #include "motor.hpp"
 
-// motor spec sheets: 
-// https://steadywin.cn/en/pd.jsp?id=15&fromColId=0#_pp=0_752_3
-// https://steadywin.cn/en/pd.jsp?id=116&fromColId=0#_pp=0_752_3
-// https://steadywin.cn/en/pd.jsp?id=11&fromColId=0#_pp=0_752_3
-// https://steadywin.cn/en/pd.jsp?id=130&fromColId=0#_pp=0_752_3
-// motor driver protocol spec: https://14180476.s21i.faiusr.com/61/ABUIABA9GAAgqPvVqgYo-uLA7Ac.pdf?v=1708485774
+
 
 /// @brief Motor driver for the GIM motor
+/// @note GIM8108 docs (SDC103): https://steadywin.cn/en/pd.jsp?id=15&fromColId=0#_pp=0_752_3
+/// @note GIM4310 docs         : https://steadywin.cn/en/pd.jsp?id=11&fromColId=0#_pp=0_752_3
+/// @note GIM3505 docs         : https://steadywin.cn/en/pd.jsp?id=130&fromColId=0#_pp=0_752_3
+/// @note motor driver protocol: https://14180476.s21i.faiusr.com/61/ABUIABA9GAAgqPvVqgYo-uLA7Ac.pdf?v=1708485774
 class GIM : public Motor {
 public:
     /// @brief Deleted default constructor, must explicitly construct this object. Incomplete objects are not allowed
@@ -23,31 +22,24 @@ public:
 
         switch (motor_type) {
         case MotorType::GIM3505: {
-            torque_constant = 0.52f;
-            gear_ratio = 8.0f; // 8:1
-            max_torque = 1.27f; // Nm
-            max_speed = 225.0f; // RPM
+            m_torque_constant = 0.52f;
+            m_gear_ratio = 8.0f; // 8:1
+            m_max_torque = 1.27f; // Nm
+            m_max_speed = 225.0f; // RPM
             break;
         }
         case MotorType::GIM4310: {
-            torque_constant = 3.46f;
-            gear_ratio = 36.0f; // 36:1
-            max_torque = 20.16f; // Nm
-            max_speed = 63.0f; // RPM
-            break;
-        }
-        case MotorType::GIM6010: {
-            torque_constant = 0.47f;
-            gear_ratio = 8.0f; // 8:1
-            max_torque = 11.0f; // Nm
-            max_speed = 420.0f; // RPM
+            m_torque_constant = 3.46f;
+            m_gear_ratio = 36.0f; // 36:1
+            m_max_torque = 20.16f; // Nm
+            m_max_speed = 63.0f; // RPM
             break;
         }
         case MotorType::GIM8108: {
-            torque_constant = 1.83f;
-            gear_ratio = 9.0f; // 9:1
-            max_torque = 27.38; // Nm
-            max_speed = 242.0f; // RPM
+            m_torque_constant = 1.83f;
+            m_gear_ratio = 9.0f; // 9:1
+            m_max_torque = 27.38; // Nm
+            m_max_speed = 242.0f; // RPM
             break;
         }
         default: {
@@ -60,17 +52,6 @@ public:
     /// @brief Destructor, does nothing
     ~GIM() override { }
 
-    /// @brief The motor's gear ratio (determined by "motor_type" in the constructor)
-    float gear_ratio;
-
-    /// @brief The motor's torque constant in Nm/A (determined by "motor_type" in the constructor)
-    float torque_constant;
-
-    /// @brief The motor's maximum torque in Nm (determined by "motor_type" in the constructor)
-    float max_torque;
-
-    /// @brief The motor's maximum speed in RPM (determined by "motor_type" in the constructor)
-    float max_speed;
 
 public:
     /// @brief Initialize the motor by verifying it is on
@@ -118,6 +99,18 @@ public:
 private:
     /// @brief The base ID of the motor
     const uint32_t m_base_id = 0x0;
+
+    /// @brief The motor's gear ratio (determined by "motor_type" switch in the constructor)
+    float m_gear_ratio = 0.0f;
+
+    /// @brief The motor's torque constant in Nm/A (determined by "motor_type" switch in the constructor)
+    float m_torque_constant = 0.0f;
+
+    /// @brief The motor's maximum torque in Nm (determined by "motor_type" switch in the constructor)
+    float m_max_torque = 0.0f;
+
+    /// @brief The motor's maximum speed in RPM (determined by "motor_type" switch in the constructor)
+    float m_max_speed = 0.0f;
 
     /// @brief Creates a command to reset the motor's configuration
     /// @param buf Output buffer to write command to

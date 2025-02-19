@@ -30,8 +30,8 @@ int GIM::read(CAN_message_t& msg) {
         // Torque: 12 bits = ST1[3:0] (low nibble) as high 4 bits, ST2 (byte 7) as low 8 bits
         uint16_t torque_int = ((uint16_t)(msg.buf[6] & 0x0F) << 8) | msg.buf[7];
         float torque_float =
-            (float)torque_int * (450.0f * torque_constant * gear_ratio) / 4095.0f
-            - (225.0f * torque_constant * gear_ratio);
+            (float)torque_int * (450.0f * m_torque_constant * m_gear_ratio) / 4095.0f
+            - (225.0f * m_torque_constant * m_gear_ratio);
         m_state.torque = torque_float;
 
     }
@@ -84,7 +84,7 @@ void GIM::write_motor_torque(float torque) {
     if (torque > 1.0f) torque = 1.0f;
 
     // map the -1f to 1f torque value to the actual torque value for this specific motor
-    float mapped_torque = torque * max_torque;
+    float mapped_torque = torque * m_max_torque;
 
     // create the command
     uint8_t buf[8];
@@ -103,7 +103,7 @@ void GIM::write_motor_speed(float speed) {
     if (speed > 1.0f) speed = 1.0f;
 
     // map speed to the motor's max speed
-    float mapped_rpm = speed * max_speed;
+    float mapped_rpm = speed * m_max_speed;
 
     // create the command
     uint8_t buf[8];
