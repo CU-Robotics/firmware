@@ -118,9 +118,9 @@ TOFSensor* SensorManager::get_tof_sensor(int index) {
 }
 
 D200LD14P* SensorManager::get_lidar_sensor(int index) {
-    if (index == 1) {
+    if (index == 0) {
         return lidar1;
-    } else if (index == 2) {
+    } else if (index == 1) {
         return lidar2;
     } else {
         return nullptr;

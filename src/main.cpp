@@ -297,9 +297,9 @@ int main() {
 
         // set lidars
         uint8_t lidar_data[D200_NUM_PACKETS_CACHED * D200_PAYLOAD_SIZE] = { 0 };
-        sensor_manager.get_lidar_sensor(1)->export_data(lidar_data);
+        sensor_manager.get_lidar_sensor(0)->export_data(lidar_data);
         memcpy(sensor_data.raw + SENSOR_LIDAR1_OFFSET, lidar_data, D200_NUM_PACKETS_CACHED * D200_PAYLOAD_SIZE);
-        sensor_manager.get_lidar_sensor(2)->export_data(lidar_data);
+        sensor_manager.get_lidar_sensor(1)->export_data(lidar_data);
         memcpy(sensor_data.raw + SENSOR_LIDAR2_OFFSET, lidar_data, D200_NUM_PACKETS_CACHED * D200_PAYLOAD_SIZE);
 
         // construct ref data packet
