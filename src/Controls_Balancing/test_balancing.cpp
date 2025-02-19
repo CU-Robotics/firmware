@@ -142,7 +142,7 @@ void balancing_test::observer(){
     o_data.jl[1][0] = (l_u * sin(phi0l - phi2l) * sin(phi3l - phi4_l)) / sin(phi2l - phi3l);
     o_data.jl[1][1] = -(l_u * cos(phi0l - phi2l) * sin(phi3l - phi4_l)) / (o_data.ll * sin(phi2l - phi3l));
 
-    o_data.theta_ll = (-fmod((M_PI_2 - phi0l - _data.imu_angle_pitch), 2 * M_PI)); // This is the correct one 
+    o_data.theta_ll = (fmod((M_PI_2 - phi0l - _data.imu_angle_pitch), 2 * M_PI)); // This is the correct one 
  //----------------------------------------------------Right Leg Forward Kinematics & Jacobian--------------------------------------------------
     float phi4_r = _data.angle_fr;
     float phi1_r = (_data.angle_br - M_PI); 
@@ -177,7 +177,7 @@ void balancing_test::observer(){
     o_data.jr[1][0]  = (l_u * sin(phi0r - phi2r) * sin(phi3r - phi4_r)) / sin(phi2r - phi3r);
     o_data.jr[1][1]  = -(l_u * cos(phi0r - phi2r) * sin(phi3r - phi4_r)) / (o_data.lr * sin(phi2r - phi3r));
 
-    o_data.theta_lr = (-fmod((M_PI_2 - phi0r - _data.imu_angle_pitch), (2 * M_PI)));
+    o_data.theta_lr = (fmod((M_PI_2 - phi0r - _data.imu_angle_pitch), (2 * M_PI)));
     
 
 //----------------------------------------------------Calculate Theta_of_leg_dot for both leg--------------------------------------
@@ -185,7 +185,6 @@ void balancing_test::observer(){
     float xC_dot_l = -(l_u * (-_data.speed_bl) * sphi1_l + l_l * phi2_dot_l * sin(phi2l));
     float yC_dot_l = (l_u * (-_data.speed_bl) * cphi1_l + l_l * phi2_dot_l * cos(phi2l));
     o_data.theta_ll_dot = (yC_dot_l*helpingl - xC_dot_l*yCl) < 0 ? (sqrt(xC_dot_l * xC_dot_l + yC_dot_l * yC_dot_l)/sqrt(helpingl*helpingl + yCl*yCl)) - _data.gyro_pitch : -(sqrt(xC_dot_l * xC_dot_l + yC_dot_l * yC_dot_l)/sqrt(helpingl*helpingl + yCl*yCl)) - _data.gyro_pitch;
-    o_data.theta_ll_dot *= -1;
     o_data.ll_dot = sqrt(xC_dot_l * xC_dot_l + yC_dot_l * yC_dot_l);
     // o_data.theta_ll_dot = -(((helpingl*yC_dot_l) + (yCl * xC_dot_l)) / (helpingl * helpingl + yCl * yCl)) - _data.gyro_pitch;
 
@@ -193,12 +192,11 @@ void balancing_test::observer(){
     float xC_dot_r = -(l_u * _data.speed_br * sphi1r + l_l * phi2_dot_r * sin(phi2r));
     float yC_dot_r = (l_u * _data.speed_br * cphi1r + l_l * phi2_dot_r * cos(phi2r));
     o_data.theta_lr_dot = (yC_dot_r*helpingr - xC_dot_r*yCr) < 0 ? (sqrt(xC_dot_r * xC_dot_r + yC_dot_r * yC_dot_r)/sqrt(helpingr*helpingr + yCr*yCr)) - _data.gyro_pitch : -(sqrt(xC_dot_r * xC_dot_r + yC_dot_r * yC_dot_r)/sqrt(helpingr*helpingr + yCr*yCr)) - _data.gyro_pitch;
-    o_data.theta_lr_dot *= -1;
     o_data.lr_dot = sqrt(xC_dot_r * xC_dot_r + yC_dot_r * yC_dot_r);
     // o_data.theta_lr_dot = -(((helpingr*yC_dot_r) + (yCr * xC_dot_r)) / (helpingr * helpingr + yCr * yCr)) - _data.gyro_pitch;
 //--------------------------------------------------------------b_s and filter for it--------------------------------------------------------
     o_data.b_speed =  (1/2) * (R_w) * (_data.speed_wr - _data.speed_wl) ; // s_dot //speed 
-//- (1/2) * (o_data.ll*(o_data.theta_ll_dot + _data.imu_angle_pitch)*cos(phi0l) + o_data.lr*(o_data.theta_lr_dot + _data.imu_angle_pitch)*cos(phi0r)) - (1/2)* (o_data.ll_dot * sin(phi0l) + o_data.lr_dot * sin(phi0r))
+    o_data.wheel_speed = _data.imu_accel_x + (1/2) * (o_data.ll*(o_data.theta_ll_dot + _data.imu_angle_pitch)*cos(phi0l) + o_data.lr*(o_data.theta_lr_dot + _data.imu_angle_pitch)*cos(phi0r)) + (1/2)* (o_data.ll_dot * sin(phi0l) + o_data.lr_dot * sin(phi0r))
 //-------------------------------------------filter by a falman filter (I will update this soon) ---------------------------------------------------------------------
     // For the x we have [v,a]^T 
     // predict

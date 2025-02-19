@@ -102,8 +102,7 @@ struct observer_data
     float jl[2][2];
     float jr[2][2];
 
-    float right_wheel_speed;
-    float left_wheel_speed;
+    float wheel_speed;
     float b_speed_old;
 };
 
