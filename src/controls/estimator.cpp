@@ -236,7 +236,7 @@
 //         // pos_estimate[1] += vel_estimate[1] * dt;
 //         // pos_estimate[2] += vel_estimate[2] * dt;
 
-        
+
 
 //         output[0][0] = pos_estimate[0]; // x pos
 //         output[0][1] = (pos_estimate[0]-previous_pos[0])/dt;

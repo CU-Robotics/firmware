@@ -1,40 +1,30 @@
-#ifndef C610_DRIVER_HPP
-#define C610_DRIVER_HPP
+#ifndef C620_DRIVER_HPP
+#define C620_DRIVER_HPP
 
 #include "motor.hpp"
 
-// C610 Data Sheet
-// https://rm-static.djicdn.com/tem/17348/RoboMaster%20C610%20Brushless%20DC%20Motor%20Speed%20Controller%20User%20Guide.pdf
-
-/// @brief C610 controller driver. This manages generating CAN output messages and processing incomming CAN messages into a state array.
-/// @note It's construction is heavily managed since copying this object could alter the actions of CAN (and by extension the robot). This object exists only to be managed by CANManager.
-class C610 : public Motor {
+/// @brief C620 controller driver. This manages generating CAN output messages and processing incomming CAN messages into a state array.
+/// @brief Datasheet: https://rm-static.djicdn.com/tem/17348/RoboMaster%20C620%20Brushless%20DC%20Motor%20Speed%20Controller%20V1.01.pdf
+/// @note Motors must be explicitly constructed to avoid uninitialized parameters. Motors exist to be managed by CANManager.
+class C620 : public Motor {
 public:
     /// @brief Deleted default constructor, must explicitly construct this object. Incomplete objects are not allowed
-    C610() = delete;
+    C620() = delete;
 
     /// @brief Main constructor. Defines the controller type, global ID, id, and can bus
     /// @param gid The global ID, not the per-bus motor ID
     /// @param id The per-bus motor ID. This is 1-indexed
     /// @param bus_id The CAN bus index/ID
-    C610(uint32_t gid, uint32_t id, uint8_t bus_id)
-        : Motor(C610_CONTROLLER, gid, id, bus_id) {
+    C620(uint32_t gid, uint32_t id, uint8_t bus_id)
+        : Motor(MotorControllerType::C620_CONTROLLER, gid, id, bus_id) {
     }
 
-    /// @brief Deleted copy constructor, you must not copy this object
-    /// @param copy copy
-    C610(const C610& copy) = delete;
-    /// @brief Deleted copy assignment operator, you must not move/copy this object
-    /// @param copy copy
-    /// @return C610&
-    C610& operator=(const C610& copy) = delete;
-
     /// @brief Destructor, does nothing
-    ~C610() override { }
+    ~C620() override { }
 
 public:
     /// @brief Initialize the motor by zeroing it
-    void init() override;
+    void init();
 
     /// @brief Common read command. Fills given message if successful
     /// @param msg The message buffer to fill data into
@@ -52,7 +42,7 @@ public:
     void zero_motor() override;
 
     /// @brief Write motor torque given a normalized value
-    /// @param torque A value between [-1, 1] representing the torque range of [-10A, 10A]
+    /// @param torque A value between [-1, 1] representing the torque range of [-20A, 20A]
     void write_motor_torque(float torque) override;
 
     /// @brief Print the current state of the motor
@@ -66,10 +56,10 @@ private:
     uint32_t m_base_id = 0x200;
 
     /// @brief The maximum torque value
-    const int32_t m_max_torque = 10000;
+    const int32_t m_max_torque = 16384;
     /// @brief The minimum torque value
-    const int32_t m_min_torque = -10000;
+    const int32_t m_min_torque = -16384;
 
 };
 
-#endif // C610_DRIVER_HPP
+#endif // C620_DRIVER_HPP

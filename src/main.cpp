@@ -1,8 +1,8 @@
 #include <Arduino.h>
 #include <TeensyDebug.h>
 #include "utils/timing.hpp"
-#include "comms/can/can_manager.hpp"
-#include "comms/can/MG8016EI6.hpp"
+#include "sensors/can/can_manager.hpp"
+#include "sensors/can/MG8016EI6.hpp"
 #include "sensors/dr16.hpp"
 #include "sensors/ICM20649.hpp"
 #include "filters/IMU_filter.hpp"
@@ -138,7 +138,7 @@ int main() {
             // SAFETY ON
             // TODO: Reset all controller integrators here
             Serial.println("SAFTYON");
-            can.safety_mode();
+            can.issue_safety_mode();
         } else if (dr16.is_connected() && dr16.get_l_switch() != 1) {
             // SAFETY OFF
             Serial.println("SAFTYOFF");

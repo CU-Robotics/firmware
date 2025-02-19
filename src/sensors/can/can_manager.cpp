@@ -24,6 +24,7 @@ void CANManager::init() {
     m_can2.begin();
     m_can2.setBaudRate(1000000u);   // 1Mbit baud
     m_can2.enableFIFO(true);
+
     // initialize CAN 3
     // TODO: can CAN 3 act the same as CAN 1/2 since its CANFD?
     m_can3.begin();
@@ -34,8 +35,9 @@ void CANManager::init() {
     m_motor_map.clear();
 }
 
-void CANManager::configure(float  motor_info[CAN_MAX_MOTORS][3]) {
+void CANManager::configure(const float motor_info[CAN_MAX_MOTORS][3]) {
     // using the motor_info array, create the motors following the config
+    
     // loop through all CAN_MAX_MOTORS
     for (uint32_t motor_id = 0; motor_id < CAN_MAX_MOTORS; motor_id++) {
         // grab the information for this specific motor
@@ -44,7 +46,7 @@ void CANManager::configure(float  motor_info[CAN_MAX_MOTORS][3]) {
         int bus_id = (int)motor_info[motor_id][2];
 
         // if the controller type is 0, then this motor is unused and we should process the next one
-        if (controller_type == 0) {
+        if (static_cast<MotorControllerType>(controller_type) == MotorControllerType::NULL_MOTOR_CONTROLLER_TYPE) {
             continue;
         }
         // else this motor is valid
@@ -52,25 +54,25 @@ void CANManager::configure(float  motor_info[CAN_MAX_MOTORS][3]) {
         // create the motor based on the controller type
         Motor* new_motor = nullptr;
 
-        switch (controller_type) {
-        case C610_CONTROLLER: {
-            Serial.printf("Creating C610 Motor: %d on bus %d\n", motor_id, bus_id);
+        switch (static_cast<MotorControllerType>(controller_type)) {
+        case MotorControllerType::C610_CONTROLLER: {
             new_motor = new C610(motor_id, physical_id, bus_id);
+            Serial.printf("Creating C610 Motor: %d on bus %d\n", new_motor->get_id(), new_motor->get_bus_id());
             break;
         }
-        case C620_CONTROLLER: {
-            Serial.printf("Creating C620 Motor: %d on bus %d\n", motor_id, bus_id);
+        case MotorControllerType::C620_CONTROLLER: {
             new_motor = new C620(motor_id, physical_id, bus_id);
+            Serial.printf("Creating C620 Motor: %d on bus %d\n", new_motor->get_id(), new_motor->get_bus_id());
             break;
         }
-        case MG8016_CONTROLLER: {
-            Serial.printf("Creating MG Motor: %d on bus %d\n", motor_id, bus_id);
+        case MotorControllerType::MG8016_CONTROLLER: {
             new_motor = new MG8016EI6(motor_id, physical_id, bus_id);
+            Serial.printf("Creating MG Motor: %d on bus %d\n", new_motor->get_id(), new_motor->get_bus_id());
             break;
         }
         default: {
             Serial.printf("CANManager tried to create a motor of invalid type: %d\n", controller_type);
-            break;
+            continue;   // continue in order to not call the later map insert since new_motor would be null
         }
         }
 
@@ -92,7 +94,8 @@ void CANManager::read() {
             // if this fails, we've received a message that does not match any motor
             // how would this happen?
             if (!distribute_msg(msg)) {
-                Serial.printf("CANManager failed to distribute message: %d\n", msg.id);
+                // - 1 on msg.bus to maintain bus IDs being 0-indexed
+                Serial.printf("CANManager failed to distribute message with raw CAN ID: %.4x on bus: %x\n", msg.id, msg.bus - 1);
             }
         }
     }
@@ -107,23 +110,37 @@ void CANManager::write() {
         // both the c610s and c620s can occupy the same message
         CAN_message_t rm_motor_msgs[2];
 
+        // flag to see whether rm motors are even on this bus
+        // we dont want to send a write command to motors that wont be on this bus
+        bool should_send_rm_motors = false;
+
         // for each motor, can be const
         for (const auto& motor : m_motor_map) {
+            // if the motor is not on this bus, skip it
+            if (motor.second->get_bus_id() != bus) {
+                continue;
+            }
+            
             // based on the motor type, figure out how to write the message
             switch (motor.second->get_controller_type()) {
-            case C610_CONTROLLER:   // fallthrough
-            case C620_CONTROLLER: {
+            case MotorControllerType::C610_CONTROLLER:   // fallthrough
+            case MotorControllerType::C620_CONTROLLER: {
                 // depending on the motor ID, write the message to the correct msg in the array
+                // - 1 to get the id into 0-indexed form, then divide by 4 to get the upper or lower half as an index (0, 1)
                 if ((motor.second->get_id() - 1) / 4) {
                     motor.second->write(rm_motor_msgs[1]);   // last 4 motors
                 } else {
                     motor.second->write(rm_motor_msgs[0]);   // first 4 motors
                 }
+
                 // this combined message will be written to the bus after the motor loop
+
+                // there are rm motors on this bus that need to be written
+                should_send_rm_motors = true;
 
                 break;
             }
-            case MG8016_CONTROLLER: {
+            case MotorControllerType::MG8016_CONTROLLER: {
                 CAN_message_t msg;
 
                 // get its message data
@@ -132,6 +149,7 @@ void CANManager::write() {
                 // the MG motors dont require msg merging so just write it to the bus
                 // write the message to the correct bus
                 m_busses[bus]->write(msg);
+
                 break;
             }
             default: {
@@ -141,13 +159,15 @@ void CANManager::write() {
             }
         }
         
-        // write the combined messages to the bus
-        m_busses[bus]->write(rm_motor_msgs[0]);
-        m_busses[bus]->write(rm_motor_msgs[1]);
+        // write the rm motor messages to the bus
+        if (should_send_rm_motors) {
+            m_busses[bus]->write(rm_motor_msgs[0]);
+            m_busses[bus]->write(rm_motor_msgs[1]);
+        }
     }
 }
 
-void CANManager::safety_mode() {
+void CANManager::issue_safety_mode() {
     // for each motor, cant be const
     for (auto& motor : m_motor_map) {
         motor.second->zero_motor();
@@ -159,13 +179,27 @@ void CANManager::safety_mode() {
 
 void CANManager::write_motor_torque(uint32_t motor_gid, float torque) {
     // verify motor ID
-    
     if (m_motor_map.count(motor_gid) == 0) {
         Serial.printf("CANManager tried to write to an invalid motor: %d\n", motor_gid);
         return;
     }
+
     // write the torque to the motor
     m_motor_map[motor_gid]->write_motor_torque(torque);
+}
+
+void CANManager::write_motor_torque(uint32_t bus_id, uint32_t motor_id, float torque) {
+    // find the motor by bus and ID
+    Motor* motor = get_motor(bus_id, motor_id);
+    if (!motor) {
+    #ifdef CAN_MANAGER_DEBUG
+        Serial.printf("CANManager tried to write to an invalid motor: %d on bus %d\n", motor_id, bus_id);
+    #endif
+        return;
+    }
+
+    // write the torque to the motor
+    motor->write_motor_torque(torque);
 }
 
 void CANManager::print_state() {
@@ -173,8 +207,6 @@ void CANManager::print_state() {
     for (const auto& motor : m_motor_map) {
         // print the motor state
         motor.second->print_state();
-
-        Serial.println();
     }
 }
 
@@ -189,6 +221,20 @@ void CANManager::print_motor_state(uint32_t motor_gid) {
     m_motor_map[motor_gid]->print_state();
 }
 
+void CANManager::print_motor_state(uint32_t bus_id, uint32_t motor_id) {
+    // find the motor by bus and ID
+    Motor* motor = get_motor(bus_id, motor_id);
+    if (!motor) {
+    #ifdef CAN_MANAGER_DEBUG
+        Serial.printf("CANManager tried to print an invalid motor: %d on bus %d\n", motor_id, bus_id);
+    #endif
+        return;
+    }
+
+    // print the motor state
+    motor->print_state();
+}
+
 Motor* CANManager::get_motor(uint32_t motor_gid) {
     // verify motor ID
     if (m_motor_map.count(motor_gid) == 0) {
@@ -198,6 +244,47 @@ Motor* CANManager::get_motor(uint32_t motor_gid) {
 
     // return the motor
     return m_motor_map[motor_gid];
+}
+
+Motor* CANManager::get_motor(uint32_t bus_id, uint32_t motor_id) {
+    // for each motor, can be const
+    for (const auto& motor : m_motor_map) {
+        if (motor.second->get_bus_id() == bus_id && motor.second->get_id() == motor_id) {
+            return motor.second;
+        }
+    }
+
+    // could not find the motor
+#ifdef CAN_MANAGER_DEBUG
+    Serial.printf("CANManager tried to get an invalid motor: %d on bus %d\n", motor_id, bus_id);
+#endif
+
+    return nullptr;
+}
+
+MotorState CANManager::get_motor_state(uint32_t motor_gid) {
+    // verify motor ID
+    if (m_motor_map.count(motor_gid) == 0) {
+        Serial.printf("CANManager tried to get the state of an invalid motor: %d\n", motor_gid);
+        return MotorState();
+    }
+
+    // return the motor state
+    return m_motor_map[motor_gid]->get_state();
+}
+
+MotorState CANManager::get_motor_state(uint32_t bus_id, uint32_t motor_id) {
+    // find the motor by bus and ID
+    Motor* motor = get_motor(bus_id, motor_id);
+    if (!motor) {
+    #ifdef CAN_MANAGER_DEBUG
+        Serial.printf("CANManager tried to get the state of an invalid motor: %d on bus %d\n", motor_id, bus_id);
+    #endif
+        return MotorState();
+    }
+
+    // return the motor state
+    return motor->get_state();
 }
 
 void CANManager::init_motors() {
@@ -215,24 +302,32 @@ void CANManager::init_motors() {
 
     // wait for the motors to initialize or timeout
 
-    // maintain a list of motors that have been initialized
+    // maintain a list of motors that have been initialized, indexed by motor global id
     bool motors_initialized[CAN_MAX_MOTORS] = { false };
 
-    // for each bus, read all messages until all motors have been initialized
-    for (uint32_t bus = 0; bus < CAN_NUM_BUSSES; bus++) {
-        CAN_message_t msg;
+    // only run the initialization for the timeout time
+    uint32_t start_time = millis();
 
-        // start the timeout timer
-        uint32_t start_time = millis();
-        
-        // read all messages from the bus. exit if the timeout is reached and the buffer is empty
-        while (millis() - start_time < m_motor_init_timeout || m_busses[bus]->read(msg)) {
-            // for each motor, find the motor that this msg belongs to
-            for (auto& motor : m_motor_map) {
-                // mark the motor as initialized if the message was read
-                if (motor.second->read(msg)) {
-                    motors_initialized[motor.second->get_global_id()] = true;
-                    Serial.printf("Motor %d initialized\n", motor);
+    while (millis() - start_time < m_motor_init_timeout) {
+        // for each bus
+        for (uint32_t bus = 0; bus < CAN_NUM_BUSSES; bus++) {
+            CAN_message_t msg;
+
+            // we want to read all the messages from this bus as there might be many queued up
+            while (m_busses[bus]->read(msg)) {
+                // try to distribute the message to the correct motor
+                Motor* motor = distribute_msg(msg);
+
+                // no motor could handle the message so move on
+                if (!motor)
+                    continue;
+
+                // if the motor is not initialized, mark it as initialized
+                if (!motors_initialized[motor->get_global_id()]) {
+                    motors_initialized[motor->get_global_id()] = true;
+                #ifdef CAN_MANAGER_DEBUG
+                    Serial.printf("Motor %u on bus %u initialized!\n", motor->get_id(), motor->get_bus_id());
+                #endif
                 }
             }
         }
@@ -240,22 +335,22 @@ void CANManager::init_motors() {
 
     // print out any motors that failed to initialize using the motors_initialized array
     // this is not fatal but should be investigated
-    for (uint32_t motor = 0; motor < CAN_MAX_MOTORS; motor++) {
-        // if this motor is not initialized and it actually exists, print a warning
-        if (!motors_initialized[motor] && m_motor_map.count(motor) != 0) {
-            Serial.printf("Motor %d on bus %d with id %d failed to initialize\n", motor, m_motor_map[motor]->get_bus_id(), m_motor_map[motor]->get_id());
+    for (auto& motor : m_motor_map) {
+        if (!motors_initialized[motor.second->get_global_id()]) {
+            Serial.printf("Motor %u on bus %u failed to initialize!\n", motor.second->get_id(), motor.second->get_bus_id());
         }
     }
 }
 
-bool CANManager::distribute_msg(CAN_message_t& msg) {
+Motor* CANManager::distribute_msg(CAN_message_t& msg) {
     // for each motor, cant be const
     for (auto& motor : m_motor_map) {
         // if the motor can handle the message, give it to the motor
         if (motor.second->read(msg)) {
-            return true;
+            return motor.second;
         }
     }
     
-    return false;
+    // no motors could handle the message
+    return nullptr;
 }

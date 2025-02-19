@@ -2,7 +2,6 @@
 
 void MG8016EI6::init() {
     write_motor_on();
-    // write_motor_set_zero_ROM();
 }
 
 int MG8016EI6::read(CAN_message_t& msg) {
@@ -22,9 +21,10 @@ int MG8016EI6::read(CAN_message_t& msg) {
     // CMD_MOTOR_OFF, CMD_MOTOR_ON, CMD_MOTOR_STOP, CMD_WRITE_PID, CMD_WRITE_PID_ROM, CMD_WRITE_ACCELERATION, CMD_WRITE_ENCODER_ZERO
 
     // early return if msg ID does not match this motor
-    if (msg.id != m_base_id + m_id) {
-        return 0;
-    }
+    if (msg.id != m_base_id + m_id) return 0; 
+
+    // early return if the bus ID does not match
+    if ((uint32_t)(msg.bus - 1) != m_bus_id) return 0;
 
     uint8_t cmd_byte = msg.buf[0];
 
@@ -230,11 +230,7 @@ void MG8016EI6::write_motor_angle(float angle, float speed_limit) {
 }
 
 void MG8016EI6::print_state() const {
-    Serial.printf("MG Motor %d\n", m_id);
-    Serial.printf("Temperature: %d C\n", m_state.temperature);
-    Serial.printf("Torque: %f %%\n", m_state.torque);
-    Serial.printf("Speed: %f rad/s\n", m_state.speed);
-    Serial.printf("Position: %u\n", m_state.position);
+    Serial.printf("Bus: %x\tID: %x\tTemp: %.2dc\tTorque: % 4.3f\tSpeed: % 6.2f\tPos: %5.5d\n", m_bus_id, m_id, m_state.temperature, m_state.torque, m_state.speed, m_state.position);
 }
 
 void MG8016EI6::write_motor_off() {
@@ -265,18 +261,6 @@ void MG8016EI6::write_motor_stop() {
     // create the message
     uint8_t buf[8];
     create_cmd_motor_stop(buf);
-
-    // fill in the output array
-    m_output.id = m_base_id + m_id;
-    for (int i = 0; i < 8; i++) {
-        m_output.buf[i] = buf[i];
-    }
-}
-
-void MG8016EI6::write_motor_set_zero_ROM() {
-    // create the message
-    uint8_t buf[8];
-    create_cmd_write_position_as_zero(buf);
 
     // fill in the output array
     m_output.id = m_base_id + m_id;

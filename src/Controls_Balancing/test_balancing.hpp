@@ -3,7 +3,7 @@
 
 #include "../filters/pid_filter.hpp"
 #include "../utils/timing.hpp"
-#include "../comms/can/can_manager.hpp"
+#include "../sensors/can/can_manager.hpp"
 //Constants for control
 /** Constants for leg_controller*/
 #define m_b 8.1                                  

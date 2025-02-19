@@ -6,7 +6,7 @@
 #include <FlexCAN_T4.h>
 
 /// @brief Defines the motor controller types. Enum values chosen based on the yaml config specification
-enum MotorControllerType {
+enum class MotorControllerType {
     NULL_MOTOR_CONTROLLER_TYPE = 0,
     C610_CONTROLLER,
     C620_CONTROLLER,
@@ -27,6 +27,7 @@ struct MotorState {
 };
 
 /// @brief An abstract class holding common information for individual CAN-capable motors
+/// @note Motors must be explicitly constructed to avoid uninitialized parameters. Motors exist to be managed by CANManager.
 class Motor {
 public:
     /// @brief Deleted default constructor. Must explicitly construct this object
@@ -37,7 +38,7 @@ public:
     /// @param gid The global ID, not the per-bus motor ID
     /// @param id The per-bus motor ID. This is 1-indexed 
     /// @param bus The CAN bus index/ID
-    Motor(MotorControllerType controller_type, uint32_t gid, uint32_t id, uint8_t bus)
+    Motor(MotorControllerType controller_type, uint32_t gid, uint32_t id, uint32_t bus)
         : m_controller_type(controller_type), m_gid(gid), m_id(id), m_bus_id(bus) {}
 
     /// @brief Virtual destructor
@@ -93,7 +94,7 @@ public:
 
 protected:
     /// @brief What controller this motor uses
-    MotorControllerType m_controller_type = NULL_MOTOR_CONTROLLER_TYPE;
+    MotorControllerType m_controller_type = MotorControllerType::NULL_MOTOR_CONTROLLER_TYPE;
 
     /// @brief The unique global motor ID for this motor. This is not it's per-bus ID
     uint32_t m_gid = 0;
@@ -102,7 +103,7 @@ protected:
     uint32_t m_id = 0;
 
     /// @brief ID of the CAN bus
-    uint8_t m_bus_id = 0;
+    uint32_t m_bus_id = 0;
 
     /// @brief The output CAN frame. To be sent to the motor
     CAN_message_t m_output;
