@@ -196,12 +196,14 @@ void balancing_test::observer(){
     // o_data.theta_lr_dot = -(((helpingr*yC_dot_r) + (yCr * xC_dot_r)) / (helpingr * helpingr + yCr * yCr)) - _data.gyro_pitch;
 //--------------------------------------------------------------b_s and filter for it--------------------------------------------------------
     o_data.wheel_speed_filtered =  (1/2) * (R_w) * (_data.speed_wr - _data.speed_wl) ; // s_dot //speed 
-    o_data.wheel_speed = _data.imu_accel_x + (1/2) * (o_data.ll*(o_data.theta_ll_dot + _data.imu_angle_pitch)*cos(phi0l) + o_data.lr*(o_data.theta_lr_dot + _data.imu_angle_pitch)*cos(phi0r)) + (1/2)* (o_data.ll_dot * sin(phi0l) + o_data.lr_dot * sin(phi0r))
+    o_data.wheel_speed = _data.imu_accel_x * _dt + (1/2) * (o_data.ll*(o_data.theta_ll_dot + _data.imu_angle_pitch)*cos(phi0l) + o_data.lr*(o_data.theta_lr_dot + _data.imu_angle_pitch)*cos(phi0r)) + (1/2)* (o_data.ll_dot * sin(phi0l) + o_data.lr_dot * sin(phi0r));
 //-------------------------------------------filter by a falman filter (I will update this soon) ---------------------------------------------------------------------
     // For the x we have [v,a]^T 
     // predict
-
-
+    o_data.P[0][0] += Q; 
+    o_data.P[0][1] += Q; 
+    o_data.P[1][0] += Q;
+    o_data.P[1][1] += Q;
     return;
 }
 
