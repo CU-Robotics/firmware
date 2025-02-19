@@ -16,7 +16,7 @@ TransmitterType Transmitter::who_am_i() {
 	while(counter != 5){
 		raw_input[24] = 0;
 		if (Serial8.available() < (2*ET16S_PACKET_SIZE)) {
-			if ((millis() - start_time) < timeout) { return TransmitterType::ET16S; }
+			if ((millis() - start_time) < timeout) { return TransmitterType::DR16; }
 			continue;
 		}
 		// We read until we find the start byte of the new packet (0x0f)

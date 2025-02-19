@@ -179,13 +179,13 @@ public:
 		// the mouse functionalities.
 
 		/// @brief If the key 'w' is pressed
-		bool w;
+		bool w = 0;
 		/// @brief If the key 's' is pressed
-		bool s;
+		bool s = 0;
 		/// @brief if the key 'a' is pressed
-		bool a;
+		bool a = 0;
 		/// @brief if the key 'd' is pressed
-		bool d;
+		bool d = 0;
 		/// @brief if the key 'shift' is pressed
 		bool shift;
 		/// @brief if the key 'ctrl' is pressed
