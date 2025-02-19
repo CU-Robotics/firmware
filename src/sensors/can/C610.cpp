@@ -5,11 +5,8 @@ void C610::init() {
 }
 
 int C610::read(CAN_message_t& msg) {
-    // early return if the message ID does not match
-    if (msg.id != m_base_id + m_id) return 0;
-
-    // early return if the bus ID does not match
-    if ((uint32_t)(msg.bus - 1) != m_bus_id) return 0;
+    // check the msg id and bus to see if this msg is for this motor
+    if (!check_msg_id(msg)) return 0;
 
     // set m_input from msg
     memcpy(&m_input, &msg, sizeof(CAN_message_t));
@@ -77,8 +74,4 @@ void C610::write_motor_torque(float torque) {
     // fill in the output array
     m_output.buf[motor_id * 2] = (int_torque >> 8) & 0xFF;  // upper byte
     m_output.buf[motor_id * 2 + 1] = int_torque & 0xFF;     // lower byte
-}
-
-void C610::print_state() const {
-    Serial.printf("Bus: %x\tID: %x\tTemp: %.2dc\tTorque: % 4.3f\tSpeed: % 6.2f\tPos: %5.5d\n", m_bus_id, m_id, m_state.temperature, m_state.torque, m_state.speed, m_state.position);
 }
