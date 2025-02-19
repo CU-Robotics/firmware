@@ -1,0 +1,5 @@
+<map id="TOFSensor" name="TOFSensor">
+<area shape="rect" id="node1" title="A time of flight sensor to measure distance in millimeters." alt="" coords="48,95,137,121"/>
+<area shape="rect" id="node2" href="$classSensor.html" title="Base class for all sensors." alt="" coords="5,5,68,32"/>
+<area shape="rect" id="node3" href="$structTOFSensorData.html" title="Structure for the TOF (Time&#45;of&#45;Flight) sensor." alt="" coords="92,5,208,32"/>
+</map>
