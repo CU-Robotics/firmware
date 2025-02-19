@@ -290,9 +290,9 @@ int main() {
         //Serial.printf("DR16:\n\t");
         //wfly.print();
 
-        //Serial.printf("Target state:\n");
+        Serial.printf("Target state:\n");
         for (int i = 0; i < 8; i++) {
-            //Serial.printf("\t%d: %f %f %f\n", i, target_state[i][0], target_state[i][1], target_state[i][2]);
+            Serial.printf("\t%d: %f %f %f\n", i, target_state[i][0], target_state[i][1], target_state[i][2]);
         }
         
         // override temp state if needed
@@ -314,7 +314,7 @@ int main() {
 
         Serial.printf("Estimated state:\n");
         for (int i = 0; i < 8; i++) {
-            Serial.printf("\t%d: %f %f %f\n", i, temp_state[i][0], temp_state[i][1], temp_state[i][2]);
+			 Serial.printf("\t%d: %f %f %f\n", i, temp_state[i][0], temp_state[i][1], temp_state[i][2]);
         }
 
         // reference govern
@@ -322,9 +322,9 @@ int main() {
         governor.step_reference(target_state, config->governor_types);
         governor.get_reference(temp_reference);
 
-        //Serial.printf("Reference state:\n");
+        Serial.printf("Reference state:\n");
         for (int i = 0; i < 8; i++) {
-            //Serial.printf("\t%d: %f %f %f\n", i, temp_reference[i][0], temp_reference[i][1], temp_reference[i][2]);
+            Serial.printf("\t%d: %f %f %f\n", i, temp_reference[i][0], temp_reference[i][1], temp_reference[i][2]);
         }
 
         // generate motor outputs from controls
@@ -361,7 +361,7 @@ int main() {
 
         // check whether this was a slow loop or not
 	float dt = stall_timer.delta();
-	//Serial.printf("Loop %d, dt: %f\n", loopc, dt);
+	Serial.printf("Loop %d, dt: %f\n", loopc, dt);
         if (dt > 0.002) { 
             // zero the can bus just in case
 	    	can.zero();
@@ -375,12 +375,12 @@ int main() {
         if (wfly.is_connected() && (wfly.get_l_switch() == 2 || wfly.get_l_switch() == 3) && config_layer.is_configured() && !is_slow_loop) {
             // SAFETY OFF
             can.write();
-			// Serial.printf("Can write\n");
+			 Serial.printf("Can write\n");
         } else {
             // SAFETY ON
             // TODO: Reset all controller integrators here
             can.zero();
-			//       Serial.printf("Can zero\n");
+			       Serial.printf("Can zero\n");
         }
 
         // LED heartbeat -- linked to loop count to reveal slowdowns and freezes.
