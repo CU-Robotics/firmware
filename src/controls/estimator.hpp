@@ -10,7 +10,7 @@
 #include "sensors/rev_encoder.hpp"
 #include "sensors/ICM20649.hpp"
 #include "sensors/TOFSensor.hpp"
-
+#include "sensors/SensorManager.hpp"
 
 
 /// @brief Parent estimator struct. All estimators should inherit from this.
@@ -274,17 +274,10 @@ private:
 public:
     /// @brief estimate the state of the gimbal
     /// @param config_data inputted sensor values from khadas yaml
-    /// @param r1 rev encoder 1
-    /// @param r2 rev encoder 2
-    /// @param r3 rev encoder 3
-    /// @param b1 buff encoder 1
-    /// @param b2 buff encoder 2
-    /// @param imu icm encoder
-    /// @param can can from Estimator Manager
-    GimbalEstimator(Config config_data, RevEncoder* r1, RevEncoder* r2, RevEncoder* r3, BuffEncoder* b1, BuffEncoder* b2, ICM20649* imu, CANManager* can);
-
-    ~GimbalEstimator() { };
-
+    /// @param sensor_manager sensor manager object 
+    /// @param can can data from Estimator Manager
+    GimbalEstimator(Config config_data, SensorManager* sensor_manager, CANManager* can);
+  
     /// @brief calculate estimated states and add to output array
     /// @param output output array to add estimated states to
     /// @param curr_state current state array to update with new state
@@ -414,11 +407,9 @@ private:
 public:
     /// @brief estimate the state of the gimbal
     /// @param config_data inputted sensor values from khadas yaml
-    /// @param b1 buff encoder 1
-    /// @param b2 buff encoder 2
-    /// @param imu icm encoder
+    /// @param sensor_manager sensor manager object 
     /// @param can can from Estimator Manager
-    GimbalEstimatorNoOdom(Config config_data, BuffEncoder* b1, BuffEncoder* b2, ICM20649* imu, CANManager* can);
+    GimbalEstimatorNoOdom(Config config_data, SensorManager* sensor_manager, CANManager* can);
 
     GimbalEstimatorNoOdom() { };
 

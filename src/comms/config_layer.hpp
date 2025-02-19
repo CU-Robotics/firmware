@@ -26,7 +26,7 @@
 #define CONFIG_PATH "/config.pack"
 
 // define DISABLE_REF_CONFIG_SAFETY_CHECK macro when running off of real robot (testing firmware away from actual robot)
-// #define DISABLE_REF_CONFIG_SAFETY_CHECK 
+//#define DISABLE_REF_CONFIG_SAFETY_CHECK 
 
 /// @brief arbitrary cap on config packets that can be received (make sure it's enough)
 const int MAX_CONFIG_PACKETS = 64;
@@ -57,11 +57,30 @@ struct Config {
     /// @brief robot id
     float robot;
 
-    /// @brief matrix that defines type and neccessary values for each sensor
+    /// @brief matrix that defines type and necessary values for each sensor
     float sensor_info[NUM_SENSORS][NUM_SENSOR_VALUES + 1];
+
+    /// @brief Number of buffer encoders
+    int num_of_buffEnc = 0;
+
+    /// @brief Number of revolution encoders
+    int num_of_revEnc = 0;
+
+    /// @brief Number of ICM sensors
+    int num_of_icm = 0;
+
+    /// @brief Number of TOF sensors
+    int num_of_tof = 0;
+
+    /// @brief Number of LiDAR sensors
+    int num_of_lidar = 0;
+
+    /// @brief Number of RealSense sensors
+    int num_of_realsense = 0;
 
     /// @brief gains matrix
     float gains[NUM_ROBOT_CONTROLLERS][NUM_GAINS];
+
     /// @brief gear ratio matrix
     float gear_ratios[NUM_ROBOT_CONTROLLERS][CAN_MAX_MOTORS];
 
@@ -69,9 +88,10 @@ struct Config {
     float motor_info[CAN_MAX_MOTORS][3];
     /// @brief reference limits matrix
     float set_reference_limits[STATE_LEN][3][2];
-    
+
     /// @brief the estimator id's and info
     float estimator_info[NUM_ESTIMATORS][STATE_LEN + 1];
+
     /// @brief controller id's and info
     float controller_info[NUM_ROBOT_CONTROLLERS][CAN_MAX_MOTORS + 1];
     /// @brief governor types
@@ -182,6 +202,8 @@ public:
     /// @param err_code error code to identify which behavior to execute
     /// @return false when error is unrecoverable or fails to recover, true when successfully recovers.
     bool CONFIG_ERR_HANDLER(int err_code);
+
+
 };
 
 extern Config config;
