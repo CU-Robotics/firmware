@@ -195,7 +195,7 @@ void balancing_test::observer(){
     o_data.lr_dot = sqrt(xC_dot_r * xC_dot_r + yC_dot_r * yC_dot_r);
     // o_data.theta_lr_dot = -(((helpingr*yC_dot_r) + (yCr * xC_dot_r)) / (helpingr * helpingr + yCr * yCr)) - _data.gyro_pitch;
 //--------------------------------------------------------------b_s and filter for it--------------------------------------------------------
-    o_data.b_speed =  (1/2) * (R_w) * (_data.speed_wr - _data.speed_wl) ; // s_dot //speed 
+    o_data.wheel_speed_filtered =  (1/2) * (R_w) * (_data.speed_wr - _data.speed_wl) ; // s_dot //speed 
     o_data.wheel_speed = _data.imu_accel_x + (1/2) * (o_data.ll*(o_data.theta_ll_dot + _data.imu_angle_pitch)*cos(phi0l) + o_data.lr*(o_data.theta_lr_dot + _data.imu_angle_pitch)*cos(phi0r)) + (1/2)* (o_data.ll_dot * sin(phi0l) + o_data.lr_dot * sin(phi0r))
 //-------------------------------------------filter by a falman filter (I will update this soon) ---------------------------------------------------------------------
     // For the x we have [v,a]^T 
@@ -220,7 +220,7 @@ void balancing_test::control(){
     float F_psi = pid1.filter(_dt, NOBOUND, WARP, _ref_data.goal_roll, _data.gyro_roll); //Set the PID for roll angle
     float F_l = pid2.filter(_dt, NOBOUND, NOWARP, _ref_data.goal_l, l); //Set the PID for leg length 
 
-    float iF_r = ((((m_b / 2) + (eta_l * m_l)) * l * _data.gyro_pitch * o_data.b_speed) / 2) / R_l;
+    float iF_r = ((((m_b / 2) + (eta_l * m_l)) * l * _data.gyro_pitch * o_data.wheel_speed_filtered) / 2) / R_l;
     float iF_l = -iF_r; 
 //-----------------------------------------------------------------gravity feed forware-------------------------------------------------------------------
     float costheta_l = cos(o_data.theta_ll);
@@ -251,7 +251,7 @@ void balancing_test::control(){
     float dx[10];
     // dx[0] = 0; //Ignore // s
     dx[0] = _ref_data.s- o_data.s; // s
-    dx[1] = _ref_data.b_speed - o_data.b_speed; // speed
+    dx[1] = _ref_data.b_speed - o_data.wheel_speed_filtered; // speed
     dx[2] = 0; //Ignore // yaw
     //dx[2] = ref[0][2] - obs[0][2]; // yaw angle //We don't have this data and don't need it
     dx[3] = _ref_data.yaw_dot - _data.gyro_yew; // yaw rotational speed in deg
@@ -390,8 +390,8 @@ void balancing_test::print_observer(){
     Serial.println(_data.speed_wr);
     Serial.print("s: ");
     Serial.println(o_data.s);
-    Serial.print("b_speed: ");
-    Serial.println(o_data.b_speed);
+    Serial.print("wheel_speed_filtered: ");
+    Serial.println(o_data.wheel_speed_filtered);
     Serial.print("imu_s: ");
     Serial.println(o_data.imu_s);
     Serial.print("imu_speed: ");
