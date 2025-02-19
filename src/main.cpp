@@ -162,7 +162,7 @@ int main() {
         lidar1.read();
         lidar2.read();
 		//TEMP Print Transmitter data
-		wfly.print();
+		//wfly.print();
         // read and write comms packets
         comms.ping();
         CommsPacket* incoming = comms.get_incoming_packet();
@@ -230,6 +230,8 @@ int main() {
 		Serial.print("pos_offset_y: ");
 		Serial.println(pos_offset_y);
 		*/
+		Serial.print("pitch_target: ");
+		Serial.println(pitch_target);
         // set manual controls
         target_state[0][0] = chassis_pos_x;
         target_state[0][1] = chassis_vel_x;
