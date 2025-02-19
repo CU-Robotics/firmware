@@ -21,13 +21,16 @@ struct PIDFilter {
     /// @param bound bound from -1 to 1
     /// @param wrap wrap at 2*pi
     /// @return pidf output
-    float filter(float dt, bool bound, bool wrap, float setpoint, float measurement) {
+    float filter(float dt, bool bound, bool wrap, float setpoint, float measurement,bool use_dot = false , float dot_data = 0) {
         float error = setpoint - measurement;
         if (error > PI && wrap) error -= 2 * PI;
         if (error < -PI && wrap) error += 2 * PI;
         // if(wrap) Serial.println(error);
+        if(!use_dot){
+            dot_data = (error - prevError) / dt;
+        }
         sumError += error * dt;
-        float output = (K[0] * error) + K[1] * sumError + (K[2] * ((error - prevError) / dt)) + K[3];
+        float output = (K[0] * error) + K[1] * sumError + (K[2] * (dot_data)) + K[3];
         // + (K[1] * sumError)
         // + (K[2] * ((error - prevError) / dt));
         // + (K[3] * feedForward);
