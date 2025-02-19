@@ -103,7 +103,24 @@ int main() {
     ref.init();
     comms.init();
 
-	
+	Serial.println(wfly.is_connected());
+	Serial.println(wfly.get_l_switch());
+	wfly.read();
+    while(0){
+		//uint32_t starttime = millis();
+	wfly.read();
+        if (wfly.is_connected() && (wfly.get_l_switch() == 2 || wfly.get_l_switch() == 3)) {
+            // SAFETY OFF
+            //can.write();
+			 Serial.printf("Can write\n");
+        } else {
+            // SAFETY ON
+            // TODO: Reset all controller integrators here
+            //can.zero();
+			       Serial.printf("Can zero\n");
+        }
+
+		}
     //can data pointer so we don't pass around rm_CAN object
     // TODO: extern the can_data object
     CANData* can_data = can.get_data();
@@ -230,8 +247,8 @@ int main() {
 		Serial.print("pos_offset_y: ");
 		Serial.println(pos_offset_y);
 		*/
-		Serial.print("pitch_target: ");
-		Serial.println(pitch_target);
+		//Serial.print("pitch_target: ");
+		//Serial.println(pitch_target);
         // set manual controls
         target_state[0][0] = chassis_pos_x;
         target_state[0][1] = chassis_vel_x;
@@ -273,9 +290,9 @@ int main() {
         //Serial.printf("DR16:\n\t");
         //wfly.print();
 
-        //Serial.printf("Target state:\n");
+        Serial.printf("Target state:\n");
         for (int i = 0; i < 8; i++) {
-            //Serial.printf("\t%d: %f %f %f\n", i, target_state[i][0], target_state[i][1], target_state[i][2]);
+            Serial.printf("\t%d: %f %f %f\n", i, target_state[i][0], target_state[i][1], target_state[i][2]);
         }
         
         // override temp state if needed

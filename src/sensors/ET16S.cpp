@@ -27,9 +27,11 @@ void ET16S::init() {
 }
 
 void ET16S::read() {
+	//uint32_t time = millis();
 	// Raw data stored in array
 	uint8_t m_inputRaw[ET16S_PACKET_SIZE] = { 0 };
 	// Store 2 packets (50 bytes) in the buffer to prevent incomplete packet reads
+	//Serial.println(Serial8.available());
 	if (Serial8.available() < (2*ET16S_PACKET_SIZE)) {
 		return;
 	}
@@ -54,6 +56,7 @@ void ET16S::read() {
 	//print_format_bin(16);
 	//print();
 	//print_raw();
+	//Serial.println(time);
 }
 
 void ET16S::print() {
@@ -237,9 +240,12 @@ float ET16S::map_raw(InputChannel input) {
 		if (val == max_in) {
 			val = static_cast<float>(SwitchPos::BACKWARD);
 		} else if (val == min_in) {
-			val = static_cast<float>(SwitchPos::FORWARD);
-		} else {
+			//val = static_cast<float>(SwitchPos::FORWARD);
+			//bad fix this
 			val = static_cast<float>(SwitchPos::MIDDLE);
+		} else {
+			//val = static_cast<float>(SwitchPos::MIDDLE);
+			val = static_cast<float>(SwitchPos::FORWARD);
 		}
 		break;
 	}

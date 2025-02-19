@@ -76,29 +76,29 @@ public:
 		/// @brief if the key 'd' is pressed
 		bool d=0;
 		/// @brief if the key 'shift' is pressed
-		bool shift;
+		bool shift = 0;
 		/// @brief if the key 'ctrl' is pressed
-		bool ctrl;
+		bool ctrl = 0;
 		/// @brief if the key 'q' is pressed
-		bool q;
+		bool q = 0;
 		/// @brief if the key 'e' is pressed
-		bool e;
+		bool e = 0;
 		/// @brief if the key 'r' is pressed
-		bool r;
+		bool r = 0;
 		/// @brief if the key 'f' is pressed
-		bool f;
+		bool f = 0;
 		/// @brief if the key 'g' is pressed
-		bool g;
+		bool g = 0;
 		/// @brief if the key 'z' is pressed
-		bool z;
+		bool z = 0;
 		/// @brief if the key 'x' is pressed
-		bool x;
+		bool x = 0;
 		/// @brief if the key 'c' is pressed
-		bool c;
+		bool c = 0;
 		/// @brief if the key 'v' is pressed
-		bool v;
+		bool v = 0;
 		/// @brief if the key 'b' is pressed
-		bool b;
+		bool b = 0;
 	};
 
 	/// @brief struct instance to keep track of the rm control data
