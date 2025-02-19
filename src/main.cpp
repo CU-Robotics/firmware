@@ -162,7 +162,7 @@ int main() {
         lidar1.read();
         lidar2.read();
 		//TEMP Print Transmitter data
-		//wfly.print();
+		wfly.print();
         // read and write comms packets
         comms.ping();
         CommsPacket* incoming = comms.get_incoming_packet();
@@ -216,7 +216,7 @@ int main() {
             - vtm_pos_x;
         float fly_wheel_target = (wfly.get_r_switch() == 1 || wfly.get_r_switch() == 3) ? 18 : 0; //m/s
         float feeder_target = (((wfly.get_l_mouse_button() || ref.ref_data.kbm_interaction.button_left) && wfly.get_r_switch() != 2) || wfly.get_r_switch() == 1) ? 10 : 0;
-
+		/*
 		Serial.print("chassis_pos_x:  ");
 		Serial.println(chassis_pos_x);
 		Serial.print("chassis_pos_y  ");
@@ -229,7 +229,7 @@ int main() {
 		Serial.println(pos_offset_x);
 		Serial.print("pos_offset_y: ");
 		Serial.println(pos_offset_y);
-		
+		*/
         // set manual controls
         target_state[0][0] = chassis_pos_x;
         target_state[0][1] = chassis_vel_x;
