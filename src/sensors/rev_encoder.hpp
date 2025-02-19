@@ -1,17 +1,11 @@
 #include <cmath>
 #include <FreqMeasureMulti.h>
-#include "Sensor.hpp"
 
 #ifndef REV_ENCODER_H
 #define REV_ENCODER_H
 
-// Rev encoder pins
-#define REV_ENC_PIN1 2
-#define REV_ENC_PIN2 3
-#define REV_ENC_PIN3 4
-
 /// @brief the class for the Rev Through Bore Encoder(www.revrobotics.com/rev-11-1271/)
-class RevEncoder : public Sensor{
+class RevEncoder {
 private:
 	/// @brief the pin number that the encoder's signal pin is plugged into
 	uint8_t in_pin;
@@ -25,7 +19,7 @@ private:
 	float starting_value = 0;
 public:
 	/// @brief Construct a new rev_encoder object without initializing the encoder
-	RevEncoder() : Sensor(SensorType::REVENC) {};
+	RevEncoder() {};
 
 	/// @brief Construct a new rev_encoder object
 	/// @param encoder_pin the pin number that the encoders signal pin is plugged into
@@ -44,14 +38,6 @@ public:
 	/// @brief get the last angle of the encoder in radians
 	/// @return the last angle of the encoder in radians [0, 2pi)
 	float get_angle_radians();
-
-	/// @brief serialize the data into a buffer
-	/// @param buffer buffer to store the serialized data
-	/// @param offset offset to store the position of the serialized data in the buffer
-	void serialize(uint8_t* buffer, size_t& offset)  override;
-
-	/// @brief print the encoder details
-	void print();
 };
 
 #endif

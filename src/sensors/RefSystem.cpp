@@ -69,6 +69,7 @@ void RefSystem::write(uint8_t* packet, uint8_t length) {
     packet[13 + data_length] = (footerCRC & 0x00FF);    // set CRC
     packet[14 + data_length] = (footerCRC >> 8);        // set CRC
 
+    // Serial.println("Attempting to send msg");
     if (Serial7.write(packet, length) == length) {
         packets_sent++;
         bytes_sent += length;

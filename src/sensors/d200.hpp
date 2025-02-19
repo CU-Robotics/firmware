@@ -5,8 +5,6 @@
 #include <Arduino.h>
 #include <HardwareSerial.h>
 
-#include "Sensor.hpp"
-
 // development manual
 // https://files.waveshare.com/upload/9/99/LD14P_Development_Manual.pdf
 
@@ -152,9 +150,8 @@ struct D200Calibration {
 };
 
 /// @brief class for LiDAR driver
-class D200LD14P : Sensor{
+class D200LD14P {
   private:
-
     /// @brief default scanning speed (deg/s) (used internally)
     const uint16_t DEFAULT_SPEED = 6 * 360;
 
@@ -193,11 +190,8 @@ class D200LD14P : Sensor{
   public:
     /// @brief constructor and initialization
     /// @param _port pointer to HardwareSerial object to read/write from
-    /// @param _id ID of this specific module
+    /// @param _id id of the LiDAR object
     D200LD14P(HardwareSerial *_port, uint8_t _id);
-
-    //default constructor
-    D200LD14P() : Sensor(SensorType::LIDAR) {};
 
     /// @brief set rotation the speed of the LiDAR
     /// @param speed desired rotation speed of LiDAR (rad/s)
@@ -233,12 +227,6 @@ class D200LD14P : Sensor{
     /// @brief export LiDAR data as byte array for comms. Exports the latest D200_NUM_PACKETS_CACHED packets, for a total size of D200_NUM_PACKETS_CACHED * D200_PAYLOAD_SIZE bytes per export.
     /// @param bytes byte array to write LiDAR data into
     void export_data(uint8_t bytes[D200_NUM_PACKETS_CACHED * D200_PAYLOAD_SIZE]);
-
-
-    /// @brief serialize the LiDAR data
-    /// @param buffer buffer to store the serialized data
-    /// @param offset offset to store the serialized data
-    void serialize(uint8_t* buffer, size_t& offset) override;
 };
 
 #endif // D200_H

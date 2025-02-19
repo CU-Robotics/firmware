@@ -26,15 +26,3 @@ float BuffEncoder::read() {
     m_angle = radians;
     return radians;
 }
-
-void BuffEncoder::serialize(uint8_t* buffer, size_t& offset) {
-    buffer[offset++] = id_;
-    memcpy(buffer + offset, &m_angle, sizeof(m_angle));
-    offset += sizeof(m_angle);
-}
-
-void BuffEncoder::print() {
-    Serial.println("Buff Encoder:");
-    Serial.print("Angle: ");
-    Serial.println(m_angle);
-}

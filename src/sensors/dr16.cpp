@@ -26,71 +26,13 @@ void DR16::read() {
 	// uint8_t k2{ 0 };
 
 	// verify that the receiver is ready to be read
-	// since each packet it sends is 18 bytes, verify that there are exactly 18 bytes in the buffer
+	// since each packet it sends is 18 bytes, verify that there are exactly 8 bytes in the buffer
 
-	// if we have missed 4 packets, then we need to allign/re-allign
-	// this catches the first read allignment as well
-	if (Serial8.available() > DR16_PACKET_SIZE * 4) {
-		Serial.printf("Aligning dr16 data...\n");
-		
-		// start with the buffer clear
+	// clear if there are more than 18 bytes, i.e. we missed a previous packet
+	if (Serial8.available() > DR16_PACKET_SIZE) {
 		Serial8.clear();
-
-		int pause_windows = 0; // amount of pause_windows in between full packets
-		int accumulator = 0; // number of bytes read since the last paused window.
-
-		int tries = 0; // count the number of tries for clearer feedback in case we get stuck aligning.
-
-		// while we are not alligned
-		while (1) {
-			// grab the current size of the recv buffer
-			int available = Serial8.available();
-			// wait for about 100 micro seconds
-			// the dr16 runs at 100kbps, so thats 1 byte every 80 us
-			delayMicroseconds(100);
-
-			// calculate the diff. Should be either 0 or 1 at this speed
-			int diff = Serial8.available() - available;
-
-			// if diff was a zero, we hit a pause in the datastream.
-			if (diff == 0) {
-				// count the pause_windows
-				pause_windows++;
-
-				// check to see if enough pause_windows have passed
-
-				// if at least 5 pause_windows have passed, this tells us we are in between dr16 packets since it should have sent a byte by now
-				// also check to see if we've actually received a full packet
-				if (pause_windows > 5 && accumulator == DR16_PACKET_SIZE) {
-					Serial.printf("Dr16 aligned\n");
-					
-					break; // done
-				} else if (pause_windows > 5) {
-					// enough pause_windows have passed but we didnt read an entire packet, start over
-					accumulator = 0;
-				}
-
-				// maintain having the buffer clear
-				Serial8.clear();
-			} else {
-				// there was a byte sent
-
-				// reset pause counter
-				pause_windows = 0;
-				// increment that we read a byte
-				accumulator += diff;
-				// maintain a clear buffer
-				Serial8.clear();
-			}
-
-			Serial.printf("Dr16 failed to read enough data to align. Tries: %d\n", tries++);
-		}
-
-
-		// even though we are alligned, we have not actually read anything yet, so still return
 		return;
 	}
-
 
 	// dont read if there are less than 18 bytes, i.e. we caught the packet as it was being written
 	if (Serial8.available() < DR16_PACKET_SIZE) {
@@ -100,8 +42,11 @@ void DR16::read() {
 		return;
 	}
 
+	// Serial.println(m_disctTime);
 	m_disctTime = millis();
 	m_connected = true;
+	// Serial.print("CONNCETD: ");
+	// Serial.println(m_connected);
 
 	  // issue read command, fills m_inputRaw with 18 bytes
 	Serial8.readBytes(m_inputRaw, DR16_PACKET_SIZE);
@@ -178,6 +123,8 @@ void DR16::read() {
 			m_fail = false;
 	}
 
+
+	// Serial.printf("%.4d (%.3f)\t%.4d (%.3f)\t%.4d (%.3f)\t%.4d (%.3f)\t%.4d (%.3f)\t%.4d\t%.4d\n", c0, m_input[0], c1, m_input[1], c2, m_input[2], c3, m_input[3], wh, m_input[4], s1, s2);
 	m_prevTime = micros();
 }
 

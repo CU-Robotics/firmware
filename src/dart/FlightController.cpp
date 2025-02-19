@@ -1,14 +1,14 @@
 #include "FlightController.hpp"
 #include "IMU.hpp"
-#include "IMU_Filter.hpp"
+#include "IMUSensor.hpp"
+#include "IMU_filter.hpp"
 #include "usb_serial.h"
 
-IMU_filter icmF;
-IMUData imu_data;
+IMU_data imu_data;
 
-FlightController::FlightController(ServoController &sc, IMU &imu,
+FlightController::FlightController(ServoController &sc, IMU_filter &imuf,
                                    Dartcam &dartcam)
-    : servoController(sc), imu(imu), dartcam(dartcam), currentMode(FIN_HOLD),
+    : servoController(sc), imuf(imuf), dartcam(dartcam), currentMode(FIN_HOLD),
       pitchPID(0.1, 0.01, 0.05, -10, 10),
       rollPID(0.1, 0.01, 0.05, -10, 10), // TODO Will need to tune these
       yawPID(0.1, 0.01, 0.05, -10, 10) {}
@@ -51,6 +51,7 @@ void FlightController::hold_fin_position() {
 void FlightController::align_to_velocity_vector() {
   // This is currently just stable flight, will need to be set to the actual
   // velo vector if we want it to fly a true arc.
+  /*
   float pitchSetpoint = 0.0; // Target pitch angle in degrees
   float yawSetpoint = 0.0;
   float rollSetpoint = 0.0;
@@ -80,6 +81,7 @@ void FlightController::align_to_velocity_vector() {
   servoController.set_servo_angle(1, rightElevator);
   servoController.set_servo_angle(2, leftRudder);
   servoController.set_servo_angle(3, rightRudder);
+  */
 }
 
 // Mode 3: Guided
@@ -129,9 +131,9 @@ void FlightController::test_gyro_level() {
   //  float yawSetpoint = 0.0;
   float rollSetpoint = 90;
 
-  imu_data = imu.read_data();
+  imu_data = *imuf.get_filter_data();
 
-  float currentRoll = imu_data.accelX;
+  float currentRoll = imu_data.roll;
   // float currentYaw = imu_data.;
   // float currentRoll = imu_data.k_roll;
 
@@ -168,8 +170,8 @@ void FlightController::test_gyro_level() {
 void FlightController::maintain_level_roll() {
   float rollSetpoint = 0.0;
 
-  IMUData imuData = imu.read_data();
-  float currentRoll = imuData.roll;
+  imu_data = *imuf.get_filter_data();
+  float currentRoll = imu_data.roll;
 
   float rollAdjustment = rollPID.calculate(rollSetpoint, currentRoll);
 

@@ -3,6 +3,7 @@
 
 #include "Dartcam.hpp"
 #include "IMU.hpp"
+#include "IMU_filter.hpp"
 #include "PIDController.hpp"
 #include "ServoController.hpp" 
 enum ControlMode {
@@ -15,14 +16,14 @@ enum ControlMode {
 
 class FlightController {
 public:
-  FlightController(ServoController &servoController, IMU &imu, Dartcam &dartcam);
+  FlightController(ServoController &servoController, IMU_filter &imuf, Dartcam &dartcam);
   void update();
   void set_control_mode(ControlMode mode);
   void init();
 
 private:
   ServoController &servoController;
-  IMU &imu;
+  IMU_filter &imuf;
   Dartcam &dartcam;
   ControlMode currentMode;
 

@@ -1,7 +1,8 @@
 #include "d200.hpp"
 
-D200LD14P::D200LD14P(HardwareSerial *_port, uint8_t _id) : Sensor(SensorType::LIDAR, _id) {
+D200LD14P::D200LD14P(HardwareSerial *_port, uint8_t _id) {
   port = _port;
+  id = _id;
   current_packet = 0;
   port->begin(D200_BAUD);
 }
@@ -104,7 +105,7 @@ void D200LD14P::read() {
       p->lidar_speed = (float) lidar_speed * M_PI / 180.0; // deg/s -> rad/s
       p->start_angle = ((float) (start_angle % 36000) / 100.0) * M_PI / 180.0; // 0.01 deg -> rad
       p->end_angle = ((float) (end_angle % 36000) / 100.0) * M_PI / 180.0; // 0.01 deg -> rad
-      
+      // Serial.printf("lidar: %f, %f, %d\n", p->start_angle,  p->end_angle, current_packet);
       for (int i = 0; i < D200_POINTS_PER_PACKET; i++) {
         // points start at byte 6, each point is 3 bytes
         int base = 6 + i * 3;
@@ -195,14 +196,4 @@ void D200LD14P::print_latest_packet() {
   Serial.println(p.end_angle);
   Serial.print("timestamp: ");
   Serial.println(p.timestamp);
-}
-
-void D200LD14P::serialize(uint8_t* buffer, size_t& offset) {
-  buffer[offset++] = id;
-  memcpy(buffer + offset, &current_packet, sizeof(current_packet));
-  offset += sizeof(current_packet);
-  memcpy(buffer + offset, &cal, sizeof(cal));
-  offset += sizeof(cal);
-  memcpy(buffer + offset, get_packets(), D200_NUM_PACKETS_CACHED * D200_PAYLOAD_SIZE);
-  offset += D200_NUM_PACKETS_CACHED * D200_PAYLOAD_SIZE;
 }

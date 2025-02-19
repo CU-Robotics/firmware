@@ -6,57 +6,40 @@
 #include "../sensors/RefSystem.hpp"
 #include "../comms/config_layer.hpp"
 
-#define MOTOR_INFO_TYPE 0
-#define MOTOR_INFO_ID 1
-#define MOTOR_INFO_BUS 2
-
 /// @brief Manage all controllers
 class ControllerManager {
 private:
-    /// @brief Array storing every controller
-    Controller* controllers[NUM_ROBOT_CONTROLLERS];
-    
-    /// @brief number of controllers configured for this robot
-    int num_controllers = 0;
-
-    /// @brief array of motor outputs
-    float outputs[NUM_MOTORS] = { 0 };
+    /// @brief Keep track of the controller used on each motor
+    Controller* controllers[NUM_MOTORS][NUM_CONTROLLER_LEVELS] = { nullptr };
 
     /// @brief config struct to store all config data
     /// @note this is read only
     const Config* config_data = nullptr;
-
-    /// @brief can data pointer used to write to the can bus
-    rm_CAN* can;
 
 public:
     /// @brief default constructor, does nothing
     ControllerManager() = default;
 
     /// @brief Initializes controllers with data from the config yaml
-    /// @param _can pointer to the can data struct
     /// @param _config_data read-only config reference storing all config data
-    void init(rm_CAN* _can, const Config* _config_data);
+    void init(const Config* _config_data);
 
     /// @brief Populates the corresponding index of the "controllers" array attribute with a controller object
+    /// @param can_id can bus number. Use the defines! (0 indexed. ie can_1 = 0)
+    /// @param motor_id motor id (1 indexed. ie motor id 1 = 1)
     /// @param controller_type denotes what kind of controller to initialize (see contoller.hpp)
+    /// @param controller_level denotes level of controller and what it outputs, such as a target micro state, or a target motor torque to send to can.
     /// @param gains gains matrix input (see controller.hpp for what each gain means)
-    /// @param gear_ratios gear ratios array, used to relate motor inputs to joint states
-    void init_controller(int controller_type, const float gains[NUM_GAINS], const float gear_ratios[NUM_MOTORS]);
+    void init_controller(uint8_t can_id, uint8_t motor_id, int controller_type, int controller_level, const float gains[NUM_GAINS]);
 
-    /// @brief Steps through controllers and sets the new motor inputs (ie. motor current, torque)
-    /// @param macro_reference Governor reference (governed target state)
+    /// @brief Steps through controllers and calculates output, which is written to the "output" array attribute.
+    /// @param macro_reference State reference (governed target state)
     /// @param macro_estimate estimated current joint states
     /// @param micro_estimate estimated current motor states
-    void step(float macro_reference[STATE_LEN][3], float macro_estimate[STATE_LEN][3], float micro_estimate[NUM_MOTORS][MICRO_STATE_LEN]);
-
-    /// @brief get the ratio (between 0 and 1) of power limit. 1 when 60 to 20 and x/20 under 20.
-    /// @return ratio to scale the chassis control based on current power buffer
-    float powerlimit_ratio();
-
-    /// @brief An abstracted method to write to a specific motor by ID
-    /// @param motor_id The ID of a motor, these IDs are defined in the config
-    /// @param value 
-    void actuator_write(int motor_id, float value);
+    /// @param kinematics_p position kinematics matrix relating motors to states (Number_of_motors x State_length)
+    /// @param kinematics_v velocity kinematics matrix relating motors to states (Number_of_motors x State_length)
+    /// @param outputs generated motor input normalized -1 to 1
+    void step(float macro_reference[STATE_LEN][3], float macro_estimate[STATE_LEN][3], float micro_estimate[NUM_MOTORS][MICRO_STATE_LEN], float kinematics_p[NUM_MOTORS][STATE_LEN], float kinematics_v[NUM_MOTORS][STATE_LEN], float outputs[NUM_MOTORS]);
 };
+
 #endif // CONTROLLER_MANAGER_H
