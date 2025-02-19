@@ -103,7 +103,10 @@ struct observer_data
     float jr[2][2];
 
     float wheel_speed;
-    std::array<std::array<float, 2>, 2> P;
+    float P;
+    float K;
+    float Q;
+    float R;
 
     float b_speed_old;
 };
@@ -142,8 +145,7 @@ class balancing_test{
         balancing_sensor_data _data;
         write_data _write;
         observer_data o_data;
-        ref_data _ref_data;  
-        float Q; //
+        ref_data _ref_data; 
         float Rv;
         float Ra;
 
