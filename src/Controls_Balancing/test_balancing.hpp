@@ -103,8 +103,8 @@ struct observer_data
     float jr[2][2];
 
     float wheel_speed;
-    float P;
-    float K;
+    std::array<std::array<float, 2>, 2> P; // State covariance matrix
+    std::array<std::array<float, 2>, 2> K; // Kalman gain
     float Q;
     float R;
 

@@ -193,15 +193,14 @@ void balancing_test::observer(){
     // o_data.theta_lr_dot = -(((helpingr*yC_dot_r) + (yCr * xC_dot_r)) / (helpingr * helpingr + yCr * yCr)) - _data.gyro_pitch;
 //--------------------------------------------------------------b_s and filter for it--------------------------------------------------------
     o_data.wheel_speed_filtered =  (1/2) * (R_w) * (_data.speed_wr - _data.speed_wl) ; // s_dot //speed 
-    o_data.wheel_speed = _data.imu_accel_x * _dt + (1/2) * (o_data.ll*(o_data.theta_ll_dot + _data.imu_angle_pitch)*cos(phi0l) + o_data.lr*(o_data.theta_lr_dot + _data.imu_angle_pitch)*cos(phi0r)) + (1/2)* (o_data.ll_dot * sin(phi0l) + o_data.lr_dot * sin(phi0r));
+
+    o_data.wheel_speed = (1/2) * (R_w) * (_data.speed_wr - _data.speed_wl) - (1/2) * (o_data.ll*(o_data.theta_ll_dot + _data.imu_angle_pitch)*cos(phi0l) + o_data.lr*(o_data.theta_lr_dot + _data.imu_angle_pitch)*cos(phi0r)) - (1/2)* (o_data.ll_dot * sin(phi0l) + o_data.lr_dot * sin(phi0r));
 //-------------------------------------------filter by a falman filter (I will update this soon) ---------------------------------------------------------------------
     // For the x we have [v,a]^T 
-    // predict since F is 1 we can just ignore it
-    o_data.P += o_data.Q; 
-    o_data.K = o_data.P/(o_data.P + o_data.R);
-    // update
-    // o_data.wheel_speed_filtered = (o_data.wheel_speed_filtered + o_data.K * (o_data.wheel_speed - o_data.wheel_speed_filtered)); 
-    o_data.P = (1 - o_data.K) * o_data.P;
+    // predict 
+    
+    // Update
+
     return;
 }
 
