@@ -61,6 +61,7 @@ struct balancing_sensor_data
 
     float imu_angle_pitch;
     float imu_angle_roll;
+    float imu_angle_yaw;
     float imu_accel_x;
     float imu_accel_y;
     float imu_accel_z;

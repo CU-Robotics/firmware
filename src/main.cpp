@@ -109,6 +109,7 @@ int main() {
         data.imu_accel_z = -filtered_data->accel_world_Z; // up (+)
         data.imu_angle_pitch = -filtered_data->roll;  // Front(+)
         data.imu_angle_roll = -filtered_data->pitch; // Right(+)
+        data.imu_angle_yaw = -filtered_data->yaw; // Clockwise(+)
         data.angle_fr = can.get_motor(0)->get_state().position; // see from robot outor side clockwise (+) 
         data.angle_fl = can.get_motor(1)->get_state().position; // see from robot outor side clockwise (+)
         data.angle_bl = can.get_motor(2)->get_state().position; // see from robot outor side clockwise (+)
