@@ -411,8 +411,8 @@ public:
     /// @param can can from Estimator Manager
     GimbalEstimatorNoOdom(Config config_data, SensorManager* sensor_manager, CANManager* can);
 
-    GimbalEstimatorNoOdom() {};
-  
+    GimbalEstimatorNoOdom() { };
+
     /// @brief calculate estimated states and add to output array
     /// @param output output array to add estimated states to
     /// @param curr_state current state of the system

@@ -19,8 +19,8 @@
 
 // Declare global objects
 DR16 dr16;
-RefSystem* ref;
 CANManager can;
+RefSystem* ref;
 HIDLayer comms;
 ACS712 current_sensor;
 
@@ -103,6 +103,8 @@ int main() {
     Serial.println("Configuring...");
     const Config* config = config_layer.configure(&comms);
     Serial.println("Configured!");
+
+    can.configure(config->motor_info);
 
 
     sensor_manager.init(config);
