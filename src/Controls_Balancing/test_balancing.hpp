@@ -18,9 +18,9 @@
 #define K1_F 0                                  //Need test  
 
 //leg length PID
-#define K2_P 4.4                                 //Need test                         
-#define K2_I 2.4                               //Need test                         
-#define K2_D 0.8                                  //Need test                         
+#define K2_P 130                                //Need test                         
+#define K2_I 0.5                               //Need test                         
+#define K2_D 5                                  //Need test                         
 #define K2_F 0                                  //Need test                   
 
 /** Constants for locomotion_controller*/

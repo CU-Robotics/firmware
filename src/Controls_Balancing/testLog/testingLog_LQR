@@ -92,8 +92,15 @@ R = [1/4^2 0 0 0;
     0 0 0 1/14^2];
 
 
-Feb 16 - Attempt 5
+Feb 16 - Attempt 5 & Feb 18 - Attempt 1 & 2 & 3
 leg length target: 22
+Comments: Too slow leg length response.
+          Not enough leg angle control
+          Atttemp 2 has 3/4 PID
+          Atttemp 3 has 0.9 PID
+          Atttemp 4 has 1.2 PID
+          Atttemp 5 has 1.1 PID
+          Attemp 4 has too much control on body pitch
 Q = [1/1000^2,0,0,0,0,0,0,0,0,0;
     0,1/1^2,0,0,0,0,0,0,0,0;
     0,0,1/1000^2,0,0,0,0,0,0,0;
@@ -108,3 +115,39 @@ R = [1/4^2 0 0 0;
     0 1/4^2 0 0 ;
     0 0 1/14^2 0;
     0 0 0 1/14^2];
+
+
+Feb 18 - Attempt 6 7
+leg length target: 23
+Comments: 
+6 leg PID Overall Gian 1.1 ; roll pid (.3,.1,.1)
+7 leg PID Overall Gian 1.1 ; roll pid (3,1,1)
+8 leg PID Overall Gian 1.1 ; roll pid 4*(.3,.1,.1)
+9 leg PID Overall Gian (7.5 4.8 2) ; roll pid 4*(.3,.1,.1)       too big Kp for length
+10 leg PID Overall Gian (5 3 2) ; roll pid 4*(.3,.1,.1)     too small Kp for length
+11 leg PID Overall Gian (6 3 2) ; roll pid 4*(.3,.1,.1)
+12 leg PID Overall Gian (7 1 2) ; roll pid 4*(.3,.1,.1)
+13 leg PID Overall Gian (8 1 2) ; roll pid 4*(.3,.1,.1)
+14 leg PID Overall Gian (10 1 2) ; roll pid 4*(.3,.1,.1)
+15 leg PID Overall Gian (30 0.5 29) ; roll pid 4*(.3,.1,.1)
+16 leg PID Overall Gian (30 0.5 20) ; roll pid 4*(.3,.1,.1)
+17 leg PID Overall Gian (15 0.5 8) ; roll pid 4*(.3,.1,.1)      flipped
+18 leg PID Overall Gian (15 0.5 5) ; roll pid 4*(.3,.1,.1)  
+19 leg PID Overall Gian (25 0.5 5) ; roll pid 4*(.3,.1,.1)   
+19 leg PID Overall Gian (35 0.5 5) ; roll pid 4*(.3,.1,.1)    
+19 leg PID Overall Gian (80 0.5 5) ; roll pid 4*(.3,.1,.1)    
+Q = [1/1000^2,0,0,0,0,0,0,0,0,0;
+    0,1/1^2,0,0,0,0,0,0,0,0;
+    0,0,1/1000^2,0,0,0,0,0,0,0;
+    0,0,0,1/20^2,0,0,0,0,0,0;
+    0,0,0,0,1/4^2,0,0,0,0,0;
+    0,0,0,0,0,1/7^2,0,0,0,0;
+    0,0,0,0,0,0,1/4^2,0,0,0;
+    0,0,0,0,0,0,0,1/7^2,0,0;
+    0,0,0,0,0,0,0,0,1/1.5^2,0;
+    0,0,0,0,0,0,0,0,0,1/5^2];
+R = [1/4^2 0 0 0;
+    0 1/4^2 0 0 ;
+    0 0 1/14^2 0;
+    0 0 0 1/14^2];
+
