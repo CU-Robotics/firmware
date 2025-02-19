@@ -108,7 +108,7 @@ int main() {
 
 
     sensor_manager.init(config);
-    
+
 
 
     //estimate micro and macro state
@@ -328,13 +328,13 @@ int main() {
         bool is_slow_loop = false;
 
         // check whether this was a slow loop or not
-	float dt = stall_timer.delta();
+        float dt = stall_timer.delta();
         Serial.printf("Loop %d, dt: %f\n", loopc, dt);
-        if (dt > 0.002) { 
+        if (dt > 0.002) {
             // zero the can bus just in case
-	    	can.issue_safety_mode();
-		
-	    	Serial.printf("Slow loop with dt: %f\n", dt);
+            can.issue_safety_mode();
+
+            Serial.printf("Slow loop with dt: %f\n", dt);
             // mark this as a slow loop to trigger safety mode
             is_slow_loop = true;
         }

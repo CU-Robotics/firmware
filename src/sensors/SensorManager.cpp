@@ -69,7 +69,7 @@ void SensorManager::init(const Config* config_data) {
 
     }
 
-   
+
 }
 
 void SensorManager::read() {
@@ -81,7 +81,7 @@ void SensorManager::read() {
         icm_sensors[i]->read();
         icm_sensors[i]->print();
     }
-    
+
     for (int i = 0; i < rev_sensor_count; i++) {
         rev_sensors[i]->read();
         rev_sensors[i]->print();
@@ -94,9 +94,8 @@ void SensorManager::read() {
     }
 
     // read ref system
-    
+
     ref->read();
-    Serial.println(tof_sensor_count);
     for (int i = 0; i < tof_sensor_count; i++) {
         tof_sensors[i]->read();
         tof_sensors[i]->print();
@@ -118,14 +117,10 @@ TOFSensor* SensorManager::get_tof_sensor(int index) {
     return tof_sensors[index];
 }
 
-D200LD14P* SensorManager::get_lidar_sensor(int index)
-{
-    if (index == 1)
-    {
+D200LD14P* SensorManager::get_lidar_sensor(int index) {
+    if (index == 1) {
         return lidar1;
-    }
-    else if(index == 2)
-    {
+    } else if (index == 2) {
         return lidar2;
     } else {
         return nullptr;

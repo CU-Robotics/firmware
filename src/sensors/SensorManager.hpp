@@ -116,7 +116,7 @@ private:
     /// @brief Second LiDAR sensor
     D200LD14P* lidar2;
 
-    
+
     /// @brief Array of LiDAR sensor data structs
     LidarSensorData* lidar_sensors_data;
 
