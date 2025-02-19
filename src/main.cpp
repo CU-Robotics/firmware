@@ -155,6 +155,7 @@ int main() {
 
     // Main loop
     while (true) {
+        stall_timer.start();
         // read sensors
         sensor_manager.read();
         // read CAN and DR16 -- These are kept out of sensor manager for safety reasons
@@ -251,6 +252,15 @@ int main() {
                 pos_offset_y = temp_state[1][0];
             }
             hive_toggle = true;
+        }
+
+        // print dr16
+        Serial.printf("DR16:\n\t");
+        dr16.print();
+
+        Serial.printf("Target state:\n");
+        for (int i = 0; i < 8; i++) {
+            Serial.printf("\t%d: %f %f %f\n", i, target_state[i][0], target_state[i][1], target_state[i][2]);
         }
 
         // override temp state if needed
