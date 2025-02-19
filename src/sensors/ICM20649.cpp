@@ -103,5 +103,4 @@ void ICM20649::set_gyro_range(int gyro_rate_range) {
         sensor.setGyroRange(ICM20649_GYRO_RANGE_4000_DPS);
         break;
     }
-    Serial.println("Done w icm");
 }
