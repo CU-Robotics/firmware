@@ -8,6 +8,6 @@ namespace Comms {
 struct HiveData {
 };
 
-#endif  // FIRMWARE
-
 } // namespace Comms
+
+#endif  // FIRMWARE

@@ -101,7 +101,7 @@ private:
 
 }   // namespace Comms
 
-#ifdef HIVE
+#if defined(HIVE)
 
 TEST_CASE("Testing packet payload") {
 
@@ -427,4 +427,4 @@ TEST_CASE("Testing packet payload") {
     }
 }
 
-#endif
+#endif  // HIVE

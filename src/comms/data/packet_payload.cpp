@@ -190,7 +190,7 @@ bool PacketPayload::try_append_splittable_logging_data(LoggingData* log) {
 }
 
 void PacketPayload::place_data_in_mega_struct(CommsData* data) {
-#ifdef HIVE
+#if defined(HIVE)
     
     switch (data->type_label) {
     case TypeLabel::TestData: {
@@ -209,7 +209,7 @@ void PacketPayload::place_data_in_mega_struct(CommsData* data) {
         throw std::runtime_error("Invalid type label given to place in mega struct: " + std::to_string(static_cast<uint8_t>(data->type_label)));
     }
     
-#elif FIRMWARE
+#elif defined(FIRMWARE)
     assert(false && "Unimplemented");
 #endif
 }

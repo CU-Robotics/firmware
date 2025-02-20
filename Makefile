@@ -42,13 +42,12 @@ LIBRARY_INC_DIRS := $(shell find $(LIBRARY_SRC_DIRS) -maxdepth 2 -type d)
 SRC_INC_DIRS := $(shell find $(SRC_SRC_DIRS) -type d)
 
 # Generate compiler include flags from include directories
-TEENSY_INC_FLAGS := $(addprefix -I,$(TEENSY_INC_DIRS))
 LIBRARY_INC_FLAGS := $(addprefix -I,$(LIBRARY_INC_DIRS))
 SRC_INC_FLAGS := $(addprefix -I,$(SRC_INC_DIRS))
 INCLUDE_FLAGS := $(TEENSY_INC_FLAGS) $(LIBRARY_INC_FLAGS) $(SRC_INC_FLAGS)
 
 # Compiler flags specific to Teensy 4.1
-TEENSY4_FLAGS = -DF_CPU=600000000 -DUSB_CUSTOM -DLAYOUT_US_ENGLISH -D__IMXRT1062__ -DTEENSYDUINO=159 -DARDUINO_TEENSY41 -DARDUINO=10813
+TEENSY4_FLAGS = -DF_CPU=600000000 -DUSB_CUSTOM -DLAYOUT_US_ENGLISH -D__IMXRT1062__ -DTEENSYDUINO=159 -DARDUINO_TEENSY41 -DARDUINO=10813 -DFIRMWARE
 
 # CPU flags to optimize code for the Teensy processor
 CPU_CFLAGS = -mcpu=cortex-m7 -mfloat-abi=hard -mfpu=fpv5-d16 -mthumb
@@ -210,8 +209,8 @@ upload: build
 
 # Install required tools for building and uploading firmware
 install:
-	@$(TOOLS_DIR)/install_tytools.sh
-	@$(TOOLS_DIR)/install_arduino.sh
+	@bash $(TOOLS_DIR)/install_tytools.sh
+	@bash $(TOOLS_DIR)/install_arduino.sh
 
 
 # starts GDB and attaches to the firmware running on a connected Teensy

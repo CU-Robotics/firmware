@@ -1,6 +1,6 @@
 #pragma once
 
-#include <cstdint>          // for uintN_t
+#include <stdint.h>     // for uintN_t
 
 namespace Comms {
 
@@ -24,7 +24,6 @@ enum class Priority : uint8_t {
     Logging,
 };
 
-
 /// @brief base class for all data structs that want to be sent over comms.
 struct CommsData {
 public:
@@ -40,6 +39,17 @@ public:
         this->size = size;
     }
 
+    // TODO: upgrade firmware to gcc13 to use bitfield initializers
+#if defined(HIVE)
+    /// @brief size of the data in bytes
+    uint16_t size : 16 = 0;
+    /// @brief type of data
+    TypeLabel type_label : 8 = TypeLabel::NONE;
+    /// @brief medium over which the data is sent
+    PhysicalMedium physical_medium : 4 = PhysicalMedium::Ethernet;
+    /// @brief priority of the data
+    Priority priority : 4 = Priority::Medium;
+#elif defined(FIRMWARE)
     /// @brief size of the data in bytes
     uint16_t size : 16;
     /// @brief type of data
@@ -48,6 +58,7 @@ public:
     PhysicalMedium physical_medium : 4;
     /// @brief priority of the data
     Priority priority : 4;
+#endif
 };
 
 } // namespace Comms

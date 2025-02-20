@@ -1,6 +1,6 @@
 #pragma once
 
-#ifdef HIVE
+#if defined(HIVE)
 
 #include "modules/comms/data/comms_data.hpp"
 #include "modules/comms/data/logging_data.hpp"
