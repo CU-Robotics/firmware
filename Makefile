@@ -42,6 +42,7 @@ LIBRARY_INC_DIRS := $(shell find $(LIBRARY_SRC_DIRS) -maxdepth 2 -type d)
 SRC_INC_DIRS := $(shell find $(SRC_SRC_DIRS) -type d)
 
 # Generate compiler include flags from include directories
+TEENSY_INC_FLAGS := $(addprefix -I,$(TEENSY_INC_DIRS))
 LIBRARY_INC_FLAGS := $(addprefix -I,$(LIBRARY_INC_DIRS))
 SRC_INC_FLAGS := $(addprefix -I,$(SRC_INC_DIRS))
 INCLUDE_FLAGS := $(TEENSY_INC_FLAGS) $(LIBRARY_INC_FLAGS) $(SRC_INC_FLAGS)
