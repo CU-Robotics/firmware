@@ -23,7 +23,6 @@
 
 // Declare global objects
 
-DR16 dr16;
 CANManager can;
 RefSystem* ref;
 HIDLayer comms;
@@ -101,7 +100,7 @@ int main() {
 		transmitter = new ET16S;
 	}
     can.init();
-    dr16.init();
+    transmitter->init();
     comms.init();
     ref = sensor_manager.get_ref();
 
@@ -166,7 +165,7 @@ int main() {
         sensor_manager.read();
         // read CAN and DR16 -- These are kept out of sensor manager for safety reasons
         can.read();
-        dr16.read();
+        transmitter->read();
 
         // read and write comms packets
         comms.ping();
@@ -202,12 +201,12 @@ int main() {
         float chassis_pos_y = 0;
         if (config->governor_types[0] == 2) {   // if we should be controlling velocity
 
-            chassis_vel_x = dr16.get_l_stick_y() * 5.4
+            chassis_vel_x = transmitter->get_l_stick_y() * 5.4
                 + (-ref->ref_data.kbm_interaction.key_w + ref->ref_data.kbm_interaction.key_s) * 2.5
-                + (-dr16.keys.w + dr16.keys.s) * 2.5;
-            chassis_vel_y = -dr16.get_l_stick_x() * 5.4
+                + (-transmitter->keys.w + transmitter->keys.s) * 2.5;
+            chassis_vel_y = -transmitter->get_l_stick_x() * 5.4
                 + (ref->ref_data.kbm_interaction.key_d - ref->ref_data.kbm_interaction.key_a) * 2.5
-                + (dr16.keys.d - dr16.keys.a) * 2.5;
+                + (transmitter->keys.d - transmitter->keys.a) * 2.5;
 
         } else if (config->governor_types[0] == 1) { // if we should be controlling position
             chassis_pos_x = wfly.get_l_stick_x() * 2 + pos_offset_x;
@@ -223,10 +222,9 @@ int main() {
             - transmitter_pos_x
             - vtm_pos_x;
 		
-        float fly_wheel_target = (dr16.get_r_switch() == 1 || dr16.get_r_switch() == 3) ? 18 : 0; //m/s
-        float feeder_target = (((dr16.get_l_mouse_button() || ref->ref_data.kbm_interaction.button_left) && dr16.get_r_switch() != 2) || dr16.get_r_switch() == 1) ? 10 : 0;
+        float fly_wheel_target = (transmitter->get_r_switch() == 1 || transmitter->get_r_switch() == 3) ? 18 : 0; //m/s
+        float feeder_target = (((transmitter->get_l_mouse_button() || ref->ref_data.kbm_interaction.button_left) && transmitter->get_r_switch() != 2) || transmitter->get_r_switch() == 1) ? 10 : 0;
 
->>>>>>> origin/main
         // set manual controls
         target_state[0][0] = chassis_pos_x;
         target_state[0][1] = chassis_vel_x;
