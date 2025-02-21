@@ -64,10 +64,10 @@ const int D200_DATA_PACKET_LEN = 47;
 const int D200_CMD_PACKET_LEN = 8;
 
 /// @brief hard-coded start command
-const uint8_t D200_START_CMD[] = { 0x54, 0xa0, 0x04, 0, 0, 0, 0, 0x5e };
+const uint8_t D200_START_CMD[ ] = { 0x54, 0xa0, 0x04, 0, 0, 0, 0, 0x5e };
 
 /// @brief hard-coded stop command
-const uint8_t D200_STOP_CMD[] = { 0x54, 0xa1, 0x04, 0, 0, 0, 0, 0x4a };
+const uint8_t D200_STOP_CMD[ ] = { 0x54, 0xa1, 0x04, 0, 0, 0, 0, 0x4a };
 
 /// @brief default scanning speed (rad/s)
 const float D200_DEFAULT_SPEED = (float)(6 * 360) * M_PI / 180.0;
@@ -89,10 +89,10 @@ const int D200_TIMESTAMP_WRAP_LIMIT = 30000;
 struct LidarDataPacket {
   /// @brief speed of lidar module (deg/s)
   uint16_t lidar_speed = 0;
-  
+
   /// @brief start angle of measurements (hundredths of deg)
   uint16_t start_angle = 0;
-  
+
   /// @brief array of point measurements
   struct {
     /// @brief distance (mm)
@@ -101,22 +101,23 @@ struct LidarDataPacket {
     /// @brief intensity of measurement. units are ambiguous (not documented), but in general "the higher the intensity, the larger the signal strength value"
     uint8_t intensity = 0;
   } points[D200_POINTS_PER_PACKET];
-  
+
   /// @brief end angle of measurements (hundredths of deg)
   uint16_t end_angle = 0;
-  
+
   /// @brief timestamp of measurements, wraps after 30s (ms)
   uint16_t timestamp = 0;
 }; */
+
 
 /// @brief data for a LiDAR packet (SI units)
 struct LidarDataPacketSI {
   /// @brief speed of lidar module (rad/s)
   float lidar_speed = 0;
-  
+
   /// @brief start angle of measurements (rad)
   float start_angle = 0;
-  
+
   /// @brief array of point measurements
   struct {
     /// @brief distance (m)
@@ -125,10 +126,10 @@ struct LidarDataPacketSI {
     /// @brief intensity of measurement. units are ambiguous (not documented), but in general "the higher the intensity, the larger the signal strength value"
     uint8_t intensity = 0;
   } points[D200_POINTS_PER_PACKET];
-  
+
   /// @brief end angle of measurements (rad)
   float end_angle = 0;
-  
+
   /// @brief timestamp of measurements, calibrated (s)
   float timestamp = 0;
 };
@@ -151,94 +152,111 @@ struct D200Calibration {
   int timestamp_delta_sum = 0;
 };
 
-/// @brief class for LiDAR driver
-class D200LD14P : Sensor{
-  private:
+/// @brief Structure for the LiDAR sensor.
+struct LidarSensorData {
+    /// Sensor ID.
+  uint8_t id;
+  /// Index of the current data packet.
+  int current_packet;
+  /// Calibration data.
+  D200Calibration cal;
+  /// Array of cached data packets.
+  LidarDataPacketSI packets[D200_NUM_PACKETS_CACHED];
 
-    /// @brief default scanning speed (deg/s) (used internally)
-    const uint16_t DEFAULT_SPEED = 6 * 360;
-
-    /// @brief minimum specified scanning speed (deg/s) (used internally)
-    const uint16_t MIN_SPEED = 2 * 360 + 1;
-
-    /// @brief maximum specified scanning speed (deg/s) (used internally)
-    const uint16_t MAX_SPEED = 8 * 360 - 1;
-
-    /// @brief teensy-side cache of packets for comms to use. number of cached packets may be adjusted as needed
-    LidarDataPacketSI packets[D200_NUM_PACKETS_CACHED];
-
-    /// @brief index of current packet (wraps)
-    int current_packet = 0;
-
-    /// @brief serial object to read from
-    HardwareSerial *port = nullptr;
-
-    /// @brief assigned ID of this specific module
-    uint8_t id;
-
-    /// @brief timestamp calibration results
-    D200Calibration cal;
-
-    /// @brief utility for bitcasting float to 32bit unsigned integer
-    /// @param f32 float to bitcat to a uint32_t
-    /// @return uint32_t with same bits as passed float
-    uint32_t bitcast_float(float f32);
-
-    /// @brief compute CRC8 checksum for buffer
-    /// @param buf pointer to buffer
-    /// @param len length of buffer
-    /// @return CRC8 checksum for buffer
-    uint8_t calc_checksum(uint8_t *buf, int len);
-
-  public:
-    /// @brief constructor and initialization
-    /// @param _port pointer to HardwareSerial object to read/write from
-    /// @param _id ID of this specific module
-    D200LD14P(HardwareSerial *_port, uint8_t _id);
-
-    //default constructor
-    D200LD14P() : Sensor(SensorType::LIDAR) {};
-
-    /// @brief set rotation the speed of the LiDAR
-    /// @param speed desired rotation speed of LiDAR (rad/s)
-    void set_speed(float speed);
-
-    /// @brief start the LiDAR motor
-    void start_motor();
-
-    /// @brief stop the LiDAR motor
-    void stop_motor();
-
-    /// @brief read latest packet(s) from D200 module
-    void read();
-
-    /// @brief get the packet array
-    /// @return pointer to start of packet array
-    LidarDataPacketSI *get_packets() { return packets; }
-
-    /// @brief get the index of the most recent packet
-    /// @return index of latest packet
-    int get_latest_packet_index() { return current_packet; }
-
-    /// @brief get the most recently read (complete) packet
-    /// @return the most recently read packet. if no packets have been read, this will return a zero-initialized packet
-    LidarDataPacketSI get_latest_packet() { return packets[current_packet]; }
-
-    /// @brief print the most recently read (complete) packet for debugging purposes
-    void print_latest_packet();
-
-    /// @brief flush the packet buffer
-    void flush_packet_buffer();
-
-    /// @brief export LiDAR data as byte array for comms. Exports the latest D200_NUM_PACKETS_CACHED packets, for a total size of D200_NUM_PACKETS_CACHED * D200_PAYLOAD_SIZE bytes per export.
-    /// @param bytes byte array to write LiDAR data into
-    void export_data(uint8_t bytes[D200_NUM_PACKETS_CACHED * D200_PAYLOAD_SIZE]);
-
-
-    /// @brief serialize the LiDAR data
-    /// @param buffer buffer to store the serialized data
-    /// @param offset offset to store the serialized data
-    void serialize(uint8_t* buffer, size_t& offset) override;
 };
+
+/// @brief class for LiDAR driver
+class D200LD14P : Sensor {
+private:
+
+  /// @brief default scanning speed (deg/s) (used internally)
+  const uint16_t DEFAULT_SPEED = 6 * 360;
+
+  /// @brief minimum specified scanning speed (deg/s) (used internally)
+  const uint16_t MIN_SPEED = 2 * 360 + 1;
+
+  /// @brief maximum specified scanning speed (deg/s) (used internally)
+  const uint16_t MAX_SPEED = 8 * 360 - 1;
+
+  /// @brief teensy-side cache of packets for comms to use. number of cached packets may be adjusted as needed
+  LidarDataPacketSI packets[D200_NUM_PACKETS_CACHED];
+
+  /// @brief index of current packet (wraps)
+  int current_packet = 0;
+
+  /// @brief serial object to read from
+  HardwareSerial* port = nullptr;
+
+  /// @brief assigned ID of this specific module
+  uint8_t id;
+
+  /// @brief timestamp calibration results
+  D200Calibration cal;
+
+  /// @brief utility for bitcasting float to 32bit unsigned integer
+  /// @param f32 float to bitcat to a uint32_t
+  /// @return uint32_t with same bits as passed float
+  uint32_t bitcast_float(float f32);
+
+  /// @brief compute CRC8 checksum for buffer
+  /// @param buf pointer to buffer
+  /// @param len length of buffer
+  /// @return CRC8 checksum for buffer
+  uint8_t calc_checksum(uint8_t* buf, int len);
+
+  //data struct for the LiDAR sensor
+  /// @brief struct storing data from lidar data packet (native units).
+  LidarSensorData lidar_sensor_data;
+
+public:
+  /// @brief constructor and initialization
+  /// @param _port pointer to HardwareSerial object to read/write from
+  /// @param _id ID of this specific module
+  D200LD14P(HardwareSerial* _port, uint8_t _id);
+
+  //default constructor
+  D200LD14P() : Sensor(SensorType::LIDAR) { };
+
+  /// @brief set rotation the speed of the LiDAR
+  /// @param speed desired rotation speed of LiDAR (rad/s)
+  void set_speed(float speed);
+
+  /// @brief start the LiDAR motor
+  void start_motor();
+
+  /// @brief stop the LiDAR motor
+  void stop_motor();
+
+  /// @brief read latest packet(s) from D200 module
+  /// @return true if successful, false if no data available
+  bool read() override;
+
+  /// @brief get the packet array
+  /// @return pointer to start of packet array
+  LidarDataPacketSI* get_packets() { return packets; }
+
+  /// @brief get the index of the most recent packet
+  /// @return index of latest packet
+  int get_latest_packet_index() { return current_packet; }
+
+  /// @brief get the most recently read (complete) packet
+  /// @return the most recently read packet. if no packets have been read, this will return a zero-initialized packet
+  LidarDataPacketSI get_latest_packet() { return packets[current_packet]; }
+
+  /// @brief print the most recently read (complete) packet for debugging purposes
+  void print_latest_packet();
+
+  /// @brief flush the packet buffer
+  void flush_packet_buffer();
+
+  /// @brief export LiDAR data as byte array for comms. Exports the latest D200_NUM_PACKETS_CACHED packets, for a total size of D200_NUM_PACKETS_CACHED * D200_PAYLOAD_SIZE bytes per export.
+  /// @param bytes byte array to write LiDAR data into
+  void export_data(uint8_t bytes[D200_NUM_PACKETS_CACHED * D200_PAYLOAD_SIZE]);
+
+  /// @brief return the current packet
+  /// @return the current packet index
+  int get_current_packet_index() { return current_packet; };
+};
+
 
 #endif // D200_H

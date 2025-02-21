@@ -17,7 +17,7 @@ public:
     void init();
 
     /// @copydoc IMUSensor::read()    
-    void read() override;
+    bool read() override;
 
 private:
     /// @brief sensor object from adafruit libraries.
