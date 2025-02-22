@@ -189,8 +189,8 @@ int main() {
         // manual controls on firmware
 
         float delta = control_input_timer.delta();
-        transmitter_pos_x += wfly.get_mouse_x() * 0.05 * delta;
-        transmitter_pos_y += wfly.get_mouse_y() * 0.05 * delta;
+        transmitter_pos_x += transmitter->get_mouse_x() * 0.05 * delta;
+        transmitter_pos_y += transmitter->get_mouse_y() * 0.05 * delta;
 
         vtm_pos_x += ref->ref_data.kbm_interaction.mouse_speed_x * 0.05 * delta;
         vtm_pos_y += ref->ref_data.kbm_interaction.mouse_speed_y * 0.05 * delta;
@@ -209,16 +209,16 @@ int main() {
                 + (transmitter->keys.d - transmitter->keys.a) * 2.5;
 
         } else if (config->governor_types[0] == 1) { // if we should be controlling position
-            chassis_pos_x = wfly.get_l_stick_x() * 2 + pos_offset_x;
-            chassis_pos_y = wfly.get_l_stick_y() * 2 + pos_offset_y;
+            chassis_pos_x = transmitter->get_l_stick_x() * 2 + pos_offset_x;
+            chassis_pos_y = transmitter->get_l_stick_y() * 2 + pos_offset_y;
         }
 
-        float chassis_spin = wfly.get_wheel() * 25;
+        float chassis_spin = transmitter->get_wheel() * 25;
         float pitch_target = 1.57
-            + -wfly.get_r_stick_y() * 0.3
+            + -transmitter->get_r_stick_y() * 0.3
             + transmitter_pos_y
             + vtm_pos_y;
-        float yaw_target = -wfly.get_r_stick_x() * 1.5
+        float yaw_target = -transmitter->get_r_stick_x() * 1.5
             - transmitter_pos_x
             - vtm_pos_x;
 		
@@ -241,7 +241,7 @@ int main() {
         target_state[7][0] = 1;
 
         // if the left switch is all the way down use Hive controls
-        if (wfly.get_l_switch() == 2) {
+        if (transmitter->get_l_switch() == 2) {
             incoming->get_target_state(target_state);
             // if you just switched to hive controls, set the reference to the current state
             if (hive_toggle) {
@@ -251,7 +251,7 @@ int main() {
         }
 
         // when in teensy control mode reset hive toggle
-        if (wfly.get_l_switch() == 3) {
+        if (transmitter->get_l_switch() == 3) {
             if (!hive_toggle) {
                 pos_offset_x = temp_state[0][0];
                 pos_offset_y = temp_state[1][0];
@@ -261,7 +261,7 @@ int main() {
 
         // print dr16
         //Serial.printf("DR16:\n\t");
-        //wfly.print();
+        //transmitter->print();
 
         Serial.printf("Target state:\n");
         for (int i = 0; i < 8; i++) {
@@ -311,7 +311,7 @@ int main() {
         SensorData sensor_data;
 
         // set transmitter raw data
-        //memcpy(sensor_data.raw + SENSOR_DR16_OFFSET, wfly.get_raw(), DR16_PACKET_SIZE);
+        //memcpy(sensor_data.raw + SENSOR_DR16_OFFSET, transmitter->get_raw(), DR16_PACKET_SIZE);
 
         // set lidars
         uint8_t lidar_data[D200_NUM_PACKETS_CACHED * D200_PAYLOAD_SIZE] = { 0 };
@@ -349,7 +349,7 @@ int main() {
 
 
         //  SAFETY MODE
-        if (wfly.is_connected() && (wfly.get_l_switch() == 2 || wfly.get_l_switch() == 3) && config_layer.is_configured() && !is_slow_loop) {
+        if (transmitter->is_connected() && (transmitter->get_l_switch() == 2 || transmitter->get_l_switch() == 3) && config_layer.is_configured() && !is_slow_loop) {
             // SAFETY OFF
             can.write();
 			 Serial.printf("Can write\n");
