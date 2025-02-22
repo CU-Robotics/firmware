@@ -58,7 +58,7 @@ void XDrivePositionController::step(float reference[STATE_LEN][3], float estimat
     // Serial.printf("1: %f, 2: %f, 3: %f, 4: %f\n", motor_velocity[0], motor_velocity[1], motor_velocity[2], motor_velocity[3]);
 
     // Power limiting
-    float power_buffer = ref.ref_data.robot_power_heat.buffer_energy;
+    float power_buffer = ref->ref_data.robot_power_heat.buffer_energy;
     float power_limit_ratio = 1.0;
     float power_buffer_limit_thresh = gains[15];
     float power_buffer_critical_thresh = gains[16];
@@ -126,7 +126,7 @@ void XDriveVelocityController::step(float reference[STATE_LEN][3], float estimat
     motor_velocity[3] = -output[0] * sin(chassis_heading) + output[1] * cos(chassis_heading) + output[2];
     // Serial.printf("motor 0: %f, motor 1: %f, motor 2: %f, motor 3: %f\n", motor_velocity[0], motor_velocity[1], motor_velocity[2], motor_velocity[3]);
     // Power limiting
-    float power_buffer = ref.ref_data.robot_power_heat.buffer_energy;
+    float power_buffer = ref->ref_data.robot_power_heat.buffer_energy;
     float power_limit_ratio = 1.0;
     float power_buffer_limit_thresh = gains[13];
     float power_buffer_critical_thresh = gains[14];
