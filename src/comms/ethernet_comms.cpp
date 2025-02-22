@@ -1,4 +1,5 @@
 #include "ethernet_comms.hpp"
+#include "ethernet_packet.hpp"
 
 namespace Comms {
 
@@ -95,12 +96,12 @@ void EthernetComms::loop() {
 	return;
 }
 
-EthernetPacket* const EthernetComms::get_incoming_packet() {
-	return &m_incoming;
+EthernetPacket EthernetComms::get_incoming_packet() {
+	return m_incoming;
 }
 
-EthernetPacket* const EthernetComms::get_outgoing_packet() {
-	return &m_outgoing;
+void EthernetComms::set_outgoing_packet(EthernetPacket& packet) {
+	m_outgoing = packet;
 }
 
 bool EthernetComms::is_connected() const {

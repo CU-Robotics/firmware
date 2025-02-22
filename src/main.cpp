@@ -1,5 +1,6 @@
 #include <Arduino.h>
 
+#include "comms/comms_layer.hpp"
 #include "git_info.h"
 
 #include "sensors/d200.hpp"
@@ -20,9 +21,8 @@
 DR16 dr16;
 CANManager can;
 RefSystem ref;
-HIDLayer hid_comms;
-Comms::EthernetComms ecomms;
 ACS712 current_sensor;
+Comms::CommsLayer comms_layer;
 
 D200LD14P lidar1(&Serial4, 0);
 D200LD14P lidar2(&Serial5, 1);
@@ -87,12 +87,11 @@ int main() {
     can.init();
     dr16.init();
     ref.init();
-    hid_comms.init();
-    ecomms.begin();
+    comms_layer.init();
     
     // Config config
     Serial.println("Configuring...");
-    const Config* config = config_layer.configure(&hid_comms);
+    const Config* config = config_layer.configure(&comms_layer);
     Serial.println("Configured!");
 
     can.configure(config->motor_info);
@@ -148,22 +147,19 @@ int main() {
         lidar1.read();
         lidar2.read();
 
-        ecomms.loop();
-        // auto eth_incoming = ecomms.get_incoming_packet();
-        auto eth_outgoing = ecomms.get_outgoing_packet();
-        eth_outgoing->header.sequence = loopc;
+        Comms::HIDPacket hid_incoming = comms_layer.get_hid_incoming();
+        Comms::HIDPacket hid_outgoing;
+        // Comms::EthernetPacket eth_incoming = comms_layer.get_ethernet_incoming();
+        Comms::EthernetPacket eth_outgoing;
 
-        // read and write comms packets
-        hid_comms.ping();
-        CommsPacket* incoming = hid_comms.get_incoming_packet();
-        CommsPacket* outgoing = hid_comms.get_outgoing_packet();
+        eth_outgoing.header.sequence = loopc;
 
         // check whether this packet is a config packet
-        if (incoming->raw[3] == 1) {
+        if (hid_incoming.raw[3] == 1) {
             Serial.println("\n\nConfig request received, reconfiguring from comms!\n\n");
             // trigger safety mode
             can.issue_safety_mode();
-            config_layer.reconfigure(&hid_comms);
+            config_layer.reconfigure(&comms_layer);
         }
 
         // print loopc every second to verify it is still alive
@@ -224,7 +220,7 @@ int main() {
 
         // if the left switch is all the way down use Hive controls
         if (dr16.get_l_switch() == 2) {
-            incoming->get_target_state(target_state);
+            hid_incoming.get_target_state(target_state);
             // if you just switched to hive controls, set the reference to the current state
             if (hive_toggle) {
                 governor.set_reference(temp_state);
@@ -254,14 +250,14 @@ int main() {
         // }
         
         // override temp state if needed
-        if (incoming->get_hive_override_request() == 1) {
+        if (hid_incoming.get_hive_override_request() == 1) {
             Serial.printf("Overriding state with hive state\n");
-            incoming->get_hive_override_state(hive_state_offset);
+            hid_incoming.get_hive_override_state(hive_state_offset);
             memcpy(temp_state, hive_state_offset, sizeof(hive_state_offset));
         }
 
         // step estimates and construct estimated state
-        estimator_manager.step(temp_state, temp_micro_state, incoming->get_hive_override_request());
+        estimator_manager.step(temp_state, temp_micro_state, hid_incoming.get_hive_override_request());
 
         // if first loop set target state to estimated state
         if (count_one == 0) {
@@ -291,29 +287,34 @@ int main() {
         // can.print_state();
 
         // construct sensor data packet
-        SensorData sensor_data;
+        Comms::SensorData sensor_data;
 
         // set dr16 raw data
-        memcpy(sensor_data.raw + SENSOR_DR16_OFFSET, dr16.get_raw(), DR16_PACKET_SIZE);
+        memcpy(sensor_data.raw + Comms::SENSOR_DR16_OFFSET, dr16.get_raw(), DR16_PACKET_SIZE);
 
         // set lidars
         uint8_t lidar_data[D200_NUM_PACKETS_CACHED * D200_PAYLOAD_SIZE] = { 0 };
         lidar1.export_data(lidar_data);
-        memcpy(sensor_data.raw + SENSOR_LIDAR1_OFFSET, lidar_data, D200_NUM_PACKETS_CACHED * D200_PAYLOAD_SIZE);
+        memcpy(sensor_data.raw + Comms::SENSOR_LIDAR1_OFFSET, lidar_data, D200_NUM_PACKETS_CACHED * D200_PAYLOAD_SIZE);
         lidar2.export_data(lidar_data);
-        memcpy(sensor_data.raw + SENSOR_LIDAR2_OFFSET, lidar_data, D200_NUM_PACKETS_CACHED * D200_PAYLOAD_SIZE);
+        memcpy(sensor_data.raw + Comms::SENSOR_LIDAR2_OFFSET, lidar_data, D200_NUM_PACKETS_CACHED * D200_PAYLOAD_SIZE);
 
         // construct ref data packet
         uint8_t ref_data_raw[180] = { 0 };
         ref.get_data_for_comms(ref_data_raw);
 
         // set the outgoing packet
-        outgoing->set_id((uint16_t)loopc);
-        outgoing->set_info(0x0000);
-        outgoing->set_time(millis() / 1000.0);
-        outgoing->set_sensor_data(&sensor_data);
-        outgoing->set_ref_data(ref_data_raw);
-        outgoing->set_estimated_state(temp_state);
+        hid_outgoing.set_id((uint16_t)loopc);
+        hid_outgoing.set_info(0x0000);
+        hid_outgoing.set_time(millis() / 1000.0);
+        hid_outgoing.set_sensor_data(&sensor_data);
+        hid_outgoing.set_ref_data(ref_data_raw);
+        hid_outgoing.set_estimated_state(temp_state);
+
+        comms_layer.set_ethernet_outgoing(eth_outgoing);
+        comms_layer.set_hid_outgoing(hid_outgoing);
+
+        comms_layer.run();
 
         bool is_slow_loop = false;
 

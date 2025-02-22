@@ -1,12 +1,15 @@
-#ifndef USB_HID_HPP
-#define USB_HID_HPP
+#ifndef HID_COMMS_HPP
+#define HID_COMMS_HPP
 
 #include "Arduino.h"
 #include "usb_rawhid.h"				// usb_rawhid functions
 #include "../controls/state.hpp"	// STATE_LEN macro
+#include <optional>
+
+namespace Comms {
 
 /// @brief Packet size for communication packets
-constexpr unsigned int COMMS_PACKET_SIZE = 1023u;
+constexpr unsigned int HID_PACKET_SIZE = 1023u;
 
 // TODO: make this dynamic and grabbed from the config packet
 // Khadas -> Teensy
@@ -64,9 +67,9 @@ struct SensorData {
 };
 
 /// @brief An encapsulating data struct managing a HID packet
-struct CommsPacket {
+struct HIDPacket {
 	/// @brief The raw array of bytes of a packet
-	char raw[COMMS_PACKET_SIZE] = { 0 };
+	char raw[HID_PACKET_SIZE] = { 0 };
 
 	// common getters
 	/// @brief Get the ID of this packet
@@ -116,16 +119,16 @@ struct CommsPacket {
 };
 
 /// @brief The communications layer between Khadas and Teensy
-class HIDLayer {
+class HIDComms {
 public:
 	/// @brief Default constructor
-	HIDLayer();
+	HIDComms();
 
 	/// @brief Initialize the HID 
 	void init();
 
 	/// @brief Attempt to read and write a packet to Khadas
-	void ping();
+	std::optional<HIDPacket> sendReceive(HIDPacket& outgoing_packet);
 
 	/// @brief Print the outgoing packet
 	/// @note This massively slows the loop down
@@ -137,24 +140,25 @@ public:
 
 	/// @brief Get the packet comming from Khadas
 	/// @return A pointer to the received Khadas packet
-	inline CommsPacket* get_incoming_packet() { return &m_incomingPacket; }
-	/// @brief Get the packet to Khadas
-	/// @return A pointer to the packet to be sent to Khadas
-	inline CommsPacket* get_outgoing_packet() { return &m_outgoingPacket; }
+	inline HIDPacket get_incoming_packet() { return m_incomingPacket; }
+
+	/// @brief Set the packet to be sent to Khadas
+	/// @param packet The packet to send
+	inline void set_outgoing_packet(HIDPacket& packet) { m_outgoingPacket = packet; }
 
 private:
 	/// @brief Attempt a read on HID
 	/// @return True/False on read success
-	bool read();
+	bool read(HIDPacket& incoming_packet);
 	/// @brief Attempt a write on HID
 	/// @return True/False on write success
-	bool write();
+	bool write(HIDPacket& outgoing_packet);
 
 private:
 	/// @brief An encapsulating struct around the packet received from Khadas
-	CommsPacket m_incomingPacket{};
+	HIDPacket m_incomingPacket{};
 	/// @brief An encapsulating struct around the packet to be sent to Khadas
-	CommsPacket m_outgoingPacket{};
+	HIDPacket m_outgoingPacket{};
 	/// @brief An encapsulating struct around all the sensor data to be sent to Khadas
 	SensorData m_sensorData{};
 
@@ -167,6 +171,8 @@ private:
 	long long unsigned m_packetsFailed = 0;
 };
 
-extern HIDLayer comms;
+extern HIDComms comms;
 
-#endif // end USB_HID_HPP
+} 	// namespace Comms
+
+#endif	// HID_COMMS_HPP

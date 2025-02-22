@@ -36,14 +36,12 @@ public:
 
 public:
 	/// @brief Get a pointer to the incoming packet
-	/// @return The pointer to the internal incoming packet
-	/// @note Pointer is const, the data is not; you shouldn't change the pointer itself
-	EthernetPacket* const get_incoming_packet();
+	/// @return The incoming packet
+	EthernetPacket get_incoming_packet();
 
-	/// @brief Get a pointer to the outgoing packet
-	/// @return The pointer to the internal outgoing packet
-	/// @note Pointer is const, the data is not; you shouldn't change the pointer itself
-	EthernetPacket* const get_outgoing_packet();
+	/// @brief Set the outgoing packet
+	/// @param packet The packet to send
+	void set_outgoing_packet(EthernetPacket& packet);
 
 	/// @brief Get the connection status with the Jetson
 	/// @return True if connected
