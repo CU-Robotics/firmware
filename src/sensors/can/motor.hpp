@@ -117,7 +117,7 @@ protected:
     /// @return True if the message is for this motor, false otherwise
     inline virtual bool check_msg_id(const CAN_message_t& msg) const {
         // early return if msg ID does not match
-        if (msg.id != m_gid + m_id) {
+        if (msg.id != m_base_id + m_id) {
             return false;
         }
 
@@ -142,6 +142,9 @@ protected:
 
     /// @brief ID of the CAN bus
     uint32_t m_bus_id = 0;
+
+    /// @brief The base ID for the motor
+    uint32_t m_base_id = 0;
 
     /// @brief The motor type
     MotorType m_motor_type = MotorType::NULL_MOTOR_TYPE;
