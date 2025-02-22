@@ -200,9 +200,6 @@ private:
     // TODO: multi motor commands, will we use them?
 
 private:
-    /// @brief The base ID for the motor, the true id is this + the motor id
-    const uint32_t m_base_id = 0x140;
-
     /// @brief The maximum torque value, corresponds to 33A
     const int32_t m_max_torque = 2048;
     /// @brief The minimum torque value, corresponds to -33A
