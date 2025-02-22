@@ -97,9 +97,6 @@ public:
 
 
 private:
-    /// @brief The base ID of the motor
-    const uint32_t m_base_id = 0x0;
-
     /// @brief The motor's gear ratio (determined by "motor_type" switch in the constructor)
     float m_gear_ratio = 0.0f;
 

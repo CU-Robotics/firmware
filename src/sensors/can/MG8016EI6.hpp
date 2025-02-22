@@ -19,6 +19,7 @@ public:
     /// @param motor_type The motor type (not used for MG8016EI6, do not speicify)
     MG8016EI6(uint32_t gid, uint32_t id, uint8_t bus_id, MotorType motor_type)
         : Motor(MotorControllerType::MG8016, gid, id, bus_id, motor_type) {
+        m_base_id = 0x140;
     }
 
     /// @brief Destructor, does nothing

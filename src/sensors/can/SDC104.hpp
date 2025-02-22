@@ -272,9 +272,6 @@ private:
     void create_cmd_save_configuration(CAN_message_t& msg);
 
 private:
-    /// @brief The base ID for the motor, the true id is this + the motor id
-    const uint32_t m_base_id = 0;
-
     /// @brief The motor's torque constant in Nm
     float m_max_torque = 11.0f;
 

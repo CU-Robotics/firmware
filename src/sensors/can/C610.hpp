@@ -18,6 +18,7 @@ public:
     /// @param motor_type The motor type, defaults to NULL_MOTOR_TYPE if not specified (not used for C610)
     C610(uint32_t gid, uint32_t id, uint8_t bus_id, MotorType motor_type)
         : Motor(MotorControllerType::C610, gid, id, bus_id, motor_type) {
+        m_base_id = 0x200;
     }
 
     /// @brief Destructor, does nothing
@@ -50,9 +51,6 @@ private:
 
 
 private:
-    /// @brief The base ID of the motor
-    uint32_t m_base_id = 0x200;
-
     /// @brief The maximum torque value
     const int32_t m_max_torque = 10000;
     /// @brief The minimum torque value
