@@ -4,6 +4,8 @@
 #include "can/C610.hpp"
 #include "can/C620.hpp"
 #include "can/MG8016EI6.hpp"
+#include "can/GIM.hpp"
+#include "can/SDC104.hpp"
 
 // FlexCAN_T4 moment
 CANManager::CANManager() { }
@@ -35,7 +37,7 @@ void CANManager::init() {
     m_motor_map.clear();
 }
 
-void CANManager::configure(const float motor_info[CAN_MAX_MOTORS][3]) {
+void CANManager::configure(const float motor_info[CAN_MAX_MOTORS][4]) {
     // using the motor_info array, create the motors following the config
     
     // loop through all CAN_MAX_MOTORS
@@ -44,6 +46,7 @@ void CANManager::configure(const float motor_info[CAN_MAX_MOTORS][3]) {
         int controller_type = (int)motor_info[motor_id][0];
         int physical_id = (int)motor_info[motor_id][1];
         int bus_id = (int)motor_info[motor_id][2];
+        MotorType motor_type = (MotorType)motor_info[motor_id][3];
 
         // if the controller type is 0, then this motor is unused and we should process the next one
         if (static_cast<MotorControllerType>(controller_type) == MotorControllerType::NULL_MOTOR_CONTROLLER_TYPE) {
@@ -55,19 +58,29 @@ void CANManager::configure(const float motor_info[CAN_MAX_MOTORS][3]) {
         Motor* new_motor = nullptr;
 
         switch (static_cast<MotorControllerType>(controller_type)) {
-        case MotorControllerType::C610_CONTROLLER: {
-            new_motor = new C610(motor_id, physical_id, bus_id);
-            Serial.printf("Creating C610 Motor: %d on bus %d\n", new_motor->get_id(), new_motor->get_bus_id());
+        case MotorControllerType::C610: {
+            new_motor = new C610(motor_id, physical_id, bus_id, motor_type);
+            Serial.printf("Creating C610 Motor: %d on bus %d\n", new_motor->get_id(), new_motor->get_bus_id(), new_motor->get_motor_type());
             break;
         }
-        case MotorControllerType::C620_CONTROLLER: {
-            new_motor = new C620(motor_id, physical_id, bus_id);
-            Serial.printf("Creating C620 Motor: %d on bus %d\n", new_motor->get_id(), new_motor->get_bus_id());
+        case MotorControllerType::C620: {
+            new_motor = new C620(motor_id, physical_id, bus_id, motor_type);
+            Serial.printf("Creating C620 Motor: %d on bus %d\n", new_motor->get_id(), new_motor->get_bus_id(), new_motor->get_motor_type());
             break;
         }
-        case MotorControllerType::MG8016_CONTROLLER: {
-            new_motor = new MG8016EI6(motor_id, physical_id, bus_id);
-            Serial.printf("Creating MG Motor: %d on bus %d\n", new_motor->get_id(), new_motor->get_bus_id());
+        case MotorControllerType::MG8016: {
+            new_motor = new MG8016EI6(motor_id, physical_id, bus_id, motor_type);
+            Serial.printf("Creating MG Motor: %d on bus %d\n", new_motor->get_id(), new_motor->get_bus_id(), new_motor->get_motor_type());
+            break;
+        }
+        case MotorControllerType::GIM: {
+            new_motor = new GIM(motor_id, physical_id, bus_id, motor_type);
+            Serial.printf("Creating GIM Motor: %d on bus %d\n", new_motor->get_id(), new_motor->get_bus_id(), new_motor->get_motor_type());
+            break;
+        }
+        case MotorControllerType::SDC104: {
+            new_motor = new SDC104(motor_id, physical_id, bus_id, motor_type);
+            Serial.printf("Creating SDC104 Motor: %d on bus %d\n", new_motor->get_id(), new_motor->get_bus_id(), new_motor->get_motor_type());
             break;
         }
         default: {
@@ -123,8 +136,8 @@ void CANManager::write() {
             
             // based on the motor type, figure out how to write the message
             switch (motor.second->get_controller_type()) {
-            case MotorControllerType::C610_CONTROLLER:   // fallthrough
-            case MotorControllerType::C620_CONTROLLER: {
+            case MotorControllerType::C610:   // fallthrough
+            case MotorControllerType::C620: {
                 // depending on the motor ID, write the message to the correct msg in the array
                 // - 1 to get the id into 0-indexed form, then divide by 4 to get the upper or lower half as an index (0, 1)
                 if ((motor.second->get_id() - 1) / 4) {
@@ -140,13 +153,15 @@ void CANManager::write() {
 
                 break;
             }
-            case MotorControllerType::MG8016_CONTROLLER: {
+            case MotorControllerType::MG8016:
+            case MotorControllerType::GIM:
+            case MotorControllerType::SDC104: {
+                // these motors dont require msg merging so just write it to the bus
                 CAN_message_t msg;
 
                 // get its message data
                 motor.second->write(msg);
                 
-                // the MG motors dont require msg merging so just write it to the bus
                 // write the message to the correct bus
                 m_busses[bus]->write(msg);
 
