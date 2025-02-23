@@ -21,7 +21,7 @@ constexpr uint16_t ERROR = 0b0000000000001100;
 
 /// @brief organizes the kinds of inputs the transmitter has
 enum class InputKind {
-	INVALID,
+	INVALID = 0,
 	STICK,
 	TWO_SWITCH,
 	THREE_SWITCH,
@@ -32,7 +32,7 @@ enum class InputKind {
 };
 /// @brief enum for all possible inputs on transmitter
 enum class ChannelId{
-	UNMAPPED,
+	UNMAPPED = 0,
 	L_STICK_X,
 	L_STICK_Y,
 	R_STICK_X,
@@ -59,12 +59,6 @@ enum class ChannelId{
 };
 /// @brief three switch possible positions
 /// @note for switch on the front plate forward is up
-enum class SwitchPos{
-	INVALID,
-	FORWARD,
-	BACKWARD,
-	MIDDLE
-};
 
 /// @brief stores data and kind of data for the  15 data channels and 1 flag channel
 /// for the W-fly Transmitter

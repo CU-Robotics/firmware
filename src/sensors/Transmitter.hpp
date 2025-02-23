@@ -11,6 +11,13 @@ enum class TransmitterType {
 	ET16S
 };
 
+enum class SwitchPos{
+	INVALID = 0,
+	FORWARD,
+	BACKWARD,
+	MIDDLE
+};
+
 class Transmitter {
 public:
 
