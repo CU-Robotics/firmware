@@ -241,13 +241,17 @@ private:
 
 	/// @brief signifies whether a disconnect flag has been read
 	bool is_connect=false;
-	//switch a (safety switch) and joysticks are not configurable
-	/// @brief switch b index
+	// switch a (safety switch / index 4) is not configurable
+	/// @brief r stick x index
 	std::optional<int> r_stick_x_num = 0;
+	/// @brief right y stick index
 	std::optional<int> r_stick_y_num = 1;
+	/// @brief left x stick index
 	std::optional<int> l_stick_x_num = 3;
+	/// @brief left y stick index
 	std::optional<int> l_stick_y_num = 2;
-	std::optional<int> switch_b_num = 4;
+	/// @brief stich b index
+	std::optional<int> switch_b_num = 5;
 	/// @brief switch c index	
 	std::optional<int> switch_c_num = 6;
 	/// @brief switch d index	
@@ -255,17 +259,17 @@ private:
 	/// @brief switch e index	
 	std::optional<int> switch_e_num = 8;
 	/// @brief switch f index	
-	std::optional<int> switch_f_num=9;
+	std::optional<int> switch_f_num = 9;
 	/// @brief switch g index	
-	std::optional<int> switch_g_num=10;
+	std::optional<int> switch_g_num = 1;
 	/// @brief switch h index	
-	std::optional<int> switch_h_num=11;
+	std::optional<int> switch_h_num = 11;
 	/// @brief right slider index	
-	std::optional<int> r_slider_num=12;
+	std::optional<int> r_slider_num = 12;
 	/// @brief left slider index	
-	std::optional<int> l_slider_num=14;
+	std::optional<int> l_slider_num = 14;
 	/// @brief right dial index	
-	std::optional<int> r_dial_num=13;
+	std::optional<int> r_dial_num = 13;
 	/// @brief left dial index	
 	std::optional<int> l_dial_num;
 	/// @brief trim one index	

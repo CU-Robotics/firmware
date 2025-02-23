@@ -10,12 +10,13 @@ void ET16S::init() {
 	//configure safety switch
 	//InputKind three_switch=THREE_SWITCH;
 	channel[4].kind = InputKind::THREE_SWITCH;
+	channel[4].id = ChannelId::SWITCH_A;
 	//Turn safety on
 	channel[4].data = static_cast<float>(SwitchPos::FORWARD);
 
 	//configure sticks
 	//right stick horizontal
-	channel[0].kind = InputKind::STICK;
+	channel[r_stick_x_num.value()].kind = InputKind::STICK;
 	//right stick vertical
 	channel[1].kind = InputKind::STICK;
 	//left stick vertical
@@ -299,17 +300,39 @@ void ET16S::set_config() {
 	channel[r_stick_y_num.value()].id = ChannelId::R_STICK_Y;
 	channel[l_stick_x_num.value()].id = ChannelId::L_STICK_X;
 	channel[l_stick_y_num.value()].id = ChannelId::L_STICK_Y;
-	channel[4].id = ChannelId::SWITCH_A;
-	channel[5].id = ChannelId::SWITCH_B;
-	channel[6].id = ChannelId::SWITCH_C;
-	channel[7].id = ChannelId::SWITCH_D;
-	channel[8].id = ChannelId::SWITCH_E;
-	channel[9].id = ChannelId::SWITCH_F;
-	channel[10].id = ChannelId::SWITCH_G;
-	channel[11].id = ChannelId::SWITCH_H;
-	channel[12].id = ChannelId::R_SLIDER;
-	channel[14].id = ChannelId::L_SLIDER;
-	channel[13].id = ChannelId::R_DIAL;
+	if (switch_b_num.has_value()) {
+		channel[switch_b_num.value()].id = ChannelId::SWITCH_B;
+	}
+	if (switch_c_num.has_value()) {
+		channel[switch_c_num.value()].id = ChannelId::SWITCH_C;
+	}
+	if (switch_d_num.has_value()) {
+		channel[switch_d_num.value()].id = ChannelId::SWITCH_D;
+	}
+	if (switch_e_num.has_value()) {
+		channel[switch_e_num.value()].id = ChannelId::SWITCH_E;
+	}
+	if (switch_f_num.has_value()) {
+		channel[switch_f_num.value()].id = ChannelId::SWITCH_F;
+	}
+	if (switch_g_num.has_value()) {
+		channel[switch_g_num.value()].id = ChannelId::SWITCH_G;
+	}
+	if (switch_h_num.has_value()) {
+		channel[switch_h_num.value()].id = ChannelId::SWITCH_H;
+	}
+	if (r_slider_num.has_value()) {
+		channel[r_slider_num.value()].id = ChannelId::R_SLIDER;
+	}
+	if (l_slider_num.has_value()) {
+		channel[l_slider_num.value()].id = ChannelId::L_SLIDER;
+	}
+	if (r_dial_num.has_value()) {
+		channel[r_dial_num.value()].id = ChannelId::R_DIAL;
+	}
+	if(l_dial_num.has_value()){
+		channel[l_dial_num.value()].id = ChannelId::L_DIAL;
+	}
 	channel[15].id = ChannelId::UNMAPPED; //channel[15] is non-functional
 	channel[16].id = ChannelId::FLAG;
 
