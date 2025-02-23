@@ -75,6 +75,9 @@ struct InputChannel {
 	/// @brief stores the specific control on the transmitter
 	ChannelId id = ChannelId::UNMAPPED;
 };
+struct ET16S_Data{
+	InputChannel channels[ET16S_INPUT_VALUE_COUNT];
+};
 
 /// @brief Class for W-Fly transmitter and reciever to gather and map control data
 class ET16S : public Transmitter {
@@ -206,7 +209,10 @@ public:
 	/// @note exists for DR16 Backwards Compatability
 	/// @return back left spin wheel value
 	float get_wheel();
-	
+
+	/// @brief returns struct containing all data channels for comms
+	/// @return returns ET16S_Data Struct
+	ET16S_Data get_channels();
 	
 private:
 	/// @brief prints the entire raw binary data packet exactly as it is recieved

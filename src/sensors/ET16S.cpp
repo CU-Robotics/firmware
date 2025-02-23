@@ -540,3 +540,8 @@ float ET16S::get_wheel(){
 	// index will need to be changed to use a different control for wheel
 	return channel[l_slider_num.value()].data;
 }
+ET16S_Data ET16S::get_channels(){
+	ET16S_Data temp_channels;
+	memcpy(temp_channels.channels,channel,sizeof(ET16S_Data));
+	return temp_channels;
+}

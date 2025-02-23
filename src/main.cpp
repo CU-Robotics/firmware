@@ -311,7 +311,7 @@ int main() {
         SensorData sensor_data;
 
         // set transmitter raw data
-        //memcpy(sensor_data.raw + SENSOR_DR16_OFFSET, transmitter->get_raw(), DR16_PACKET_SIZE);
+        memcpy(sensor_data.raw + SENSOR_DR16_OFFSET, transmitter->get_raw(), DR16_PACKET_SIZE);
 
         // set lidars
         uint8_t lidar_data[D200_NUM_PACKETS_CACHED * D200_PAYLOAD_SIZE] = { 0 };
