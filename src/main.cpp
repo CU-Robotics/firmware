@@ -222,7 +222,7 @@ int main() {
             - transmitter_pos_x
             - vtm_pos_x;
 		
-        float fly_wheel_target = (transmitter->get_r_switch() == SwitchPos::FORWARD || transmitter->get_r_switch() == SwitchPos::BACKWARD) ? 18 : 0; //m/s
+        float fly_wheel_target = (transmitter->get_r_switch() == SwitchPos::FORWARD || transmitter->get_r_switch() == SwitchPos::MIDDLE) ? 18 : 0; //m/s
         float feeder_target = (((transmitter->get_l_mouse_button() || ref->ref_data.kbm_interaction.button_left) && transmitter->get_r_switch() != SwitchPos::BACKWARD) || transmitter->get_r_switch() == SwitchPos::FORWARD) ? 10 : 0;
 
         // set manual controls
@@ -241,7 +241,7 @@ int main() {
         target_state[7][0] = 1;
 
         // if the left switch is all the way down use Hive controls
-        if (transmitter->get_l_switch() == SwitchPos::MIDDLE) {
+        if (transmitter->get_l_switch() == SwitchPos::BACKWARD) {
             incoming->get_target_state(target_state);
             // if you just switched to hive controls, set the reference to the current state
             if (hive_toggle) {
@@ -251,7 +251,7 @@ int main() {
         }
 
         // when in teensy control mode reset hive toggle
-        if (transmitter->get_l_switch() == SwitchPos::BACKWARD) {
+        if (transmitter->get_l_switch() == SwitchPos::MIDDLE) {
             if (!hive_toggle) {
                 pos_offset_x = temp_state[0][0];
                 pos_offset_y = temp_state[1][0];
