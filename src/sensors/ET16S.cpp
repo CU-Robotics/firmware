@@ -295,10 +295,10 @@ void ET16S::set_config() {
 	//Valid channel types include STICK,TWO_SWITCH_THREE_SWITCH,
 	//DIAL,SLIDER,TRIM,FLAG,INVALID
 	//note (trim is not mapped)
-	channel[0].id = ChannelId::L_STICK_Y;
-	channel[1].id = ChannelId::L_STICK_X;
-	channel[2].id = ChannelId::R_STICK_X;
-	channel[3].id = ChannelId::R_STICK_Y;
+	channel[0].id = ChannelId::R_STICK_X;
+	channel[1].id = ChannelId::R_STICK_Y;
+	channel[2].id = ChannelId::L_STICK_X;
+	channel[3].id = ChannelId::L_STICK_Y;
 	channel[4].id = ChannelId::SWITCH_A;
 	channel[5].id = ChannelId::SWITCH_B;
 	channel[6].id = ChannelId::SWITCH_C;
@@ -313,7 +313,7 @@ void ET16S::set_config() {
 	channel[15].id = ChannelId::UNMAPPED; //channel[15] is non-functional
 	channel[16].id = ChannelId::FLAG;
 
-	for (int i=5; i<ET16S_INPUT_VALUE_COUNT;i++){
+	for (int i = 5; i < ET16S_INPUT_VALUE_COUNT; i++){
 		ChannelId id = channel[i].id;
 		switch(id){
 		case ChannelId::L_STICK_X:
@@ -413,19 +413,19 @@ uint8_t ET16S::get_safety_switch() {
 }
 
 float ET16S::get_r_stick_x() {
-	return channel[0].data;
+	return channel[r_stick_x_num.value()].data;
 }
 
 float ET16S::get_r_stick_y() {
-	return channel[1].data;
+	return channel[r_stick_y_num.value()].data;
 }
 
 float ET16S::get_l_stick_x() {
-	return channel[2].data;
+	return channel[l_stick_x_num.value()].data;
 }
 
 float ET16S::get_l_stick_y() {
-	return channel[3].data;
+	return channel[l_stick_y_num.value()].data;
 }
 std::optional<float> ET16S::get_switch_b(){
 	if (!switch_b_num.has_value()){ return {}; }

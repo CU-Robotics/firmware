@@ -243,13 +243,17 @@ private:
 	bool is_connect=false;
 	//switch a (safety switch) and joysticks are not configurable
 	/// @brief switch b index
-	std::optional<int> switch_b_num=5;
+	std::optional<int> l_stick_x_num = 1;
+	std::optional<int> l_stick_y_num = 2;
+	std::optional<int> r_stick_x_num = 3;
+	std::optional<int> r_stick_y_num = 4;
+	std::optional<int> switch_b_num = 5;
 	/// @brief switch c index	
-	std::optional<int> switch_c_num=6;
+	std::optional<int> switch_c_num = 6;
 	/// @brief switch d index	
-	std::optional<int> switch_d_num=7;
+	std::optional<int> switch_d_num = 7;
 	/// @brief switch e index	
-	std::optional<int> switch_e_num=8;
+	std::optional<int> switch_e_num = 8;
 	/// @brief switch f index	
 	std::optional<int> switch_f_num=9;
 	/// @brief switch g index	
