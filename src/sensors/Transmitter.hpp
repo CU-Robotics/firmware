@@ -22,66 +22,183 @@ class Transmitter {
 public:
 
 	/// @brief who_am_i assumes transmitter is ET16S, on fail it returns dr16
-	/// @note utilizes the counting byte at the end of every element
-	/// @return TransmitterType 
+	/// @note utilizes the packet size of each transmitter to comfirm
+	/// @return Corrosponding TransmitterType object
 	static TransmitterType who_am_i();
-	virtual void read() {Serial.print("we not in here");}
+	
+	/// @brief Reads raw input
+	virtual void read() {}
+	
+	/// @brief initalizes serial connection
 	virtual void init() {}
+	
+	/// @brief prints all output values
 	virtual void print() {}
+	
+	/// @brief zeros all buffers
 	virtual void zero() {}
+	
+	/// @brief Prints raw input
 	virtual void print_raw() {}
+	
+	/// @brief get right stick x axis value
+	/// @return (-1 to 1)	/// @brief get
 	virtual float get_r_stick_x() { return 0; }
+	
+	/// @brief get right stick y axis value
+	/// @return (-1 to 1)
 	virtual float get_r_stick_y() { return 0; }
+	
+	/// @brief get left stick x axis value
+	/// @return (-1 to 1)
 	virtual float get_l_stick_x() { return 0; }
+	
+	/// @brief get left stick y axis value
+	/// @return (-1 to 1)
 	virtual float get_l_stick_y() { return 0; }
+	
+	/// @brief checks if data is valid
+	/// @return returns true if data is valid false otherwise
 	virtual bool is_data_valid() { return false; }
+	
+	/// @brief Returns the fail bit. Set only if invalid packets have been received for more then 250ms
+	/// @return Failure status
 	virtual uint8_t is_fail() { return 0; }
+	
+	/// @brief getter for connection status
+	/// @return false if disconnected
 	virtual bool is_connected() { return 0; }
+	
+	/// @brief Get mouse velocity x
+	/// @return Amount of points since last read
 	virtual int get_mouse_x() { return 0; }
+	
+	/// @brief Get mouse velocity y
+	/// @return Amount of points since last read
 	virtual int get_mouse_y() { return 0; }
+	
+	/// @brief status of left mouse button
+	/// @return Is left mouse button pressed
 	virtual bool get_l_mouse_button() { return false; }
+	
+	/// @brief status of right mouse button
+	/// @return Is right mouse button pressed
 	virtual bool get_r_mouse_button() { return false; }
+	
+	/// @brief used for safety switch
+	/// @return left most front face switch value
 	virtual SwitchPos get_l_switch() { return SwitchPos::INVALID; }
+	
+	/// @brief used for flywheel trigger switch
+	/// @return left most front face switch value
 	virtual SwitchPos get_r_switch() { return SwitchPos::INVALID; }
+	
+	/// @brief used for spin wheel
+	/// @return wheel value
 	virtual float get_wheel() { return 0; }
+	
+	/// @brief used to get input
+	/// @return pointer to input array
 	virtual float* get_input() { return 0; }
+	
+	/// @brief used to get raw input
+	/// @return pointer to raw input array
 	virtual uint8_t* get_raw() { return 0; }
+	
+	/// @brief prints data in binary for a specific channel
+	/// @param channel_num channel number from 0-16 inclusive
 	virtual void print_format_bin(int channel_num) {}
-	virtual uint8_t get_safety_switch() { return 0; }
+	
+	/// @brief getter for safety switch
+	/// @return safety switch value
+	virtual SwitchPos get_safety_switch() { return SwitchPos::INVALID; }
+	
+	/// @brief get switch b value on the ET16S
+	/// @return switch b value if it exists otherwise return nothing
 	virtual std::optional<SwitchPos> get_switch_b() { return {}; }
+	
+	/// @brief get switch c value on the ET16S
+	/// @return switch c value if it exists otherwise return nothing
 	virtual std::optional<SwitchPos> get_switch_c() { return {}; }
+	
+	/// @brief get switch d value on the ET16S
+	/// @return switch d value if it exists otherwise return nothing
 	virtual std::optional<SwitchPos> get_switch_d() { return {}; }
+	
+	/// @brief get switch e value on the ET16S
+	/// @return switch e value if it exists otherwise return nothing
 	virtual std::optional<SwitchPos> get_switch_e() { return {}; }
+	
+	/// @brief get switch f value on the ET16S
+	/// @return switch f value if it exists otherwise return nothing
 	virtual std::optional<SwitchPos> get_switch_f() { return {}; }
+	
+ 	/// @brief get switch g value on the ET16S
+	/// @return switch g value if it exists otherwise return nothing
 	virtual std::optional<SwitchPos> get_switch_g() { return {}; }
+	
+	/// @brief get switch h value on the ET16S
+	/// @return switch h value if it exists otherwise return nothing
 	virtual std::optional<SwitchPos> get_switch_h() { return {}; }
+	
+	/// @brief get left slider value on the ET16S
+	/// @return left slider value if it exists otherwise return nothing
 	virtual std::optional<float> get_l_slider() { return {}; }
+	
+ 	/// @brief get right slider value on the ET16S
+	/// @return right slider value if it exists otherwise return nothing
 	virtual std::optional<float> get_r_slider() { return {}; }
+	
+	/// @brief get left dial value on the ET16S
+	/// @return left dial value if it exists otherwise return nothing
 	virtual std::optional<float> get_l_dial() { return {}; }
+	
+	/// @brief get right dial value on the ET16S
+	/// @return right dial value if it exists otherwise return nothing
 	virtual std::optional<float> get_r_dial() { return {}; }
+	
+	/// @brief get trim one value on the ET16S
+	/// @return trim one value if it exists otherwise return nothing
 	virtual std::optional<float> get_trim_one() { return {}; }
+	
+	/// @brief get trim two value on the ET16S
+	/// @return trim two value if it exists otherwise return nothing
 	virtual std::optional<float> get_trim_two() { return {}; }
+	
+	/// @brief get trim three value on the ET16S
+	/// @return trim three value if it exists otherwise return nothing
 	virtual std::optional<float> get_trim_three() { return {}; }
+	
+	/// @brief get trim four value on the ET16S
+	/// @return trim four value if it exists otherwise return nothing
 	virtual std::optional<float> get_trim_four() { return {}; }
+	
+	/// @brief get trim five value on the ET16S
+	/// @return trim five value if it exists otherwise return nothing
 	virtual std::optional<float> get_trim_five() { return {}; }
+	
+ 	/// @brief get trim six value on the ET16S
+	/// @return trim six value if it exists otherwise return nothing
 	virtual std::optional<float> get_trim_six() { return {}; }
+	
+	/// @brief get channel data
+	/// @param chan_num is the channel number from 5-16
+	/// @return channel data
 	virtual std::optional<float> get_channel_data(int chan_num) { return {}; }
+	/// @brief standard destructor
 	virtual ~Transmitter() {}
 
 
 	struct Keys {
-		// just testing with keys at the moment
-		// but will eventually implement
-		// the mouse functionalities.
 
 		/// @brief If the key 'w' is pressed
-		bool w=0;
+		bool w = 0;
 		/// @brief If the key 's' is pressed
-		bool s=0;
+		bool s = 0;
 		/// @brief if the key 'a' is pressed
-		bool a=0;
+		bool a = 0;
 		/// @brief if the key 'd' is pressed
-		bool d=0;
+		bool d = 0;
 		/// @brief if the key 'shift' is pressed
 		bool shift = 0;
 		/// @brief if the key 'ctrl' is pressed

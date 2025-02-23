@@ -97,7 +97,7 @@ public:
 
 	/// @brief get safety values
 	/// @return safety value(1-3) 1 is safe
-	uint8_t get_safety_switch();
+	SwitchPos get_safety_switch();
 
 	/// @brief get right stick x axis value
 	/// @return (-1 to 1)
@@ -183,7 +183,6 @@ public:
 	/// @return trim six value if it exists otherwise return nothing
 	std::optional<float> get_trim_six();
 	
-
 	/// @brief get channel data
 	/// @param chan_num is the channel number from 5-16
 	/// @return channel data
@@ -192,11 +191,20 @@ public:
 	/// @brief getter for connection status
 	/// @return false if disconnected
 	bool is_connected();
-
+	
+	/// @brief returns switch A
+	/// @note exists for DR16 Backwards Compatability
+	/// @return left most front face switch value
 	SwitchPos get_l_switch();
-
+	
+	/// @brief returns switch D
+	/// @note exists for DR16 Backwards Compatability
+	/// @return right most front face switch value
 	SwitchPos get_r_switch();
-
+	
+	/// @brief returns left slider
+	/// @note exists for DR16 Backwards Compatability
+	/// @return back left spin wheel value
 	float get_wheel();
 	
 	

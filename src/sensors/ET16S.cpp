@@ -431,8 +431,8 @@ void ET16S::test_connection() {
 	}
 }
 
-uint8_t ET16S::get_safety_switch() {
-	return channel[4].data;
+SwitchPos ET16S::get_safety_switch() {
+	return static_cast<SwitchPos> (channel[4].data);
 }
 
 float ET16S::get_r_stick_x() {
