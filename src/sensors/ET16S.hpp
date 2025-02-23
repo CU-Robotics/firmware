@@ -245,8 +245,8 @@ private:
 	/// @brief switch b index
 	std::optional<int> r_stick_x_num = 0;
 	std::optional<int> r_stick_y_num = 1;
-	std::optional<int> l_stick_x_num = 2;
-	std::optional<int> l_stick_y_num = 3;
+	std::optional<int> l_stick_x_num = 3;
+	std::optional<int> l_stick_y_num = 2;
 	std::optional<int> switch_b_num = 4;
 	/// @brief switch c index	
 	std::optional<int> switch_c_num = 6;
