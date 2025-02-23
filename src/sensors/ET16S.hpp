@@ -62,8 +62,8 @@ enum class ChannelId{
 enum class SwitchPos{
 	INVALID,
 	FORWARD,
-	MIDDLE,
-	BACKWARD
+	BACKWARD,
+	MIDDLE
 };
 
 /// @brief stores data and kind of data for the  15 data channels and 1 flag channel
