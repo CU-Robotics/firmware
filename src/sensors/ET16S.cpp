@@ -295,10 +295,10 @@ void ET16S::set_config() {
 	//Valid channel types include STICK,TWO_SWITCH_THREE_SWITCH,
 	//DIAL,SLIDER,TRIM,FLAG,INVALID
 	//note (trim is not mapped)
-	channel[0].id = ChannelId::R_STICK_X;
-	channel[1].id = ChannelId::R_STICK_Y;
-	channel[2].id = ChannelId::L_STICK_X;
-	channel[3].id = ChannelId::L_STICK_Y;
+	channel[r_stick_x_num.value()].id = ChannelId::R_STICK_X;
+	channel[r_stick_y_num.value()].id = ChannelId::R_STICK_Y;
+	channel[l_stick_x_num.value()].id = ChannelId::L_STICK_X;
+	channel[l_stick_y_num.value()].id = ChannelId::L_STICK_Y;
 	channel[4].id = ChannelId::SWITCH_A;
 	channel[5].id = ChannelId::SWITCH_B;
 	channel[6].id = ChannelId::SWITCH_C;
