@@ -537,5 +537,5 @@ float ET16S::get_r_switch(){
 	return channel[switch_d_num.value()].data;
 }
 float ET16S::get_wheel(){
-	return channel[l_slider_num.value()].data;
+	return channel[r_dial_num.value()].data;
 }
