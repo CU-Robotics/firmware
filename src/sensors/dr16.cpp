@@ -241,12 +241,12 @@ float DR16::get_wheel() {
 	return m_input[4];
 }
 
-float DR16::get_r_switch() {
-	return m_input[5];
+SwitchPos DR16::get_r_switch() {
+	return static_cast<SwitchPos> (m_input[5]);
 }
 
-float DR16::get_l_switch() {
-	return m_input[6];
+SwitchPos DR16::get_l_switch() {
+	return static_cast<SwitchPos> (m_input[6]);
 }
 
 int DR16::get_mouse_y() {

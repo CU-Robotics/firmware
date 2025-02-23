@@ -117,31 +117,31 @@ public:
 	
 	/// @brief get switch b value 
 	/// @return switch b value if it exists otherwise return nothing
-	std::optional<float> get_switch_b();
+	std::optional<SwitchPos> get_switch_b();
 	
 	/// @brief get switch c value 
 	/// @return switch c value if it exists otherwise return nothing
-	std::optional<float> get_switch_c();
+	std::optional<SwitchPos> get_switch_c();
 	
 	/// @brief get switch d value 
 	/// @return switch d value if it exists otherwise return nothing
-	std::optional<float> get_switch_d();
+	std::optional<SwitchPos> get_switch_d();
 	
 	/// @brief get switch e value 
 	/// @return switch e value if it exists otherwise return nothing
-	std::optional<float> get_switch_e();
+	std::optional<SwitchPos> get_switch_e();
 	
 	/// @brief get switch f value 
 	/// @return switch f value if it exists otherwise return nothing
-	std::optional<float> get_switch_f();
+	std::optional<SwitchPos> get_switch_f();
 	
 	/// @brief get switch g value 
 	/// @return switch g value if it exists otherwise return nothing
-	std::optional<float> get_switch_g();
+	std::optional<SwitchPos> get_switch_g();
 	
 	/// @brief get switch h value 
 	/// @return switch h value if it exists otherwise return nothing
-	std::optional<float> get_switch_h();
+	std::optional<SwitchPos> get_switch_h();
 
 	/// @brief get left slider value
 	/// @return left slider value if it exists otherwise return nothing
@@ -193,9 +193,9 @@ public:
 	/// @return false if disconnected
 	bool is_connected();
 
-	float get_l_switch();
+	SwitchPos get_l_switch();
 
-	float get_r_switch();
+	SwitchPos get_r_switch();
 
 	float get_wheel();
 	
@@ -234,7 +234,7 @@ private:
 	InputChannel channel[ET16S_INPUT_VALUE_COUNT];
 
 	/// @brief signifies whether a disconnect flag has been read
-	bool is_connect=false;
+	bool is_connect = false;
 	// switch a (safety switch / index 4) is not configurable
 	/// @brief r stick x index
 	std::optional<int> r_stick_x_num = 0;

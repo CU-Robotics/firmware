@@ -222,8 +222,8 @@ int main() {
             - transmitter_pos_x
             - vtm_pos_x;
 		
-        float fly_wheel_target = (transmitter->get_r_switch() == 1 || transmitter->get_r_switch() == 3) ? 18 : 0; //m/s
-        float feeder_target = (((transmitter->get_l_mouse_button() || ref->ref_data.kbm_interaction.button_left) && transmitter->get_r_switch() != 2) || transmitter->get_r_switch() == 1) ? 10 : 0;
+        float fly_wheel_target = (transmitter->get_r_switch() == SwitchPos::FORWARD || transmitter->get_r_switch() == SwitchPos::BACKWARD) ? 18 : 0; //m/s
+        float feeder_target = (((transmitter->get_l_mouse_button() || ref->ref_data.kbm_interaction.button_left) && transmitter->get_r_switch() != SwitchPos::BACKWARD) || transmitter->get_r_switch() == SwitchPos::FORWARD) ? 10 : 0;
 
         // set manual controls
         target_state[0][0] = chassis_pos_x;
@@ -241,7 +241,7 @@ int main() {
         target_state[7][0] = 1;
 
         // if the left switch is all the way down use Hive controls
-        if (transmitter->get_l_switch() == 2) {
+        if (transmitter->get_l_switch() == SwitchPos::MIDDLE) {
             incoming->get_target_state(target_state);
             // if you just switched to hive controls, set the reference to the current state
             if (hive_toggle) {
@@ -251,7 +251,7 @@ int main() {
         }
 
         // when in teensy control mode reset hive toggle
-        if (transmitter->get_l_switch() == 3) {
+        if (transmitter->get_l_switch() == SwitchPos::BACKWARD) {
             if (!hive_toggle) {
                 pos_offset_x = temp_state[0][0];
                 pos_offset_y = temp_state[1][0];
@@ -349,7 +349,7 @@ int main() {
 
 
         //  SAFETY MODE
-        if (transmitter->is_connected() && (transmitter->get_l_switch() == 2 || transmitter->get_l_switch() == 3) && config_layer.is_configured() && !is_slow_loop) {
+        if (transmitter->is_connected() && (transmitter->get_l_switch() == SwitchPos::MIDDLE || transmitter->get_l_switch() == SwitchPos::BACKWARD) && config_layer.is_configured() && !is_slow_loop) {
             // SAFETY OFF
             can.write();
 			 Serial.printf("Can write\n");

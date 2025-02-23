@@ -113,11 +113,11 @@ public:
 
 	/// @brief Get left switch value
 	/// @return Switch value [1, 2, 3]
-	float get_l_switch();
+	SwitchPos get_l_switch();
 
 	/// @brief Get right switch value
 	/// @return Switch value [1, 2, 3]
-	float get_r_switch();
+	SwitchPos get_r_switch();
 
 	/// @brief Prints the normalized input buffer
 	void print();

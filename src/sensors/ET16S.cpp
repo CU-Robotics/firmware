@@ -450,33 +450,33 @@ float ET16S::get_l_stick_x() {
 float ET16S::get_l_stick_y() {
 	return channel[l_stick_y_num.value()].data;
 }
-std::optional<float> ET16S::get_switch_b(){
+std::optional<SwitchPos> ET16S::get_switch_b(){
 	if (!switch_b_num.has_value()){ return {}; }
-		return channel[switch_b_num.value()].data;
+	return static_cast<SwitchPos> (channel[switch_b_num.value()].data);
 }
-std::optional<float> ET16S::get_switch_c(){
+std::optional<SwitchPos> ET16S::get_switch_c(){
 	if (!switch_c_num.has_value()){ return {}; }
-	return channel[switch_c_num.value()].data;
+	return static_cast<SwitchPos> (channel[switch_c_num.value()].data);
 }
-std::optional<float> ET16S::get_switch_d(){
+std::optional<SwitchPos> ET16S::get_switch_d(){
 	if (!switch_d_num.has_value()){ return {}; }
-	return channel[switch_d_num.value()].data;
+	return static_cast<SwitchPos> (channel[switch_d_num.value()].data);
 }
-std::optional<float> ET16S::get_switch_e(){
+std::optional<SwitchPos> ET16S::get_switch_e(){
 	if (!switch_e_num.has_value()){ return {}; }
-	return channel[switch_e_num.value()].data;
+	return static_cast<SwitchPos> (channel[switch_e_num.value()].data);
 }
-std::optional<float> ET16S::get_switch_f(){
+std::optional<SwitchPos> ET16S::get_switch_f(){
 	if (!switch_f_num.has_value()){ return {}; }
-	return channel[switch_f_num.value()].data;
+	return static_cast<SwitchPos> (channel[switch_f_num.value()].data);
 }
-std::optional<float> ET16S::get_switch_g(){
+std::optional<SwitchPos> ET16S::get_switch_g(){
 	if (!switch_g_num.has_value()){ return {}; }
-	return channel[switch_g_num.value()].data;
+	return static_cast<SwitchPos> (channel[switch_g_num.value()].data);
 }
-std::optional<float> ET16S::get_switch_h(){
+std::optional<SwitchPos> ET16S::get_switch_h(){
 	if (!switch_h_num.has_value()){ return {}; }
-	return channel[switch_h_num.value()].data;
+	return static_cast<SwitchPos> (channel[switch_h_num.value()].data);
 }
 std::optional<float> ET16S::get_l_slider(){
 	if (!l_slider_num.has_value()){ return {}; }
@@ -530,11 +530,11 @@ std::optional<float> ET16S::get_channel_data(int chan_num){
 bool ET16S::is_connected() {
 	return is_connect;
 }
-float ET16S::get_l_switch(){
-	return static_cast<float>(get_safety_switch());
+SwitchPos ET16S::get_l_switch(){
+	return static_cast<SwitchPos> (get_safety_switch());
 }
-float ET16S::get_r_switch(){
-	return channel[switch_d_num.value()].data;
+SwitchPos ET16S::get_r_switch(){
+	return static_cast<SwitchPos> (channel[switch_d_num.value()].data);
 }
 float ET16S::get_wheel(){
 	// index will need to be changed to use a different control for wheel

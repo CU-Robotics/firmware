@@ -41,20 +41,20 @@ public:
 	virtual int get_mouse_y() { return 0; }
 	virtual bool get_l_mouse_button() { return false; }
 	virtual bool get_r_mouse_button() { return false; }
-	virtual float get_l_switch() { return 0; }
-	virtual float get_r_switch() { return 0; }
+	virtual SwitchPos get_l_switch() { return SwitchPos::INVALID; }
+	virtual SwitchPos get_r_switch() { return SwitchPos::INVALID; }
 	virtual float get_wheel() { return 0; }
 	virtual float* get_input() { return 0; }
 	virtual uint8_t* get_raw() { return 0; }
 	virtual void print_format_bin(int channel_num) {}
 	virtual uint8_t get_safety_switch() { return 0; }
-	virtual std::optional<float> get_switch_b() { return {}; }
-	virtual std::optional<float> get_switch_c() { return {}; }
-	virtual std::optional<float> get_switch_d() { return {}; }
-	virtual std::optional<float> get_switch_e() { return {}; }
-	virtual std::optional<float> get_switch_f() { return {}; }
-	virtual std::optional<float> get_switch_g() { return {}; }
-	virtual std::optional<float> get_switch_h() { return {}; }
+	virtual std::optional<SwitchPos> get_switch_b() { return {}; }
+	virtual std::optional<SwitchPos> get_switch_c() { return {}; }
+	virtual std::optional<SwitchPos> get_switch_d() { return {}; }
+	virtual std::optional<SwitchPos> get_switch_e() { return {}; }
+	virtual std::optional<SwitchPos> get_switch_f() { return {}; }
+	virtual std::optional<SwitchPos> get_switch_g() { return {}; }
+	virtual std::optional<SwitchPos> get_switch_h() { return {}; }
 	virtual std::optional<float> get_l_slider() { return {}; }
 	virtual std::optional<float> get_r_slider() { return {}; }
 	virtual std::optional<float> get_l_dial() { return {}; }
