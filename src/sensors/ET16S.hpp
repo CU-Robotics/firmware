@@ -213,6 +213,8 @@ public:
 	/// @brief returns struct containing all data channels for comms
 	/// @return returns ET16S_Data Struct
 	ET16S_Data get_channels();
+
+	uint8_t* get_raw() { return m_inputRaw; }
 	
 private:
 	/// @brief prints the entire raw binary data packet exactly as it is recieved
@@ -292,4 +294,6 @@ private:
 	std::optional<int> trim_five_num;
 	/// @brief trim six index	
 	std::optional<int> trim_six_num;
+
+	uint8_t m_inputRaw[ET16S_PACKET_SIZE] = { 0 };
 };

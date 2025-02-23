@@ -30,7 +30,7 @@ void ET16S::init() {
 void ET16S::read() {
 	//uint32_t time = millis();
 	// Raw data stored in array
-	uint8_t m_inputRaw[ET16S_PACKET_SIZE] = { 0 };
+	//uint8_t m_inputRaw[ET16S_PACKET_SIZE] = { 0 };
 	// Store 2 packets (50 bytes) in the buffer to prevent incomplete packet reads
 	//Serial.println(Serial8.available());
 	if (Serial8.available() < (2*ET16S_PACKET_SIZE)) {
