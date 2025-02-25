@@ -1,16 +1,15 @@
 #include "estimator.hpp"
 
-
-GimbalEstimator::GimbalEstimator(Config config_data, RevEncoder* r1, RevEncoder* r2, RevEncoder* r3, BuffEncoder* b1, BuffEncoder* b2, ICM20649* imu, CANManager* _can) {
-    buff_enc_yaw = b1; // sensor object definitions
-    buff_enc_pitch = b2;
-    rev_enc[0] = r1;
-    rev_enc[1] = r2;
-    rev_enc[2] = r3;
-    can = _can;
-    icm_imu = imu;
-    YAW_ENCODER_OFFSET = config_data.sensor_info[0][2];
-    PITCH_ENCODER_OFFSET = config_data.sensor_info[1][2];
+GimbalEstimator::GimbalEstimator(Config config_data, SensorManager* sensor_manager, CANManager* _can) {
+        buff_enc_yaw = sensor_manager->get_buff_encoder(0); // sensor object definitions
+        buff_enc_pitch = sensor_manager->get_buff_encoder(1);
+        rev_enc[0] = sensor_manager->get_rev_sensor(0);
+        rev_enc[1] = sensor_manager->get_rev_sensor(1);
+        rev_enc[2] = sensor_manager->get_rev_sensor(2);
+        can = _can;
+        icm_imu = sensor_manager->get_icm_sensor(0);
+        YAW_ENCODER_OFFSET = config_data.sensor_info[0][2];
+        PITCH_ENCODER_OFFSET = config_data.sensor_info[1][2];
 
     yaw_angle = config_data.sensor_info[2][2];
     pitch_angle = config_data.sensor_info[2][3];
@@ -254,12 +253,11 @@ void GimbalEstimator::step_states(float output[STATE_LEN][3], float curr_state[S
     previous_pos[1] = pos_estimate[1];
 }
 
-
-GimbalEstimatorNoOdom::GimbalEstimatorNoOdom(Config config_data, BuffEncoder* b1, BuffEncoder* b2, ICM20649* imu, CANManager* _can) {
-    buff_enc_yaw = b1; // sensor object definitions
-    buff_enc_pitch = b2;
+GimbalEstimatorNoOdom::GimbalEstimatorNoOdom(Config config_data, SensorManager* sensor_manager, CANManager* _can) {
+    buff_enc_yaw = sensor_manager->get_buff_encoder(0); // sensor object definitions
+    buff_enc_pitch = sensor_manager->get_buff_encoder(1);
     can = _can;
-    icm_imu = imu;
+    icm_imu = sensor_manager->get_icm_sensor(0);
     YAW_ENCODER_OFFSET = config_data.sensor_info[0][2];
     PITCH_ENCODER_OFFSET = config_data.sensor_info[1][2];
 
@@ -475,7 +473,7 @@ void FlyWheelEstimator::step_states(float output[STATE_LEN][3], float curr_state
     linear_velocity = angular_velocity_avg * radius; //m/s
 
     //ref
-    projectile_speed_ref = ref.ref_data.launching_status.initial_speed;
+    projectile_speed_ref = ref->ref_data.launching_status.initial_speed;
 
     //weighted average
     output[0][1] = (projectile_speed_ref * ref_weight) + (linear_velocity * can_weight);
@@ -493,7 +491,7 @@ void FeederEstimator::step_states(float output[STATE_LEN][3], float curr_state[S
     balls_per_second_can = angular_velocity_feeder * 8;
 
     //ref
-    balls_per_second_ref = ref.ref_data.launching_status.launching_frequency;
+    balls_per_second_ref = ref->ref_data.launching_status.launching_frequency;
 
     output[0][1] = (balls_per_second_ref * ref_weight) + (balls_per_second_can * can_weight);
 
@@ -546,3 +544,4 @@ void LocalEstimator::step_states(float output[CAN_MAX_MOTORS][MICRO_STATE_LEN], 
         }
     }
 }
+

@@ -15,7 +15,7 @@ void LSM6DSOX::init() {
     sensor.setGyroDataRate(LSM6DS_RATE_6_66K_HZ);
 }
 
-void LSM6DSOX::read() {
+bool LSM6DSOX::read() {
     // get the event data from the sensor class
     sensor.getEvent(&accel, &gyro, &temp);
 
@@ -31,4 +31,5 @@ void LSM6DSOX::read() {
     gyro_Z = gyro.gyro.z;
 
     temperature = temp.temperature;
+    return true;
 }

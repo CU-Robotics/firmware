@@ -56,7 +56,13 @@ CPU_CFLAGS = -mcpu=cortex-m7 -mfloat-abi=hard -mfpu=fpv5-d16 -mthumb
 DEFINES := $(TEENSY4_FLAGS)
 
 # Preprocessor flags for both C and C++ files
-CPPFLAGS := $(INCLUDE_FLAGS) $(DEFINES) -MMD -MP -ffunction-sections -fdata-sections -O2
+# -MMD: Generate dependency files for each source file
+# -MP: Add a phony target for each dependency to avoid errors if the dependency is missing
+# -ffunction-sections: Place each function in its own section to allow the linker to remove unused functions
+# -fdata-sections: Place each variable in its own section to allow the linker to remove unused variables
+# -O2: Optimize the code for speed
+# --specs=nano.specs: Use newlib nano instead of full newlib to reduce binary size
+CPPFLAGS := $(INCLUDE_FLAGS) $(DEFINES) -MMD -MP -ffunction-sections -fdata-sections -O2 --specs=nano.specs
 
 # Compiler flags for C files
 CFLAGS := $(CPU_CFLAGS)
