@@ -19,6 +19,12 @@ build/
 # Ignore the libraries
 *.a
 
+# Ignore clangd files
+compile_commands.json
+.cache/
+.clangd
+.clang-format
+
 # Ignore any tools/ directory artifacts
 tools/*.txt
 tools/*.out
