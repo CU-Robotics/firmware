@@ -4,7 +4,6 @@ void balancing_test::init(){
     slowdalay_help = micros();
 
     saftymode = 0;
-    o_data.b_speed_old = 0;
     o_data.Q = 0.1; // Need tune
     o_data.R = 0.01; // Need tune
     //PID1:roll, PID2:Leg length
@@ -107,6 +106,8 @@ void balancing_test::test_write(){
 
 void balancing_test::observer(){
     _dt = timer.delta();
+    o_data.gyro_pitch_dot = (_data.gyro_pitch - o_data.gyro_pitch_old) / _dt;
+    o_data.gyro_pitch_old = _data.gyro_pitch;
 //---------------------------------------------------------Left Leg Forward Kinematics & Jacobian--------------------------------------------------------------
     float phi4_l =   (2 * M_PI - _data.angle_fl); 
     float phi1_l = (M_PI - _data.angle_bl); 
@@ -193,8 +194,9 @@ void balancing_test::observer(){
     // o_data.theta_lr_dot = -(((helpingr*yC_dot_r) + (yCr * xC_dot_r)) / (helpingr * helpingr + yCr * yCr)) - _data.gyro_pitch;
 //--------------------------------------------------------------b_s and filter for it--------------------------------------------------------
     o_data.wheel_speed_filtered =  (1/2) * (R_w) * (_data.speed_wr - _data.speed_wl) ; // s_dot //speed 
-
-    o_data.wheel_speed = (1/2) * (R_w) * (_data.speed_wr - _data.speed_wl) - (1/2) * (o_data.ll*(o_data.theta_ll_dot + _data.imu_angle_pitch)*cos(phi0l) + o_data.lr*(o_data.theta_lr_dot + _data.imu_angle_pitch)*cos(phi0r)) - (1/2)* (o_data.ll_dot * sin(phi0l) + o_data.lr_dot * sin(phi0r));
+    o_data.wheel_speed_dot = (o_data.wheel_speed_filtered - o_data.wheel_speed_old) / _dt;
+    o_data.wheel_speed_old = o_data.wheel_speed_filtered;
+    o_data.b_speed = (1/2) * (R_w) * (_data.speed_wr - _data.speed_wl) - (1/2) * (o_data.ll*(o_data.theta_ll_dot + _data.imu_angle_pitch)*cos(phi0l) + o_data.lr*(o_data.theta_lr_dot + _data.imu_angle_pitch)*cos(phi0r)) - (1/2)* (o_data.ll_dot * sin(phi0l) + o_data.lr_dot * sin(phi0r));
 //-------------------------------------------filter by a falman filter (I will update this soon) ---------------------------------------------------------------------
     // For the x we have [v,a]^T 
     // predict 
@@ -221,8 +223,11 @@ void balancing_test::control(){
     float F_l = 1 * pid2.filter(_dt, NOBOUND, NOWARP, _ref_data.goal_l, l, 0.9); //Set the PID for leg length 
     // float F_l = 1 * pid2.filter(_dt, NOBOUND, NOWARP, _ref_data.goal_l, l, 0.9, true, ((o_data.lr_dot + o_data.ll_dot) * 0.5f)); //Set the PID for leg length using encoder data
 
-    float iF_r = ((((m_b / 2) + (eta_l * m_l)) * l * _data.gyro_pitch * o_data.wheel_speed_filtered) / 2) / R_l;
-    float iF_l = -iF_r; 
+    // float iF_r = ((((m_b / 2) + (eta_l * m_l)) * l * _data.gyro_pitch * o_data.wheel_speed_filtered) / 2) / R_l;
+    // float iF_l = -iF_r; 
+
+    float iF_l = ((m_b / 2) + (eta_l * m_l))*(o_data.gyro_pitch_dot * R_l + o_data.wheel_speed_dot) * sin(o_data.theta_ll);
+    float iF_r = ((m_b / 2) + (eta_l * m_l))*(-(o_data.gyro_pitch_dot * R_l) + o_data.wheel_speed_dot) * sin(o_data.theta_lr);
 //-----------------------------------------------------------------gravity feed forware-------------------------------------------------------------------
     float costheta_l = cos(o_data.theta_ll);
     float costheta_r = cos(o_data.theta_lr);
@@ -441,7 +446,7 @@ void balancing_test::print_observer(){
     Serial.print(o_data.jr[1][0]);
     Serial.print(" ");
     Serial.println(o_data.jr[1][1]);
-    Serial.printf("pitch: %f, roll: %f, yaw: %f", _data.imu_angle_pitch, _data.imu_angle_roll, _data.imu_angle_yaw);
+    Serial.printf("pitch: %f, roll: %f, yaw: %f\n", _data.imu_angle_pitch, _data.imu_angle_roll, _data.imu_angle_yaw);
 
 }
 
