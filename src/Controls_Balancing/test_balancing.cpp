@@ -256,8 +256,8 @@ void balancing_test::control(){
     // dx[0] = 0; //Ignore // s
     dx[0] = _ref_data.s- o_data.s; // s
     dx[1] = _ref_data.b_speed - o_data.wheel_speed_filtered; // speed
-    dx[2] = 0; //Ignore // yaw
-    //dx[2] = ref[0][2] - obs[0][2]; // yaw angle //We don't have this data and don't need it
+    // dx[2] = 0; //Ignore // yaw
+    dx[2] = _ref_data.yaw - _data.imu_angle_yaw; // yaw angle //We don't have this data and don't need it
     dx[3] = _ref_data.yaw_dot - _data.gyro_yaw; // yaw rotational speed in deg
     dx[4] = _ref_data.theta_ll - o_data.theta_ll; // theta_ll
     dx[5] = _ref_data.theta_ll_dot - o_data.theta_ll_dot; // theta_ll_dot
