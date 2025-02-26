@@ -12,13 +12,13 @@
 #define eta_l 0.4144                            
 
 //roll PID
-#define K1_P 550                               //Need test                                    
+#define K1_P 120                               //Need test                                    
 #define K1_I 0                                  //Need test 
-#define K1_D 43                                //Need test                         
+#define K1_D 9.5                                //Need test                         
 #define K1_F 0                                  //Need test  
 
 //leg length PID
-#define K2_P 2100                                //Need test                         
+#define K2_P 2100                               //Need test                         
 #define K2_I 0                               //Need test                         
 #define K2_D 260                                  //Need test                         
 #define K2_F 0                                  //Need test                   
@@ -68,7 +68,7 @@ struct balancing_sensor_data
 
     float gyro_pitch;
     float gyro_roll;
-    float gyro_yew;
+    float gyro_yaw;
 };
 
 
