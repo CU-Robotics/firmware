@@ -407,6 +407,10 @@ void balancing_test::print_observer(){
     Serial.print("leglength lr: ");
     Serial.printf("%f", o_data.lr);
     Serial.println();
+    Serial.print("leglength_dot ll: ");
+    Serial.printf("%f\n", o_data.ll_dot);
+    Serial.print("leglength_dot lr: ");
+    Serial.printf("%f\n", o_data.lr_dot);
     Serial.print("ll_ddot: ");
     Serial.println(o_data.ll_ddot);
     Serial.print("lr_ddot: ");
