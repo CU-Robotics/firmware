@@ -106,8 +106,8 @@ void balancing_test::test_write(){
 
 void balancing_test::observer(){
     _dt = timer.delta();
-    o_data.gyro_pitch_dot = (_data.gyro_pitch - o_data.gyro_pitch_old) / _dt;
-    o_data.gyro_pitch_old = _data.gyro_pitch;
+    o_data.gyro_yaw_dot = (_data.gyro_pitch - o_data.gyro_yaw_old) / _dt;
+    o_data.gyro_yaw_old = _data.gyro_pitch;
 //---------------------------------------------------------Left Leg Forward Kinematics & Jacobian--------------------------------------------------------------
     float phi4_l =   (2 * M_PI - _data.angle_fl); 
     float phi1_l = (M_PI - _data.angle_bl); 
@@ -226,8 +226,9 @@ void balancing_test::control(){
     // float iF_r = ((((m_b / 2) + (eta_l * m_l)) * l * _data.gyro_pitch * o_data.wheel_speed_filtered) / 2) / R_l;
     // float iF_l = -iF_r; 
 
-    float iF_l = ((m_b / 2) + (eta_l * m_l))*(o_data.gyro_pitch_dot * R_l + o_data.wheel_speed_dot) * sin(o_data.theta_ll);
-    float iF_r = ((m_b / 2) + (eta_l * m_l))*(-(o_data.gyro_pitch_dot * R_l) + o_data.wheel_speed_dot) * sin(o_data.theta_lr);
+    //Inertial Feedforward (IF) calculation
+    float iF_l = ((m_b / 2) + (eta_l * m_l))*(o_data.gyro_yaw_dot * R_l + o_data.wheel_speed_dot) * sin(o_data.theta_ll);
+    float iF_r = ((m_b / 2) + (eta_l * m_l))*(-(o_data.gyro_yaw_dot * R_l) + o_data.wheel_speed_dot) * sin(o_data.theta_lr);
 //-----------------------------------------------------------------gravity feed forware-------------------------------------------------------------------
     float costheta_l = cos(o_data.theta_ll);
     float costheta_r = cos(o_data.theta_lr);

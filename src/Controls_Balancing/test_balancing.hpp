@@ -109,9 +109,9 @@ struct observer_data
     float R;
 
     float wheel_speed_old;
-    float gyro_pitch_old;
+    float gyro_yaw_old;
     float wheel_speed_dot;
-    float gyro_pitch_dot;
+    float gyro_yaw_dot;
 };
 
 struct ref_data
