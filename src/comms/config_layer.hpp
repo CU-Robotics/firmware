@@ -26,7 +26,7 @@
 #define CONFIG_PATH "/config.pack"
 
 // define DISABLE_REF_CONFIG_SAFETY_CHECK macro when running off of real robot (testing firmware away from actual robot)
-//#define DISABLE_REF_CONFIG_SAFETY_CHECK 
+// #define DISABLE_REF_CONFIG_SAFETY_CHECK 
 
 /// @brief arbitrary cap on config packets that can be received (make sure it's enough)
 const int MAX_CONFIG_PACKETS = 64;
