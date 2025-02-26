@@ -136,9 +136,9 @@ void balancing_test::observer(){
     float phi0l = atan2(yCl, helpingl); //phi 0
 
     o_data.jl[0][0] = (l_u * sin(phi0l - phi3l) * sin(phi1_l - phi2l)) / sin(phi2l - phi3l); 
-    o_data.jl[0][1]= -(l_u * cos(phi0l - phi3l) * sin(phi1_l - phi2l)) / (o_data.ll * sin(phi2l - phi3l));
+    o_data.jl[0][1] = (l_u * cos(phi0l - phi3l) * sin(phi1_l - phi2l)) / sin(phi2l - phi3l);
     o_data.jl[1][0] = (l_u * sin(phi0l - phi2l) * sin(phi3l - phi4_l)) / sin(phi2l - phi3l);
-    o_data.jl[1][1] = -(l_u * cos(phi0l - phi2l) * sin(phi3l - phi4_l)) / (o_data.ll * sin(phi2l - phi3l));
+    o_data.jl[1][1] = (l_u * cos(phi0l - phi2l) * sin(phi3l - phi4_l)) / sin(phi2l - phi3l);
 
     o_data.theta_ll = (fmod((M_PI_2 - phi0l - _data.imu_angle_pitch), 2 * M_PI)); // This is the correct one 
  //----------------------------------------------------Right Leg Forward Kinematics & Jacobian--------------------------------------------------
@@ -171,9 +171,9 @@ void balancing_test::observer(){
     float phi0r = atan2(yCr, helpingr);
 
     o_data.jr[0][0]  = (l_u * sin(phi0r - phi3r) * sin(phi1_r - phi2r)) / sin(phi2r - phi3r); 
-    o_data.jr[0][1]  = -(l_u * cos(phi0r - phi3r) * sin(phi1_r - phi2r)) / (o_data.lr * sin(phi2r - phi3r));
+    o_data.jr[0][1]  = (l_u * cos(phi0r - phi3r) * sin(phi1_r - phi2r)) / sin(phi2r - phi3r);
     o_data.jr[1][0]  = (l_u * sin(phi0r - phi2r) * sin(phi3r - phi4_r)) / sin(phi2r - phi3r);
-    o_data.jr[1][1]  = -(l_u * cos(phi0r - phi2r) * sin(phi3r - phi4_r)) / (o_data.lr * sin(phi2r - phi3r));
+    o_data.jr[1][1]  = (l_u * cos(phi0r - phi2r) * sin(phi3r - phi4_r)) / sin(phi2r - phi3r);
 
     o_data.theta_lr = (fmod((M_PI_2 - phi0r - _data.imu_angle_pitch), (2 * M_PI)));
     
