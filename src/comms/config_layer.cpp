@@ -5,11 +5,11 @@
 /// @note Dont abuse this function, it is not to be used lightly
 extern "C" void reset_teensy(void) {
     // Register information found in the NXP IM.XRT 1060 reference manual
-	SRC_GPR5 = 0x0BAD00F1;
+    SRC_GPR5 = 0x0BAD00F1;
     // Register information found in the Arm-v7-m reference manual
-	SCB_AIRCR = 0x05FA0004;
+    SCB_AIRCR = 0x05FA0004;
     // loop to catch execution while the reset occurs
-	while (1);
+    while (1);
 }
 
 const Config* const ConfigLayer::configure(HIDLayer* comms, bool config_off_SD) {
@@ -40,9 +40,9 @@ const Config* const ConfigLayer::configure(HIDLayer* comms, bool config_off_SD) 
 
     // verify that config received matches ref system: if not, error out
 #ifndef DISABLE_REF_CONFIG_SAFETY_CHECK
-    Serial.printf("Received robot ID from config: %d\nRobot ID from ref system: %d\n", (int)config.robot, ref.ref_data.robot_performance.robot_ID);
+    Serial.printf("Received robot ID from config: %d\nRobot ID from ref system: %d\n", (int)config.robot, ref->ref_data.robot_performance.robot_ID);
     // id check with modulo 100 to account for red and blue teams. Blue is the id + 100. (ID == 101, 102, ...)
-    if ((ref.ref_data.robot_performance.robot_ID % 100) != (int)config.robot) {
+    if ((ref->ref_data.robot_performance.robot_ID % 100) != (int)config.robot) {
         Serial.printf("ERROR: IDs do not match!! Check robot_id.cfg and robot settings from ref system!\n");
         if (!CONFIG_ERR_HANDLER(CONFIG_ID_MISMATCH)) {
             // in current implementation, CONFIG_ERR_HANDLER w/ err code CONFIG_ID_MISMATCH will
@@ -77,6 +77,7 @@ const Config* const ConfigLayer::configure(HIDLayer* comms, bool config_off_SD) 
         comms->ping();
     }
 
+    // update the num_of_(sensor) variables in the config struct
     return &config;
 }
 
@@ -88,7 +89,7 @@ void ConfigLayer::reconfigure(HIDLayer* comms) {
     seek_sec = -1;
     seek_subsec = 0;
     index = 0;
-    
+
     // perform a normal config, but dont try to load from the config, just process and store
     configure(comms, false);
 
@@ -103,7 +104,8 @@ void ConfigLayer::config_SD_init(HIDLayer* comms) {
     // if on robot, we need to wait for ref to send robot_id
 #ifndef DISABLE_REF_CONFIG_SAFETY_CHECK
     Serial.println("Waiting for ref system to initialize...");
-    while (ref.ref_data.robot_performance.robot_ID == 0) ref.read();
+    while (ref->ref_data.robot_performance.robot_ID == 0)
+        ref->read();
     Serial.println("Ref system online");
 #endif
 
@@ -135,11 +137,11 @@ void ConfigLayer::process(CommsPacket* in, CommsPacket* out) {
     if (sec_id == seek_sec && subsec_id == seek_subsec && info_bit == 1) {
         // received the initial config packet
         if (sec_id == -1) {
-             /*
-            the khadas sends a config packet with its raw data set to a byte
-            array where each index corresponds to a YAML section, and the value
-            at that index indicates the number of subsections for the given section
-            */
+            /*
+           the khadas sends a config packet with its raw data set to a byte
+           array where each index corresponds to a YAML section, and the value
+           at that index indicates the number of subsections for the given section
+           */
             num_sec = (in_raw[5] << 8) | in_raw[4];
             memcpy(
                 subsec_sizes,
@@ -153,7 +155,7 @@ void ConfigLayer::process(CommsPacket* in, CommsPacket* out) {
             }
         #endif
 
-            // look for the next YAML section
+                    // look for the next YAML section
             seek_sec++;
         } else {
             config_packets[index] = *in;
@@ -163,7 +165,7 @@ void ConfigLayer::process(CommsPacket* in, CommsPacket* out) {
             Serial.printf("Received YAML configuration packet: (%u, %u)\n", sec_id, subsec_id);
         #endif
 
-            // add one because subsections are zero-indexed
+                    // add one because subsections are zero-indexed
             if (subsec_id + 1 < subsec_sizes[sec_id]) {
                 // if we haven't received all subsections, request the next one
                 seek_subsec++;
@@ -181,7 +183,6 @@ void ConfigLayer::process(CommsPacket* in, CommsPacket* out) {
                 #endif
                 }
             }
-
         }
     }
 
@@ -201,7 +202,8 @@ void Config::fill_data(CommsPacket packets[MAX_CONFIG_PACKETS], uint8_t sizes[MA
         uint8_t subsec_id = *reinterpret_cast<uint8_t*>(packets[i].raw + 2);
         uint16_t sub_size = *reinterpret_cast<uint16_t*>(packets[i].raw + 6);
 
-        if (subsec_id == 0) index = 0;
+        if (subsec_id == 0)
+            index = 0;
 
         if (sub_size != 0) {
             Serial.printf("id: %d, subsec_id: %d, sub_size: %d\n", id, subsec_id, sub_size);
@@ -215,8 +217,8 @@ void Config::fill_data(CommsPacket packets[MAX_CONFIG_PACKETS], uint8_t sizes[MA
         if (id == yaml_section_id_mappings.at("motor_info")) {
 
             size_t linear_index = index / sizeof(float);
-            size_t i1 = linear_index / (NUM_MOTORS);
-            size_t i2 = linear_index % NUM_MOTORS;
+            size_t i1 = linear_index / (CAN_MAX_MOTORS);
+            size_t i2 = linear_index % CAN_MAX_MOTORS;
             memcpy(&motor_info[i1][i2], packets[i].raw + 8, sub_size);
             index += sub_size;
         }
@@ -254,8 +256,8 @@ void Config::fill_data(CommsPacket packets[MAX_CONFIG_PACKETS], uint8_t sizes[MA
         }
         if (id == yaml_section_id_mappings.at("controller_info")) {
             size_t linear_index = index / sizeof(float);
-            size_t i1 = linear_index / (NUM_MOTORS);
-            size_t i2 = linear_index % NUM_MOTORS;
+            size_t i1 = linear_index / (CAN_MAX_MOTORS);
+            size_t i2 = linear_index % CAN_MAX_MOTORS;
             memcpy(&controller_info[i1][i2], packets[i].raw + 8, sub_size);
             index += sub_size;
         }
@@ -272,24 +274,53 @@ void Config::fill_data(CommsPacket packets[MAX_CONFIG_PACKETS], uint8_t sizes[MA
     }
 
     Serial.println();
+
+
+    //fill num_of_(sensor) variables with the number of sensors defined for this robot
+    for (int i = 0; i < 16; i++) {
+        // if the sensor at index i is not -1
+        if (sensor_info[i][0] != -1.f) {
+            switch ((int)sensor_info[i][0]) {
+            case 0:
+                this->num_of_buffEnc++;
+                break;
+            case 1:
+                this->num_of_revEnc++;
+                break;
+            case 2:
+                this->num_of_icm++;
+                break;
+            case 3:
+                this->num_of_tof++;
+                break;
+            case 4:
+                this->num_of_lidar++;
+                break;
+            case 5:
+                this->num_of_realsense++;
+            default:
+                break;
+            }
+        }
+    }
 }
 
 void Config::print() const {
     Serial.printf("Config:\n");
     Serial.printf("Robot ID: %.3f\n", robot);
     Serial.printf("Controller Info:\n");
-    for (int i = 0; i < NUM_ROBOT_CONTROLLERS; i++) {
+    for (size_t i = 0; i < NUM_ROBOT_CONTROLLERS; i++) {
         Serial.printf("\tController %d: ", i);
-        for (int j = 0; j < NUM_MOTORS; j++) {
+        for (size_t j = 0; j < CAN_MAX_MOTORS; j++) {
             Serial.printf("%.3f ", controller_info[i][j]);
         }
         Serial.println();
     }
     // gains
     Serial.printf("Gains:\n");
-    for (int i = 0; i < NUM_ROBOT_CONTROLLERS; i++) {
+    for (size_t i = 0; i < NUM_ROBOT_CONTROLLERS; i++) {
         Serial.printf("\tController %d: ", i);
-        for (int j = 0; j < NUM_GAINS; j++) {
+        for (size_t j = 0; j < NUM_GAINS; j++) {
             Serial.printf("%.3f ", gains[i][j]);
         }
         Serial.println();
@@ -297,9 +328,9 @@ void Config::print() const {
 
     // gear ratios
     Serial.printf("Gear Ratios:\n");
-    for (int i = 0; i < NUM_ROBOT_CONTROLLERS; i++) {
+    for (size_t i = 0; i < NUM_ROBOT_CONTROLLERS; i++) {
         Serial.printf("\tController %d: ", i);
-        for (int j = 0; j < NUM_MOTORS; j++) {
+        for (size_t j = 0; j < CAN_MAX_MOTORS; j++) {
             Serial.printf("%.3f ", gear_ratios[i][j]);
         }
         Serial.println();
@@ -307,9 +338,9 @@ void Config::print() const {
 
     // sensor info
     Serial.printf("Sensor Info:\n");
-    for (int i = 0; i < NUM_SENSORS; i++) {
+    for (size_t i = 0; i < NUM_SENSORS; i++) {
         Serial.printf("\tSensor %d: ", i);
-        for (int j = 0; j < NUM_SENSOR_VALUES; j++) {
+        for (size_t j = 0; j < NUM_SENSOR_VALUES; j++) {
             Serial.printf("%.3f ", sensor_info[i][j]);
         }
         Serial.println();
@@ -317,9 +348,9 @@ void Config::print() const {
 
     // estimator info
     Serial.printf("Estimator Info:\n");
-    for (int i = 0; i < NUM_ESTIMATORS; i++) {
+    for (size_t i = 0; i < NUM_ESTIMATORS; i++) {
         Serial.printf("\tEstimator %d: ", i);
-        for (int j = 0; j < STATE_LEN; j++) {
+        for (size_t j = 0; j < STATE_LEN; j++) {
             Serial.printf("%.3f ", estimator_info[i][j]);
         }
         Serial.println();
@@ -327,15 +358,15 @@ void Config::print() const {
 
     // governor types
     Serial.printf("Governor Types:\n");
-    for (int i = 0; i < STATE_LEN; i++) {
+    for (size_t i = 0; i < STATE_LEN; i++) {
         Serial.printf("\tState %d: %.3f\n", i, governor_types[i]);
     }
 
     // motor info
     Serial.printf("Motor Info:\n");
-    for (int i = 0; i < NUM_MOTORS; i++) {
+    for (size_t i = 0; i < CAN_MAX_MOTORS; i++) {
         Serial.printf("\tMotor %d: ", i);
-        for (int j = 0; j < 3; j++) {
+        for (size_t j = 0; j < 3; j++) {
             Serial.printf("%.3f ", motor_info[i][j]);
         }
         Serial.println();
@@ -347,7 +378,8 @@ bool ConfigLayer::sd_load() {
     // num of packets * size of each packet == num of bytes for all packets
     const int config_byte_size = MAX_CONFIG_PACKETS * sizeof(CommsPacket);
 
-    if (sdcard.open(CONFIG_PATH) != 0) return false;
+    if (sdcard.open(CONFIG_PATH) != 0)
+        return false;
 
     // grab ID from config (originally from hive). should match ID from ref system- if not, abort!!
     float received_id;
@@ -355,7 +387,8 @@ bool ConfigLayer::sd_load() {
 
     // checksum is passed by reference and written to for later reference
     uint64_t checksum;
-    if (!config_SD_read_packets(checksum)) return false;
+    if (!config_SD_read_packets(checksum))
+        return false;
 
     sdcard.close();
 
@@ -379,9 +412,9 @@ bool ConfigLayer::sd_load() {
 
 #ifndef DISABLE_REF_CONFIG_SAFETY_CHECK
     // id check with modulo 100 to account for red and blue teams. Blue is the id + 100. (ID == 101, 102, ...)
-    if ((ref.ref_data.robot_performance.robot_ID % 100) != (int)received_id) {
+    if ((ref->ref_data.robot_performance.robot_ID % 100) != (int)received_id) {
         Serial.printf("NOTICE: attempting to load firmware for different robot type! \n");
-        Serial.printf("Current robot ID: %d\nStored config robot ID: %d\n", ref.ref_data.robot_performance.robot_ID, (int)received_id);
+        Serial.printf("Current robot ID: %d\nStored config robot ID: %d\n", ref->ref_data.robot_performance.robot_ID, (int)received_id);
         Serial.println("Requesting config from hive...");
         return false;
     }
@@ -395,8 +428,10 @@ bool ConfigLayer::sd_load() {
 bool ConfigLayer::config_SD_read_packets(uint64_t& checksum) {
     // read checksum and each packet
     // grab first packet and checksum (kept separate in order to validate subsequent checksum values)
-    if (sdcard.read((uint8_t*)(&checksum), sizeof(uint64_t)) != sizeof(uint64_t)) return false;
-    if (sdcard.read((uint8_t*)(&config_packets[0]), sizeof(CommsPacket)) != sizeof(CommsPacket)) return false;
+    if (sdcard.read((uint8_t*)(&checksum), sizeof(uint64_t)) != sizeof(uint64_t))
+        return false;
+    if (sdcard.read((uint8_t*)(&config_packets[0]), sizeof(CommsPacket)) != sizeof(CommsPacket))
+        return false;
     // read remaining packets
     for (int i = 1; i < MAX_CONFIG_PACKETS; i++) {
         uint64_t temp_checksum;
@@ -431,14 +466,17 @@ bool ConfigLayer::store_config() {
     // check return values of everything!!!
     if (sdcard.exists(config_path)) {
         if (sdcard.rm(config_path) != 0) {
-            if (!CONFIG_ERR_HANDLER(CONFIG_RM_FAIL)) return false;
+            if (!CONFIG_ERR_HANDLER(CONFIG_RM_FAIL))
+                return false;
         }
     }
     if (sdcard.touch(config_path) != 0) {
-        if (!CONFIG_ERR_HANDLER(CONFIG_TOUCH_FAIL)) return false;
+        if (!CONFIG_ERR_HANDLER(CONFIG_TOUCH_FAIL))
+            return false;
     }
     if (sdcard.open(config_path) != 0) {
-        if (!CONFIG_ERR_HANDLER(CONFIG_OPEN_FAIL)) return false;
+        if (!CONFIG_ERR_HANDLER(CONFIG_OPEN_FAIL))
+            return false;
     }
 
     // calculate checksum on config packet array
@@ -516,5 +554,4 @@ bool ConfigLayer::CONFIG_ERR_HANDLER(int err_code) {
         Serial.printf("\tCONFIG_ERR_HANDLER::invalid err_code (%d) passed\n", err_code);
         return false;
     }
-
 }

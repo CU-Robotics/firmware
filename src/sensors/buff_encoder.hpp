@@ -6,6 +6,16 @@
 #include "Sensor.hpp"
 #include "sensor_constants.hpp"
 
+
+/// @brief Structure for the buff encoder sensor.
+struct BuffEncoderData {
+    /// Sensor ID.
+    uint8_t id;
+    /// Measured angle.
+    float m_angle;
+};
+
+
 // Encoder Registers and Config
 constexpr uint32_t MT6835_OP_READ = 0b0011;
 constexpr uint32_t MT6835_OP_WRITE = 0b0110;
@@ -45,33 +55,28 @@ constexpr int YAW_BUFF_CS = 37;
 constexpr int PITCH_BUFF_CS = 36;
 
 /// @brief Driver for the Buff-Encoder
-class BuffEncoder : public Sensor{
+class BuffEncoder : public Sensor {
 public:
     /// @brief 
     /// @param 
-    BuffEncoder() : Sensor(SensorType::BUFFENC) {};
+    BuffEncoder() : Sensor(SensorType::BUFFENC) { };
 
     /// @brief Initialize the encoder object with the specific Chip Select pin
     /// @param cs The Chip Select pin
-    BuffEncoder(int cs) : Sensor(SensorType::BUFFENC),  m_CS(cs) {};
+    BuffEncoder(int cs) : Sensor(SensorType::BUFFENC), m_CS(cs) { };
 
     /// @brief initialize sensor with new cs(if needed)
     /// @param cs input Chip Select pin
     void init(int cs) { m_CS = cs; };
 
     /// @brief Read via SPI the current angle of the encoder
-    /// @return Read angle (radians)
     /// @note Returns and sets m_angle when it reads
-    float read();
+    /// @return true if successful, false if no data available
+    bool read() override;
 
     /// @brief Get the angle of the last read function
     /// @return Read angle (radians)
     inline float get_angle() const { return m_angle; }
-
-    /// @brief Serialize the data into a buffer
-    /// @param buffer Buffer to serialize the data into
-    /// @param offset Offset to store the position of the serialized data in the buffer
-    void serialize(uint8_t* buffer, size_t& offset) override;
 
     /// @brief Print the data for debugging
     void print();
@@ -86,6 +91,10 @@ private:
     /// @brief The SPI settings of the buff encoders
     static const SPISettings m_settings;
 
+    ///buff sensor data struct.
+    BuffEncoderData buff_sensor_data;
+
 };
+
 
 #endif
