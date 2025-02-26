@@ -218,13 +218,13 @@ void balancing_test::control(){
     float l = (o_data.ll + o_data.lr) / 2; // Get the average leg length 
     float F_psi = 1 * pid1.filter(_dt, NOBOUND, WARP, _ref_data.goal_roll, _data.gyro_roll, 0.4); //Set the PID for roll angle
     float F_l = 1 * pid2.filter(_dt, NOBOUND, NOWARP, _ref_data.goal_l, l, 0.9); //Set the PID for leg length 
+    // float F_l = 1 * pid2.filter(_dt, NOBOUND, NOWARP, _ref_data.goal_l, l, 0.9, true, ((o_data.lr_dot + o_data.ll_dot) * 0.5f)); //Set the PID for leg length using encoder data
 
     float iF_r = ((((m_b / 2) + (eta_l * m_l)) * l * _data.gyro_pitch * o_data.wheel_speed_filtered) / 2) / R_l;
     float iF_l = -iF_r; 
 //-----------------------------------------------------------------gravity feed forware-------------------------------------------------------------------
     float costheta_l = cos(o_data.theta_ll);
     float costheta_r = cos(o_data.theta_lr);
-
 
     float GF_help = (m_b / 2 + m_l * eta_l) * G_CONSTANT;
     float gF_l = GF_help * costheta_l;
@@ -233,8 +233,6 @@ void balancing_test::control(){
     float F_bll = F_psi + F_l + iF_l + gF_l;
     float F_blr = -F_psi + F_l + iF_r + gF_r; 
 
-
-    
 //---------------------------------------------------------------The NormalF Left------------------------------------------------------------------------
     float F_whl = F_bll * costheta_l + m_l * ( G_CONSTANT + _data.imu_accel_z - (1-eta_l) * o_data.ll_ddot * costheta_l);
 
