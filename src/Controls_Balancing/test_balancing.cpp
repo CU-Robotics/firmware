@@ -216,7 +216,8 @@ void balancing_test::control(){
 
 //----------------------------------------------------------------leg_controller---------------------------------------------------------------------
     float l = (o_data.ll + o_data.lr) / 2; // Get the average leg length 
-    float F_psi = 1 * pid1.filter(_dt, NOBOUND, WARP, _ref_data.goal_roll, _data.gyro_roll, 0.4); //Set the PID for roll angle
+    float F_psi = 1 * pid1.filter(_dt, NOBOUND, WARP, _ref_data.goal_roll, _data.imu_angle_roll, 0.4); //Set the PID for roll angle
+    // float F_psi = 1 * pid1.filter(_dt, NOBOUND, WARP, _ref_data.goal_roll, _data.imu_angle_roll, 0.4, true, _data.gyro_roll); //Set the PID for roll angle using sensor derivative data.
     float F_l = 1 * pid2.filter(_dt, NOBOUND, NOWARP, _ref_data.goal_l, l, 0.9); //Set the PID for leg length 
     // float F_l = 1 * pid2.filter(_dt, NOBOUND, NOWARP, _ref_data.goal_l, l, 0.9, true, ((o_data.lr_dot + o_data.ll_dot) * 0.5f)); //Set the PID for leg length using encoder data
 
