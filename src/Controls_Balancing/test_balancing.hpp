@@ -43,7 +43,7 @@
 #define NOWARP false                        
 #define F_WH_OUTPUT_LIMIT_NUM 10000000000
 #define MGlimit 14
-#define WHEEL_MOTOR_limit 3
+#define WHEEL_MOTOR_limit 5
 struct balancing_sensor_data
 {
     float angle_fl;

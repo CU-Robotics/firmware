@@ -134,11 +134,13 @@ void balancing_test::observer(){
     float helpingl = (xCl - l_a);
     o_data.ll = sqrt(yCl * yCl + helpingl * helpingl); //ll
     float phi0l = atan2(yCl, helpingl); //phi 0
+    Serial.printf("phi1_l, phi4_l: %f, %f\n", phi1_l * RAD_TO_DEG, phi4_l * RAD_TO_DEG);
+    Serial.printf("phi3;, phi2l, phi0l:%f, %f, %f\n", phi3l * RAD_TO_DEG, phi2l * RAD_TO_DEG, phi0l * RAD_TO_DEG);
 
     o_data.jl[0][0] = (l_u * sin(phi0l - phi3l) * sin(phi1_l - phi2l)) / sin(phi2l - phi3l); 
-    o_data.jl[0][1] = (l_u * cos(phi0l - phi3l) * sin(phi1_l - phi2l)) / (o_data.ll * sin(phi2l - phi3l));
+    o_data.jl[0][1] = -(l_u * cos(phi0l - phi3l) * sin(phi1_l - phi2l)) / (o_data.ll * sin(phi2l - phi3l));
     o_data.jl[1][0] = (l_u * sin(phi0l - phi2l) * sin(phi3l - phi4_l)) / sin(phi2l - phi3l);
-    o_data.jl[1][1] = (l_u * cos(phi0l - phi2l) * sin(phi3l - phi4_l)) / (o_data.ll * sin(phi2l - phi3l));
+    o_data.jl[1][1] = -(l_u * cos(phi0l - phi2l) * sin(phi3l - phi4_l)) / (o_data.ll * sin(phi2l - phi3l));
 
     o_data.theta_ll = (fmod((M_PI_2 - phi0l - _data.imu_angle_pitch), 2 * M_PI)); // This is the correct one 
  //----------------------------------------------------Right Leg Forward Kinematics & Jacobian--------------------------------------------------
@@ -169,11 +171,12 @@ void balancing_test::observer(){
     float helpingr = xCr - l_a;
     o_data.lr = sqrt(yCr * yCr + helpingr * helpingr); 
     float phi0r = atan2(yCr, helpingr);
-
+    Serial.printf("phi1_r, phi4_r: %f, %f\n", phi1_r * RAD_TO_DEG, phi4_r * RAD_TO_DEG);
+    Serial.printf("phi3r, phi2r, phi0r:%f, %f, %f\n", phi3r * RAD_TO_DEG, phi2r * RAD_TO_DEG, phi0r * RAD_TO_DEG);
     o_data.jr[0][0]  = (l_u * sin(phi0r - phi3r) * sin(phi1_r - phi2r)) / sin(phi2r - phi3r); 
-    o_data.jr[0][1]  = (l_u * cos(phi0r - phi3r) * sin(phi1_r - phi2r)) / (o_data.ll * sin(phi2r - phi3r));
+    o_data.jr[0][1]  = -(l_u * cos(phi0r - phi3r) * sin(phi1_r - phi2r)) / (o_data.ll * sin(phi2r - phi3r));
     o_data.jr[1][0]  = (l_u * sin(phi0r - phi2r) * sin(phi3r - phi4_r)) / sin(phi2r - phi3r);
-    o_data.jr[1][1]  = (l_u * cos(phi0r - phi2r) * sin(phi3r - phi4_r)) / (o_data.ll *sin(phi2r - phi3r));
+    o_data.jr[1][1]  = -(l_u * cos(phi0r - phi2r) * sin(phi3r - phi4_r)) / (o_data.ll *sin(phi2r - phi3r));
 
     o_data.theta_lr = (fmod((M_PI_2 - phi0r - _data.imu_angle_pitch), (2 * M_PI)));
     
@@ -433,21 +436,21 @@ void balancing_test::print_observer(){
     Serial.print("theta_lr_dot: ");
     Serial.printf("%f", o_data.theta_lr_dot*RAD_TO_DEG);
     Serial.println();
-    Serial.print("jl: ");
-    Serial.print(o_data.jl[0][0]);
-    Serial.print(" ");
-    Serial.println(o_data.jl[0][1]);
-    Serial.print(o_data.jl[1][0]);
-    Serial.print(" ");
-    Serial.println(o_data.jl[1][1]);
-    Serial.print("jr: ");
-    Serial.print(o_data.jr[0][0]);
-    Serial.print(" ");
-    Serial.println(o_data.jr[0][1]);
-    Serial.print(o_data.jr[1][0]);
-    Serial.print(" ");
-    Serial.println(o_data.jr[1][1]);
-    Serial.printf("pitch: %f, roll: %f, yaw: %f\n", _data.imu_angle_pitch, _data.imu_angle_roll, _data.imu_angle_yaw);
+    // Serial.print("jl: ");
+    // Serial.print(o_data.jl[0][0]);
+    // Serial.print(" ");
+    // Serial.println(o_data.jl[0][1]);
+    // Serial.print(o_data.jl[1][0]);
+    // Serial.print(" ");
+    // Serial.println(o_data.jl[1][1]);
+    // Serial.print("jr: ");
+    // Serial.print(o_data.jr[0][0]);
+    // Serial.print(" ");
+    // Serial.println(o_data.jr[0][1]);
+    // Serial.print(o_data.jr[1][0]);
+    // Serial.print(" ");
+    // Serial.println(o_data.jr[1][1]);
+    Serial.printf("pitch: %f, roll: %f, yaw: %f\n", _data.imu_angle_pitch * RAD_TO_DEG, _data.imu_angle_roll * RAD_TO_DEG, _data.imu_angle_yaw * RAD_TO_DEG);
 
 }
 
