@@ -257,17 +257,17 @@ void balancing_test::control(){
 //--------------------------------------------------------------Acceleration Saturation---------------------------------------------------------------------------
     float dx[10];
     // dx[0] = 0; //Ignore // s
-    dx[0] = _ref_data.s- o_data.s; // s
-    dx[1] = _ref_data.b_speed - o_data.wheel_speed_filtered; // speed
+    dx[0] = 0; // s
+    dx[1] = 0; // speed
     // dx[2] = 0; //Ignore // yaw
-    dx[2] = _ref_data.yaw - _data.imu_angle_yaw; // yaw angle //We don't have this data and don't need it
-    dx[3] = _ref_data.yaw_dot - _data.gyro_yaw; // yaw rotational speed in deg
+    dx[2] = 0; // yaw angle //We don't have this data and don't need it
+    dx[3] = 0; // yaw rotational speed in deg
     dx[4] = _ref_data.theta_ll - o_data.theta_ll; // theta_ll
     dx[5] = _ref_data.theta_ll_dot - o_data.theta_ll_dot; // theta_ll_dot
     dx[6] = _ref_data.theta_lr - o_data.theta_lr; // theta_lr
     dx[7] = _ref_data.theta_lr_dot - o_data.theta_lr_dot; // theta_lr_dot
-    dx[8] = _ref_data.pitch - _data.imu_angle_pitch; // pitch
-    dx[9] = _ref_data.pitch_dot - _data.gyro_pitch; // pitch_dot
+    dx[8] = 0; // pitch
+    dx[9] = 0; // pitch_dot
 
 //----------------------------------------------------------------Leg Length to K------------------------------------------------------------------------------
     // K from Full scale LQR
