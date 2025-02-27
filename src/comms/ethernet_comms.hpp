@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Arduino.h>
+#include <optional>
 
 // QNEthernet has warnings that are not fixable (-Wattributes)
 // This is a useful warning so we dont want to permanently disable it
@@ -32,7 +33,7 @@ public:
 	bool begin(uint32_t data_rate = 95);
 
 	/// @brief Cycle comms, this issues packet read and write calls
-	void loop();
+	std::optional<EthernetPacket> sendReceive(EthernetPacket& outgoing_packet);
 
 public:
 	/// @brief Get a pointer to the incoming packet

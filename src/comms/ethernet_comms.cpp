@@ -72,19 +72,20 @@ bool EthernetComms::begin(uint32_t data_rate) {
 	return true;
 }
 
-void EthernetComms::loop() {
+std::optional<EthernetPacket> EthernetComms::sendReceive(EthernetPacket& outgoing_packet) {
 	// call the library's loop function
 	// this progresses the ethernet stack allowing new data in/out
 	qn::Ethernet.loop();
 
 	// send the outgoing packet
-	send_packet(m_outgoing);
+	send_packet(outgoing_packet);
 
 	// receive the incoming packet
-	recv_packet(&m_incoming);
+	EthernetPacket incoming_packet;
+	bool received = recv_packet(&incoming_packet);
 
 	// if we detect a handshake request from Jetson, respond
-	if (m_incoming.header.type == Comms::EthernetPacketType::HANDSHAKE) {
+	if (incoming_packet.header.type == Comms::EthernetPacketType::HANDSHAKE) {
 		Serial.printf("Handshake received...\n");
 		connect_jetson();
 		Serial.printf("Handshake finished!\n");
@@ -93,7 +94,13 @@ void EthernetComms::loop() {
 	// check whether the connection is still alive
 	check_connection();
 
-	return;
+	if (received) {
+		// return the incoming packet
+		return incoming_packet;
+	}
+
+	// return an empty optional
+	return {};
 }
 
 EthernetPacket EthernetComms::get_incoming_packet() {
