@@ -30,8 +30,9 @@ struct PIDFilter {
 
 
         if(!use_dot){
-            dot_data = (error - prevError) / dt;
-            
+            dot_data = (error - prevError) / dt;   
+        }else{
+            dot_data *= -1;
         }
         sumError += error * dt;
         float output = (K[0] * error) + K[1] * sumError + (K[2] * (dot_data)) + K[3];
