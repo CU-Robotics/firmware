@@ -26,8 +26,11 @@ int CommsLayer::init() {
 };
 
 int CommsLayer::run() {
-    m_ethernet.set_outgoing_packet(m_ethernet_outgoing);
-    m_ethernet.loop();
+    std::optional<EthernetPacket> ethernet_incoming = m_ethernet.sendReceive(m_ethernet_outgoing);
+
+    if (ethernet_incoming.has_value()) {
+        m_ethernet_payload.deconstruct_data(ethernet_incoming.value().payload.data, ETHERNET_PACKET_PAYLOAD_MAX_SIZE);
+    }
 
     m_hid.sendReceive(m_hid_outgoing);
 
