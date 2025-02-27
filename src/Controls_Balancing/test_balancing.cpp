@@ -142,7 +142,7 @@ void balancing_test::observer(){
     o_data.jl[1][0] = (l_u * sin(phi0l - phi2l) * sin(phi3l - phi4_l)) / sin(phi2l - phi3l);
     o_data.jl[1][1] = -(l_u * cos(phi0l - phi2l) * sin(phi3l - phi4_l)) / (o_data.ll * sin(phi2l - phi3l));
 
-    o_data.theta_ll = (fmod((M_PI_2 - phi0l - _data.imu_angle_pitch), 2 * M_PI)); // This is the correct one 
+    o_data.theta_ll = -(fmod((M_PI_2 - phi0l - _data.imu_angle_pitch), 2 * M_PI)); // This is the correct one 
  //----------------------------------------------------Right Leg Forward Kinematics & Jacobian--------------------------------------------------
     float phi4_r = _data.angle_fr;
     float phi1_r = (_data.angle_br - M_PI); 
@@ -178,7 +178,7 @@ void balancing_test::observer(){
     o_data.jr[1][0]  = (l_u * sin(phi0r - phi2r) * sin(phi3r - phi4_r)) / sin(phi2r - phi3r);
     o_data.jr[1][1]  = -(l_u * cos(phi0r - phi2r) * sin(phi3r - phi4_r)) / (o_data.ll *sin(phi2r - phi3r));
 
-    o_data.theta_lr = (fmod((M_PI_2 - phi0r - _data.imu_angle_pitch), (2 * M_PI)));
+    o_data.theta_lr = -(fmod((M_PI_2 - phi0r - _data.imu_angle_pitch), (2 * M_PI)));
     
 
 //----------------------------------------------------Calculate Theta_of_leg_dot for both leg--------------------------------------
@@ -186,6 +186,7 @@ void balancing_test::observer(){
     float xC_dot_l = -(l_u * (-_data.speed_bl) * sphi1_l + l_l * phi2_dot_l * sin(phi2l));
     float yC_dot_l = (l_u * (-_data.speed_bl) * cphi1_l + l_l * phi2_dot_l * cos(phi2l));
     o_data.theta_ll_dot = (yC_dot_l*helpingl - xC_dot_l*yCl) < 0 ? (sqrt(xC_dot_l * xC_dot_l + yC_dot_l * yC_dot_l)/sqrt(helpingl*helpingl + yCl*yCl)) - _data.gyro_pitch : -(sqrt(xC_dot_l * xC_dot_l + yC_dot_l * yC_dot_l)/sqrt(helpingl*helpingl + yCl*yCl)) - _data.gyro_pitch;
+    o_data.theta_ll_dot *= -1;
     o_data.ll_dot = ((helpingl*xC_dot_l + yCl*yC_dot_l)/o_data.ll);
     // o_data.theta_ll_dot = -(((helpingl*yC_dot_l) + (yCl * xC_dot_l)) / (helpingl * helpingl + yCl * yCl)) - _data.gyro_pitch;
 
@@ -193,6 +194,7 @@ void balancing_test::observer(){
     float xC_dot_r = -(l_u * _data.speed_br * sphi1r + l_l * phi2_dot_r * sin(phi2r));
     float yC_dot_r = (l_u * _data.speed_br * cphi1r + l_l * phi2_dot_r * cos(phi2r));
     o_data.theta_lr_dot = (yC_dot_r*helpingr - xC_dot_r*yCr) < 0 ? (sqrt(xC_dot_r * xC_dot_r + yC_dot_r * yC_dot_r)/sqrt(helpingr*helpingr + yCr*yCr)) - _data.gyro_pitch : -(sqrt(xC_dot_r * xC_dot_r + yC_dot_r * yC_dot_r)/sqrt(helpingr*helpingr + yCr*yCr)) - _data.gyro_pitch;
+    o_data.theta_lr_dot *= -1;
     o_data.lr_dot = ((helpingr*xC_dot_r + yCr*yC_dot_r)/o_data.lr);
     // o_data.theta_lr_dot = -(((helpingr*yC_dot_r) + (yCr * xC_dot_r)) / (helpingr * helpingr + yCr * yCr)) - _data.gyro_pitch;
 //--------------------------------------------------------------b_s and filter for it--------------------------------------------------------
@@ -239,7 +241,6 @@ void balancing_test::control(){
     float GF_help = (m_b / 2 + m_l * eta_l) * G_CONSTANT;
     float gF_l = GF_help * costheta_l;
     float gF_r = GF_help * costheta_r; 
-
     float F_bll = F_psi + F_l + iF_l + gF_l;
     float F_blr = -F_psi + F_l + iF_r + gF_r; 
 
@@ -258,16 +259,16 @@ void balancing_test::control(){
     float dx[10];
     // dx[0] = 0; //Ignore // s
     dx[0] = 0; // s
-    dx[1] = 0; // speed
+    dx[1] = _ref_data.b_speed - o_data.wheel_speed_filtered; // speed
     // dx[2] = 0; //Ignore // yaw
     dx[2] = 0; // yaw angle //We don't have this data and don't need it
-    dx[3] = 0; // yaw rotational speed in deg
+    dx[3] = _ref_data.yaw_dot - _data.gyro_yaw; // yaw rotational speed in deg
     dx[4] = _ref_data.theta_ll - o_data.theta_ll; // theta_ll
     dx[5] = _ref_data.theta_ll_dot - o_data.theta_ll_dot; // theta_ll_dot
     dx[6] = _ref_data.theta_lr - o_data.theta_lr; // theta_lr
     dx[7] = _ref_data.theta_lr_dot - o_data.theta_lr_dot; // theta_lr_dot
-    dx[8] = 0; // pitch
-    dx[9] = 0; // pitch_dot
+    dx[8] = _ref_data.pitch - _data.imu_angle_pitch; // pitch
+    dx[9] = _ref_data.pitch_dot - _data.gyro_pitch; // pitch_dot
 
 //----------------------------------------------------------------Leg Length to K------------------------------------------------------------------------------
     // K from Full scale LQR
@@ -321,8 +322,8 @@ void balancing_test::control(){
     }
 //-------------------------------------------------------------Calculate CAN value-----------------------------------------------
     
-    int wheel_motor__left_sign = 1;
-    int wheel_motor__right_sign = -1;
+    int wheel_motor__left_sign = -1;
+    int wheel_motor__right_sign = 1;
     int leg_motor__left_sign = -1;
     int leg_motor__right_sign = 1;
 

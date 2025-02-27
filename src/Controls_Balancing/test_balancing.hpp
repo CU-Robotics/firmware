@@ -12,15 +12,15 @@
 #define eta_l 0.4144                            
 
 //roll PID
-#define K1_P 120                               //Need test                                    
+#define K1_P 96                               //Need test                                    
 #define K1_I 0                                  //Need test 
-#define K1_D 9.5                                //Need test                         
+#define K1_D 25                                //Need test                         
 #define K1_F 0                                  //Need test  
 
 //leg length PID
 #define K2_P 2100                               //Need test                         
 #define K2_I 0                               //Need test                         
-#define K2_D 260                                  //Need test                         
+#define K2_D 540                                  //Need test                         
 #define K2_F 0                                  //Need test                   
 
 /** Constants for locomotion_controller*/
@@ -43,7 +43,7 @@
 #define NOWARP false                        
 #define F_WH_OUTPUT_LIMIT_NUM 10000000000
 #define MGlimit 14
-#define WHEEL_MOTOR_limit 5
+#define WHEEL_MOTOR_limit 4
 struct balancing_sensor_data
 {
     float angle_fl;
