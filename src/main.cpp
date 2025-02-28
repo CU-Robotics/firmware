@@ -16,6 +16,8 @@
 #define SPEED_SCALE 0.5   
 // Speed scale will give the maximum desire rotation speed (rad/s)
 #define ROTATION_SCALE M_2_PI
+#define MAX_LEG_LENGTH 0.32
+#define MIN_LEG_LENGTH 0.18
 // Declare global objects
 DR16 dr16;
 CANManager can;
@@ -128,22 +130,37 @@ int main() {
         test_control.set_data(data); 
         test_control.observer();
         if(dr16.get_l_switch() == 3){
-            ref_data control_ref;
-            control_ref.speed = dr16.get_l_stick_y(); 
-            if(abs(control_ref.speed) < 0.05){
-                control_ref.speed = 0; // Ignore small data
+            ref_data* control_ref = test_control.get_ref();
+            // Set all data to 0 for balancing
+            control_ref->s = 0;
+            control_ref->speed = 0;
+            control_ref->theta_ll = 0;
+            control_ref->theta_ll_dot = 0;
+            control_ref->theta_lr = 0;
+            control_ref->theta_lr_dot = 0;
+            control_ref->yaw = 0;
+            control_ref->yaw_dot = 0;
+            control_ref->pitch = 0;
+            control_ref->pitch_dot = 0;
+            
+            control_ref->speed = dr16.get_l_stick_y(); 
+            if(abs(control_ref->speed) < 0.05){
+                control_ref->speed = 0; // Ignore small data
             }else{
                 test_control.reset_s(); // Ignore position 
-                control_ref.speed *= SPEED_SCALE; // Times a scale for max speed we set
+                control_ref->speed *= SPEED_SCALE; // Times a scale for max speed we set
             }
-            control_ref.yaw_dot = dr16.get_l_stick_x(); 
-            if(abs(control_ref.yaw_dot) < 0.05){
-                control_ref.yaw_dot = 0; // Ignore small data
+            control_ref->yaw_dot = -dr16.get_l_stick_x(); 
+            if(abs(control_ref->yaw_dot) < 0.05){
+                control_ref->yaw_dot = 0; // Ignore small data
             }else{
                 test_control.reset_yaw(); // Ignore yaw data
-                control_ref.yaw_dot *= SPEED_SCALE; // Times a scale for max speed we set
+                control_ref->yaw_dot *= ROTATION_SCALE; // Times a scale for max speed we set
             }
-            test_control.set_ref(control_ref);
+            float leg_control = dr16.get_r_stick_y() * 0.01;
+            if((leg_control > 0 && control_ref->goal_l < MAX_LEG_LENGTH - 0.01) || (leg_control < 0 && control_ref->goal_l > MIN_LEG_LENGTH + 0.01)){
+                control_ref->goal_l += leg_control;
+            }
         }
         test_control.control();
         can.write_motor_torque(0,test_control.getwrite().torque_fr);

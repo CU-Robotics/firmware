@@ -404,9 +404,8 @@ write_data balancing_test::getwrite(){
     return _write;
 }
 
-void balancing_test::set_ref(ref_data ref){
-    _ref_data = ref;
-    return;
+ref_data* balancing_test::get_ref(){
+    return &_ref_data;
 }
 
 
