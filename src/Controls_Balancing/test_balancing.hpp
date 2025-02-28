@@ -12,15 +12,15 @@
 #define eta_l 0.4144                            
 
 //roll PID
-#define K1_P 144                               //Need test                                    
+#define K1_P 48                               //Need test                                    
 #define K1_I 0                                  //Need test 
-#define K1_D 16                                //Need test                         
+#define K1_D 9.2                                //Need test                         
 #define K1_F 0                                  //Need test  
 
 //leg length PID
-#define K2_P 2100                               //Need test                         
+#define K2_P 700                               //Need test                         
 #define K2_I 0                               //Need test                         
-#define K2_D 400                                  //Need test                         
+#define K2_D 230                                  //Need test                         
 #define K2_F 0                                  //Need test                   
 
 /** Constants for locomotion_controller*/
