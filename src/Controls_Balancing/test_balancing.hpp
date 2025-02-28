@@ -135,6 +135,7 @@ struct debug_data
 {   
     float F_blr;
     float F_bll;
+    float F_psi;
 }; 
 
 class balancing_test{

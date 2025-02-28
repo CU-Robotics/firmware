@@ -237,6 +237,8 @@ void balancing_test::control(){
     float F_bll = F_psi + F_l + iF_l + gF_l;
     float F_blr = -F_psi + F_l + iF_r + gF_r; 
 
+    _debug_data.F_psi = F_psi;
+
 //---------------------------------------------------------------The NormalF Left------------------------------------------------------------------------
     float F_whl = F_bll * costheta_l + m_l * ( G_CONSTANT + _data.imu_accel_z - (1-eta_l) * o_data.ll_ddot * costheta_l);
 
@@ -454,18 +456,19 @@ void balancing_test::print_observer(){
 }
 
 void balancing_test::print_visual(){
-    Serial.printf("waggle graph %s %f \n", "theta_lr", o_data.theta_lr * RAD_TO_DEG);
-    Serial.printf("waggle graph %s %f \n", "theta_ll", o_data.theta_ll * RAD_TO_DEG);
-    Serial.printf("waggle graph %s %f \n", "theta_lr_dot", o_data.theta_lr_dot * RAD_TO_DEG);
-    Serial.printf("waggle graph %s %f \n", "theta_ll_dot", o_data.theta_ll_dot * RAD_TO_DEG);
+    // Serial.printf("waggle graph %s %f \n", "theta_lr", o_data.theta_lr * RAD_TO_DEG);
+    // Serial.printf("waggle graph %s %f \n", "theta_ll", o_data.theta_ll * RAD_TO_DEG);
+    // Serial.printf("waggle graph %s %f \n", "theta_lr_dot", o_data.theta_lr_dot * RAD_TO_DEG);
+    // Serial.printf("waggle graph %s %f \n", "theta_ll_dot", o_data.theta_ll_dot * RAD_TO_DEG);
     Serial.printf("waggle graph %s %f \n", "Pitch", _data.imu_angle_pitch * RAD_TO_DEG);
     Serial.printf("waggle graph %s %f \n", "Roll", _data.imu_angle_roll * RAD_TO_DEG);
     Serial.printf("waggle graph %s %f \n", "Yaw", _data.imu_angle_yaw * RAD_TO_DEG);
-    Serial.printf("waggle graph %s %f \n", "Gyro Pitch", _data.gyro_pitch * RAD_TO_DEG);
-    Serial.printf("waggle graph %s %f \n", "Gyro Roll", _data.gyro_roll * RAD_TO_DEG);
-    Serial.printf("waggle graph %s %f \n", "Gyro Yaw", _data.gyro_yaw * RAD_TO_DEG);
-    Serial.printf("waggle graph %s %f \n", "Leg Force Right", _debug_data.F_blr);
-    Serial.printf("waggle graph %s %f \n", "Leg Force Left", _debug_data.F_bll);
+    Serial.printf("waggle graph %s %f \n", "Gyro_Pitch", _data.gyro_pitch * RAD_TO_DEG);
+    Serial.printf("waggle graph %s %f \n", "Gyro_Roll", _data.gyro_roll * RAD_TO_DEG);
+    Serial.printf("waggle graph %s %f \n", "Gyro_Yaw", _data.gyro_yaw * RAD_TO_DEG);
+    Serial.printf("waggle graph %s %f \n", "Leg_Force_Right", _debug_data.F_blr);
+    Serial.printf("waggle graph %s %f \n", "Leg_Force_Left", _debug_data.F_bll);
+    Serial.printf("waggle graph %s %f \n", "F_roll", _debug_data.F_psi);
 
     
 
