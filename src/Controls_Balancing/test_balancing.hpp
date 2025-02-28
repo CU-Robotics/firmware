@@ -131,6 +131,11 @@ struct ref_data
     float theta_lr_dot;
 
 }; 
+struct debug_data
+{   
+    float F_blr;
+    float F_bll;
+}; 
 
 class balancing_test{
     private:
@@ -150,6 +155,7 @@ class balancing_test{
         write_data _write;
         observer_data o_data;
         ref_data _ref_data; 
+        debug_data _debug_data;
         float Rv;
         float Ra;
 

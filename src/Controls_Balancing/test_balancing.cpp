@@ -356,7 +356,12 @@ void balancing_test::control(){
     if(_write.torque_br < -MGlimit)
     _write.torque_br = -MGlimit;
     _write.torque_br /= leg_motor__right_sign * 37.0;
-return;
+
+
+//----------------------------Save data to printout for debug-------------------------------------------------------------
+    _debug_data.F_blr = F_blr;
+    _debug_data.F_bll = F_bll;
+    return;
 }
 
 write_data balancing_test::getwrite(){
@@ -453,5 +458,20 @@ void balancing_test::print_visual(){
     Serial.printf("waggle graph %s %f \n", "theta_ll", o_data.theta_ll * RAD_TO_DEG);
     Serial.printf("waggle graph %s %f \n", "theta_lr_dot", o_data.theta_lr_dot * RAD_TO_DEG);
     Serial.printf("waggle graph %s %f \n", "theta_ll_dot", o_data.theta_ll_dot * RAD_TO_DEG);
+    Serial.printf("waggle graph %s %f \n", "Pitch", _data.imu_angle_pitch * RAD_TO_DEG);
+    Serial.printf("waggle graph %s %f \n", "Roll", _data.imu_angle_roll * RAD_TO_DEG);
+    Serial.printf("waggle graph %s %f \n", "Yaw", _data.imu_angle_yaw * RAD_TO_DEG);
+    Serial.printf("waggle graph %s %f \n", "Gyro Pitch", _data.gyro_pitch * RAD_TO_DEG);
+    Serial.printf("waggle graph %s %f \n", "Gyro Roll", _data.gyro_roll * RAD_TO_DEG);
+    Serial.printf("waggle graph %s %f \n", "Gyro Yaw", _data.gyro_yaw * RAD_TO_DEG);
+    Serial.printf("waggle graph %s %f \n", "Gyro Pitch", _data.gyro_pitch * RAD_TO_DEG);
+    Serial.printf("waggle graph %s %f \n", "Gyro Roll", _data.gyro_roll * RAD_TO_DEG);
+    Serial.printf("waggle graph %s %f \n", "Gyro Yaw", _data.gyro_yaw * RAD_TO_DEG);
+    Serial.printf("waggle graph %s %f \n", "Leg Force Right", _debug_data.F_blr);
+    Serial.printf("waggle graph %s %f \n", "Leg Force Left", _debug_data.F_bll);
+
+    
+
+
     return ;
 }
