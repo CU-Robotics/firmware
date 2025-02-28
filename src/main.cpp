@@ -143,6 +143,7 @@ int main() {
                 test_control.reset_yaw(); // Ignore yaw data
                 control_ref.yaw_dot *= SPEED_SCALE; // Times a scale for max speed we set
             }
+            test_control.set_ref(control_ref);
         }
         test_control.control();
         can.write_motor_torque(0,test_control.getwrite().torque_fr);
@@ -169,6 +170,7 @@ int main() {
         } else if (dr16.is_connected() && dr16.get_l_switch() != 1) {
             // SAFETY OFF
             Serial.println("SAFTYOFF");
+            can.write();
             can.write();
         }
 

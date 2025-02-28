@@ -182,7 +182,7 @@ class balancing_test{
 
         void control();
 
-        void control_ref(ref_data);
+        void set_ref(ref_data);
 
         void step();
 
