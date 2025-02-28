@@ -25,46 +25,44 @@
 
 // Accounts for overflow
 #define UINT_MAX 4294967295
-#define CYCCNT_OVERFLOW(duration) (duration < 0 ? UINT_MAX-duration : duration)
+#define CYCCNT_OVERFLOW(duration) (duration > UINT_MAX*0.25 ? UINT_MAX-duration : duration)
 
+/// @brief Timing object with blocking capability
 struct Timer {
+    /// @brief start time
     uint32_t t = ARM_DWT_CYCCNT;
 
+    /// @brief Start time
     void start_timer() { t = ARM_DWT_CYCCNT; }
 
+    /// @brief Helper to pause for a duration. Duration starts
+    /// @param duration microseconds to wait (from when any other timing function was called)
     void delay_micros(uint32_t duration) {
-        /*
-        Helper to pause for a duration. Duration starts
-        when startTimer() is called.
-        @param
-        duration: (uint32_t) microseconds to wait (from when any other timing function was called)
-        @return
-            None
-        */
         while (DURATION_US(t, ARM_DWT_CYCCNT) < duration) {}
         start_timer();
     }
 
+    /// @brief Helper to pause for a duration. Duration starts when startTimer() is called.
+    /// @param duration milliseconds to wait (from when any other timing function was called)
     void delay_millis(uint32_t duration) {
-        /*
-        Helper to pause for a duration. Duration starts
-        when startTimer() is called.
-        @param
-        duration: (uint32_t) milliseconds to wait (from when any other timing function was called)
-        @return
-            None
-        */
         while (DURATION_MS(t, ARM_DWT_CYCCNT) < duration) {}
         start_timer();
     }
 
+    /// @brief delta of clock
+    /// @return deltaTime: (float) The time since the last delta call.
     float delta() {
-        /*
-        @return
-            deltaTime: (float) The time since the last delta call.
-        */
-        return DURATION_US(t, ARM_DWT_CYCCNT) / (float)(1E6);
+        float delta = DURATION_US(t, ARM_DWT_CYCCNT) / (float)(1E6);
         start_timer();
+        return delta;
+    }
+
+    /// @brief delta of clock in microseconds
+    /// @return deltaTime: (float) The time since the last delta call.
+    float delta_micros() {
+        float delta = DURATION_US(t, ARM_DWT_CYCCNT);
+        start_timer();
+        return delta;
     }
 };
 

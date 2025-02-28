@@ -4,17 +4,20 @@
 #include <cstdint>		// for access to fixed-width types
 #include "Arduino.h"	// for access to HardwareSerial defines
 
-constexpr uint16_t DR16_PACKET_SIZE = 18;	// the size in bytes of a DR16-Receiver packet
-constexpr uint16_t DR16_INPUT_VALUE_COUNT = 7;	// the size in floats of the normalized input
+constexpr uint16_t DR16_PACKET_SIZE = 18;				// the size in bytes of a DR16-Receiver packet
+constexpr uint16_t DR16_INPUT_VALUE_COUNT = 7;			// the size in floats of the normalized input
 
 constexpr uint16_t DR16_CONTROLLER_INPUT_HIGH = 1684;	// the maximum joystick input value
-constexpr uint16_t DR16_CONTROLLER_INPUT_LOW = 364;	// the minimum joystick input value
+constexpr uint16_t DR16_CONTROLLER_INPUT_LOW = 364;		// the minimum joystick input value
 constexpr uint16_t DR16_CONTROLLER_INPUT_ZERO = 1024;	// the medium joystick input value
 
-constexpr uint16_t DR16_CONTROLLER_SWITCH_HIGH = 3;	// the maximum switch input value
-constexpr uint16_t DR16_CONTROLLER_SWITCH_LOW = 1;	// the minimum switch input value
+constexpr uint16_t DR16_CONTROLLER_SWITCH_HIGH = 3;		// the maximum switch input value
+constexpr uint16_t DR16_CONTROLLER_SWITCH_LOW = 1;		// the minimum switch input value
 
-constexpr uint32_t DR16_FAIL_STATE_TIMEOUT = 250000;
+constexpr uint32_t DR16_FAIL_STATE_TIMEOUT = 250000;	// time in us since last data packet that signifies a controller timeout
+
+constexpr uint32_t DR16_ALIGNMENT_TIMEOUT = 25000;					// max time in us that the alignment can take
+constexpr uint32_t DR16_ALIGNMENT_LONG_INTERVAL_THRESHOLD = 1000; 	// time in us that signifies a packet break rather than just another incoming byte
 
 /// DR16 Packet Structure
 /// (translated from this: https://rm-static.djicdn.com/tem/17348/4.RoboMaster%20%E6%9C%BA%E5%99%A8%E4%BA%BA%E4%B8%93%E7%94%A8%E9%81%A5%E6%8E%A7%E5%99%A8%EF%BC%88%E6%8E%A5%E6%94%B6%E6%9C%BA%EF%BC%89%E7%94%A8%E6%88%B7%E6%89%8B%E5%86%8C.pdf)
@@ -71,7 +74,7 @@ public:
 	/// @brief Attempts to read a full packet from the receiver. This function shouldn't be ran more than 100kHz
 	void read();
 
-  /// @brief Zeros the normalized input array
+	/// @brief Zeros the normalized input array
 	void zero();
 
 public:
@@ -79,9 +82,9 @@ public:
 	/// @return Failure status
 	uint8_t is_fail() { return m_fail; }
 
-  	/// @brief Returns a the current connection status for the dr16 controller
-  	/// @return true for connected false for not connected
-  	bool is_connected() { return m_connected; }
+	/// @brief Returns a the current connection status for the dr16 controller
+	/// @return true for connected false for not connected
+	bool is_connected() { return m_connected; }
 
 	/// @brief Get the 7 float length input buffer. These values are normalized [-1, 1]
 	/// @return float buffer
@@ -121,8 +124,29 @@ public:
 	/// @brief Prints the raw 18-byte packet from the receiver
 	void print_raw();
 
+	/// @brief Get mouse velocity x
+	/// @return Amount of points since last read
+	int get_mouse_x();
 
+	/// @brief Get mouse velocity y
+	/// @return Amount of points since last read
+	int get_mouse_y();
 
+	/// @brief status of left mouse button
+	/// @return Is left mouse button pressed
+	bool get_l_mouse_button();
+
+	/// @brief status of right mouse button
+	/// @return Is right mouse button pressed
+	bool get_r_mouse_button();
+
+	/// @brief Get raw 18-byte packet
+	/// @return 18-byte packet
+	uint8_t* get_raw() { return m_inputRaw; }
+
+	/// @brief A simple check to see if read data is within expected values
+	/// @return True/false whether data is deemed valid or not
+	bool is_data_valid();
 private:
 	/// @brief Maps the input value to a specified value range
 	/// @param value the input value
@@ -133,9 +157,17 @@ private:
 	/// @return Mapped input in the range of [out_low, out_high]
 	float bounded_map(int value, int in_low, int in_high, int out_low, int out_high);
 
-	/// @brief A simple check to see if read data is within expected values
-	/// @return True/false whether data is deemed valid or not
-	bool is_data_valid();
+	
+
+	/// @brief Keep track of mouse x velocity
+	int16_t mouse_x;
+	/// @brief Keep track of mouse y velocity
+	int16_t mouse_y;
+
+	/// @brief Keep track of left mouse button status
+	bool l_mouse_button;
+	/// @brief Keep track of right mouse button status
+	bool r_mouse_button;
 
 public:
 

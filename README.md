@@ -1,15 +1,15 @@
-# firmware
-This repo contains the source code for the CU Boulder Robotics Teams' microcontroller firmware. It runs on a PJRC Teensy 4.1 and interfaces with any device running `buff-core`.
+# Firmware 
+This repo contains the source code for the CU Boulder Robotics Teams' microcontroller firmware. It runs on a PJRC Teensy 4.1 and interfaces with any device running `hive`.
 
-# Documentation
-You can find up-to-date documentation at [cu-robotics.github.io/firmware](cu-robotics.github.io/firmware), compiled on merges to `main`.
+## Documentation
+You can find up-to-date documentation at [cu-robotics.github.io/firmware](cu-robotics.github.io/firmware/), compiled on merges to `main`.
 
 You can find our documentation guidelines at [docs/README](docs/README.md), and how to access your documentation before being merged to main.
 
-## Installation & Usage
-To begin, download this repo: \
+## Installation
+To begin, clone the repository:
 ```bash
-git clone https://gitlab.com/cu-robotics/firmware.git
+git clone git@github.com:CU-Robotics/firmware.git
 ```
 
 Then, install dependencies:
@@ -19,26 +19,31 @@ Then, install dependencies:
 git config --local core.hooksPath .githooks
 ```
 
-`buff-core` is required to build firmware. Clone the repo:
+Install the required tools
 ```bash
-git clone https://gitlab.com/cu-robotics/buff-core.git
+make install
 ```
 
-Once installed, source `buff-tools`:
+## Usage
+
+Now, navigate to the main directory, and run:
+
 ```bash
-cd buff-core
-source buff-tools.bash
+make
 ```
 
-Then, build firmware:
+This will build the current firmware. To upload, run:
+
 ```bash
-buff -b fw
+make upload
 ```
 
-Finally, to flash firmware to a Teensy, use `-f` (also builds):
+There are a few other nice helper functions within the makefile. This will list them:
+
 ```bash
-buff -f fw
+make help
 ```
+
 
 ## Contributing
 This repo follows the CU Robotics code standard:
@@ -47,3 +52,7 @@ This repo follows the CU Robotics code standard:
 - `feature` branches are named `feature-[featurename]` and contain major new features that require unit and integration testing.
 - `patch` branches are named `patch-[patchname]` and contain bugfixes and/or minor adjustments. Unit and integration testing is a soft requirement.
 - All software is required to pass formatting and build tests before being merged into a `production` branch.
+- Other branch-based style questions are answered in the [style guide](docs/README.md).
+
+## Licensing
+This repository uses the MIT License, which covers the code and tools written for our robot firmware. See separate copyright/licensing information for the external libraries used in the repo (in the libaries/ and teensy4/ directories).
