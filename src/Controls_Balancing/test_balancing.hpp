@@ -12,9 +12,9 @@
 #define eta_l 0.4144                            
 
 //roll PID
-#define K1_P 48                               //Need test                                    
+#define K1_P 72                               //Need test                                    
 #define K1_I 0                                  //Need test 
-#define K1_D 9.2                                //Need test                         
+#define K1_D 11.5                                //Need test                         
 #define K1_F 0                                  //Need test  
 
 //leg length PID
