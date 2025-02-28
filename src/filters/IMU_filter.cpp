@@ -199,9 +199,9 @@ int IMU_filter::step_EKF_6axis(IMU_data data){
         filtered_data.roll =  asinf(2.0f * (x[0]*x[2] - x[1]*x[3]));
     }
     filtered_data.yaw = atan2f(2.0f*(x[0]*x[3] + x[1]*x[2]), 1.0f - 2.0f*(x[2]*x[2] + x[3]*x[3]));
-    filtered_data.gyro_yaw = (temp3 - filtered_data.yaw)/dt;
-    filtered_data.gyro_roll = (temp2 - filtered_data.roll)/dt;
-    filtered_data.gyro_pitch = (temp1 - filtered_data.pitch)/dt;
+    filtered_data.gyro_yaw = (filtered_data.yaw - temp3)/dt;
+    filtered_data.gyro_roll = (filtered_data.roll - temp2)/dt;
+    filtered_data.gyro_pitch = (filtered_data.pitch - temp1)/dt;
     // Convert to the original
     filtered_data.accel_world_X = filtered_data.accel_X * (1-2*(x[2]*x[2] + x[3]*x[3])) + filtered_data.accel_Y * (2*(x[1]*x[2] - x[3]*x[0])) + filtered_data.accel_Z * (2*(x[1]*x[3] + x[0]*x[2]));
     filtered_data.accel_world_Y = filtered_data.accel_X * (2*(x[1]*x[2] + x[3]*x[0])) + filtered_data.accel_Y * (1-2*(x[1]*x[1] + x[3]*x[3])) + filtered_data.accel_Z * (2*(x[2]*x[3] - x[1]*x[0]));

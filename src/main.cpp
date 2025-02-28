@@ -102,7 +102,7 @@ int main() {
         imu_filter.step_EKF_6axis(icm.get_data());
         IMU_data* filtered_data = imu_filter.get_filter_data();
         data.gyro_roll = -filtered_data->gyro_pitch; // Roll is Y meaning the pitch from IMU filter -- right(+) 
-        data.gyro_pitch = filtered_data->gyro_roll; // Pitch is X meaning this is roll from IMU filter -- front(+)
+        data.gyro_pitch = -filtered_data->gyro_roll; // Pitch is X meaning this is roll from IMU filter -- front(+)
         data.gyro_yaw = filtered_data->gyro_yaw; // Counterclockwise (+)
         data.imu_accel_x = -filtered_data->accel_world_X; // Front (+)
         data.imu_accel_y = filtered_data->accel_world_Y; // Right (+)
