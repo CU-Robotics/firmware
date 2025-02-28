@@ -464,9 +464,6 @@ void balancing_test::print_visual(){
     Serial.printf("waggle graph %s %f \n", "Gyro Pitch", _data.gyro_pitch * RAD_TO_DEG);
     Serial.printf("waggle graph %s %f \n", "Gyro Roll", _data.gyro_roll * RAD_TO_DEG);
     Serial.printf("waggle graph %s %f \n", "Gyro Yaw", _data.gyro_yaw * RAD_TO_DEG);
-    Serial.printf("waggle graph %s %f \n", "Gyro Pitch", _data.gyro_pitch * RAD_TO_DEG);
-    Serial.printf("waggle graph %s %f \n", "Gyro Roll", _data.gyro_roll * RAD_TO_DEG);
-    Serial.printf("waggle graph %s %f \n", "Gyro Yaw", _data.gyro_yaw * RAD_TO_DEG);
     Serial.printf("waggle graph %s %f \n", "Leg Force Right", _debug_data.F_blr);
     Serial.printf("waggle graph %s %f \n", "Leg Force Left", _debug_data.F_bll);
 
