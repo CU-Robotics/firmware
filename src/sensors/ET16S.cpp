@@ -28,23 +28,40 @@ void ET16S::init() {
 }
 
 void ET16S::read() {
-	//uint32_t time = millis();
-	// Raw data stored in array
-	//uint8_t m_inputRaw[ET16S_PACKET_SIZE] = { 0 };
-	// Store 2 packets (50 bytes) in the buffer to prevent incomplete packet reads
-	//Serial.println(Serial8.available());
-	if (Serial8.available() < (2*ET16S_PACKET_SIZE)) {
+	static uint8_t last_byte = 0xAA;
+	
+	// if we have missed more than 4 packets (for example on startup), clear the buffer and start fresh
+	if (Serial8.available() > ET16S_PACKET_SIZE * 4) {
+		Serial8.clear();
+	}
+
+	// only start the "peeking" process if we have at least 2 packets worth of data, therefore we can afford to skip some bytes
+	if (Serial8.available() < ET16S_PACKET_SIZE * 2) {
 		return;
 	}
-	// We read until we find the start byte of the new packet (0x0f)
-	// this ensures we read one packet per loop
+
+	// try to find the start of the frame. This is achieved by seeing if the current byte to read is 0x0f and the previous byte read was 0x00
+	// if this is the case, we have found the start of the frame
 	while (Serial8.peek() != 0x0f) {
-		Serial8.read();
+		last_byte = Serial8.read();
 	}
-	// Fill raw input array
-	for (int i = 0; i < ET16S_PACKET_SIZE;i++) {
+
+	// if the last byte was not 0x00, we have not found the start of the frame
+	if (last_byte != 0x00) {
+		return;
+	}
+
+	// if we have less than a full packet available, we cannot read the full frame
+	// however we are "aligned" with the start of the frame, so we can wait for the next frame
+	if (Serial8.available() < ET16S_PACKET_SIZE) {
+		return;
+	}
+
+	// read the full frame
+	for (int i = 0; i < ET16S_PACKET_SIZE; i++) {
 		m_inputRaw[i] = Serial8.read();
 	}
+
 	//format raw data
 	format_raw(m_inputRaw);
 	//set flag data
@@ -53,11 +70,6 @@ void ET16S::read() {
 	set_channel_data();
 	//Check flag byte for disconnect
 	test_connection();
-	//print_raw_bin(m_inputRaw);
-	//print_format_bin(16);
-	//print();
-	//print_raw();
-	//Serial.println(time);
 }
 
 void ET16S::print() {
@@ -423,7 +435,7 @@ void ET16S::set_channel_data() {
 }
 
 void ET16S::test_connection() {
-	uint16_t flag_byte = channel[16].data;
+	uint16_t flag_byte = channel[16].raw_format;
 	if (flag_byte & ERROR) {
 		is_connect = false;
 	} else {

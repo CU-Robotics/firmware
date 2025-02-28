@@ -15,7 +15,7 @@ constexpr uint16_t ET16S_INPUT_VALUE_COUNT = 17;
 /// @brief maximum raw input value for stick,dial,wheel
 constexpr float max_in = 1695;
 /// @brief minimum raw input value for stick,dial,wheel
-constexpr float min_in = 352;
+constexpr float min_in = 353;	// this is 352 if Port9 is set to w.bus2
 /// @brief flag byte displaying disconnect (found through testing)
 constexpr uint16_t ERROR = 0b0000000000001100;
 
