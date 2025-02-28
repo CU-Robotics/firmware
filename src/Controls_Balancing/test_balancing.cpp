@@ -106,6 +106,9 @@ void balancing_test::test_write(){
 
 void balancing_test::observer(){
     _dt = timer.delta();
+    o_data.control_yaw += _data.gyro_yaw * _dt;
+    
+
     o_data.gyro_yaw_dot = (_data.gyro_yaw - o_data.gyro_yaw_old) / _dt;
     o_data.gyro_yaw_old = _data.gyro_yaw;
 //---------------------------------------------------------Left Leg Forward Kinematics & Jacobian--------------------------------------------------------------
@@ -191,10 +194,13 @@ void balancing_test::observer(){
     o_data.lr_dot = ((helpingr*xC_dot_r + yCr*yC_dot_r)/o_data.lr);
     o_data.theta_lr_dot = (((helpingr*yC_dot_r) - (yCr * xC_dot_r)) / (helpingr * helpingr + yCr * yCr)) - _data.gyro_pitch;
 //--------------------------------------------------------------b_s and filter for it--------------------------------------------------------
-    o_data.wheel_speed_filtered =  (1/2) * (R_w) * (_data.speed_wr - _data.speed_wl) ; // s_dot //speed 
+    o_data.wheel_speed_filtered =  (1/2) * (R_w) * (_data.speed_wr - _data.speed_wl); // s_dot //speed 
     o_data.wheel_speed_dot = (o_data.wheel_speed_filtered - o_data.wheel_speed_old) / _dt;
     o_data.wheel_speed_old = o_data.wheel_speed_filtered;
     o_data.b_speed = (1/2) * (R_w) * (_data.speed_wr - _data.speed_wl) - (1/2) * (o_data.ll*(o_data.theta_ll_dot + _data.imu_angle_pitch)*cos(phi0l) + o_data.lr*(o_data.theta_lr_dot + _data.imu_angle_pitch)*cos(phi0r)) - (1/2)* (o_data.ll_dot * sin(phi0l) + o_data.lr_dot * sin(phi0r));
+
+
+    o_data.control_s += o_data.wheel_speed_filtered * _dt;    
 //-------------------------------------------filter by a falman filter (I will update this soon) ---------------------------------------------------------------------
     // For the x we have [v,a]^T 
     // predict 
@@ -225,8 +231,8 @@ void balancing_test::control(){
     // float iF_l = -iF_r; 
 
     //Inertial Feedforward (IF) calculation
-    float iF_l = ((m_b / 2) + (eta_l * m_l))*(o_data.gyro_yaw_dot * R_l + o_data.wheel_speed_dot) * sin(o_data.theta_ll);
-    float iF_r = ((m_b / 2) + (eta_l * m_l))*(-(o_data.gyro_yaw_dot * R_l) + o_data.wheel_speed_dot) * sin(o_data.theta_lr);
+    float iF_l = ((m_b / 2) + (eta_l * m_l))*(-(o_data.gyro_yaw_dot * R_l) + o_data.wheel_speed_dot) * sin(o_data.theta_ll);
+    float iF_r = ((m_b / 2) + (eta_l * m_l))*((o_data.gyro_yaw_dot * R_l) + o_data.wheel_speed_dot) * sin(o_data.theta_lr);
 //-----------------------------------------------------------------gravity feed forware-------------------------------------------------------------------
     float costheta_l = cos(o_data.theta_ll);
     float costheta_r = cos(o_data.theta_lr);
@@ -253,10 +259,10 @@ void balancing_test::control(){
 //--------------------------------------------------------------Acceleration Saturation---------------------------------------------------------------------------
     float dx[10];
     // dx[0] = 0; //Ignore // s
-    dx[0] = 0; // s
+    dx[0] = _ref_data.s - o_data.control_s; // s
     dx[1] = _ref_data.b_speed - o_data.wheel_speed_filtered; // speed
     // dx[2] = 0; //Ignore // yaw
-    dx[2] = 0; // yaw angle //We don't have this data and don't need it
+    dx[2] = _ref_data.yaw - o_data.control_yaw; // yaw angle //We don't have this data and don't need it
     dx[3] = _ref_data.yaw_dot - _data.gyro_yaw; // yaw rotational speed in deg
     dx[4] = _ref_data.theta_ll - o_data.theta_ll; // theta_ll
     dx[5] = _ref_data.theta_ll_dot - o_data.theta_ll_dot; // theta_ll_dot
@@ -363,7 +369,18 @@ void balancing_test::control(){
 //----------------------------Save data to printout for debug-------------------------------------------------------------
     _debug_data.F_blr = F_blr;
     _debug_data.F_bll = F_bll;
+    _debug_data.T_blr = T_blr;
+    _debug_data.T_bll = T_bll;
+    _debug_data.F_psi - F_psi;
     return;
+}
+
+void balancing_test::reset_s(){
+    o_data.control_s = 0;
+}
+
+void balancing_test::reset_yaw(){
+    o_data.control_yaw = 0;
 }
 
 write_data balancing_test::getwrite(){
@@ -380,6 +397,13 @@ write_data balancing_test::getwrite(){
     // }
     return _write;
 }
+
+void balancing_test::control_ref(){
+
+    return;
+}
+
+
 
 void balancing_test::printdata(){
     getwrite();
@@ -469,7 +493,8 @@ void balancing_test::print_visual(){
     Serial.printf("waggle graph %s %f \n", "Leg_Force_Right", _debug_data.F_blr);
     Serial.printf("waggle graph %s %f \n", "Leg_Force_Left", _debug_data.F_bll);
     Serial.printf("waggle graph %s %f \n", "F_roll", _debug_data.F_psi);
-
+    Serial.printf("waggle graph %s %f \n", "Leg_Force_Right", _debug_data.F_blr);
+    Serial.printf("waggle graph %s %f \n", "Leg_Force_Left", _debug_data.F_bll);
     
 
 

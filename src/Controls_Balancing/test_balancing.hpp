@@ -83,7 +83,6 @@ struct write_data
 };
 struct observer_data
 {
-    float s;
     float wheel_speed_filtered;
     float imu_speed_x;
     float imu_s;
@@ -112,11 +111,13 @@ struct observer_data
     float gyro_yaw_old;
     float wheel_speed_dot;
     float gyro_yaw_dot;
+
+    float control_yaw;
+    float control_s;
 };
 
 struct ref_data
 {   
-    
     float goal_roll;
     float goal_l;
     float s;
@@ -129,13 +130,15 @@ struct ref_data
     float theta_lr;
     float theta_ll_dot;
     float theta_lr_dot;
-
 }; 
 struct debug_data
 {   
     float F_blr;
     float F_bll;
     float F_psi;
+    
+    float T_bll;
+    float T_blr;
 }; 
 
 class balancing_test{
@@ -179,17 +182,23 @@ class balancing_test{
 
         void control();
 
-        void simple_control();
+        void control_ref();
 
         void step();
 
         write_data getwrite();
+
+        void reset_yaw();
+
+        void reset_s();
 
         void printdata();
 
         void print_observer();
 
         void print_visual();
+
+
 
 };
 

@@ -11,6 +11,8 @@
 // Loop constants
 #define LOOP_FREQ 1000
 #define HEARTBEAT_FREQ 2
+
+#define CONTROLREF flase
 // Declare global objects
 DR16 dr16;
 CANManager can;
@@ -110,6 +112,12 @@ int main() {
         data.imu_angle_pitch = -filtered_data->roll;  // Front(+)
         data.imu_angle_roll = -filtered_data->pitch; // Right(+)
         data.imu_angle_yaw = filtered_data->yaw; // CounterClockwise(+)
+
+        #if CONTROLREF
+
+
+
+        #endif
         data.angle_fr = can.get_motor(0)->get_state().position; // see from robot outor side clockwise (+) 
         data.angle_fl = can.get_motor(1)->get_state().position; // see from robot outor side clockwise (+)
         data.angle_bl = can.get_motor(2)->get_state().position; // see from robot outor side clockwise (+)
@@ -140,12 +148,17 @@ int main() {
             // TODO: Reset all controller integrators here
             Serial.println("SAFTYON");
             can.issue_safety_mode();
+
+            // reset s and yaw
+            test_control.reset_s();
+            test_control.reset_yaw();
         } else if (dr16.is_connected() && dr16.get_l_switch() != 1) {
             // SAFETY OFF
             Serial.println("SAFTYOFF");
             can.write();
         }
 
+        
 
         // Keep the loop running at the desired rate
         loop_timer.delay_micros((int)(1E6 / (float)(LOOP_FREQ)));
