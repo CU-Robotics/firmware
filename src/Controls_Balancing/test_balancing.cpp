@@ -134,8 +134,6 @@ void balancing_test::observer(){
     float helpingl = (xCl - l_a);
     o_data.ll = sqrt(yCl * yCl + helpingl * helpingl); //ll
     float phi0l = atan2(yCl, helpingl); //phi 0
-    Serial.printf("phi1_l, phi4_l: %f, %f\n", phi1_l * RAD_TO_DEG, phi4_l * RAD_TO_DEG);
-    Serial.printf("phi3;, phi2l, phi0l:%f, %f, %f\n", phi3l * RAD_TO_DEG, phi2l * RAD_TO_DEG, phi0l * RAD_TO_DEG);
 
     o_data.jl[0][0] = (l_u * sin(phi0l - phi3l) * sin(phi1_l - phi2l)) / sin(phi2l - phi3l); 
     o_data.jl[0][1] = -(l_u * cos(phi0l - phi3l) * sin(phi1_l - phi2l)) / (o_data.ll * sin(phi2l - phi3l));
@@ -171,8 +169,6 @@ void balancing_test::observer(){
     float helpingr = xCr - l_a;
     o_data.lr = sqrt(yCr * yCr + helpingr * helpingr); 
     float phi0r = atan2(yCr, helpingr);
-    Serial.printf("phi1_r, phi4_r: %f, %f\n", phi1_r * RAD_TO_DEG, phi4_r * RAD_TO_DEG);
-    Serial.printf("phi3r, phi2r, phi0r:%f, %f, %f\n", phi3r * RAD_TO_DEG, phi2r * RAD_TO_DEG, phi0r * RAD_TO_DEG);
     o_data.jr[0][0]  = (l_u * sin(phi0r - phi3r) * sin(phi1_r - phi2r)) / sin(phi2r - phi3r); 
     o_data.jr[0][1]  = -(l_u * cos(phi0r - phi3r) * sin(phi1_r - phi2r)) / (o_data.ll * sin(phi2r - phi3r));
     o_data.jr[1][0]  = (l_u * sin(phi0r - phi2r) * sin(phi3r - phi4_r)) / sin(phi2r - phi3r);
@@ -453,5 +449,9 @@ void balancing_test::print_observer(){
 }
 
 void balancing_test::print_visual(){
+    Serial.printf("waggle graph %s %f \n", "theta_lr", o_data.theta_lr * RAD_TO_DEG);
+    Serial.printf("waggle graph %s %f \n", "theta_ll", o_data.theta_ll * RAD_TO_DEG);
+    Serial.printf("waggle graph %s %f \n", "theta_lr_dot", o_data.theta_lr_dot * RAD_TO_DEG);
+    Serial.printf("waggle graph %s %f \n", "theta_ll_dot", o_data.theta_ll_dot * RAD_TO_DEG);
     return ;
 }

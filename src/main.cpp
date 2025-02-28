@@ -131,8 +131,9 @@ int main() {
         can.write_motor_torque(5,test_control.getwrite().torque_wr);
 
         // can.print_state();
-        test_control.print_observer();
-        test_control.printdata();
+        // test_control.print_observer();
+        // test_control.printdata();
+        test_control.print_visual();
         
         if (!dr16.is_connected() || dr16.get_l_switch() == 1 || test_control.saftymode) {
             // SAFETY ON

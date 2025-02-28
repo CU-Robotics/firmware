@@ -33,3 +33,6 @@ src/git_info.h
 
 # Ignore .vscode config
 .vscode
+
+# Ignore simulator-rust
+simulator-rust
