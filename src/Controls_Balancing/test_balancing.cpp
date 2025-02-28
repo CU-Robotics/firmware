@@ -268,9 +268,9 @@ void balancing_test::control(){
     float dx[10];
     // dx[0] = 0; //Ignore // s
     dx[0] = _ref_data.s - o_data.control_s; // s
-    dx[1] = _ref_data.b_speed - o_data.wheel_speed_filtered; // speed
+    dx[1] = _ref_data.speed - o_data.wheel_speed_filtered; // speed
     // dx[2] = 0; //Ignore // yaw
-    dx[2] = _ref_data.yaw - o_data.control_yaw; // yaw angle //We don't have this data and don't need it
+    dx[2] = _ref_data.yaw -o_data.control_yaw; // yaw angle //We don't have this data and don't need it
     dx[3] = _ref_data.yaw_dot - _data.gyro_yaw; // yaw rotational speed in deg
     dx[4] = _ref_data.theta_ll - o_data.theta_ll; // theta_ll
     dx[5] = _ref_data.theta_ll_dot - o_data.theta_ll_dot; // theta_ll_dot
@@ -406,7 +406,7 @@ write_data balancing_test::getwrite(){
     return _write;
 }
 
-void balancing_test::control_ref(){
+void balancing_test::control_ref(ref_data ref){
 
     return;
 }
@@ -434,7 +434,7 @@ void balancing_test::print_observer(){
     Serial.print("speed_wr ");
     Serial.println(_data.speed_wr);
     Serial.print("s: ");
-    Serial.println(o_data.s);
+    Serial.println(o_data.control_s);
     Serial.print("wheel_speed_filtered: ");
     Serial.println(o_data.wheel_speed_filtered);
     Serial.print("imu_s: ");

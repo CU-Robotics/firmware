@@ -121,7 +121,7 @@ struct ref_data
     float goal_roll;
     float goal_l;
     float s;
-    float b_speed;
+    float speed;
     float yaw;
     float yaw_dot;
     float pitch;
@@ -182,7 +182,7 @@ class balancing_test{
 
         void control();
 
-        void control_ref();
+        void control_ref(ref_data);
 
         void step();
 

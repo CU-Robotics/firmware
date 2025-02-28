@@ -12,7 +12,10 @@
 #define LOOP_FREQ 1000
 #define HEARTBEAT_FREQ 2
 
-#define CONTROLREF flase
+// Speed scale will give the maximum desire speed (m/s)
+#define SPEED_SCALE 0.5   
+// Speed scale will give the maximum desire rotation speed (rad/s)
+#define ROTATION_SCALE M_2_PI
 // Declare global objects
 DR16 dr16;
 CANManager can;
@@ -112,12 +115,6 @@ int main() {
         data.imu_angle_pitch = -filtered_data->roll;  // Front(+)
         data.imu_angle_roll = -filtered_data->pitch; // Right(+)
         data.imu_angle_yaw = filtered_data->yaw; // CounterClockwise(+)
-
-        #if CONTROLREF
-
-
-
-        #endif
         data.angle_fr = can.get_motor(0)->get_state().position; // see from robot outor side clockwise (+) 
         data.angle_fl = can.get_motor(1)->get_state().position; // see from robot outor side clockwise (+)
         data.angle_bl = can.get_motor(2)->get_state().position; // see from robot outor side clockwise (+)
@@ -130,6 +127,23 @@ int main() {
         data.speed_wr = can.get_motor(5)->get_state().speed/ M3508RATIO; // see from robot outor side clockwise (+)
         test_control.set_data(data); 
         test_control.observer();
+        if(dr16.get_l_switch() == 3){
+            ref_data control_ref;
+            control_ref.speed = dr16.get_l_stick_y(); 
+            if(abs(control_ref.speed) < 0.05){
+                control_ref.speed = 0; // Ignore small data
+            }else{
+                test_control.reset_s(); // Ignore position 
+                control_ref.speed *= SPEED_SCALE; // Times a scale for max speed we set
+            }
+            control_ref.yaw_dot = dr16.get_l_stick_x(); 
+            if(abs(control_ref.yaw_dot) < 0.05){
+                control_ref.yaw_dot = 0; // Ignore small data
+            }else{
+                test_control.reset_yaw(); // Ignore yaw data
+                control_ref.yaw_dot *= SPEED_SCALE; // Times a scale for max speed we set
+            }
+        }
         test_control.control();
         can.write_motor_torque(0,test_control.getwrite().torque_fr);
         can.write_motor_torque(1,test_control.getwrite().torque_fl);
