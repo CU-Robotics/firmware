@@ -1,4 +1,3 @@
-use image::current_timestamp_nanos;
 use rand::Rng;
 use rand::distributions::Alphanumeric;
 use serde::{Deserialize, Serialize};
@@ -9,8 +8,6 @@ use std::process::{Command, Stdio};
 use std::time::Duration;
 use std::time::{SystemTime, UNIX_EPOCH};
 use tokio::time::sleep;
-
-mod image;
 
 #[derive(Serialize, Deserialize, Debug)]
 struct ImageData {
@@ -68,105 +65,6 @@ impl Default for RobotData {
     }
 }
 
-fn random_string(len: usize) -> String {
-    rand::thread_rng()
-        .sample_iter(&Alphanumeric)
-        .take(len)
-        .map(char::from)
-        .collect()
-}
-
-fn random_graph_data_point() -> GraphDataPoint {
-    let mut rng = rand::thread_rng();
-    let now = SystemTime::now();
-    let duration = now.duration_since(UNIX_EPOCH);
-    let millis = duration.unwrap().as_millis();
-    GraphDataPoint {
-        x: millis as f64,
-        y: rng.r#gen::<f64>(),
-        settings: GraphDataSettings { clear_data: false },
-    }
-}
-
-fn random_graph_data_points() -> Vec<GraphDataPoint> {
-    let mut rng = rand::thread_rng();
-    let count = rng.r#gen_range(1..=5);
-    (0..count).map(|_| random_graph_data_point()).collect()
-}
-
-fn random_robot_position() -> RobotPosition {
-    let mut rng = rand::thread_rng();
-    let now = SystemTime::now();
-    let duration = now.duration_since(UNIX_EPOCH);
-    let millis = duration.unwrap().as_millis();
-    RobotPosition {
-        x: millis as f64,
-        y: rng.r#gen::<f64>(),
-        heading: rng.r#gen::<f64>(),
-    }
-}
-
-fn create_json_string() -> RobotData {
-    let mut rng = rand::thread_rng();
-
-    let mut graph_data: HashMap<String, Vec<GraphDataPoint>> = HashMap::new();
-    for i in 0..2 {
-        let key = format!("graph_key_{}", i);
-        graph_data.insert(key, random_graph_data_points());
-    }
-
-    let mut string_data: HashMap<String, StringData> = HashMap::new();
-    for i in 0..2 {
-        let key = format!("string_key_{}", i);
-        string_data.insert(
-            key,
-            StringData {
-                value: random_string(10),
-            },
-        );
-    }
-
-    let mut images: HashMap<String, ImageData> = HashMap::new();
-    let image = image::generate_timestamp_image(200, 200);
-    for i in 0..20 {
-        let key = format!("image_key_{}", i);
-        images.insert(
-            key,
-            ImageData {
-                image_data: image.clone(),
-                scale: rng.r#gen_range(1..=5),
-                flip: rng.r#gen::<bool>(),
-            },
-        );
-    }
-
-    let robot_data = RobotData {
-        sent_timestamp: rng.r#gen::<f64>(),
-        images,
-        graph_data,
-        string_data,
-        robot_position: random_robot_position(),
-    };
-
-    robot_data
-}
-
-async fn send_random_loop() {
-    loop {
-        let start = SystemTime::now();
-        let robot_data = create_json_string();
-        println!("Sending");
-
-        send_data(robot_data).await;
-
-        let elapsed = start.elapsed().unwrap();
-        let remaining = Duration::from_secs(1) / 30 - elapsed;
-        if remaining.as_millis() > 0 {
-            sleep(remaining).await;
-        }
-    }
-}
-
 async fn send_data(robot_data: RobotData) {
     let client = reqwest::Client::new();
 
@@ -179,18 +77,22 @@ async fn send_data(robot_data: RobotData) {
         .send()
         .await
     {
-        Ok(response) => {
-            println!("Sent successfully: Status {}", response.status());
-        }
+        Ok(_response) => {}
         Err(e) => {
             println!("Error sending request: {}", e);
         }
     };
 }
 
+pub fn current_timestamp_nanos() -> u64 {
+    SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .expect("Time went backwards")
+        .as_nanos() as u64
+}
+
 #[tokio::main]
 async fn main() -> std::io::Result<()> {
-    // main_loop().await;
     let args: Vec<String> = env::args().collect();
     if args.len() < 2 {
         eprintln!("Usage: {} <command> [arguments...]", args[0]);
