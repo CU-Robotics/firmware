@@ -187,6 +187,6 @@ public:
     RefData ref_data {};
 };
 
-extern RefSystem ref;
+extern RefSystem* ref;
 
 #endif // REF_SYSTEM_HPP

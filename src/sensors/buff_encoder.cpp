@@ -2,7 +2,7 @@
 
 const SPISettings BuffEncoder::m_settings = SPISettings(1000000, MT6835_BITORDER, SPI_MODE3);
 
-float BuffEncoder::read() {
+bool BuffEncoder::read() {
 
     uint8_t data[6] = { 0 }; // transact 48 bits
 
@@ -22,19 +22,16 @@ float BuffEncoder::read() {
     int raw_angle = (data[2] << 13) | (data[3] << 5) | (data[4] >> 3);
     float radians = raw_angle / (float)MT6835_CPR * (3.14159265 * 2.0);
 
-    // assign and return angle
+    // assign angle
     m_angle = radians;
-    return radians;
+
+    //add angle to the data struct
+    buff_sensor_data.m_angle = m_angle;
+    return true;
 }
 
-void BuffEncoder::serialize(uint8_t* buffer, size_t& offset) {
-    buffer[offset++] = id_;
-    memcpy(buffer + offset, &m_angle, sizeof(m_angle));
-    offset += sizeof(m_angle);
-}
 
 void BuffEncoder::print() {
-    Serial.println("Buff Encoder:");
-    Serial.print("Angle: ");
+    Serial.printf("Buff Encoder:\n\t");
     Serial.println(m_angle);
 }
