@@ -1,14 +1,9 @@
-use rand::Rng;
-use rand::distributions::Alphanumeric;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::env;
-use std::f64::consts::E;
 use std::io::{BufRead, BufReader};
 use std::process::{Command, Stdio};
-use std::time::Duration;
 use std::time::{SystemTime, UNIX_EPOCH};
-use tokio::time::sleep;
 
 #[derive(Serialize, Deserialize, Debug)]
 struct ImageData {
@@ -115,7 +110,7 @@ async fn main() -> std::io::Result<()> {
     let mut robot_data = RobotData::default();
 
     let mut last_sent_timestamp = current_timestamp_nanos();
-    let target_fps = 30;
+    let target_fps = 15;
 
     for line in reader.lines() {
         let line = line?.to_lowercase();
@@ -147,9 +142,9 @@ async fn main() -> std::io::Result<()> {
                 if (current_timestamp_nanos() - last_sent_timestamp) / (10e9 as u128)
                     > 1 / target_fps
                 {
+                    last_sent_timestamp = current_timestamp_nanos();
                     send_data(robot_data).await;
                     robot_data = RobotData::default();
-                    last_sent_timestamp = current_timestamp_nanos();
                 }
             } else {
                 println!("Invalid graph value: {}", split[3]);
