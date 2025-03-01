@@ -3,6 +3,7 @@ use rand::distributions::Alphanumeric;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::env;
+use std::f64::consts::E;
 use std::io::{BufRead, BufReader};
 use std::process::{Command, Stdio};
 use std::time::Duration;
@@ -84,11 +85,11 @@ async fn send_data(robot_data: RobotData) {
     };
 }
 
-pub fn current_timestamp_nanos() -> u64 {
+pub fn current_timestamp_nanos() -> u128 {
     SystemTime::now()
         .duration_since(UNIX_EPOCH)
         .expect("Time went backwards")
-        .as_nanos() as u64
+        .as_nanos() as u128
 }
 
 #[tokio::main]
@@ -112,11 +113,13 @@ async fn main() -> std::io::Result<()> {
     let reader = BufReader::new(stdout);
 
     let mut robot_data = RobotData::default();
-    let mut data_counter = 0;
+
+    let mut last_sent_timestamp = current_timestamp_nanos();
+    let target_fps = 30;
 
     for line in reader.lines() {
         let line = line?.to_lowercase();
-        println!("reeeee2 {}", line);
+        println!("intercepted {}", line);
         let split: Vec<&str> = line.split_ascii_whitespace().collect();
         if split.len() < 4 {
             continue;
@@ -140,14 +143,16 @@ async fn main() -> std::io::Result<()> {
                     .entry(graph_name.to_string())
                     .or_insert_with(Vec::new)
                     .push(graph_data);
-                data_counter += 1;
-                if data_counter > 500 {
+
+                if (current_timestamp_nanos() - last_sent_timestamp) / (10e9 as u128)
+                    > 1 / target_fps
+                {
                     send_data(robot_data).await;
                     robot_data = RobotData::default();
-                    data_counter = 0;
+                    last_sent_timestamp = current_timestamp_nanos();
                 }
             } else {
-                // println!("Invalid graph value: {}", split[4]);
+                println!("Invalid graph value: {}", split[3]);
             }
             continue;
         }
