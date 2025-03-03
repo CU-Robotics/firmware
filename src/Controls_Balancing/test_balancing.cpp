@@ -506,6 +506,7 @@ void balancing_test::print_visual(){
     Serial.printf("waggle graph %s %f \n", "ref_s_dot", _ref_data.speed);
     Serial.printf("waggle graph %s %f \n", "ref_yaw", _ref_data.yaw);
     Serial.printf("waggle graph %s %f \n", "ref_yaw_dot", _ref_data.yaw_dot );
+    Serial.printf("waggle graph %s %f \n", "ref_llength", _ref_data.goal_l);
 
     return ;
 }

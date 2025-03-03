@@ -129,17 +129,19 @@ int main() {
         data.speed_wr = can.get_motor(5)->get_state().speed/ M3508RATIO; // see from robot outor side clockwise (+)
         test_control.set_data(data); 
         test_control.observer();
+
+        float _dt = loop_timer.delta();
         if(dr16.get_l_switch() == 3){
             ref_data* control_ref = test_control.get_ref();
             // Set all data to 0 for balancing
-            control_ref->s = 0;
+            // control_ref->s = 0;
             control_ref->speed = 0;
+            // control_ref->yaw = 0;
+            control_ref->yaw_dot = 0;
             control_ref->theta_ll = 0;
             control_ref->theta_ll_dot = 0;
             control_ref->theta_lr = 0;
             control_ref->theta_lr_dot = 0;
-            control_ref->yaw = 0;
-            control_ref->yaw_dot = 0;
             control_ref->pitch = 0;
             control_ref->pitch_dot = 0;
             
@@ -147,17 +149,17 @@ int main() {
             if(abs(control_ref->speed) < 0.05){
                 control_ref->speed = 0; // Ignore small data
             }else{
-                test_control.reset_s(); // Ignore position 
                 control_ref->speed *= SPEED_SCALE; // Times a scale for max speed we set
+                control_ref->s += control_ref->speed * _dt;
             }
             control_ref->yaw_dot = -dr16.get_l_stick_x(); 
             if(abs(control_ref->yaw_dot) < 0.05){
                 control_ref->yaw_dot = 0; // Ignore small data
             }else{
-                test_control.reset_yaw(); // Ignore yaw data
                 control_ref->yaw_dot *= ROTATION_SCALE; // Times a scale for max speed we set
+                control_ref->yaw += control_ref->yaw_dot * _dt;
             }
-            float leg_control = dr16.get_r_stick_y() * 0.01;
+            float leg_control = dr16.get_r_stick_y() * 0.00004;
             if((leg_control > 0 && control_ref->goal_l < MAX_LEG_LENGTH - 0.01) || (leg_control < 0 && control_ref->goal_l > MIN_LEG_LENGTH + 0.01)){
                 control_ref->goal_l += leg_control;
             }
