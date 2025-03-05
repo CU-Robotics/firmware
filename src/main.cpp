@@ -130,7 +130,7 @@ int main() {
         test_control.set_data(data); 
         test_control.observer();
 
-        float _dt = loop_timer.delta();
+        // float _dt = loop_timer.delta();
         if(dr16.get_l_switch() == 3){
             ref_data* control_ref = test_control.get_ref();
             // Set all data to 0 for balancing
