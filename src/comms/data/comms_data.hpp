@@ -9,6 +9,12 @@ enum class TypeLabel : uint8_t {
     NONE = 0x00,
     TestData,
     LoggingData,
+    BuffEncoderData,
+    ICMSensorData,
+    RevEncoderData,
+    TOFSensorData,
+    LidarSensorData,
+    DR16Data
 };
 
 /// @brief PhysicalMedium is the medium over which the data is sent.

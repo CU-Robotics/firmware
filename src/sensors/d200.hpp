@@ -38,15 +38,11 @@ const uint8_t CRC_TABLE[256] = {
   0x78, 0xd6, 0x9b, 0x4c, 0x01, 0xf4, 0xb9, 0x6e, 0x23, 0x8d, 0xc0, 0x17,
   0x5a, 0x06, 0x4b, 0x9c, 0xd1, 0x7f, 0x32, 0xe5, 0xa8
 };
+//There are some other constants for the lidar sensor in the sensor_constants.hpp file
+//These constants are used for the LiDAR sensor and needed for comms which is why its outside the class
 
 /// @brief size of each data packet sent over comms
 const int D200_PAYLOAD_SIZE = 77;
-
-/// @brief points per D200 data packet
-const int D200_POINTS_PER_PACKET = 12;
-
-/// @brief number of packets stored teensy-side
-const int D200_NUM_PACKETS_CACHED = 2;
 
 /// @brief baud rate of LiDAR module
 const int D200_BAUD = 230400;
@@ -77,9 +73,6 @@ const float D200_MIN_SPEED = (float)(2 * 360 + 1) * M_PI / 180.0;
 
 /// @brief max specified scanning speed (rad/s)
 const float D200_MAX_SPEED = (float)(8 * 360 - 1) * M_PI / 180.0;
-
-/// @brief number of timestamp calibration packets. new packet read rate of 333 Hz = 1 packet / 3ms
-const int D200_MAX_CALIBRATION_PACKETS = 333;
 
 /// @brief max millis before lidar timestamp wraps (30s)
 const int D200_TIMESTAMP_WRAP_LIMIT = 30000;
@@ -152,18 +145,6 @@ struct D200Calibration {
   int timestamp_delta_sum = 0;
 };
 
-/// @brief Structure for the LiDAR sensor.
-struct LidarSensorData {
-    /// Sensor ID.
-  uint8_t id;
-  /// Index of the current data packet.
-  int current_packet;
-  /// Calibration data.
-  D200Calibration cal;
-  /// Array of cached data packets.
-  LidarDataPacketSI packets[D200_NUM_PACKETS_CACHED];
-
-};
 
 /// @brief class for LiDAR driver
 class D200LD14P : Sensor {
