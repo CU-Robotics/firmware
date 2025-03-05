@@ -144,6 +144,9 @@ void balancing_test::observer(){
     o_data.jl[1][1] = -(l_u * cos(phi0l - phi2l) * sin(phi3l - phi4_l)) / (o_data.ll * sin(phi2l - phi3l));
 
     o_data.theta_ll = -(fmod((M_PI_2 - phi0l - _data.imu_angle_pitch), 2 * M_PI)); // This is the correct one 
+    if(o_data.theta_ll < -M_PIf){ // less than -180 degree
+        o_data.theta_ll = (2*M_PIf) - o_data.theta_ll; // change it into positive angle
+    }
  //----------------------------------------------------Right Leg Forward Kinematics & Jacobian--------------------------------------------------
     float phi4_r = _data.angle_fr;
     float phi1_r = (_data.angle_br - M_PI); 
@@ -178,7 +181,9 @@ void balancing_test::observer(){
     o_data.jr[1][1]  = -(l_u * cos(phi0r - phi2r) * sin(phi3r - phi4_r)) / (o_data.ll *sin(phi2r - phi3r));
 
     o_data.theta_lr = -(fmod((M_PI_2 - phi0r - _data.imu_angle_pitch), (2 * M_PI)));
-    
+    if(o_data.theta_lr < -M_PIf){ // less than -180 degree
+        o_data.theta_lr = (2*M_PIf) - o_data.theta_lr; // change it into positive angle
+    }
 
 //----------------------------------------------------Calculate Theta_of_leg_dot for both leg--------------------------------------
     float phi2_dot_l = (l_u *((_data.speed_bl * sphi1_l - _data.speed_fl * sphi4_l) * cos(phi3l) + ((-_data.speed_bl) * cphi1_l + _data.speed_fl * cphi4_l) * sin(phi3l))) / (l_l * sin(phi2l - phi3l));

@@ -150,14 +150,16 @@ int main() {
                 control_ref->speed = 0; // Ignore small data
             }else{
                 control_ref->speed *= SPEED_SCALE; // Times a scale for max speed we set
-                control_ref->s += control_ref->speed * _dt;
+                // control_ref->s += control_ref->speed * _dt;
+                test_control.reset_s(); // Ignore the position when running 
             }
             control_ref->yaw_dot = -dr16.get_l_stick_x(); 
             if(abs(control_ref->yaw_dot) < 0.05){
                 control_ref->yaw_dot = 0; // Ignore small data
             }else{
                 control_ref->yaw_dot *= ROTATION_SCALE; // Times a scale for max speed we set
-                control_ref->yaw += control_ref->yaw_dot * _dt;
+                // control_ref->yaw += control_ref->yaw_dot * _dt;
+                test_control.reset_yaw(); // Ignore yaw data when rotating
             }
             float leg_control = dr16.get_r_stick_y() * 0.00004;
             if((leg_control > 0 && control_ref->goal_l < MAX_LEG_LENGTH - 0.01) || (leg_control < 0 && control_ref->goal_l > MIN_LEG_LENGTH + 0.01)){
