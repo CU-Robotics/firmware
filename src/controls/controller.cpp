@@ -150,10 +150,18 @@ void XDriveVelocityController::step(float reference[STATE_LEN][3], float estimat
 void YawController::step(float reference[STATE_LEN][3], float estimate[STATE_LEN][3], float micro_estimate[CAN_MAX_MOTORS][MICRO_STATE_LEN], float outputs[CAN_MAX_MOTORS]) {
     float dt = timer.delta();
     float output = 0.0;
+    float yaw_inertia = 0.055;//kg*m^2 estimated yaw inertia from cad
+    float yaw_max_torque = 9;//9Nm max torque
 
     pidp.K[0] = gains[0];
     pidp.K[1] = gains[1];
     pidp.K[2] = gains[2];
+
+    float torque_reference = (reference[3][2] * yaw_inertia)/yaw_max_torque; 
+    Serial.printf("torque ref: %f\n",torque_reference);
+
+    pidp.K[3] = torque_reference;
+
     pidv.K[0] = gains[3];
     pidv.K[1] = gains[4];
     pidv.K[2] = gains[5];
@@ -164,6 +172,7 @@ void YawController::step(float reference[STATE_LEN][3], float estimate[STATE_LEN
     pidv.setpoint = reference[3][1];
     pidv.measurement = estimate[3][1];
 
+    // TODO:Remove pid filter bounds
     output += pidp.filter(dt, true, true); // position wraps
     output += pidv.filter(dt, true, false); // no wrap for velocity
     output = constrain(output, -1.0, 1.0);
