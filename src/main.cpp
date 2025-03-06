@@ -28,7 +28,6 @@ RefSystem* ref;
 HIDLayer comms;
 ACS712 current_sensor;
 Transmitter* transmitter = nullptr;
-ET16S wfly;
 
 StereoCamTrigger stereoCamTrigger(60);
 
@@ -261,7 +260,7 @@ int main() {
 
         // print dr16
         //Serial.printf("DR16:\n\t");
-        //transmitter->print();
+        transmitter->print();
 
         Serial.printf("Target state:\n");
         for (int i = 0; i < 8; i++) {

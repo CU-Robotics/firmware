@@ -12,13 +12,16 @@ TransmitterType Transmitter::who_am_i() {
 	int counter = 0; //How many sequential elements have been found
 	
 	uint32_t start_time = millis();
-	uint32_t timeout = 500; // Times out after 100 microseconds
+	uint32_t timeout = 500; // Times out after 100 milliseconds
 	while(counter != 5){
 		start_time = millis();
 		raw_input[24] = 0;
-		if (Serial8.available() < (2*ET16S_PACKET_SIZE)) {
-			if ((millis() - start_time) > timeout) { Serial.println("found dr16 by timeout"); return TransmitterType::DR16; }
-			continue;
+
+		while (Serial8.available() < (2*ET16S_PACKET_SIZE)) {
+			if ((millis() - start_time) > timeout) { 
+				Serial.println("found dr16 by timeout"); 
+				return TransmitterType::DR16; 
+			}
 		}
 		// We read until we find the start byte of the new packet (0x0f)
 		// this ensures we read one packet per loop 
@@ -30,16 +33,17 @@ TransmitterType Transmitter::who_am_i() {
 		for (int i = 0; i < ET16S_PACKET_SIZE+1;i++) {
 			raw_input[i] = Serial8.read();
 		}
+
 		if (raw_input[0] == 0x0f) {
 			counter += 1;
-		}
-		else {
+		} else {
 			Serial.println();
 			Serial.print("found dr16");
 			Serial.println();
 			return TransmitterType::DR16;
 		}
 	}
+	
 	Serial.print("found ET16S");
 	return TransmitterType::ET16S;
 }

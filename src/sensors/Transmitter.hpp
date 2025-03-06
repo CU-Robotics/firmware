@@ -2,15 +2,15 @@
 
 #include <Arduino.h>
 #include <optional>
-//#include "./ET16S.hpp"
-//#include "./dr16.hpp"
 
+/// @brief The enum of what type of transmitter is being used
 enum class TransmitterType {
-	INVALID,
+	INVALID = 0,
 	DR16,
 	ET16S
 };
 
+/// @brief The enum of the switch positions
 enum class SwitchPos{
 	INVALID = 0,
 	FORWARD,
@@ -18,13 +18,16 @@ enum class SwitchPos{
 	MIDDLE
 };
 
+/// @brief A unifying interface for all transmitters
 class Transmitter {
 public:
-
-	/// @brief who_am_i assumes transmitter is ET16S, on fail it returns dr16
-	/// @note utilizes the packet size of each transmitter to comfirm
+	/// @brief checks the incoming data stream to determine the transmitter type
+	/// @note who_am_i assumes transmitter is ET16S, on fail it returns dr16. utilizes the packet size of each transmitter to comfirm
 	/// @return Corrosponding TransmitterType object
 	static TransmitterType who_am_i();
+
+	/// @brief standard destructor
+	virtual ~Transmitter() {}
 	
 	/// @brief Reads raw input
 	virtual void read() {}
@@ -42,7 +45,7 @@ public:
 	virtual void print_raw() {}
 	
 	/// @brief get right stick x axis value
-	/// @return (-1 to 1)	/// @brief get
+	/// @return (-1 to 1)
 	virtual float get_r_stick_x() { return 0; }
 	
 	/// @brief get right stick y axis value
@@ -185,10 +188,8 @@ public:
 	/// @param chan_num is the channel number from 5-16
 	/// @return channel data
 	virtual std::optional<float> get_channel_data(int chan_num) { return {}; }
-	/// @brief standard destructor
-	virtual ~Transmitter() {}
 
-
+	/// @brief Various keys that can be pressed on the transmitter
 	struct Keys {
 
 		/// @brief If the key 'w' is pressed
