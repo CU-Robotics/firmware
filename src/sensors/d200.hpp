@@ -6,6 +6,7 @@
 #include <HardwareSerial.h>
 
 #include "Sensor.hpp"
+#include "data_structs.hpp"
 
 // development manual
 // https://files.waveshare.com/upload/9/99/LD14P_Development_Manual.pdf
@@ -102,48 +103,6 @@ struct LidarDataPacket {
   uint16_t timestamp = 0;
 }; */
 
-
-/// @brief data for a LiDAR packet (SI units)
-struct LidarDataPacketSI {
-  /// @brief speed of lidar module (rad/s)
-  float lidar_speed = 0;
-
-  /// @brief start angle of measurements (rad)
-  float start_angle = 0;
-
-  /// @brief array of point measurements
-  struct {
-    /// @brief distance (m)
-    float distance;
-
-    /// @brief intensity of measurement. units are ambiguous (not documented), but in general "the higher the intensity, the larger the signal strength value"
-    uint8_t intensity = 0;
-  } points[D200_POINTS_PER_PACKET];
-
-  /// @brief end angle of measurements (rad)
-  float end_angle = 0;
-
-  /// @brief timestamp of measurements, calibrated (s)
-  float timestamp = 0;
-};
-
-/// @brief struct storing timestamp calibration results 
-struct D200Calibration {
-  /// @brief how many packets are used for calibration
-  int max_calibration_packets = D200_MAX_CALIBRATION_PACKETS;
-
-  /// @brief how many calibration packets have been received
-  int packets_recv = 0;
-
-  /// @brief count of D200 timestamp wraps
-  int num_wraps = 0;
-
-  /// @brief previous lidar timestamp
-  int prev_timestamp = -1;
-
-  /// @brief sum of delta times for calibration packets
-  int timestamp_delta_sum = 0;
-};
 
 
 /// @brief class for LiDAR driver
