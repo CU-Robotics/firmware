@@ -7,7 +7,7 @@
 
 /// @brief Data struct for testing purposes
 struct TestData : Comms::CommsData {
-    TestData() : Comms::CommsData(Comms::TypeLabel::TestData, Comms::PhysicalMedium::HID, Comms::Priority::High, sizeof(TestData)) {}
+    TestData() : Comms::CommsData(Comms::TypeLabel::TestData, Comms::PhysicalMedium::Ethernet, Comms::Priority::High, sizeof(TestData)) {}
     /// @brief x value
     float x = 1.f;
     /// @brief y value
