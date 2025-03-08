@@ -26,7 +26,7 @@ public:
     #if defined(HIVE)
         Hive::env->comms_layer->queue_data(new T(data)); 
     #elif defined(FIRMWARE)
-        assert(false && "Unimplemented");
+        comms_layer.queue_data(new T(data));
     #endif
     }
 

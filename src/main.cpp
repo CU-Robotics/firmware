@@ -13,6 +13,9 @@
 #include "sensor_constants.hpp"
 #include "SensorManager.hpp"
 
+#include "comms/data/sendable.hpp"
+#include "comms/data/hive_data.hpp"
+
 // Loop constants
 #define LOOP_FREQ 1000
 #define HEARTBEAT_FREQ 2
@@ -142,6 +145,9 @@ int main() {
 
     Serial.println("Entering main loop...\n");
 
+    Comms::Sendable<TestData> test_data;
+    test_data.data.w = 0xdeaddead;
+
     // Main loop
     while (true) {
         // start main loop time timer
@@ -152,6 +158,8 @@ int main() {
         // read CAN and DR16 -- These are kept out of sensor manager for safety reasons
         can.read();
         dr16.read();
+
+        test_data.send_to_comms();
 
         Comms::HIDPacket hid_incoming = comms_layer.get_hid_incoming();
         Comms::HIDPacket hid_outgoing;
