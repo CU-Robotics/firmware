@@ -135,25 +135,25 @@ struct DR16Data : Comms::CommsData {
         }
      * 
      */
-    union {
+    union KeyUnion{
         uint16_t keys;
         struct {
-            unsigned w     : 1;
-            unsigned s     : 1;
-            unsigned a     : 1;
-            unsigned d     : 1;
-            unsigned shift : 1;
-            unsigned ctrl  : 1;
-            unsigned q     : 1;
-            unsigned e     : 1;
-            unsigned r     : 1;
-            unsigned f     : 1;
-            unsigned g     : 1;
-            unsigned z     : 1;
-            unsigned x     : 1;
-            unsigned c     : 1;
-            unsigned v     : 1;
-            unsigned b     : 1;
+            uint16_t w     :unsigned 1;
+            uint16_t s     : 1;
+            uint16_t a     : 1;
+            uint16_t d     : 1;
+            uint16_t shift : 1;
+            uint16_t ctrl  : 1;
+            uint16_t q     : 1;
+            uint16_t e     : 1;
+            uint16_t r     : 1;
+            uint16_t f     : 1;
+            uint16_t g     : 1;
+            uint16_t z     : 1;
+            uint16_t x     : 1;
+            uint16_t c     : 1;
+            uint16_t v     : 1;
+            uint16_t b     : 1;
         };
     };
 };
