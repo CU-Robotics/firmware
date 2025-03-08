@@ -5,30 +5,30 @@
 #define LOGGER_FLAG
 
 /// @brief Wrapper for storing print data from Serial
-class Logger:public Print{
+class Logger :public Print {
 public:
 	/// @brief Default Constructor
 	Logger() = default;
 	/// @brief Default Destructor
 	~Logger() = default;
-	
+
 	/// @brief Neccesary function to utilize Print abstract class
 	/// @param b matches parameters in Print.h
 	/// @return input byte
-	size_t write(uint8_t b){print("UNEXPECTED PRINT IN LOGGER.HPP"); return b;}
-	
+	size_t write(uint8_t b) { print("UNEXPECTED PRINT IN LOGGER.HPP"); return b; }
+
 	/// @brief copies internal buffer to inputted location (*data) in memory
 	/// @return number of bytes copied
 	/// @param size of data
 	/// @param data pointer to data
-	uint32_t grab_log_data(uint32_t size, uint8_t *data);
+	uint32_t grab_log_data(uint32_t size, uint8_t* data);
 private:
 	/// @brief copies formatted bytes to internal buffer
 	/// @return number of bytes
 	/// @param buffer pointer to a buffer
 	/// @param size size of the buffer
-	size_t write(const uint8_t *buffer, size_t size);
-	
+	size_t write(const uint8_t* buffer, size_t size);
+
 	/// @brief amount of bytes currently stored in log
 	/// @note also used as current position in memory
 	unsigned int cursor;
