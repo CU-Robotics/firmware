@@ -14,8 +14,9 @@ public:
     IMUSensor() : Sensor(SensorType::ICM) {}
 
 
-    /// @brief read values from the sensor. Call this to update sensor data before accessing them from the getters. 
-    virtual void read() = 0;
+    /// @brief read values from the sensor. Call this to update sensor data before accessing them from the getters.
+    /// @return true if successful, false if no data available 
+    virtual bool read() = 0;
 
     /// @brief Get the temperature of the sensor
     /// @return temperature in Celcius

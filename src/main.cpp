@@ -3,7 +3,6 @@
 #include "git_info.h"
 
 #include "utils/profiler.hpp"
-#include "sensors/d200.hpp"
 #include "sensors/StereoCamTrigger.hpp"
 #include "controls/estimator_manager.hpp"
 #include "controls/controller_manager.hpp"
@@ -11,8 +10,8 @@
 #include "utils/logger.hpp"
 #include <TeensyDebug.h>
 #include "sensors/LEDBoard.hpp"
-#include "data_packet.hpp"
 #include "sensor_constants.hpp"
+#include "SensorManager.hpp"
 
 // Loop constants
 #define LOOP_FREQ 1000
@@ -20,13 +19,10 @@
 
 // Declare global objects
 DR16 dr16;
-rm_CAN can;
-RefSystem ref;
+CANManager can;
+RefSystem* ref;
 HIDLayer comms;
 ACS712 current_sensor;
-
-D200LD14P lidar1(&Serial4, 0);
-D200LD14P lidar2(&Serial5, 1);
 
 StereoCamTrigger stereoCamTrigger(60);
 
@@ -34,10 +30,7 @@ ConfigLayer config_layer;
 
 Profiler prof;
 
-Timer loop_timer;
-Timer stall_timer;
-Timer control_input_timer;
-
+SensorManager sensor_manager;
 EstimatorManager estimator_manager;
 ControllerManager controller_manager;
 
@@ -84,8 +77,8 @@ void print_logo() {
 
 // Master loop
 int main() {
-    long long loopc = 0; // Loop counter for heartbeat
-	
+    uint32_t loopc = 0; // Loop counter for heartbeat
+
     Serial.begin(115200); // the serial monitor is actually always active (for debug use Serial.println & tycmd)
     debug.begin(SerialUSB1);
     print_logo();
@@ -97,35 +90,39 @@ int main() {
     //initialize objects
     can.init();
     dr16.init();
-    ref.init();
     comms.init();
-
-    //can data pointer so we don't pass around rm_CAN object
-    // TODO: extern the can_data object
-    CANData* can_data = can.get_data();
+    ref = sensor_manager.get_ref();
 
     // Config config
     logger.println("Configuring...");
     const Config* config = config_layer.configure(&comms);
     logger.println("Configured!");
 
+    // configure motors
+    can.configure(config->motor_info);
+
+    // initialize sensors
+    sensor_manager.init(config);
+
     //estimate micro and macro state
-    estimator_manager.init(can_data, config);
+    estimator_manager.init(&can, config, &sensor_manager);
 
     //generate controller outputs based on governed references and estimated state
     controller_manager.init(&can, config);
 
-
     //set reference limits in the reference governor
     governor.set_reference_limits(config->set_reference_limits);
 
+    // print all of config
+    config->print();
+
     // variables for use in main
     float temp_state[STATE_LEN][3] = { 0 }; // Temp state array
-    float temp_micro_state[NUM_MOTORS][MICRO_STATE_LEN] = { 0 }; // Temp micro state array
+    float temp_micro_state[CAN_MAX_MOTORS][MICRO_STATE_LEN] = { 0 }; // Temp micro state array
     float temp_reference[STATE_LEN][3] = { 0 }; //Temp governed state
     float target_state[STATE_LEN][3] = { 0 }; //Temp ungoverned state
     float hive_state_offset[STATE_LEN][3] = { 0 }; //Hive offset state
-    // float motor_inputs[NUM_MOTORS] = { 0 }; //Array for storing controller outputs to send to CAN
+    // float motor_inputs[CAN_MAX_MOTORS] = { 0 }; //Array for storing controller outputs to send to CAN
 
     // manual controls variables
     float vtm_pos_x = 0;
@@ -141,19 +138,27 @@ int main() {
     // whether we are in hive mode or not
     bool hive_toggle = false;
 
+    // main loop timers
+    Timer loop_timer;
+    Timer stall_timer;
+    Timer control_input_timer;
+
     Serial.println("Entering main loop...\n");
 
     // Main loop
     while (true) {
-        // read main sensors
+        // start main loop time timer
+        stall_timer.start();
+        
+        // read sensors
+        sensor_manager.read();
+        // read CAN and DR16 -- These are kept out of sensor manager for safety reasons
         can.read();
         dr16.read();
-        ref.read();
-        lidar1.read();
-        lidar2.read();
 
         // read and write comms packets
         comms.ping();
+
         CommsPacket* incoming = comms.get_incoming_packet();
         CommsPacket* outgoing = comms.get_outgoing_packet();
 
@@ -161,7 +166,7 @@ int main() {
         if (incoming->raw[3] == 1) {
             Serial.println("\n\nConfig request received, reconfiguring from comms!\n\n");
             // trigger safety mode
-            can.zero();
+            can.issue_safety_mode();
             config_layer.reconfigure(&comms);
         }
 
@@ -176,19 +181,19 @@ int main() {
         dr16_pos_x += dr16.get_mouse_x() * 0.05 * delta;
         dr16_pos_y += dr16.get_mouse_y() * 0.05 * delta;
 
-        vtm_pos_x += ref.ref_data.kbm_interaction.mouse_speed_x * 0.05 * delta;
-        vtm_pos_y += ref.ref_data.kbm_interaction.mouse_speed_y * 0.05 * delta;
-        
+        vtm_pos_x += ref->ref_data.kbm_interaction.mouse_speed_x * 0.05 * delta;
+        vtm_pos_y += ref->ref_data.kbm_interaction.mouse_speed_y * 0.05 * delta;
+
         float chassis_vel_x = 0;
         float chassis_vel_y = 0;
         float chassis_pos_x = 0;
         float chassis_pos_y = 0;
         if (config->governor_types[0] == 2) {   // if we should be controlling velocity
             chassis_vel_x = dr16.get_l_stick_y() * 5.4
-                + (-ref.ref_data.kbm_interaction.key_w + ref.ref_data.kbm_interaction.key_s) * 2.5
+                + (-ref->ref_data.kbm_interaction.key_w + ref->ref_data.kbm_interaction.key_s) * 2.5
                 + (-dr16.keys.w + dr16.keys.s) * 2.5;
             chassis_vel_y = -dr16.get_l_stick_x() * 5.4
-                + (ref.ref_data.kbm_interaction.key_d - ref.ref_data.kbm_interaction.key_a) * 2.5
+                + (ref->ref_data.kbm_interaction.key_d - ref->ref_data.kbm_interaction.key_a) * 2.5
                 + (dr16.keys.d - dr16.keys.a) * 2.5;
         } else if (config->governor_types[0] == 1) { // if we should be controlling position
             chassis_pos_x = dr16.get_l_stick_x() * 2 + pos_offset_x;
@@ -204,7 +209,7 @@ int main() {
             - dr16_pos_x
             - vtm_pos_x;
         float fly_wheel_target = (dr16.get_r_switch() == 1 || dr16.get_r_switch() == 3) ? 18 : 0; //m/s
-        float feeder_target = (((dr16.get_l_mouse_button() || ref.ref_data.kbm_interaction.button_left) && dr16.get_r_switch() != 2) || dr16.get_r_switch() == 1) ? 10 : 0;
+        float feeder_target = (((dr16.get_l_mouse_button() || ref->ref_data.kbm_interaction.button_left) && dr16.get_r_switch() != 2) || dr16.get_r_switch() == 1) ? 10 : 0;
 
         // set manual controls
         target_state[0][0] = chassis_pos_x;
@@ -230,6 +235,7 @@ int main() {
                 hive_toggle = false;
             }
         }
+
         // when in teensy control mode reset hive toggle
         if (dr16.get_l_switch() == 3) {
             if (!hive_toggle) {
@@ -239,20 +245,24 @@ int main() {
             hive_toggle = true;
         }
 
+        // print dr16
+        Serial.printf("DR16:\n\t");
+        dr16.print();
 
-        // read sensors
-        estimator_manager.read_sensors();
+        Serial.printf("Target state:\n");
+        for (int i = 0; i < 8; i++) {
+            Serial.printf("\t%d: %f %f %f\n", i, target_state[i][0], target_state[i][1], target_state[i][2]);
+        }
 
         // override temp state if needed
         if (incoming->get_hive_override_request() == 1) {
+            Serial.printf("Overriding state with hive state\n");
             incoming->get_hive_override_state(hive_state_offset);
             memcpy(temp_state, hive_state_offset, sizeof(hive_state_offset));
         }
 
-
         // step estimates and construct estimated state
         estimator_manager.step(temp_state, temp_micro_state, incoming->get_hive_override_request());
-
 
         // if first loop set target state to estimated state
         if (count_one == 0) {
@@ -261,17 +271,25 @@ int main() {
             count_one++;
         }
 
+        Serial.printf("Estimated state:\n");
+        for (int i = 0; i < 8; i++) {
+            Serial.printf("\t%d: %f %f %f\n", i, temp_state[i][0], temp_state[i][1], temp_state[i][2]);
+        }
+
         // reference govern
         governor.set_estimate(temp_state);
         governor.step_reference(target_state, config->governor_types);
         governor.get_reference(temp_reference);
 
-        // Serial.printf("yaw ref: %f, pitch ref: %f\n", temp_reference[3][0], temp_reference[4][0]);
-
+        Serial.printf("Reference state:\n");
+        for (int i = 0; i < 8; i++) {
+            Serial.printf("\t%d: %f %f %f\n", i, temp_reference[i][0], temp_reference[i][1], temp_reference[i][2]);
+        }
 
         // generate motor outputs from controls
         controller_manager.step(temp_reference, temp_state, temp_micro_state);
 
+        can.print_state();
 
         // construct sensor data packet
         SensorData sensor_data;
@@ -281,14 +299,14 @@ int main() {
 
         // set lidars
         uint8_t lidar_data[D200_NUM_PACKETS_CACHED * D200_PAYLOAD_SIZE] = { 0 };
-        lidar1.export_data(lidar_data);
+        sensor_manager.get_lidar_sensor(0)->export_data(lidar_data);
         memcpy(sensor_data.raw + SENSOR_LIDAR1_OFFSET, lidar_data, D200_NUM_PACKETS_CACHED * D200_PAYLOAD_SIZE);
-        lidar2.export_data(lidar_data);
+        sensor_manager.get_lidar_sensor(1)->export_data(lidar_data);
         memcpy(sensor_data.raw + SENSOR_LIDAR2_OFFSET, lidar_data, D200_NUM_PACKETS_CACHED * D200_PAYLOAD_SIZE);
 
         // construct ref data packet
         uint8_t ref_data_raw[180] = { 0 };
-        ref.get_data_for_comms(ref_data_raw);
+        ref->get_data_for_comms(ref_data_raw);
 
         // set the outgoing packet
         outgoing->set_id((uint16_t)loopc);
@@ -298,14 +316,31 @@ int main() {
         outgoing->set_ref_data(ref_data_raw);
         outgoing->set_estimated_state(temp_state);
 
+        bool is_slow_loop = false;
+
+        // check whether this was a slow loop or not
+        float dt = stall_timer.delta();
+        Serial.printf("Loop %d, dt: %f\n", loopc, dt);
+        if (dt > 0.002) {
+            // zero the can bus just in case
+            can.issue_safety_mode();
+
+            Serial.printf("Slow loop with dt: %f\n", dt);
+            // mark this as a slow loop to trigger safety mode
+            is_slow_loop = true;
+        }
+
+
         //  SAFETY MODE
-        if (dr16.is_connected() && (dr16.get_l_switch() == 2 || dr16.get_l_switch() == 3) && config_layer.is_configured()) {
+        if (dr16.is_connected() && (dr16.get_l_switch() == 2 || dr16.get_l_switch() == 3) && config_layer.is_configured() && !is_slow_loop) {
             // SAFETY OFF
             can.write();
+            Serial.printf("Can write\n");
         } else {
             // SAFETY ON
             // TODO: Reset all controller integrators here
-            can.zero();
+            can.issue_safety_mode();
+            Serial.printf("Can zero\n");
         }
 
         // LED heartbeat -- linked to loop count to reveal slowdowns and freezes.
@@ -314,9 +349,7 @@ int main() {
 
         // Keep the loop running at the desired rate
         loop_timer.delay_micros((int)(1E6 / (float)(LOOP_FREQ)));
-        float dt = stall_timer.delta();
-        if (dt > 0.002) logger.printf("Slow loop with dt: %f\n", dt);
     }
-    
+
     return 0;
 }

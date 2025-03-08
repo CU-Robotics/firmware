@@ -25,69 +25,66 @@ void DR16::read() {
 	uint8_t s1{ 0 }, s2{ 0 }, k1{ 0 };
 	// uint8_t k2{ 0 };
 
-	// verify that the receiver is ready to be read
-	// since each packet it sends is 18 bytes, verify that there are exactly 18 bytes in the buffer
+	// if read is not called regularly enough, it may miss a packet and start reading halfway through another packet
+	// since the dr16 data structure does not include a start of transmission byte, we need to time our reads based on
+	// it's data stream. 
 
-	// if we have missed 4 packets, then we need to allign/re-allign
-	// this catches the first read allignment as well
+	// the dr16 gives us data in 18 byte packets at 100kbps. Including UART bloat, that comes out to be around 120us per byte. 
+	// however, the dr16 also pauses in between packets for about 11-12ms. 
+
+	// this alignment code polls to find this packet break, indicated by not receiving a byte for longer than DR16_ALIGNMENT_LONG_INTERVAL_THRESHOLD
+	// once it finds it, it clears the buffer, marks the controller as disconnected (for safety), and returns. Allowing the next 
+	// read to catch the incoming packet successfully
 	if (Serial8.available() > DR16_PACKET_SIZE * 4) {
-		Serial.printf("Aligning dr16 data...\n");
-		
-		// start with the buffer clear
+		uint32_t align_start = micros();
+		// wait for a break in the data transmission
 		Serial8.clear();
 
-		int pause_windows = 0; // amount of pause_windows in between full packets
-		int accumulator = 0; // number of bytes read since the last paused window.
+		// number of byte intervals the alignment has encountered
+		int interval_count = 0;
 
-		int tries = 0; // count the number of tries for clearer feedback in case we get stuck aligning.
+		// whether the alignment was successful or stopped prematurely due to a timeout
+		bool alignment_timed_out = true;
 
-		// while we are not alligned
-		while (1) {
-			// grab the current size of the recv buffer
-			int available = Serial8.available();
-			// wait for about 100 micro seconds
-			// the dr16 runs at 100kbps, so thats 1 byte every 80 us
-			delayMicroseconds(100);
+		// wait until a long interval
+		uint32_t long_interval_start = micros();
+		while (micros() - long_interval_start < DR16_ALIGNMENT_TIMEOUT) {
+			interval_count++;
+			
+			// keep track of the this interval's start time and how many bytes were in the serial buffer
+			uint32_t start = micros();
+			int last_available = Serial8.available();
 
-			// calculate the diff. Should be either 0 or 1 at this speed
-			int diff = Serial8.available() - available;
+			// poll until we get a byte or the long interval threshold time is reached
+			while (last_available == Serial8.available() && micros() - start < DR16_ALIGNMENT_LONG_INTERVAL_THRESHOLD);
+			uint32_t end = micros();
+			
+			Serial.printf("DR16: Still aligning (%d)\n", interval_count);
 
-			// if diff was a zero, we hit a pause in the datastream.
-			if (diff == 0) {
-				// count the pause_windows
-				pause_windows++;
-
-				// check to see if enough pause_windows have passed
-
-				// if at least 5 pause_windows have passed, this tells us we are in between dr16 packets since it should have sent a byte by now
-				// also check to see if we've actually received a full packet
-				if (pause_windows > 5 && accumulator == DR16_PACKET_SIZE) {
-					Serial.printf("Dr16 aligned\n");
-					
-					break; // done
-				} else if (pause_windows > 5) {
-					// enough pause_windows have passed but we didnt read an entire packet, start over
-					accumulator = 0;
-				}
-
-				// maintain having the buffer clear
-				Serial8.clear();
-			} else {
-				// there was a byte sent
-
-				// reset pause counter
-				pause_windows = 0;
-				// increment that we read a byte
-				accumulator += diff;
-				// maintain a clear buffer
-				Serial8.clear();
-			}
-
-			Serial.printf("Dr16 failed to read enough data to align. Tries: %d\n", tries++);
+			// if this interval was a long interval (break in packets), call the alignment done and finish up
+			// also mark this as a successful alignment, rather than it timing out
+			if (end - start >= DR16_ALIGNMENT_LONG_INTERVAL_THRESHOLD) {
+				alignment_timed_out = false;
+				break;
+			};
 		}
 
+		// print success or failure
+		if (alignment_timed_out) {
+			Serial.printf("DR16: Alignment timed out, trying again next loop\n\n");
+		} else {
+			uint32_t align_end = micros();
+			Serial.printf("DR16: Aligned successfully\n");
+			Serial.printf("DR16: Alignment took %fms\n\n", (align_end - align_start) / 1000.f);
+		}
 
-		// even though we are alligned, we have not actually read anything yet, so still return
+		// clear the buffer to get ready for the next packet
+		Serial8.clear();
+
+		// mark the controller as disconnected since we have not yet received valid data
+		m_connected = false;
+
+		// no need to do more reading logic since the buffer is now empty		
 		return;
 	}
 
@@ -197,7 +194,7 @@ float* DR16::get_input() {
 }
 
 void DR16::print() {
-	Serial.printf("%.4f\t%.4f\t%.4f\t%.4f\t%.4f\t%.4f\t%.4f\n", m_input[0], m_input[1], m_input[2], m_input[3], m_input[4], m_input[5], m_input[6]);
+	Serial.printf("RStick X: %.2f\tRStick Y: %.2f\tLStick X: %.2f\tLStick Y: %.2f\tWheel: %.2f\tRSwitch: %.2f\tLSwitch: %.2f\n", m_input[0], m_input[1], m_input[2], m_input[3], m_input[4], m_input[5], m_input[6]);
 }
 
 void DR16::print_raw() {

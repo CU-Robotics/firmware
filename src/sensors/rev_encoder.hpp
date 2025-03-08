@@ -10,8 +10,18 @@
 #define REV_ENC_PIN2 3
 #define REV_ENC_PIN3 4
 
+/// @brief Structure for the Rev encoder sensor.
+struct RevSensorData {
+	/// Sensor ID.
+	uint8_t id;
+	/// Encoder ticks.
+	int ticks;
+	/// Angle in radians.
+	float radians;
+};
+
 /// @brief the class for the Rev Through Bore Encoder(www.revrobotics.com/rev-11-1271/)
-class RevEncoder : public Sensor{
+class RevEncoder : public Sensor {
 private:
 	/// @brief the pin number that the encoder's signal pin is plugged into
 	uint8_t in_pin;
@@ -23,9 +33,11 @@ private:
 	float radians;
 	/// @brief the starting value of the encoder in radians
 	float starting_value = 0;
+	/// @brief the data structure for the encoder
+	RevSensorData rev_sensor_data;
 public:
 	/// @brief Construct a new rev_encoder object without initializing the encoder
-	RevEncoder() : Sensor(SensorType::REVENC) {};
+	RevEncoder() : Sensor(SensorType::REVENC) { };
 
 	/// @brief Construct a new rev_encoder object
 	/// @param encoder_pin the pin number that the encoders signal pin is plugged into
@@ -37,18 +49,14 @@ public:
 	void init(uint8_t encoder_pin, bool is_relative);
 
 	/// @brief updates ticks and radians to the current angle 
-	void read();
+	/// @return true if successful, false if no data available
+	bool read() override;
 	/// @brief get the last angle of the encoder in ticks
 	/// @return the last angle of the encoder in ticks [0, 1023]
 	float get_angle_ticks();
 	/// @brief get the last angle of the encoder in radians
 	/// @return the last angle of the encoder in radians [0, 2pi)
 	float get_angle_radians();
-
-	/// @brief serialize the data into a buffer
-	/// @param buffer buffer to store the serialized data
-	/// @param offset offset to store the position of the serialized data in the buffer
-	void serialize(uint8_t* buffer, size_t& offset)  override;
 
 	/// @brief print the encoder details
 	void print();
