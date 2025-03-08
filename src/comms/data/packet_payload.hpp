@@ -97,6 +97,10 @@ private:
     uint16_t max_data_size = 0;
     /// @brief The remaining size of the data packet.
     uint16_t remaining_data_size = 0;
+
+    /// @brief The maximum size of the queue.
+    constexpr static uint16_t MAX_QUEUE_SIZE = 50;
+
 };
 
 }   // namespace Comms

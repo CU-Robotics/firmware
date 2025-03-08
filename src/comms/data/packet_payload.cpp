@@ -72,15 +72,27 @@ void PacketPayload::deconstruct_data(uint8_t* data, uint16_t size) {
 void PacketPayload::add(CommsData* data) {
     switch (data->priority) {
     case Priority::High: {
-        high_priority_send_queue.push(data);
+        if (high_priority_send_queue.size() <= MAX_QUEUE_SIZE) {
+            high_priority_send_queue.push(data);
+        } else {
+            delete data;
+        }
         break;
     } case Priority::Medium: {
-        medium_priority_send_queue.push(data);
+        if (medium_priority_send_queue.size() <= MAX_QUEUE_SIZE) {
+            medium_priority_send_queue.push(data);
+        } else {
+            delete data;
+        }
         break;
     } case Priority::Logging: {
         // a logging priority item must be of type logging data since we grab data from logs dynamically (handled in this file)
         LoggingData* logging = static_cast<LoggingData*>(data);
-        logging_send_queue.push(logging);
+        if (logging_send_queue.size() <= MAX_QUEUE_SIZE) {
+            logging_send_queue.push(logging);
+        } else {
+            delete data;
+        }
         break;
     }
     default:
@@ -210,7 +222,19 @@ void PacketPayload::place_data_in_mega_struct(CommsData* data) {
     }
     
 #elif defined(FIRMWARE)
-    assert(false && "Unimplemented");
+    
+    switch (data->type_label) {
+    case TypeLabel::TestData: {
+        // place the data in the mega struct
+        TestData* test_data = static_cast<TestData*>(data);
+        memcpy(&hive_data.test_data, test_data, sizeof(TestData));
+        Serial.printf("Placed test data in mega struct\n");
+        break;
+    }
+    default:
+        assert(false && "Invalid type label given to place in mega struct");
+    }
+
 #endif
 }
 
