@@ -4,6 +4,9 @@
 /// @brief comment define statement to stop printing to serial monitor
 #define LOGGER_FLAG
 
+/// @brief size of internal buffer
+#define BUFFER_SIZE 4096
+
 /// @brief Wrapper for storing print data from Serial
 class Logger :public Print {
 public:
@@ -31,7 +34,7 @@ private:
 
     /// @brief amount of bytes currently stored in log
     /// @note also used as current position in memory
-    unsigned int cursor;
+    uint32_t cursor;
 };
 /// @brief universal logger object to be called anywhere in codebase
 extern Logger logger;
