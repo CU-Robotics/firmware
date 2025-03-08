@@ -5,8 +5,6 @@
 namespace Comms {
 
 CommsLayer::CommsLayer() {
-    m_ethernet_payload = PacketPayload(ETHERNET_PACKET_PAYLOAD_MAX_SIZE);
-    m_hid_payload = PacketPayload(HID_PACKET_SIZE);
 };
 
 CommsLayer::~CommsLayer() {
@@ -26,7 +24,11 @@ int CommsLayer::init() {
 };
 
 int CommsLayer::run() {
-    std::optional<EthernetPacket> ethernet_incoming = m_ethernet.sendReceive(m_ethernet_outgoing);
+    // process Ethernet stack
+    EthernetPacket eth_outgoing;
+    m_ethernet_payload.construct_data();
+    memcpy(eth_outgoing.payload.data, m_ethernet_payload.data(), ETHERNET_PACKET_PAYLOAD_MAX_SIZE);
+    std::optional<EthernetPacket> ethernet_incoming = m_ethernet.sendReceive(eth_outgoing);
 
     if (ethernet_incoming.has_value()) {
         m_ethernet_payload.deconstruct_data(ethernet_incoming.value().payload.data, ETHERNET_PACKET_PAYLOAD_MAX_SIZE);
@@ -38,7 +40,30 @@ int CommsLayer::run() {
 };
 
 void CommsLayer::queue_data(CommsData* data) {
-
+#if defined(HIVE)
+    std::lock_guard<std::mutex> lock(Hive::env->comms_mutex);
+    switch (data->physical_medium) {
+    case PhysicalMedium::HID:
+        m_hid_payload.add(data);
+        break;
+    case PhysicalMedium::Ethernet:
+        m_ethernet_payload.add(data);
+        break;
+    default:
+        throw std::runtime_error("Invalid PhysicalMedium " + std::to_string(static_cast<uint8_t>(data->physical_medium)));
+    }   
+#elif defined(FIRMWARE)
+    switch (data->physical_medium) {
+    case PhysicalMedium::HID:
+        m_hid_payload.add(data);
+        break;
+    case PhysicalMedium::Ethernet:
+        m_ethernet_payload.add(data);
+        break;
+    default:
+        assert(false && "Invalid PhysicalMedium");
+    }
+#endif
 };
 
 HIDPacket CommsLayer::get_hid_incoming() {

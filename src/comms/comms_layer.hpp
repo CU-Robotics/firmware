@@ -63,3 +63,5 @@ private:
 };
 
 }   // namespace Comms
+
+extern Comms::CommsLayer comms_layer;
