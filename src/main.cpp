@@ -87,7 +87,7 @@ int main() {
     can.init();
 
     float motor_info[24][4] = {
-        {0, 0, 0, 0},
+        {6, 6, 1, 0},
     };
 
     // configure motors
@@ -107,7 +107,10 @@ int main() {
         // read CAN and DR16 -- These are kept out of sensor manager for safety reasons
         can.read();
 
+        can.write_motor_torque(CAN_2, 6, 0);
+
         can.write();
+        can.print_state();
 
         // LED heartbeat -- linked to loop count to reveal slowdowns and freezes.
         loopc % (int)(1E3 / float(HEARTBEAT_FREQ)) < (int)(1E3 / float(5 * HEARTBEAT_FREQ)) ? digitalWrite(13, HIGH) : digitalWrite(13, LOW);

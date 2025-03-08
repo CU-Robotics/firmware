@@ -44,6 +44,7 @@ void SDC302::write_motor_torque(float torque) {
     // create the CAN message
     CAN_message_t msg;
     create_cmd_control(msg, 0, 0, 0, 0, int_torque);
+    Serial.printf("Torque: %d\n", int_torque);
 
     // fill in the output array
     memcpy(&m_output, &msg, sizeof(CAN_message_t));
@@ -75,6 +76,7 @@ void SDC302::write_motor_off() {
 }
 
 void SDC302::create_cmd_motor_on(CAN_message_t& msg) {
+    msg.id = m_id;
     msg.buf[0] = 0xFF;
     msg.buf[1] = 0xFF;
     msg.buf[2] = 0xFF;
@@ -86,6 +88,7 @@ void SDC302::create_cmd_motor_on(CAN_message_t& msg) {
 }
 
 void SDC302::create_cmd_motor_zero(CAN_message_t& msg) {
+    msg.id = m_id;
     msg.buf[0] = 0xFF;
     msg.buf[1] = 0xFF;
     msg.buf[2] = 0xFF;
@@ -97,6 +100,7 @@ void SDC302::create_cmd_motor_zero(CAN_message_t& msg) {
 }
 
 void SDC302::create_cmd_motor_off(CAN_message_t& msg) {
+    msg.id = m_id;
     msg.buf[0] = 0xFF;
     msg.buf[1] = 0xFF;
     msg.buf[2] = 0xFF;
@@ -108,6 +112,7 @@ void SDC302::create_cmd_motor_off(CAN_message_t& msg) {
 }
 
 void SDC302::create_cmd_control(CAN_message_t& msg, int16_t position, int16_t velocity, int16_t kp, int16_t kd, int16_t torque_ff) {
+    msg.id = m_id;
     msg.buf[0] = (position >> 8) & 0xFF;
     msg.buf[1] = position & 0xFF;
     msg.buf[2] = ((velocity >> 4) & 0xFF);

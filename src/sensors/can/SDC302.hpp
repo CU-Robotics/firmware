@@ -1,6 +1,7 @@
 #pragma once
 
 #include "motor.hpp"
+#include <cstdint>
 
 /// @brief SDC302 motor controller class
 class SDC302 : public Motor {
