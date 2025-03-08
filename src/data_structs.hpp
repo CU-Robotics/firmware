@@ -138,7 +138,7 @@ struct DR16Data : Comms::CommsData {
     union KeyUnion{
         uint16_t keys;
         struct {
-            uint16_t w     :unsigned 1;
+            uint16_t w     : 1;
             uint16_t s     : 1;
             uint16_t a     : 1;
             uint16_t d     : 1;
