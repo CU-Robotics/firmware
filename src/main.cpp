@@ -13,10 +13,10 @@
 #define HEARTBEAT_FREQ 2
 
 // Speed scale will give the maximum desire speed (m/s)
-#define SPEED_SCALE 0.5   
+#define SPEED_SCALE 0.65   
 // Speed scale will give the maximum desire rotation speed (rad/s)
-#define ROTATION_SCALE M_2_PI
-#define MAX_LEG_LENGTH 0.32
+#define ROTATION_SCALE 4 * M_1_PI //multiples of 1/pi radian/s = deg/s
+#define MAX_LEG_LENGTH 0.33
 #define MIN_LEG_LENGTH 0.18
 // Declare global objects
 DR16 dr16;
@@ -161,8 +161,8 @@ int main() {
                 // control_ref->yaw += control_ref->yaw_dot * _dt;
                 test_control.reset_yaw(); // Ignore yaw data when rotating
             }
-            float leg_control = dr16.get_r_stick_y() * 0.00004;
-            if((leg_control > 0 && control_ref->goal_l < MAX_LEG_LENGTH - 0.01) || (leg_control < 0 && control_ref->goal_l > MIN_LEG_LENGTH + 0.01)){
+            float leg_control = dr16.get_r_stick_y() * 0.00007;
+            if((leg_control > 0 && control_ref->goal_l < MAX_LEG_LENGTH) || (leg_control < 0 && control_ref->goal_l > MIN_LEG_LENGTH )){
                 control_ref->goal_l += leg_control;
             }
         }
