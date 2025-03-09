@@ -105,7 +105,9 @@ private:
     BuffEncoder* buff_encoders[NUM_SENSOR_TYPE];
 
     /// @brief Array to store robot rev encoders
-    RevEncoder* rev_sensors[NUM_SENSOR_TYPE];
+    /// @note The rev encoder fails to finish reading if it is a pointer/new object
+    // TODO: Fix this
+    RevEncoder rev_sensors[NUM_SENSOR_TYPE];
 
     /// @brief Array to store TOF sensors
     TOFSensor* tof_sensors[NUM_SENSOR_TYPE];
