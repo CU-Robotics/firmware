@@ -143,6 +143,7 @@ int main() {
     Timer stall_timer;
     Timer control_input_timer;
     
+    Watchdog watchdog;
     watchdog.watchdog_set(5, 10);
     Serial.println("Entering main loop...\n");
     watchdog.watchdog_start();
