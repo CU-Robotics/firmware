@@ -12,6 +12,8 @@
 #include "sensor_constants.hpp"
 #include "SensorManager.hpp"
 
+#include "utils/watchdog.hpp"
+
 // Loop constants
 #define LOOP_FREQ 1000
 #define HEARTBEAT_FREQ 2
@@ -140,11 +142,14 @@ int main() {
     Timer loop_timer;
     Timer stall_timer;
     Timer control_input_timer;
-
+    
+    watchdog.watchdog_set(5, 10);
     Serial.println("Entering main loop...\n");
-
+    watchdog.watchdog_start();
     // Main loop
     while (true) {
+        //verify watchdog is still alive every 1 second
+
         // start main loop time timer
         stall_timer.start();
         
@@ -174,7 +179,6 @@ int main() {
         }
 
         // manual controls on firmware
-
         float delta = control_input_timer.delta();
         dr16_pos_x += dr16.get_mouse_x() * 0.05 * delta;
         dr16_pos_y += dr16.get_mouse_y() * 0.05 * delta;
@@ -344,7 +348,7 @@ int main() {
         // LED heartbeat -- linked to loop count to reveal slowdowns and freezes.
         loopc % (int)(1E3 / float(HEARTBEAT_FREQ)) < (int)(1E3 / float(5 * HEARTBEAT_FREQ)) ? digitalWrite(13, HIGH) : digitalWrite(13, LOW);
         loopc++;
-
+        watchdog.wathdog_feed();
         // Keep the loop running at the desired rate
         loop_timer.delay_micros((int)(1E6 / (float)(LOOP_FREQ)));
     }

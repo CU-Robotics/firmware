@@ -2,7 +2,6 @@
 
 #include <WDT_T4/Watchdog_t4.h>
 
-
 /// @brief watchdog callback to indicate trigger has occured
 void watchdog_callback(){
         Serial.println("CALLBACK");
