@@ -229,4 +229,6 @@ public:
 	/// @brief struct instance to keep track of the rm control data
 	Keys keys;
 
+	virtual std::optional<Keys> get_keys() { return {}; }
+
 };

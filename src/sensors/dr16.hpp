@@ -145,6 +145,10 @@ public:
 	/// @return 18-byte packet
 	uint8_t* get_raw() { return m_inputRaw; }
 
+	std::optional<Keys> get_keys() override {
+		return keys;
+	}
+
 	/// @brief A simple check to see if read data is within expected values
 	/// @return True/false whether data is deemed valid or not
 	bool is_data_valid();
@@ -171,49 +175,8 @@ private:
 	bool r_mouse_button = 0;
 
 public:
-
-	/// @brief keeps track of keys pressed on the rm client
-	struct Keys {
-		// just testing with keys at the moment
-		// but will eventually implement
-		// the mouse functionalities.
-
-		/// @brief If the key 'w' is pressed
-		bool w = 0;
-		/// @brief If the key 's' is pressed
-		bool s = 0;
-		/// @brief if the key 'a' is pressed
-		bool a = 0;
-		/// @brief if the key 'd' is pressed
-		bool d = 0;
-		/// @brief if the key 'shift' is pressed
-		bool shift;
-		/// @brief if the key 'ctrl' is pressed
-		bool ctrl;
-		/// @brief if the key 'q' is pressed
-		bool q;
-		/// @brief if the key 'e' is pressed
-		bool e;
-		/// @brief if the key 'r' is pressed
-		bool r;
-		/// @brief if the key 'f' is pressed
-		bool f;
-		/// @brief if the key 'g' is pressed
-		bool g;
-		/// @brief if the key 'z' is pressed
-		bool z;
-		/// @brief if the key 'x' is pressed
-		bool x;
-		/// @brief if the key 'c' is pressed
-		bool c;
-		/// @brief if the key 'v' is pressed
-		bool v;
-		/// @brief if the key 'b' is pressed
-		bool b;
-	};
-
 	/// @brief struct instance to keep track of the rm control data
-	Keys keys;
+	// Keys keys;
 
 	/// @brief normalized input buffer
 	float m_input[DR16_INPUT_VALUE_COUNT] = { 0 };

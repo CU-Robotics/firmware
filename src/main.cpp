@@ -202,10 +202,10 @@ int main() {
 
             chassis_vel_x = transmitter->get_l_stick_y() * 5.4
                 + (-ref->ref_data.kbm_interaction.key_w + ref->ref_data.kbm_interaction.key_s) * 2.5
-                + (-transmitter->keys.w + transmitter->keys.s) * 2.5;
+                + (transmitter->get_keys().value().w - transmitter->get_keys().value().s) * 2.5;
             chassis_vel_y = -transmitter->get_l_stick_x() * 5.4
                 + (ref->ref_data.kbm_interaction.key_d - ref->ref_data.kbm_interaction.key_a) * 2.5
-                + (transmitter->keys.d - transmitter->keys.a) * 2.5;
+                + (-transmitter->get_keys().value().d + transmitter->get_keys().value().a) * 2.5;
 
         } else if (config->governor_types[0] == 1) { // if we should be controlling position
             chassis_pos_x = transmitter->get_l_stick_x() * 2 + pos_offset_x;
