@@ -3,7 +3,7 @@
 
 /// @brief internal buffer with 4kb capacity
 /// @note will need to change size if we every print more than 4096 characters per loop
-DMAMEM char log_buffer[BUFFER_SIZE];
+DMAMEM char log_buffer[LOGGER_BUFFER_SIZE];
 
 size_t Logger::write(const uint8_t* buffer, size_t size) {
     // guard against cursor going beyond buffer size
@@ -17,7 +17,7 @@ size_t Logger::write(const uint8_t* buffer, size_t size) {
     memcpy(print_statement, log_buffer + cursor, size);
 
 #ifdef LOGGER_FLAG
-    Serial.print(print_statement);
+    logger.print(print_statement);
 #endif
 
     // sets cursor to current place in memory

@@ -1,8 +1,9 @@
 #include "state.hpp"
+#include "logger.hpp"
 
 void Governor::set_reference(float reference[STATE_LEN][3]) {
     memcpy(this->reference, reference, sizeof(this->reference));
-    Serial.println("Don't use this, bitch 'one time is ok :)'");
+    logger.println("Don't use this, bitch 'one time is ok :)'");
 }
 
 void Governor::get_reference(float reference[STATE_LEN][3]) {

@@ -79,7 +79,7 @@ void print_logo() {
 int main() {
     uint32_t loopc = 0; // Loop counter for heartbeat
 
-    Serial.begin(115200); // the serial monitor is actually always active (for debug use Serial.println & tycmd)
+    Serial.begin(115200); // the serial monitor is actually always active (for debug use logger.println & tycmd)
     debug.begin(SerialUSB1);
     print_logo();
 
@@ -143,7 +143,7 @@ int main() {
     Timer stall_timer;
     Timer control_input_timer;
 
-    Serial.println("Entering main loop...\n");
+    logger.println("Entering main loop...\n");
 
     // Main loop
     while (true) {
@@ -164,7 +164,7 @@ int main() {
 
         // check whether this packet is a config packet
         if (incoming->raw[3] == 1) {
-            Serial.println("\n\nConfig request received, reconfiguring from comms!\n\n");
+            logger.println("\n\nConfig request received, reconfiguring from comms!\n\n");
             // trigger safety mode
             can.issue_safety_mode();
             config_layer.reconfigure(&comms);
@@ -172,7 +172,7 @@ int main() {
 
         // print loopc every second to verify it is still alive
         if (loopc % 1000 == 0) {
-            Serial.println(loopc);
+            logger.println(loopc);
         }
 
         // manual controls on firmware
@@ -246,17 +246,17 @@ int main() {
         }
 
         // print dr16
-        Serial.printf("DR16:\n\t");
+        logger.printf("DR16:\n\t");
         dr16.print();
 
-        Serial.printf("Target state:\n");
+        logger.printf("Target state:\n");
         for (int i = 0; i < 8; i++) {
-            Serial.printf("\t%d: %f %f %f\n", i, target_state[i][0], target_state[i][1], target_state[i][2]);
+            logger.printf("\t%d: %f %f %f\n", i, target_state[i][0], target_state[i][1], target_state[i][2]);
         }
 
         // override temp state if needed
         if (incoming->get_hive_override_request() == 1) {
-            Serial.printf("Overriding state with hive state\n");
+            logger.printf("Overriding state with hive state\n");
             incoming->get_hive_override_state(hive_state_offset);
             memcpy(temp_state, hive_state_offset, sizeof(hive_state_offset));
         }
@@ -271,9 +271,9 @@ int main() {
             count_one++;
         }
 
-        Serial.printf("Estimated state:\n");
+        logger.printf("Estimated state:\n");
         for (int i = 0; i < 8; i++) {
-            Serial.printf("\t%d: %f %f %f\n", i, temp_state[i][0], temp_state[i][1], temp_state[i][2]);
+            logger.printf("\t%d: %f %f %f\n", i, temp_state[i][0], temp_state[i][1], temp_state[i][2]);
         }
 
         // reference govern
@@ -281,9 +281,9 @@ int main() {
         governor.step_reference(target_state, config->governor_types);
         governor.get_reference(temp_reference);
 
-        Serial.printf("Reference state:\n");
+        logger.printf("Reference state:\n");
         for (int i = 0; i < 8; i++) {
-            Serial.printf("\t%d: %f %f %f\n", i, temp_reference[i][0], temp_reference[i][1], temp_reference[i][2]);
+            logger.printf("\t%d: %f %f %f\n", i, temp_reference[i][0], temp_reference[i][1], temp_reference[i][2]);
         }
 
         // generate motor outputs from controls
@@ -320,12 +320,12 @@ int main() {
 
         // check whether this was a slow loop or not
         float dt = stall_timer.delta();
-        Serial.printf("Loop %d, dt: %f\n", loopc, dt);
+        logger.printf("Loop %d, dt: %f\n", loopc, dt);
         if (dt > 0.002) {
             // zero the can bus just in case
             can.issue_safety_mode();
 
-            Serial.printf("Slow loop with dt: %f\n", dt);
+            logger.printf("Slow loop with dt: %f\n", dt);
             // mark this as a slow loop to trigger safety mode
             is_slow_loop = true;
         }
@@ -335,12 +335,12 @@ int main() {
         if (dr16.is_connected() && (dr16.get_l_switch() == 2 || dr16.get_l_switch() == 3) && config_layer.is_configured() && !is_slow_loop) {
             // SAFETY OFF
             can.write();
-            Serial.printf("Can write\n");
+            logger.printf("Can write\n");
         } else {
             // SAFETY ON
             // TODO: Reset all controller integrators here
             can.issue_safety_mode();
-            Serial.printf("Can zero\n");
+            logger.printf("Can zero\n");
         }
 
         // LED heartbeat -- linked to loop count to reveal slowdowns and freezes.

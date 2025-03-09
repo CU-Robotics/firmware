@@ -1,4 +1,5 @@
 #include "config_layer.hpp"
+#include "logger.hpp"
 
 /// @brief This resets the whole processor and kicks it back to program entry (teensy4/startup.c)
 /// @param void specify no arguments (needed in C)
@@ -26,7 +27,7 @@ const Config* const ConfigLayer::configure(HIDLayer* comms, bool config_off_SD) 
     while (!is_configured()) {
     #ifdef CONFIG_LAYER_DEBUG
         if (delta_time >= 2000) {
-            Serial.printf("Pinging for config packet....\n");
+            logger.printf("Pinging for config packet....\n");
             prev_time = millis();
         }
         delta_time = millis() - prev_time;
@@ -40,16 +41,16 @@ const Config* const ConfigLayer::configure(HIDLayer* comms, bool config_off_SD) 
 
     // verify that config received matches ref system: if not, error out
 #ifndef DISABLE_REF_CONFIG_SAFETY_CHECK
-    Serial.printf("Received robot ID from config: %d\nRobot ID from ref system: %d\n", (int)config.robot, ref->ref_data.robot_performance.robot_ID);
+    logger.printf("Received robot ID from config: %d\nRobot ID from ref system: %d\n", (int)config.robot, ref->ref_data.robot_performance.robot_ID);
     // id check with modulo 100 to account for red and blue teams. Blue is the id + 100. (ID == 101, 102, ...)
     if ((ref->ref_data.robot_performance.robot_ID % 100) != (int)config.robot) {
-        Serial.printf("ERROR: IDs do not match!! Check robot_id.cfg and robot settings from ref system!\n");
+        logger.printf("ERROR: IDs do not match!! Check robot_id.cfg and robot settings from ref system!\n");
         if (!CONFIG_ERR_HANDLER(CONFIG_ID_MISMATCH)) {
             // in current implementation, CONFIG_ERR_HANDLER w/ err code CONFIG_ID_MISMATCH will
             // enter an infinite while(1) loop-- if that is changed, this loop should be changed accordingly as well
             while (1) {
-                Serial.println("CONFIG_ERR_HANDLER: exited with error code CONFIG_ID_MISMATCH");
-                Serial.println("if function was modified for case CONFIG_ID_MISMATCH, remove this loop in config_layer.cpp");
+                logger.println("CONFIG_ERR_HANDLER: exited with error code CONFIG_ID_MISMATCH");
+                logger.println("if function was modified for case CONFIG_ID_MISMATCH, remove this loop in config_layer.cpp");
                 delay(2000);
             }
         }
@@ -57,9 +58,9 @@ const Config* const ConfigLayer::configure(HIDLayer* comms, bool config_off_SD) 
 #endif
 
     // update stored config, msg if successful
-    Serial.println("Attempting to store config...");
-    if (store_config()) Serial.println("\tConfig successfully stored in /config.pack\n");
-    else Serial.println("\tConfig not successfully stored (is an SD card inserted?)\n");    // not a fatal error, can still return
+    logger.println("Attempting to store config...");
+    if (store_config()) logger.println("\tConfig successfully stored in /config.pack\n");
+    else logger.println("\tConfig not successfully stored (is an SD card inserted?)\n");    // not a fatal error, can still return
 
     // blink 4 times quickly to show that we received a config packet finished processing it
     for (int i = 0; i < 8; i++) {
@@ -103,26 +104,26 @@ void ConfigLayer::reconfigure(HIDLayer* comms) {
 void ConfigLayer::config_SD_init(HIDLayer* comms) {
     // if on robot, we need to wait for ref to send robot_id
 #ifndef DISABLE_REF_CONFIG_SAFETY_CHECK
-    Serial.println("Waiting for ref system to initialize...");
+    logger.println("Waiting for ref system to initialize...");
     while (ref->ref_data.robot_performance.robot_ID == 0)
         ref->read();
-    Serial.println("Ref system online");
+    logger.println("Ref system online");
 #endif
 
 
 // check SD
     if (sdcard.exists(CONFIG_PATH)) {
-        Serial.printf("Config located on SD in /config.pack, attempting to load from file\n");
+        logger.printf("Config located on SD in /config.pack, attempting to load from file\n");
 
         // load sd config into config_packets
         configured = sd_load();
         if (configured) {
-            Serial.printf("SD config load successful!\n");
+            logger.printf("SD config load successful!\n");
         } else {
-            Serial.printf("SD config load failed, awaiting input from comms....\n");
+            logger.printf("SD config load failed, awaiting input from comms....\n");
         }
     } else {
-        Serial.printf("No %s in SD card, awaiting input from comms....\n", CONFIG_PATH);
+        logger.printf("No %s in SD card, awaiting input from comms....\n", CONFIG_PATH);
     }
 }
 
@@ -149,9 +150,9 @@ void ConfigLayer::process(CommsPacket* in, CommsPacket* out) {
                 num_sec);
 
         #ifdef CONFIG_LAYER_DEBUG
-            Serial.printf("YAML metadata received:\n");
+            logger.printf("YAML metadata received:\n");
             for (int i = 0; i < num_sec; i++) {
-                Serial.printf("\tSection %d: %u subsection(s)\n", i, subsec_sizes[i]);
+                logger.printf("\tSection %d: %u subsection(s)\n", i, subsec_sizes[i]);
             }
         #endif
 
@@ -162,7 +163,7 @@ void ConfigLayer::process(CommsPacket* in, CommsPacket* out) {
             index++;
 
         #ifdef CONFIG_LAYER_DEBUG
-            Serial.printf("Received YAML configuration packet: (%u, %u)\n", sec_id, subsec_id);
+            logger.printf("Received YAML configuration packet: (%u, %u)\n", sec_id, subsec_id);
         #endif
 
                     // add one because subsections are zero-indexed
@@ -179,7 +180,7 @@ void ConfigLayer::process(CommsPacket* in, CommsPacket* out) {
                 if (seek_sec + 1 > num_sec) {
                     configured = true;
                 #ifdef CONFIG_LAYER_DEBUG
-                    Serial.printf("YAML configuration complete\n");
+                    logger.printf("YAML configuration complete\n");
                 #endif
                 }
             }
@@ -206,7 +207,7 @@ void Config::fill_data(CommsPacket packets[MAX_CONFIG_PACKETS], uint8_t sizes[MA
             index = 0;
 
         if (sub_size != 0) {
-            Serial.printf("id: %d, subsec_id: %d, sub_size: %d\n", id, subsec_id, sub_size);
+            logger.printf("id: %d, subsec_id: %d, sub_size: %d\n", id, subsec_id, sub_size);
         }
 
         if (id == yaml_section_id_mappings.at("robot")) {
@@ -273,7 +274,7 @@ void Config::fill_data(CommsPacket packets[MAX_CONFIG_PACKETS], uint8_t sizes[MA
         }
     }
 
-    Serial.println();
+    logger.println();
 
 
     //fill num_of_(sensor) variables with the number of sensors defined for this robot
@@ -306,70 +307,70 @@ void Config::fill_data(CommsPacket packets[MAX_CONFIG_PACKETS], uint8_t sizes[MA
 }
 
 void Config::print() const {
-    Serial.printf("Config:\n");
-    Serial.printf("Robot ID: %.3f\n", robot);
-    Serial.printf("Controller Info:\n");
+    logger.printf("Config:\n");
+    logger.printf("Robot ID: %.3f\n", robot);
+    logger.printf("Controller Info:\n");
     for (size_t i = 0; i < NUM_ROBOT_CONTROLLERS; i++) {
-        Serial.printf("\tController %d: ", i);
+        logger.printf("\tController %d: ", i);
         for (size_t j = 0; j < CAN_MAX_MOTORS; j++) {
-            Serial.printf("%.3f ", controller_info[i][j]);
+            logger.printf("%.3f ", controller_info[i][j]);
         }
-        Serial.println();
+        logger.println();
     }
     // gains
-    Serial.printf("Gains:\n");
+    logger.printf("Gains:\n");
     for (size_t i = 0; i < NUM_ROBOT_CONTROLLERS; i++) {
-        Serial.printf("\tController %d: ", i);
+        logger.printf("\tController %d: ", i);
         for (size_t j = 0; j < NUM_GAINS; j++) {
-            Serial.printf("%.3f ", gains[i][j]);
+            logger.printf("%.3f ", gains[i][j]);
         }
-        Serial.println();
+        logger.println();
     }
 
     // gear ratios
-    Serial.printf("Gear Ratios:\n");
+    logger.printf("Gear Ratios:\n");
     for (size_t i = 0; i < NUM_ROBOT_CONTROLLERS; i++) {
-        Serial.printf("\tController %d: ", i);
+        logger.printf("\tController %d: ", i);
         for (size_t j = 0; j < CAN_MAX_MOTORS; j++) {
-            Serial.printf("%.3f ", gear_ratios[i][j]);
+            logger.printf("%.3f ", gear_ratios[i][j]);
         }
-        Serial.println();
+        logger.println();
     }
 
     // sensor info
-    Serial.printf("Sensor Info:\n");
+    logger.printf("Sensor Info:\n");
     for (size_t i = 0; i < NUM_SENSORS; i++) {
-        Serial.printf("\tSensor %d: ", i);
+        logger.printf("\tSensor %d: ", i);
         for (size_t j = 0; j < NUM_SENSOR_VALUES; j++) {
-            Serial.printf("%.3f ", sensor_info[i][j]);
+            logger.printf("%.3f ", sensor_info[i][j]);
         }
-        Serial.println();
+        logger.println();
     }
 
     // estimator info
-    Serial.printf("Estimator Info:\n");
+    logger.printf("Estimator Info:\n");
     for (size_t i = 0; i < NUM_ESTIMATORS; i++) {
-        Serial.printf("\tEstimator %d: ", i);
+        logger.printf("\tEstimator %d: ", i);
         for (size_t j = 0; j < STATE_LEN; j++) {
-            Serial.printf("%.3f ", estimator_info[i][j]);
+            logger.printf("%.3f ", estimator_info[i][j]);
         }
-        Serial.println();
+        logger.println();
     }
 
     // governor types
-    Serial.printf("Governor Types:\n");
+    logger.printf("Governor Types:\n");
     for (size_t i = 0; i < STATE_LEN; i++) {
-        Serial.printf("\tState %d: %.3f\n", i, governor_types[i]);
+        logger.printf("\tState %d: %.3f\n", i, governor_types[i]);
     }
 
     // motor info
-    Serial.printf("Motor Info:\n");
+    logger.printf("Motor Info:\n");
     for (size_t i = 0; i < CAN_MAX_MOTORS; i++) {
-        Serial.printf("\tMotor %d: ", i);
+        logger.printf("\tMotor %d: ", i);
         for (size_t j = 0; j < 3; j++) {
-            Serial.printf("%.3f ", motor_info[i][j]);
+            logger.printf("%.3f ", motor_info[i][j]);
         }
-        Serial.println();
+        logger.println();
     }
 }
 
@@ -394,11 +395,11 @@ bool ConfigLayer::sd_load() {
 
     uint8_t* config_bytes = (uint8_t*)config_packets;
 #ifdef CONFIG_LAYER_DEBUG
-    Serial.printf("sd_load: computing checksum for stored config\n");
+    logger.printf("sd_load: computing checksum for stored config\n");
 #endif
     // need combined checksum of config_bytes, subsec_sizes
     if ((sd_checksum64(config_bytes, config_byte_size) + sd_checksum64(subsec_sizes, MAX_CONFIG_PACKETS)) != checksum) {
-        Serial.printf("Checksum for config file does not match stored config, requesting config from hive...\n");
+        logger.printf("Checksum for config file does not match stored config, requesting config from hive...\n");
         return false;
     }
 
@@ -413,9 +414,9 @@ bool ConfigLayer::sd_load() {
 #ifndef DISABLE_REF_CONFIG_SAFETY_CHECK
     // id check with modulo 100 to account for red and blue teams. Blue is the id + 100. (ID == 101, 102, ...)
     if ((ref->ref_data.robot_performance.robot_ID % 100) != (int)received_id) {
-        Serial.printf("NOTICE: attempting to load firmware for different robot type! \n");
-        Serial.printf("Current robot ID: %d\nStored config robot ID: %d\n", ref->ref_data.robot_performance.robot_ID, (int)received_id);
-        Serial.println("Requesting config from hive...");
+        logger.printf("NOTICE: attempting to load firmware for different robot type! \n");
+        logger.printf("Current robot ID: %d\nStored config robot ID: %d\n", ref->ref_data.robot_performance.robot_ID, (int)received_id);
+        logger.println("Requesting config from hive...");
         return false;
     }
 #endif
@@ -436,20 +437,20 @@ bool ConfigLayer::config_SD_read_packets(uint64_t& checksum) {
     for (int i = 1; i < MAX_CONFIG_PACKETS; i++) {
         uint64_t temp_checksum;
         if (sdcard.read((uint8_t*)(&temp_checksum), sizeof(uint64_t)) != sizeof(uint64_t)) {
-            Serial.printf("Unexpected mismatch in number of bytes read, requesting config from hive...\n");
+            logger.printf("Unexpected mismatch in number of bytes read, requesting config from hive...\n");
             return false;
         }
         if (temp_checksum != checksum) {
-            Serial.printf("Inconsistent data found in config file, requesting config from hive...\n");
+            logger.printf("Inconsistent data found in config file, requesting config from hive...\n");
             return false;
         }
         if (sdcard.read((uint8_t*)(&config_packets[i]), sizeof(CommsPacket)) != sizeof(CommsPacket)) {
-            Serial.printf("Unexpected mismatch in number of bytes read, requesting config from hive...\n");
+            logger.printf("Unexpected mismatch in number of bytes read, requesting config from hive...\n");
             return false;
         }
     }
     if (sdcard.read(subsec_sizes, MAX_CONFIG_PACKETS) != MAX_CONFIG_PACKETS) {
-        Serial.printf("Unexpected mismatch in number of bytes read, requesting config from hive...\n");
+        logger.printf("Unexpected mismatch in number of bytes read, requesting config from hive...\n");
         return false;
     }
 
@@ -481,7 +482,7 @@ bool ConfigLayer::store_config() {
 
     // calculate checksum on config packet array
 #ifdef CONFIG_LAYER_DEBUG
-    Serial.printf("store_config: computing checksum for received config\n");
+    logger.printf("store_config: computing checksum for received config\n");
 #endif
     uint8_t* config_bytes = (uint8_t*)config_packets;
     uint64_t checksum = sd_checksum64(config_bytes, config_byte_size);
@@ -490,7 +491,7 @@ bool ConfigLayer::store_config() {
     // write robot id byte to ref data so it can be compared directly
     sdcard.write((uint8_t*)(&config.robot), sizeof(float));
 
-    Serial.printf("Robot ID from config: %d\n", (int)config.robot);
+    logger.printf("Robot ID from config: %d\n", (int)config.robot);
 
     for (int i = 0; i < MAX_CONFIG_PACKETS; i++) {
         // write checksum once
@@ -502,7 +503,7 @@ bool ConfigLayer::store_config() {
 
     sdcard.close();
 
-    Serial.printf("Finished writing to SD\n");
+    logger.printf("Finished writing to SD\n");
 
     return true;
 }
@@ -513,7 +514,7 @@ uint64_t ConfigLayer::sd_checksum64(uint8_t* arr, uint64_t n) {
         out += arr[i];
     }
 #ifdef CONFIG_LAYER_DEBUG
-    Serial.printf("sd_checksum64: returned %x\n", out);
+    logger.printf("sd_checksum64: returned %x\n", out);
 #endif
     return out;
 }
@@ -525,15 +526,15 @@ bool ConfigLayer::CONFIG_ERR_HANDLER(int err_code) {
     // make sure that every error case returns a value!
     switch (err_code) {
     case CONFIG_RM_FAIL:
-        Serial.println("\tCONFIG_ERROR::config failed to remove /config.pack from SD");
+        logger.println("\tCONFIG_ERROR::config failed to remove /config.pack from SD");
         return false;
 
     case CONFIG_TOUCH_FAIL:
-        Serial.println("\tCONFIG_ERROR::config failed to create /config.pack on SD");
+        logger.println("\tCONFIG_ERROR::config failed to create /config.pack on SD");
         return false;
 
     case CONFIG_OPEN_FAIL:
-        Serial.println("\tCONFIG_ERROR::config failed to open /config.pack from SD");
+        logger.println("\tCONFIG_ERROR::config failed to open /config.pack from SD");
         return false;
 
     case CONFIG_ID_MISMATCH:
@@ -541,8 +542,8 @@ bool ConfigLayer::CONFIG_ERR_HANDLER(int err_code) {
         delta_time = millis() - prev_time;
         while (1) {
             if (delta_time >= 2000) {
-                Serial.println("\tCONFIG_ERROR::config from comms does not match from ref system!!");
-                Serial.println("\tCheck robot_id.cfg and robot ID on ref system for inconsistency");
+                logger.println("\tCONFIG_ERROR::config from comms does not match from ref system!!");
+                logger.println("\tCheck robot_id.cfg and robot ID on ref system for inconsistency");
                 prev_time = millis();
             }
             delta_time = millis() - prev_time;
@@ -551,7 +552,7 @@ bool ConfigLayer::CONFIG_ERR_HANDLER(int err_code) {
 
     default:
         // default case, in the event that invalid err_code passed
-        Serial.printf("\tCONFIG_ERR_HANDLER::invalid err_code (%d) passed\n", err_code);
+        logger.printf("\tCONFIG_ERR_HANDLER::invalid err_code (%d) passed\n", err_code);
         return false;
     }
 }

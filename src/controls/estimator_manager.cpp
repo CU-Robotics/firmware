@@ -1,9 +1,10 @@
 #include "estimator_manager.hpp"
+#include "logger.hpp"
 
 EstimatorManager::~EstimatorManager() {
-    Serial.println("Ending SPI");
+    logger.println("Ending SPI");
     SPI.end();
-    Serial.println("SPI Ended");
+    logger.println("SPI Ended");
 
     for (int i = 0; i < STATE_LEN; i++) {
         if (estimators[i] == nullptr)
@@ -18,12 +19,12 @@ void EstimatorManager::init(CANManager* _can, const Config* _config_data, Sensor
     can = _can;
     config_data = _config_data;
     sensor_manager = _sensor_manager;
-    if (!config_data) Serial.println("CONFIG DATA IS NULL!!!!!");
+    if (!config_data) logger.println("CONFIG DATA IS NULL!!!!!");
 
     // create and initialize the estimators
     for (int i = 0; i < NUM_ESTIMATORS; i++) {
         int id = config_data->estimator_info[i][0];
-        // Serial.printf("Init Estimator %d\n", id);
+        // logger.printf("Init Estimator %d\n", id);
 
         if (id != -1) {
             init_estimator(id);
@@ -32,7 +33,7 @@ void EstimatorManager::init(CANManager* _can, const Config* _config_data, Sensor
 }
 
 void EstimatorManager::init_estimator(int estimator_id) {
-    if (!config_data) Serial.println("CONFIG DATA IS NULL!!!!!");
+    if (!config_data) logger.println("CONFIG DATA IS NULL!!!!!");
 
     switch (estimator_id) {
     case 1:

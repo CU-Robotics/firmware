@@ -1,4 +1,6 @@
 #include "ethernet_comms.hpp"
+#include "logger.hpp"
+
 
 namespace Comms {
 
@@ -6,18 +8,18 @@ bool EthernetComms::begin(uint32_t data_rate) {
 	// begin the ethernet library and verify the status of the line
 	uint8_t ethernet_status = qn::Ethernet.begin(m_teensy_ip, m_teensy_netmask, m_teensy_gateway);
 	if (!ethernet_status) {
-		Serial.printf("Failed to start Ethernet!\n");
+		logger.printf("Failed to start Ethernet!\n");
 
 		// check if this teensy even has ethernet hardware support
 		qn::EthernetHardwareStatus hw_status = qn::Ethernet.hardwareStatus();
 		if (hw_status != qn::EthernetHardwareStatus::EthernetTeensy41)
-			Serial.printf("Teensy Ethernet hardware not present!\n");
+			logger.printf("Teensy Ethernet hardware not present!\n");
 
 		return false;
 	} else {
 	#ifdef COMMS_DEBUG
-		Serial.printf("Ethernet started!\n");
-		Serial.printf("IP: %u.%u.%u.%u:%u\n", qn::Ethernet.localIP()[0], qn::Ethernet.localIP()[1], qn::Ethernet.localIP()[2], qn::Ethernet.localIP()[3], m_teensy_port);
+		logger.printf("Ethernet started!\n");
+		logger.printf("IP: %u.%u.%u.%u:%u\n", qn::Ethernet.localIP()[0], qn::Ethernet.localIP()[1], qn::Ethernet.localIP()[2], qn::Ethernet.localIP()[3], m_teensy_port);
 	#endif
 	}
 
@@ -25,12 +27,12 @@ bool EthernetComms::begin(uint32_t data_rate) {
 	uint8_t udp_status = m_udp_server.begin(m_teensy_port);
 	// this failing is extremely bad. Either the Teensy is out of memory, or the hardware is broken
 	if (!udp_status) {
-		Serial.printf("UDP server failed to start!\n");
+		logger.printf("UDP server failed to start!\n");
 
 		return false;
 	} else {
 	#ifdef COMMS_DEBUG
-		Serial.printf("UDP server started!\n");
+		logger.printf("UDP server started!\n");
 	#endif
 	}
 
@@ -53,7 +55,7 @@ bool EthernetComms::begin(uint32_t data_rate) {
 	}
 
 	// ethernet is now setup and udp server is online
-	Serial.printf("Ethernet online!\n");
+	logger.printf("Ethernet online!\n");
 
 	return true;
 }
@@ -71,9 +73,9 @@ void EthernetComms::loop() {
 
 	// if we detect a handshake request from Jetson, respond
 	if (m_incoming.header.type == Comms::EthernetPacketType::HANDSHAKE) {
-		Serial.printf("Handshake received...\n");
+		logger.printf("Handshake received...\n");
 		connect_jetson();
-		Serial.printf("Handshake finished!\n");
+		logger.printf("Handshake finished!\n");
 	}
 
 	// check whether the connection is still alive
@@ -151,7 +153,7 @@ int EthernetComms::connect_jetson() {
 			m_status.handshake_time = micros();
 
 		#ifdef COMMS_DEBUG
-			Serial.printf("Handshake took %lu us\n", m_status.handshake_time - handshake_start);
+			logger.printf("Handshake took %lu us\n", m_status.handshake_time - handshake_start);
 		#endif
 
 			// return success
@@ -165,7 +167,7 @@ int EthernetComms::connect_jetson() {
 		// this does not prevent Hive from just spamming the Teensy with handshake requests, although that should be impossible
 		// I have yet to see a handshake fail, so consider this a sanity check if nothing else
 		if (micros() - handshake_start >= m_handshake_timeout) {
-			Serial.printf("Handshake failed: timeout!\n");
+			logger.printf("Handshake failed: timeout!\n");
 			// return failure
 			return -1;
 		}
@@ -182,7 +184,7 @@ bool EthernetComms::send_packet(EthernetPacket& packet) {
 		// log the fail, this almost always happens when the udp server is not "warmed up"
 		m_status.packets_sent_failed++;
 	#if defined(COMMS_DEBUG)
-		Serial.printf("Comms: Send fail: %lu\n", m_status.packets_sent_failed);
+		logger.printf("Comms: Send fail: %lu\n", m_status.packets_sent_failed);
 	#endif
 		return false;
 	} else {
@@ -207,7 +209,7 @@ bool EthernetComms::recv_packet(EthernetPacket* packet) {
 		// half-read, log as a failure
 		m_status.packets_received_failed++;
 	#if defined(COMMS_DEBUG)
-		Serial.printf("Comms: Recv fail: %d %lu\n", current_buffer_size, m_status.packets_received_failed);
+		logger.printf("Comms: Recv fail: %d %lu\n", current_buffer_size, m_status.packets_received_failed);
 	#endif
 		return false;
 	} else {
@@ -219,7 +221,7 @@ bool EthernetComms::recv_packet(EthernetPacket* packet) {
 		// this should never happen, but sanity check
 		if (packet_data == NULL) {
 		#if defined(COMMS_DEBUG)
-			Serial.printf("Comms: Recv data NULL\n");
+			logger.printf("Comms: Recv data NULL\n");
 		#endif
 		}
 
@@ -241,7 +243,7 @@ void EthernetComms::check_connection() {
 	#ifdef COMMS_DEBUG
 		// this check ensures this is only printed once
 		if (m_connected)
-			Serial.printf("Connection lost!\n");
+			logger.printf("Connection lost!\n");
 	#endif
 		// mark the connection as disconnected
 		m_connected = false;

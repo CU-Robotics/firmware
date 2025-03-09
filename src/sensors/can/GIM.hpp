@@ -1,6 +1,5 @@
 #include "motor.hpp"
-
-
+#include "utils/logger.hpp"
 
 /// @brief Motor driver for the GIM motor
 /// @note GIM8108 docs (SDC103): https://steadywin.cn/en/pd.jsp?id=15&fromColId=0#_pp=0_752_3
@@ -43,7 +42,7 @@ public:
             break;
         }
         default: {
-            Serial.printf("GIM motor type not recognized: %d\n", motor_type);
+            logger.printf("GIM motor type not recognized: %d\n", motor_type);
             break;
         }
         }

@@ -5,7 +5,7 @@
 #define LOGGER_FLAG
 
 /// @brief size of internal buffer
-#define BUFFER_SIZE 4096
+#define LOGGER_BUFFER_SIZE 4096
 
 /// @brief Wrapper for storing print data from Serial
 class Logger :public Print {

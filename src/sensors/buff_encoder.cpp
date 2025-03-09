@@ -1,4 +1,5 @@
 #include "buff_encoder.hpp"
+#include "../utils/logger.hpp"
 
 const SPISettings BuffEncoder::m_settings = SPISettings(1000000, MT6835_BITORDER, SPI_MODE3);
 
@@ -32,6 +33,6 @@ bool BuffEncoder::read() {
 
 
 void BuffEncoder::print() {
-    Serial.printf("Buff Encoder:\n\t");
-    Serial.println(m_angle);
+    logger.printf("Buff Encoder:\n\t");
+    logger.println(m_angle);
 }

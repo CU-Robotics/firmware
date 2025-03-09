@@ -1,4 +1,5 @@
 #include "GIM.hpp"
+#include "logger.hpp"
 
 void GIM::init() {
     write_motor_on();
@@ -42,7 +43,7 @@ int GIM::read(CAN_message_t& msg) {
         break;
     }
     default:
-        Serial.printf("No GIM::read case for this command byte: 0x%02X\n", cmd_byte);
+        logger.printf("No GIM::read case for this command byte: 0x%02X\n", cmd_byte);
         break;
     }
 

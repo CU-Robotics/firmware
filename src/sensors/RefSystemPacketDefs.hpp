@@ -3,6 +3,8 @@
 
 #include <Arduino.h>
 
+#include "utils/logger.hpp"
+
 /// @brief Maximum size of a Ref System packet in bytes
 constexpr uint16_t REF_MAX_PACKET_SIZE = 128;
 /// @brief Maximum valid command ID for Ref System packets
@@ -89,10 +91,10 @@ struct FrameHeader {
 
     /// @brief Prints the FrameHeader
     void print() {
-        Serial.printf("\tSOF: %x\n", SOF);
-        Serial.printf("\tLength: %u\n", data_length);
-        Serial.printf("\tSequence: %u\n", sequence);
-        Serial.printf("\tCRC: %x\n", CRC);
+        logger.printf("\tSOF: %x\n", SOF);
+        logger.printf("\tLength: %u\n", data_length);
+        logger.printf("\tSequence: %u\n", sequence);
+        logger.printf("\tCRC: %x\n", CRC);
     }
 };
 
@@ -122,14 +124,14 @@ struct Frame {
 
     /// @brief Prints the Frame
     void print() {
-        Serial.println("Read Frame:");
+        logger.println("Read Frame:");
         header.print();
-        Serial.printf("Command ID: %.2x\n", commandID);
+        logger.printf("Command ID: %.2x\n", commandID);
         for (int i = 0; i < header.data_length; i++) {
-            Serial.printf("%x ", data[i]);
+            logger.printf("%x ", data[i]);
         }
-        Serial.println();
-        Serial.printf("CRC: %.2x\n", CRC);
+        logger.println();
+        logger.printf("CRC: %.2x\n", CRC);
     }
 };
 
@@ -159,11 +161,11 @@ struct GameStatus {
 
     /// @brief Prints the GameStatus packet
     void print() {
-        Serial.println("GameStatus:");
-        Serial.printf("\tCompetition Type: %u\n", competition_type);
-        Serial.printf("\tCurrent Stage: %u\n", current_stage);
-        Serial.printf("\tRound Time Remaining: %u\n", round_time_remaining);
-        Serial.printf("\tUnix Time: %lu\n", unix_time);
+        logger.println("GameStatus:");
+        logger.printf("\tCompetition Type: %u\n", competition_type);
+        logger.printf("\tCurrent Stage: %u\n", current_stage);
+        logger.printf("\tRound Time Remaining: %u\n", round_time_remaining);
+        logger.printf("\tUnix Time: %lu\n", unix_time);
     }
 
     /// @brief Fills in this struct with the data from a FrameData object
@@ -208,8 +210,8 @@ struct GameResult {
 
     /// @brief Prints the GameResult packet
     void print() {
-        Serial.println("GameResult:");
-        Serial.printf("\tWinner: %u\n", winner);
+        logger.println("GameResult:");
+        logger.printf("\tWinner: %u\n", winner);
     }
 
     /// @brief Fills in this struct with the data from a FrameData object
@@ -241,14 +243,14 @@ struct GameRobotHP {
 
     /// @brief Prints the GameRobotHP packet
     void print() {
-        Serial.println("GameRobotHP:");
-        Serial.println("Red Team:");
+        logger.println("GameRobotHP:");
+        logger.println("Red Team:");
         for (int i = 0; i < 8; i++) {
-            Serial.printf("\tRobot %u: %u\n", i + 1, red_team_HP[i]);
+            logger.printf("\tRobot %u: %u\n", i + 1, red_team_HP[i]);
         }
-        Serial.println("Blue Team:");
+        logger.println("Blue Team:");
         for (int i = 0; i < 8; i++) {
-            Serial.printf("\tRobot %u: %u\n", i + 1, blue_team_HP[i]);
+            logger.printf("\tRobot %u: %u\n", i + 1, blue_team_HP[i]);
         }
     }
 
@@ -280,8 +282,8 @@ struct EventData {
 
     /// @brief Prints the EventData packet
     void print() {
-        Serial.println("EventData:");
-        Serial.printf("\tSite Event Data: %.8x\n", site_event_data);
+        logger.println("EventData:");
+        logger.printf("\tSite Event Data: %.8x\n", site_event_data);
     }
 
     /// @brief Fills in this struct with the data from a FrameData object
@@ -315,10 +317,10 @@ struct ProjectileSupplierStatus {
 
     /// @brief Prints the ProjectileSupplierStatus packet
     void print() {
-        Serial.println("ProjectileSupplierStatus:");
-        Serial.printf("\tReloading Robot ID: %u\n", reloading_robot_ID);
-        Serial.printf("\tSupplier Status: %u\n", supplier_status);
-        Serial.printf("\tNum Projectiles Supplied: %u\n", num_projectiles_supplied);
+        logger.println("ProjectileSupplierStatus:");
+        logger.printf("\tReloading Robot ID: %u\n", reloading_robot_ID);
+        logger.printf("\tSupplier Status: %u\n", supplier_status);
+        logger.printf("\tNum Projectiles Supplied: %u\n", num_projectiles_supplied);
     }
 
     /// @brief Fills in this struct with the data from a FrameData object
@@ -355,10 +357,10 @@ struct RefereeWarning {
 
     /// @brief Prints the RefereeWarning packet
     void print() {
-        Serial.println("RefereeWarning:");
-        Serial.printf("\tLast Received Severity: %u\n", last_received_severity);
-        Serial.printf("\tLast Received Robot ID: %u\n", last_received_robot_ID);
-        Serial.printf("\tLast Num Violations: %u\n", last_num_violations);
+        logger.println("RefereeWarning:");
+        logger.printf("\tLast Received Severity: %u\n", last_received_severity);
+        logger.printf("\tLast Received Robot ID: %u\n", last_received_robot_ID);
+        logger.printf("\tLast Num Violations: %u\n", last_num_violations);
     }
 
     /// @brief Fills in this struct with the data from a FrameData object
@@ -398,11 +400,11 @@ struct DartStatus {
 
     /// @brief Prints the DartStatus packet
     void print() {
-        Serial.println("DartStatus:");
-        Serial.printf("\tTime Remaining: %u\n", time_remaining);
-        Serial.printf("\tTarget Last Hit: %u\n", target_last_hit);
-        Serial.printf("\tNum Recent Hits: %u\n", num_recent_hits);
-        Serial.printf("\tCurrent Target: %u\n", current_target);
+        logger.println("DartStatus:");
+        logger.printf("\tTime Remaining: %u\n", time_remaining);
+        logger.printf("\tTarget Last Hit: %u\n", target_last_hit);
+        logger.printf("\tNum Recent Hits: %u\n", num_recent_hits);
+        logger.printf("\tCurrent Target: %u\n", current_target);
     }
 
     /// @brief Fills in this struct with the data from a FrameData object
@@ -453,17 +455,17 @@ struct RobotPerformance {
 
     /// @brief Prints the RobotPerformance packet
     void print() {
-        Serial.println("RobotPerformance:");
-        Serial.printf("\tRobot ID: %u\n", robot_ID);
-        Serial.printf("\tRobot Level: %u\n", robot_level);
-        Serial.printf("\tCurrent HP: %u\n", current_HP);
-        Serial.printf("\tMax HP: %u\n", max_HP);
-        Serial.printf("\tBarrel Cooling Rate: %u\n", barrel_cooling_rate);
-        Serial.printf("\tBarrel Heat Limit: %u\n", barrel_heat_limit);
-        Serial.printf("\tChassis Power Limit: %u\n", chassis_power_limit);
-        Serial.printf("\tGimbol Power Active: %u\n", gimbol_power_active);
-        Serial.printf("\tChassis Power Active: %u\n", chassis_power_active);
-        Serial.printf("\tShooter Power Active: %u\n", shooter_power_active);
+        logger.println("RobotPerformance:");
+        logger.printf("\tRobot ID: %u\n", robot_ID);
+        logger.printf("\tRobot Level: %u\n", robot_level);
+        logger.printf("\tCurrent HP: %u\n", current_HP);
+        logger.printf("\tMax HP: %u\n", max_HP);
+        logger.printf("\tBarrel Cooling Rate: %u\n", barrel_cooling_rate);
+        logger.printf("\tBarrel Heat Limit: %u\n", barrel_heat_limit);
+        logger.printf("\tChassis Power Limit: %u\n", chassis_power_limit);
+        logger.printf("\tGimbol Power Active: %u\n", gimbol_power_active);
+        logger.printf("\tChassis Power Active: %u\n", chassis_power_active);
+        logger.printf("\tShooter Power Active: %u\n", shooter_power_active);
     }
 
     /// @brief Fills in this struct with the data from a FrameData object
@@ -512,14 +514,14 @@ struct RobotPowerHeat {
 
     /// @brief Prints the RobotPowerHeat packet
     void print() {
-        Serial.println("RobotPowerHeat:");
-        Serial.printf("\tChassis Voltage Output: %u\n", chassis_voltage_output);
-        Serial.printf("\tChassis Current Output: %u\n", chassis_current_output);
-        Serial.printf("\tChassis Power: %f\n", chassis_power);
-        Serial.printf("\tBuffer Energy: %u\n", buffer_energy);
-        Serial.printf("\tBarrel Heat 1 17mm: %u\n", barrel_heat_1_17mm);
-        Serial.printf("\tBarrel Heat 2 17mm: %u\n", barrel_heat_2_17mm);
-        Serial.printf("\tBarrel Heat 42mm: %u\n", barrel_heat_42mm);
+        logger.println("RobotPowerHeat:");
+        logger.printf("\tChassis Voltage Output: %u\n", chassis_voltage_output);
+        logger.printf("\tChassis Current Output: %u\n", chassis_current_output);
+        logger.printf("\tChassis Power: %f\n", chassis_power);
+        logger.printf("\tBuffer Energy: %u\n", buffer_energy);
+        logger.printf("\tBarrel Heat 1 17mm: %u\n", barrel_heat_1_17mm);
+        logger.printf("\tBarrel Heat 2 17mm: %u\n", barrel_heat_2_17mm);
+        logger.printf("\tBarrel Heat 42mm: %u\n", barrel_heat_42mm);
     }
 
     /// @brief Fills in this struct with the data from a FrameData object
@@ -559,10 +561,10 @@ struct RobotPosition {
 
     /// @brief Prints the RobotPosition packet
     void print() {
-        Serial.println("RobotPosition:");
-        Serial.printf("\tX: %f\n", x);
-        Serial.printf("\tY: %f\n", y);
-        Serial.printf("\tAngle: %f\n", angle);
+        logger.println("RobotPosition:");
+        logger.printf("\tX: %f\n", x);
+        logger.printf("\tY: %f\n", y);
+        logger.printf("\tAngle: %f\n", angle);
     }
 
     /// @brief Fills in this struct with the data from a FrameData object
@@ -603,12 +605,12 @@ struct RobotBuff {
 
     /// @brief Prints the RobotBuff packet
     void print() {
-        Serial.println("RobotBuff:");
-        Serial.printf("\tHP Recovery: %u\n", hp_recovery);
-        Serial.printf("\tHeat Cooling: %u\n", heat_cooling);
-        Serial.printf("\tDefence: %u\n", defence);
-        Serial.printf("\tNegative Defence: %u\n", negative_defence);
-        Serial.printf("\tAttack: %u\n", attack);
+        logger.println("RobotBuff:");
+        logger.printf("\tHP Recovery: %u\n", hp_recovery);
+        logger.printf("\tHeat Cooling: %u\n", heat_cooling);
+        logger.printf("\tDefence: %u\n", defence);
+        logger.printf("\tNegative Defence: %u\n", negative_defence);
+        logger.printf("\tAttack: %u\n", attack);
     }
 
     /// @brief Fills in this struct with the data from a FrameData object
@@ -643,9 +645,9 @@ struct AirSupportStatus {
 
     /// @brief Prints the AirSupportStatus packet
     void print() {
-        Serial.println("AirSupportStatus:");
-        Serial.printf("\tStatus: %u\n", status);
-        Serial.printf("\tTime Remaining: %u\n", time_remaining);
+        logger.println("AirSupportStatus:");
+        logger.printf("\tStatus: %u\n", status);
+        logger.printf("\tTime Remaining: %u\n", time_remaining);
     }
 
     /// @brief Fills in this struct with the data from a FrameData object
@@ -677,9 +679,9 @@ struct DamageStatus {
 
     /// @brief Prints the DamageStatus packet
     void print() {
-        Serial.println("DamageStatus:");
-        Serial.printf("\tArmor Plate ID: %u\n", armor_plate_ID);
-        Serial.printf("\tDamage Type: %u\n", damage_type);
+        logger.println("DamageStatus:");
+        logger.printf("\tArmor Plate ID: %u\n", armor_plate_ID);
+        logger.printf("\tDamage Type: %u\n", damage_type);
     }
 
     /// @brief Fills in this struct with the data from a FrameData object
@@ -715,11 +717,11 @@ struct LaunchingStatus {
 
     /// @brief Prints the LaunchingStatus packet
     void print() {
-        Serial.println("LaunchingStatus:");
-        Serial.printf("\tProjectile Type: %u\n", projectile_type);
-        Serial.printf("\tLaunching Mechanism: %u\n", launching_mechanism);
-        Serial.printf("\tLaunching Frequency: %u\n", launching_frequency);
-        Serial.printf("\tInitial Speed: %f\n", initial_speed);
+        logger.println("LaunchingStatus:");
+        logger.printf("\tProjectile Type: %u\n", projectile_type);
+        logger.printf("\tLaunching Mechanism: %u\n", launching_mechanism);
+        logger.printf("\tLaunching Frequency: %u\n", launching_frequency);
+        logger.printf("\tInitial Speed: %f\n", initial_speed);
     }
 
     /// @brief Fills in this struct with the data from a FrameData object
@@ -754,10 +756,10 @@ struct ProjectileAllowance {
 
     /// @brief Prints the ProjectileAllowance packet
     void print() {
-        Serial.println("ProjectileAllowance:");
-        Serial.printf("\tNum 17mm: %u\n", num_17mm);
-        Serial.printf("\tNum 42mm: %u\n", num_42mm);
-        Serial.printf("\tNum Gold: %u\n", num_gold);
+        logger.println("ProjectileAllowance:");
+        logger.printf("\tNum 17mm: %u\n", num_17mm);
+        logger.printf("\tNum 42mm: %u\n", num_42mm);
+        logger.printf("\tNum Gold: %u\n", num_gold);
     }
 
     /// @brief Fills in this struct with the data from a FrameData object
@@ -881,11 +883,11 @@ struct DartCommand {
 
     /// @brief Prints the DartCommand packet
     void print() {
-        Serial.println("DartCommand:");
-        Serial.printf("\tStatus: %u\n", status);
-        Serial.printf("\tReserved: %u\n", reserved);
-        Serial.printf("\tTime Remaining on Target Change: %u\n", time_remaining_on_target_change);
-        Serial.printf("\tTime Remaining on Launch Confirm: %u\n", time_remaining_on_launch_confirm);
+        logger.println("DartCommand:");
+        logger.printf("\tStatus: %u\n", status);
+        logger.printf("\tReserved: %u\n", reserved);
+        logger.printf("\tTime Remaining on Target Change: %u\n", time_remaining_on_target_change);
+        logger.printf("\tTime Remaining on Launch Confirm: %u\n", time_remaining_on_launch_confirm);
     }
 
     /// @brief Fills in this struct with the data from a FrameData object
@@ -933,17 +935,17 @@ struct GroundRobotPositions {
 
     /// @brief Prints the RobotPosition packet
     void print() {
-        Serial.println("RobotPosition:");
-        Serial.printf("\tHero X: %f\n", hero_x);
-        Serial.printf("\tHero Y: %f\n", hero_y);
-        Serial.printf("\tEngineer X: %f\n", engineer_x);
-        Serial.printf("\tEngineer Y: %f\n", engineer_y);
-        Serial.printf("\tStandard 3 X: %f\n", standard_3_x);
-        Serial.printf("\tStandard 3 Y: %f\n", standard_3_y);
-        Serial.printf("\tStandard 4 X: %f\n", standard_4_x);
-        Serial.printf("\tStandard 4 Y: %f\n", standard_4_y);
-        Serial.printf("\tStandard 5 X: %f\n", standard_5_x);
-        Serial.printf("\tStandard 5 Y: %f\n", standard_5_y);
+        logger.println("RobotPosition:");
+        logger.printf("\tHero X: %f\n", hero_x);
+        logger.printf("\tHero Y: %f\n", hero_y);
+        logger.printf("\tEngineer X: %f\n", engineer_x);
+        logger.printf("\tEngineer Y: %f\n", engineer_y);
+        logger.printf("\tStandard 3 X: %f\n", standard_3_x);
+        logger.printf("\tStandard 3 Y: %f\n", standard_3_y);
+        logger.printf("\tStandard 4 X: %f\n", standard_4_x);
+        logger.printf("\tStandard 4 Y: %f\n", standard_4_y);
+        logger.printf("\tStandard 5 X: %f\n", standard_5_x);
+        logger.printf("\tStandard 5 Y: %f\n", standard_5_y);
     }
 
     /// @brief Fills in this struct with the data from a FrameData object
@@ -1000,13 +1002,13 @@ struct RadarProgress {
 
     /// @brief Prints the RadarProgress packet
     void print() {
-        Serial.println("RadarProgress:");
-        Serial.printf("\tHero: %u\n", hero);
-        Serial.printf("\tEngineer: %u\n", engineer);
-        Serial.printf("\tStandard 3: %u\n", standard_3);
-        Serial.printf("\tStandard 4: %u\n", standard_4);
-        Serial.printf("\tStandard 5: %u\n", standard_5);
-        Serial.printf("\tSentry: %u\n", sentry);
+        logger.println("RadarProgress:");
+        logger.printf("\tHero: %u\n", hero);
+        logger.printf("\tEngineer: %u\n", engineer);
+        logger.printf("\tStandard 3: %u\n", standard_3);
+        logger.printf("\tStandard 4: %u\n", standard_4);
+        logger.printf("\tStandard 5: %u\n", standard_5);
+        logger.printf("\tSentry: %u\n", sentry);
     }
 
     /// @brief Fills in this struct with the data from a FrameData object
@@ -1038,8 +1040,8 @@ struct SentryDecision {
 
     /// @brief Prints the SentryDecision packet
     void print() {
-        Serial.println("SentryDecision:");
-        Serial.printf("\tSentry Info: %u\n", sentry_info);
+        logger.println("SentryDecision:");
+        logger.printf("\tSentry Info: %u\n", sentry_info);
     }
 
     /// @brief Fills in this struct with the data from a FrameData object
@@ -1066,8 +1068,8 @@ struct RadarDecision {
 
     /// @brief Prints the RadarDecision packet
     void print() {
-        Serial.println("RadarDecision:");
-        Serial.printf("\tRadar Info: %u\n", radar_info);
+        logger.println("RadarDecision:");
+        logger.printf("\tRadar Info: %u\n", radar_info);
     }
 
     /// @brief Fills in this struct with the data from a FrameData object
@@ -1104,9 +1106,9 @@ struct RobotInteraction {
     /// @brief Prints the RobotInteraction packet
     void print() {
         for (int i = 0; i < size; i++) {
-            Serial.printf("%x ", data[i]);
+            logger.printf("%x ", data[i]);
         }
-        Serial.println();
+        logger.println();
     }
 
     /// @brief Fills in this struct with the data from a Frame object
@@ -1140,9 +1142,9 @@ struct CustomControllerRobot {
 
     /// @brief Prints the ControllerRobots packet
     void print() {
-        Serial.println("ControllerRobots:");
+        logger.println("ControllerRobots:");
         for (uint8_t i = 0; i < 30; i++) {
-            Serial.printf("\tData[%u]: %u\n", i, data[i]);
+            logger.printf("\tData[%u]: %u\n", i, data[i]);
         }
     }
 
@@ -1184,12 +1186,12 @@ struct SmallMapCommand {
 
     /// @brief Prints the SmallMapCommand packet
     void print() {
-        Serial.println("SmallMapCommand:");
-        Serial.printf("\tTarget Position X: %f\n", target_position_x);
-        Serial.printf("\tTarget Position Y: %f\n", target_position_y);
-        Serial.printf("\tCMD Keyboard: %u\n", cmd_keyboard);
-        Serial.printf("\tTarget Robot ID: %u\n", target_robot_id);
-        Serial.printf("\tCMD Source: %u\n", cmd_source);
+        logger.println("SmallMapCommand:");
+        logger.printf("\tTarget Position X: %f\n", target_position_x);
+        logger.printf("\tTarget Position Y: %f\n", target_position_y);
+        logger.printf("\tCMD Keyboard: %u\n", cmd_keyboard);
+        logger.printf("\tTarget Robot ID: %u\n", target_robot_id);
+        logger.printf("\tCMD Source: %u\n", cmd_source);
     }
 
     /// @brief Fills in this struct with the data from a FrameData object
@@ -1264,29 +1266,29 @@ struct KBMInteraction {
 
     /// @brief Prints the KBMInteraction packet
     void print() {
-        Serial.println("KBMInteraction:");
-        Serial.printf("\tMouse Speed X: %d\n", mouse_speed_x);
-        Serial.printf("\tMouse Speed Y: %d\n", mouse_speed_y);
-        Serial.printf("\tScroll Speed: %d\n", scroll_speed);
-        Serial.printf("\tButton Left: %u\n", button_left);
-        Serial.printf("\tButton Right: %u\n", button_right);
-        Serial.printf("\tKey W: %u\n", key_w);
-        Serial.printf("\tKey S: %u\n", key_s);
-        Serial.printf("\tKey A: %u\n", key_a);
-        Serial.printf("\tKey D: %u\n", key_d);
-        Serial.printf("\tKey Shift: %u\n", key_shift);
-        Serial.printf("\tKey Ctrl: %u\n", key_ctrl);
-        Serial.printf("\tKey Q: %u\n", key_q);
-        Serial.printf("\tKey E: %u\n", key_e);
-        Serial.printf("\tKey R: %u\n", key_r);
-        Serial.printf("\tKey F: %u\n", key_f);
-        Serial.printf("\tKey G: %u\n", key_g);
-        Serial.printf("\tKey Z: %u\n", key_z);
-        Serial.printf("\tKey X: %u\n", key_x);
-        Serial.printf("\tKey C: %u\n", key_c);
-        Serial.printf("\tKey V: %u\n", key_v);
-        Serial.printf("\tKey B: %u\n", key_b);
-        Serial.printf("\tReserved: %u\n", reserved);
+        logger.println("KBMInteraction:");
+        logger.printf("\tMouse Speed X: %d\n", mouse_speed_x);
+        logger.printf("\tMouse Speed Y: %d\n", mouse_speed_y);
+        logger.printf("\tScroll Speed: %d\n", scroll_speed);
+        logger.printf("\tButton Left: %u\n", button_left);
+        logger.printf("\tButton Right: %u\n", button_right);
+        logger.printf("\tKey W: %u\n", key_w);
+        logger.printf("\tKey S: %u\n", key_s);
+        logger.printf("\tKey A: %u\n", key_a);
+        logger.printf("\tKey D: %u\n", key_d);
+        logger.printf("\tKey Shift: %u\n", key_shift);
+        logger.printf("\tKey Ctrl: %u\n", key_ctrl);
+        logger.printf("\tKey Q: %u\n", key_q);
+        logger.printf("\tKey E: %u\n", key_e);
+        logger.printf("\tKey R: %u\n", key_r);
+        logger.printf("\tKey F: %u\n", key_f);
+        logger.printf("\tKey G: %u\n", key_g);
+        logger.printf("\tKey Z: %u\n", key_z);
+        logger.printf("\tKey X: %u\n", key_x);
+        logger.printf("\tKey C: %u\n", key_c);
+        logger.printf("\tKey V: %u\n", key_v);
+        logger.printf("\tKey B: %u\n", key_b);
+        logger.printf("\tReserved: %u\n", reserved);
     }
 
     /// @brief Fills in this struct with the data from a FrameData object
@@ -1338,10 +1340,10 @@ struct SmallMapRadarPosition {
 
     /// @brief Prints the SmallMapRadarPosition packet
     void print() {
-        Serial.println("SmallMapRadarPosition:");
-        Serial.printf("\tTarget ID: %u\n", target_ID);
-        Serial.printf("\tTarget X: %f\n", target_x);
-        Serial.printf("\tTarget Y: %f\n", target_y);
+        logger.println("SmallMapRadarPosition:");
+        logger.printf("\tTarget ID: %u\n", target_ID);
+        logger.printf("\tTarget X: %f\n", target_x);
+        logger.printf("\tTarget Y: %f\n", target_y);
     }
 
     /// @brief Fills in this struct with the data from a FrameData object
@@ -1386,14 +1388,14 @@ struct CustomControllerClient {
     
     /// @brief Prints the ControllerClient packet
     void print() {
-        Serial.println("ControllerClient:");
-        Serial.printf("\tKey 1: %u\n", key_1);
-        Serial.printf("\tKey 2: %u\n", key_2);
-        Serial.printf("\tMouse X: %u\n", mouse_x);
-        Serial.printf("\tMouse Left: %u\n", mouse_left);
-        Serial.printf("\tMouse Y: %u\n", mouse_y);
-        Serial.printf("\tMouse Right: %u\n", mouse_right);
-        Serial.printf("\tReserved: %u\n", reserved);
+        logger.println("ControllerClient:");
+        logger.printf("\tKey 1: %u\n", key_1);
+        logger.printf("\tKey 2: %u\n", key_2);
+        logger.printf("\tMouse X: %u\n", mouse_x);
+        logger.printf("\tMouse Left: %u\n", mouse_left);
+        logger.printf("\tMouse Y: %u\n", mouse_y);
+        logger.printf("\tMouse Right: %u\n", mouse_right);
+        logger.printf("\tReserved: %u\n", reserved);
     }
 
     /// @brief Fills in this struct with the data from a FrameData object
@@ -1437,19 +1439,19 @@ struct SmallMapSentryCommand {
 
     /// @brief Prints the SmallMapSentryPosition packet
     void print() {
-        Serial.println("SmallMapSentryPosition:");
-        Serial.printf("\tCommand: %u\n", command);
-        Serial.printf("\tStart X: %u\n", start_x);
-        Serial.printf("\tStart Y: %u\n", start_y);
-        Serial.println("\tDelta X:");
+        logger.println("SmallMapSentryPosition:");
+        logger.printf("\tCommand: %u\n", command);
+        logger.printf("\tStart X: %u\n", start_x);
+        logger.printf("\tStart Y: %u\n", start_y);
+        logger.println("\tDelta X:");
         for (uint8_t i = 0; i < 49; i++) {
-            Serial.printf("\t\t%d\n", delta_x[i]);
+            logger.printf("\t\t%d\n", delta_x[i]);
         }
-        Serial.println("\tDelta Y:");
+        logger.println("\tDelta Y:");
         for (uint8_t i = 0; i < 49; i++) {
-            Serial.printf("\t\t%d\n", delta_y[i]);
+            logger.printf("\t\t%d\n", delta_y[i]);
         }
-        Serial.printf("\tSender ID: %u\n", sender_ID);
+        logger.printf("\tSender ID: %u\n", sender_ID);
     }
 
     /// @brief Fills in this struct with the data from a FrameData object
@@ -1489,12 +1491,12 @@ struct SmallMapRobotData {
 
     /// @brief Prints the SmallMapRobotPosition packet
     void print() {
-        Serial.println("SmallMapRobotPosition:");
-        Serial.printf("\tSender ID: %u\n", sender_ID);
-        Serial.printf("\tReceiver ID: %u\n", receiver_ID);
-        Serial.println("\tData:");
+        logger.println("SmallMapRobotPosition:");
+        logger.printf("\tSender ID: %u\n", sender_ID);
+        logger.printf("\tReceiver ID: %u\n", receiver_ID);
+        logger.println("\tData:");
         for (uint8_t i = 0; i < 30; i++) {
-            Serial.printf("\t\t%u\n", data[i]);
+            logger.printf("\t\t%u\n", data[i]);
         }
     }
 

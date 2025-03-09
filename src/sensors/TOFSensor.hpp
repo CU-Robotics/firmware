@@ -8,6 +8,8 @@
 
 #include "Sensor.hpp"
 
+#include "utils/logger.hpp"
+
 /// @brief Default I2C bus for the TOF sensor (Wire2 is pins 24 and 25)
 constexpr TwoWire* TOF_DEFAULT_I2C_BUS = &Wire2;
 /// @brief Default pin to turn off and on the sensor (-1 to disable this feature)
@@ -108,8 +110,8 @@ public:
 
     /// @brief function to deserialize the TOF sensor data
     void print() {
-        Serial.println("TOF Sensor:");
-        Serial.printf("\tDistance: %u mm\n", latest_distance);
+        logger.println("TOF Sensor:");
+        logger.printf("\tDistance: %u mm\n", latest_distance);
     }
 
     /// @brief funtion to return latest distance

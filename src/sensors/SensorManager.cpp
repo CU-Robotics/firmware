@@ -1,5 +1,6 @@
 #include "SensorManager.hpp"
 #include "../utils/profiler.hpp"
+#include "utils/logger.hpp"
 
 SensorManager::SensorManager() {
      // initialize refereree system
@@ -38,7 +39,7 @@ void SensorManager::init(const Config* config_data) {
     digitalWrite(ICM_CS, HIGH);
 
     // start SPI
-    Serial.println("Starting SPI");
+    logger.println("Starting SPI");
     SPI.begin();
 
     // initialize ICMs
@@ -128,7 +129,7 @@ D200LD14P* SensorManager::get_lidar_sensor(int index) {
 }
 
 void SensorManager::calibrate_imus() {
-    Serial.println("Calibrating IMU's...");
+    logger.println("Calibrating IMU's...");
     float sum_x = 0;
     float sum_y = 0;
     float sum_z = 0;
@@ -148,7 +149,7 @@ void SensorManager::calibrate_imus() {
         sum_accel_z += icm_sensors[0]->get_accel_Z();
     }
 
-    Serial.printf("Calibrated offsets: %f, %f, %f\n", sum_x / NUM_IMU_CALIBRATION, sum_y / NUM_IMU_CALIBRATION, sum_z / NUM_IMU_CALIBRATION);
+    logger.printf("Calibrated offsets: %f, %f, %f\n", sum_x / NUM_IMU_CALIBRATION, sum_y / NUM_IMU_CALIBRATION, sum_z / NUM_IMU_CALIBRATION);
     icm_sensors[0]->set_offsets(sum_x / NUM_IMU_CALIBRATION, sum_y / NUM_IMU_CALIBRATION, sum_z / NUM_IMU_CALIBRATION);
 }
 

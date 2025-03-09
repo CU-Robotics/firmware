@@ -1,4 +1,6 @@
 #include "d200.hpp"
+#include "../utils/logger.hpp"
+
 
 D200LD14P::D200LD14P(HardwareSerial *_port, uint8_t _id) : Sensor(SensorType::LIDAR, _id) {
   port = _port;
@@ -191,14 +193,14 @@ void D200LD14P::export_data(uint8_t bytes[D200_NUM_PACKETS_CACHED * D200_PAYLOAD
 
 void D200LD14P::print_latest_packet() {
   LidarDataPacketSI p = get_latest_packet();
-  Serial.println("==D200LD14P PACKET==");
-  Serial.print("LiDAR speed: ");
-  Serial.println(p.lidar_speed);
-  Serial.print("start angle: ");
-  Serial.println(p.start_angle);
-  Serial.println("measurement data: ...");
-  Serial.print("end angle: ");
-  Serial.println(p.end_angle);
-  Serial.print("timestamp: ");
-  Serial.println(p.timestamp);
+  logger.println("==D200LD14P PACKET==");
+  logger.print("LiDAR speed: ");
+  logger.println(p.lidar_speed);
+  logger.print("start angle: ");
+  logger.println(p.start_angle);
+  logger.println("measurement data: ...");
+  logger.print("end angle: ");
+  logger.println(p.end_angle);
+  logger.print("timestamp: ");
+  logger.println(p.timestamp);
 }
