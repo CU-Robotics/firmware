@@ -111,7 +111,7 @@ int main() {
         data.gyro_roll = -filtered_data->gyro_pitch; // Roll is Y meaning the pitch from IMU filter -- right(+) 
         data.gyro_pitch = -filtered_data->gyro_roll; // Pitch is X meaning this is roll from IMU filter -- front(+)
         data.gyro_yaw = filtered_data->gyro_yaw; // Counterclockwise (+)
-        data.imu_accel_x = -filtered_data->accel_world_X; // Front (+)
+        data.imu_accel_x = abs(-filtered_data->accel_world_X) > 0.1 ? -filtered_data->accel_world_X : 0; // Front (+)
         data.imu_accel_y = filtered_data->accel_world_Y; // Right (+)
         data.imu_accel_z = -filtered_data->accel_world_Z; // up (+)
         data.imu_angle_pitch = -filtered_data->roll;// - 0.935*DEG_TO_RAD;  // Front(+)
@@ -177,7 +177,7 @@ int main() {
         // can.print_state();
         // test_control.print_observer();
         // test_control.printdata();
-        test_control.print_visual();
+        // test_control.print_visual();
         
         if (!dr16.is_connected() || dr16.get_l_switch() == 1 || test_control.saftymode) {
             // SAFETY ON

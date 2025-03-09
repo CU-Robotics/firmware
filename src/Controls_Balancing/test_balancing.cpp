@@ -4,8 +4,17 @@ void balancing_test::init(){
     slowdalay_help = micros();
 
     saftymode = 0;
-    o_data.Q = 0.1; // Need tune
-    o_data.R = 0.01; // Need tune
+    o_data.Q = 0.6; // Need tune
+    o_data.R_v = 0.0007; // Need tune
+    o_data.R_a = 0.1; // Need tune
+    o_data.P[0][0] = 10;
+    o_data.P[0][1] = 10;
+    o_data.P[1][0] = 10;
+    o_data.P[1][1] = 10;
+    o_data.K[0][0] = 0;
+    o_data.K[0][1] = 0;
+    o_data.K[1][0] = 0;
+    o_data.K[1][1] = 0;
     //PID1:roll, PID2:Leg length
     float gain1[4] = {K1_P, K1_I, K1_D, K1_F};
     float gain2[4] = {K2_P, K2_I, K2_D, K2_F};
@@ -202,22 +211,100 @@ void balancing_test::observer(){
     
 
     // o_data.wheel_speed_filtered =  1/2 * 0.05 * (_data.speed_wr - _data.speed_wl) ; // s_dot //speed 
-    o_data.wheel_speed_filtered =  0.05/2 * (-_data.speed_wl + _data.speed_wr) ;
+    // o_data.wheel_speed_filtered =  0.05/2 * (-_data.speed_wl + _data.speed_wr) ;
 
-    Serial.printf("waggle graph %s %f \n", "s_dot", o_data.wheel_speed_filtered);
-    Serial.printf("waggle graph %s %f \n", "omega_wheel_l",_data.speed_wl);
-    Serial.printf("waggle graph %s %f \n", "omega_wheel_r",_data.speed_wr);
+    
 
-    o_data.wheel_speed_dot = (o_data.wheel_speed_filtered - o_data.wheel_speed_old) / _dt;
-    o_data.wheel_speed_old = o_data.wheel_speed_filtered;
-    o_data.b_speed = (1/2) * (R_w) * (_data.speed_wr - _data.speed_wl) - (1/2) * (o_data.ll*(o_data.theta_ll_dot + _data.imu_angle_pitch)*cos(phi0l) + o_data.lr*(o_data.theta_lr_dot + _data.imu_angle_pitch)*cos(phi0r)) - (1/2)* (o_data.ll_dot * sin(phi0l) + o_data.lr_dot * sin(phi0r));
-
-    o_data.control_s += o_data.wheel_speed_filtered * _dt;    
-//-------------------------------------------filter by a falman filter (I will update this soon) ---------------------------------------------------------------------
+    // o_data.wheel_speed_dot = (o_data.wheel_speed_filtered - o_data.wheel_speed_old) / _dt;
+    // o_data.wheel_speed_old = o_data.wheel_speed_filtered;
+    o_data.b_speed = (0.05/2 * (-_data.speed_wl + _data.speed_wr)) - (1/2) * (o_data.ll*(o_data.theta_ll_dot + _data.imu_angle_pitch)*cos(phi0l) + o_data.lr*(o_data.theta_lr_dot + _data.imu_angle_pitch)*cos(phi0r)) - (1/2)* (o_data.ll_dot * sin(phi0l) + o_data.lr_dot * sin(phi0r));
+    o_data.b_accel = _data.imu_accel_x;
+       
+//-------------------------------------------filter by a kalman filter (I will update this soon) ---------------------------------------------------------------------
     // For the x we have [v,a]^T 
-    // predict 
+    // predict
+    o_data.body_speed_filtered += o_data.body_accel_filtered * _dt;
+    float P_hat[2][2] = {0};
+    float P_FP[2][2] = {0};
+    float F[2][2] = {{1,_dt},{0,1}};
+    float Q[2][2] = {{0.25f*_dt*_dt*_dt*_dt, 0.5f*_dt*_dt*_dt},{0.5f*_dt*_dt*_dt, _dt*_dt}};
+    // P_hat = F * P * F^T + Q
+    for (int i = 0; i < 2; i++) {
+        for (int j = 0; j < 2; j++) {
+            for (int k = 0; k < 2; k++) {
+                P_FP[i][j] += F[i][k] * o_data.P[k][j];
+            }
+        }
+    }
+    for (int i = 0; i < 2; i++) {
+        for (int j = 0; j < 2; j++) {
+            for (int k = 0; k < 2; k++) {
+                P_hat[i][j] += P_FP[i][k] * F[j][k];
+            }
+            P_hat[i][j] += Q[i][j] * o_data.Q * o_data.Q;
+        }
+    }
     
     // Update
+    float error_speed = o_data.b_speed - o_data.body_speed_filtered;
+    float error_accel = o_data.b_accel - o_data.body_accel_filtered;
+    Serial.printf("waggle graph %s %f \n", "o_data.b_speed", o_data.b_speed);
+    Serial.printf("waggle graph %s %f \n", "o_data.b_accel", o_data.b_accel);
+    float S[2][2] = {0};
+    for(int i =0; i < 2; i++){
+        for(int j = 0; j < 2; j++){
+            S[i][j] = P_hat[i][j];
+        }
+    }
+    if(abs(0.05/2 * (-_data.speed_wl + _data.speed_wr))< 0.01){ // Since if the wheel is really slow, there shouldn't be any slip possible.
+        S[0][0] += 0.000001 * 0.000001;
+    }else{
+        S[0][0] += o_data.R_v * o_data.R_v;
+    }
+    S[1][1] += o_data.R_a * o_data.R_a;
+    float S_inv[2][2] = {0};
+    float detS = S[0][0] * S[1][1] - S[0][1] * S[1][0];
+    S_inv[0][0] = S[1][1] / detS;
+    S_inv[1][1] = S[0][0] / detS;
+    S_inv[0][1] = -S[0][1] / detS;
+    S_inv[1][0] = -S[1][0] / detS;
+    float K[2][2] = {0};
+    for(int i = 0; i < 2; i++){
+        for(int j = 0; j < 2; j++){
+            for(int k = 0; k < 2; k++){
+                K[i][j] += P_hat[i][k] * S_inv[k][j];
+            }
+        }
+    }
+    o_data.body_speed_filtered += K[0][0] * error_speed;
+    o_data.body_accel_filtered += K[1][1] * error_accel;
+    for(int i = 0; i < 2; i++){
+        for(int j = 0; j < 2; j++){
+            if(i==j)
+            K[i][j] = (1 - K[i][j]);
+            else 
+            K[i][j] = -K[i][j];
+        }
+    }
+    for (int i = 0; i < 2; i++) {
+        for (int j = 0; j < 2; j++) {
+            for (int k = 0; k < 2; k++) {
+                o_data.P[i][j] = K[i][k] * P_hat[j][k];
+            }
+        }
+    }
+    
+
+    o_data.wheel_speed_filtered = o_data.body_speed_filtered + (1/2) * (o_data.ll*(o_data.theta_ll_dot + _data.imu_angle_pitch)*cos(phi0l) + o_data.lr*(o_data.theta_lr_dot + _data.imu_angle_pitch)*cos(phi0r)) - (1/2)* (o_data.ll_dot * sin(phi0l) + o_data.lr_dot * sin(phi0r));
+    o_data.wheel_speed_dot = (o_data.wheel_speed_filtered - o_data.wheel_speed_old) / _dt;
+    o_data.wheel_speed_old = o_data.wheel_speed_filtered;
+    if(abs(o_data.wheel_speed_filtered) < 0.001){ //0.1cm/s
+        o_data.wheel_speed_filtered = 0;
+    }
+    
+    o_data.control_s += o_data.wheel_speed_filtered * _dt; 
+    Serial.printf("waggle graph %s %f \n", "wheel_speed_filtered", o_data.wheel_speed_filtered);
+    Serial.printf("waggle graph %s %f \n", "body_accel_filtered", o_data.body_accel_filtered);
 
     return;
 }

@@ -105,7 +105,8 @@ struct observer_data
     std::array<std::array<float, 2>, 2> P; // State covariance matrix
     std::array<std::array<float, 2>, 2> K; // Kalman gain
     float Q;
-    float R;
+    float R_v;
+    float R_a;
 
     float wheel_speed_old;
     float gyro_yaw_old;
@@ -114,6 +115,10 @@ struct observer_data
 
     float control_yaw;
     float control_s;
+
+    float body_speed_filtered;
+    float body_accel_filtered; 
+
 };
 
 struct ref_data
