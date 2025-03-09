@@ -9,19 +9,18 @@ size_t Logger::write(const uint8_t* buffer, size_t size) {
     // guard against cursor going beyond buffer size
     if (cursor + size >= sizeof(log_buffer)) { return 0; }
 
-    //writes incoming content to cursor position
+    // writes incoming content (buffer) to cursor position
     memcpy(log_buffer + cursor, buffer, size);
     char print_statement[sizeof(log_buffer)] = { 0 }; // temp variable
 
-    //print_statement captures only the most recent addition to log_buffer
+    // print_statement captures only the most recent addition to log_buffer
     memcpy(print_statement, log_buffer + cursor, size);
 
-    //precompiler toggle for printing to monitor
 #ifdef LOGGER_FLAG
     Serial.print(print_statement);
 #endif
 
-    //sets cursor to current place in memory
+    // sets cursor to current place in memory
     cursor += size;
     return size;
 }
