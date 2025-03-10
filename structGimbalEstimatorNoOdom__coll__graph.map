@@ -1,0 +1,12 @@
+<map id="GimbalEstimatorNoOdom" name="GimbalEstimatorNoOdom">
+<area shape="rect" id="node1" title="Estimate the yaw, pitch, and chassis heading." alt="" coords="97,276,268,303"/>
+<area shape="rect" id="node2" href="$structEstimator.html" title="Parent estimator struct. All estimators should inherit from this." alt="" coords="5,185,83,212"/>
+<area shape="rect" id="node3" href="$structTimer.html" title="Timer class. Operates based on micros() and provides a simple interface for timing operations." alt="" coords="14,95,69,121"/>
+<area shape="rect" id="node4" href="$classBuffEncoder.html" title="Driver for the Buff&#45;Encoder." alt="" coords="93,95,185,121"/>
+<area shape="rect" id="node5" href="$classSensor.html" title="Base class for all sensors." alt="" coords="221,5,283,32"/>
+<area shape="rect" id="node8" href="$classIMUSensor.html" title="Abstract parent class for all IMUSensors, which give acceleration and gyroscope data." alt="" coords="225,95,313,121"/>
+<area shape="rect" id="node6" href="$structBuffEncoderData.html" title="Structure for the buff encoder sensor." alt="" coords="54,5,173,32"/>
+<area shape="rect" id="node7" href="$classICM20649.html" title="Sensor access for an ICM20649 IMU Sensor. Child of the abstract IMUSensor class." alt="" coords="246,185,327,212"/>
+<area shape="rect" id="node9" href="$structICMSensorData.html" title="Structure for the ICM sensor." alt="" coords="337,95,452,121"/>
+<area shape="rect" id="node10" href="$classCANManager.html" title="The overall manager for the CAN busses and motors." alt="" coords="351,185,451,212"/>
+</map>

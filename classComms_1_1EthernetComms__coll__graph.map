@@ -1,0 +1,7 @@
+<map id="Comms::EthernetComms" name="Comms::EthernetComms">
+<area shape="rect" id="node1" title="Ethernet Communications. This handles all comms between the Jetson and the Teensy via Ethernet." alt="" coords="45,199,212,225"/>
+<area shape="rect" id="node2" href="$structComms_1_1EthernetStatus.html" title="A status struct holding diagnostic data about ethernet comms." alt="" coords="5,95,164,121"/>
+<area shape="rect" id="node3" href="$structComms_1_1EthernetPacket.html" title="A complete comms packet." alt="" coords="189,95,351,121"/>
+<area shape="rect" id="node4" href="$structComms_1_1EthernetPacketPayload.html" title="Comms packet payload struct." alt="" coords="51,5,259,32"/>
+<area shape="rect" id="node5" href="$structComms_1_1EthernetPacketHeader.html" title="Comms packet header struct." alt="" coords="284,5,488,32"/>
+</map>
