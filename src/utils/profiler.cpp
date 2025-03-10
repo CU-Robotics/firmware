@@ -3,6 +3,16 @@
 /// @brief Array of profiling sections.
 static DMAMEM Profiler::profiler_section_t sections[PROF_MAX_SECTIONS] = { 0 };
 
+
+void Profiler::clear() {
+#ifdef PROFILE
+    for (auto& sec : sections) {
+        // initialize each section so the sections arent filled with DMAMEM junk
+        sec = profiler_section_t();
+    }
+#endif
+}
+
 void Profiler::begin(const char* name) {
 #ifdef PROFILE
     // search for a section by name or an empty slot
@@ -65,7 +75,7 @@ void Profiler::print(const char* name) {
             if (delta > max) max = delta;
         }
         // print stats
-        Serial.printf("Profiling for: %s\n  Min: %u us\n  Max: %u us\n  Avg: %u us\n", 
+        Serial.printf("Profiling for: %s\n  Min: %u us\n  Max: %u us\n  Avg: %u us\n",
                         name, min, max, sum / actual_count);
         return;
     }
