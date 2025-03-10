@@ -99,7 +99,12 @@ int MG8016EI6::read(CAN_message_t& msg) {
         m_single_motor_mode_angle = (uint32_t)((msg.buf[7] << 24) | (msg.buf[6] << 16) | (msg.buf[5] << 8) | msg.buf[4]);
         break;
     }
-    case CMD_READ_STATE_1:
+    case CMD_READ_STATE_1: {
+        m_state.temperature = msg.buf[1];
+        m_voltage = (uint16_t)((msg.buf[4] << 8) | msg.buf[3]) * 10; // times 10 for 0.1V/LSB
+        m_error_state.under_voltage = !!(msg.buf[7] & 0x01);
+        m_error_state.over_temperature = !!(msg.buf[7] & 0x08);
+    }
     case CMD_CLEAR_ERROR: {
         m_voltage = (uint16_t)((msg.buf[4] << 8) | msg.buf[3]);
         m_error_state.under_voltage = !!(msg.buf[7] & 0x01);
@@ -260,6 +265,32 @@ void MG8016EI6::write_motor_stop() {
     for (int i = 0; i < 8; i++) {
         m_output.buf[i] = buf[i];
     }
+}
+
+void MG8016EI6::write_motor_set_zero_ROM() {
+    // create the message
+    uint8_t buf[8];
+    create_cmd_write_position_as_zero(buf);
+
+    // fill in the output array
+    m_output.id = m_base_id + m_id;
+    for (int i = 0; i < 8; i++) {
+        m_output.buf[i] = buf[i];
+    }
+    write(m_output);
+}
+
+void MG8016EI6::write_cmd_read_state_1() {
+    // create the message
+    uint8_t buf[8];
+    create_cmd_read_state_1(buf);
+
+    // fill in the output array
+    m_output.id = m_base_id + m_id;
+    for (int i = 0; i < 8; i++) {
+        m_output.buf[i] = buf[i];
+    }
+    write(m_output);
 }
 
 // Command creation functions

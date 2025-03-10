@@ -68,6 +68,15 @@ public:
     /// @brief Stop the motor but dont clear it's state
     void write_motor_stop();
 
+    /// @brief Set the motor angle 0 position to the current encoder value
+    void write_motor_set_zero_ROM();
+
+    /// @brief Read the motor state 1 
+    void write_cmd_read_state_1();
+
+public:
+    /// @brief Get the voltage
+    float get_voltage() const { return m_voltage; };
 private:
     /// @brief Turn off the motor and clear it's state
     /// @param buf Output buffer to write the command to

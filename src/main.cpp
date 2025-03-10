@@ -81,15 +81,16 @@ int main() {
     // 2: C620 
     // 3: MG8016EI6
     
-    float motor_info[CAN_MAX_MOTORS][3] = {
-        {3 , 1 , 2},
-        {3 , 2 , 2},
-        {3 , 3 , 2},
-        {3 , 4 , 2},
-        {2 , 1 , 2},
-        {2 , 3 , 2}
+    float motor_info[CAN_MAX_MOTORS][4] = {
+        {3 , 1 , 2 , 0},
+        {3 , 2 , 2 , 0},
+        {3 , 3 , 2 , 0},
+        {3 , 4 , 2 , 0},
+        {2 , 1 , 2 , 0},
+        {2 , 3 , 2 , 0},
     }; 
     can.configure(motor_info);
+    // Reset all motor ROM
     // ((MG8016EI6*)can.get_motor(0))->write_motor_set_zero_ROM();
     // ((MG8016EI6*)can.get_motor(1))->write_motor_set_zero_ROM();
     // ((MG8016EI6*)can.get_motor(2))->write_motor_set_zero_ROM();
@@ -104,8 +105,22 @@ int main() {
         dr16.read();
         icm.read();
         icm.fix_raw_data(); // Fix the bias and scale factor
-        can.read();
+        can.read(); 
 
+//---------------------------Debugging code-----------------------------------
+    // Print the motor voltage
+    Serial.printf("waggle graph %s %f \n", "FR motor voltage", ((MG8016EI6*)can.get_motor(0))->get_voltage());
+    Serial.printf("waggle graph %s %f \n", "FL motor voltage", ((MG8016EI6*)can.get_motor(1))->get_voltage());
+    Serial.printf("waggle graph %s %f \n", "BL motor voltage", ((MG8016EI6*)can.get_motor(2))->get_voltage());
+    Serial.printf("waggle graph %s %f \n", "BR motor voltage", ((MG8016EI6*)can.get_motor(3))->get_voltage());
+    // Request the read function for motor state 1 (Which contains the motor voltage)
+    ((MG8016EI6*)can.get_motor(0))->write_cmd_read_state_1();
+    ((MG8016EI6*)can.get_motor(1))->write_cmd_read_state_1();
+    ((MG8016EI6*)can.get_motor(2))->write_cmd_read_state_1();
+    ((MG8016EI6*)can.get_motor(3))->write_cmd_read_state_1();
+    //Don't do can.write() We don't want wheel motor run. I already put write in write_cmd_read_state_1()
+
+//---------------------------Controller code-----------------------------------
         imu_filter.step_EKF_6axis(icm.get_data());
         IMU_data* filtered_data = imu_filter.get_filter_data();
         data.gyro_roll = -filtered_data->gyro_pitch; // Roll is Y meaning the pitch from IMU filter -- right(+) 
@@ -195,7 +210,7 @@ int main() {
             can.write();
         }
 
-        
+
 
         // Keep the loop running at the desired rate
         loop_timer.delay_micros((int)(1E6 / (float)(LOOP_FREQ)));
