@@ -18,7 +18,8 @@
 #elif defined(FIRMWARE)
 #include "comms/data/comms_data.hpp"            // for CommsData
 #include "comms/data/logging_data.hpp"          // for LoggingData
-#include "comms/data/firmware_data.hpp"         // for FirmwareData
+#include "comms/data/hive_data.hpp"             // for HiveData
+#include <Arduino.h>                            // for Serial
 #endif
 
 namespace Comms {
