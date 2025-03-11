@@ -14,7 +14,8 @@ enum class TypeLabel : uint8_t {
     RevEncoderData,
     TOFSensorData,
     LidarSensorData,
-    DR16Data
+    DR16Data,
+    TempRobotState,
 };
 
 /// @brief PhysicalMedium is the medium over which the data is sent.

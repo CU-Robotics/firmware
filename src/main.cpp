@@ -322,6 +322,11 @@ int main() {
         hid_outgoing.set_ref_data(ref_data_raw);
         hid_outgoing.set_estimated_state(temp_state);
 
+        // TODO: phase out this temp state sendable
+        Comms::Sendable<TempRobotState> temp_state_sendable;
+        memcpy(temp_state_sendable.data.state, temp_state, sizeof(temp_state));
+        temp_state_sendable.send_to_comms();
+
         comms_layer.set_ethernet_outgoing(eth_outgoing);
         comms_layer.set_hid_outgoing(hid_outgoing);
 
