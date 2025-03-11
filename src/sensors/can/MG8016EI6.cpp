@@ -30,7 +30,7 @@ int MG8016EI6::read(CAN_message_t& msg) {
     // handle the command
     switch (cmd_byte) {
     // commands that return the base state
-    case CMD_TORQUE_CONTROL:
+    case CMD_TORQUE_CONTROL: 
     case CMD_SPEED_CONTROL:
     case CMD_MULTI_ANGLE_CONTROL:
     case CMD_MULTI_ANGLE_CONTROL_SPEED_LIMITED:
@@ -101,9 +101,10 @@ int MG8016EI6::read(CAN_message_t& msg) {
     }
     case CMD_READ_STATE_1: {
         m_state.temperature = msg.buf[1];
-        m_voltage = (uint16_t)((msg.buf[4] << 8) | msg.buf[3]) * 10; // times 10 for 0.1V/LSB
+        m_voltage = (uint16_t)((msg.buf[4] << 8) | msg.buf[3]) / 10.0; // devide 10 for 0.1V/LSB
         m_error_state.under_voltage = !!(msg.buf[7] & 0x01);
-        m_error_state.over_temperature = !!(msg.buf[7] & 0x08);
+        m_error_state.over_temperature = !!(msg.buf[7] & 0x08); 
+        break;
     }
     case CMD_CLEAR_ERROR: {
         m_voltage = (uint16_t)((msg.buf[4] << 8) | msg.buf[3]);
@@ -277,7 +278,6 @@ void MG8016EI6::write_motor_set_zero_ROM() {
     for (int i = 0; i < 8; i++) {
         m_output.buf[i] = buf[i];
     }
-    write(m_output);
 }
 
 void MG8016EI6::write_cmd_read_state_1() {
@@ -290,7 +290,6 @@ void MG8016EI6::write_cmd_read_state_1() {
     for (int i = 0; i < 8; i++) {
         m_output.buf[i] = buf[i];
     }
-    write(m_output);
 }
 
 // Command creation functions

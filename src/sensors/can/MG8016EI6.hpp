@@ -253,7 +253,7 @@ private:
     uint32_t m_single_motor_mode_angle = 0;
 
     /// @brief The motor voltage in 0.1V / LSB
-    uint16_t m_voltage = 0;
+    float m_voltage = 0;
 
     /// @brief The error state of the motor
     struct {

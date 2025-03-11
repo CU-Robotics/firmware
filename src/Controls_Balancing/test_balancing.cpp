@@ -247,8 +247,6 @@ void balancing_test::observer(){
     // Update
     float error_speed = o_data.b_speed - o_data.body_speed_filtered;
     float error_accel = o_data.b_accel - o_data.body_accel_filtered;
-    Serial.printf("waggle graph %s %f \n", "o_data.b_speed", o_data.b_speed);
-    Serial.printf("waggle graph %s %f \n", "o_data.b_accel", o_data.b_accel);
     float S[2][2] = {0};
     for(int i =0; i < 2; i++){
         for(int j = 0; j < 2; j++){
@@ -302,8 +300,6 @@ void balancing_test::observer(){
     }
     
     o_data.control_s += o_data.wheel_speed_filtered * _dt; 
-    Serial.printf("waggle graph %s %f \n", "wheel_speed_filtered", o_data.wheel_speed_filtered);
-    Serial.printf("waggle graph %s %f \n", "body_accel_filtered", o_data.body_accel_filtered);
 
     return;
 }
@@ -593,11 +589,20 @@ void balancing_test::print_visual(){
     // Serial.printf("waggle graph %s %f \n", "T_legl", _debug_data.T_bll);
     // Serial.printf("waggle graph %s %f \n", "T_legr", _debug_data.T_blr);
     // Serial.printf("waggle graph %s %f \n", "F_roll", _debug_data.F_psi);
-    Serial.printf("waggle graph %s %f \n", "ref_s", _ref_data.s );
-    Serial.printf("waggle graph %s %f \n", "ref_s_dot", _ref_data.speed);
-    Serial.printf("waggle graph %s %f \n", "ref_yaw", _ref_data.yaw);
-    Serial.printf("waggle graph %s %f \n", "ref_yaw_dot", _ref_data.yaw_dot );
-    Serial.printf("waggle graph %s %f \n", "ref_llength", _ref_data.goal_l);
+    // Serial.printf("waggle graph %s %f \n", "o_data.b_speed", o_data.b_speed); // Speed without filter
+    // Serial.printf("waggle graph %s %f \n", "o_data.b_accel", o_data.b_accel); // Acceleration without filter
 
+    // Serial.printf("waggle graph %s %f \n", "wheel_speed_filtered", o_data.wheel_speed_filtered); // Speed with filter
+    // Serial.printf("waggle graph %s %f \n", "body_accel_filtered", o_data.body_accel_filtered); // Acceleration with filter
+
+    // Serial.printf("waggle graph %s %f \n", "ref_s", _ref_data.s );
+    // Serial.printf("waggle graph %s %f \n", "ref_s_dot", _ref_data.speed);
+    // Serial.printf("waggle graph %s %f \n", "ref_yaw", _ref_data.yaw);
+    // Serial.printf("waggle graph %s %f \n", "ref_yaw_dot", _ref_data.yaw_dot );
+    // Serial.printf("waggle graph %s %f \n", "ref_llength", _ref_data.goal_l);
+    
+    // Serial.printf("waggle graph %s %f \n", "pitch", _data.imu_angle_pitch * RAD_TO_DEG);
+    // Serial.printf("waggle graph %s %f \n", "roll", _data.imu_angle_roll * RAD_TO_DEG);
+    // Serial.printf("waggle graph %s %f \n", "yaw", _data.imu_angle_yaw * RAD_TO_DEG);
     return ;
 }

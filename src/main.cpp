@@ -106,20 +106,7 @@ int main() {
         icm.read();
         icm.fix_raw_data(); // Fix the bias and scale factor
         can.read(); 
-
-//---------------------------Debugging code-----------------------------------
-    // Print the motor voltage
-    Serial.printf("waggle graph %s %f \n", "FR motor voltage", ((MG8016EI6*)can.get_motor(0))->get_voltage());
-    Serial.printf("waggle graph %s %f \n", "FL motor voltage", ((MG8016EI6*)can.get_motor(1))->get_voltage());
-    Serial.printf("waggle graph %s %f \n", "BL motor voltage", ((MG8016EI6*)can.get_motor(2))->get_voltage());
-    Serial.printf("waggle graph %s %f \n", "BR motor voltage", ((MG8016EI6*)can.get_motor(3))->get_voltage());
-    // Request the read function for motor state 1 (Which contains the motor voltage)
-    ((MG8016EI6*)can.get_motor(0))->write_cmd_read_state_1();
-    ((MG8016EI6*)can.get_motor(1))->write_cmd_read_state_1();
-    ((MG8016EI6*)can.get_motor(2))->write_cmd_read_state_1();
-    ((MG8016EI6*)can.get_motor(3))->write_cmd_read_state_1();
-    //Don't do can.write() We don't want wheel motor run. I already put write in write_cmd_read_state_1()
-
+        
 //---------------------------Controller code-----------------------------------
         imu_filter.step_EKF_6axis(icm.get_data());
         IMU_data* filtered_data = imu_filter.get_filter_data();
@@ -199,6 +186,8 @@ int main() {
             // TODO: Reset all controller integrators here
             Serial.println("SAFTYON");
             can.issue_safety_mode();
+            
+            
 
             // reset s and yaw
             test_control.reset_s();
@@ -209,9 +198,21 @@ int main() {
             can.write();
             can.write();
         }
+//---------------------------Debugging code-----------------------------------
+        // ((MG8016EI6*)can.get_motor(0))->write_cmd_read_state_1();
+        // ((MG8016EI6*)can.get_motor(1))->write_cmd_read_state_1();
+        // ((MG8016EI6*)can.get_motor(2))->write_cmd_read_state_1();
+        // ((MG8016EI6*)can.get_motor(3))->write_cmd_read_state_1();
+        // can.write();
+        // Serial.printf("waggle graph %s %f \n", "FR motor voltage", ((MG8016EI6*)can.get_motor(0))->get_voltage());
+        // Serial.printf("waggle graph %s %f \n", "FL motor voltage", ((MG8016EI6*)can.get_motor(1))->get_voltage());
+        // Serial.printf("waggle graph %s %f \n", "BL motor voltage", ((MG8016EI6*)can.get_motor(2))->get_voltage());
+        // Serial.printf("waggle graph %s %f \n", "BR motor voltage", ((MG8016EI6*)can.get_motor(3))->get_voltage());
 
-
-
+        // Serial.printf("waggle graph %s %f \n", "FR motor current", can.get_motor(0)->get_state().torque);
+        // Serial.printf("waggle graph %s %f \n", "FL motor current", can.get_motor(1)->get_state().torque);
+        // Serial.printf("waggle graph %s %f \n", "BL motor current", can.get_motor(2)->get_state().torque);
+        // Serial.printf("waggle graph %s %f \n", "BR motor current", can.get_motor(3)->get_state().torque);
         // Keep the loop running at the desired rate
         loop_timer.delay_micros((int)(1E6 / (float)(LOOP_FREQ)));
     }
