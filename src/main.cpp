@@ -327,6 +327,22 @@ int main() {
         memcpy(temp_state_sendable.data.state, temp_state, sizeof(temp_state));
         temp_state_sendable.send_to_comms();
 
+        Comms::Sendable<DR16Data> dr16_sendable;
+        dr16_sendable.data.l_mouse_button = dr16.get_l_mouse_button();
+        dr16_sendable.data.r_mouse_button = dr16.get_r_mouse_button();
+        dr16_sendable.data.l_switch = dr16.get_l_switch();
+        dr16_sendable.data.r_switch = dr16.get_r_switch();
+        dr16_sendable.data.l_stick_x = dr16.get_l_stick_x();
+        dr16_sendable.data.l_stick_y = dr16.get_l_stick_y();
+        dr16_sendable.data.r_stick_x = dr16.get_r_stick_x();
+        dr16_sendable.data.r_stick_y = dr16.get_r_stick_y();
+        dr16_sendable.data.wheel = dr16.get_wheel();
+        dr16_sendable.data.mouse_x = dr16.get_mouse_x();
+        dr16_sendable.data.mouse_y = dr16.get_mouse_y();
+        dr16_sendable.data.mouse_z = dr16.get_mouse_z();
+        dr16_sendable.data.keys.raw = *(uint16_t*)(dr16.get_raw() + 14);
+        dr16_sendable.send_to_comms();
+
         comms_layer.set_ethernet_outgoing(eth_outgoing);
         comms_layer.set_hid_outgoing(hid_outgoing);
 

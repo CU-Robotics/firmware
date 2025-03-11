@@ -25,6 +25,11 @@ namespace Comms {
 struct FirmwareData {
     /// @brief Test data
     TestData test_data;
+    /// @brief TempRobotState data
+    TempRobotState temp_robot_state;
+    /// @brief DR16 data
+    DR16Data dr16_data;
+
     /// @brief Logging data
     Comms::LoggingData logging_data;
 };

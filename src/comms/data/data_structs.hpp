@@ -133,13 +133,29 @@ struct DR16Data : Comms::CommsData {
     /// Sensor ID.
     uint8_t id;
     /// mouse x velocity
-    int16_t mouse_x;
+    int16_t mouse_x = 0;
     /// mouse y velocity
-    int16_t mouse_y;
+    int16_t mouse_y = 0;
+    /// mouse z velocity
+    int16_t mouse_z = 0;
     /// left mouse button status
-    bool l_mouse_button;
+    bool l_mouse_button = 0;
     /// right mouse button status
-    bool r_mouse_button;
+    bool r_mouse_button = 0;
+    /// left switch status
+    float l_switch = 0;
+    /// right switch status
+    float r_switch = 0;
+    /// left stick x axis
+    float l_stick_x = 0;
+    /// left stick y axis
+    float l_stick_y = 0;
+    /// right stick x axis
+    float r_stick_x = 0;
+    /// right stick y axis
+    float r_stick_y = 0;
+    /// wheel
+    float wheel = 0;
 
     /**
      * Usage example of how to acces the keys bitfield:
@@ -151,7 +167,7 @@ struct DR16Data : Comms::CommsData {
      * 
      */
     union {
-        uint16_t keys;
+        uint16_t raw = 0;
         struct {
             uint16_t w     : 1;
             uint16_t s     : 1;
@@ -169,7 +185,7 @@ struct DR16Data : Comms::CommsData {
             uint16_t c     : 1;
             uint16_t v     : 1;
             uint16_t b     : 1;
-        };
+        } key;
     } keys;
 };
 
