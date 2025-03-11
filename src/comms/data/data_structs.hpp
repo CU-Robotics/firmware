@@ -1,6 +1,21 @@
-#include <cstdint>
+#if defined(FIRMWARE)
+#include <stdint.h>
 #include "comms/data/comms_data.hpp"
 #include "sensor_constants.hpp"
+#elif defined(HIVE)
+#include <stdint.h>
+#include "modules/comms/data/comms_data.hpp"
+// TODO: remove this
+//some constants for lidar sensors needed for comms as well as the sensor
+/// @brief points per D200 data packet
+const inline int D200_POINTS_PER_PACKET = 12;
+
+/// @brief number of timestamp calibration packets. new packet read rate of 333 Hz = 1 packet / 3ms
+const inline int D200_MAX_CALIBRATION_PACKETS = 333;
+
+/// @brief number of packets stored teensy-side
+const inline int D200_NUM_PACKETS_CACHED = 2;
+#endif
 
 #ifndef DATA_STRUCTS_HPP
 #define DATA_STRUCTS_HPP
@@ -135,7 +150,7 @@ struct DR16Data : Comms::CommsData {
         }
      * 
      */
-    union KeyUnion{
+    union {
         uint16_t keys;
         struct {
             uint16_t w     : 1;
@@ -155,7 +170,18 @@ struct DR16Data : Comms::CommsData {
             uint16_t v     : 1;
             uint16_t b     : 1;
         };
-    };
+    } keys;
+};
+
+// TODO: replace with kyle3's new state struct
+/// @brief Structure for the full robot state including time
+struct TempRobotState : Comms::CommsData {
+    TempRobotState() : CommsData(Comms::TypeLabel::TempRobotState, Comms::PhysicalMedium::Ethernet, Comms::Priority::High, sizeof(TempRobotState)) { }
+  
+    /// @brief Time of the teensy
+    double time = 0.0;
+    /// @brief Full robot state array
+    float state[24][3] = { {0} };
 };
 
 #endif // DATA_STRUCTS_HPP
