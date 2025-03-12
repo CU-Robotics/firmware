@@ -1,8 +1,9 @@
+use colored::Colorize;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::env;
 use std::io::{BufRead, BufReader};
-use std::process::{Command, Stdio};
+use std::process::{self, Command, Stdio};
 use std::time::{SystemTime, UNIX_EPOCH};
 use tokio::task;
 
@@ -62,7 +63,7 @@ impl Default for RobotData {
     }
 }
 
-async fn send_data(client: &reqwest::Client, robot_data: RobotData) {
+async fn send_data(client: &reqwest::Client, robot_data: RobotData) -> bool {
     let json_bytes = task::spawn_blocking(move || serde_json::to_vec(&robot_data).unwrap())
         .await
         .unwrap();
@@ -74,9 +75,10 @@ async fn send_data(client: &reqwest::Client, robot_data: RobotData) {
         .send()
         .await
     {
-        Ok(_response) => {}
+        Ok(_response) => true,
         Err(e) => {
             println!("Error sending request: {}", e);
+            false
         }
     }
 }
@@ -91,6 +93,16 @@ pub fn current_timestamp_nanos() -> u128 {
 #[tokio::main]
 async fn main() -> std::io::Result<()> {
     let client = reqwest::Client::new();
+    let mut robot_data = RobotData::default();
+
+    if !send_data(&client, robot_data).await {
+        eprintln!(
+            "{}",
+            "FAILED TO SEND WAGGLE DATA. MAKE SURE THE WAGGLE SERVER IS RUNNING".red()
+        );
+        process::exit(1);
+    }
+    robot_data = RobotData::default();
 
     println!("Starting waggle interceptor!");
     let args: Vec<String> = env::args().collect();
@@ -110,8 +122,6 @@ async fn main() -> std::io::Result<()> {
 
     let stdout = child.stdout.take().expect("Failed to capture stdout");
     let reader = BufReader::new(stdout);
-
-    let mut robot_data = RobotData::default();
 
     let mut last_sent_timestamp = current_timestamp_nanos();
     let mut last_clear_timestamp = current_timestamp_nanos();
