@@ -24,6 +24,8 @@ RefSystem* ref;
 HIDLayer comms;
 ACS712 current_sensor;
 
+Logger logger;
+
 StereoCamTrigger stereoCamTrigger(60);
 
 ConfigLayer config_layer;
@@ -38,7 +40,6 @@ Governor governor;
 
 LEDBoard led;
 
-Logger logger;
 
 // DONT put anything else in this function. It is not a setup function
 void print_logo() {

@@ -16,7 +16,7 @@ size_t Logger::write(const uint8_t* buffer, size_t size) {
     memcpy(print_statement, log_buffer + cursor, size);
 
 #ifdef LOGGER_FLAG
-    Serial.println(print_statement);
+    Serial.print(print_statement);
 #endif
 
     // sets cursor to current place in memory
