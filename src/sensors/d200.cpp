@@ -1,5 +1,5 @@
 #include "d200.hpp"
-#include "../utils/logger.hpp"
+#include "utils/logger.hpp"
 
 
 D200LD14P::D200LD14P(HardwareSerial *_port, uint8_t _id) : Sensor(SensorType::LIDAR, _id) {

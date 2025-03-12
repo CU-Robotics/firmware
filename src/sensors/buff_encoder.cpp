@@ -1,5 +1,5 @@
 #include "buff_encoder.hpp"
-#include "../utils/logger.hpp"
+#include "utils/logger.hpp"
 
 const SPISettings BuffEncoder::m_settings = SPISettings(1000000, MT6835_BITORDER, SPI_MODE3);
 
