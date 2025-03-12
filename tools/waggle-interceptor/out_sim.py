@@ -161,4 +161,4 @@ wheel_speed_filtered: 0.
 
 print(a)
 while True:
-    print(f'waggle graph torque_br: {random.randint(-10, 10)}')
+    print(f'waggle graph torque_br {random.randint(-10, 10)}')

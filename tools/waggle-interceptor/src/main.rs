@@ -61,10 +61,10 @@ impl Default for RobotData {
     }
 }
 
-async fn send_data(robot_data: RobotData) {
+async fn send_data(robot_data: &RobotData) {
     let client = reqwest::Client::new();
 
-    let json_str = serde_json::to_string_pretty(&robot_data).unwrap();
+    let json_str = serde_json::to_string_pretty(robot_data).unwrap();
 
     match client
         .post("http://localhost:3000/batch")
@@ -73,7 +73,9 @@ async fn send_data(robot_data: RobotData) {
         .send()
         .await
     {
-        Ok(_response) => {}
+        Ok(_response) => {
+            println!("Data sent succesfully!");
+        }
         Err(e) => {
             println!("Error sending request: {}", e);
         }
@@ -89,6 +91,7 @@ pub fn current_timestamp_nanos() -> u128 {
 
 #[tokio::main]
 async fn main() -> std::io::Result<()> {
+    println!("Starting waggle interceptor!");
     let args: Vec<String> = env::args().collect();
     if args.len() < 2 {
         eprintln!("Usage: {} <command> [arguments...]", args[0]);
@@ -110,24 +113,31 @@ async fn main() -> std::io::Result<()> {
     let mut robot_data = RobotData::default();
 
     let mut last_sent_timestamp = current_timestamp_nanos();
-    let target_fps = 15;
+    let mut last_clear_timestamp = current_timestamp_nanos();
 
+    let target_fps = 15;
+    let clear_every_nanos = 1 * 1e9 as u128;
+    let nanos_per_frame = 1e9 as u128 / target_fps; // Convert to nanoseconds
+
+    // let clear_every_nanos = 10;
+
+    println!("Starting read");
     for line in reader.lines() {
         let line = line?.to_lowercase();
-        println!("intercepted {}", line);
         let split: Vec<&str> = line.split_ascii_whitespace().collect();
+        // println!("intercepted {}", line);
         if split.len() < 4 {
             continue;
         }
         if split[0] != "waggle" {
             continue;
         }
+        // println!("wagge seen!");
         if split[1] == "graph" {
             let graph_name = split[2];
-            // println!("parsing {}", split[3]);
             let value: Result<f64, _> = split[3].parse();
             if let Ok(value) = value {
-                // println!("Graph {}: {}", graph_name, value);
+                // println!("Graphing {} {}", graph_name, value);
                 let graph_data: GraphDataPoint = GraphDataPoint {
                     x: (current_timestamp_nanos() as f64),
                     y: value,
@@ -139,22 +149,31 @@ async fn main() -> std::io::Result<()> {
                     .or_insert_with(Vec::new)
                     .push(graph_data);
 
-                if (current_timestamp_nanos() - last_sent_timestamp) / (10e9 as u128)
-                    > 1 / target_fps
+                if (current_timestamp_nanos() - last_sent_timestamp) / (1e9 as u128)
+                    > nanos_per_frame
                 {
                     last_sent_timestamp = current_timestamp_nanos();
-                    send_data(robot_data).await;
+                    send_data(&robot_data).await;
                     robot_data = RobotData::default();
                 }
+                if (current_timestamp_nanos() - last_clear_timestamp) > clear_every_nanos {
+                    last_clear_timestamp = current_timestamp_nanos();
+                    // print!("\x1B[2J\x1B[1;1H");
+                    // std::process::Command::new("clear").status().unwrap();
+                    // print!("{esc}[2J{esc}[1;1H", esc = 27 as char);
+                    clearscreen::clear().expect("failed to clear screen");
+
+                    // println!("cleared");
+                }
             } else {
-                println!("Invalid graph value: {}", split[3]);
+                // println!("Invalid graph value: {}", split[3]);
             }
             continue;
         }
     }
 
     child.wait()?;
-    send_data(robot_data).await;
+    send_data(&robot_data).await;
 
     Ok(())
 }
