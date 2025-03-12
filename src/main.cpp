@@ -1,5 +1,7 @@
 #include <Arduino.h>
 
+#include "utils/logger.hpp"
+
 #include "git_info.h"
 
 #include "utils/profiler.hpp"
@@ -7,7 +9,6 @@
 #include "controls/estimator_manager.hpp"
 #include "controls/controller_manager.hpp"
 
-#include "utils/logger.hpp"
 #include <TeensyDebug.h>
 #include "sensors/LEDBoard.hpp"
 #include "sensor_constants.hpp"
@@ -17,14 +18,14 @@
 #define LOOP_FREQ 1000
 #define HEARTBEAT_FREQ 2
 
+Logger logger; // DONT move this lower! Logger be initialized before the other objects.
+
 // Declare global objects
 DR16 dr16;
 CANManager can;
 RefSystem* ref;
 HIDLayer comms;
 ACS712 current_sensor;
-
-Logger logger;
 
 StereoCamTrigger stereoCamTrigger(60);
 

@@ -40,3 +40,6 @@ uint32_t Logger::grab_log_data(uint32_t size, uint8_t* data) {
     // return number of bytes copied
     return bytes_to_copy;
 }
+
+Logger logger;
+
