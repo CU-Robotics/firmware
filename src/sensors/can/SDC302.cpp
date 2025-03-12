@@ -43,7 +43,7 @@ void SDC302::write_motor_torque(float torque) {
 
     // create the CAN message
     CAN_message_t msg;
-    create_cmd_control(msg, 0, 0, 0, 0, int_torque);
+    create_cmd_control(msg, 0, 0, 0, 0, (((double)int_torque + 200 * 0.68 * 6) * 4095) / (400 * 0.68 * 6));
     Serial.printf("Torque: %d\n", int_torque);
 
     // fill in the output array
