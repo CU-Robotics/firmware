@@ -34,6 +34,6 @@ This is a tool for allowing you to send information from teensy to the waggle da
 
 - Anywhere you want to add a datapoint to the dashboard, print on a newline with the format `waggle graph GRAPH_NAME GRAPH_VALUE`. For instance, if I wanted to graph that `torque_fr` is currently 3.14, I would print `waggle graph torque_fr 3.14`
 
-- Instead of running make upload, run `./tools/waggle-interceptor/make-upload.sh`
+- Instead of running make upload, run `./tools/waggle-interceptor/make-upload.sh` **Run this in your standard terminal, not the VS Code built-in terminal, unless you want to have no memory remaining on your machine**
 
 That's it :)
