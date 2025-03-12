@@ -11,13 +11,13 @@ int SDC302::read(CAN_message_t& msg) {
     if (!check_msg_id(msg)) return 0;
 
     int16_t position = (msg.buf[1] << 8) | msg.buf[2];
-    m_state.position = position;
+    m_state.position = (position * 14.0 / 65535.0) - 7;
 
     int16_t speed = (msg.buf[3] << 4) | (msg.buf[4] >> 4);
-    m_state.speed = speed;
+    m_state.speed = (speed * 300 / 4095 - 150) * 2 * M_PI / 60.0;
 
     int16_t torque = ((msg.buf[4] & 0x0F) << 8) | msg.buf[5];
-    m_state.torque = torque;
+    m_state.torque = torque * (400 * 0.68 * 6) / 4095 - 200 * 0.68 * 6;
     
     return 1;
 }
