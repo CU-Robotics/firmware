@@ -61,11 +61,9 @@ impl Default for RobotData {
     }
 }
 
-async fn send_data(robot_data: &RobotData) {
-    let client = reqwest::Client::new();
-
-    let json_str = serde_json::to_string_pretty(robot_data).unwrap();
-
+async fn send_data(client: &reqwest::Client, robot_data: &RobotData) {
+    let json_str = serde_json::to_string(robot_data).unwrap();
+    println!("str len {}", json_str.len());
     match client
         .post("http://localhost:3000/batch")
         .header("Content-Type", "application/json")
@@ -74,7 +72,7 @@ async fn send_data(robot_data: &RobotData) {
         .await
     {
         Ok(_response) => {
-            println!("Data sent succesfully!");
+            // println!("Data sent succesfully!");
         }
         Err(e) => {
             println!("Error sending request: {}", e);
@@ -91,6 +89,8 @@ pub fn current_timestamp_nanos() -> u128 {
 
 #[tokio::main]
 async fn main() -> std::io::Result<()> {
+    let client = reqwest::Client::new();
+
     println!("Starting waggle interceptor!");
     let args: Vec<String> = env::args().collect();
     if args.len() < 2 {
@@ -116,9 +116,10 @@ async fn main() -> std::io::Result<()> {
     let mut last_clear_timestamp = current_timestamp_nanos();
 
     let target_fps = 15;
-    let clear_every_nanos = 1 * 1e9 as u128;
-    let nanos_per_frame = 1e9 as u128 / target_fps; // Convert to nanoseconds
+    let clear_every_nanos = 30 * 1_000_000_000u128;
+    let nanos_per_frame = 1_000_000_000u128 / target_fps; // Convert to nanoseconds
 
+    println!("Nanos per frame: {}", nanos_per_frame);
     // let clear_every_nanos = 10;
 
     println!("Starting read");
@@ -149,11 +150,12 @@ async fn main() -> std::io::Result<()> {
                     .or_insert_with(Vec::new)
                     .push(graph_data);
 
-                if (current_timestamp_nanos() - last_sent_timestamp) / (1e9 as u128)
-                    > nanos_per_frame
-                {
+                if (current_timestamp_nanos() - last_sent_timestamp) > nanos_per_frame {
                     last_sent_timestamp = current_timestamp_nanos();
-                    send_data(&robot_data).await;
+                    let start = current_timestamp_nanos();
+                    send_data(&client, &robot_data).await;
+                    let end = current_timestamp_nanos();
+                    println!("Send took {} ms", (end - start) / 1_000_000);
                     robot_data = RobotData::default();
                 }
                 if (current_timestamp_nanos() - last_clear_timestamp) > clear_every_nanos {
@@ -173,7 +175,7 @@ async fn main() -> std::io::Result<()> {
     }
 
     child.wait()?;
-    send_data(&robot_data).await;
+    send_data(&client, &robot_data).await;
 
     Ok(())
 }
