@@ -1,5 +1,4 @@
 #include "logger.hpp"
-#include <algorithm>
 
 /// @brief internal buffer with 4kb capacity
 /// @note will need to change size if we every print more than 4096 characters per loop
@@ -17,7 +16,7 @@ size_t Logger::write(const uint8_t* buffer, size_t size) {
     memcpy(print_statement, log_buffer + cursor, size);
 
 #ifdef LOGGER_FLAG
-    logger.print(print_statement);
+    Serial.println(print_statement);
 #endif
 
     // sets cursor to current place in memory
