@@ -144,9 +144,9 @@ int main() {
     Timer control_input_timer;
     
     Watchdog watchdog;
-    watchdog.watchdog_set(5, 10);
+    watchdog.set(5, 10);
     Serial.println("Entering main loop...\n");
-    watchdog.watchdog_start();
+    watchdog.start();
     // Main loop
     while (true) {
         //verify watchdog is still alive every 1 second
@@ -349,7 +349,7 @@ int main() {
         // LED heartbeat -- linked to loop count to reveal slowdowns and freezes.
         loopc % (int)(1E3 / float(HEARTBEAT_FREQ)) < (int)(1E3 / float(5 * HEARTBEAT_FREQ)) ? digitalWrite(13, HIGH) : digitalWrite(13, LOW);
         loopc++;
-        watchdog.wathdog_feed();
+        watchdog.feed();
         // Keep the loop running at the desired rate
         loop_timer.delay_micros((int)(1E6 / (float)(LOOP_FREQ)));
     }
