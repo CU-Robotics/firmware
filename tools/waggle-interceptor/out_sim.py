@@ -160,5 +160,7 @@ wheel_speed_filtered: 0.
 '''
 
 print(a)
+n = 1
 while True:
-    print(f'waggle graph torque_br {random.randint(-10, 10)}')
+    n += random.random()-0.5
+    print(f'waggle graph torque_br {n}')
