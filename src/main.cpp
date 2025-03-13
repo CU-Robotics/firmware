@@ -39,6 +39,8 @@ Governor governor;
 
 LEDBoard led;
 
+Watchdog watchdog;
+
 // DONT put anything else in this function. It is not a setup function
 void print_logo() {
     if (Serial) {
@@ -143,14 +145,13 @@ int main() {
     Timer stall_timer;
     Timer control_input_timer;
     
-    Watchdog watchdog;
-    watchdog.set(5, 10);
-    Serial.println("Entering main loop...\n");
+    // start the main loop watchdog
     watchdog.start();
+
+    Serial.println("Entering main loop...\n");
+
     // Main loop
     while (true) {
-        //verify watchdog is still alive every 1 second
-
         // start main loop time timer
         stall_timer.start();
         
@@ -349,7 +350,10 @@ int main() {
         // LED heartbeat -- linked to loop count to reveal slowdowns and freezes.
         loopc % (int)(1E3 / float(HEARTBEAT_FREQ)) < (int)(1E3 / float(5 * HEARTBEAT_FREQ)) ? digitalWrite(13, HIGH) : digitalWrite(13, LOW);
         loopc++;
+
+        // feed the watchdog to keep the loop running
         watchdog.feed();
+
         // Keep the loop running at the desired rate
         loop_timer.delay_micros((int)(1E6 / (float)(LOOP_FREQ)));
     }
