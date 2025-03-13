@@ -4,6 +4,10 @@
 #include <string.h>     // for memset/memcpy
 #include <assert.h>     // for assert
 
+#if defined(HIVE)
+#include <iostream>     // for std::cout
+#endif
+
 namespace Comms {
 
 PacketPayload::PacketPayload(uint16_t max_data_size) {
@@ -204,6 +208,7 @@ bool PacketPayload::try_append_splittable_logging_data(LoggingData* log) {
 void PacketPayload::place_data_in_mega_struct(CommsData* data) {
 #if defined(HIVE)
     
+    std::cout << "Placing data in mega struct: " << to_string(data->type_label) << std::endl;
     switch (data->type_label) {
     case TypeLabel::TestData: {
         // place the data in the mega struct
@@ -215,6 +220,12 @@ void PacketPayload::place_data_in_mega_struct(CommsData* data) {
         // place the data in the mega struct
         LoggingData* logging_data = static_cast<LoggingData*>(data);
         memcpy(&Hive::env->firmware_data->logging_data, logging_data, sizeof(LoggingData));
+        break;
+    }
+    case TypeLabel::TempRobotState: {
+        // place the data in the mega struct
+        TempRobotState* temp_robot_state = static_cast<TempRobotState*>(data);
+        memcpy(&Hive::env->firmware_data->temp_robot_state, temp_robot_state, sizeof(TempRobotState));
         break;
     }
     default:

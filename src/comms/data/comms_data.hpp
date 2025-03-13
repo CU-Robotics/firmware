@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stdint.h>     // for uintN_t
+#include <string>       // for std::string
 
 namespace Comms {
 
@@ -17,6 +18,38 @@ enum class TypeLabel : uint8_t {
     DR16Data,
     TempRobotState,
 };
+
+/// @brief Converts a TypeLabel to a string.
+/// @param type_label The TypeLabel to convert.
+/// @return The string representation of the TypeLabel.
+inline std::string to_string(TypeLabel type_label) {
+    switch (type_label) {
+    case TypeLabel::NONE:
+        return "NONE";
+    case TypeLabel::TestData:
+        return "TestData";
+    case TypeLabel::LoggingData:
+        return "LoggingData";
+    case TypeLabel::BuffEncoderData:
+        return "BuffEncoderData";
+    case TypeLabel::ICMSensorData:
+        return "ICMSensorData";
+    case TypeLabel::RevEncoderData:
+        return "RevEncoderData";
+    case TypeLabel::TOFSensorData:
+        return "TOFSensorData";
+    case TypeLabel::LidarSensorData:
+        return "LidarSensorData";
+    case TypeLabel::DR16Data:
+        return "DR16Data";
+    case TypeLabel::TempRobotState:
+        return "TempRobotState"; 
+    // no default case, so the compiler will warn us if we forget a case
+    }
+
+    // because no default case, this gets rid of the no return warning
+    return "UNKNOWN";
+}
 
 /// @brief PhysicalMedium is the medium over which the data is sent.
 enum class PhysicalMedium : uint8_t {
