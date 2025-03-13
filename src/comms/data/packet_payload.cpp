@@ -242,6 +242,13 @@ void PacketPayload::place_data_in_mega_struct(CommsData* data) {
         Serial.printf("Placed test data in mega struct\n");
         break;
     }
+    case TypeLabel::TempRobotState: {
+        // place the data in the mega struct
+        TempRobotState* temp_robot_state = static_cast<TempRobotState*>(data);
+        memcpy(&hive_data.target_state, temp_robot_state, sizeof(TempRobotState));
+        Serial.printf("Placed temp robot state in mega struct\n");
+        break;
+    }
     default:
         assert(false && "Invalid type label given to place in mega struct");
     }

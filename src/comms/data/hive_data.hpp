@@ -24,6 +24,8 @@ namespace Comms {
 struct HiveData {
     /// @brief Test data
     TestData test_data;
+    /// @brief Target state
+    TempRobotState target_state;
 };
 
 } // namespace Comms

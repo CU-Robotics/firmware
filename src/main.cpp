@@ -234,7 +234,9 @@ int main() {
 
         // if the left switch is all the way down use Hive controls
         if (dr16.get_l_switch() == 2) {
-            hid_incoming.get_target_state(target_state);
+            // hid_incoming.get_target_state(target_state);
+            memcpy(target_state, hive_data.target_state.state, sizeof(target_state));
+
             // if you just switched to hive controls, set the reference to the current state
             if (hive_toggle) {
                 governor.set_reference(temp_state);
