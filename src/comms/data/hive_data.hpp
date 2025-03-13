@@ -2,8 +2,8 @@
 
 #if defined(FIRMWARE)
 
-#include "comms/data/comms_data.hpp"
-#include "comms/data/data_structs.hpp"
+#include "comms/data/comms_data.hpp"        // for CommsData
+#include "comms/data/data_structs.hpp"      // for shared data structs
 
 /// @brief Data struct for testing purposes
 struct TestData : Comms::CommsData {

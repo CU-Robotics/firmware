@@ -1,10 +1,9 @@
+
 #if defined(FIRMWARE)
-#include <stdint.h>
-#include "comms/data/comms_data.hpp"
-#include "sensor_constants.hpp"
+#include "comms/data/comms_data.hpp"            // for CommsData
+#include "sensor_constants.hpp"                 // for D200_POINTS_PER_PACKET, D200_MAX_CALIBRATION_PACKETS, D200_NUM_PACKETS_CACHED
 #elif defined(HIVE)
-#include <stdint.h>
-#include "modules/comms/data/comms_data.hpp"
+#include "modules/comms/data/comms_data.hpp"    // for CommsData
 // TODO: remove this
 //some constants for lidar sensors needed for comms as well as the sensor
 /// @brief points per D200 data packet
@@ -19,6 +18,8 @@ const inline int D200_NUM_PACKETS_CACHED = 2;
 
 #ifndef DATA_STRUCTS_HPP
 #define DATA_STRUCTS_HPP
+
+#include <stdint.h>     // uintN_t
 
 /// @brief Structure for the buff encoder sensor.
 struct BuffEncoderData : Comms::CommsData {

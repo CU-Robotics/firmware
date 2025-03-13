@@ -1,10 +1,9 @@
 #pragma once
 
-#include <memory>               // for shared_ptr
-#include <queue>                // for queue
+#include <queue>                // for std::queue
 
 #if defined(HIVE)
-#include <exception>            // for runtime_error
+#include <stdexcept>            // for std::runtime_error
 #elif defined(FIRMWARE)
 #include <cassert>              // for assert
 #endif

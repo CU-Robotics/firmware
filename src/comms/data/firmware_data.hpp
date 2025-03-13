@@ -2,9 +2,9 @@
 
 #if defined(HIVE)
 
-#include "modules/comms/data/comms_data.hpp"
-#include "modules/comms/data/logging_data.hpp"
-#include "modules/comms/data/data_structs.hpp"
+#include "modules/comms/data/comms_data.hpp"        // for CommsData
+#include "modules/comms/data/logging_data.hpp"      // for LoggingData
+#include "modules/comms/data/data_structs.hpp"      // for shared data structs
 
 /// @brief Data struct for testing purposes
 struct TestData : Comms::CommsData {

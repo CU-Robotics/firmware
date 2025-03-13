@@ -1,8 +1,8 @@
 #pragma once
 
-#include "comms_data.hpp"
-#include <string.h>
-#include <string>
+#include "comms_data.hpp"       // for CommsData
+#include <string.h>             // for memcpy
+#include <string>               // for std::string
 
 namespace Comms {
 
