@@ -35,7 +35,7 @@ void D200LD14P::stop_motor() {
   port->write(D200_STOP_CMD, D200_CMD_PACKET_LEN);
 }
 
-void D200LD14P::read() {
+bool D200LD14P::read() {
   // consume bytes until we reach a start character (only relevant for startup)
   while (port->available() && port->peek() != D200_START_CHAR) {
     port->read();
@@ -73,7 +73,6 @@ void D200LD14P::read() {
     // parse packet
     current_packet = (current_packet+1) % D200_NUM_PACKETS_CACHED;
     LidarDataPacketSI *p = &packets[current_packet];
-
     // (alignments of values from dev manual: https://files.waveshare.com/upload/9/99/LD14P_Development_Manual.pdf)
     uint16_t lidar_speed = (buf[3] << 8) | buf[2];
     uint16_t start_angle = (buf[5] << 8) | buf[4];
@@ -116,6 +115,13 @@ void D200LD14P::read() {
       }
     }
   }
+
+  //add data to struct
+  lidar_sensor_data.cal = cal;
+  lidar_sensor_data.current_packet = current_packet;
+  lidar_sensor_data.id = id;
+  memcpy(lidar_sensor_data.packets, packets, D200_NUM_PACKETS_CACHED * sizeof(LidarDataPacketSI));
+  return true;
 }
 
 void D200LD14P::flush_packet_buffer() {
@@ -195,14 +201,4 @@ void D200LD14P::print_latest_packet() {
   Serial.println(p.end_angle);
   Serial.print("timestamp: ");
   Serial.println(p.timestamp);
-}
-
-void D200LD14P::serialize(uint8_t* buffer, size_t& offset) {
-  buffer[offset++] = id;
-  memcpy(buffer + offset, &current_packet, sizeof(current_packet));
-  offset += sizeof(current_packet);
-  memcpy(buffer + offset, &cal, sizeof(cal));
-  offset += sizeof(cal);
-  memcpy(buffer + offset, get_packets(), D200_NUM_PACKETS_CACHED * D200_PAYLOAD_SIZE);
-  offset += D200_NUM_PACKETS_CACHED * D200_PAYLOAD_SIZE;
 }
