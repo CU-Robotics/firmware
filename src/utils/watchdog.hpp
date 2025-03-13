@@ -2,7 +2,7 @@
 
 #include <WDT_T4/Watchdog_t4.h>
 
-/// @brief watchdog callback to indicate trigger has occured
+/// @brief watchdog callback that is triggered before the CPU is reset, this is used to give a warning that the CPU is about to be reset
 void watchdog_callback() {
     Serial.println("Watchdog is almost out of time, please feed the watchdog");
 }
