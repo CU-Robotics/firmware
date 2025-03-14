@@ -12,6 +12,11 @@
 
 /// @brief Object for profiling sections of code.
 struct Profiler {
+    /// @brief Constructor for the profiler.
+    Profiler() {
+        clear();
+    }
+
     /// @brief Data structure for a profiling section. 
     struct profiler_section_t {
         /// @brief Start time for each profiling section.
@@ -27,6 +32,9 @@ struct Profiler {
         /// @brief A unique name to identify the section.
         char name[PROF_MAX_NAME + 1] = { 0 };  // extra for null terminator
     };
+
+    /// @brief  Clear all profiling sections.
+    void clear();
 
     /// @brief Start a profiling section.
     /// @param name A unique name to identify the section.

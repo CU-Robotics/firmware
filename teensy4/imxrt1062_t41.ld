@@ -11,7 +11,7 @@ ENTRY(ImageVectorTable)
 
 SECTIONS
 {
-	.text.headers : {
+	.text.headers (READONLY) : {
 		KEEP(*(.flashconfig))
 		FILL(0xFF)
 		. = ORIGIN(FLASH) + 0x1000;

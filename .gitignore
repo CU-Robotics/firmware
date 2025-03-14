@@ -18,6 +18,7 @@ build/
 
 # Ignore the libraries
 *.a
+*.tar.xz
 
 # Ignore clangd files
 compile_commands.json
@@ -30,6 +31,7 @@ tools/*.txt
 tools/*.out
 tools/git_scraper
 tools/custom_monitor
+tools/compiler
 
 # Ignore the output from the git scraper
 src/git_info.h

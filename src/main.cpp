@@ -13,6 +13,7 @@
 #include "sensor_constants.hpp"
 #include "SensorManager.hpp"
 
+#include "utils/watchdog.hpp"
 #include "comms/data/sendable.hpp"
 #include "comms/data/hive_data.hpp"
 
@@ -38,6 +39,8 @@ EstimatorManager estimator_manager;
 ControllerManager controller_manager;
 
 Governor governor;
+
+Watchdog watchdog;
 
 // DONT put anything else in this function. It is not a setup function
 void print_logo() {
@@ -141,6 +144,9 @@ int main() {
     Timer loop_timer;
     Timer stall_timer;
     Timer control_input_timer;
+    
+    // start the main loop watchdog
+    watchdog.start();
 
 
     Serial.println("Entering main loop...\n");
@@ -182,7 +188,6 @@ int main() {
         }
 
         // manual controls on firmware
-
         float delta = control_input_timer.delta();
         dr16_pos_x += dr16.get_mouse_x() * 0.05 * delta;
         dr16_pos_y += dr16.get_mouse_y() * 0.05 * delta;
@@ -380,6 +385,9 @@ int main() {
         // LED heartbeat -- linked to loop count to reveal slowdowns and freezes.
         loopc % (int)(1E3 / float(HEARTBEAT_FREQ)) < (int)(1E3 / float(5 * HEARTBEAT_FREQ)) ? digitalWrite(13, HIGH) : digitalWrite(13, LOW);
         loopc++;
+
+        // feed the watchdog to keep the loop running
+        watchdog.feed();
 
         // Keep the loop running at the desired rate
         loop_timer.delay_micros((int)(1E6 / (float)(LOOP_FREQ)));
