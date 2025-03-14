@@ -63,7 +63,7 @@ DEFINES := $(TEENSY4_FLAGS)
 # -fdata-sections: Place each variable in its own section to allow the linker to remove unused variables
 # -O2: Optimize the code for speed
 # --specs=nano.specs: Use newlib nano instead of full newlib to reduce binary size
-CPPFLAGS := $(INCLUDE_FLAGS) $(DEFINES) -MMD -MP -ffunction-sections -fdata-sections -O2 --specs=nano.specs
+CPPFLAGS := $(INCLUDE_FLAGS) $(DEFINES) -MMD -MP -ffunction-sections -fdata-sections -O2 --specs=nano.specs -g3
 
 # Compiler flags for C files
 CFLAGS := $(CPU_CFLAGS)
