@@ -350,6 +350,11 @@ int main() {
         dr16_sendable.data.keys.raw = *(uint16_t*)(dr16.get_raw() + 14);
         dr16_sendable.send_to_comms();
 
+        Comms::LoggingData logging_data;
+        const char* logging_data_str = "Logging data test string";
+        logging_data.deserialize(logging_data_str, strlen(logging_data_str));
+        logging_data.send_to_comms();
+
         comms_layer.set_ethernet_outgoing(eth_outgoing);
         comms_layer.set_hid_outgoing(hid_outgoing);
 
