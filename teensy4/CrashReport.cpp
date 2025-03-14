@@ -70,7 +70,7 @@ size_t CrashReportClass::printTo(Print& p) const
         if (info->mmfar < 32) {
           p.print(" (nullptr)\n\t  Check code at 0x");
           p.print(info->ret, HEX);
-          p.print(" - very likely a bug!\n\t  Run \"addr2line -e mysketch.ino.elf 0x");
+          p.print(" - very likely a bug!\n\t  Run \"./tools/compiler/arm-gnu-toolchain/bin/arm-none-eabi-addr2line -e firmware.elf 0x");
           p.print(info->ret, HEX);
           p.print("\" for filename & line number.");
             // TODO: in some perfect future, maybe we'll build part of the ELF debug_line
