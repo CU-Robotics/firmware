@@ -184,14 +184,8 @@ public:
 	/// @return trim six value if it exists otherwise return nothing
 	virtual std::optional<float> get_trim_six() { return {}; }
 	
-	/// @brief get channel data
-	/// @param chan_num is the channel number from 5-16
-	/// @return channel data
-	virtual std::optional<float> get_channel_data(int chan_num) { return {}; }
-
 	/// @brief Various keys that can be pressed on the transmitter
 	struct Keys {
-
 		/// @brief If the key 'w' is pressed
 		bool w = 0;
 		/// @brief If the key 's' is pressed
