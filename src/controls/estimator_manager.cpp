@@ -1,9 +1,9 @@
 #include "estimator_manager.hpp"
 
 EstimatorManager::~EstimatorManager() {
-	//  Serial.println("Ending SPI");
+    Serial.println("Ending SPI");
     SPI.end();
-	// Serial.println("SPI Ended");
+	Serial.println("SPI Ended");
 
     for (int i = 0; i < STATE_LEN; i++) {
         if (estimators[i] == nullptr)
@@ -13,7 +13,6 @@ EstimatorManager::~EstimatorManager() {
 }
 
 void EstimatorManager::init(CANManager* _can, const Config* _config_data, SensorManager* _sensor_manager) {
-
     // set can and config data pointers
     can = _can;
     config_data = _config_data;
