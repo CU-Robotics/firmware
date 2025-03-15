@@ -1,0 +1,5 @@
+<map id="Comms::EthernetPacket" name="Comms::EthernetPacket">
+<area shape="rect" id="node1" title="A complete comms packet." alt="" coords="143,95,305,121"/>
+<area shape="rect" id="node2" href="$structComms_1_1EthernetPacketPayload.html" title="Comms packet payload struct." alt="" coords="5,5,213,32"/>
+<area shape="rect" id="node3" href="$structComms_1_1EthernetPacketHeader.html" title="Comms packet header struct." alt="" coords="238,5,442,32"/>
+</map>
