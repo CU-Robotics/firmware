@@ -53,8 +53,7 @@ void SensorManager::init(const Config* config_data) {
 
     // initialize rev encoders
     for (int i = 0; i < rev_sensor_count; i++) {
-        rev_sensors[i] = new RevEncoder();
-        rev_sensors[i]->init(REV_ENC_PIN1 + i, true);
+        rev_sensors[i].init(REV_ENC_PIN1 + i, true);
     }
 
     // initialize TOFs
@@ -84,8 +83,8 @@ void SensorManager::read() {
     }
 
     for (int i = 0; i < rev_sensor_count; i++) {
-        rev_sensors[i]->read();
-        rev_sensors[i]->print();
+        rev_sensors[i].read();
+        rev_sensors[i].print();
     }
     if (lidar_sensor_count > 0) {
 
@@ -111,7 +110,7 @@ ICM20649* SensorManager::get_icm_sensor(int index) {
 }
 
 RevEncoder* SensorManager::get_rev_sensor(int index) {
-    return rev_sensors[index];
+    return &rev_sensors[index];
 }
 
 TOFSensor* SensorManager::get_tof_sensor(int index) {

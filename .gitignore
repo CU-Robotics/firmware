@@ -35,3 +35,7 @@ src/git_info.h
 
 # Ignore .vscode config
 .vscode
+
+
+# Ignore Rust tool's build directory
+/tools/waggle-interceptor/target

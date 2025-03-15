@@ -14,6 +14,8 @@
 #include "sensor_constants.hpp"
 #include "SensorManager.hpp"
 
+#include "utils/watchdog.hpp"
+
 // Loop constants
 #define LOOP_FREQ 1000
 #define HEARTBEAT_FREQ 2
@@ -39,6 +41,7 @@ Governor governor;
 
 LEDBoard led;
 
+Watchdog watchdog;
 
 // DONT put anything else in this function. It is not a setup function
 void print_logo() {
@@ -82,6 +85,16 @@ int main() {
     Serial.begin(115200); // the serial monitor is actually always active (for debug use logger.println & tycmd)
     debug.begin(SerialUSB1);
     print_logo();
+
+    // check to see if there is a crash report, and if so, print it repeatedly over Serial
+    // in the future, we'll send this directly over comms
+    if (CrashReport) {
+        while (1) {
+            Serial.println(CrashReport);
+            Serial.println("\nReflash to clear CrashReport (and also please fix why it crashed)");
+            delay(1000);
+        }
+    }
 
     // Execute setup functions
     pinMode(LED_BUILTIN, OUTPUT);
@@ -142,6 +155,9 @@ int main() {
     Timer loop_timer;
     Timer stall_timer;
     Timer control_input_timer;
+    
+    // start the main loop watchdog
+    watchdog.start();
 
     logger.println("Entering main loop...\n");
 
@@ -176,7 +192,6 @@ int main() {
         }
 
         // manual controls on firmware
-
         float delta = control_input_timer.delta();
         dr16_pos_x += dr16.get_mouse_x() * 0.05 * delta;
         dr16_pos_y += dr16.get_mouse_y() * 0.05 * delta;
@@ -346,6 +361,9 @@ int main() {
         // LED heartbeat -- linked to loop count to reveal slowdowns and freezes.
         loopc % (int)(1E3 / float(HEARTBEAT_FREQ)) < (int)(1E3 / float(5 * HEARTBEAT_FREQ)) ? digitalWrite(13, HIGH) : digitalWrite(13, LOW);
         loopc++;
+
+        // feed the watchdog to keep the loop running
+        watchdog.feed();
 
         // Keep the loop running at the desired rate
         loop_timer.delay_micros((int)(1E6 / (float)(LOOP_FREQ)));
