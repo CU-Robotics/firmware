@@ -42,8 +42,9 @@ LIBRARY_INC_DIRS := $(shell find $(LIBRARY_SRC_DIRS) -maxdepth 2 -type d)
 SRC_INC_DIRS := $(shell find $(SRC_SRC_DIRS) -type d)
 
 # Generate compiler include flags from include directories
-TEENSY_INC_FLAGS := $(addprefix -I,$(TEENSY_INC_DIRS))
-LIBRARY_INC_FLAGS := $(addprefix -I,$(LIBRARY_INC_DIRS))
+# -isystem on Teensy and Library files to suppress warnings
+TEENSY_INC_FLAGS := $(addprefix -isystem,$(TEENSY_INC_DIRS))
+LIBRARY_INC_FLAGS := $(addprefix -isystem,$(LIBRARY_INC_DIRS))
 SRC_INC_FLAGS := $(addprefix -I,$(SRC_INC_DIRS))
 INCLUDE_FLAGS := $(TEENSY_INC_FLAGS) $(LIBRARY_INC_FLAGS) $(SRC_INC_FLAGS)
 
@@ -62,7 +63,8 @@ DEFINES := $(TEENSY4_FLAGS)
 # -fdata-sections: Place each variable in its own section to allow the linker to remove unused variables
 # -O2: Optimize the code for speed
 # --specs=nano.specs: Use newlib nano instead of full newlib to reduce binary size
-CPPFLAGS := $(INCLUDE_FLAGS) $(DEFINES) -MMD -MP -ffunction-sections -fdata-sections -O2 --specs=nano.specs
+# -g3: Generate debug information for GDB. Level 3 includes the most information possible
+CPPFLAGS := $(INCLUDE_FLAGS) $(DEFINES) -MMD -MP -ffunction-sections -fdata-sections -O2 --specs=nano.specs -g3
 
 # Compiler flags for C files
 CFLAGS := $(CPU_CFLAGS)
@@ -91,22 +93,18 @@ ifeq ($(UNAME),Linux)
 endif
 
 # Base arm-none-eabi and Teensyduino tool paths
-COMPILER_TOOLS_PATH := $(ARDUINO_PATH)/packages/teensy/tools/teensy-compile/11.3.1/arm/bin
-TEENSYDUINO_TOOLS_PATH := $(ARDUINO_PATH)/packages/teensy/tools/teensy-tools/1.59.0
+COMPILER_TOOLS_PATH = $(TOOLS_DIR)/compiler/arm-gnu-toolchain/bin
 
 # arm-none-eabi tools
-COMPILER_CPP	:= $(COMPILER_TOOLS_PATH)/arm-none-eabi-g++
-COMPILER_C		:= $(COMPILER_TOOLS_PATH)/arm-none-eabi-gcc
-AR				:= $(COMPILER_TOOLS_PATH)/arm-none-eabi-ar
-GDB				:= $(COMPILER_TOOLS_PATH)/arm-none-eabi-gdb
-OBJCOPY			:= $(COMPILER_TOOLS_PATH)/arm-none-eabi-objcopy
-OBJDUMP			:= $(COMPILER_TOOLS_PATH)/arm-none-eabi-objdump
-READELF			:= $(COMPILER_TOOLS_PATH)/arm-none-eabi-readelf
-ADDR2LINE		:= $(COMPILER_TOOLS_PATH)/arm-none-eabi-addr2line
-SIZE			:= $(COMPILER_TOOLS_PATH)/arm-none-eabi-size
-
-# Teensyduino tools
-TEENSY_SIZE		:= $(TEENSYDUINO_TOOLS_PATH)/teensy_size
+COMPILER_CPP	= $(COMPILER_TOOLS_PATH)/arm-none-eabi-g++
+COMPILER_C		= $(COMPILER_TOOLS_PATH)/arm-none-eabi-gcc
+AR				= $(COMPILER_TOOLS_PATH)/arm-none-eabi-ar
+GDB				= $(COMPILER_TOOLS_PATH)/arm-none-eabi-gdb
+OBJCOPY			= $(COMPILER_TOOLS_PATH)/arm-none-eabi-objcopy
+OBJDUMP			= $(COMPILER_TOOLS_PATH)/arm-none-eabi-objdump
+READELF			= $(COMPILER_TOOLS_PATH)/arm-none-eabi-readelf
+ADDR2LINE		= $(COMPILER_TOOLS_PATH)/arm-none-eabi-addr2line
+SIZE			= $(COMPILER_TOOLS_PATH)/arm-none-eabi-size
 
 # Path to the Git scraper tool source file
 GIT_SCRAPER = $(TOOLS_DIR)/git_scraper.cpp
@@ -216,8 +214,8 @@ upload: build
 
 # Install required tools for building and uploading firmware
 install:
-	@$(TOOLS_DIR)/install_tytools.sh
-	@$(TOOLS_DIR)/install_arduino.sh
+	@bash $(TOOLS_DIR)/install_tytools.sh
+	@bash $(TOOLS_DIR)/install_compiler.sh
 
 
 # starts GDB and attaches to the firmware running on a connected Teensy
