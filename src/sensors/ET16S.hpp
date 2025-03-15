@@ -271,7 +271,7 @@ private:
 	/// @brief switch f index	
 	std::optional<int> switch_f_num = 9;
 	/// @brief switch g index	
-	std::optional<int> switch_g_num = 1;
+	std::optional<int> switch_g_num = 10;
 	/// @brief switch h index	
 	std::optional<int> switch_h_num = 11;
 	/// @brief right slider index	

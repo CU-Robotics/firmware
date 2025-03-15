@@ -174,7 +174,7 @@ int main() {
 
         // check whether this packet is a config packet
         if (incoming->raw[3] == 1) {
-            //Serial.println("\n\nConfig request received, reconfiguring from comms!\n\n");
+            Serial.println("\n\nConfig request received, reconfiguring from comms!\n\n");
             // trigger safety mode
             can.issue_safety_mode();
             config_layer.reconfigure(&comms);
@@ -182,7 +182,7 @@ int main() {
 
         // print loopc every second to verify it is still alive
         if (loopc % 1000 == 0) {
-            //Serial.println(loopc);
+            Serial.println(loopc);
         }
 
         // manual controls on firmware
@@ -351,12 +351,11 @@ int main() {
         if (transmitter->is_connected() && (transmitter->get_l_switch() == SwitchPos::MIDDLE || transmitter->get_l_switch() == SwitchPos::BACKWARD) && config_layer.is_configured() && !is_slow_loop) {
             // SAFETY OFF
             can.write();
-			 Serial.printf("Can write\n");
+            Serial.printf("Can write\n");
         } else {
             // SAFETY ON
             // TODO: Reset all controller integrators here
-
-         can.issue_safety_mode();
+            can.issue_safety_mode();
             Serial.printf("Can zero\n");
         }
 

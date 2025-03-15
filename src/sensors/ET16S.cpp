@@ -74,8 +74,7 @@ void ET16S::read() {
 
 void ET16S::print() {
 	for (int i = 0; i < ET16S_INPUT_VALUE_COUNT; i++) {
-		Serial.print(channel[i].data);
-		Serial.print(" ");
+		Serial.printf("%f ", channel[i].data);
 	}
 
 	Serial.println();
