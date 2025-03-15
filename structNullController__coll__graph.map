@@ -1,0 +1,5 @@
+<map id="NullController" name="NullController">
+<area shape="rect" id="node1" title="Default controller." alt="" coords="5,171,105,197"/>
+<area shape="rect" id="node2" href="$structController.html" title="Parent controller struct, all controllers should be based off of this." alt="" coords="17,95,94,121"/>
+<area shape="rect" id="node3" href="$structTimer.html" title="Timer class. Operates based on micros() and provides a simple interface for timing operations." alt="" coords="28,5,83,32"/>
+</map>

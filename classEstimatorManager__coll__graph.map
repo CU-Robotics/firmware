@@ -1,0 +1,52 @@
+<map id="EstimatorManager" name="EstimatorManager">
+<area shape="rect" id="node1" title="Manage all estimators for macro and micro state." alt="" coords="1239,1672,1365,1699"/>
+<area shape="rect" id="node2" href="$structConfig.html" title="struct to hold configuration data" alt="" coords="1005,1596,1063,1623"/>
+<area shape="rect" id="node3" href="$classSensorManager.html" title="Class to manage sensors on the robot." alt="" coords="977,1647,1091,1673"/>
+<area shape="rect" id="node4" href="$classRefSystem.html" title="Wrapper class to send and receive packets from the Referee System." alt="" coords="752,1076,839,1103"/>
+<area shape="rect" id="node5" href="$structRefData.html" title="Encompassing all read&#45;able packet structs of the Ref System." alt="" coords="459,708,529,735"/>
+<area shape="rect" id="node6" href="$structSmallMapCommand.html" title="Player client&#39;s small map interaction data." alt="" coords="24,531,163,557"/>
+<area shape="rect" id="node7" href="$structEventData.html" title="Site event data." alt="" coords="52,581,135,608"/>
+<area shape="rect" id="node8" href="$structGameStatus.html" title="Competition status data." alt="" coords="46,632,141,659"/>
+<area shape="rect" id="node9" href="$structProjectileAllowance.html" title="Projectile allowance data." alt="" coords="25,683,161,709"/>
+<area shape="rect" id="node10" href="$structDamageStatus.html" title="Damage status data." alt="" coords="39,733,147,760"/>
+<area shape="rect" id="node11" href="$structRobotPosition.html" title="Robot position data." alt="" coords="42,784,145,811"/>
+<area shape="rect" id="node12" href="$structSmallMapRadarPosition.html" title="Radar data received by player clients&#39; Small Maps." alt="" coords="13,835,174,861"/>
+<area shape="rect" id="node13" href="$structRFIDStatus.html" title="Robot RFID module status." alt="" coords="48,885,139,912"/>
+<area shape="rect" id="node14" href="$structSentryDecision.html" title="Decision&#45;making data of Sentry Robot." alt="" coords="39,936,148,963"/>
+<area shape="rect" id="node15" href="$structGameRobotHP.html" title="Robot health data." alt="" coords="38,987,149,1013"/>
+<area shape="rect" id="node16" href="$structSmallMapRobotData.html" title="Robot data received by player clients&#39; Small Map." alt="" coords="23,1037,164,1064"/>
+<area shape="rect" id="node17" href="$structCustomControllerRobot.html" title="Data about the interaction between the Custom Controller and robots." alt="" coords="15,1088,171,1115"/>
+<area shape="rect" id="node18" href="$structRobotPowerHeat.html" title="Real&#45;time chassis power and barrel heat data." alt="" coords="33,1139,154,1165"/>
+<area shape="rect" id="node19" href="$structSmallMapSentryCommand.html" title="Sentry data received by player clients&#39; Small Maps." alt="" coords="5,1189,181,1216"/>
+<area shape="rect" id="node20" href="$structRobotInteraction.html" title="Robot interaction data." alt="" coords="35,1240,152,1267"/>
+<area shape="rect" id="node21" href="$structRadarProgress.html" title="Radar&#45;marked progress data." alt="" coords="39,1291,147,1317"/>
+<area shape="rect" id="node22" href="$structRadarDecision.html" title="Decision&#45;making data of Radar." alt="" coords="40,1341,147,1368"/>
+<area shape="rect" id="node23" href="$structLaunchingStatus.html" title="Real&#45;time launching data." alt="" coords="33,24,153,51"/>
+<area shape="rect" id="node24" href="$structRobotPerformance.html" title="Robot performance system data." alt="" coords="28,75,159,101"/>
+<area shape="rect" id="node25" href="$structGameResult.html" title="Competition result data." alt="" coords="46,125,141,152"/>
+<area shape="rect" id="node26" href="$structDartStatus.html" title="Dart launching data." alt="" coords="51,176,135,203"/>
+<area shape="rect" id="node27" href="$structCustomControllerClient.html" title="Data about the interaction between the Custom Controller and player clients." alt="" coords="16,227,171,253"/>
+<area shape="rect" id="node28" href="$structAirSupportStatus.html" title="Air support time data." alt="" coords="33,277,154,304"/>
+<area shape="rect" id="node29" href="$structGroundRobotPositions.html" title="Ground Robot position data." alt="" coords="17,328,169,355"/>
+<area shape="rect" id="node30" href="$structDartCommand.html" title="Dart player&#39;s client command data." alt="" coords="41,379,146,405"/>
+<area shape="rect" id="node31" href="$structProjectileSupplierStatus.html" title="Action identifier data of the Official Projectile Supplier." alt="" coords="13,429,174,456"/>
+<area shape="rect" id="node32" href="$structKBMInteraction.html" title="Keyboard, mouse, and remote control data." alt="" coords="37,480,149,507"/>
+<area shape="rect" id="node33" href="$structRefSystem_1_1RefInternalData.html" title="Internal data struct for the RefSystem. This contains all the meta data required to read a frame." alt="" coords="403,1076,585,1103"/>
+<area shape="rect" id="node34" href="$classBuffEncoder.html" title="Driver for the Buff&#45;Encoder." alt="" coords="448,1651,540,1677"/>
+<area shape="rect" id="node35" href="$classSensor.html" title="Base class for all sensors." alt="" coords="62,1711,125,1737"/>
+<area shape="rect" id="node37" href="$classD200LD14P.html" title="class for LiDAR driver" alt="" coords="749,1589,841,1616"/>
+<area shape="rect" id="node42" href="$classIMUSensor.html" title="Abstract parent class for all IMUSensors, which give acceleration and gyroscope data." alt="" coords="450,1803,538,1829"/>
+<area shape="rect" id="node44" href="$classRevEncoder.html" title="the class for the Rev Through Bore Encoder(www.revrobotics.com/rev&#45;11&#45;1271/)" alt="" coords="448,1401,540,1428"/>
+<area shape="rect" id="node46" href="$classTOFSensor.html" title="A time of flight sensor to measure distance in millimeters." alt="" coords="449,1853,539,1880"/>
+<area shape="rect" id="node36" href="$structBuffEncoderData.html" title="Structure for the buff encoder sensor." alt="" coords="34,1633,153,1660"/>
+<area shape="rect" id="node38" href="$structLidarDataPacketSI.html" title="data for a LiDAR packet (SI units)" alt="" coords="27,1460,159,1487"/>
+<area shape="rect" id="node39" href="$structLidarSensorData.html" title="Structure for the LiDAR sensor." alt="" coords="435,1469,553,1496"/>
+<area shape="rect" id="node40" href="$structD200Calibration.html" title="struct storing timestamp calibration results" alt="" coords="37,1547,150,1573"/>
+<area shape="rect" id="node41" href="$classICM20649.html" title="Sensor access for an ICM20649 IMU Sensor. Child of the abstract IMUSensor class." alt="" coords="755,1764,836,1791"/>
+<area shape="rect" id="node43" href="$structICMSensorData.html" title="Structure for the ICM sensor." alt="" coords="437,1752,551,1779"/>
+<area shape="rect" id="node45" href="$structRevSensorData.html" title="Structure for the Rev encoder sensor." alt="" coords="37,1392,150,1419"/>
+<area shape="rect" id="node47" href="$structTOFSensorData.html" title="Structure for the TOF (Time&#45;of&#45;Flight) sensor." alt="" coords="35,1853,151,1880"/>
+<area shape="rect" id="node48" href="$classCANManager.html" title="The overall manager for the CAN busses and motors." alt="" coords="984,1697,1084,1724"/>
+<area shape="rect" id="node49" href="$structEstimator.html" title="Parent estimator struct. All estimators should inherit from this." alt="" coords="995,1791,1073,1817"/>
+<area shape="rect" id="node50" href="$structTimer.html" title="Timer class. Operates based on micros() and provides a simple interface for timing operations." alt="" coords="768,1891,823,1917"/>
+</map>
