@@ -237,6 +237,12 @@ private:
 	/// @param m_inputRaw takes in 8 bit chunks of the total data packet
 	void format_raw(uint8_t m_inputRaw[ET16S_PACKET_SIZE]);
 
+	/// @brief averages the last 5 samples of a channel
+	/// @param sample is the current sample
+	/// @param channel_index is the index of the channel
+	/// @return the average of the last 5 samples
+	float average_channel(float sample, int channel_index);
+
 	/// @brief assigns the mapped input values to their respective channels
 	void set_channel_data();
 
@@ -294,6 +300,11 @@ private:
 	std::optional<int> trim_five_num;
 	/// @brief trim six index	
 	std::optional<int> trim_six_num;
+
+	const static int AVERAGE_SAMPLE_COUNT = 2;
+
+	float channel_values_circular_buf[ET16S_INPUT_VALUE_COUNT][AVERAGE_SAMPLE_COUNT] = { 0 };
+	int value_indices[ET16S_INPUT_VALUE_COUNT] = { 0 };
 
 	uint8_t m_inputRaw[ET16S_PACKET_SIZE] = { 0 };
 };

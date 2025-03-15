@@ -427,9 +427,33 @@ void ET16S::set_config() {
 	}
 }
 
+float ET16S::average_channel(float sample, int channel_index) {
+	// set the sample
+	// circular buffer 
+	int channel_value_index = value_indices[channel_index];
+	channel_values_circular_buf[channel_index][channel_value_index] = sample;
+	value_indices[channel_index] = (channel_value_index + 1) % AVERAGE_SAMPLE_COUNT;
+	
+	float sum = 0;
+	float average = 0;
+	for (int i = 0; i < AVERAGE_SAMPLE_COUNT; i++) {
+		sum += channel_values_circular_buf[channel_index][i];
+	}
+
+	average = sum / AVERAGE_SAMPLE_COUNT;
+	return average;
+}
+
 void ET16S::set_channel_data() {
 	for (int i = 0; i < ET16S_INPUT_VALUE_COUNT;i++) {
-		channel[i].data = map_raw(channel[i]);
+		// we only want to average the stick, dial, and slider channels
+		// the transmitter's output for continuous data is a bit noisy, enough to move the yaw back and forth
+		// we average the last few samples to smoothen the output
+		if (channel[i].kind == InputKind::STICK || channel[i].kind == InputKind::DIAL || channel[i].kind == InputKind::SLIDER) {
+			channel[i].data = average_channel(map_raw(channel[i]), i);
+		} else {
+			channel[i].data = map_raw(channel[i]);
+		}
 	}
 }
 
