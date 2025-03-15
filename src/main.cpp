@@ -90,8 +90,8 @@ int main() {
     // in the future, we'll send this directly over comms
     if (CrashReport) {
         while (1) {
-            Serial.println(CrashReport);
-            Serial.println("\nReflash to clear CrashReport (and also please fix why it crashed)");
+            logger.println(CrashReport);
+            logger.println("\nReflash to clear CrashReport (and also please fix why it crashed)");
             delay(1000);
         }
     }
