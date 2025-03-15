@@ -75,9 +75,6 @@ struct InputChannel {
 	/// @brief stores the specific control on the transmitter
 	ChannelId id = ChannelId::UNMAPPED;
 };
-struct ET16S_Data{
-	InputChannel channels[ET16S_INPUT_VALUE_COUNT];
-};
 
 /// @brief Class for W-Fly transmitter and reciever to gather and map control data
 class ET16S : public Transmitter {
@@ -210,10 +207,8 @@ public:
 	/// @return back left spin wheel value
 	float get_wheel();
 
-	/// @brief returns struct containing all data channels for comms
-	/// @return returns ET16S_Data Struct
-	ET16S_Data get_channels();
-
+	/// @brief getter for raw data
+	/// @return raw data
 	uint8_t* get_raw() { return m_inputRaw; }
 	
 private:
@@ -301,10 +296,14 @@ private:
 	/// @brief trim six index	
 	std::optional<int> trim_six_num;
 
+	/// @brief the number of samples to average
 	const static int AVERAGE_SAMPLE_COUNT = 2;
 
+	/// @brief circular buffer for storing the last few samples of each channel
 	float channel_values_circular_buf[ET16S_INPUT_VALUE_COUNT][AVERAGE_SAMPLE_COUNT] = { 0 };
+	/// @brief the index of the next sample to be stored in the circular buffer
 	int value_indices[ET16S_INPUT_VALUE_COUNT] = { 0 };
 
+	/// @brief raw data packet
 	uint8_t m_inputRaw[ET16S_PACKET_SIZE] = { 0 };
 };

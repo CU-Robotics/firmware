@@ -1,7 +1,6 @@
 #include "ET16S.hpp"
-#include "ET16S.hpp"
-ET16S::ET16S() { }
 
+ET16S::ET16S() { }
 
 void ET16S::init() {
 	Serial8.begin(100000, SERIAL_8E1_RXINV_TXINV);
@@ -291,6 +290,7 @@ float ET16S::map_raw(InputChannel input) {
 
 	return val;
 }
+
 float ET16S::map_math(float val,float min_out, float max_out){
 	// maps input value from -1 to 1
 	val = min_out + (val - min_in) * (max_out - min_out) / (max_in - min_in);
@@ -303,6 +303,7 @@ float ET16S::map_math(float val,float min_out, float max_out){
 	}
 	return val;
 }
+
 void ET16S::set_config() {
 	//Valid channel types include STICK,TWO_SWITCH_THREE_SWITCH,
 	//DIAL,SLIDER,TRIM,FLAG,INVALID
@@ -485,70 +486,87 @@ float ET16S::get_l_stick_x() {
 float ET16S::get_l_stick_y() {
 	return channel[l_stick_y_num.value()].data;
 }
+
 std::optional<SwitchPos> ET16S::get_switch_b(){
 	if (!switch_b_num.has_value()){ return {}; }
 	return static_cast<SwitchPos> (channel[switch_b_num.value()].data);
 }
+
 std::optional<SwitchPos> ET16S::get_switch_c(){
 	if (!switch_c_num.has_value()){ return {}; }
 	return static_cast<SwitchPos> (channel[switch_c_num.value()].data);
 }
+
 std::optional<SwitchPos> ET16S::get_switch_d(){
 	if (!switch_d_num.has_value()){ return {}; }
 	return static_cast<SwitchPos> (channel[switch_d_num.value()].data);
 }
+
 std::optional<SwitchPos> ET16S::get_switch_e(){
 	if (!switch_e_num.has_value()){ return {}; }
 	return static_cast<SwitchPos> (channel[switch_e_num.value()].data);
 }
+
 std::optional<SwitchPos> ET16S::get_switch_f(){
 	if (!switch_f_num.has_value()){ return {}; }
 	return static_cast<SwitchPos> (channel[switch_f_num.value()].data);
 }
+
 std::optional<SwitchPos> ET16S::get_switch_g(){
 	if (!switch_g_num.has_value()){ return {}; }
 	return static_cast<SwitchPos> (channel[switch_g_num.value()].data);
 }
+
 std::optional<SwitchPos> ET16S::get_switch_h(){
 	if (!switch_h_num.has_value()){ return {}; }
 	return static_cast<SwitchPos> (channel[switch_h_num.value()].data);
 }
+
 std::optional<float> ET16S::get_l_slider(){
 	if (!l_slider_num.has_value()){ return {}; }
 	return channel[l_slider_num.value()].data;
 }
+
 std::optional<float> ET16S::get_r_slider(){
 	if (!r_slider_num.has_value()){ return {}; }
 	return channel[r_slider_num.value()].data;
 }
+
 std::optional<float> ET16S::get_trim_one(){
 	if (!trim_one_num.has_value()){ return {}; }
 	return channel[trim_one_num.value()].data;
 }
+
 std::optional<float> ET16S::get_trim_two(){
 	if (!trim_two_num.has_value()){ return {}; }
 	return channel[trim_two_num.value()].data;
 }
+
 std::optional<float> ET16S::get_trim_three(){
 	if (!trim_three_num.has_value()){ return {}; }
 	return channel[trim_three_num.value()].data;
 }
+
 std::optional<float> ET16S::get_trim_four(){
 	if (!trim_four_num.has_value()){ return {}; }
 	return channel[trim_four_num.value()].data;
 }
+
 std::optional<float> ET16S::get_trim_five(){
 	if (!trim_five_num.has_value()){ return {}; }
 	return channel[trim_five_num.value()].data;
 }
+
 std::optional<float> ET16S::get_trim_six(){
 	if (!trim_six_num.has_value()){ return {}; }
 	return channel[trim_six_num.value()].data;
 }
+
 std::optional<float> ET16S::get_l_dial(){
 	if (!l_dial_num.has_value()){ return {}; }
 	return channel[l_dial_num.value()].data;
 }
+
 std::optional<float> ET16S::get_r_dial(){
 	if (!r_dial_num.has_value()){ return {}; }
 	return channel[r_dial_num.value()].data;
@@ -565,18 +583,16 @@ std::optional<float> ET16S::get_channel_data(int chan_num){
 bool ET16S::is_connected() {
 	return is_connect;
 }
+
 SwitchPos ET16S::get_l_switch(){
 	return static_cast<SwitchPos> (get_safety_switch());
 }
+
 SwitchPos ET16S::get_r_switch(){
 	return static_cast<SwitchPos> (channel[switch_d_num.value()].data);
 }
+
 float ET16S::get_wheel(){
 	// index will need to be changed to use a different control for wheel
 	return channel[l_slider_num.value()].data;
-}
-ET16S_Data ET16S::get_channels(){
-	ET16S_Data temp_channels;
-	memcpy(temp_channels.channels,channel,sizeof(ET16S_Data));
-	return temp_channels;
 }
