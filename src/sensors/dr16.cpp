@@ -249,18 +249,18 @@ SwitchPos DR16::get_l_switch() {
 	return static_cast<SwitchPos> (m_input[6]);
 }
 
-int DR16::get_mouse_y() {
+std::optional<int> DR16::get_mouse_y() {
 	return mouse_y;
 }
 
-int DR16::get_mouse_x() {
+std::optional<int> DR16::get_mouse_x() {
 	return mouse_x;
 }
 
-bool DR16::get_l_mouse_button() {
+std::optional<bool> DR16::get_l_mouse_button() {
 	return l_mouse_button;
 }
 
-bool DR16::get_r_mouse_button() {
+std::optional<bool> DR16::get_r_mouse_button() {
 	return r_mouse_button;
 }

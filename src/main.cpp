@@ -91,11 +91,11 @@ int main() {
     pinMode(LED_BUILTIN, OUTPUT);
 
     led.init();
-	TransmitterType t_type = transmitter->who_am_i();
-	if (t_type == TransmitterType::DR16){
+	TransmitterType transmitter_type = transmitter->who_am_i();
+	if (transmitter_type == TransmitterType::DR16){
 		transmitter = new DR16;
 	}
-	else if (t_type == TransmitterType::ET16S){
+	else if (transmitter_type == TransmitterType::ET16S){
 		transmitter = new ET16S;
 	}
     can.init();
@@ -184,12 +184,19 @@ int main() {
         if (loopc % 1000 == 0) {
             Serial.println(loopc);
         }
-
+        
         // manual controls on firmware
+        std::optional<Transmitter::Keys> transmitter_keys = transmitter->get_keys();
+        std::optional<int> mouse_x = transmitter->get_mouse_x();
+        std::optional<int> mouse_y = transmitter->get_mouse_y();
+        std::optional<bool> l_mouse_button = transmitter->get_l_mouse_button();
+        // std::optional<bool> r_mouse_button = transmitter->get_r_mouse_button();
 
         float delta = control_input_timer.delta();
-        transmitter_pos_x += transmitter->get_mouse_x() * 0.05 * delta;
-        transmitter_pos_y += transmitter->get_mouse_y() * 0.05 * delta;
+        if (mouse_x.has_value() && mouse_y.has_value()) {
+            transmitter_pos_x += mouse_x.value() * 0.05 * delta;
+            transmitter_pos_y += mouse_y.value() * 0.05 * delta;
+        }
 
         vtm_pos_x += ref->ref_data.kbm_interaction.mouse_speed_x * 0.05 * delta;
         vtm_pos_y += ref->ref_data.kbm_interaction.mouse_speed_y * 0.05 * delta;
@@ -198,15 +205,22 @@ int main() {
         float chassis_vel_y = 0;
         float chassis_pos_x = 0;
         float chassis_pos_y = 0;
+
         if (config->governor_types[0] == 2) {   // if we should be controlling velocity
 
             chassis_vel_x = transmitter->get_l_stick_y() * 5.4
-                + (-ref->ref_data.kbm_interaction.key_w + ref->ref_data.kbm_interaction.key_s) * 2.5
-                + (transmitter->get_keys().value().w - transmitter->get_keys().value().s) * 2.5;
-            chassis_vel_y = -transmitter->get_l_stick_x() * 5.4
-                + (ref->ref_data.kbm_interaction.key_d - ref->ref_data.kbm_interaction.key_a) * 2.5
-                + (-transmitter->get_keys().value().d + transmitter->get_keys().value().a) * 2.5;
+                + (-ref->ref_data.kbm_interaction.key_w + ref->ref_data.kbm_interaction.key_s) * 2.5;
 
+            if (transmitter_keys.has_value()) {
+                chassis_vel_x += (-transmitter_keys.value().w + transmitter_keys.value().s) * 2.5;
+            }
+            
+            chassis_vel_y = -transmitter->get_l_stick_x() * 5.4
+                + (ref->ref_data.kbm_interaction.key_d - ref->ref_data.kbm_interaction.key_a) * 2.5;
+
+            if (transmitter_keys.has_value()) {
+                chassis_vel_y += (transmitter_keys.value().d - transmitter_keys.value().a) * 2.5;
+            }
         } else if (config->governor_types[0] == 1) { // if we should be controlling position
             chassis_pos_x = transmitter->get_l_stick_x() * 2 + pos_offset_x;
             chassis_pos_y = transmitter->get_l_stick_y() * 2 + pos_offset_y;
@@ -222,7 +236,8 @@ int main() {
             - vtm_pos_x;
 		
         float fly_wheel_target = (transmitter->get_r_switch() == SwitchPos::FORWARD || transmitter->get_r_switch() == SwitchPos::MIDDLE) ? 18 : 0; //m/s
-        float feeder_target = (((transmitter->get_l_mouse_button() || ref->ref_data.kbm_interaction.button_left) && transmitter->get_r_switch() != SwitchPos::BACKWARD) || transmitter->get_r_switch() == SwitchPos::FORWARD) ? 10 : 0;
+        // if the right switch is forward, and either the left mouse button is pressed or the right switch is not backward, set the feeder to something. Otherwise, set it to 0
+        float feeder_target = ((((l_mouse_button.has_value() && l_mouse_button.value()) || ref->ref_data.kbm_interaction.button_left) && transmitter->get_r_switch() != SwitchPos::BACKWARD) || transmitter->get_r_switch() == SwitchPos::FORWARD) ? 10 : 0;
 
         // set manual controls
         target_state[0][0] = chassis_pos_x;
@@ -302,15 +317,17 @@ int main() {
         // generate motor outputs from controls
         controller_manager.step(temp_reference, temp_state, temp_micro_state);
 
-
         can.print_state();
-
 
         // construct sensor data packet
         SensorData sensor_data;
 
         // set transmitter raw data
-        memcpy(sensor_data.raw + SENSOR_DR16_OFFSET, transmitter->get_raw(), DR16_PACKET_SIZE);
+        if (transmitter_type == TransmitterType::DR16) {
+            memcpy(sensor_data.raw + SENSOR_DR16_OFFSET, transmitter->get_raw(), DR16_PACKET_SIZE);
+        } else {
+            Serial.printf("Transmitter type not supported yet\n");
+        }
 
         // set lidars
         uint8_t lidar_data[D200_NUM_PACKETS_CACHED * D200_PAYLOAD_SIZE] = { 0 };

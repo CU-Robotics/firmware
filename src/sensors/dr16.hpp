@@ -70,80 +70,80 @@ public:
 	DR16();
 
 	/// @brief Initializes DR16 receiver, starts the Serial interface, and zeros input buffers
-	void init();
+	void init() override;
 
 	/// @brief Attempts to read a full packet from the receiver. This function shouldn't be ran more than 100kHz
-	void read();
+	void read() override;
 
 	/// @brief Zeros the normalized input array
-	void zero();
+	void zero() override;
 
 public:
 	/// @brief Returns the fail bit. Set only if invalid packets have been received for more then 250ms
 	/// @return Failure status
-	uint8_t is_fail() { return m_fail; }
+	uint8_t is_fail() override { return m_fail; }
 
 	/// @brief Returns a the current connection status for the dr16 controller
 	/// @return true for connected false for not connected
-	bool is_connected() { return m_connected; }
+	bool is_connected() override { return m_connected; }
 
 	/// @brief Get the 7 float length input buffer. These values are normalized [-1, 1]
 	/// @return float buffer
-	float* get_input();
+	float* get_input() override;
 
 	/// @brief Get right stick x value
 	/// @return Right stick x value [-1.f, 1.f]
-	float get_r_stick_x();
+	float get_r_stick_x() override;
 
 	/// @brief Get right stick y value
 	/// @return Right stick y value [-1.f, 1.f]
-	float get_r_stick_y();
+	float get_r_stick_y() override;
 
 	/// @brief Get left stick x value
 	/// @return Left stick x value [-1.f, 1.f]
-	float get_l_stick_x();
+	float get_l_stick_x() override;
 
 	/// @brief Get left stick y value
 	/// @return Left stick y value [-1.f, 1.f]
-	float get_l_stick_y();
+	float get_l_stick_y() override;
 
 	/// @brief Get wheel value
 	/// @return Wheel value [-1.f, 1.f]
-	float get_wheel();
+	float get_wheel() override;
 
 	/// @brief Get left switch value
 	/// @return Switch value [1, 2, 3]
-	SwitchPos get_l_switch();
+	SwitchPos get_l_switch() override;
 
 	/// @brief Get right switch value
 	/// @return Switch value [1, 2, 3]
-	SwitchPos get_r_switch();
+	SwitchPos get_r_switch() override;
 
 	/// @brief Prints the normalized input buffer
-	void print();
+	void print() override;
 
 	/// @brief Prints the raw 18-byte packet from the receiver
-	void print_raw();
+	void print_raw() override;
 
 	/// @brief Get mouse velocity x
 	/// @return Amount of points since last read
-	int get_mouse_x();
+	std::optional<int> get_mouse_x();
 
 	/// @brief Get mouse velocity y
 	/// @return Amount of points since last read
-	int get_mouse_y();
+	std::optional<int> get_mouse_y();
 
 	/// @brief status of left mouse button
 	/// @return Is left mouse button pressed
-	bool get_l_mouse_button();
+	std::optional<bool> get_l_mouse_button();
 
 	/// @brief status of right mouse button
 	/// @return Is right mouse button pressed
-	bool get_r_mouse_button();
+	std::optional<bool> get_r_mouse_button();
 
 	/// @brief Get raw 18-byte packet
 	/// @return 18-byte packet
-	uint8_t* get_raw() { return m_inputRaw; }
+	uint8_t* get_raw() override { return m_inputRaw; }
 
 	std::optional<Keys> get_keys() override {
 		return keys;
@@ -151,7 +151,7 @@ public:
 
 	/// @brief A simple check to see if read data is within expected values
 	/// @return True/false whether data is deemed valid or not
-	bool is_data_valid();
+	bool is_data_valid() override;
 private:
 	/// @brief Maps the input value to a specified value range
 	/// @param value the input value

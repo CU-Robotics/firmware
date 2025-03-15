@@ -74,19 +74,19 @@ public:
 	
 	/// @brief Get mouse velocity x
 	/// @return Amount of points since last read
-	virtual int get_mouse_x() { return 0; }
+	virtual std::optional<int> get_mouse_x() { return {}; }
 	
 	/// @brief Get mouse velocity y
 	/// @return Amount of points since last read
-	virtual int get_mouse_y() { return 0; }
+	virtual std::optional<int> get_mouse_y() { return {}; }
 	
 	/// @brief status of left mouse button
 	/// @return Is left mouse button pressed
-	virtual bool get_l_mouse_button() { return false; }
+	virtual std::optional<bool> get_l_mouse_button() { return {}; }
 	
 	/// @brief status of right mouse button
 	/// @return Is right mouse button pressed
-	virtual bool get_r_mouse_button() { return false; }
+	virtual std::optional<bool> get_r_mouse_button() { return {};}
 	
 	/// @brief used for safety switch
 	/// @return left most front face switch value
@@ -106,7 +106,7 @@ public:
 	
 	/// @brief used to get raw input
 	/// @return pointer to raw input array
-	virtual uint8_t* get_raw() { return 0; }
+	virtual uint8_t* get_raw() { return nullptr; }
 	
 	/// @brief prints data in binary for a specific channel
 	/// @param channel_num channel number from 0-16 inclusive
