@@ -36,5 +36,6 @@ private:
     /// @note also used as current position in memory
     uint32_t cursor;
 };
+
 /// @brief universal logger object to be called anywhere in codebase
-extern Logger logger;
+inline Logger logger;

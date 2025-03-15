@@ -18,8 +18,6 @@
 #define LOOP_FREQ 1000
 #define HEARTBEAT_FREQ 2
 
-Logger logger; // DONT move this lower! Logger be initialized before the other objects.
-
 // Declare global objects
 DR16 dr16;
 CANManager can;
