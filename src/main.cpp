@@ -105,13 +105,13 @@ int main() {
     pinMode(LED_BUILTIN, OUTPUT);
 
     led.init();
-	TransmitterType transmitter_type = transmitter->who_am_i();
-	if (transmitter_type == TransmitterType::DR16){
-		transmitter = new DR16;
-	}
-	else if (transmitter_type == TransmitterType::ET16S){
-		transmitter = new ET16S;
-	}
+    TransmitterType transmitter_type = transmitter->who_am_i();
+    if (transmitter_type == TransmitterType::DR16){
+        transmitter = new DR16;
+    }
+    else if (transmitter_type == TransmitterType::ET16S){
+        transmitter = new ET16S;
+    }
     can.init();
     transmitter->init();
     comms.init();
@@ -318,7 +318,7 @@ int main() {
 
         Serial.printf("Estimated state:\n");
         for (int i = 0; i < 8; i++) {
-			 Serial.printf("\t%d: %f %f %f\n", i, temp_state[i][0], temp_state[i][1], temp_state[i][2]);
+            Serial.printf("\t%d: %f %f %f\n", i, temp_state[i][0], temp_state[i][1], temp_state[i][2]);
         }
 
         // reference govern

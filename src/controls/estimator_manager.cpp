@@ -3,7 +3,7 @@
 EstimatorManager::~EstimatorManager() {
     Serial.println("Ending SPI");
     SPI.end();
-	Serial.println("SPI Ended");
+    Serial.println("SPI Ended");
 
     for (int i = 0; i < STATE_LEN; i++) {
         if (estimators[i] == nullptr)

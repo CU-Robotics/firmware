@@ -53,7 +53,7 @@ void ControllerManager::step(float macro_reference[STATE_LEN][3], float macro_es
         // grab the motor outputs for this controller
         controllers[i]->step(macro_reference, macro_estimate, micro_estimate, outputs);
 
-		Serial.printf("Controller %d\n", i);
+        Serial.printf("Controller %d\n", i);
         
         // iterate through all the motors this controller sets
         for (size_t j = 0; j < CAN_MAX_MOTORS + 1; j++) {
