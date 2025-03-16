@@ -136,9 +136,9 @@ int main() {
         if(dr16.get_l_switch() == 3){
             ref_data* control_ref = test_control.get_ref();
             // Set all data to 0 for balancing
-            // control_ref->s = 0;
+            control_ref->s = 0;
             control_ref->speed = 0;
-            // control_ref->yaw = 0;
+            control_ref->yaw = 0;
             control_ref->yaw_dot = 0;
             control_ref->theta_ll = 0;
             control_ref->theta_ll_dot = 0;
