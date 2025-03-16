@@ -84,6 +84,37 @@ void balancing_test::init(){
     _ref_data.theta_lr = 0;
     _ref_data.theta_lr_dot = 0;
     _ref_data.yaw_dot = 0;
+
+    o_data.control_yaw = 0;
+    o_data.body_speed_filtered = 0;
+    o_data.body_accel_filtered = 0;
+    o_data.wheel_speed_old = 0;
+    o_data.gyro_yaw_old = 0;
+    o_data.wheel_speed_dot = 0;
+    o_data.gyro_yaw_dot = 0;
+    o_data.control_s = 0;
+    o_data.b_speed = 0;
+    o_data.b_accel = 0;
+    o_data.wheel_speed_filtered = 0;
+    o_data.ll = 0;
+    o_data.lr = 0;
+    o_data.ll_ddot = 0;
+    o_data.lr_ddot = 0;
+    o_data.theta_ll = 0;
+    o_data.theta_lr = 0;
+    o_data.ll_dot = 0;
+    o_data.lr_dot = 0;
+    o_data.theta_ll_dot = 0;
+    o_data.theta_lr_dot = 0;
+    o_data.avg_count = 0;
+    o_data.jl[0][0] = 0;
+    o_data.jl[0][1] = 0;
+    o_data.jl[1][0] = 0;
+    o_data.jl[1][1] = 0;
+    o_data.jr[0][0] = 0;
+    o_data.jr[0][1] = 0;
+    o_data.jr[1][0] = 0;
+    o_data.jr[1][1] = 0;
 }
 
 void balancing_test::set_data(balancing_sensor_data data){ // Convert 65535 to randiance
