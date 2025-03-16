@@ -2,8 +2,6 @@
 
 void balancing_test::init(){
     slowdalay_help = micros();
-
-    saftymode = 0;
     o_data.Q = 0.6; // Need tune
     o_data.R_v = 0.0007; // Need tune
     o_data.R_a = 0.1; // Need tune

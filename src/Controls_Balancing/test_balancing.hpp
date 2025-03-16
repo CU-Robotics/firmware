@@ -172,7 +172,6 @@ class balancing_test{
 
 
     public:
-        bool saftymode;
         /// @brief setting all constant array
         void init();
         /// @brief Set private data the data from main

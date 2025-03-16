@@ -181,7 +181,7 @@ int main() {
         // test_control.printdata();
         // test_control.print_visual();
         
-        if (!dr16.is_connected() || dr16.get_l_switch() == 1 || test_control.saftymode) {
+        if (!dr16.is_connected() || dr16.get_l_switch() == 1) {
             // SAFETY ON
             // TODO: Reset all controller integrators here
             Serial.println("SAFTYON");
