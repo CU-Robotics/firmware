@@ -45,13 +45,12 @@ const Config* const ConfigLayer::configure(HIDLayer* comms, bool config_off_SD) 
     if ((ref->ref_data.robot_performance.robot_ID % 100) != (int)config.robot) {
         Serial.printf("ERROR: IDs do not match!! Check robot_id.cfg and robot settings from ref system!\n");
         if (!CONFIG_ERR_HANDLER(CONFIG_ID_MISMATCH)) {
-            // in current implementation, CONFIG_ERR_HANDLER w/ err code CONFIG_ID_MISMATCH will
-            // enter an infinite while(1) loop-- if that is changed, this loop should be changed accordingly as well
-            while (1) {
-                Serial.println("CONFIG_ERR_HANDLER: exited with error code CONFIG_ID_MISMATCH");
-                Serial.println("if function was modified for case CONFIG_ID_MISMATCH, remove this loop in config_layer.cpp");
-                delay(2000);
-            }
+            Serial.println("Wiping config file from SD card and restarting...");
+            
+            sdcard.rm(CONFIG_PATH);
+            delay(5000);
+
+            reset_teensy();
         }
     }
 #endif
@@ -537,16 +536,8 @@ bool ConfigLayer::CONFIG_ERR_HANDLER(int err_code) {
         return false;
 
     case CONFIG_ID_MISMATCH:
-        prev_time = millis();
-        delta_time = millis() - prev_time;
-        while (1) {
-            if (delta_time >= 2000) {
-                Serial.println("\tCONFIG_ERROR::config from comms does not match from ref system!!");
-                Serial.println("\tCheck robot_id.cfg and robot ID on ref system for inconsistency");
-                prev_time = millis();
-            }
-            delta_time = millis() - prev_time;
-        }
+        Serial.println("\tCONFIG_ERROR::config from comms does not match from ref system!!");
+        Serial.println("\tCheck robot_id.cfg and robot ID on ref system for inconsistency");
         return false;
 
     default:
