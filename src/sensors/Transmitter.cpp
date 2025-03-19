@@ -19,7 +19,7 @@ TransmitterType Transmitter::who_am_i() {
 
 		while (Serial8.available() < (2*ET16S_PACKET_SIZE)) {
 			if ((millis() - start_time) > timeout) { 
-				Serial.println("found dr16 by timeout"); 
+				Serial.println("Transmitter: DR16 by timeout"); 
 				return TransmitterType::DR16; 
 			}
 		}
@@ -37,13 +37,11 @@ TransmitterType Transmitter::who_am_i() {
 		if (raw_input[0] == 0x0f) {
 			counter += 1;
 		} else {
-			Serial.println();
-			Serial.print("found dr16");
-			Serial.println();
+			Serial.println("Transmitter: DR16");
 			return TransmitterType::DR16;
 		}
 	}
 	
-	Serial.print("found ET16S");
+	Serial.println("Transmitter: ET16S");
 	return TransmitterType::ET16S;
 }

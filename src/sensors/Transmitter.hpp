@@ -183,6 +183,10 @@ public:
  	/// @brief get trim six value on the ET16S
 	/// @return trim six value if it exists otherwise return nothing
 	virtual std::optional<float> get_trim_six() { return {}; }
+	/// @brief get any channel on ET16S
+	/// @param chan_num is the channel number from 0-16
+	/// @return value at given channel
+	virtual std::optional<float> get_channel_data(int chan_num) { return {}; }
 	
 	/// @brief Various keys that can be pressed on the transmitter
 	struct Keys {

@@ -24,6 +24,7 @@ void ET16S::init() {
 	channel[3].kind = InputKind::STICK;
 	//configure remaining channels
 	set_config();
+
 }
 
 void ET16S::read() {
@@ -345,7 +346,6 @@ void ET16S::set_config() {
 	if(l_dial_num.has_value()){
 		channel[l_dial_num.value()].id = ChannelId::L_DIAL;
 	}
-	channel[15].id = ChannelId::UNMAPPED; //channel[15] is non-functional
 	channel[16].id = ChannelId::FLAG;
 
 	for (int i = 5; i < ET16S_INPUT_VALUE_COUNT; i++){

@@ -184,7 +184,7 @@ public:
 	std::optional<float> get_trim_six();
 	
 	/// @brief get channel data
-	/// @param chan_num is the channel number from 5-16
+	/// @param chan_num is the channel number from 0-16
 	/// @return channel data
 	std::optional<float> get_channel_data(int chan_num);
 
@@ -282,7 +282,7 @@ private:
 	/// @brief right dial index	
 	std::optional<int> r_dial_num = 13;
 	/// @brief left dial index	
-	std::optional<int> l_dial_num;
+	std::optional<int> l_dial_num=15;
 	/// @brief trim one index	
 	std::optional<int> trim_one_num;
 	/// @brief trim two index	
