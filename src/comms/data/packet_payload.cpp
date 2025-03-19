@@ -228,6 +228,106 @@ void PacketPayload::place_data_in_mega_struct(CommsData* data) {
         memcpy(&Hive::env->firmware_data->temp_robot_state, temp_robot_state, sizeof(TempRobotState));
         break;
     }
+    case TypeLabel::BuffEncoderData: {
+        //determine if the data is for yaw or pitch
+        BuffEncoderData* buff_encoder_data = static_cast<BuffEncoderData*>(data);
+        if (buff_encoder_data->id == 0) {
+            memcpy(&Hive::env->firmware_data->yaw_buff_encoder, buff_encoder_data, sizeof(BuffEncoderData));
+        } else if (buff_encoder_data->id == 1) {
+            memcpy(&Hive::env->firmware_data->pitch_buff_encoder, buff_encoder_data, sizeof(BuffEncoderData));
+        }
+        break;
+    }
+    case TypeLabel::RevEncoderData: {
+        //determine which rev encoder the data is for
+        RevSensorData* rev_encoder_data = static_cast<RevSensorData*>(data);
+        if (rev_encoder_data->id == 0) {
+            memcpy(&Hive::env->firmware_data->rev_sensor_0, rev_encoder_data, sizeof(RevSensorData));
+        } else if (rev_encoder_data->id == 1) {
+            memcpy(&Hive::env->firmware_data->rev_sensor_1, rev_encoder_data, sizeof(RevSensorData));
+        } else if (rev_encoder_data->id == 2) {
+            memcpy(&Hive::env->firmware_data->rev_sensor_2, rev_encoder_data, sizeof(RevSensorData));
+        }
+        break;
+    }
+    case TypeLabel::ICMSensorData: {
+        // place the data in the mega struct
+        ICMSensorData* icm_sensor_data = static_cast<ICMSensorData*>(data);
+        memcpy(&Hive::env->firmware_data->icm_sensor, icm_sensor_data, sizeof(ICMSensorData));
+        break;
+    }
+    case TypeLabel::TOFSensorData: {
+        // place the data in the mega struct
+        TOFSensorData* tof_sensor_data = static_cast<TOFSensorData*>(data);
+        memcpy(&Hive::env->firmware_data->tof_sensor, tof_sensor_data, sizeof(TOFSensorData));
+        break;
+    }
+    case TypeLabel::LidarSensorData: {
+        //determine which lidar sensor the data is for
+        LidarSensorData* lidar_sensor_data = static_cast<LidarSensorData*>(data);
+        if (lidar_sensor_data->id == 0) {
+            memcpy(&Hive::env->firmware_data->lidar_sensor_0, lidar_sensor_data, sizeof(LidarSensorData));
+        } else if (lidar_sensor_data->id == 1) {
+            memcpy(&Hive::env->firmware_data->lidar_sensor_1, lidar_sensor_data, sizeof(LidarSensorData));
+        }
+        break;
+    }
+    case TypeLabel::DR16Data: {
+        // place the data in the mega struct
+        DR16Data* dr16_data = static_cast<DR16Data*>(data);
+        memcpy(&Hive::env->firmware_data->dr16_data, dr16_data, sizeof(DR16Data));
+        break;
+    }
+    case TypeLabel::BuffEncoderData: {
+        //determine if the data is for yaw or pitch
+        BuffEncoderData* buff_encoder_data = static_cast<BuffEncoderData*>(data);
+        if (buff_encoder_data->id == 0) {
+            memcpy(&Hive::env->firmware_data->yaw_buff_encoder, buff_encoder_data, sizeof(BuffEncoderData));
+        } else if (buff_encoder_data->id == 1) {
+            memcpy(&Hive::env->firmware_data->pitch_buff_encoder, buff_encoder_data, sizeof(BuffEncoderData));
+        }
+        break;
+    }
+    case TypeLabel::RevEncoderData: {
+        //determine which rev encoder the data is for
+        RevSensorData* rev_encoder_data = static_cast<RevSensorData*>(data);
+        if (rev_encoder_data->id == 0) {
+            memcpy(&Hive::env->firmware_data->rev_sensor_0, rev_encoder_data, sizeof(RevSensorData));
+        } else if (rev_encoder_data->id == 1) {
+            memcpy(&Hive::env->firmware_data->rev_sensor_1, rev_encoder_data, sizeof(RevSensorData));
+        } else if (rev_encoder_data->id == 2) {
+            memcpy(&Hive::env->firmware_data->rev_sensor_2, rev_encoder_data, sizeof(RevSensorData));
+        }
+        break;
+    }
+    case TypeLabel::ICMSensorData: {
+        // place the data in the mega struct
+        ICMSensorData* icm_sensor_data = static_cast<ICMSensorData*>(data);
+        memcpy(&Hive::env->firmware_data->icm_sensor, icm_sensor_data, sizeof(ICMSensorData));
+        break;
+    }
+    case TypeLabel::TOFSensorData: {
+        // place the data in the mega struct
+        TOFSensorData* tof_sensor_data = static_cast<TOFSensorData*>(data);
+        memcpy(&Hive::env->firmware_data->tof_sensor, tof_sensor_data, sizeof(TOFSensorData));
+        break;
+    }
+    case TypeLabel::LidarSensorData: {
+        //determine which lidar sensor the data is for
+        LidarSensorData* lidar_sensor_data = static_cast<LidarSensorData*>(data);
+        if (lidar_sensor_data->id == 0) {
+            memcpy(&Hive::env->firmware_data->lidar_sensor_0, lidar_sensor_data, sizeof(LidarSensorData));
+        } else if (lidar_sensor_data->id == 1) {
+            memcpy(&Hive::env->firmware_data->lidar_sensor_1, lidar_sensor_data, sizeof(LidarSensorData));
+        }
+        break;
+    }
+    case TypeLabel::DR16Data: {
+        // place the data in the mega struct
+        DR16Data* dr16_data = static_cast<DR16Data*>(data);
+        memcpy(&Hive::env->firmware_data->dr16_data, dr16_data, sizeof(DR16Data));
+        break;
+    }
     default:
         throw std::runtime_error("Invalid type label given to place in mega struct: " + std::to_string(static_cast<uint8_t>(data->type_label)));
     }

@@ -166,6 +166,7 @@ int main() {
         dr16.read();
 
         test_data.send_to_comms();
+        sensor_manager.send_sensor_data_to_comms();
 
         Comms::HIDPacket hid_incoming = comms_layer.get_hid_incoming();
         Comms::HIDPacket hid_outgoing;
@@ -346,14 +347,14 @@ int main() {
         dr16_sendable.data.wheel = dr16.get_wheel();
         dr16_sendable.data.mouse_x = dr16.get_mouse_x();
         dr16_sendable.data.mouse_y = dr16.get_mouse_y();
-        dr16_sendable.data.mouse_z = dr16.get_mouse_z();
         dr16_sendable.data.keys.raw = *(uint16_t*)(dr16.get_raw() + 14);
         dr16_sendable.send_to_comms();
 
-        Comms::LoggingData logging_data;
-        const char* logging_data_str = "Logging data test string";
-        logging_data.deserialize(logging_data_str, strlen(logging_data_str));
-        logging_data.send_to_comms();
+        // Comms::LoggingData logging_data;
+        // const char* logging_data_str = "Logging data test string";
+        // logging_data.deserialize(logging_data_str, strlen(logging_data_str));
+        // logging_data.send_to_comms();
+        
 
         comms_layer.set_ethernet_outgoing(eth_outgoing);
         comms_layer.set_hid_outgoing(hid_outgoing);

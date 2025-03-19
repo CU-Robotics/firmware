@@ -32,6 +32,38 @@ struct FirmwareData {
 
     /// @brief Logging data
     Comms::LoggingData logging_data;
+
+    //two buff encodes
+    /// @brief yaw_buff_encoder will have id 0
+    Comms::BuffEncoderData yaw_buff_encoder;
+    /// @brief pitch_buff_encoder will have id 1
+    Comms::BuffEncoderData pitch_buff_encoder;
+
+    //three rev encoders
+    /// @brief rev_sensor_0
+    Comms::RevSensorData rev_sensor_0;
+    /// @brief rev_sensor_1
+    Comms::RevSensorData rev_sensor_1;
+    /// @brief rev_sensor_2
+    Comms::RevSensorData rev_sensor_2;
+
+    //one icm
+    /// @brief icm_sensor
+    Comms::ICMSensorData icm_sensor;
+
+    //one tof
+    /// @brief tof_sensor
+    Comms::TOFSensorData tof_sensor;
+
+    //two liadars
+    /// @brief lidar_sensor_0
+    Comms::LidarSensorData lidar_sensor_0;
+    /// @brief lidar_sensor_2
+    Comms::LidarSensorData lidar_sensor_1;
+
+    //one dr16
+    /// @brief dr16_data
+    Comms::DR16Data dr16_data;
 };
 
 

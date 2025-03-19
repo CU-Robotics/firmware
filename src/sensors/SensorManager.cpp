@@ -31,6 +31,9 @@ void SensorManager::init(const Config* config_data) {
         pinMode(config_data->sensor_info[i][1], OUTPUT);
         digitalWrite(config_data->sensor_info[i][1], HIGH);
         buff_encoders[i] = new BuffEncoder(config_data->sensor_info[i][1]);
+
+        //assign id for comms
+        buff_encoders[i]->setId(i);
     }
 
     // configure pins for the ICM
@@ -47,18 +50,26 @@ void SensorManager::init(const Config* config_data) {
         icm_sensors[i]->init(icm_sensors[i]->CommunicationProtocol::SPI);
         icm_sensors[i]->set_gyro_range(4000);
 
+        //assign id for comms
+        icm_sensors[i]->setId(i);
     }
     calibrate_imus();
 
     // initialize rev encoders
     for (int i = 0; i < rev_sensor_count; i++) {
         rev_sensors[i].init(REV_ENC_PIN1 + i, true);
+
+        //assign id for comms
+        rev_sensors[i].setId(i);
     }
 
     // initialize TOFs
     for (int i = 0; i < tof_sensor_count; i++) {
         tof_sensors[i] = new TOFSensor();
         tof_sensors[i]->init();
+
+        //assign id for comms
+        tof_sensors[i]->setId(i);
     }
 
     // initialize LiDARs
@@ -66,6 +77,10 @@ void SensorManager::init(const Config* config_data) {
         lidar1 = new D200LD14P(&Serial4, 0);
         lidar2 = new D200LD14P(&Serial5, 1);
 
+
+        // //assign id for comms
+        // lidar1->setId(0);
+        // lidar2->setId(1);
     }
 
 
@@ -149,6 +164,56 @@ void SensorManager::calibrate_imus() {
 
     Serial.printf("Calibrated offsets: %f, %f, %f\n", sum_x / NUM_IMU_CALIBRATION, sum_y / NUM_IMU_CALIBRATION, sum_z / NUM_IMU_CALIBRATION);
     icm_sensors[0]->set_offsets(sum_x / NUM_IMU_CALIBRATION, sum_y / NUM_IMU_CALIBRATION, sum_z / NUM_IMU_CALIBRATION);
+}
+
+void SensorManager::send_sensor_data_to_comms()
+{
+    //send sensor data to comms
+
+    //send buff encoders
+    for(int i = 0; i < buff_sensor_count; i++) {
+        buff_encoder_sendables[i].data.m_angle = buff_encoders[i]->get_angle();
+        buff_encoder_sendables[i].data.id = buff_encoders[i]->getId();
+        buff_encoder_sendables[i].send_to_comms();
+    }
+
+    //send ICMs
+    for(int i = 0; i < icm_sensor_count; i++) {
+        icm_sendables[i].data.accel_X = icm_sensors[i]->get_accel_X();
+        icm_sendables[i].data.accel_Y = icm_sensors[i]->get_accel_Y();
+        icm_sendables[i].data.accel_Z = icm_sensors[i]->get_accel_Z();
+        icm_sendables[i].data.gyro_X = icm_sensors[i]->get_gyro_X();
+        icm_sendables[i].data.gyro_Y = icm_sensors[i]->get_gyro_Y();
+        icm_sendables[i].data.gyro_Z = icm_sensors[i]->get_gyro_Z();
+        icm_sendables[i].data.temperature = icm_sensors[i]->get_temperature();
+        icm_sendables[i].data.id = icm_sensors[i]->getId();
+        icm_sendables[i].send_to_comms();
+    }
+
+    //send rev encoders
+    for(int i = 0; i < rev_sensor_count; i++) {
+        rev_sensor_sendables[i].data.ticks = rev_sensors[i].get_angle_ticks();
+        rev_sensor_sendables[i].data.radians = rev_sensors[i].get_angle_radians();
+        rev_sensor_sendables[i].data.id = rev_sensors[i].getId();
+        rev_sensor_sendables[i].send_to_comms();
+    }
+
+    //send TOFs
+    for(int i = 0; i < tof_sensor_count; i++) {
+        tof_sensor_sendables[i].data.latest_distance = tof_sensors[i]->get_latest_distance();
+        tof_sensor_sendables[i].data.id = tof_sensors[i]->getId();
+        tof_sensor_sendables[i].send_to_comms();
+    }
+
+    //send LiDARs
+    //NOTE it seems like lidar is broken right now
+    if(lidar_sensor_count > 0) {
+        lidar_sensor_sendables[0].data.current_packet = lidar1->get_current_packet_index();
+        //lidar_sensor_sendables[0].data.cal = lidar1->get_calibration();
+        //lidar_sensor_sendables[0].data.packets = lidar1->get_packets();
+        memcpy(lidar1->get_packets(),lidar_sensor_sendables[0].data.packets, sizeof(LidarDataPacketSI) * D200_NUM_PACKETS_CACHED);
+    }
+
 }
 
 int SensorManager::get_num_sensors(SensorType sensor_type) {
