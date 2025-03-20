@@ -1,4 +1,5 @@
 #include "usb_hid.hpp"
+#include "logger.hpp"
 
 uint8_t CommsPacket::get_id() {
     // c++ moment
@@ -52,7 +53,7 @@ void CommsPacket::set_ref_data(uint8_t ref_data[180]) {
 
 HIDLayer::HIDLayer() {}
 
-void HIDLayer::init() { Serial.println("Starting HID layer"); }
+void HIDLayer::init() { logger.println("Starting HID layer"); }
 
 void HIDLayer::ping() {
     // loop until the packet buffer is empty (this is only ever 1 packet large)
@@ -61,25 +62,25 @@ void HIDLayer::ping() {
         if (read()) {
             // if we read, attempt to write
             if (!write())
-                Serial.printf("Failed to send ping %llu\n", m_packetsSent);
+                logger.printf("Failed to send ping %llu\n", m_packetsSent);
         }
     }
 }
 
 void HIDLayer::print_outgoing() {
-    Serial.println("Outgoing packet:");
+    logger.println("Outgoing packet:");
     for (unsigned int i = 0; i < COMMS_PACKET_SIZE; i++)
-        Serial.printf("%.2x ", m_outgoingPacket.raw[i]);
+        logger.printf("%.2x ", m_outgoingPacket.raw[i]);
 
-    Serial.println();
+    logger.println();
 }
 
 void HIDLayer::print_incoming() {
-    Serial.println("Incoming packet:");
+    logger.println("Incoming packet:");
     for (unsigned int i = 0; i < COMMS_PACKET_SIZE; i++)
-        Serial.printf("%.2x ", m_incomingPacket.raw[i]);
+        logger.printf("%.2x ", m_incomingPacket.raw[i]);
 
-    Serial.println();
+    logger.println();
 }
 
 bool HIDLayer::read() {
@@ -108,7 +109,7 @@ bool HIDLayer::write() {
         m_packetsSent++;
         return true;
     } else {
-        Serial.println("Comms: failed write");
+        logger.println("Comms: failed write");
         m_packetsFailed++;
         return false;
     }
