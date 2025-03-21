@@ -12,6 +12,7 @@ namespace qn = qindesign::network;
 #pragma GCC diagnostic pop
 
 #include "ethernet_data.hpp"
+#include "utils/timing.hpp"
 
 // DEBUG define for displaying all comms errors/status updates
 // This is very noisy on start up
@@ -121,6 +122,8 @@ private:
 	EthernetPacket m_incoming = {};
 	/// @brief The outgoing packet buffer
 	EthernetPacket m_outgoing = {};
+
+	Timer m_regulation_timer;
 };
 
 }	// namespace Comms

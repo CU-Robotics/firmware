@@ -77,6 +77,12 @@ std::optional<EthernetPacket> EthernetComms::sendReceive(EthernetPacket& outgoin
 	// this progresses the ethernet stack allowing new data in/out
 	qn::Ethernet.loop();
 
+	// check if the last call to this function is within the regulation time
+	// this is to prevent the Teensy from running too fast and overloading the hardware
+	if (m_regulation_timer.get_elapsed_micros_no_restart() < m_regulation_time) {
+		return {};
+	}
+
 	// BUG: I'm not sure yet, but it takes an unknown amount of time for Hive and Teensy to handshake if Teensy was online AND unconfigured first. 
 	// 		Hive fails to receive any packets until a point if it has to manually configure Teensy. Possible workarounds involve Hive restarting 
 	// 		Teensy if it is unable to handshake for a certain amount of time.
@@ -98,6 +104,9 @@ std::optional<EthernetPacket> EthernetComms::sendReceive(EthernetPacket& outgoin
 
 	// check whether the connection is still alive
 	check_connection();
+
+	// restart the regulation timer to indicate the next call to this function
+	m_regulation_timer.start();
 
 	if (received) {
 		// return the incoming packet
