@@ -331,9 +331,10 @@ int main() {
         hid_outgoing.set_estimated_state(temp_state);
 
         // TODO: phase out this temp state sendable
-        Comms::Sendable<TempRobotState> temp_state_sendable;
-        memcpy(temp_state_sendable.data.state, temp_state, sizeof(temp_state));
-        temp_state_sendable.send_to_comms();
+        Comms::Sendable<EstimatedState> estimated_state;
+        memcpy(estimated_state.data.state, temp_state, sizeof(temp_state));
+        estimated_state.data.time = millis() / 1000.0;
+        estimated_state.send_to_comms();
 
         Comms::Sendable<DR16Data> dr16_sendable;
         dr16_sendable.data.l_mouse_button = dr16.get_l_mouse_button();
@@ -354,7 +355,6 @@ int main() {
         // const char* logging_data_str = "Logging data test string";
         // logging_data.deserialize(logging_data_str, strlen(logging_data_str));
         // logging_data.send_to_comms();
-        
 
         comms_layer.set_ethernet_outgoing(eth_outgoing);
         comms_layer.set_hid_outgoing(hid_outgoing);

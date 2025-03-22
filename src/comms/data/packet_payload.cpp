@@ -1,6 +1,7 @@
 #include "packet_payload.hpp"
 
 #include <algorithm>    // for min
+#include <mutex>        // for std::lock_guard, std::mutex
 #include <string.h>     // for memset/memcpy
 #include <assert.h>     // for assert
 
@@ -37,6 +38,10 @@ PacketPayload::~PacketPayload() {
 }
 
 void PacketPayload::construct_data() {
+#if defined(HIVE)
+    std::lock_guard<std::mutex> lock(m_mutex);
+#endif
+    
     clear_raw_data();
 
     append_data_from_queue(high_priority_send_queue);
@@ -46,6 +51,10 @@ void PacketPayload::construct_data() {
 }
 
 void PacketPayload::deconstruct_data(uint8_t* data, uint16_t size) {
+#if defined(HIVE)
+    std::lock_guard<std::mutex> lock(m_mutex);
+#endif
+
     // ensure the data is the correct size
     assert(size == max_data_size);
 
@@ -74,6 +83,10 @@ void PacketPayload::deconstruct_data(uint8_t* data, uint16_t size) {
 }
 
 void PacketPayload::add(CommsData* data) {
+#if defined(HIVE)
+    std::lock_guard<std::mutex> lock(m_mutex);
+#endif
+
     switch (data->priority) {
     case Priority::High: {
         if (high_priority_send_queue.size() <= MAX_QUEUE_SIZE) {
@@ -207,7 +220,8 @@ bool PacketPayload::try_append_splittable_logging_data(LoggingData* log) {
 
 void PacketPayload::place_data_in_mega_struct(CommsData* data) {
 #if defined(HIVE)
-    
+
+    std::lock_guard<std::mutex> lock(Hive::env->firmware_data_mutex);
     std::cout << "Placing data in mega struct: " << to_string(data->type_label) << std::endl;
     switch (data->type_label) {
     case TypeLabel::TestData: {
@@ -220,6 +234,7 @@ void PacketPayload::place_data_in_mega_struct(CommsData* data) {
         // place the data in the mega struct
         LoggingData* logging_data = static_cast<LoggingData*>(data);
         memcpy(&Hive::env->firmware_data->logging_data, logging_data, sizeof(LoggingData));
+        std::cout << logging_data->get_logs() << std::endl;
         break;
     }
     case TypeLabel::TempRobotState: {
@@ -228,48 +243,10 @@ void PacketPayload::place_data_in_mega_struct(CommsData* data) {
         memcpy(&Hive::env->firmware_data->temp_robot_state, temp_robot_state, sizeof(TempRobotState));
         break;
     }
-    case TypeLabel::BuffEncoderData: {
-        //determine if the data is for yaw or pitch
-        BuffEncoderData* buff_encoder_data = static_cast<BuffEncoderData*>(data);
-        if (buff_encoder_data->id == 0) {
-            memcpy(&Hive::env->firmware_data->yaw_buff_encoder, buff_encoder_data, sizeof(BuffEncoderData));
-        } else if (buff_encoder_data->id == 1) {
-            memcpy(&Hive::env->firmware_data->pitch_buff_encoder, buff_encoder_data, sizeof(BuffEncoderData));
-        }
-        break;
-    }
-    case TypeLabel::RevEncoderData: {
-        //determine which rev encoder the data is for
-        RevSensorData* rev_encoder_data = static_cast<RevSensorData*>(data);
-        if (rev_encoder_data->id == 0) {
-            memcpy(&Hive::env->firmware_data->rev_sensor_0, rev_encoder_data, sizeof(RevSensorData));
-        } else if (rev_encoder_data->id == 1) {
-            memcpy(&Hive::env->firmware_data->rev_sensor_1, rev_encoder_data, sizeof(RevSensorData));
-        } else if (rev_encoder_data->id == 2) {
-            memcpy(&Hive::env->firmware_data->rev_sensor_2, rev_encoder_data, sizeof(RevSensorData));
-        }
-        break;
-    }
-    case TypeLabel::ICMSensorData: {
+    case TypeLabel::EstimatedState: {
         // place the data in the mega struct
-        ICMSensorData* icm_sensor_data = static_cast<ICMSensorData*>(data);
-        memcpy(&Hive::env->firmware_data->icm_sensor, icm_sensor_data, sizeof(ICMSensorData));
-        break;
-    }
-    case TypeLabel::TOFSensorData: {
-        // place the data in the mega struct
-        TOFSensorData* tof_sensor_data = static_cast<TOFSensorData*>(data);
-        memcpy(&Hive::env->firmware_data->tof_sensor, tof_sensor_data, sizeof(TOFSensorData));
-        break;
-    }
-    case TypeLabel::LidarSensorData: {
-        //determine which lidar sensor the data is for
-        LidarSensorData* lidar_sensor_data = static_cast<LidarSensorData*>(data);
-        if (lidar_sensor_data->id == 0) {
-            memcpy(&Hive::env->firmware_data->lidar_sensor_0, lidar_sensor_data, sizeof(LidarSensorData));
-        } else if (lidar_sensor_data->id == 1) {
-            memcpy(&Hive::env->firmware_data->lidar_sensor_1, lidar_sensor_data, sizeof(LidarSensorData));
-        }
+        EstimatedState* estimated_state = static_cast<EstimatedState*>(data);
+        memcpy(&Hive::env->firmware_data->estimated_state, estimated_state, sizeof(EstimatedState));
         break;
     }
     case TypeLabel::DR16Data: {
@@ -320,12 +297,6 @@ void PacketPayload::place_data_in_mega_struct(CommsData* data) {
         } else if (lidar_sensor_data->id == 1) {
             memcpy(&Hive::env->firmware_data->lidar_sensor_1, lidar_sensor_data, sizeof(LidarSensorData));
         }
-        break;
-    }
-    case TypeLabel::DR16Data: {
-        // place the data in the mega struct
-        DR16Data* dr16_data = static_cast<DR16Data*>(data);
-        memcpy(&Hive::env->firmware_data->dr16_data, dr16_data, sizeof(DR16Data));
         break;
     }
     default:
@@ -334,6 +305,7 @@ void PacketPayload::place_data_in_mega_struct(CommsData* data) {
     
 #elif defined(FIRMWARE)
     
+    Serial.printf("Placing data in mega struct: %s\n", to_string(data->type_label).c_str());
     switch (data->type_label) {
     case TypeLabel::TestData: {
         // place the data in the mega struct
@@ -342,11 +314,18 @@ void PacketPayload::place_data_in_mega_struct(CommsData* data) {
         Serial.printf("Placed test data in mega struct\n");
         break;
     }
-    case TypeLabel::TempRobotState: {
+    case TypeLabel::TargetState: {
         // place the data in the mega struct
-        TempRobotState* temp_robot_state = static_cast<TempRobotState*>(data);
-        memcpy(&hive_data.target_state, temp_robot_state, sizeof(TempRobotState));
-        Serial.printf("Placed temp robot state in mega struct\n");
+        TargetState* target_state = static_cast<TargetState*>(data);
+        memcpy(&hive_data.target_state, target_state, sizeof(TargetState));
+        Serial.printf("Placed target state in mega struct\n");
+        break;
+    }
+    case TypeLabel::OverrideState: {
+        // place the data in the mega struct
+        OverrideState* override_state = static_cast<OverrideState*>(data);
+        memcpy(&hive_data.override_state, override_state, sizeof(OverrideState));
+        Serial.printf("Placed override state in mega struct\n");
         break;
     }
     default:

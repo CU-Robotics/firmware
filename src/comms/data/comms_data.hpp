@@ -17,6 +17,9 @@ enum class TypeLabel : uint8_t {
     LidarSensorData,
     DR16Data,
     TempRobotState,
+    TargetState,
+    EstimatedState,
+    OverrideState,
 };
 
 /// @brief Converts a TypeLabel to a string.
@@ -44,6 +47,12 @@ inline std::string to_string(TypeLabel type_label) {
         return "DR16Data";
     case TypeLabel::TempRobotState:
         return "TempRobotState"; 
+    case TypeLabel::TargetState:
+        return "TargetState";
+    case TypeLabel::EstimatedState:
+        return "EstimatedState";
+    case TypeLabel::OverrideState:
+        return "OverrideState";
     // no default case, so the compiler will warn us if we forget a case
     }
 

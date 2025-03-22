@@ -24,8 +24,12 @@ namespace Comms {
 struct HiveData {
     /// @brief Test data
     TestData test_data;
+
     /// @brief Target state
-    TempRobotState target_state;
+    TargetState target_state;
+
+    /// @brief Override state
+    OverrideState override_state;
 };
 
 } // namespace Comms

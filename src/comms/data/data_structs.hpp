@@ -4,6 +4,7 @@
 #include "sensor_constants.hpp"                 // for D200_POINTS_PER_PACKET, D200_MAX_CALIBRATION_PACKETS, D200_NUM_PACKETS_CACHED
 #elif defined(HIVE)
 #include "modules/comms/data/comms_data.hpp"    // for CommsData
+#include "modules/hive/robot_state.hpp"         // for RobotState
 // TODO: remove this
 //some constants for lidar sensors needed for comms as well as the sensor
 /// @brief points per D200 data packet
@@ -194,6 +195,93 @@ struct DR16Data : Comms::CommsData {
 /// @brief Structure for the full robot state including time
 struct TempRobotState : Comms::CommsData {
     TempRobotState() : CommsData(Comms::TypeLabel::TempRobotState, Comms::PhysicalMedium::Ethernet, Comms::Priority::High, sizeof(TempRobotState)) { }
+  
+    /// @brief Time of the teensy
+    double time = 0.0;
+    /// @brief Full robot state array
+    float state[24][3] = { {0} };
+};
+
+/// @brief Full robot state, in the form of TargetState
+struct TargetState : Comms::CommsData {
+    TargetState() : CommsData(Comms::TypeLabel::TargetState, Comms::PhysicalMedium::Ethernet, Comms::Priority::High, sizeof(TargetState)) { }
+
+#if defined(HIVE)
+    /// @brief Construct a TargetState object with raw byte arrays for time and state
+    /// @param state The state to convert
+    TargetState(Hive::RobotState state) : CommsData(Comms::TypeLabel::TargetState, Comms::PhysicalMedium::Ethernet, Comms::Priority::High, sizeof(TargetState)){
+        time = state.time;
+        for (int i = 0; i < 24; i++) {
+            for (int j = 0; j < 3; j++) {
+                this->state[i][j] = state.state[i][j];
+            }
+        }
+    }
+
+    /// @brief Convert TargetState to old RobotState
+    /// @return Hive::RobotState
+    Hive::RobotState to_old_robot_state() {
+        return Hive::RobotState((char*)(&time), (char*)state);
+    }
+#endif // HIVE
+
+    /// @brief Time of the teensy
+    double time = 0.0;
+    /// @brief Full robot state array
+    float state[24][3] = { {0} };
+};
+
+/// @brief Full robot state, in the form of EstimatedState
+struct EstimatedState : Comms::CommsData {
+    EstimatedState() : CommsData(Comms::TypeLabel::EstimatedState, Comms::PhysicalMedium::Ethernet, Comms::Priority::High, sizeof(EstimatedState)) { }
+
+#if defined(HIVE)
+    /// @brief Construct a EstimatedState object with raw byte arrays for time and state
+    /// @param state The state to convert
+    EstimatedState(Hive::RobotState state) : CommsData(Comms::TypeLabel::EstimatedState, Comms::PhysicalMedium::Ethernet, Comms::Priority::High, sizeof(EstimatedState)) {
+        time = state.time;
+        for (int i = 0; i < 24; i++) {
+            for (int j = 0; j < 3; j++) {
+                this->state[i][j] = state.state[i][j];
+            }
+        }
+    }
+
+    /// @brief Convert EstimatedState to old RobotState
+    /// @return Hive::RobotState
+    Hive::RobotState to_old_robot_state() {
+        return Hive::RobotState((char*)(&time), (char*)state);
+    }
+#endif // HIVE
+  
+    /// @brief Time of the teensy
+    double time = 0.0;
+    /// @brief Full robot state array
+    float state[24][3] = { {0} };
+};
+
+/// @brief Full robot state, in the form of OverrideState
+struct OverrideState : Comms::CommsData {
+    OverrideState() : CommsData(Comms::TypeLabel::OverrideState, Comms::PhysicalMedium::Ethernet, Comms::Priority::High, sizeof(OverrideState)) { }
+
+#if defined(HIVE)
+    /// @brief Construct a OverrideState object with raw byte arrays for time and state
+    /// @param state The state to convert
+    OverrideState(Hive::RobotState state) : CommsData(Comms::TypeLabel::OverrideState, Comms::PhysicalMedium::Ethernet, Comms::Priority::High, sizeof(OverrideState)) {
+        time = state.time;
+        for (int i = 0; i < 24; i++) {
+            for (int j = 0; j < 3; j++) {
+                this->state[i][j] = state.state[i][j];
+            }
+        }
+    }
+
+    /// @brief Convert OverrideState to old RobotState
+    /// @return Hive::RobotState
+    Hive::RobotState to_old_robot_state() {
+        return Hive::RobotState((char*)(&time), (char*)state);
+    }
+#endif // HIVE
   
     /// @brief Time of the teensy
     double time = 0.0;
