@@ -311,21 +311,18 @@ void PacketPayload::place_data_in_mega_struct(CommsData* data) {
         // place the data in the mega struct
         TestData* test_data = static_cast<TestData*>(data);
         memcpy(&hive_data.test_data, test_data, sizeof(TestData));
-        Serial.printf("Placed test data in mega struct\n");
         break;
     }
     case TypeLabel::TargetState: {
         // place the data in the mega struct
         TargetState* target_state = static_cast<TargetState*>(data);
         memcpy(&hive_data.target_state, target_state, sizeof(TargetState));
-        Serial.printf("Placed target state in mega struct\n");
         break;
     }
     case TypeLabel::OverrideState: {
         // place the data in the mega struct
         OverrideState* override_state = static_cast<OverrideState*>(data);
         memcpy(&hive_data.override_state, override_state, sizeof(OverrideState));
-        Serial.printf("Placed override state in mega struct\n");
         break;
     }
     default:
