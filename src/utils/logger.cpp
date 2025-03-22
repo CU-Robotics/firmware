@@ -42,7 +42,6 @@ uint32_t Logger::grab_log_data(uint32_t size, uint8_t* data) {
     return bytes_to_copy;
 }
 
-// stuff from teensy4/Print.cpp
 size_t Logger::print(const String& s, LogDestination dest) {
     uint8_t buffer[33];
     size_t count = 0;
@@ -94,7 +93,7 @@ int Logger::printf(const char* format, ...) {
     va_list args;
     va_start(args, format);
 
-    int retval = vprintf( LogDestination::Serial, format, args); // Default: print to stdout
+    int retval = vprintf( LogDestination::Comms, format, args); // Default: print to stdout
 
     va_end(args);
 

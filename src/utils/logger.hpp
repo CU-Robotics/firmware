@@ -10,7 +10,7 @@
 
 enum class LogDestination {
     Serial,
-    File
+    Comms
 };
 
 #define DEC 10
@@ -66,88 +66,88 @@ public:
     virtual int availableForwrite(void) { return 0; }
     virtual void flush() { }
     // Print a string
-    size_t print(const String& s, LogDestination dest = LogDestination::Serial);
+    size_t print(const String& s, LogDestination dest = LogDestination::Comms);
     // Print a single character
-    size_t print(char c, LogDestination dest = LogDestination::Serial) { return write((uint8_t)c, dest); }
+    size_t print(char c, LogDestination dest = LogDestination::Comms) { return write((uint8_t)c, dest); }
     // Print a string
-    size_t print(const char s[ ], LogDestination dest = LogDestination::Serial) { return write(s, dest); }
+    size_t print(const char s[ ], LogDestination dest = LogDestination::Comms) { return write(s, dest); }
     // Print an unsigned number
-    size_t print(uint8_t b, LogDestination dest = LogDestination::Serial) { return printNumber(b, 10, 0, dest); }
+    size_t print(uint8_t b, LogDestination dest = LogDestination::Comms) { return printNumber(b, 10, 0, dest); }
     // Print a signed number
-    size_t print(int n, LogDestination dest = LogDestination::Serial) { return print((long)n, dest); }
+    size_t print(int n, LogDestination dest = LogDestination::Comms) { return print((long)n, dest); }
     // Print an unsigned number
-    size_t print(unsigned int n, LogDestination dest = LogDestination::Serial) { return printNumber(n, 10, 0, dest); }
+    size_t print(unsigned int n, LogDestination dest = LogDestination::Comms) { return printNumber(n, 10, 0, dest); }
     // Print a signed number
-    size_t print(long n, LogDestination dest = LogDestination::Serial);
+    size_t print(long n, LogDestination dest = LogDestination::Comms);
     // Print an unsigned number
-    size_t print(unsigned long n, LogDestination dest = LogDestination::Serial) { return printNumber(n, 10, 0, dest); }
+    size_t print(unsigned long n, LogDestination dest = LogDestination::Comms) { return printNumber(n, 10, 0, dest); }
     // Print a signed number
-    size_t print(int64_t n, LogDestination dest = LogDestination::Serial);
+    size_t print(int64_t n, LogDestination dest = LogDestination::Comms);
     // Print an unsigned number
-    size_t print(uint64_t n, LogDestination dest = LogDestination::Serial) { return printNumber64(n, 10, 0, dest); }
+    size_t print(uint64_t n, LogDestination dest = LogDestination::Comms) { return printNumber64(n, 10, 0, dest); }
 
     // Print a number in any number base (eg, BIN, HEX, OCT)
-    size_t print(unsigned char n, int base, LogDestination dest = LogDestination::Serial) { return printNumber(n, base, 0, dest); }
+    size_t print(unsigned char n, int base, LogDestination dest = LogDestination::Comms) { return printNumber(n, base, 0, dest); }
     // Print a number in any number base (eg, BIN, HEX, OCT)
-    size_t print(int n, int base, LogDestination dest = LogDestination::Serial) { return (base == 10) ? print(n, dest) : printNumber(n, base, 0, dest); }
+    size_t print(int n, int base, LogDestination dest = LogDestination::Comms) { return (base == 10) ? print(n, dest) : printNumber(n, base, 0, dest); }
     // Print a number in any number base (eg, BIN, HEX, OCT)
-    size_t print(unsigned int n, int base, LogDestination dest = LogDestination::Serial) { return printNumber(n, base, 0, dest); }
+    size_t print(unsigned int n, int base, LogDestination dest = LogDestination::Comms) { return printNumber(n, base, 0, dest); }
     // Print a number in any number base (eg, BIN, HEX, OCT)
-    size_t print(long n, int base, LogDestination dest = LogDestination::Serial) { return (base == 10) ? print(n) : printNumber(n, base, 0, dest); }
+    size_t print(long n, int base, LogDestination dest = LogDestination::Comms) { return (base == 10) ? print(n) : printNumber(n, base, 0, dest); }
     // Print a number in any number base (eg, BIN, HEX, OCT)
-    size_t print(unsigned long n, int base, LogDestination dest = LogDestination::Serial) { return printNumber(n, base, 0, dest); }
+    size_t print(unsigned long n, int base, LogDestination dest = LogDestination::Comms) { return printNumber(n, base, 0, dest); }
     // Print a number in any number base (eg, BIN, HEX, OCT)
-    size_t print(int64_t n, int base, LogDestination dest = LogDestination::Serial) { return (base == 10) ? print(n) : printNumber64(n, base, 0, dest); }
+    size_t print(int64_t n, int base, LogDestination dest = LogDestination::Comms) { return (base == 10) ? print(n) : printNumber64(n, base, 0, dest); }
     // Print a number in any number base (eg, BIN, HEX, OCT)
-    size_t print(uint64_t n, int base, LogDestination dest = LogDestination::Serial) { return printNumber64(n, base, 0, dest); }
+    size_t print(uint64_t n, int base, LogDestination dest = LogDestination::Comms) { return printNumber64(n, base, 0, dest); }
 
     // Print a floating point (decimal) number
-    size_t print(double n, int digits = 2, LogDestination dest = LogDestination::Serial) { return printFloat(n, digits, dest); }
+    size_t print(double n, int digits = 2, LogDestination dest = LogDestination::Comms) { return printFloat(n, digits, dest); }
     // Print an object instance in human readable format
     // size_t print(const Printable& obj) { return obj.printTo(*this); }
     // Print a newline
-    size_t println(LogDestination dest = LogDestination::Serial);
+    size_t println(LogDestination dest = LogDestination::Comms);
     // Print a string and newline
-    size_t println(const String& s, LogDestination dest = LogDestination::Serial) { return print(s, dest) + println(dest); }
+    size_t println(const String& s, LogDestination dest = LogDestination::Comms) { return print(s, dest) + println(dest); }
     // Print a single character and newline
-    size_t println(char c, LogDestination dest = LogDestination::Serial) { return print(c, dest) + println(dest); }
+    size_t println(char c, LogDestination dest = LogDestination::Comms) { return print(c, dest) + println(dest); }
     // Print a string and newline
-    size_t println(const char s[ ], LogDestination dest = LogDestination::Serial) { return print(s, dest) + println(dest); }
+    size_t println(const char s[ ], LogDestination dest = LogDestination::Comms) { return print(s, dest) + println(dest); }
     // Print a string and newline
     // size_t println(const __FlashStringHelper* f) { return print(f) + println(); }
 
     // Print an unsigned number and newline
-    size_t println(uint8_t b, LogDestination dest = LogDestination::Serial) { return print(b, dest) + println(dest); }
+    size_t println(uint8_t b, LogDestination dest = LogDestination::Comms) { return print(b, dest) + println(dest); }
     // Print a signed number and newline
-    size_t println(int n, LogDestination dest = LogDestination::Serial) { return print(n, dest) + println(dest); }
+    size_t println(int n, LogDestination dest = LogDestination::Comms) { return print(n, dest) + println(dest); }
     // Print an unsigned number and newline
-    size_t println(unsigned int n, LogDestination dest = LogDestination::Serial) { return print(n, dest) + println(dest); }
+    size_t println(unsigned int n, LogDestination dest = LogDestination::Comms) { return print(n, dest) + println(dest); }
     // Print a signed number and newline
-    size_t println(long n, LogDestination dest = LogDestination::Serial) { return print(n, dest) + println(dest); }
+    size_t println(long n, LogDestination dest = LogDestination::Comms) { return print(n, dest) + println(dest); }
     // Print an unsigned number and newline
-    size_t println(unsigned long n, LogDestination dest = LogDestination::Serial) { return print(n, dest) + println(dest); }
+    size_t println(unsigned long n, LogDestination dest = LogDestination::Comms) { return print(n, dest) + println(dest); }
     // Print a signed number and newline
-    size_t println(int64_t n, LogDestination dest = LogDestination::Serial) { return print(n, dest) + println(dest); }
+    size_t println(int64_t n, LogDestination dest = LogDestination::Comms) { return print(n, dest) + println(dest); }
     // Print an unsigned number and newline
-    size_t println(uint64_t n, LogDestination dest = LogDestination::Serial) { return print(n, dest) + println(dest); }
+    size_t println(uint64_t n, LogDestination dest = LogDestination::Comms) { return print(n, dest) + println(dest); }
 
     // Print a number in any number base (eg, BIN, HEX, OCT) and a newline
-    size_t println(unsigned char n, int base, LogDestination dest = LogDestination::Serial) { return print(n, base, dest) + println(dest); }
+    size_t println(unsigned char n, int base, LogDestination dest = LogDestination::Comms) { return print(n, base, dest) + println(dest); }
     // Print a number in any number base (eg, BIN, HEX, OCT) and a newline
-    size_t println(int n, int base, LogDestination dest = LogDestination::Serial) { return print(n, base, dest) + println(dest); }
+    size_t println(int n, int base, LogDestination dest = LogDestination::Comms) { return print(n, base, dest) + println(dest); }
     // Print a number in any number base (eg, BIN, HEX, OCT) and a newline
-    size_t println(unsigned int n, int base, LogDestination dest = LogDestination::Serial) { return print(n, base, dest) + println(dest); }
+    size_t println(unsigned int n, int base, LogDestination dest = LogDestination::Comms) { return print(n, base, dest) + println(dest); }
     // Print a number in any number base (eg, BIN, HEX, OCT) and a newline
-    size_t println(long n, int base, LogDestination dest = LogDestination::Serial) { return print(n, base, dest) + println(dest); }
+    size_t println(long n, int base, LogDestination dest = LogDestination::Comms) { return print(n, base, dest) + println(dest); }
     // Print a number in any number base (eg, BIN, HEX, OCT) and a newline
-    size_t println(unsigned long n, int base, LogDestination dest = LogDestination::Serial) { return print(n, base, dest) + println(dest); }
+    size_t println(unsigned long n, int base, LogDestination dest = LogDestination::Comms) { return print(n, base, dest) + println(dest); }
     // Print a number in any number base (eg, BIN, HEX, OCT) and a newline
-    size_t println(int64_t n, int base, LogDestination dest = LogDestination::Serial) { return print(n, base, dest) + println(dest); }
+    size_t println(int64_t n, int base, LogDestination dest = LogDestination::Comms) { return print(n, base, dest) + println(dest); }
     // Print a number in any number base (eg, BIN, HEX, OCT) and a newline
-    size_t println(uint64_t n, int base, LogDestination dest = LogDestination::Serial) { return print(n, base, dest) + println(dest); }
+    size_t println(uint64_t n, int base, LogDestination dest = LogDestination::Comms) { return print(n, base, dest) + println(dest); }
 
     // Print a floating point (decimal) number and a newline
-    size_t println(double n, int digits = 2, LogDestination dest = LogDestination::Serial) { return print(n, digits, dest) + println(dest); }
+    size_t println(double n, int digits = 2, LogDestination dest = LogDestination::Comms) { return print(n, digits, dest) + println(dest); }
     // Print an object instance in human readable format, and a newline
     // size_t println(const Printable& obj) { return obj.printTo(*this) + println(); }
     int getwriteError() { return write_error; }
@@ -158,7 +158,7 @@ public:
 
     int printf(const char* format, ...);
     // printf is a C standard function which allows you to print any number of variables using a somewhat cryptic format string
-    // int printf(const __FlashStringHelper* format, LogDestination dest = LogDestination::Serial,  ...);
+    // int printf(const __FlashStringHelper* format, LogDestination dest = LogDestination::Comms,  ...);
     // vprintf is a C standard function that allows you to print a variable argument list with a format string
     int vprintf(LogDestination dest, const char* format, va_list ap);
 
