@@ -78,6 +78,11 @@ size_t Logger::println(LogDestination dest) {
     return write(buf, 2, dest);
 }
 
+size_t Logger::println() {
+    uint8_t buf[2] = { '\r', '\n' };
+    return write(buf, 2, LogDestination::Comms);
+}
+
 
 // Function to handle the actual formatted printing
 int Logger::vprintf(LogDestination dest, const char* format, va_list args) {

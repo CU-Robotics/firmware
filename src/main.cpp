@@ -46,7 +46,7 @@ Watchdog watchdog;
 // DONT put anything else in this function. It is not a setup function
 void print_logo() {
     if (Serial) {
-        logger.println("TEENSY SERIAL START\n\n", LogDestination::Serial);
+        logger.println(LogDestination::Serial, "TEENSY SERIAL START\n\n");
         logger.print("\033[1;33m");
         logger.println("                  .:^!?!^.                        ");
         logger.println("           .:~!?JYYYJ?7?Y5Y7!!.                   ");
