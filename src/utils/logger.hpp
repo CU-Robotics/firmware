@@ -43,15 +43,6 @@ private:
     /// @param size size of the buffer
     size_t write(const uint8_t* buffer, size_t size, LogDestination dest);
 
-    /// @brief Write but with a cast, so if we get a char* buffer we just recall with a casted uint8_t* buffer
-    /// @param buffer pointer to a buffer
-    /// @param size size of the buffer
-    /// @param dest destination to write to
-    /// @return Returns the result of the nested write.
-    size_t write(const char* buffer, size_t size, LogDestination dest) {
-        return write((const uint8_t*)buffer, size, dest);
-    }
-
     size_t write(uint8_t b, LogDestination dest) {
         return write(&b, 1, dest);
     }
@@ -72,7 +63,7 @@ private:
 
 // Stuff from teensy4/print.h
 public:
-    virtual int availableForWrite(void) { return 0; }
+    virtual int availableForwrite(void) { return 0; }
     virtual void flush() { }
     // Print a string
     size_t print(const String& s, LogDestination dest = LogDestination::Serial);
@@ -159,22 +150,24 @@ public:
     size_t println(double n, int digits = 2, LogDestination dest = LogDestination::Serial) { return print(n, digits, dest) + println(dest); }
     // Print an object instance in human readable format, and a newline
     // size_t println(const Printable& obj) { return obj.printTo(*this) + println(); }
-    int getWriteError() { return write_error; }
-    void clearWriteError() { setWriteError(0); }
+    int getwriteError() { return write_error; }
+    void clearwriteError() { setwriteError(0); }
 
     // printf is a C standard function which allows you to print any number of variables using a somewhat cryptic format string
-    int printf(const char* format, LogDestination dest = LogDestination::Serial, ...);
+    int printf(LogDestination dest, const char* format, ...);
+
+    int printf(const char* format, ...);
     // printf is a C standard function which allows you to print any number of variables using a somewhat cryptic format string
-    int printf(const __FlashStringHelper* format, LogDestination dest = LogDestination::Serial,  ...);
+    // int printf(const __FlashStringHelper* format, LogDestination dest = LogDestination::Serial,  ...);
     // vprintf is a C standard function that allows you to print a variable argument list with a format string
-    int vprintf(const char* format, va_list ap) { return vdprintf((int)this, format, ap); }
+    int vprintf(LogDestination dest, const char* format, va_list ap);
 
     // format warnings are too pedantic - disable until newer toolchain offers better...
     // https://forum.pjrc.com/threads/62473?p=256873&viewfull=1#post256873
     // int printf(const char *format, ...) __attribute__ ((format (printf, 2, 3)));
 
 protected:
-    void setWriteError(int err = 1) { write_error = err; }
+    void setwriteError(int err = 1) { write_error = err; }
 private:
     int write_error;
     size_t printFloat(double n, uint8_t digits, LogDestination dest);

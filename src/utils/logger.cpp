@@ -18,8 +18,6 @@ size_t Logger::write(const uint8_t* buffer, size_t size, LogDestination destinat
     if (destination == LogDestination::Serial) {
         // print to serial monitor
         Serial.print(print_statement);
-    } else if (destination == LogDestination::File) {
-        // TODO print to file
     }
 
     // sets cursor to current place in memory
@@ -81,15 +79,37 @@ size_t Logger::println(LogDestination dest) {
     return write(buf, 2, dest);
 }
 
-int Logger::printf(const char* format, LogDestination dest, ...) {
-    va_list ap;
-    va_start(ap, format);
 
-    char buffer[1024];
-    int retval = vsnprintf_(buffer, 1024, format, ap);
-    write(buffer, dest);
+// Function to handle the actual formatted printing
+int Logger::vprintf(LogDestination dest, const char* format, va_list args) {
+    uint8_t buffer[1024];
+    int retval = vsnprintf_((char*)buffer, 1024, format, args);
+    write(buffer, 1024, dest);
 
-    va_end(ap);
+    return retval;
+}
+
+// Default behavior: print to stdout
+int Logger::printf(const char* format, ...) {
+    va_list args;
+    va_start(args, format);
+
+    int retval = vprintf( LogDestination::Serial, format, args); // Default: print to stdout
+
+    va_end(args);
+
+    return retval;
+}
+
+// Overload with explicit log destination
+int Logger::printf(LogDestination dest, const char* format, ...) {
+    va_list args;
+    va_start(args, format);
+
+    int retval = vprintf(dest, format, args);
+
+    va_end(args);
+
     return retval;
 }
 
@@ -127,7 +147,7 @@ size_t Logger::printNumber(unsigned long n, uint8_t base, uint8_t sign, LogDesti
     return write(buf + i, sizeof(buf) - i, dest);
 }
 
-size_t Logger::printNumber64(uint64_t n, uint8_t base, uint8_t sign, dest) {
+size_t Logger::printNumber64(uint64_t n, uint8_t base, uint8_t sign, LogDestination dest) {
     uint8_t buf[66];
     uint8_t digit, i;
 
@@ -152,7 +172,7 @@ size_t Logger::printNumber64(uint64_t n, uint8_t base, uint8_t sign, dest) {
     return write(buf + i, sizeof(buf) - i, dest);
 }
 
-size_t Logger::printFloat(double number, uint8_t digits) {
+size_t Logger::printFloat(double number, uint8_t digits, LogDestination dest) {
     uint8_t sign = 0;
     size_t count = 0;
 
@@ -177,7 +197,7 @@ size_t Logger::printFloat(double number, uint8_t digits) {
     // Extract the integer part of the number and print it
     unsigned long int_part = (unsigned long)number;
     double remainder = number - (double)int_part;
-    count += printNumber(int_part, 10, sign);
+    count += printNumber(int_part, 10, sign, dest);
 
     // Print the decimal point, but only if there are digits beyond
     if (digits > 0) {
