@@ -93,7 +93,7 @@ int Logger::printf(const char* format, ...) {
     va_list args;
     va_start(args, format);
 
-    int retval = vprintf( LogDestination::Comms, format, args); // Default: print to stdout
+    int retval = vprintf(LogDestination::Comms, format, args); // Default: print to stdout
 
     va_end(args);
 
