@@ -6,7 +6,8 @@
 #include <assert.h>     // for assert
 
 #if defined(HIVE)
-#include <iostream>     // for std::cout
+#include <iostream>                     // for std::cout
+#include "modules/comms/hid_comms.hpp"  // for comms_data
 #endif
 
 namespace Comms {
@@ -247,6 +248,8 @@ void PacketPayload::place_data_in_mega_struct(CommsData* data) {
         // place the data in the mega struct
         EstimatedState* estimated_state = static_cast<EstimatedState*>(data);
         memcpy(&Hive::env->firmware_data->estimated_state, estimated_state, sizeof(EstimatedState));
+        // TODO: remove
+        Hive::env->comms_data->set_estimated_state(estimated_state);
         break;
     }
     case TypeLabel::DR16Data: {

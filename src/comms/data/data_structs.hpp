@@ -1,3 +1,5 @@
+#ifndef DATA_STRUCTS_HPP
+#define DATA_STRUCTS_HPP
 
 #if defined(FIRMWARE)
 #include "comms/data/comms_data.hpp"            // for CommsData
@@ -16,9 +18,6 @@ const inline int D200_MAX_CALIBRATION_PACKETS = 333;
 /// @brief number of packets stored teensy-side
 const inline int D200_NUM_PACKETS_CACHED = 2;
 #endif
-
-#ifndef DATA_STRUCTS_HPP
-#define DATA_STRUCTS_HPP
 
 #include <stdint.h>     // uintN_t
 
@@ -200,93 +199,44 @@ struct TempRobotState : Comms::CommsData {
     double time = 0.0;
     /// @brief Full robot state array
     float state[24][3] = { {0} };
+    /// @brief The delay in communication between the teensy and the khadas
+    double comms_delay = 0;
 };
 
 /// @brief Full robot state, in the form of TargetState
 struct TargetState : Comms::CommsData {
     TargetState() : CommsData(Comms::TypeLabel::TargetState, Comms::PhysicalMedium::Ethernet, Comms::Priority::High, sizeof(TargetState)) { }
 
-#if defined(HIVE)
-    /// @brief Construct a TargetState object with raw byte arrays for time and state
-    /// @param state The state to convert
-    TargetState(Hive::RobotState state) : CommsData(Comms::TypeLabel::TargetState, Comms::PhysicalMedium::Ethernet, Comms::Priority::High, sizeof(TargetState)){
-        time = state.time;
-        for (int i = 0; i < 24; i++) {
-            for (int j = 0; j < 3; j++) {
-                this->state[i][j] = state.state[i][j];
-            }
-        }
-    }
-
-    /// @brief Convert TargetState to old RobotState
-    /// @return Hive::RobotState
-    Hive::RobotState to_old_robot_state() {
-        return Hive::RobotState((char*)(&time), (char*)state);
-    }
-#endif // HIVE
-
     /// @brief Time of the teensy
     double time = 0.0;
     /// @brief Full robot state array
     float state[24][3] = { {0} };
+    /// @brief The delay in communication between the teensy and the khadas
+    double comms_delay = 0;
 };
 
 /// @brief Full robot state, in the form of EstimatedState
 struct EstimatedState : Comms::CommsData {
     EstimatedState() : CommsData(Comms::TypeLabel::EstimatedState, Comms::PhysicalMedium::Ethernet, Comms::Priority::High, sizeof(EstimatedState)) { }
-
-#if defined(HIVE)
-    /// @brief Construct a EstimatedState object with raw byte arrays for time and state
-    /// @param state The state to convert
-    EstimatedState(Hive::RobotState state) : CommsData(Comms::TypeLabel::EstimatedState, Comms::PhysicalMedium::Ethernet, Comms::Priority::High, sizeof(EstimatedState)) {
-        time = state.time;
-        for (int i = 0; i < 24; i++) {
-            for (int j = 0; j < 3; j++) {
-                this->state[i][j] = state.state[i][j];
-            }
-        }
-    }
-
-    /// @brief Convert EstimatedState to old RobotState
-    /// @return Hive::RobotState
-    Hive::RobotState to_old_robot_state() {
-        return Hive::RobotState((char*)(&time), (char*)state);
-    }
-#endif // HIVE
   
     /// @brief Time of the teensy
     double time = 0.0;
     /// @brief Full robot state array
     float state[24][3] = { {0} };
+    /// @brief The delay in communication between the teensy and the khadas
+    double comms_delay = 0;
 };
 
 /// @brief Full robot state, in the form of OverrideState
 struct OverrideState : Comms::CommsData {
     OverrideState() : CommsData(Comms::TypeLabel::OverrideState, Comms::PhysicalMedium::Ethernet, Comms::Priority::High, sizeof(OverrideState)) { }
-
-#if defined(HIVE)
-    /// @brief Construct a OverrideState object with raw byte arrays for time and state
-    /// @param state The state to convert
-    OverrideState(Hive::RobotState state) : CommsData(Comms::TypeLabel::OverrideState, Comms::PhysicalMedium::Ethernet, Comms::Priority::High, sizeof(OverrideState)) {
-        time = state.time;
-        for (int i = 0; i < 24; i++) {
-            for (int j = 0; j < 3; j++) {
-                this->state[i][j] = state.state[i][j];
-            }
-        }
-    }
-
-    /// @brief Convert OverrideState to old RobotState
-    /// @return Hive::RobotState
-    Hive::RobotState to_old_robot_state() {
-        return Hive::RobotState((char*)(&time), (char*)state);
-    }
-#endif // HIVE
   
     /// @brief Time of the teensy
     double time = 0.0;
     /// @brief Full robot state array
     float state[24][3] = { {0} };
+    /// @brief The delay in communication between the teensy and the khadas
+    double comms_delay = 0;
 };
 
 #endif // DATA_STRUCTS_HPP

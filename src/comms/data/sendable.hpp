@@ -23,6 +23,13 @@ struct Sendable {
     static_assert(std::is_base_of<CommsData, T>::value, "The datatype stored in Comms::Container must be a subtype of CommsData");
     static_assert(std::is_copy_constructible<T>::value, "The datatype stored in Comms::Container must be copy constructible");
 public:
+    /// @brief Default constructor.
+    Sendable() = default;
+
+    /// @brief Implicit constructor.
+    /// @param data The data to be sent.
+    Sendable(const T& data) : data(data) {}
+
     /// @brief Add this Sendable to the comms layer to be sent.
     void send_to_comms() {
     #if defined(HIVE)
