@@ -1,6 +1,6 @@
 #pragma once 
 
-#include "comms/data/comms_data.hpp"
+#include "comms/data/comms_data.hpp"        // CommsData
 #include "comms/hid_comms.hpp"              // HIDComms
 #include "comms/ethernet_comms.hpp"         // EthernetComms
 #include "comms/data/packet_payload.hpp"    // PacketPayload
@@ -31,6 +31,29 @@ public:
     /// @param data The CommsData packet to send
     void queue_data(CommsData* data);
 
+    /// @brief Process the HID layer by sending, receiving, and processing HID packets
+    void process_hid_layer();
+
+    /// @brief Process the Ethernet layer by sending, receiving, and processing Ethernet packets
+    void process_ethernet_layer();
+
+    /// @brief Check if Ethernet is connected
+    /// @return True if connected, false if not
+    bool is_ethernet_connected();
+
+    /// @brief Check if HID is connected
+    /// @return True if connected, false if not
+    bool is_hid_connected();
+
+    /// @brief Get the hive data
+    /// @return The hive data
+    HiveData get_hive_data();
+
+    /// @brief Set the hive data
+    /// @param data The hive data to set
+    void set_hive_data(HiveData& data);
+
+    // TODO: remove these sometime soon
     HIDPacket get_hid_incoming();
     void set_hid_outgoing(HIDPacket& packet);
     EthernetPacket get_ethernet_incoming();
@@ -47,18 +70,22 @@ private:
 
 private:
     /// @brief Ethernet physical layer
-    EthernetComms m_ethernet;
+    Comms::EthernetComms m_ethernet;
+    /// @brief Ethernet outgoing packet
     EthernetPacket m_ethernet_outgoing;
 
     /// @brief HID physical layer
-    // TODO: hid comms namespace
-    HIDComms m_hid;
+    Comms::HIDComms m_hid;
+    /// @brief HID outgoing packet
     HIDPacket m_hid_outgoing;
 
     /// @brief Packet payload for Ethernet
     PacketPayload m_ethernet_payload{ETHERNET_PACKET_PAYLOAD_MAX_SIZE};
     /// @brief Packet payload for HID
     PacketPayload m_hid_payload{HID_PACKET_SIZE};
+
+    /// @brief Hive data
+    HiveData m_hive_data;
 
 };
 

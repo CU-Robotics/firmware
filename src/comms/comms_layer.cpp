@@ -1,6 +1,4 @@
 #include "comms_layer.hpp"
-#include "ethernet_packet.hpp"
-#include "hid_comms.hpp"
 
 namespace Comms {
 
@@ -25,16 +23,10 @@ int CommsLayer::init() {
 
 int CommsLayer::run() {
     // process Ethernet stack
-    EthernetPacket eth_outgoing;
-    m_ethernet_payload.construct_data();
-    memcpy(eth_outgoing.payload.data, m_ethernet_payload.data(), ETHERNET_PACKET_PAYLOAD_MAX_SIZE);
-    std::optional<EthernetPacket> ethernet_incoming = m_ethernet.sendReceive(eth_outgoing);
+    process_ethernet_layer();
 
-    if (ethernet_incoming.has_value()) {
-        m_ethernet_payload.deconstruct_data(ethernet_incoming.value().payload.data, ETHERNET_PACKET_PAYLOAD_MAX_SIZE);
-    }
-
-    m_hid.sendReceive(m_hid_outgoing);
+    // process HID stack
+    process_hid_layer();
 
     return 0;
 };
@@ -64,6 +56,39 @@ void CommsLayer::queue_data(CommsData* data) {
         assert(false && "Invalid PhysicalMedium");
     }
 #endif
+};
+
+void CommsLayer::process_hid_layer() {
+    // TODO: use m_hid_payload
+    m_hid.sendReceive(m_hid_outgoing);
+};
+
+void CommsLayer::process_ethernet_layer() {
+    EthernetPacket eth_outgoing;
+    m_ethernet_payload.construct_data();
+    memcpy(eth_outgoing.payload.data, m_ethernet_payload.data(), ETHERNET_PACKET_PAYLOAD_MAX_SIZE);
+    std::optional<EthernetPacket> ethernet_incoming = m_ethernet.sendReceive(eth_outgoing);
+
+    if (ethernet_incoming.has_value()) {
+        m_ethernet_payload.deconstruct_data(ethernet_incoming.value().payload.data, ETHERNET_PACKET_PAYLOAD_MAX_SIZE);
+    }
+};
+
+bool CommsLayer::is_ethernet_connected() {
+    return m_ethernet.is_connected();
+};
+
+bool CommsLayer::is_hid_connected() {
+    // HID is always connected
+    return true;
+};
+
+HiveData CommsLayer::get_hive_data() {
+    return m_hive_data;
+};
+
+void CommsLayer::set_hive_data(HiveData& data) {
+    m_hive_data = data;
 };
 
 HIDPacket CommsLayer::get_hid_incoming() {
