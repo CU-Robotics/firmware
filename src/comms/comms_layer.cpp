@@ -1,4 +1,5 @@
 #include "comms_layer.hpp"
+#include "hid_comms.hpp"
 
 namespace Comms {
 
@@ -59,8 +60,14 @@ void CommsLayer::queue_data(CommsData* data) {
 };
 
 void CommsLayer::process_hid_layer() {
-    // TODO: use m_hid_payload
-    m_hid.sendReceive(m_hid_outgoing);
+    HIDPacket hid_outgoing;
+    m_hid_payload.construct_data();
+    memcpy(hid_outgoing.raw, m_hid_payload.data(), HID_PACKET_SIZE);
+    std::optional<HIDPacket> hid_incoming = m_hid.sendReceive(hid_outgoing);
+
+    if (hid_incoming.has_value()) {
+        m_hid_payload.deconstruct_data((uint8_t*)hid_incoming.value().raw, HID_PACKET_SIZE);
+    }
 };
 
 void CommsLayer::process_ethernet_layer() {

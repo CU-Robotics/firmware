@@ -1,6 +1,8 @@
 #include "config_layer.hpp"
 #include "comms_layer.hpp"
 
+#include "comms/data/sendable.hpp"
+
 /// @brief This resets the whole processor and kicks it back to program entry (teensy4/startup.c)
 /// @param void specify no arguments (needed in C)
 /// @note Dont abuse this function, it is not to be used lightly
@@ -71,12 +73,15 @@ const Config* const ConfigLayer::configure(Comms::CommsLayer* comms, bool config
     }
 
     // get the outgoing packet and set it to 0
-    memset(outgoing.raw, 0, sizeof(outgoing.raw));
-    comms->set_hid_outgoing(outgoing);
+    // memset(outgoing.raw, 0, sizeof(outgoing.raw));
+    // comms->set_hid_outgoing(outgoing);
 
     // Hive marks the config process as done once teensy sends a packet with info_bit == 0
     // Hive then sends a packet back with info_bit == 0 as well, so ping until we get a non-config back
-    while (comms->get_hid_incoming().raw[3] == 1) {
+    while (comms_layer.get_hive_data().config_section.info_bit == 1) {
+        Comms::Sendable<ConfigSection> sendable;
+        sendable.data.info_bit = 0;
+        sendable.send_to_comms();
         comms->run();
     }
 
@@ -130,15 +135,16 @@ void ConfigLayer::config_SD_init() {
 }
 
 void ConfigLayer::process(Comms::HIDPacket in, Comms::HIDPacket* out) {
-    ConfigSection in_section;
+    ConfigSection in_section = comms_layer.get_hive_data().config_section;
     ConfigSection out_section;
-    
-    in_section.section_id = in.raw[1];
-    in_section.subsection_id = in.raw[2];
-    in_section.info_bit = in.raw[3];
-    in_section.section_size = (in.raw[5] << 8) | in.raw[4];
-    in_section.subsection_size = (in.raw[7] << 8) | in.raw[6];
-    memcpy(in_section.raw, in.raw + 8, 1012);
+
+    in.raw[0] = 0xff; // filler byte (needed for some reason)
+    in.raw[1] = in_section.section_id;
+    in.raw[2] = in_section.subsection_id;
+    in.raw[3] = in_section.info_bit;
+    *reinterpret_cast<uint16_t*>(in.raw + 4) = in_section.section_size;
+    *reinterpret_cast<uint16_t*>(in.raw + 6) = in_section.subsection_size;
+    memcpy(in.raw + 8, in_section.raw, 1000);
 
     char* out_raw = out->raw;
 
@@ -205,6 +211,9 @@ void ConfigLayer::process(Comms::HIDPacket in, Comms::HIDPacket* out) {
         out_raw[1] = out_section.section_id;
         out_raw[2] = out_section.subsection_id;
         out_raw[3] = out_section.info_bit;
+
+        Comms::Sendable<ConfigSection> sendable = out_section;
+        sendable.send_to_comms();
     }
 }
 

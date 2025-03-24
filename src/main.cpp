@@ -176,7 +176,7 @@ int main() {
         eth_outgoing.header.sequence = loopc;
 
         // check whether this packet is a config packet
-        if (hid_incoming.raw[3] == 1) {
+        if (comms_layer.get_hive_data().config_section.info_bit == 1) {
             Serial.println("\n\nConfig request received, reconfiguring from comms!\n\n");
             // trigger safety mode
             can.issue_safety_mode();
