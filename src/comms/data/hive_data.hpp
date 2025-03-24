@@ -34,6 +34,4 @@ struct HiveData {
 
 } // namespace Comms
 
-inline Comms::HiveData hive_data;
-
 #endif  // FIRMWARE

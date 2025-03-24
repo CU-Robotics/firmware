@@ -8,6 +8,8 @@
 #if defined(HIVE)
 #include <iostream>                         // for std::cout
 #include "modules/comms/comms_layer.hpp"    // for CommsLayer
+#elif defined(FIRMWARE)
+#include "comms/comms_layer.hpp"            // for CommsLayer
 #endif
 
 namespace Comms {
@@ -310,6 +312,8 @@ void PacketPayload::place_data_in_mega_struct(CommsData* data) {
     Hive::env->comms_layer->set_firmware_data(firmware_data);
     
 #elif defined(FIRMWARE)
+
+    HiveData hive_data = comms_layer.get_hive_data();
     
     Serial.printf("Placing data in mega struct: %s\n", to_string(data->type_label).c_str());
     switch (data->type_label) {
@@ -334,6 +338,8 @@ void PacketPayload::place_data_in_mega_struct(CommsData* data) {
     default:
         assert(false && "Invalid type label given to place in mega struct");
     }
+
+    comms_layer.set_hive_data(hive_data);
 
 #endif
 }
