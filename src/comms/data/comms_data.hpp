@@ -20,6 +20,7 @@ enum class TypeLabel : uint8_t {
     TargetState,
     EstimatedState,
     OverrideState,
+    ConfigSection,
 };
 
 /// @brief Converts a TypeLabel to a string.
@@ -53,6 +54,8 @@ inline std::string to_string(TypeLabel type_label) {
         return "EstimatedState";
     case TypeLabel::OverrideState:
         return "OverrideState";
+    case TypeLabel::ConfigSection:
+        return "ConfigSection";
     // no default case, so the compiler will warn us if we forget a case
     }
 

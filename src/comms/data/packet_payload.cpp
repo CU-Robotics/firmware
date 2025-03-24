@@ -305,6 +305,12 @@ void PacketPayload::place_data_in_mega_struct(CommsData* data) {
         }
         break;
     }
+    case TypeLabel::ConfigSection: {
+        // place the data in the mega struct
+        ConfigSection* config_section = static_cast<ConfigSection*>(data);
+        memcpy(&firmware_data.config_section, config_section, sizeof(ConfigSection));
+        break;
+    }
     default:
         throw std::runtime_error("Invalid type label given to place in mega struct: " + std::to_string(static_cast<uint8_t>(data->type_label)));
     }
@@ -333,6 +339,12 @@ void PacketPayload::place_data_in_mega_struct(CommsData* data) {
         // place the data in the mega struct
         OverrideState* override_state = static_cast<OverrideState*>(data);
         memcpy(&hive_data.override_state, override_state, sizeof(OverrideState));
+        break;
+    }
+    case TypeLabel::ConfigSection: {
+        // place the data in the mega struct
+        ConfigSection* config_section = static_cast<ConfigSection*>(data);
+        memcpy(&hive_data.config_section, config_section, sizeof(ConfigSection));
         break;
     }
     default:

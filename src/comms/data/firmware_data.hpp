@@ -64,6 +64,9 @@ struct FirmwareData {
 
     /// @brief DR16 data
     DR16Data dr16_data;
+
+    /// @brief Config section
+    ConfigSection config_section;
 };
 
 } // namespace Comms

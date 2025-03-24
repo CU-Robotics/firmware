@@ -239,4 +239,19 @@ struct OverrideState : Comms::CommsData {
     double comms_delay = 0;
 };
 
+/// @brief Section of a config packet
+struct ConfigSection : Comms::CommsData {
+    ConfigSection() : CommsData(Comms::TypeLabel::ConfigSection, Comms::PhysicalMedium::Ethernet, Comms::Priority::High, sizeof(ConfigSection)) { }
+
+    uint8_t filler_byte = 0xff;         // 0
+    int8_t section_id = 0;              // 1
+    int8_t subsection_id = 0;           // 2
+    uint8_t info_bit = 0;               // 3
+
+    uint16_t section_size = 0;          // 4 - 5
+    uint16_t subsection_size = 0;       // 6 - 7
+
+    char raw[1012] = { 0 };             // 8 - 1011
+};
+
 #endif // DATA_STRUCTS_HPP

@@ -30,6 +30,9 @@ struct HiveData {
 
     /// @brief Override state
     OverrideState override_state;
+
+    /// @brief Config section
+    ConfigSection config_section;
 };
 
 } // namespace Comms

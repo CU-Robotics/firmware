@@ -130,25 +130,31 @@ void ConfigLayer::config_SD_init() {
 }
 
 void ConfigLayer::process(Comms::HIDPacket in, Comms::HIDPacket* out) {
-    char* in_raw = in.raw;
+    ConfigSection in_section;
+    ConfigSection out_section;
+    
+    in_section.section_id = in.raw[1];
+    in_section.subsection_id = in.raw[2];
+    in_section.info_bit = in.raw[3];
+    in_section.section_size = (in.raw[5] << 8) | in.raw[4];
+    in_section.subsection_size = (in.raw[7] << 8) | in.raw[6];
+    memcpy(in_section.raw, in.raw + 8, 1012);
+
     char* out_raw = out->raw;
-    int8_t sec_id = in_raw[1];
-    uint8_t subsec_id = in_raw[2];
-    uint8_t info_bit = in_raw[3];
 
     // if this is the packet we want
-    if (sec_id == seek_sec && subsec_id == seek_subsec && info_bit == 1) {
+    if (in_section.section_id == seek_sec && in_section.subsection_id == seek_subsec && in_section.info_bit == 1) {
         // received the initial config packet
-        if (sec_id == -1) {
+        if (in_section.section_id == -1) {
             /*
            the khadas sends a config packet with its raw data set to a byte
            array where each index corresponds to a YAML section, and the value
            at that index indicates the number of subsections for the given section
            */
-            num_sec = (in_raw[5] << 8) | in_raw[4];
+            num_sec = in_section.section_size;
             memcpy(
                 subsec_sizes,
-                in_raw + 8, // byte array starts at byte 8
+                in_section.raw,
                 num_sec);
 
         #ifdef CONFIG_LAYER_DEBUG
@@ -165,11 +171,11 @@ void ConfigLayer::process(Comms::HIDPacket in, Comms::HIDPacket* out) {
             index++;
 
         #ifdef CONFIG_LAYER_DEBUG
-            Serial.printf("Received YAML configuration packet: (%u, %u)\n", sec_id, subsec_id);
+            Serial.printf("Received YAML configuration packet: (%u, %u)\n", in_section.section_id, in_section.subsection_id);
         #endif
 
                     // add one because subsections are zero-indexed
-            if (subsec_id + 1 < subsec_sizes[sec_id]) {
+            if (in_section.subsection_id + 1 < subsec_sizes[in_section.section_id]) {
                 // if we haven't received all subsections, request the next one
                 seek_subsec++;
             } else {
@@ -189,13 +195,16 @@ void ConfigLayer::process(Comms::HIDPacket in, Comms::HIDPacket* out) {
         }
     }
 
+    out_section.section_id = seek_sec;
+    out_section.subsection_id = seek_subsec;
+    out_section.info_bit = 1;
+
     // if configuration isn't complete, request the next packet
     if (!configured) {
         out_raw[0] = 0xff; // filler byte (needed for some reason)
-        out_raw[1] = seek_sec;
-        out_raw[2] = seek_subsec;
-        out_raw[3] = 1; // set info bit
-
+        out_raw[1] = out_section.section_id;
+        out_raw[2] = out_section.subsection_id;
+        out_raw[3] = out_section.info_bit;
     }
 }
 
