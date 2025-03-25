@@ -241,7 +241,7 @@ struct OverrideState : Comms::CommsData {
 
 /// @brief Section of a config packet
 struct ConfigSection : Comms::CommsData {
-    ConfigSection() : CommsData(Comms::TypeLabel::ConfigSection, Comms::PhysicalMedium::HID, Comms::Priority::High, sizeof(ConfigSection)) { }
+    ConfigSection() : CommsData(Comms::TypeLabel::ConfigSection, Comms::PhysicalMedium::Ethernet, Comms::Priority::High, sizeof(ConfigSection)) { }
 
     uint8_t filler_byte = 0xff;         // 0
     int8_t section_id = 0;              // 1

@@ -34,12 +34,16 @@ int CommsLayer::run() {
 
 void CommsLayer::queue_data(CommsData* data) {
 #if defined(HIVE)
-    std::lock_guard<std::mutex> lock(Hive::env->comms_mutex);
     switch (data->physical_medium) {
     case PhysicalMedium::HID:
         m_hid_payload.add(data);
         break;
     case PhysicalMedium::Ethernet:
+        if (!is_ethernet_connected()) {
+            // re route to HID
+            m_hid_payload.add(data);
+            break;
+        }
         m_ethernet_payload.add(data);
         break;
     default:
@@ -51,22 +55,27 @@ void CommsLayer::queue_data(CommsData* data) {
         m_hid_payload.add(data);
         break;
     case PhysicalMedium::Ethernet:
+        if (!is_ethernet_connected()) {
+            // re route to HID
+            m_hid_payload.add(data);
+            break;
+        }
         m_ethernet_payload.add(data);
         break;
     default:
         assert(false && "Invalid PhysicalMedium");
     }
 #endif
-};
+}
 
 void CommsLayer::process_hid_layer() {
     HIDPacket hid_outgoing;
     m_hid_payload.construct_data();
-    memcpy(hid_outgoing.raw, m_hid_payload.data(), HID_PACKET_SIZE);
+    memcpy(hid_outgoing.payload(), m_hid_payload.data(), HID_PACKET_PAYLOAD_SIZE);
     std::optional<HIDPacket> hid_incoming = m_hid.sendReceive(hid_outgoing);
 
     if (hid_incoming.has_value()) {
-        m_hid_payload.deconstruct_data((uint8_t*)hid_incoming.value().raw, HID_PACKET_SIZE);
+        m_hid_payload.deconstruct_data((uint8_t*)hid_incoming.value().payload(), HID_PACKET_PAYLOAD_SIZE);
     }
 };
 

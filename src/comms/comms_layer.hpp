@@ -82,7 +82,7 @@ private:
     /// @brief Packet payload for Ethernet
     PacketPayload m_ethernet_payload{ETHERNET_PACKET_PAYLOAD_MAX_SIZE};
     /// @brief Packet payload for HID
-    PacketPayload m_hid_payload{HID_PACKET_SIZE};
+    PacketPayload m_hid_payload{HID_PACKET_PAYLOAD_SIZE};
 
     /// @brief Hive data
     HiveData m_hive_data;
