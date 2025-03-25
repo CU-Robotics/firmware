@@ -74,22 +74,17 @@ void SensorManager::init(const Config* config_data) {
 void SensorManager::read() {
     for (int i = 0; i < buff_sensor_count; i++) {
         buff_encoders[i]->read();
-        buff_encoders[i]->print();
     }
     for (int i = 0; i < icm_sensor_count; i++) {
         icm_sensors[i]->read();
-        icm_sensors[i]->print();
     }
 
     for (int i = 0; i < rev_sensor_count; i++) {
         rev_sensors[i].read();
-        rev_sensors[i].print();
     }
     if (lidar_sensor_count > 0) {
-
         lidar1->read();
         lidar2->read();
-
     }
 
     // read ref system
@@ -97,7 +92,6 @@ void SensorManager::read() {
     ref->read();
     for (int i = 0; i < tof_sensor_count; i++) {
         tof_sensors[i]->read();
-        tof_sensors[i]->print();
     }
 }
 BuffEncoder* SensorManager::get_buff_encoder(int index) {

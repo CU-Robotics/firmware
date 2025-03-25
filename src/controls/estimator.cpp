@@ -135,7 +135,7 @@ void GimbalEstimator::step_states(float output[STATE_LEN][3], float curr_state[S
         count1++;
         dt = 0;
     }
-    if (override == 1)yaw_angle = curr_state[3][0];
+    if (override == 1 && curr_state[3][0] != 0)yaw_angle = curr_state[3][0];
     yaw_angle += current_yaw_velocity * (dt);
     pitch_angle += current_pitch_velocity * (dt);
     roll_angle += current_roll_velocity * (dt);
@@ -188,60 +188,62 @@ void GimbalEstimator::step_states(float output[STATE_LEN][3], float curr_state[S
         previous_pos[0] = curr_state[0][0];
         previous_pos[1] = curr_state[1][0];
     }
-    if (d_chassis_heading == 0) {
-        pos_estimate[0] += ((odom_pos_diff[0]) * cos(chassis_angle + odom_angle_offset)) - ((odom_pos_diff[1]) * sin(chassis_angle + odom_angle_offset));
-        pos_estimate[1] += ((odom_pos_diff[0]) * sin(chassis_angle + odom_angle_offset)) + ((odom_pos_diff[1]) * cos(chassis_angle + odom_angle_offset));
-    } else {
-        float pod1_relative = 2 * sin(d_chassis_heading * 0.5) * ((odom_pos_diff[0] / d_chassis_heading) + odom_axis_offset_x); //relative motion of the first pod
-        float pod2_relative = 2 * sin(d_chassis_heading * 0.5) * ((odom_pos_diff[1] / d_chassis_heading) + odom_axis_offset_y); //relative motion of the second pod
-        pos_estimate[0] += pod1_relative * cos((chassis_angle + odom_angle_offset) + (d_chassis_heading * 0.5))
-            - pod2_relative * sin((chassis_angle + odom_angle_offset) + (d_chassis_heading * 0.5));
-        pos_estimate[1] += pod1_relative * sin((chassis_angle + odom_angle_offset) + (d_chassis_heading * 0.5))
-            + pod2_relative * cos((chassis_angle + odom_angle_offset) + (d_chassis_heading * 0.5));
-    }
+    // if (d_chassis_heading == 0) {
+    //     pos_estimate[0] += ((odom_pos_diff[0]) * cos(chassis_angle + odom_angle_offset)) - ((odom_pos_diff[1]) * sin(chassis_angle + odom_angle_offset));
+    //     pos_estimate[1] += ((odom_pos_diff[0]) * sin(chassis_angle + odom_angle_offset)) + ((odom_pos_diff[1]) * cos(chassis_angle + odom_angle_offset));
+    // } else {
+    //     float pod1_relative = 2 * sin(d_chassis_heading * 0.5) * ((odom_pos_diff[0] / d_chassis_heading) + odom_axis_offset_x); //relative motion of the first pod
+    //     float pod2_relative = 2 * sin(d_chassis_heading * 0.5) * ((odom_pos_diff[1] / d_chassis_heading) + odom_axis_offset_y); //relative motion of the second pod
+    //     pos_estimate[0] += pod1_relative * cos((chassis_angle + odom_angle_offset) + (d_chassis_heading * 0.5))
+    //         - pod2_relative * sin((chassis_angle + odom_angle_offset) + (d_chassis_heading * 0.5));
+    //     pos_estimate[1] += pod1_relative * sin((chassis_angle + odom_angle_offset) + (d_chassis_heading * 0.5))
+    //         + pod2_relative * cos((chassis_angle + odom_angle_offset) + (d_chassis_heading * 0.5));
+    // }
 
-    // // chassis estimation
-    // float front_right = can_data->get_motor_attribute(CAN_1, 1, MotorAttribute::SPEED);
-    // float back_right = can_data->get_motor_attribute(CAN_1, 2, MotorAttribute::SPEED);
-    // float back_left = can_data->get_motor_attribute(CAN_1, 3, MotorAttribute::SPEED);
-    // float front_left = can_data->get_motor_attribute(CAN_1, 4, MotorAttribute::SPEED);
+    // chassis estimation
+    float front = can->get_motor_state(CAN_1, 1).speed;
+    float right = can->get_motor_state(CAN_1, 2).speed;
+    float back = can->get_motor_state(CAN_1, 3).speed;
+    float left = can->get_motor_state(CAN_1, 4).speed;
+    
+    // m/s of chassis to motor rpm
+    float x_scale = ((1 / (0.0516))) / 0.10897435897;
+    float y_scale = ((1 / (0.0516))) / 0.10897435897;
+    // chassis rad/s to motor rpm
+    float psi_scale = ((.1835 / (0.0516))) / 0.10897435897;
+    // define coeff matracies for each system we want to solve
+    float coeff_matrix1[3][4] = { {0,y_scale,psi_scale,front},{x_scale,0,psi_scale,right},{0,-y_scale,psi_scale,back} };
+    float coeff_matrix2[3][4] = { {0,y_scale,psi_scale,front},{x_scale,0,psi_scale,right},{-x_scale,0,psi_scale,left} };
+    float coeff_matrix3[3][4] = { {0,y_scale,psi_scale,front},{-x_scale,0,psi_scale,left},{0,-y_scale,psi_scale,back} };
+    float coeff_matrix4[3][4] = { {x_scale,0,psi_scale,right},{-x_scale,0,psi_scale,left},{0,-y_scale,psi_scale,back} };
 
-    // // m/s of chassis to motor rpm
-    // float x_scale = ((1 / (PI * 2 * 0.0516)) * 60) / 0.10897435897;
-    // float y_scale = ((1 / (PI * 2 * 0.0516)) * 60) / 0.10897435897;
-    // // chassis rad/s to motor rpm
-    // float psi_scale = ((.1835 / (PI * 2 * 0.0516)) * 60) / 0.10897435897;
-    // // define coeff matracies for each system we want to solve
-    // float coeff_matrix1[3][4] = { {x_scale,0,psi_scale,front_right},{0,-y_scale,psi_scale,back_right},{-x_scale,0,psi_scale,back_left} };
-    // float coeff_matrix2[3][4] = { {x_scale,0,psi_scale,front_right},{0,-y_scale,psi_scale,back_right},{0,y_scale,psi_scale,front_left} };
-    // float coeff_matrix3[3][4] = { {x_scale,0,psi_scale,front_right},{0,y_scale,psi_scale,front_left},{-x_scale,0,psi_scale,back_left} };
-    // float coeff_matrix4[3][4] = { {0,-y_scale,psi_scale,back_right},{0,y_scale,psi_scale,front_left},{-x_scale,0,psi_scale,back_left} };
+    // 4 solution sets of x, y, psi
+    float vel_solutions[4][3];
+    solveSystem(coeff_matrix1, vel_solutions[0]);
+    solveSystem(coeff_matrix2, vel_solutions[1]);
+    solveSystem(coeff_matrix3, vel_solutions[2]);
+    solveSystem(coeff_matrix4, vel_solutions[3]);
 
-    // // 4 solution sets of x, y, psi
-    // float vel_solutions[4][3];
-    // solveSystem(coeff_matrix1, vel_solutions[0]);
-    // solveSystem(coeff_matrix2, vel_solutions[1]);
-    // solveSystem(coeff_matrix3, vel_solutions[2]);
-    // solveSystem(coeff_matrix4, vel_solutions[3]);
+    float vel_estimate[3];
 
-    // float vel_estimate[3];
-
-    // vel_estimate[0] = (cos(yaw_enc_angle - yaw_angle) * vel_solutions[0][0] + sin(yaw_enc_angle - yaw_angle) * vel_solutions[0][1]);
-    // vel_estimate[1] = (-sin(yaw_enc_angle - yaw_angle) * vel_solutions[0][0] + cos(yaw_enc_angle - yaw_angle) * vel_solutions[0][1]);
-    // vel_estimate[2] = vel_solutions[0][2];
+    vel_estimate[0] = (cos(yaw_enc_angle - yaw_angle) * vel_solutions[0][0] + sin(yaw_enc_angle - yaw_angle) * vel_solutions[0][1]);
+    vel_estimate[1] = (-sin(yaw_enc_angle - yaw_angle) * vel_solutions[0][0] + cos(yaw_enc_angle - yaw_angle) * vel_solutions[0][1]);
+    vel_estimate[2] = vel_solutions[0][2];
 
     // integrate to find pos
-    // pos_estimate[0] += vel_estimate[0] * dt;
-    // pos_estimate[1] += vel_estimate[1] * dt;
-    // pos_estimate[2] += vel_estimate[2] * dt;
+    pos_estimate[0] += vel_estimate[0] * dt;
+    pos_estimate[1] += vel_estimate[1] * dt;
+    pos_estimate[2] += vel_estimate[2] * dt;
 
 
 
     output[0][0] = pos_estimate[0]; // x pos
-    output[0][1] = (pos_estimate[0] - previous_pos[0]) / dt;
+    // output[0][1] = (pos_estimate[0] - previous_pos[0]) / dt;
+    output[0][1] = vel_estimate[0];
     output[0][2] = 0;
     output[1][0] = pos_estimate[1]; // y pos
-    output[1][1] = (pos_estimate[1] - previous_pos[1]) / dt;
+    // output[1][1] = (pos_estimate[1] - previous_pos[1]) / dt;
+    output[1][1] = vel_estimate[1];
     output[1][2] = 0;
     output[2][0] = chassis_angle; // chassis angle
     output[2][1] = d_chassis_heading / dt;
