@@ -81,7 +81,16 @@ public:
     /// @brief Send sensor data to comms
     void send_sensor_data_to_comms();
 
+    /// @brief Set the estimated state of the robot
+    /// @param estimated_state array of the estimated state
+    void set_estimated_state(float estimated_state[STATE_LEN][3]) {
+        memcpy(this->estimated_state, estimated_state, sizeof(this->estimated_state));
+    }
+
 private:
+    /// @brief Array to store the estimated state of the robot, used by sensors that adjust from the estimated state
+    float estimated_state[STATE_LEN][3] = { 0 };
+
     /// @brief Number of buff sensors
     int buff_sensor_count;
 
@@ -133,10 +142,7 @@ private:
     D200LD14P* lidar2;
 
     /// @brief Array of LiDAR sensor sendables to be used with comms
-    Comms::Sendable<LidarSensorData> lidar_sensor_sendables[2];
-
-    /// @brief Array of LiDAR sensor data structs
-    LidarSensorData* lidar_sensors_data;
+    Comms::Sendable<LidarDataPacketSI> lidar_sensor_sendables[2];
 
     /// @brief Referee system
     RefSystem* ref;

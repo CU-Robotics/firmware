@@ -78,30 +78,23 @@ const float D200_MAX_SPEED = (float)(8 * 360 - 1) * M_PI / 180.0;
 /// @brief max millis before lidar timestamp wraps (30s)
 const int D200_TIMESTAMP_WRAP_LIMIT = 30000;
 
-/*
-/// @brief struct storing data from lidar data packet (native units).
-struct LidarDataPacket {
-  /// @brief speed of lidar module (deg/s)
-  uint16_t lidar_speed = 0;
+/// @brief struct storing timestamp calibration results 
+struct D200Calibration {
+  /// @brief how many packets are used for calibration
+  int max_calibration_packets = D200_MAX_CALIBRATION_PACKETS;
 
-  /// @brief start angle of measurements (hundredths of deg)
-  uint16_t start_angle = 0;
+  /// @brief how many calibration packets have been received
+  int packets_recv = 0;
 
-  /// @brief array of point measurements
-  struct {
-    /// @brief distance (mm)
-    uint16_t distance;
+  /// @brief count of D200 timestamp wraps
+  int num_wraps = 0;
 
-    /// @brief intensity of measurement. units are ambiguous (not documented), but in general "the higher the intensity, the larger the signal strength value"
-    uint8_t intensity = 0;
-  } points[D200_POINTS_PER_PACKET];
+  /// @brief previous lidar timestamp
+  int prev_timestamp = -1;
 
-  /// @brief end angle of measurements (hundredths of deg)
-  uint16_t end_angle = 0;
-
-  /// @brief timestamp of measurements, wraps after 30s (ms)
-  uint16_t timestamp = 0;
-}; */
+  /// @brief sum of delta times for calibration packets
+  int timestamp_delta_sum = 0;
+};
 
 
 
@@ -133,6 +126,12 @@ private:
   /// @brief timestamp calibration results
   D200Calibration cal;
 
+  /// @brief the current yaw position of the robot (rad)
+  float robot_yaw = 0;
+
+  /// @brief the current yaw velocity of the robot (rad/s)
+  float robot_yaw_velocity = 0;
+
   /// @brief utility for bitcasting float to 32bit unsigned integer
   /// @param f32 float to bitcat to a uint32_t
   /// @return uint32_t with same bits as passed float
@@ -143,10 +142,6 @@ private:
   /// @param len length of buffer
   /// @return CRC8 checksum for buffer
   uint8_t calc_checksum(uint8_t* buf, int len);
-
-  //data struct for the LiDAR sensor
-  /// @brief struct storing data from lidar data packet (native units).
-  LidarSensorData lidar_sensor_data;
 
 public:
   /// @brief constructor and initialization
@@ -171,9 +166,14 @@ public:
   /// @return true if successful, false if no data available
   bool read() override;
 
-  /// @brief get the packet array
-  /// @return pointer to start of packet array
-  LidarDataPacketSI* get_packets() { return packets; }
+  void set_yaw(float yaw, float yaw_velocity) {
+    robot_yaw = yaw;
+    robot_yaw_velocity = yaw_velocity;
+  }
+
+  /// @brief get all cached packets
+  /// @param data array to store cached packets
+  void get_data(LidarDataPacketSI data[D200_NUM_PACKETS_CACHED]);
 
   /// @brief get the index of the most recent packet
   /// @return index of latest packet

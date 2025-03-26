@@ -100,16 +100,19 @@ void SensorManager::read() {
         rev_sensors[i].read();
         // rev_sensors[i].print();
     }
+
     if (lidar_sensor_count > 0) {
-
+        lidar1->set_yaw(estimated_state[3][0], estimated_state[3][1]);
         lidar1->read();
-        lidar2->read();
 
+        lidar2->set_yaw(estimated_state[3][0], estimated_state[3][1]);
+        lidar2->read();
     }
 
     // read ref system
-
     ref->read();
+
+    // read tof sensors
     for (int i = 0; i < tof_sensor_count; i++) {
         // tof_sensors[i]->read();
         // tof_sensors[i]->print();
@@ -208,10 +211,20 @@ void SensorManager::send_sensor_data_to_comms()
     //send LiDARs
     //NOTE it seems like lidar is broken right now
     if(lidar_sensor_count > 0) {
-        lidar_sensor_sendables[0].data.current_packet = lidar1->get_current_packet_index();
-        //lidar_sensor_sendables[0].data.cal = lidar1->get_calibration();
-        //lidar_sensor_sendables[0].data.packets = lidar1->get_packets();
-        memcpy(lidar1->get_packets(),lidar_sensor_sendables[0].data.packets, sizeof(LidarDataPacketSI) * D200_NUM_PACKETS_CACHED);
+        LidarDataPacketSI lidar_data[2] = {};
+        lidar1->get_data(lidar_data);
+
+        for (int i = 0; i < 2; i++) {
+            lidar_sensor_sendables[i] = lidar_data[i];
+            lidar_sensor_sendables[i].send_to_comms();
+        }
+
+        lidar2->get_data(lidar_data);
+
+        for (int i = 0; i < 2; i++) {
+            lidar_sensor_sendables[i] = lidar_data[i];
+            lidar_sensor_sendables[i].send_to_comms();
+        }
     }
 
 }

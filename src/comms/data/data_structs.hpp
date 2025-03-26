@@ -7,16 +7,6 @@
 #elif defined(HIVE)
 #include "modules/comms/data/comms_data.hpp"    // for CommsData
 #include "modules/hive/robot_state.hpp"         // for RobotState
-// TODO: remove this
-//some constants for lidar sensors needed for comms as well as the sensor
-/// @brief points per D200 data packet
-const inline int D200_POINTS_PER_PACKET = 12;
-
-/// @brief number of timestamp calibration packets. new packet read rate of 333 Hz = 1 packet / 3ms
-const inline int D200_MAX_CALIBRATION_PACKETS = 333;
-
-/// @brief number of packets stored teensy-side
-const inline int D200_NUM_PACKETS_CACHED = 2;
 #endif
 
 #include <stdint.h>     // uintN_t
@@ -71,8 +61,16 @@ struct TOFSensorData : Comms::CommsData {
     uint16_t latest_distance;
 };
 
-/// @brief data for a LiDAR packet (SI units)
-struct LidarDataPacketSI {
+/// @brief data for a singular LiDAR packet (SI units)
+struct LidarDataPacketSI : Comms::CommsData {
+    LidarDataPacketSI() : CommsData(Comms::TypeLabel::LidarSensorData, Comms::PhysicalMedium::Ethernet, Comms::Priority::Medium, sizeof(LidarDataPacketSI)) { }
+
+    /// @brief number of points per packet
+    static constexpr uint32_t D200_POINTS_PER_PACKET = 12;
+
+    /// @brief the id of the lidar module
+    uint8_t id = 0;
+
     /// @brief speed of lidar module (rad/s)
     float lidar_speed = 0;
   
@@ -91,41 +89,23 @@ struct LidarDataPacketSI {
     /// @brief end angle of measurements (rad)
     float end_angle = 0;
   
-    /// @brief timestamp of measurements, calibrated (s)
+    /// @brief timestamp of measurements, from the lidar, calibrated (s)
     float timestamp = 0;
-  };
-  
-  /// @brief struct storing timestamp calibration results 
-  struct D200Calibration {
-    /// @brief how many packets are used for calibration
-    int max_calibration_packets = D200_MAX_CALIBRATION_PACKETS;
-  
-    /// @brief how many calibration packets have been received
-    int packets_recv = 0;
-  
-    /// @brief count of D200 timestamp wraps
-    int num_wraps = 0;
-  
-    /// @brief previous lidar timestamp
-    int prev_timestamp = -1;
-  
-    /// @brief sum of delta times for calibration packets
-    int timestamp_delta_sum = 0;
-  };
-  
 
-/// @brief Structure for the LiDAR sensor.
-struct LidarSensorData : Comms::CommsData {
-    LidarSensorData() : CommsData(Comms::TypeLabel::LidarSensorData, Comms::PhysicalMedium::Ethernet, Comms::Priority::Medium, sizeof(LidarSensorData)) { }
-    /// Sensor ID.
-  uint8_t id;
-  /// Index of the current data packet.
-  int current_packet;
-  /// Calibration data.
-  D200Calibration cal;
-  /// Array of cached data packets.
-  LidarDataPacketSI packets[D200_NUM_PACKETS_CACHED];
+    /// @brief teensy time of when the packet was received, (s)
+    float sample_time = 0;
 
+    /// @brief the angle difference between each lidar point (rad)
+    float angle_diff = 0;
+
+    /// @brief the time it takes for the lidar to sweep from the start to end angles (s)
+    float sweep_time = 0;
+
+    /// @brief the yaw of the robot when the packet was received (rad)
+    float yaw = 0;
+
+    /// @brief the yaw velocity of the robot when the packet was received (rad/s)
+    float yaw_velocity = 0;
 };
 
 /// @brief Structure for the DR16

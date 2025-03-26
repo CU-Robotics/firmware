@@ -103,6 +103,12 @@ bool D200LD14P::read() {
       p->lidar_speed = (float) lidar_speed * M_PI / 180.0; // deg/s -> rad/s
       p->start_angle = ((float) (start_angle % 36000) / 100.0) * M_PI / 180.0; // 0.01 deg -> rad
       p->end_angle = ((float) (end_angle % 36000) / 100.0) * M_PI / 180.0; // 0.01 deg -> rad
+      p->sample_time = (float) millis() / 1000.0; // ms -> s
+      p->angle_diff = (p->end_angle - p->start_angle) / D200_POINTS_PER_PACKET;
+      p->sweep_time = (p->end_angle - p->start_angle) / p->lidar_speed;
+      p->yaw = robot_yaw;
+      p->yaw_velocity = robot_yaw_velocity;
+      p->id = id;
       
       for (int i = 0; i < D200_POINTS_PER_PACKET; i++) {
         // points start at byte 6, each point is 3 bytes
@@ -116,12 +122,11 @@ bool D200LD14P::read() {
     }
   }
 
-  //add data to struct
-  lidar_sensor_data.cal = cal;
-  lidar_sensor_data.current_packet = current_packet;
-  lidar_sensor_data.id = id;
-  memcpy(lidar_sensor_data.packets, packets, D200_NUM_PACKETS_CACHED * sizeof(LidarDataPacketSI));
   return true;
+}
+
+void D200LD14P::get_data(LidarDataPacketSI data[D200_NUM_PACKETS_CACHED]) {
+  memcpy(data, packets, sizeof(packets));
 }
 
 void D200LD14P::flush_packet_buffer() {

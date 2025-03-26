@@ -290,6 +290,11 @@ int main() {
         //     Serial.printf("\t%d: %f %f %f\n", i, temp_state[i][0], temp_state[i][1], temp_state[i][2]);
         // }
 
+        temp_state[3][1] = loopc;
+        
+        // give the sensors the current estimated state
+        sensor_manager.set_estimated_state(temp_state);
+
         // reference govern
         governor.set_estimate(temp_state);
         governor.step_reference(target_state, config->governor_types);
@@ -307,16 +312,6 @@ int main() {
 
         // construct sensor data packet
         Comms::SensorData sensor_data;
-
-        // set dr16 raw data
-        memcpy(sensor_data.raw + Comms::SENSOR_DR16_OFFSET, dr16.get_raw(), DR16_PACKET_SIZE);
-
-        // set lidars
-        uint8_t lidar_data[D200_NUM_PACKETS_CACHED * D200_PAYLOAD_SIZE] = { 0 };
-        sensor_manager.get_lidar_sensor(0)->export_data(lidar_data);
-        memcpy(sensor_data.raw + Comms::SENSOR_LIDAR1_OFFSET, lidar_data, D200_NUM_PACKETS_CACHED * D200_PAYLOAD_SIZE);
-        sensor_manager.get_lidar_sensor(1)->export_data(lidar_data);
-        memcpy(sensor_data.raw + Comms::SENSOR_LIDAR2_OFFSET, lidar_data, D200_NUM_PACKETS_CACHED * D200_PAYLOAD_SIZE);
 
         // construct ref data packet
         uint8_t ref_data_raw[180] = { 0 };
