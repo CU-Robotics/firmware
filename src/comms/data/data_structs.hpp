@@ -79,7 +79,6 @@ struct LidarDataPacketSI : Comms::CommsData {
     
     // I made these separate arrays because it reduced the packet size due to alignment issues
     // goes from 96 bytes for these two arrays to 60
-    
     /// @brief distances (m)
     float distances[D200_POINTS_PER_PACKET] = {0};
 

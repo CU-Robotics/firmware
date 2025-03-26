@@ -6,6 +6,11 @@
 #include "modules/comms/data/logging_data.hpp"      // for LoggingData
 #include "modules/comms/data/data_structs.hpp"      // for shared data structs
 
+// TODO: find a better home for this
+#include "modules/comms/RefSystemPacketDefs.hpp"    // for RefData
+
+#include <vector>                                   // for std::vector
+
 /// @brief Data struct for testing purposes
 struct TestData : Comms::CommsData {
     TestData() : Comms::CommsData(Comms::TypeLabel::TestData, Comms::PhysicalMedium::Ethernet, Comms::Priority::High, sizeof(TestData)) {}
@@ -58,15 +63,16 @@ struct FirmwareData {
     
     //two liadars
     /// @brief lidar_sensor_0
-    LidarDataPacketSI lidar_sensor_0;
-    /// @brief lidar_sensor_2
-    LidarDataPacketSI lidar_sensor_1;
+    std::vector<LidarDataPacketSI> lidars[2];
 
     /// @brief DR16 data
     DR16Data dr16_data;
 
     /// @brief Config section
     ConfigSection config_section;
+
+    /// @brief Referee data
+    RefData ref_data;
 };
 
 } // namespace Comms

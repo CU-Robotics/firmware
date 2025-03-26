@@ -1,4 +1,5 @@
 #include "packet_payload.hpp"
+#include "modules/comms/data/data_structs.hpp"
 
 #include <algorithm>    // for min
 #include <mutex>        // for std::lock_guard, std::mutex
@@ -95,7 +96,6 @@ void PacketPayload::add(CommsData* data) {
         if (high_priority_send_queue.size() <= MAX_QUEUE_SIZE) {
             high_priority_send_queue.push(data);
         } else {
-            Serial.printf("High priority queue is full, discarding %s\n", to_string(data->type_label).c_str());
             delete data;
         }
         break;
@@ -103,7 +103,6 @@ void PacketPayload::add(CommsData* data) {
         if (medium_priority_send_queue.size() <= MAX_QUEUE_SIZE) {
             medium_priority_send_queue.push(data);
         } else {
-            Serial.printf("Medium priority queue is full, discarding %s\n", to_string(data->type_label).c_str());
             delete data;
         }
         break;
@@ -113,7 +112,6 @@ void PacketPayload::add(CommsData* data) {
         if (logging_send_queue.size() <= MAX_QUEUE_SIZE) {
             logging_send_queue.push(logging);
         } else {
-            Serial.printf("Logging priority queue is full, discarding %s\n", to_string(data->type_label).c_str());
             delete data;
         }
         break;
@@ -158,7 +156,6 @@ void PacketPayload::append_data_from_queue(std::queue<CommsData*>& queue) {
 bool PacketPayload::try_append_data(CommsData* data) {
     // if we don't have enough space left in our packet to store this data
     if (data->size > remaining_data_size) {
-        Serial.printf("Not enough space to store data of size %d\n", data->size);
         return false; // failure
     }
     // we have enough space, append it
@@ -303,9 +300,9 @@ void PacketPayload::place_data_in_mega_struct(CommsData* data) {
         //determine which lidar sensor the data is for
         LidarDataPacketSI* lidar_sensor_data = static_cast<LidarDataPacketSI*>(data);
         if (lidar_sensor_data->id == 0) {
-            memcpy(&firmware_data.lidar_sensor_0, lidar_sensor_data, sizeof(LidarDataPacketSI));
+            firmware_data.lidars[0].push_back(*lidar_sensor_data);
         } else if (lidar_sensor_data->id == 1) {
-            memcpy(&firmware_data.lidar_sensor_1, lidar_sensor_data, sizeof(LidarDataPacketSI));
+            firmware_data.lidars[1].push_back(*lidar_sensor_data);
         }
         break;
     }
@@ -313,6 +310,12 @@ void PacketPayload::place_data_in_mega_struct(CommsData* data) {
         // place the data in the mega struct
         ConfigSection* config_section = static_cast<ConfigSection*>(data);
         memcpy(&firmware_data.config_section, config_section, sizeof(ConfigSection));
+        break;
+    }
+    case TypeLabel::CommsRefData: {
+        // place the data in the mega struct
+        CommsRefData* comms_ref_data = static_cast<CommsRefData*>(data);
+        firmware_data.ref_data.set_data(comms_ref_data->raw);
         break;
     }
     default:
