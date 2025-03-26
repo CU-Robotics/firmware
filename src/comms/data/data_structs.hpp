@@ -63,7 +63,7 @@ struct TOFSensorData : Comms::CommsData {
 
 /// @brief data for a singular LiDAR packet (SI units)
 struct LidarDataPacketSI : Comms::CommsData {
-    LidarDataPacketSI() : CommsData(Comms::TypeLabel::LidarSensorData, Comms::PhysicalMedium::Ethernet, Comms::Priority::Medium, sizeof(LidarDataPacketSI)) { }
+    LidarDataPacketSI() : CommsData(Comms::TypeLabel::LidarSensorData, Comms::PhysicalMedium::Ethernet, Comms::Priority::High, sizeof(LidarDataPacketSI)) { }
 
     /// @brief number of points per packet
     static constexpr uint32_t D200_POINTS_PER_PACKET = 12;
@@ -110,7 +110,7 @@ struct LidarDataPacketSI : Comms::CommsData {
 
 /// @brief Structure for the DR16
 struct DR16Data : Comms::CommsData {
-    DR16Data() : CommsData(Comms::TypeLabel::DR16Data, Comms::PhysicalMedium::Ethernet, Comms::Priority::Medium, sizeof(DR16Data)) { }
+    DR16Data() : CommsData(Comms::TypeLabel::DR16Data, Comms::PhysicalMedium::Ethernet, Comms::Priority::High, sizeof(DR16Data)) { }
     /// Sensor ID.
     uint8_t id;
     /// mouse x velocity
@@ -237,6 +237,15 @@ struct ConfigSection : Comms::CommsData {
 
     /// @brief Raw config data
     uint8_t raw[1000] = { 0 };
+};
+
+// TODO: make this nice
+/// @brief Ref data
+struct CommsRefData : Comms::CommsData {
+    CommsRefData() : CommsData(Comms::TypeLabel::CommsRefData, Comms::PhysicalMedium::Ethernet, Comms::Priority::Medium, sizeof(CommsRefData)) { }
+
+    /// @brief Raw data
+    uint8_t raw[180] = { 0 };
 };
 
 #endif // DATA_STRUCTS_HPP

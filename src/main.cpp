@@ -314,16 +314,9 @@ int main() {
         Comms::SensorData sensor_data;
 
         // construct ref data packet
-        uint8_t ref_data_raw[180] = { 0 };
-        ref->get_data_for_comms(ref_data_raw);
-
-        // set the outgoing packet
-        hid_outgoing.set_id((uint16_t)loopc);
-        hid_outgoing.set_info(0x0000);
-        hid_outgoing.set_time(millis() / 1000.0);
-        hid_outgoing.set_sensor_data(&sensor_data);
-        hid_outgoing.set_ref_data(ref_data_raw);
-        hid_outgoing.set_estimated_state(temp_state);
+        CommsRefData ref_data = ref->get_data_for_comms();
+        Comms::Sendable<CommsRefData> ref_data_sendable = ref_data;
+        ref_data_sendable.send_to_comms();
 
         // TODO: phase out this temp state sendable
         Comms::Sendable<EstimatedState> estimated_state;
