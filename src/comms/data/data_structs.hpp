@@ -63,7 +63,7 @@ struct TOFSensorData : Comms::CommsData {
 
 /// @brief data for a singular LiDAR packet (SI units)
 struct LidarDataPacketSI : Comms::CommsData {
-    LidarDataPacketSI() : CommsData(Comms::TypeLabel::LidarSensorData, Comms::PhysicalMedium::Ethernet, Comms::Priority::High, sizeof(LidarDataPacketSI)) { }
+    LidarDataPacketSI() : CommsData(Comms::TypeLabel::LidarDataPacketSI, Comms::PhysicalMedium::Ethernet, Comms::Priority::High, sizeof(LidarDataPacketSI)) { }
 
     /// @brief number of points per packet
     static constexpr uint32_t D200_POINTS_PER_PACKET = 12;
@@ -76,16 +76,16 @@ struct LidarDataPacketSI : Comms::CommsData {
   
     /// @brief start angle of measurements (rad)
     float start_angle = 0;
-  
-    /// @brief array of point measurements
-    struct {
-      /// @brief distance (m)
-      float distance;
-  
-      /// @brief intensity of measurement. units are ambiguous (not documented), but in general "the higher the intensity, the larger the signal strength value"
-      uint8_t intensity = 0;
-    } points[D200_POINTS_PER_PACKET];
-  
+    
+    // I made these separate arrays because it reduced the packet size due to alignment issues
+    // goes from 96 bytes for these two arrays to 60
+    
+    /// @brief distances (m)
+    float distances[D200_POINTS_PER_PACKET] = {0};
+
+    /// @brief intensity of measurement. units are ambiguous (not documented), but in general "the higher the intensity, the larger the signal strength value"
+    uint8_t intensities[D200_POINTS_PER_PACKET] = {0};
+    
     /// @brief end angle of measurements (rad)
     float end_angle = 0;
   
@@ -96,10 +96,12 @@ struct LidarDataPacketSI : Comms::CommsData {
     float sample_time = 0;
 
     /// @brief the angle difference between each lidar point (rad)
-    float angle_diff = 0;
+    /// @return the angle difference between each lidar point (rad)
+    float angle_diff() const { return (end_angle - start_angle) / D200_POINTS_PER_PACKET; }
 
     /// @brief the time it takes for the lidar to sweep from the start to end angles (s)
-    float sweep_time = 0;
+    /// @return the time it takes for the lidar to sweep from the start to end angles (s)
+    float sweep_time() const { return (end_angle - start_angle) / lidar_speed; }
 
     /// @brief the yaw of the robot when the packet was received (rad)
     float yaw = 0;
@@ -242,7 +244,7 @@ struct ConfigSection : Comms::CommsData {
 // TODO: make this nice
 /// @brief Ref data
 struct CommsRefData : Comms::CommsData {
-    CommsRefData() : CommsData(Comms::TypeLabel::CommsRefData, Comms::PhysicalMedium::Ethernet, Comms::Priority::Medium, sizeof(CommsRefData)) { }
+    CommsRefData() : CommsData(Comms::TypeLabel::CommsRefData, Comms::PhysicalMedium::Ethernet, Comms::Priority::High, sizeof(CommsRefData)) { }
 
     /// @brief Raw data
     uint8_t raw[180] = { 0 };

@@ -14,7 +14,7 @@ enum class TypeLabel : uint8_t {
     ICMSensorData,
     RevEncoderData,
     TOFSensorData,
-    LidarSensorData,
+    LidarDataPacketSI,
     DR16Data,
     TempRobotState,
     TargetState,
@@ -43,8 +43,8 @@ inline std::string to_string(TypeLabel type_label) {
         return "RevEncoderData";
     case TypeLabel::TOFSensorData:
         return "TOFSensorData";
-    case TypeLabel::LidarSensorData:
-        return "LidarSensorData";
+    case TypeLabel::LidarDataPacketSI:
+        return "LidarDataPacketSI";
     case TypeLabel::DR16Data:
         return "DR16Data";
     case TypeLabel::TempRobotState:

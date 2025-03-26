@@ -40,7 +40,7 @@ void CommsLayer::queue_data(CommsData* data) {
         break;
     case PhysicalMedium::Ethernet:
         // if ethernet is down and it is a small enough packet, route it through HID instead
-        if (!is_ethernet_connected() && data->size < HID_PACKET_PAYLOAD_SIZE && data->priority == Priority::High) {
+        if (!is_ethernet_connected() && data->size < HID_PACKET_PAYLOAD_SIZE) {
             m_hid_payload.add(data);
             break;
         } else if (data->size > HID_PACKET_PAYLOAD_SIZE) {
@@ -61,7 +61,7 @@ void CommsLayer::queue_data(CommsData* data) {
         break;
     case PhysicalMedium::Ethernet:
         // if ethernet is down and it is a small enough packet, route it through HID instead
-        if (!is_ethernet_connected() && data->size < HID_PACKET_PAYLOAD_SIZE && data->priority == Priority::High) {
+        if (!is_ethernet_connected() && data->size < HID_PACKET_PAYLOAD_SIZE) {
             m_hid_payload.add(data);
             break;
         } else if (data->size > HID_PACKET_PAYLOAD_SIZE) {

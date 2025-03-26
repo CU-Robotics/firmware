@@ -95,6 +95,7 @@ void PacketPayload::add(CommsData* data) {
         if (high_priority_send_queue.size() <= MAX_QUEUE_SIZE) {
             high_priority_send_queue.push(data);
         } else {
+            Serial.printf("High priority queue is full, discarding %s\n", to_string(data->type_label).c_str());
             delete data;
         }
         break;
@@ -102,6 +103,7 @@ void PacketPayload::add(CommsData* data) {
         if (medium_priority_send_queue.size() <= MAX_QUEUE_SIZE) {
             medium_priority_send_queue.push(data);
         } else {
+            Serial.printf("Medium priority queue is full, discarding %s\n", to_string(data->type_label).c_str());
             delete data;
         }
         break;
@@ -111,6 +113,7 @@ void PacketPayload::add(CommsData* data) {
         if (logging_send_queue.size() <= MAX_QUEUE_SIZE) {
             logging_send_queue.push(logging);
         } else {
+            Serial.printf("Logging priority queue is full, discarding %s\n", to_string(data->type_label).c_str());
             delete data;
         }
         break;
@@ -155,6 +158,7 @@ void PacketPayload::append_data_from_queue(std::queue<CommsData*>& queue) {
 bool PacketPayload::try_append_data(CommsData* data) {
     // if we don't have enough space left in our packet to store this data
     if (data->size > remaining_data_size) {
+        Serial.printf("Not enough space to store data of size %d\n", data->size);
         return false; // failure
     }
     // we have enough space, append it
@@ -295,13 +299,13 @@ void PacketPayload::place_data_in_mega_struct(CommsData* data) {
         memcpy(&firmware_data.tof_sensor, tof_sensor_data, sizeof(TOFSensorData));
         break;
     }
-    case TypeLabel::LidarSensorData: {
+    case TypeLabel::LidarDataPacketSI: {
         //determine which lidar sensor the data is for
-        LidarSensorData* lidar_sensor_data = static_cast<LidarSensorData*>(data);
+        LidarDataPacketSI* lidar_sensor_data = static_cast<LidarDataPacketSI*>(data);
         if (lidar_sensor_data->id == 0) {
-            memcpy(&firmware_data.lidar_sensor_0, lidar_sensor_data, sizeof(LidarSensorData));
+            memcpy(&firmware_data.lidar_sensor_0, lidar_sensor_data, sizeof(LidarDataPacketSI));
         } else if (lidar_sensor_data->id == 1) {
-            memcpy(&firmware_data.lidar_sensor_1, lidar_sensor_data, sizeof(LidarSensorData));
+            memcpy(&firmware_data.lidar_sensor_1, lidar_sensor_data, sizeof(LidarDataPacketSI));
         }
         break;
     }

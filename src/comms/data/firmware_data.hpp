@@ -58,9 +58,9 @@ struct FirmwareData {
     
     //two liadars
     /// @brief lidar_sensor_0
-    LidarSensorData lidar_sensor_0;
+    LidarDataPacketSI lidar_sensor_0;
     /// @brief lidar_sensor_2
-    LidarSensorData lidar_sensor_1;
+    LidarDataPacketSI lidar_sensor_1;
 
     /// @brief DR16 data
     DR16Data dr16_data;
