@@ -1,5 +1,4 @@
 #include "packet_payload.hpp"
-#include "modules/comms/data/data_structs.hpp"
 
 #include <algorithm>    // for min
 #include <mutex>        // for std::lock_guard, std::mutex
@@ -7,10 +6,10 @@
 #include <assert.h>     // for assert
 
 #if defined(HIVE)
-#include <iostream>                         // for std::cout
-#include "modules/comms/comms_layer.hpp"    // for CommsLayer
+#include <iostream>                             // for std::cout
+#include "modules/comms/comms_layer.hpp"        // for CommsLayer
 #elif defined(FIRMWARE)
-#include "comms/comms_layer.hpp"            // for CommsLayer
+#include "comms/comms_layer.hpp"                // for CommsLayer
 #endif
 
 namespace Comms {
