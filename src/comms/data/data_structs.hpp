@@ -243,15 +243,20 @@ struct OverrideState : Comms::CommsData {
 struct ConfigSection : Comms::CommsData {
     ConfigSection() : CommsData(Comms::TypeLabel::ConfigSection, Comms::PhysicalMedium::Ethernet, Comms::Priority::High, sizeof(ConfigSection)) { }
 
-    uint8_t filler_byte = 0xff;         // 0
-    int8_t section_id = 0;              // 1
-    int8_t subsection_id = 0;           // 2
-    uint8_t info_bit = 0;               // 3
+    /// @brief Section ID
+    int8_t section_id = 0;
+    /// @brief Subsection ID
+    int8_t subsection_id = 0;
+    /// @brief Info bit, stores the config request bit
+    uint8_t info_bit = 0;
 
-    uint16_t section_size = 0;          // 4 - 5
-    uint16_t subsection_size = 0;       // 6 - 7
+    /// @brief Size of the whole section
+    uint16_t section_size = 0;
+    /// @brief Size of the subsection
+    uint16_t subsection_size = 0;
 
-    char raw[1000] = { 0 };             // 8 - 1011
+    /// @brief Raw config data
+    uint8_t raw[1000] = { 0 };
 };
 
 #endif // DATA_STRUCTS_HPP

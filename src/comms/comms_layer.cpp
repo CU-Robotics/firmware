@@ -39,11 +39,16 @@ void CommsLayer::queue_data(CommsData* data) {
         m_hid_payload.add(data);
         break;
     case PhysicalMedium::Ethernet:
-        if (!is_ethernet_connected()) {
-            // re route to HID
+        // if ethernet is down and it is a small enough packet, route it through HID instead
+        if (!is_ethernet_connected() && data->size < HID_PACKET_PAYLOAD_SIZE) {
             m_hid_payload.add(data);
             break;
+        } else if (data->size > HID_PACKET_PAYLOAD_SIZE) {
+            // discard attempt to send
+            printf("Attempting to re-route %s to HID but packet is too large\n", to_string(data->type_label).c_str());
+            break;
         }
+
         m_ethernet_payload.add(data);
         break;
     default:
@@ -55,11 +60,16 @@ void CommsLayer::queue_data(CommsData* data) {
         m_hid_payload.add(data);
         break;
     case PhysicalMedium::Ethernet:
-        if (!is_ethernet_connected()) {
-            // re route to HID
+        // if ethernet is down and it is a small enough packet, route it through HID instead
+        if (!is_ethernet_connected() && data->size < HID_PACKET_PAYLOAD_SIZE) {
             m_hid_payload.add(data);
             break;
+        } else if (data->size > HID_PACKET_PAYLOAD_SIZE) {
+            // discard attempt to send
+            Serial.printf("Attempting to re-route %s to HID but packet is too large\n", to_string(data->type_label).c_str());
+            break;
         }
+
         m_ethernet_payload.add(data);
         break;
     default:
