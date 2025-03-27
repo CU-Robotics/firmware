@@ -86,9 +86,10 @@ size_t Logger::println() {
 
 // Function to handle the actual formatted printing
 int Logger::vprintf(LogDestination dest, const char* format, va_list args) {
-    uint8_t buffer[1024];
-    int retval = vsnprintf_((char*)buffer, 1024, format, args);
-    write(buffer, 1024, dest);
+    constexpr size_t buffer_size = 1024;
+    uint8_t buffer[buffer_size];
+    int retval = vsnprintf_((char*)buffer, buffer_size, format, args);
+    write(buffer, buffer_size, dest);
 
     return retval;
 }

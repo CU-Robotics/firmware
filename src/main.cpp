@@ -46,7 +46,7 @@ Watchdog watchdog;
 // DONT put anything else in this function. It is not a setup function
 void print_logo() {
     if (Serial) {
-        logger.println(LogDestination::Serial, "TEENSY SERIAL START\n\n");
+        logger.println("TEENSY SERIAL START\n\n");
         logger.print("\033[1;33m");
         logger.println("                  .:^!?!^.                        ");
         logger.println("           .:~!?JYYYJ?7?Y5Y7!!.                   ");
@@ -70,7 +70,7 @@ void print_logo() {
         logger.print("\033[0m");
         logger.println("\n\033[1;92mFW Ver. 2.1.0");
         logger.printf("\nLast Built: %s at %s", __DATE__, __TIME__);
-        logger.printf(LogDestination::Serial, "\nGit Hash: %s", GIT_COMMIT_HASH);
+        logger.printf("\nGit Hash: %s", GIT_COMMIT_HASH);
         logger.printf("\nGit Branch: %s", GIT_BRANCH);
         logger.printf("\nCommit Message: %s", GIT_COMMIT_MSG);
         logger.printf("\nRandom Num: %x", ARM_DWT_CYCCNT);

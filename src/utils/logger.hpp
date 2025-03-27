@@ -22,7 +22,7 @@ enum class LogDestination {
 class Logger {
 public:
     /// @brief Default Constructor
-    Logger() : write_error(0) { }
+    Logger() : cursor(0), write_error(0) { }
     /// @brief Default Destructor
     ~Logger() = default;
 
