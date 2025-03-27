@@ -290,8 +290,6 @@ int main() {
         //     Serial.printf("\t%d: %f %f %f\n", i, temp_state[i][0], temp_state[i][1], temp_state[i][2]);
         // }
 
-        temp_state[3][1] = loopc;
-        
         // give the sensors the current estimated state
         sensor_manager.set_estimated_state(temp_state);
 
