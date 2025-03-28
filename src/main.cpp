@@ -369,6 +369,14 @@ int main() {
 
         // Keep the loop running at the desired rate
         loop_timer.delay_micros((int)(1E6 / (float)(LOOP_FREQ)));
+
+        // use Logger::grab_log_data
+        uint8_t log_buffer_copy[LOGGER_BUFFER_SIZE];
+        uint32_t bytes_copied = logger.grab_log_data(LOGGER_BUFFER_SIZE, log_buffer_copy);
+        // print the data we just copied from the logger
+        if (bytes_copied > 0) {
+            Serial.write(log_buffer_copy, bytes_copied);
+        }
     }
 
     return 0;

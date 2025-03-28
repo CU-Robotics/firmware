@@ -4,8 +4,6 @@
 /// @note will need to change size if we every print more than 4096 characters per loop
 DMAMEM char log_buffer[LOGGER_BUFFER_SIZE];
 
-
-
 // Logger internal functions --------------------------------------------------
 
 size_t Logger::write(const uint8_t* buffer, size_t size, LogDestination destination) {
