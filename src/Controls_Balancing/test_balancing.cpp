@@ -46,7 +46,6 @@ void balancing_test::init(){
             {0.347165, 2.251524, 0.124597, 0.278757, 1.192278, -0.073532, 1.425459, 0.385984, -46.760420, -6.535535, },
         },
     };
-    
     memcpy(p,tempp,sizeof(tempp));
     
     // For test purpose
@@ -76,7 +75,7 @@ void balancing_test::init(){
     _ref_data.goal_l = 0.25;
     _ref_data.goal_roll = 0;
     _ref_data.s = 0; 
-    _ref_data.speed = 0;
+    _ref_data.s_dot = 0;
     _ref_data.pitch = 0;
     _ref_data.pitch_dot = 0;
     _ref_data.theta_ll = 0;
@@ -252,6 +251,7 @@ void balancing_test::observer(){
     // For the x we have [v,a]^T 
     // predict
     o_data.body_speed_filtered += o_data.body_accel_filtered * _dt;
+
     float P_hat[2][2] = {0};
     float P_FP[2][2] = {0};
     float F[2][2] = {{1,_dt},{0,1}};
@@ -282,11 +282,13 @@ void balancing_test::observer(){
             S[i][j] = P_hat[i][j];
         }
     }
-    if(abs(0.05/2 * (-_data.speed_wl + _data.speed_wr))< 0.01){ // Since if the wheel is really slow, there shouldn't be any slip possible.
-        S[0][0] += 0.000001 * 0.000001;
-    }else{
-        S[0][0] += o_data.R_v * o_data.R_v;
-    }
+    // if(abs(o_data.s_dot_unfiltered)< 0.01){ // Since if the wheel is really slow, there shouldn't be any slip possible.
+    //     S[0][0] += 0.000001 * 0.000001;
+    // }else{
+    //     S[0][0] += o_data.R_v * o_data.R_v;
+    // }
+
+    S[0][0] += o_data.R_v * o_data.R_v;
     S[1][1] += o_data.R_a * o_data.R_a;
     float S_inv[2][2] = {0};
     float detS = S[0][0] * S[1][1] - S[0][1] * S[1][0];
@@ -383,7 +385,7 @@ void balancing_test::control(){
     float dx[10];
     // dx[0] = 0; //Ignore // s
     dx[0] = _ref_data.s - o_data.control_s; // s
-    dx[1] = _ref_data.speed - o_data.s_dot_filtered; // speed
+    dx[1] = _ref_data.s_dot - o_data.s_dot_filtered; // speed
     // dx[2] = 0; //Ignore // yaw
     dx[2] = _ref_data.yaw -o_data.control_yaw; // yaw angle //We don't have this data and don't need it
     if(dx[2] < -180 * DEG_TO_RAD)
@@ -620,8 +622,8 @@ void balancing_test::print_visual(){
     // Serial.printf("waggle graph %s %f \n", "T_legl", _debug_data.T_bll);
     // Serial.printf("waggle graph %s %f \n", "T_legr", _debug_data.T_blr);
     // Serial.printf("waggle graph %s %f \n", "F_roll", _debug_data.F_psi);
-    // Serial.printf("waggle graph %s %f \n", "o_data.b_speed", o_data.b_speed); // Speed without filter
-    // Serial.printf("waggle graph %s %f \n", "o_data.b_accel", o_data.b_accel); // Acceleration without filter
+    Serial.printf("waggle graph %s %f \n", "o_data.b_speed", o_data.b_speed); // Speed without filter
+    Serial.printf("waggle graph %s %f \n", "o_data.b_accel", o_data.b_accel); // Acceleration without filter
 
     // Serial.printf("waggle graph %s %f \n", "s_dot_filtered", o_data.s_dot_filtered); // Speed with filter
     // Serial.printf("waggle graph %s %f \n", "body_accel_filtered", o_data.body_accel_filtered); // Acceleration with filter

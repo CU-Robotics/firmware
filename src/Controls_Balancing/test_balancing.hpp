@@ -126,7 +126,7 @@ struct ref_data
     float goal_roll;
     float goal_l;
     float s;
-    float speed;
+    float s_dot;
     float yaw;
     float yaw_dot;
     float pitch;
