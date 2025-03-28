@@ -87,8 +87,8 @@ int main() {
     // print_logo();
 
     Serial.println("Serial.println() works");
-    logger.println("logger.println() works");
-    logger.printf("logger.printf() works\n");
+    logger.println(LogDestination::Serial, "logger.println() works");
+    logger.printf(LogDestination::Serial, "logger.printf() works\n");
     // logger.printf(LogDestination::Serial, "test with integer: %d \n", 11234);
 
     delay(1000000);
