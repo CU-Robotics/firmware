@@ -137,7 +137,7 @@ int main() {
             ref_data* control_ref = test_control.get_ref();
             // Set all data to 0 for balancing
             control_ref->s = 0;
-            control_ref->speed = 0;
+            control_ref->s_dot = 0;
             control_ref->yaw = 0;
             control_ref->yaw_dot = 0;
             control_ref->theta_ll = 0;
@@ -147,11 +147,11 @@ int main() {
             control_ref->pitch = 0;
             control_ref->pitch_dot = 0;
             
-            control_ref->speed = dr16.get_l_stick_y(); 
-            if(abs(control_ref->speed) < 0.05){
-                control_ref->speed = 0; // Ignore small data
+            control_ref->s_dot = dr16.get_l_stick_y(); 
+            if(abs(control_ref->s_dot) < 0.05){
+                control_ref->s_dot = 0; // Ignore small data
             }else{
-                control_ref->speed *= SPEED_SCALE; // Times a scale for max speed we set
+                control_ref->s_dot *= SPEED_SCALE; // Times a scale for max speed we set
                 // control_ref->s += control_ref->speed * _dt;
                 test_control.reset_s(); // Ignore the position when running 
             }
@@ -179,7 +179,7 @@ int main() {
         // can.print_state();
         // test_control.print_observer();
         // test_control.printdata();
-        // test_control.print_visual();
+        test_control.print_visual();
         
         if (!dr16.is_connected() || dr16.get_l_switch() == 1) {
             // SAFETY ON

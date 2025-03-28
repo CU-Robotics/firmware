@@ -3,7 +3,7 @@
 void balancing_test::init(){
     slowdalay_help = micros();
     o_data.Q = 0.6; // Need tune
-    o_data.R_v = 0.0007; // Need tune
+    o_data.R_v = 0.00001; // Need tune
     o_data.R_a = 0.1; // Need tune
     o_data.P[0][0] = 10;
     o_data.P[0][1] = 10;
@@ -22,31 +22,30 @@ void balancing_test::init(){
     // p matrix for average leg length
     float tempp[P_LOCO_ROW][4][10] = {
         {
-            {-0.646536, -3.343798, -0.928088, -1.961513, 3.345310, 4.968249, -27.071075, 3.929038, -14.676099, 12.987122, },
-            {-0.646536, -3.343798, 0.928088, 1.961513, -27.071075, 3.929038, 3.345310, 4.968249, -14.676099, 12.987122, },
-            {-5.933512, -38.636818, -6.458407, -13.252274, 5.959517, -5.235283, -48.905144, -2.808680, -11.222182, -17.017970, },
-            {-5.933512, -38.636818, 6.458407, 13.252274, -48.905144, -2.808680, 5.959517, -5.235283, -11.222182, -17.017970, },
+            {-0.345131, -0.820201, -2.012599, -1.028943, 6.551991, 5.169364, -28.131742, 3.441288, -0.486574, 13.661905, },
+            {-0.345131, -0.820201, 2.012599, 1.028943, -28.131742, 3.441288, 6.551991, 5.169364, -0.486574, 13.661905, },
+            {-4.437724, -23.495997, -21.546051, -11.410433, 43.546815, -2.877318, -73.642383, -2.393106, -25.862558, -10.791666, },
+            {-4.437724, -23.495997, 21.546051, 11.410433, -73.642383, -2.393106, 43.546815, -2.877318, -25.862558, -10.791666, },
         },
         {
-            {0.592726, 3.117193, 0.488954, 1.063146, -1.315224, -5.435389, 27.004265, -3.454995, 12.052822, -12.823703, },
-            {0.592726, 3.117193, -0.488954, -1.063146, 27.004265, -3.454995, -1.315224, -5.435389, 12.052822, -12.823703, },
-            {5.730229, 37.189393, 8.417980, 17.369454, -33.613800, 3.950721, 71.276182, 2.034082, 11.481365, 15.620579, },
-            {5.730229, 37.189393, -8.417980, -17.369454, 71.276182, 2.034082, -33.613800, 3.950721, 11.481365, 15.620579, },
+            {0.318252, 0.809070, 0.182998, 0.115914, 0.354209, -5.243803, 22.469987, -3.385791, -1.698062, -13.421109, },
+            {0.318252, 0.809070, -0.182998, -0.115914, 22.469987, -3.385791, 0.354209, -5.243803, -1.698062, -13.421109, },
+            {4.283221, 22.568197, 24.460118, 12.882622, -68.038588, 1.165928, 94.211057, 2.694054, 24.858781, 9.883646, },
+            {4.283221, 22.568197, -24.460118, -12.882622, 94.211057, 2.694054, -68.038588, 1.165928, 24.858781, 9.883646, },
         },
         {
-            {-0.199147, -1.193789, 0.407819, 0.858844, -12.048963, -0.378179, -6.683348, 0.046706, -2.673536, 5.049963, },
-            {-0.199147, -1.193789, -0.407819, -0.858844, -6.683348, 0.046706, -12.048963, -0.378179, -2.673536, 5.049963, },
-            {-2.184550, -14.105073, -4.314789, -9.030293, 40.309207, 1.613090, -52.921479, -2.283285, -4.515444, -5.214392, },
-            {-2.184550, -14.105073, 4.314789, 9.030293, -52.921479, -2.283285, 40.309207, 1.613090, -4.515444, -5.214392, },
+            {-0.108510, -0.434782, 1.523810, 0.828435, -12.958869, -0.344395, -3.423864, 0.292643, 2.725719, 5.198045, },
+            {-0.108510, -0.434782, -1.523810, -0.828435, -3.423864, 0.292643, -12.958869, -0.344395, 2.725719, 5.198045, },
+            {-1.639377, -8.566081, -9.580798, -5.120682, 38.512534, 1.459998, -46.814778, -1.678512, -9.068379, -3.278287, },
+            {-1.639377, -8.566081, 9.580798, 5.120682, -46.814778, -1.678512, 38.512534, 1.459998, -9.068379, -3.278287, },
         },
         {
-            {-0.254584, -1.695158, -0.293301, -0.601314, -2.611134, -0.365304, -2.788849, -0.352453, -0.301159, -1.030875, },
-            {-0.254584, -1.695158, 0.293301, 0.601314, -2.788849, -0.352453, -2.611134, -0.365304, -0.301159, -1.030875, },
-            {0.473593, 3.075997, -0.123510, -0.277226, 2.134112, 0.475473, 1.987123, 0.019654, -22.836285, -6.107949, },
-            {0.473593, 3.075997, 0.123510, 0.277226, 1.987123, 0.019654, 2.134112, 0.475473, -22.836285, -6.107949, },
+            {-0.298065, -1.618429, -0.506192, -0.239358, -2.641439, -0.375880, -2.790641, -0.342435, -1.805698, -1.029699, },
+            {-0.298065, -1.618429, 0.506192, 0.239358, -2.790641, -0.342435, -2.641439, -0.375880, -1.805698, -1.029699, },
+            {0.376976, 1.984374, -0.366737, -0.208761, 1.985193, 0.433753, 0.560780, -0.132260, -46.845666, -6.579072, },
+            {0.376976, 1.984374, 0.366737, 0.208761, 0.560780, -0.132260, 1.985193, 0.433753, -46.845666, -6.579072, },
         },
     };
-    
     memcpy(p,tempp,sizeof(tempp));
     
     // For test purpose
@@ -76,7 +75,7 @@ void balancing_test::init(){
     _ref_data.goal_l = 0.25;
     _ref_data.goal_roll = 0;
     _ref_data.s = 0; 
-    _ref_data.speed = 0;
+    _ref_data.s_dot = 0;
     _ref_data.pitch = 0;
     _ref_data.pitch_dot = 0;
     _ref_data.theta_ll = 0;
@@ -95,7 +94,7 @@ void balancing_test::init(){
     o_data.control_s = 0;
     o_data.b_speed = 0;
     o_data.b_accel = 0;
-    o_data.wheel_speed_filtered = 0;
+    o_data.s_dot_filtered = 0;
     o_data.ll = 0;
     o_data.lr = 0;
     o_data.ll_ddot = 0;
@@ -238,20 +237,22 @@ void balancing_test::observer(){
 //--------------------------------------------------------------b_s and filter for it--------------------------------------------------------
     
 
-    // o_data.wheel_speed_filtered =  1/2 * 0.05 * (_data.speed_wr - _data.speed_wl) ; // s_dot //speed 
-    // o_data.wheel_speed_filtered =  0.05/2 * (-_data.speed_wl + _data.speed_wr) ;
+    // o_data.s_dot_filtered =  1/2 * 0.05 * (_data.speed_wr - _data.speed_wl) ; // s_dot //speed 
+    // o_data.s_dot_filtered =  0.05/2 * (-_data.speed_wl + _data.speed_wr) ;
 
     
 
-    // o_data.wheel_speed_dot = (o_data.wheel_speed_filtered - o_data.wheel_speed_old) / _dt;
-    // o_data.wheel_speed_old = o_data.wheel_speed_filtered;
-    o_data.b_speed = (0.05/2 * (-_data.speed_wl + _data.speed_wr)) - (1/2) * (o_data.ll*(o_data.theta_ll_dot + _data.imu_angle_pitch)*cos(phi0l) + o_data.lr*(o_data.theta_lr_dot + _data.imu_angle_pitch)*cos(phi0r)) - (1/2)* (o_data.ll_dot * sin(phi0l) + o_data.lr_dot * sin(phi0r));
+    // o_data.wheel_speed_dot = (o_data.s_dot_filtered - o_data.wheel_speed_old) / _dt;
+    // o_data.wheel_speed_old = o_data.s_dot_filtered;
+    o_data.s_dot_unfiltered = - 0.05/2 * (_data.speed_wl + _data.speed_wr);
+    o_data.b_speed = o_data.s_dot_unfiltered - (1/2) * (o_data.ll*(o_data.theta_ll_dot + _data.imu_angle_pitch)*cos(phi0l) + o_data.lr*(o_data.theta_lr_dot + _data.imu_angle_pitch)*cos(phi0r)) - (1/2)* (o_data.ll_dot * sin(phi0l) + o_data.lr_dot * sin(phi0r));
     o_data.b_accel = _data.imu_accel_x;
        
 //-------------------------------------------filter by a kalman filter (I will update this soon) ---------------------------------------------------------------------
     // For the x we have [v,a]^T 
     // predict
     o_data.body_speed_filtered += o_data.body_accel_filtered * _dt;
+
     float P_hat[2][2] = {0};
     float P_FP[2][2] = {0};
     float F[2][2] = {{1,_dt},{0,1}};
@@ -282,11 +283,13 @@ void balancing_test::observer(){
             S[i][j] = P_hat[i][j];
         }
     }
-    if(abs(0.05/2 * (-_data.speed_wl + _data.speed_wr))< 0.01){ // Since if the wheel is really slow, there shouldn't be any slip possible.
-        S[0][0] += 0.000001 * 0.000001;
-    }else{
-        S[0][0] += o_data.R_v * o_data.R_v;
-    }
+    // if(abs(o_data.s_dot_unfiltered)< 0.01){ // Since if the wheel is really slow, there shouldn't be any slip possible.
+    //     S[0][0] += 0.000001 * 0.000001;
+    // }else{
+    //     S[0][0] += o_data.R_v * o_data.R_v;
+    // }
+
+    S[0][0] += o_data.R_v * o_data.R_v;
     S[1][1] += o_data.R_a * o_data.R_a;
     float S_inv[2][2] = {0};
     float detS = S[0][0] * S[1][1] - S[0][1] * S[1][0];
@@ -321,14 +324,14 @@ void balancing_test::observer(){
     }
     
 
-    o_data.wheel_speed_filtered = o_data.body_speed_filtered + (1/2) * (o_data.ll*(o_data.theta_ll_dot + _data.imu_angle_pitch)*cos(phi0l) + o_data.lr*(o_data.theta_lr_dot + _data.imu_angle_pitch)*cos(phi0r)) - (1/2)* (o_data.ll_dot * sin(phi0l) + o_data.lr_dot * sin(phi0r));
-    o_data.wheel_speed_dot = (o_data.wheel_speed_filtered - o_data.wheel_speed_old) / _dt;
-    o_data.wheel_speed_old = o_data.wheel_speed_filtered;
-    if(abs(o_data.wheel_speed_filtered) < 0.001){ //0.1cm/s
-        o_data.wheel_speed_filtered = 0;
+    o_data.s_dot_filtered = o_data.body_speed_filtered + (1/2) * (o_data.ll*(o_data.theta_ll_dot + _data.imu_angle_pitch)*cos(phi0l) + o_data.lr*(o_data.theta_lr_dot + _data.imu_angle_pitch)*cos(phi0r)) - (1/2)* (o_data.ll_dot * sin(phi0l) + o_data.lr_dot * sin(phi0r));
+    o_data.wheel_speed_dot = (o_data.s_dot_filtered - o_data.wheel_speed_old) / _dt;
+    o_data.wheel_speed_old = o_data.s_dot_filtered;
+    if(abs(o_data.s_dot_filtered) < 0.01){ //0.1cm/s
+        o_data.s_dot_filtered = 0;
     }
     
-    o_data.control_s += o_data.wheel_speed_filtered * _dt; 
+    o_data.control_s += o_data.s_dot_filtered * _dt; 
 
     return;
 }
@@ -350,7 +353,7 @@ void balancing_test::control(){
     // float F_l = 1 * pid2.filter(_dt, NOBOUND, NOWARP, _ref_data.goal_l, l, 0.9); //Set the PID for leg length 
     float F_l = 1 * pid2.filter(_dt, NOBOUND, NOWARP, _ref_data.goal_l, l, 0.9, true, ((o_data.lr_dot + o_data.ll_dot) * 0.5f)); //Set the PID for leg length using encoder data
 
-    // float iF_r = ((((m_b / 2) + (eta_l * m_l)) * l * _data.gyro_pitch * o_data.wheel_speed_filtered) / 2) / R_l;
+    // float iF_r = ((((m_b / 2) + (eta_l * m_l)) * l * _data.gyro_pitch * o_data.s_dot_filtered) / 2) / R_l;
     // float iF_l = -iF_r; 
 
     //Inertial Feedforward (IF) calculation
@@ -383,7 +386,7 @@ void balancing_test::control(){
     float dx[10];
     // dx[0] = 0; //Ignore // s
     dx[0] = _ref_data.s - o_data.control_s; // s
-    dx[1] = _ref_data.speed - o_data.wheel_speed_filtered; // speed
+    dx[1] = _ref_data.s_dot - o_data.s_dot_filtered; // speed
     // dx[2] = 0; //Ignore // yaw
     dx[2] = _ref_data.yaw -o_data.control_yaw; // yaw angle //We don't have this data and don't need it
     if(dx[2] < -180 * DEG_TO_RAD)
@@ -545,46 +548,46 @@ void balancing_test::printdata(){
     Serial.println(_write.torque_wr * 5);
 }
 void balancing_test::print_observer(){
-    Serial.print("speed_wl ");
-    Serial.println(_data.speed_wl);
-    Serial.print("speed_wr ");
-    Serial.println(_data.speed_wr);
-    Serial.print("s: ");
-    Serial.println(o_data.control_s);
-    Serial.print("wheel_speed_filtered: ");
-    Serial.println(o_data.wheel_speed_filtered);
-    Serial.print("imu_s: ");
-    Serial.println(o_data.imu_s);
-    Serial.print("imu_speed: ");
-    Serial.println(o_data.imu_speed_x);
-    Serial.print("b_accel: ");
-    Serial.println(o_data.b_accel);
-    Serial.print("leglength ll: ");
-    Serial.printf("%f", o_data.ll);
-    Serial.println();
-    Serial.print("leglength lr: ");
-    Serial.printf("%f", o_data.lr);
-    Serial.println();
-    Serial.print("leglength_dot ll: ");
-    Serial.printf("%f\n", o_data.ll_dot);
-    Serial.print("leglength_dot lr: ");
-    Serial.printf("%f\n", o_data.lr_dot);
-    Serial.print("ll_ddot: ");
-    Serial.println(o_data.ll_ddot);
-    Serial.print("lr_ddot: ");
-    Serial.println(o_data.lr_ddot);
-    Serial.print("theta_ll: ");
-    Serial.printf("%f", o_data.theta_ll*RAD_TO_DEG);
-    Serial.println();
-    Serial.print("theta_lr: ");
-    Serial.printf("%f", o_data.theta_lr*RAD_TO_DEG);
-    Serial.println();
-    Serial.print("theta_ll_dot: ");
-    Serial.printf("%f", o_data.theta_ll_dot*RAD_TO_DEG);
-    Serial.println();
-    Serial.print("theta_lr_dot: ");
-    Serial.printf("%f", o_data.theta_lr_dot*RAD_TO_DEG);
-    Serial.println();
+    // Serial.print("speed_wl ");
+    // Serial.println(_data.speed_wl);
+    // Serial.print("speed_wr ");
+    // Serial.println(_data.speed_wr);
+    // Serial.print("s: ");
+    // Serial.println(o_data.control_s);
+    // Serial.print("s_dot_filtered: ");
+    // Serial.println(o_data.s_dot_filtered);
+    // Serial.print("imu_s: ");
+    // Serial.println(o_data.imu_s);
+    // Serial.print("imu_speed: ");
+    // Serial.println(o_data.imu_speed_x);
+    // Serial.print("b_accel: ");
+    // Serial.println(o_data.b_accel);
+    // Serial.print("leglength ll: ");
+    // Serial.printf("%f", o_data.ll);
+    // Serial.println();
+    // Serial.print("leglength lr: ");
+    // Serial.printf("%f", o_data.lr);
+    // Serial.println();
+    // Serial.print("leglength_dot ll: ");
+    // Serial.printf("%f\n", o_data.ll_dot);
+    // Serial.print("leglength_dot lr: ");
+    // Serial.printf("%f\n", o_data.lr_dot);
+    // Serial.print("ll_ddot: ");
+    // Serial.println(o_data.ll_ddot);
+    // Serial.print("lr_ddot: ");
+    // Serial.println(o_data.lr_ddot);
+    // Serial.print("theta_ll: ");
+    // Serial.printf("%f", o_data.theta_ll*RAD_TO_DEG);
+    // Serial.println();
+    // Serial.print("theta_lr: ");
+    // Serial.printf("%f", o_data.theta_lr*RAD_TO_DEG);
+    // Serial.println();
+    // Serial.print("theta_ll_dot: ");
+    // Serial.printf("%f", o_data.theta_ll_dot*RAD_TO_DEG);
+    // Serial.println();
+    // Serial.print("theta_lr_dot: ");
+    // Serial.printf("%f", o_data.theta_lr_dot*RAD_TO_DEG);
+    // Serial.println();
     // Serial.print("jl: ");
     // Serial.print(o_data.jl[0][0]);
     // Serial.print(" ");
@@ -620,11 +623,14 @@ void balancing_test::print_visual(){
     // Serial.printf("waggle graph %s %f \n", "T_legl", _debug_data.T_bll);
     // Serial.printf("waggle graph %s %f \n", "T_legr", _debug_data.T_blr);
     // Serial.printf("waggle graph %s %f \n", "F_roll", _debug_data.F_psi);
-    // Serial.printf("waggle graph %s %f \n", "o_data.b_speed", o_data.b_speed); // Speed without filter
-    // Serial.printf("waggle graph %s %f \n", "o_data.b_accel", o_data.b_accel); // Acceleration without filter
+    Serial.printf("waggle graph %s %f \n", "o_data.b_speed", o_data.b_speed); // Speed without filter
+    Serial.printf("waggle graph %s %f \n", "o_data.b_accel", o_data.b_accel); // Acceleration without filter
 
-    // Serial.printf("waggle graph %s %f \n", "wheel_speed_filtered", o_data.wheel_speed_filtered); // Speed with filter
-    // Serial.printf("waggle graph %s %f \n", "body_accel_filtered", o_data.body_accel_filtered); // Acceleration with filter
+    Serial.printf("waggle graph %s %f \n", "s_dot_unfiltered", o_data.s_dot_unfiltered); // Speed with filter
+    Serial.printf("waggle graph %s %f \n", "s_dot_filtered", o_data.s_dot_filtered); // Speed with filter
+    Serial.printf("waggle graph %s %f \n", "control_s", o_data.control_s); // Speed without filter
+    Serial.printf("waggle graph %s %f \n", "body_accel_filtered", o_data.body_accel_filtered); // Acceleration with filter
+
 
     // Serial.printf("waggle graph %s %f \n", "ref_s", _ref_data.s );
     // Serial.printf("waggle graph %s %f \n", "ref_s_dot", _ref_data.speed);
