@@ -87,8 +87,17 @@ int main() {
     // print_logo();
 
     Serial.println("Serial.println() works");
+
     logger.println(LogDestination::Serial, "logger.println() works");
+
     logger.printf(LogDestination::Serial, "logger.printf() works\n");
+
+    logger.printf(LogDestination::Serial, "logger.printf() with hex: %x \n", 10);
+    logger.printf(LogDestination::Serial, "logger.printf() with octal: %o \n", 10);
+
+    logger.printf(LogDestination::Serial, "logger.printf() with int: %d \n", 10);
+    logger.printf(LogDestination::Serial, "logger.printf() with double: %lf \n", 10.10);
+
     // logger.printf(LogDestination::Serial, "test with integer: %d \n", 11234);
 
     delay(1000000);
