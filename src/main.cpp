@@ -84,7 +84,14 @@ int main() {
 
     Serial.begin(115200); // the serial monitor is actually always active (for debug use logger.println & tycmd)
     debug.begin(SerialUSB1);
-    print_logo();
+    // print_logo();
+
+    Serial.println("Serial.println() works");
+    logger.println("logger.println() works");
+    logger.printf("logger.printf() works\n");
+    // logger.printf(LogDestination::Serial, "test with integer: %d \n", 11234);
+
+    delay(1000000);
 
     // check to see if there is a crash report, and if so, print it repeatedly over Serial
     // in the future, we'll send this directly over comms
