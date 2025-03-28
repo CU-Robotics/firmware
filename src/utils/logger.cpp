@@ -42,7 +42,6 @@ uint32_t Logger::grab_log_data(uint32_t size, uint8_t* data) {
     return bytes_to_copy;
 }
 
-// with destination
 size_t Logger::print(LogDestination dest, const String& s) {
     uint8_t buffer[33];
     size_t count = 0;
@@ -69,15 +68,122 @@ size_t Logger::print(LogDestination dest, long n) {
     return printNumber(dest, n, 10, sign);
 }
 
+// print() section ------------------------------------------------------------
+
 size_t Logger::print(LogDestination dest, int64_t n) {
     if (n < 0) return printNumber64(dest, -n, 10, 1);
     return printNumber64(dest, n, 10, 0);
 }
 
+size_t Logger::print(LogDestination dest, int n) {
+    if (n < 0) {
+        return printNumber(dest, (unsigned long)(-n), 10, 1);
+    }
+    return printNumber(dest, (unsigned long)n, 10, 0);
+}
+
+size_t Logger::print(const String& s) { return print(LogDestination::Comms, s); }
+
+size_t Logger::print(LogDestination dest, char c) { return write((uint8_t)c, dest); }
+size_t Logger::print(char c) { return print(LogDestination::Comms, c); }
+
+size_t Logger::print(LogDestination dest, const char s[ ]) { return write(s, dest); }
+size_t Logger::print(const char s[ ]) { return print(LogDestination::Comms, s); }
+
+size_t Logger::print(LogDestination dest, uint8_t b) { return printNumber(dest, b, 10, 0); }
+size_t Logger::print(uint8_t b) { return print(LogDestination::Comms, b); }
+
+size_t Logger::print(LogDestination dest, unsigned int n) { return printNumber(dest, n, 10, 0); }
+size_t Logger::print(unsigned int n) { return print(LogDestination::Comms, n); }
+
+size_t Logger::print(LogDestination dest, unsigned long n) { return printNumber(dest, n, 10, 0); }
+size_t Logger::print(unsigned long n) { return print(LogDestination::Comms, n); }
+
+size_t Logger::print(LogDestination dest, uint64_t n) { return printNumber64(dest, n, 10, 0); }
+size_t Logger::print(uint64_t n) { return print(LogDestination::Comms, n); }
+
+size_t Logger::print(LogDestination dest, unsigned char n, int base) { return printNumber(dest, n, base, 0); }
+size_t Logger::print(unsigned char n, int base) { return print(LogDestination::Comms, n, base); }
+
+size_t Logger::print(LogDestination dest, unsigned int n, int base) { return printNumber(dest, n, base, 0); }
+size_t Logger::print(unsigned int n, int base) { return print(LogDestination::Comms, n, base); }
+
+size_t Logger::print(LogDestination dest, unsigned long n, int base) { return printNumber(dest, n, base, 0); }
+size_t Logger::print(unsigned long n, int base) { return print(LogDestination::Comms, n, base); }
+
+size_t Logger::print(LogDestination dest, uint64_t n, int base) { return printNumber64(dest, n, base, 0); }
+size_t Logger::print(uint64_t n, int base) { return print(LogDestination::Comms, n, base); }
+
+size_t Logger::print(LogDestination dest, double n, int digits) { return printFloat(dest, n, digits); }
+size_t Logger::print(double n, int digits) { return print(LogDestination::Comms, n, digits); }
+
+
+
+// println() section ----------------------------------------------------------
+
 size_t Logger::println(LogDestination dest) {
     uint8_t buf[2] = { '\r', '\n' };
     return write(buf, 2, dest);
 }
+
+
+size_t Logger::println() { return println(LogDestination::Comms); }
+
+size_t Logger::println(LogDestination dest, const String& s) { return print(dest, s) + println(dest); }
+size_t Logger::println(const String& s) { return println(LogDestination::Comms, s); }
+
+size_t Logger::println(LogDestination dest, char c) { return print(dest, c) + println(dest); }
+size_t Logger::println(char c) { return println(LogDestination::Comms, c); }
+
+size_t Logger::println(LogDestination dest, const char s[ ]) { return print(dest, s) + println(dest); }
+size_t Logger::println(const char s[ ]) { return println(LogDestination::Comms, s); }
+
+size_t Logger::println(LogDestination dest, uint8_t b) { return print(dest, b) + println(dest); }
+size_t Logger::println(uint8_t b) { return println(LogDestination::Comms, b); }
+
+size_t Logger::println(LogDestination dest, int n) { return print(dest, n) + println(dest); }
+size_t Logger::println(int n) { return println(LogDestination::Comms, n); }
+
+size_t Logger::println(LogDestination dest, unsigned int n) { return print(dest, n) + println(dest); }
+size_t Logger::println(unsigned int n) { return println(LogDestination::Comms, n); }
+
+size_t Logger::println(LogDestination dest, long n) { return print(dest, n) + println(dest); }
+size_t Logger::println(long n) { return println(LogDestination::Comms, n); }
+
+size_t Logger::println(LogDestination dest, unsigned long n) { return print(dest, n) + println(dest); }
+size_t Logger::println(unsigned long n) { return println(LogDestination::Comms, n); }
+
+size_t Logger::println(LogDestination dest, int64_t n) { return print(dest, n) + println(dest); }
+size_t Logger::println(int64_t n) { return println(LogDestination::Comms, n); }
+
+size_t Logger::println(LogDestination dest, uint64_t n) { return print(dest, n) + println(dest); }
+size_t Logger::println(uint64_t n) { return println(LogDestination::Comms, n); }
+
+size_t Logger::println(LogDestination dest, unsigned char n, int base) { return print(dest, n, base) + println(dest); }
+size_t Logger::println(unsigned char n, int base) { return println(LogDestination::Comms, n, base); }
+
+size_t Logger::println(LogDestination dest, int n, int base) { return print(dest, n, base) + println(dest); }
+size_t Logger::println(int n, int base) { return println(LogDestination::Comms, n, base); }
+
+size_t Logger::println(LogDestination dest, unsigned int n, int base) { return print(dest, n, base) + println(dest); }
+size_t Logger::println(unsigned int n, int base) { return println(LogDestination::Comms, n, base); }
+
+size_t Logger::println(LogDestination dest, long n, int base) { return print(dest, n, base) + println(dest); }
+size_t Logger::println(long n, int base) { return println(LogDestination::Comms, n, base); }
+
+size_t Logger::println(LogDestination dest, unsigned long n, int base) { return print(dest, n, base) + println(dest); }
+size_t Logger::println(unsigned long n, int base) { return println(LogDestination::Comms, n, base); }
+
+size_t Logger::println(LogDestination dest, int64_t n, int base) { return print(dest, n, base) + println(dest); }
+size_t Logger::println(int64_t n, int base) { return println(LogDestination::Comms, n, base); }
+
+size_t Logger::println(LogDestination dest, uint64_t n, int base) { return print(dest, n, base) + println(dest); }
+size_t Logger::println(uint64_t n, int base) { return println(LogDestination::Comms, n, base); }
+
+size_t Logger::println(LogDestination dest, double n, int digits) { return print(dest, n, digits) + println(dest); }
+size_t Logger::println(double n, int digits) { return println(LogDestination::Comms, n, digits); }
+
+
 
 // Function to handle the actual formatted printing
 int Logger::vprintf(LogDestination dest, const char* format, va_list args) {
@@ -171,7 +277,7 @@ size_t Logger::printNumber64(LogDestination dest, uint64_t n, uint8_t base, uint
     return write(buf + i, sizeof(buf) - i, dest);
 }
 
-size_t Logger::printFloat(LogDestination dest,  double number, uint8_t digits) {
+size_t Logger::printFloat(LogDestination dest, double number, uint8_t digits) {
     uint8_t sign = 0;
     size_t count = 0;
 

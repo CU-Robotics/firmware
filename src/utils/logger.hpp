@@ -83,27 +83,27 @@ public:
     /// @brief Prints a String object to the default destination (Comms).
     /// @param s String to print.
     /// @return Number of bytes written.
-    size_t print(const String& s) { return print(LogDestination::Comms, s); }
+    size_t print(const String& s);
 
     /// @brief Prints a single character to a specified destination.
     /// @param dest Destination for the output.
     /// @param c Character to print.
     /// @return Number of bytes written.
-    size_t print(LogDestination dest, char c) { return write((uint8_t)c, dest); }
+    size_t print(LogDestination dest, char c);
     /// @brief Prints a single character to the default destination (Comms).
     /// @param c Character to print.
     /// @return Number of bytes written.
-    size_t print(char c) { return print(LogDestination::Comms, c); }
+    size_t print(char c);
 
     /// @brief Prints a C-string to a specified destination.
     /// @param dest Destination for the output.
     /// @param s C-string to print.
     /// @return Number of bytes written.
-    size_t print(LogDestination dest, const char s[ ]) { return write(s, dest); }
+    size_t print(LogDestination dest, const char s[ ]);
     /// @brief Prints a C-string to the default destination (Comms).
     /// @param s C-string to print.
     /// @return Number of bytes written.
-    size_t print(const char s[ ]) { return print(LogDestination::Comms, s); }
+    size_t print(const char s[ ]);
 
     // Printing unsigned numbers ----------------
 
@@ -111,89 +111,89 @@ public:
     /// @param dest Destination for the output.
     /// @param b Unsigned byte to print.
     /// @return Number of bytes written.
-    size_t print(LogDestination dest, uint8_t b) { return printNumber(dest, b, 10, 0); }
+    size_t print(LogDestination dest, uint8_t b);
     /// @brief Prints an unsigned byte (in decimal) to the default destination (Comms).
     /// @param b Unsigned byte to print.
     /// @return Number of bytes written.
-    size_t print(uint8_t b) { return print(LogDestination::Comms, b); }
+    size_t print(uint8_t b);
 
     /// @brief Prints an unsigned integer (in decimal) to a specified destination.
     /// @param dest Destination for the output.
     /// @param n Unsigned integer to print.
     /// @return Number of bytes written.
-    size_t print(LogDestination dest, unsigned int n) { return printNumber(dest, n, 10, 0); }
+    size_t print(LogDestination dest, unsigned int n);
     /// @brief Prints an unsigned integer (in decimal) to the default destination (Comms).
     /// @param n Unsigned integer to print.
     /// @return Number of bytes written.
-    size_t print(unsigned int n) { return print(LogDestination::Comms, n); }
+    size_t print(unsigned int n);
 
     /// @brief Prints an unsigned long (in decimal) to a specified destination.
     /// @param dest Destination for the output.
     /// @param n Unsigned long to print.
     /// @return Number of bytes written.
-    size_t print(LogDestination dest, unsigned long n) { return printNumber(dest, n, 10, 0); }
+    size_t print(LogDestination dest, unsigned long n);
     /// @brief Prints an unsigned long (in decimal) to the default destination (Comms).
     /// @param n Unsigned long to print.
     /// @return Number of bytes written.
-    size_t print(unsigned long n) { return print(LogDestination::Comms, n); }
+    size_t print(unsigned long n);
 
     /// @brief Prints an unsigned long long (in decimal) to a specified destination.
     /// @param dest Destination for the output.
     /// @param n Unsigned long long to print.
     /// @return Number of bytes written.
-    size_t print(LogDestination dest, uint64_t n) { return printNumber64(dest, n, 10, 0); }
+    size_t print(LogDestination dest, uint64_t n);
     /// @brief Prints an unsigned long long (in decimal) to the default destination (Comms).
     /// @param n Unsigned long long to print.
     /// @return Number of bytes written.
-    size_t print(uint64_t n) { return print(LogDestination::Comms, n); }
+    size_t print(uint64_t n);
 
     /// @brief Prints an unsigned byte in a specified base to a destination.
     /// @param dest Destination for the output.
     /// @param n Unsigned byte to print.
     /// @param base Numerical base for printing.
     /// @return Number of bytes written.
-    size_t print(LogDestination dest, unsigned char n, int base) { return printNumber(dest, n, base, 0); }
+    size_t print(LogDestination dest, unsigned char n, int base);
     /// @brief Prints an unsigned byte in a specified base to the default destination (Comms).
     /// @param n Unsigned byte to print.
     /// @param base Numerical base for printing.
     /// @return Number of bytes written.
-    size_t print(unsigned char n, int base) { return print(LogDestination::Comms, n, base); }
+    size_t print(unsigned char n, int base);
 
     /// @brief Prints an unsigned integer in a specified base to a destination.
     /// @param dest Destination for the output.
     /// @param n Unsigned integer to print.
     /// @param base Numerical base for printing.
     /// @return Number of bytes written.
-    size_t print(LogDestination dest, unsigned int n, int base) { return printNumber(dest, n, base, 0); }
+    size_t print(LogDestination dest, unsigned int n, int base);
     /// @brief Prints an unsigned integer in a specified base to the default destination (Comms).
     /// @param n Unsigned integer to print.
     /// @param base Numerical base for printing.
     /// @return Number of bytes written.
-    size_t print(unsigned int n, int base) { return print(LogDestination::Comms, n, base); }
+    size_t print(unsigned int n, int base);
 
     /// @brief Prints an unsigned long in a specified base to a destination.
     /// @param dest Destination for the output.
     /// @param n Unsigned long to print.
     /// @param base Numerical base for printing.
     /// @return Number of bytes written.
-    size_t print(LogDestination dest, unsigned long n, int base) { return printNumber(dest, n, base, 0); }
+    size_t print(LogDestination dest, unsigned long n, int base);
     /// @brief Prints an unsigned long in a specified base to the default destination (Comms).
     /// @param n Unsigned long to print.
     /// @param base Numerical base for printing.
     /// @return Number of bytes written.
-    size_t print(unsigned long n, int base) { return print(LogDestination::Comms, n, base); }
+    size_t print(unsigned long n, int base);
 
     /// @brief Prints an unsigned long long in a specified base to a destination.
     /// @param dest Destination for the output.
     /// @param n Unsigned long long to print.
     /// @param base Numerical base for printing.
     /// @return Number of bytes written.
-    size_t print(LogDestination dest, uint64_t n, int base) { return printNumber64(dest, n, base, 0); }
+    size_t print(LogDestination dest, uint64_t n, int base);
     /// @brief Prints an unsigned long long in a specified base to the default destination (Comms).
     /// @param n Unsigned long long to print.
     /// @param base Numerical base for printing.
     /// @return Number of bytes written.
-    size_t print(uint64_t n, int base) { return print(LogDestination::Comms, n, base); }
+    size_t print(uint64_t n, int base);
 
     // Printing signed numbers ----------------------------------------------------------------
 
@@ -201,11 +201,11 @@ public:
     /// @param dest Destination for the output.
     /// @param n Signed integer to print.
     /// @return Number of bytes written.
-    size_t print(LogDestination dest, int n) { return print(dest, (long)n); }
+    size_t print(LogDestination dest, int n);
     /// @brief Prints a signed integer to the default destination (Comms).
     /// @param n Signed integer to print.
     /// @return Number of bytes written.
-    size_t print(int n) { return print(LogDestination::Comms, n); }
+    size_t print(int n);
 
     /// @brief Prints a long integer to a specified destination.
     /// @param dest Destination for the output.
@@ -232,48 +232,48 @@ public:
     /// @param n Signed integer to print.
     /// @param base Numerical base for printing.
     /// @return Number of bytes written.
-    size_t print(LogDestination dest, int n, int base) { return (base == 10) ? print(dest, n) : printNumber(dest, n, base, 0); }
+    size_t print(LogDestination dest, int n, int base);
     /// @brief Prints a signed integer in a specified base to the default destination (Comms).
     /// @param n Signed integer to print.
     /// @param base Numerical base for printing.
     /// @return Number of bytes written.
-    size_t print(int n, int base) { return print(LogDestination::Comms, n, base); }
+    size_t print(int n, int base);
 
     /// @brief Prints a long integer in a specified base to a destination.
     /// @param dest Destination for the output.
     /// @param n Long integer to print.
     /// @param base Numerical base for printing.
     /// @return Number of bytes written.
-    size_t print(LogDestination dest, long n, int base) { return (base == 10) ? print(n) : printNumber(dest, n, base, 0); }
+    size_t print(LogDestination dest, long n, int base);
     /// @brief Prints a long integer in a specified base to the default destination (Comms).
     /// @param n Long integer to print.
     /// @param base Numerical base for printing.
     /// @return Number of bytes written.
-    size_t print(long n, int base) { return print(LogDestination::Comms, n, base); }
+    size_t print(long n, int base);
 
     /// @brief Prints a 64-bit signed integer in a specified base to a destination.
     /// @param dest Destination for the output.
     /// @param n 64-bit signed integer to print.
     /// @param base Numerical base for printing.
     /// @return Number of bytes written.
-    size_t print(LogDestination dest, int64_t n, int base) { return (base == 10) ? print(n) : printNumber64(dest, n, base, 0); }
+    size_t print(LogDestination dest, int64_t n, int base);
     /// @brief Prints a 64-bit signed integer in a specified base to the default destination (Comms).
     /// @param n 64-bit signed integer to print.
     /// @param base Numerical base for printing.
     /// @return Number of bytes written.
-    size_t print(int64_t n, int base) { return print(LogDestination::Comms, n, base); }
+    size_t print(int64_t n, int base);
 
     /// @brief Prints a floating point number to a specified destination with fixed precision.
     /// @param dest Destination for the output.
     /// @param n Floating point number to print.
     /// @param digits Number of digits after the decimal point.
     /// @return Number of bytes written.
-    size_t print(LogDestination dest, double n, int digits = 2) { return printFloat(dest, n, digits); }
+    size_t print(LogDestination dest, double n, int digits = 2);
     /// @brief Prints a floating point number to the default destination (Comms) with fixed precision.
     /// @param n Floating point number to print.
     /// @param digits Number of digits after the decimal point.
     /// @return Number of bytes written.
-    size_t print(double n, int digits = 2) { return print(LogDestination::Comms, n, digits); }
+    size_t print(double n, int digits = 2);
 
     // TODO: Print an object instance in human readable format
     // size_t print(const Printable& obj) { return obj.printTo(*this); }
@@ -286,203 +286,203 @@ public:
     size_t println(LogDestination dest);
     /// @brief Prints a newline to the default destination (Comms).
     /// @return Number of bytes written.
-    size_t println() { return println(LogDestination::Comms); }
+    size_t println();
 
     /// @brief Prints a String followed by a newline to a specified destination.
     /// @param dest Destination for the output.
     /// @param s String to print.
     /// @return Number of bytes written.
-    size_t println(LogDestination dest, const String& s) { return print(dest, s) + println(dest); }
+    size_t println(LogDestination dest, const String& s);
     /// @brief Prints a String followed by a newline to the default destination (Comms).
     /// @param s String to print.
     /// @return Number of bytes written.
-    size_t println(const String& s) { return println(LogDestination::Comms, s); }
+    size_t println(const String& s);
 
     /// @brief Prints a character followed by a newline to a specified destination.
     /// @param dest Destination for the output.
     /// @param c Character to print.
     /// @return Number of bytes written.
-    size_t println(LogDestination dest, char c) { return print(dest, c) + println(dest); }
+    size_t println(LogDestination dest, char c);
     /// @brief Prints a character followed by a newline to the default destination (Comms).
     /// @param c Character to print.
     /// @return Number of bytes written.
-    size_t println(char c) { return println(LogDestination::Comms, c); }
+    size_t println(char c);
 
     /// @brief Prints a C-string followed by a newline to a specified destination.
     /// @param dest Destination for the output.
     /// @param s C-string to print.
     /// @return Number of bytes written.
-    size_t println(LogDestination dest, const char s[ ]) { return print(dest, s) + println(dest); }
+    size_t println(LogDestination dest, const char s[ ]);
     /// @brief Prints a C-string followed by a newline to the default destination (Comms).
     /// @param s C-string to print.
     /// @return Number of bytes written.
-    size_t println(const char s[ ]) { return println(LogDestination::Comms, s); }
+    size_t println(const char s[ ]);
 
     /// @brief Prints an unsigned byte followed by a newline to a specified destination.
     /// @param dest Destination for the output.
     /// @param b Unsigned byte to print.
     /// @return Number of bytes written.
-    size_t println(LogDestination dest, uint8_t b) { return print(dest, b) + println(dest); }
+    size_t println(LogDestination dest, uint8_t b);
     /// @brief Prints an unsigned byte followed by a newline to the default destination (Comms).
     /// @param b Unsigned byte to print.
     /// @return Number of bytes written.
-    size_t println(uint8_t b) { return println(LogDestination::Comms, b); }
+    size_t println(uint8_t b);
 
     /// @brief Prints a signed integer followed by a newline to a specified destination.
     /// @param dest Destination for the output.
     /// @param n Signed integer to print.
     /// @return Number of bytes written.
-    size_t println(LogDestination dest, int n) { return print(dest, n) + println(dest); }
+    size_t println(LogDestination dest, int n);
     /// @brief Prints a signed integer followed by a newline to the default destination (Comms).
     /// @param n Signed integer to print.
     /// @return Number of bytes written.
-    size_t println(int n) { return println(LogDestination::Comms, n); }
+    size_t println(int n);
 
     /// @brief Prints an unsigned integer followed by a newline to a specified destination.
     /// @param dest Destination for the output.
     /// @param n Unsigned integer to print.
     /// @return Number of bytes written.
-    size_t println(LogDestination dest, unsigned int n) { return print(dest, n) + println(dest); }
+    size_t println(LogDestination dest, unsigned int n);
     /// @brief Prints an unsigned integer followed by a newline to the default destination (Comms).
     /// @param n Unsigned integer to print.
     /// @return Number of bytes written.
-    size_t println(unsigned int n) { return println(LogDestination::Comms, n); }
+    size_t println(unsigned int n);
 
     /// @brief Prints a long integer followed by a newline to a specified destination.
     /// @param dest Destination for the output.
     /// @param n Long integer to print.
     /// @return Number of bytes written.
-    size_t println(LogDestination dest, long n) { return print(dest, n) + println(dest); }
+    size_t println(LogDestination dest, long n);
     /// @brief Prints a long integer followed by a newline to the default destination (Comms).
     /// @param n Long integer to print.
     /// @return Number of bytes written.
-    size_t println(long n) { return println(LogDestination::Comms, n); }
+    size_t println(long n);
 
     /// @brief Prints an unsigned long integer followed by a newline to a specified destination.
     /// @param dest Destination for the output.
     /// @param n Unsigned long integer to print.
     /// @return Number of bytes written.
-    size_t println(LogDestination dest, unsigned long n) { return print(dest, n) + println(dest); }
+    size_t println(LogDestination dest, unsigned long n);
     /// @brief Prints an unsigned long integer followed by a newline to the default destination (Comms).
     /// @param n Unsigned long integer to print.
     /// @return Number of bytes written.
-    size_t println(unsigned long n) { return println(LogDestination::Comms, n); }
+    size_t println(unsigned long n);
 
     /// @brief Prints a 64-bit signed integer followed by a newline to a specified destination.
     /// @param dest Destination for the output.
     /// @param n 64-bit signed integer to print.
     /// @return Number of bytes written.
-    size_t println(LogDestination dest, int64_t n) { return print(dest, n) + println(dest); }
+    size_t println(LogDestination dest, int64_t n);
     /// @brief Prints a 64-bit signed integer followed by a newline to the default destination (Comms).
     /// @param n 64-bit signed integer to print.
     /// @return Number of bytes written.
-    size_t println(int64_t n) { return println(LogDestination::Comms, n); }
+    size_t println(int64_t n);
 
     /// @brief Prints a 64-bit unsigned integer followed by a newline to a specified destination.
     /// @param dest Destination for the output.
     /// @param n 64-bit unsigned integer to print.
     /// @return Number of bytes written.
-    size_t println(LogDestination dest, uint64_t n) { return print(dest, n) + println(dest); }
+    size_t println(LogDestination dest, uint64_t n);
     /// @brief Prints a 64-bit unsigned integer followed by a newline to the default destination (Comms).
     /// @param n 64-bit unsigned integer to print.
     /// @return Number of bytes written.
-    size_t println(uint64_t n) { return println(LogDestination::Comms, n); }
+    size_t println(uint64_t n);
 
     /// @brief Prints an unsigned byte in a specified base followed by a newline to a destination.
     /// @param dest Destination for the output.
     /// @param n Unsigned byte to print.
     /// @param base Numerical base for printing.
     /// @return Number of bytes written.
-    size_t println(LogDestination dest, unsigned char n, int base) { return print(dest, n, base) + println(dest); }
+    size_t println(LogDestination dest, unsigned char n, int base);
     /// @brief Prints an unsigned byte in a specified base followed by a newline to the default destination (Comms).
     /// @param n Unsigned byte to print.
     /// @param base Numerical base for printing.
     /// @return Number of bytes written.
-    size_t println(unsigned char n, int base) { return println(LogDestination::Comms, n, base); }
+    size_t println(unsigned char n, int base);
 
     /// @brief Prints an integer in a specified base followed by a newline to a destination.
     /// @param dest Destination for the output.
     /// @param n Integer to print.
     /// @param base Numerical base for printing.
     /// @return Number of bytes written.
-    size_t println(LogDestination dest, int n, int base) { return print(dest, n, base) + println(dest); }
+    size_t println(LogDestination dest, int n, int base);
     /// @brief Prints an integer in a specified base followed by a newline to the default destination (Comms).
     /// @param n Integer to print.
     /// @param base Numerical base for printing.
     /// @return Number of bytes written.
-    size_t println(int n, int base) { return println(LogDestination::Comms, n, base); }
+    size_t println(int n, int base);
 
     /// @brief Prints an unsigned integer in a specified base followed by a newline to a destination.
     /// @param dest Destination for the output.
     /// @param n Unsigned integer to print.
     /// @param base Numerical base for printing.
     /// @return Number of bytes written.
-    size_t println(LogDestination dest, unsigned int n, int base) { return print(dest, n, base) + println(dest); }
+    size_t println(LogDestination dest, unsigned int n, int base);
     /// @brief Prints an unsigned integer in a specified base followed by a newline to the default destination (Comms).
     /// @param n Unsigned integer to print.
     /// @param base Numerical base for printing.
     /// @return Number of bytes written.
-    size_t println(unsigned int n, int base) { return println(LogDestination::Comms, n, base); }
+    size_t println(unsigned int n, int base);
 
     /// @brief Prints a long integer in a specified base followed by a newline to a destination.
     /// @param dest Destination for the output.
     /// @param n Long integer to print.
     /// @param base Numerical base for printing.
     /// @return Number of bytes written.
-    size_t println(LogDestination dest, long n, int base) { return print(dest, n, base) + println(dest); }
+    size_t println(LogDestination dest, long n, int base);
     /// @brief Prints a long integer in a specified base followed by a newline to the default destination (Comms).
     /// @param n Long integer to print.
     /// @param base Numerical base for printing.
     /// @return Number of bytes written.
-    size_t println(long n, int base) { return println(LogDestination::Comms, n, base); }
+    size_t println(long n, int base);
 
     /// @brief Prints an unsigned long in a specified base followed by a newline to a destination.
     /// @param dest Destination for the output.
     /// @param n Unsigned long to print.
     /// @param base Numerical base for printing.
     /// @return Number of bytes written.
-    size_t println(LogDestination dest, unsigned long n, int base) { return print(dest, n, base) + println(dest); }
+    size_t println(LogDestination dest, unsigned long n, int base);
     /// @brief Prints an unsigned long in a specified base followed by a newline to the default destination (Comms).
     /// @param n Unsigned long to print.
     /// @param base Numerical base for printing.
     /// @return Number of bytes written.
-    size_t println(unsigned long n, int base) { return println(LogDestination::Comms, n, base); }
+    size_t println(unsigned long n, int base);
 
     /// @brief Prints a 64-bit signed integer in a specified base followed by a newline to a destination.
     /// @param dest Destination for the output.
     /// @param n 64-bit signed integer to print.
     /// @param base Numerical base for printing.
     /// @return Number of bytes written.
-    size_t println(LogDestination dest, int64_t n, int base) { return print(dest, n, base) + println(dest); }
+    size_t println(LogDestination dest, int64_t n, int base);
     /// @brief Prints a 64-bit signed integer in a specified base followed by a newline to the default destination (Comms).
     /// @param n 64-bit signed integer to print.
     /// @param base Numerical base for printing.
     /// @return Number of bytes written.
-    size_t println(int64_t n, int base) { return println(LogDestination::Comms, n, base); }
+    size_t println(int64_t n, int base);
 
     /// @brief Prints a 64-bit unsigned integer in a specified base followed by a newline to a destination.
     /// @param dest Destination for the output.
     /// @param n 64-bit unsigned integer to print.
     /// @param base Numerical base for printing.
     /// @return Number of bytes written.
-    size_t println(LogDestination dest, uint64_t n, int base) { return print(dest, n, base) + println(dest); }
+    size_t println(LogDestination dest, uint64_t n, int base);
     /// @brief Prints a 64-bit unsigned integer in a specified base followed by a newline to the default destination (Comms).
     /// @param n 64-bit unsigned integer to print.
     /// @param base Numerical base for printing.
     /// @return Number of bytes written.
-    size_t println(uint64_t n, int base) { return println(LogDestination::Comms, n, base); }
+    size_t println(uint64_t n, int base);
 
     /// @brief Prints a floating point number followed by a newline to a specified destination.
     /// @param dest Destination for the output.
     /// @param n Floating point number to print.
     /// @param digits Number of digits after the decimal point.
     /// @return Number of bytes written.
-    size_t println(LogDestination dest, double n, int digits = 2) { return print(dest, n, digits) + println(dest); }
+    size_t println(LogDestination dest, double n, int digits = 2);
     /// @brief Prints a floating point number followed by a newline to the default destination (Comms).
     /// @param n Floating point number to print.
     /// @param digits Number of digits after the decimal point.
     /// @return Number of bytes written.
-    size_t println(double n, int digits = 2) { return println(LogDestination::Comms, n, digits); }
+    size_t println(double n, int digits = 2);
 
     /// @brief Retrieves the current write error code.
     /// @return Current write error code.
