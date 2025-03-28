@@ -190,7 +190,7 @@ int main() {
 
         // print loopc every second to verify it is still alive
         if (loopc % 1000 == 0) {
-            logger.println(loopc);
+            Serial.println(loopc);
         }
 
         // manual controls on firmware
