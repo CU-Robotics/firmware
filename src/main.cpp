@@ -86,8 +86,6 @@ int main() {
     debug.begin(SerialUSB1);
     print_logo();
 
-    delay(1000000);
-
     // check to see if there is a crash report, and if so, print it repeatedly over Serial
     // in the future, we'll send this directly over comms
     if (CrashReport) {
