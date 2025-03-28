@@ -83,7 +83,7 @@ struct write_data
 };
 struct observer_data
 {
-    float wheel_speed_filtered;
+    float s_dot_filtered;
     float imu_speed_x;
     float imu_s;
     float b_accel;
