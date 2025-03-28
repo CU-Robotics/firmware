@@ -42,7 +42,8 @@ uint32_t Logger::grab_log_data(uint32_t size, uint8_t* data) {
     return bytes_to_copy;
 }
 
-size_t Logger::print(const String& s, LogDestination dest) {
+// with destination
+size_t Logger::print(LogDestination dest, const String& s) {
     uint8_t buffer[33];
     size_t count = 0;
     unsigned int index = 0;
@@ -58,31 +59,25 @@ size_t Logger::print(const String& s, LogDestination dest) {
     return count;
 }
 
-size_t Logger::print(long n, LogDestination dest) {
+size_t Logger::print(LogDestination dest, long n) {
     uint8_t sign = 0;
 
     if (n < 0) {
         sign = '-';
         n = -n;
     }
-    return printNumber(n, 10, sign, dest);
+    return printNumber(dest, n, 10, sign);
 }
 
-size_t Logger::print(int64_t n, LogDestination dest) {
-    if (n < 0) return printNumber64(-n, 10, 1, dest);
-    return printNumber64(n, 10, 0, dest);
+size_t Logger::print(LogDestination dest, int64_t n) {
+    if (n < 0) return printNumber64(dest, -n, 10, 1);
+    return printNumber64(dest, n, 10, 0);
 }
 
 size_t Logger::println(LogDestination dest) {
     uint8_t buf[2] = { '\r', '\n' };
     return write(buf, 2, dest);
 }
-
-size_t Logger::println() {
-    uint8_t buf[2] = { '\r', '\n' };
-    return write(buf, 2, LogDestination::Comms);
-}
-
 
 // Function to handle the actual formatted printing
 int Logger::vprintf(LogDestination dest, const char* format, va_list args) {
@@ -117,7 +112,7 @@ int Logger::printf(LogDestination dest, const char* format, ...) {
     return retval;
 }
 
-size_t Logger::printNumber(unsigned long n, uint8_t base, uint8_t sign, LogDestination dest) {
+size_t Logger::printNumber(LogDestination dest, unsigned long n, uint8_t base, uint8_t sign) {
     uint8_t buf[34];
     uint8_t digit, i;
 
@@ -151,7 +146,7 @@ size_t Logger::printNumber(unsigned long n, uint8_t base, uint8_t sign, LogDesti
     return write(buf + i, sizeof(buf) - i, dest);
 }
 
-size_t Logger::printNumber64(uint64_t n, uint8_t base, uint8_t sign, LogDestination dest) {
+size_t Logger::printNumber64(LogDestination dest, uint64_t n, uint8_t base, uint8_t sign) {
     uint8_t buf[66];
     uint8_t digit, i;
 
@@ -176,7 +171,7 @@ size_t Logger::printNumber64(uint64_t n, uint8_t base, uint8_t sign, LogDestinat
     return write(buf + i, sizeof(buf) - i, dest);
 }
 
-size_t Logger::printFloat(double number, uint8_t digits, LogDestination dest) {
+size_t Logger::printFloat(LogDestination dest,  double number, uint8_t digits) {
     uint8_t sign = 0;
     size_t count = 0;
 
@@ -201,7 +196,7 @@ size_t Logger::printFloat(double number, uint8_t digits, LogDestination dest) {
     // Extract the integer part of the number and print it
     unsigned long int_part = (unsigned long)number;
     double remainder = number - (double)int_part;
-    count += printNumber(int_part, 10, sign, dest);
+    count += printNumber(dest, int_part, 10, sign);
 
     // Print the decimal point, but only if there are digits beyond
     if (digits > 0) {

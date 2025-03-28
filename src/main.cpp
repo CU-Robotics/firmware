@@ -46,35 +46,35 @@ Watchdog watchdog;
 // DONT put anything else in this function. It is not a setup function
 void print_logo() {
     if (Serial) {
-        logger.println("TEENSY SERIAL START\n\n");
-        logger.print("\033[1;33m");
-        logger.println("                  .:^!?!^.                        ");
-        logger.println("           .:~!?JYYYJ?7?Y5Y7!!.                   ");
-        logger.println("         :?5YJ?!~:.      ^777YP?.                 ");
-        logger.println("         5G~                  ~YP?:               ");
-        logger.println("         7P5555Y:               ^YP?:....         ");
-        logger.println("        ~55J7~^.   ..    .        ^JYYYYYYYYYJJ!. ");
-        logger.println("        YG^     !Y5555J:^PJ    Y5:      ...::^5G^ ");
-        logger.println("       :GY    .YG?^..^~ ~GY    5G^ ^!~~^^^!!~7G?  ");
-        logger.println(" .!JYYY5G!    7BJ       ~GY    5G^ ~??JJJY555GP!  ");
-        logger.println("^55!^:.^~.    ^PP~   .: ^GP:  ^PP:           :7PY.");
-        logger.println("YG^            :JP5YY55: ~YP55PY^              ~GJ");
-        logger.println("?G~      .?7~:   .^~~^.    .^:.                :G5");
-        logger.println(".5P^     7BYJ5YJ7^.                          .~5P^");
-        logger.println(" .JPJ!~!JP?  .:~?PP^            .:.    .^!JYY5Y!. ");
-        logger.println("   :!???!:       5P.         .!Y5YYYJ?Y5Y?!^:.    ");
-        logger.println("                 7G7        7GY!. .:~!^.          ");
-        logger.println("                  JG!      :G5                    ");
-        logger.println("                   7PY!^^~?PY:                    ");
-        logger.println("                    .!JJJJ?^                      ");
-        logger.print("\033[0m");
-        logger.println("\n\033[1;92mFW Ver. 2.1.0");
-        logger.printf("\nLast Built: %s at %s", __DATE__, __TIME__);
-        logger.printf("\nGit Hash: %s", GIT_COMMIT_HASH);
-        logger.printf("\nGit Branch: %s", GIT_BRANCH);
-        logger.printf("\nCommit Message: %s", GIT_COMMIT_MSG);
-        logger.printf("\nRandom Num: %x", ARM_DWT_CYCCNT);
-        logger.println("\033[0m\n");
+        logger.println(LogDestination::Serial, "TEENSY SERIAL START\n\n");
+        logger.print(LogDestination::Serial, "\033[1;33m");
+        logger.println(LogDestination::Serial, "                  .:^!?!^.                        ");
+        logger.println(LogDestination::Serial, "           .:~!?JYYYJ?7?Y5Y7!!.                   ");
+        logger.println(LogDestination::Serial, "         :?5YJ?!~:.      ^777YP?.                 ");
+        logger.println(LogDestination::Serial, "         5G~                  ~YP?:               ");
+        logger.println(LogDestination::Serial, "         7P5555Y:               ^YP?:....         ");
+        logger.println(LogDestination::Serial, "        ~55J7~^.   ..    .        ^JYYYYYYYYYJJ!. ");
+        logger.println(LogDestination::Serial, "        YG^     !Y5555J:^PJ    Y5:      ...::^5G^ ");
+        logger.println(LogDestination::Serial, "       :GY    .YG?^..^~ ~GY    5G^ ^!~~^^^!!~7G?  ");
+        logger.println(LogDestination::Serial, " .!JYYY5G!    7BJ       ~GY    5G^ ~??JJJY555GP!  ");
+        logger.println(LogDestination::Serial, "^55!^:.^~.    ^PP~   .: ^GP:  ^PP:           :7PY.");
+        logger.println(LogDestination::Serial, "YG^            :JP5YY55: ~YP55PY^              ~GJ");
+        logger.println(LogDestination::Serial, "?G~      .?7~:   .^~~^.    .^:.                :G5");
+        logger.println(LogDestination::Serial, ".5P^     7BYJ5YJ7^.                          .~5P^");
+        logger.println(LogDestination::Serial, " .JPJ!~!JP?  .:~?PP^            .:.    .^!JYY5Y!. ");
+        logger.println(LogDestination::Serial, "   :!???!:       5P.         .!Y5YYYJ?Y5Y?!^:.    ");
+        logger.println(LogDestination::Serial, "                 7G7        7GY!. .:~!^.          ");
+        logger.println(LogDestination::Serial, "                  JG!      :G5                    ");
+        logger.println(LogDestination::Serial, "                   7PY!^^~?PY:                    ");
+        logger.println(LogDestination::Serial, "                    .!JJJJ?^                      ");
+        logger.print(LogDestination::Serial, "\033[0m");
+        logger.println(LogDestination::Serial, "\n\033[1;92mFW Ver. 2.1.0");
+        logger.printf(LogDestination::Serial, "\nLast Built: %s at %s", __DATE__, __TIME__);
+        logger.printf(LogDestination::Serial, "\nGit Hash: %s", GIT_COMMIT_HASH);
+        logger.printf(LogDestination::Serial, "\nGit Branch: %s", GIT_BRANCH);
+        logger.printf(LogDestination::Serial, "\nCommit Message: %s", GIT_COMMIT_MSG);
+        logger.printf(LogDestination::Serial, "\nRandom Num: %x", ARM_DWT_CYCCNT);
+        logger.println(LogDestination::Serial, "\033[0m\n");
     }
 }
 
@@ -84,21 +84,7 @@ int main() {
 
     Serial.begin(115200); // the serial monitor is actually always active (for debug use logger.println & tycmd)
     debug.begin(SerialUSB1);
-    // print_logo();
-
-    Serial.println("Serial.println() works");
-
-    logger.println(LogDestination::Serial, "logger.println() works");
-
-    logger.printf(LogDestination::Serial, "logger.printf() works\n");
-
-    logger.printf(LogDestination::Serial, "logger.printf() with hex: %x \n", 10);
-    logger.printf(LogDestination::Serial, "logger.printf() with octal: %o \n", 10);
-
-    logger.printf(LogDestination::Serial, "logger.printf() with int: %d \n", 10);
-    logger.printf(LogDestination::Serial, "logger.printf() with double: %lf \n", 10.10);
-
-    // logger.printf(LogDestination::Serial, "test with integer: %d \n", 11234);
+    print_logo();
 
     delay(1000000);
 
