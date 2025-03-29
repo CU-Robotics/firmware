@@ -71,7 +71,6 @@ private:
     /// @brief Current number of bytes stored in the log (also serves as the current buffer position).
     uint32_t cursor;
 
-    // Stuff from teensy4/print.h
 public:
     // print() section --------------------------------------------------------
 
@@ -515,6 +514,7 @@ protected:
     /// @param err Error code to set (default is 1).
     void setwriteError(int err = 1) { write_error = err; }
 private:
+    /// @brief Write error code.
     int write_error;
     /// @brief Prints a floating point number with fixed precision to the specified destination.
     /// @param dest Destination for the output.
