@@ -78,12 +78,13 @@ void FirmwareData::set_data(CommsData* data) {
     }
     case TypeLabel::LidarDataPacketSI: {
         //determine which lidar sensor the data is for
-        LidarDataPacketSI* lidar_sensor_data = static_cast<LidarDataPacketSI*>(data);
-        if (lidar_sensor_data->id == 0) {
-            lidars[0].push_back(*lidar_sensor_data);
-        } else if (lidar_sensor_data->id == 1) {
-            lidars[1].push_back(*lidar_sensor_data);
-        }
+        // TODO: implement this on firmware
+        // LidarDataPacketSI* lidar_sensor_data = static_cast<LidarDataPacketSI*>(data);
+        // if (lidar_sensor_data->id == 0) {
+        //     lidars[0].push_back(*lidar_sensor_data);
+        // } else if (lidar_sensor_data->id == 1) {
+        //     lidars[1].push_back(*lidar_sensor_data);
+        // }
         break;
     }
     case TypeLabel::ConfigSection: {
