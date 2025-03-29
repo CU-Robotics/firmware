@@ -28,10 +28,12 @@ n = int(sys.argv[2])
 symbols = []
 line_num = 0
 is_discarded = False
+is_debug = False
 
 # parse map file
 with open(map_file_path, "r") as map_file:
     for line in map_file:
+        # skip the discarded input section
         if (line == "Discarded input sections\n"):
             print("discarded!")
             is_discarded = True
@@ -44,8 +46,15 @@ with open(map_file_path, "r") as map_file:
         if (is_discarded):
             continue
 
-        debug_match = re.match(r"debug", line)
+        # skip the debug sections
+        debug_match = re.match(r'^\s*\.debug_', line)
         if (debug_match):
+            is_debug = True
+        
+        if (line == "Cross Reference Table\n"):
+            is_debug = False
+        
+        if (is_debug):
             continue
         
         # regex from hell
