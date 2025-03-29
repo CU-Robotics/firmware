@@ -27,11 +27,27 @@ n = int(sys.argv[2])
 
 symbols = []
 line_num = 0
+is_discarded = False
 
 # parse map file
 with open(map_file_path, "r") as map_file:
     for line in map_file:
+        if (line == "Discarded input sections\n"):
+            print("discarded!")
+            is_discarded = True
+        
+        if (line == "Memory Configuration\n"):
+            print("not discarded!")
+            is_discarded = False
+
         line_num += 1
+        if (is_discarded):
+            continue
+
+        debug_match = re.match(r"debug", line)
+        if (debug_match):
+            continue
+        
         # regex from hell
         match = re.match(r"\s*(0x[0-9a-fA-F]+)\s+(0x[0-9a-fA-F]+)\s+(\S+)", line)
 
