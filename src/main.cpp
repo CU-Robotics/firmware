@@ -13,9 +13,9 @@
 #define HEARTBEAT_FREQ 2
 
 // Speed scale will give the maximum desire speed (m/s)
-#define SPEED_SCALE 0.65   
+#define SPEED_SCALE 1.5   
 // Speed scale will give the maximum desire rotation speed (rad/s)
-#define ROTATION_SCALE 4 * M_1_PI //multiples of 1/pi radian/s = deg/s
+#define ROTATION_SCALE 7 * M_1_PI //multiples of 1/pi radian/s = deg/s
 #define MAX_LEG_LENGTH 0.33
 #define MIN_LEG_LENGTH 0.18
 // Declare global objects

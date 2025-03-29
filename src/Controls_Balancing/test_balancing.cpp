@@ -2,6 +2,8 @@
 
 void balancing_test::init(){
     slowdalay_help = micros();
+    timer_1 = 0;
+    timer_2 = 0;
     o_data.Q = 0.6; // Need tune
     o_data.R_v = 0.0001; // Need tune
     o_data.R_a = 0.1; // Need tune
@@ -73,7 +75,7 @@ void balancing_test::init(){
 
     //ref for test
     _ref_data.goal_l = 0.25;
-    _ref_data.goal_roll = 0;
+    _ref_data.goal_roll = 0*DEG_TO_RAD; //compensate for intrinsic errors
     _ref_data.s = 0; 
     _ref_data.s_dot = 0;
     _ref_data.pitch = 0;
@@ -384,12 +386,15 @@ void balancing_test::control(){
 //--------------------------------------------------------------Acceleration Saturation---------------------------------------------------------------------------
     float dx[10];
     // dx[0] = 0; //Ignore // s
+
+
     dx[0] = _ref_data.s - o_data.control_s; // s
+    if (abs(dx[0])>1) { dx[0] = 1 * dx[0]/abs(dx[0]); } // reference governor
     dx[1] = _ref_data.s_dot - o_data.s_dot_filtered; // speed
-    // dx[2] = 0; //Ignore // yaw
-    dx[2] = _ref_data.yaw -o_data.control_yaw; // yaw angle //We don't have this data and don't need it
-    if(dx[2] < -180 * DEG_TO_RAD)
-        dx[2] += 360 * DEG_TO_RAD;
+    if (abs(dx[1])>0.7) { dx[1] = 0.7 * dx[1]/abs(dx[1]); }
+    dx[2] = _ref_data.yaw -o_data.control_yaw; // yaw angle 
+    if(dx[2] < -180 * DEG_TO_RAD){dx[2] += 360 * DEG_TO_RAD;}
+    if(dx[2] > 180 * DEG_TO_RAD){dx[2] -= 360 * DEG_TO_RAD;}
     dx[3] = _ref_data.yaw_dot - _data.gyro_yaw; // yaw rotational speed in deg
     dx[4] = _ref_data.theta_ll - o_data.theta_ll; // theta_ll
     dx[5] = _ref_data.theta_ll_dot - o_data.theta_ll_dot; // theta_ll_dot
@@ -493,6 +498,33 @@ void balancing_test::control(){
     _write.torque_br /= leg_motor__right_sign * 37.0;
 
 
+    //check torque integration to prevent motor overheating
+    timer_1 = timer_1+_dt;
+    o_data.leg_motor_torque_integration_old[0] += _dt * abs(_write.torque_fl);
+    o_data.leg_motor_torque_integration_old[1] += _dt * abs(_write.torque_bl);
+    o_data.leg_motor_torque_integration_old[2] += _dt * abs(_write.torque_fr);
+    o_data.leg_motor_torque_integration_old[3] += _dt * abs(_write.torque_br);
+
+    if(timer_1 >= 2.0){
+        o_data.leg_motor_torque_integration_new[0] += _dt * abs(_write.torque_fl);
+        o_data.leg_motor_torque_integration_new[1] += _dt * abs(_write.torque_bl);
+        o_data.leg_motor_torque_integration_new[2] += _dt * abs(_write.torque_fr);
+        o_data.leg_motor_torque_integration_new[3] += _dt * abs(_write.torque_br);
+    }
+
+    for (int i = 0; i < 4; i++){
+        o_data.leg_motor_torque_integration[i] =  o_data.leg_motor_torque_integration_old[i] -  o_data.leg_motor_torque_integration_new[i];
+        if (o_data.leg_motor_torque_integration[i]>0.2)
+        {
+            _write.torque_fl = 0;
+            _write.torque_bl = 0;
+            _write.torque_wl = 0;
+            _write.torque_fr = 0;
+            _write.torque_br = 0;
+            _write.torque_wr = 0;
+        }
+    }
+
 //----------------------------Save data to printout for debug-------------------------------------------------------------
     _debug_data.F_blr = F_blr;
     _debug_data.F_bll = F_bll;
@@ -503,7 +535,7 @@ void balancing_test::control(){
 }
 
 void balancing_test::reset_s(){
-    o_data.control_s = 0;
+    o_data.control_s = 0.2; //compensate for movements caused by inertial 
 }
 
 void balancing_test::reset_yaw(){
@@ -517,10 +549,10 @@ write_data balancing_test::getwrite(){
     //     _write.torque_fl = 0;
     //     _write.torque_bl = 0;
     //     _write.torque_wl = 0;
-    //     _write.torque_fl = 0;
-    //     _write.torque_bl = 0;
-    //     _write.torque_wl = 0;
-    //     saftymode = true;
+    //     _write.torque_fr = 0;
+    //     _write.torque_br = 0;
+    //     _write.torque_wr = 0;
+    //     saftymode = true;ç
     // }
     return _write;
 }
@@ -611,10 +643,10 @@ void balancing_test::print_visual(){
     // Serial.printf("waggle graph %s %f \n", "theta_lr_dot", o_data.theta_lr_dot * RAD_TO_DEG);
     // Serial.printf("waggle graph %s %f \n", "theta_ll_dot", o_data.theta_ll_dot * RAD_TO_DEG);
     // Serial.printf("waggle graph %s %f \n", "Pitch", _data.imu_angle_pitch * RAD_TO_DEG);
-    // Serial.printf("waggle graph %s %f \n", "Roll", _data.imu_angle_roll * RAD_TO_DEG);
+    Serial.printf("waggle graph %s %f \n", "Roll", _data.imu_angle_roll * RAD_TO_DEG);
     // Serial.printf("waggle graph %s %f \n", "Yaw", _data.imu_angle_yaw * RAD_TO_DEG);
     // Serial.printf("waggle graph %s %f \n", "Gyro_Pitch", _data.gyro_pitch * RAD_TO_DEG);
-    // Serial.printf("waggle graph %s %f \n", "Gyro_Roll", _data.gyro_roll * RAD_TO_DEG);
+    Serial.printf("waggle graph %s %f \n", "Gyro_Roll", _data.gyro_roll * RAD_TO_DEG);
     // Serial.printf("waggle graph %s %f \n", "Gyro_Yaw", _data.gyro_yaw * RAD_TO_DEG);
     // Serial.printf("waggle graph %s %f \n", "Control_Yaw", o_data.control_yaw * RAD_TO_DEG);
     // Serial.printf("waggle graph %s %f \n", "F_legl", _debug_data.F_bll);
@@ -622,8 +654,8 @@ void balancing_test::print_visual(){
     // Serial.printf("waggle graph %s %f \n", "T_legl", _debug_data.T_bll);
     // Serial.printf("waggle graph %s %f \n", "T_legr", _debug_data.T_blr);
     // Serial.printf("waggle graph %s %f \n", "F_roll", _debug_data.F_psi);
-    Serial.printf("waggle graph %s %f \n", "o_data.b_speed", o_data.b_speed); // Speed without filter
-    Serial.printf("waggle graph %s %f \n", "o_data.b_accel", o_data.b_accel); // Acceleration without filter
+    // Serial.printf("waggle graph %s %f \n", "o_data.b_speed", o_data.b_speed); // Speed without filter
+    // Serial.printf("waggle graph %s %f \n", "o_data.b_accel", o_data.b_accel); // Acceleration without filter
 
     // Serial.printf("waggle graph %s %f \n", "s_dot_filtered", o_data.s_dot_filtered); // Speed with filter
     // Serial.printf("waggle graph %s %f \n", "body_accel_filtered", o_data.body_accel_filtered); // Acceleration with filter

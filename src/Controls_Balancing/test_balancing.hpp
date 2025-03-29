@@ -12,9 +12,9 @@
 #define eta_l 0.4144                            
 
 //roll PID
-#define K1_P 103                               //Need test                                    
+#define K1_P 479.25                              //Need test                                    
 #define K1_I 0                                  //Need test 
-#define K1_D 13.8                               //Need test                         
+#define K1_D 29.8                               //Need test                         
 #define K1_F 0                                  //Need test  
 
 //leg length PID
@@ -119,6 +119,9 @@ struct observer_data
     float body_speed_filtered;
     float body_accel_filtered; 
 
+    float leg_motor_torque_integration_old[4];
+    float leg_motor_torque_integration_new[4];
+    float leg_motor_torque_integration[4];
 };
 
 struct ref_data
@@ -150,6 +153,8 @@ class balancing_test{
     private:
         Timer timer; 
         float _dt;
+        float timer_1;
+        float timer_2;
         uint32_t slowdalay_help;
         /// @brief The PID for psi
         PIDFilter pid1; 
