@@ -109,7 +109,7 @@ bool CommsLayer::is_hid_connected() {
     return true;
 };
 
-HiveData CommsLayer::get_hive_data() {
+HiveData& CommsLayer::get_hive_data() {
     return m_hive_data;
 };
 
@@ -117,7 +117,7 @@ void CommsLayer::set_hive_data(HiveData& data) {
     m_hive_data = data;
 };
 
-FirmwareData CommsLayer::get_firmware_data() {
+FirmwareData& CommsLayer::get_firmware_data() {
     return m_firmware_data;
 };
 

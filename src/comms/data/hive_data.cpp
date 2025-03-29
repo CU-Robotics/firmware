@@ -11,21 +11,30 @@ namespace Comms {
 
 void HiveData::set_data(CommsData* data) {
     // place the data in the mega struct
+    Serial.printf("blah\n");
     switch (data->type_label) {
     case TypeLabel::TestData: {
-        test_data = *static_cast<TestData*>(data);
+        TestData *test = static_cast<TestData*>(data);
+        // TODO: why does doing test_data = *test; not work?
+        memcpy(&test_data, test, sizeof(TestData));
         break;
     }
     case TypeLabel::TargetState: {
-        target_state = *static_cast<TargetState*>(data);
+        TargetState* target = static_cast<TargetState*>(data);
+        memcpy(&target_state, target, sizeof(TargetState));
+        // target_state = *static_cast<TargetState*>(data);
         break;
     }
     case TypeLabel::OverrideState: {
-        override_state = *static_cast<OverrideState*>(data);
+        OverrideState* o_state = static_cast<OverrideState*>(data);
+        memcpy(&override_state, o_state, sizeof(OverrideState));
+        // override_state = *static_cast<OverrideState*>(data);
         break;
     }
     case TypeLabel::ConfigSection: {
-        config_section = *static_cast<ConfigSection*>(data);
+        ConfigSection* config = static_cast<ConfigSection*>(data);
+        memcpy(&config_section, config, sizeof(ConfigSection));
+        // config_section = *static_cast<ConfigSection*>(data);
         break;
     }
     default:

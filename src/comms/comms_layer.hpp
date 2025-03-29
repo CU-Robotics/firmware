@@ -47,7 +47,7 @@ public:
 
     /// @brief Get the hive data
     /// @return The hive data
-    HiveData get_hive_data();
+    HiveData& get_hive_data();
 
     /// @brief Set the hive data
     /// @param data The hive data to set
@@ -55,7 +55,7 @@ public:
 
     /// @brief Get the firmware data
     /// @return The firmware data
-    FirmwareData get_firmware_data();
+    FirmwareData& get_firmware_data();
 
     /// @brief Set the firmware data
     /// @param data The firmware data to set
