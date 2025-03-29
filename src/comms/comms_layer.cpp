@@ -117,6 +117,14 @@ void CommsLayer::set_hive_data(HiveData& data) {
     m_hive_data = data;
 };
 
+FirmwareData CommsLayer::get_firmware_data() {
+    return m_firmware_data;
+};
+
+void CommsLayer::set_firmware_data(FirmwareData& data) {
+    m_firmware_data = data;
+};
+
 HIDPacket CommsLayer::get_hid_incoming() {
     return m_hid.get_incoming_packet();
 };

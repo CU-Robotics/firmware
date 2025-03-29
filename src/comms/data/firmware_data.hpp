@@ -1,33 +1,29 @@
 #pragma once
 
 #if defined(HIVE)
-
-#include "modules/comms/data/comms_data.hpp"        // for CommsData
-#include "modules/comms/data/logging_data.hpp"      // for LoggingData
-#include "modules/comms/data/data_structs.hpp"      // for shared data structs
-
+#include "modules/comms/data/logging_data.hpp"  // for LoggingData
+#include "modules/comms/data/data_structs.hpp"  // for shared data structs
+#include "modules/comms/data/comms_data.hpp"    // for CommsData
 // TODO: find a better home for this
-#include "modules/comms/RefSystemPacketDefs.hpp"    // for RefData
+#include "modules/comms/RefSystemPacketDefs.hpp"// for RefData
+#elif defined(FIRMWARE)
+#include "comms/data/logging_data.hpp"          // for LoggingData
+#include "comms/data/data_structs.hpp"          // for shared data structs
+#include "comms/data/comms_data.hpp"            // for CommsData
+#include "sensors/RefSystemPacketDefs.hpp"        // for RefData
+#endif
 
-#include <vector>                                   // for std::vector
-
-/// @brief Data struct for testing purposes
-struct TestData : Comms::CommsData {
-    TestData() : Comms::CommsData(Comms::TypeLabel::TestData, Comms::PhysicalMedium::Ethernet, Comms::Priority::High, sizeof(TestData)) {}
-    /// @brief x value
-    float x = 1.f;
-    /// @brief y value
-    float y = 2.f;
-    /// @brief z value
-    float z = 3.f;
-    /// @brief w value
-    uint32_t w = 0x98765432;
-};
+#include <vector>                               // for std::vector
 
 namespace Comms {
 
 /// @brief Megastruct for receiving data from Firmware, filled on Hive
 struct FirmwareData {
+    /// @brief Set a data section in the mega struct.
+    /// @param data The data to be set.
+    /// @warning This is not thread safe, call this on local copies only
+    void set_data(CommsData* data);
+        
     /// @brief Test data
     TestData test_data;
     /// @brief TempRobotState data
@@ -76,5 +72,3 @@ struct FirmwareData {
 };
 
 } // namespace Comms
-
-#endif  // HIVE

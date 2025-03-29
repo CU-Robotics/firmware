@@ -3,13 +3,24 @@
 
 #if defined(FIRMWARE)
 #include "comms/data/comms_data.hpp"            // for CommsData
-#include "sensor_constants.hpp"                 // for D200_POINTS_PER_PACKET, D200_MAX_CALIBRATION_PACKETS, D200_NUM_PACKETS_CACHED
 #elif defined(HIVE)
 #include "modules/comms/data/comms_data.hpp"    // for CommsData
-#include "modules/hive/robot_state.hpp"         // for RobotState
 #endif
 
 #include <stdint.h>     // uintN_t
+
+/// @brief Data struct for testing purposes
+struct TestData : Comms::CommsData {
+    TestData() : Comms::CommsData(Comms::TypeLabel::TestData, Comms::PhysicalMedium::Ethernet, Comms::Priority::High, sizeof(TestData)) {}
+    /// @brief x value
+    float x = 1.f;
+    /// @brief y value
+    float y = 2.f;
+    /// @brief z value
+    float z = 3.f;
+    /// @brief w value
+    uint32_t w = 0x98765432;
+};
 
 /// @brief Structure for the buff encoder sensor.
 struct BuffEncoderData : Comms::CommsData {

@@ -53,6 +53,14 @@ public:
     /// @param data The hive data to set
     void set_hive_data(HiveData& data);
 
+    /// @brief Get the firmware data
+    /// @return The firmware data
+    FirmwareData get_firmware_data();
+
+    /// @brief Set the firmware data
+    /// @param data The firmware data to set
+    void set_firmware_data(FirmwareData& data);
+
     // TODO: remove these sometime soon
     HIDPacket get_hid_incoming();
     void set_hid_outgoing(HIDPacket& packet);
@@ -86,6 +94,9 @@ private:
 
     /// @brief Hive data
     HiveData m_hive_data;
+
+    /// @brief Firmware data
+    FirmwareData m_firmware_data;
 
 };
 

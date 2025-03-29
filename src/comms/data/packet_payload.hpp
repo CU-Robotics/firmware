@@ -13,11 +13,13 @@
 #include "modules/comms/data/comms_data.hpp"    // for CommsData
 #include "modules/comms/data/logging_data.hpp"  // for LoggingData
 #include "modules/comms/data/firmware_data.hpp" // for FirmwareData
+#include "modules/comms/data/hive_data.hpp"     // for HiveData
 #include "modules/hive/environment.hpp"         // for Hive
 #elif defined(FIRMWARE)
 #include "comms/data/comms_data.hpp"            // for CommsData
 #include "comms/data/logging_data.hpp"          // for LoggingData
 #include "comms/data/hive_data.hpp"             // for HiveData
+#include "comms/data/firmware_data.hpp"         // for FirmwareData
 #include <Arduino.h>                            // for Serial
 #endif
 
@@ -84,9 +86,13 @@ private:
     /// @note This is a distinct function because LoggingData has a dynamic size AND it can be split across multiple packets.
     bool try_append_splittable_logging_data(LoggingData* log);
 
-    /// @brief Place the data in the mega struct.
+    /// @brief Place the incoming data in the mega struct.
     /// @param data The CommsData to place in the mega struct.
-    void place_data_in_mega_struct(CommsData* data);
+    void place_incoming_data_in_mega_struct(CommsData* data);
+
+    /// @brief Place the outgoing data in the mega struct.
+    /// @param data The CommsData to place in the mega struct.
+    void place_outgoing_data_in_mega_struct(CommsData* data);
 
 private:
     /// @brief The high priority send queue.

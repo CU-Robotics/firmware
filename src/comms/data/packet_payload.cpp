@@ -6,10 +6,10 @@
 #include <assert.h>     // for assert
 
 #if defined(HIVE)
-#include <iostream>                             // for std::cout
-#include "modules/comms/comms_layer.hpp"        // for CommsLayer
+#include <iostream>                         // for std::cout
+#include "modules/comms/comms_layer.hpp"    // for CommsLayer
 #elif defined(FIRMWARE)
-#include "comms/comms_layer.hpp"                // for CommsLayer
+#include "comms/comms_layer.hpp"            // for CommsLayer
 #endif
 
 namespace Comms {
@@ -74,9 +74,9 @@ void PacketPayload::deconstruct_data(uint8_t* data, uint16_t size) {
         if (header->type_label == TypeLabel::NONE) {
             break;
         }
+        
         // send the data to the mega struct
-        place_data_in_mega_struct(header);
-
+        place_incoming_data_in_mega_struct(header);
 
         // if we have reached the end of the data, we are done
         if (offset >= size - sizeof(CommsData)) {
@@ -141,6 +141,9 @@ void PacketPayload::append_data_from_queue(std::queue<CommsData*>& queue) {
         bool successful_append = try_append_data(next_data);
 
         if (successful_append) {
+            // set the data in the mega struct
+            place_outgoing_data_in_mega_struct(next_data);
+            
             // free the pointer
             delete next_data;
             queue.pop(); // remove the appended item from the queue, going to the next.
@@ -177,6 +180,9 @@ void PacketPayload::fill_logging_data_from_queue(std::queue<LoggingData*>& queue
         bool finished_append = try_append_splittable_logging_data(next_data);
 
         if (finished_append) {
+            // TODO: set the data in the mega struct
+            // place_outgoing_data_in_mega_struct(next_data);
+            
             // if we have appended the entirety of the splittlable comms data
             queue.pop(); // remove the appended item from the queue, going to the next.
         } else {
@@ -221,105 +227,12 @@ bool PacketPayload::try_append_splittable_logging_data(LoggingData* log) {
     return false;
 }
 
-void PacketPayload::place_data_in_mega_struct(CommsData* data) {
+void PacketPayload::place_incoming_data_in_mega_struct(CommsData* data) {
 #if defined(HIVE)
-
     FirmwareData firmware_data = Hive::env->comms_layer->get_firmware_data();
 
-    std::cout << "Placing data in mega struct: " << to_string(data->type_label) << std::endl;
-    switch (data->type_label) {
-    case TypeLabel::TestData: {
-        // place the data in the mega struct
-        TestData* test_data = static_cast<TestData*>(data);
-        memcpy(&firmware_data.test_data, test_data, sizeof(TestData));
-        break;
-    }
-    case TypeLabel::LoggingData: {
-        // place the data in the mega struct
-        LoggingData* logging_data = static_cast<LoggingData*>(data);
-        memcpy(&firmware_data.logging_data, logging_data, sizeof(LoggingData));
-        std::cout << logging_data->get_logs() << std::endl;
-        break;
-    }
-    case TypeLabel::TempRobotState: {
-        // place the data in the mega struct
-        TempRobotState* temp_robot_state = static_cast<TempRobotState*>(data);
-        memcpy(&firmware_data.temp_robot_state, temp_robot_state, sizeof(TempRobotState));
-        break;
-    }
-    case TypeLabel::EstimatedState: {
-        // place the data in the mega struct
-        EstimatedState* estimated_state = static_cast<EstimatedState*>(data);
-        memcpy(&firmware_data.estimated_state, estimated_state, sizeof(EstimatedState));
-        // TODO: remove
-        Hive::env->comms_data->set_estimated_state(estimated_state);
-        break;
-    }
-    case TypeLabel::DR16Data: {
-        // place the data in the mega struct
-        DR16Data* dr16_data = static_cast<DR16Data*>(data);
-        memcpy(&firmware_data.dr16_data, dr16_data, sizeof(DR16Data));
-        break;
-    }
-    case TypeLabel::BuffEncoderData: {
-        //determine if the data is for yaw or pitch
-        BuffEncoderData* buff_encoder_data = static_cast<BuffEncoderData*>(data);
-        if (buff_encoder_data->id == 0) {
-            memcpy(&firmware_data.yaw_buff_encoder, buff_encoder_data, sizeof(BuffEncoderData));
-        } else if (buff_encoder_data->id == 1) {
-            memcpy(&firmware_data.pitch_buff_encoder, buff_encoder_data, sizeof(BuffEncoderData));
-        }
-        break;
-    }
-    case TypeLabel::RevEncoderData: {
-        //determine which rev encoder the data is for
-        RevSensorData* rev_encoder_data = static_cast<RevSensorData*>(data);
-        if (rev_encoder_data->id == 0) {
-            memcpy(&firmware_data.rev_sensor_0, rev_encoder_data, sizeof(RevSensorData));
-        } else if (rev_encoder_data->id == 1) {
-            memcpy(&firmware_data.rev_sensor_1, rev_encoder_data, sizeof(RevSensorData));
-        } else if (rev_encoder_data->id == 2) {
-            memcpy(&firmware_data.rev_sensor_2, rev_encoder_data, sizeof(RevSensorData));
-        }
-        break;
-    }
-    case TypeLabel::ICMSensorData: {
-        // place the data in the mega struct
-        ICMSensorData* icm_sensor_data = static_cast<ICMSensorData*>(data);
-        memcpy(&firmware_data.icm_sensor, icm_sensor_data, sizeof(ICMSensorData));
-        break;
-    }
-    case TypeLabel::TOFSensorData: {
-        // place the data in the mega struct
-        TOFSensorData* tof_sensor_data = static_cast<TOFSensorData*>(data);
-        memcpy(&firmware_data.tof_sensor, tof_sensor_data, sizeof(TOFSensorData));
-        break;
-    }
-    case TypeLabel::LidarDataPacketSI: {
-        //determine which lidar sensor the data is for
-        LidarDataPacketSI* lidar_sensor_data = static_cast<LidarDataPacketSI*>(data);
-        if (lidar_sensor_data->id == 0) {
-            firmware_data.lidars[0].push_back(*lidar_sensor_data);
-        } else if (lidar_sensor_data->id == 1) {
-            firmware_data.lidars[1].push_back(*lidar_sensor_data);
-        }
-        break;
-    }
-    case TypeLabel::ConfigSection: {
-        // place the data in the mega struct
-        ConfigSection* config_section = static_cast<ConfigSection*>(data);
-        memcpy(&firmware_data.config_section, config_section, sizeof(ConfigSection));
-        break;
-    }
-    case TypeLabel::CommsRefData: {
-        // place the data in the mega struct
-        CommsRefData* comms_ref_data = static_cast<CommsRefData*>(data);
-        firmware_data.ref_data.set_data(comms_ref_data->raw);
-        break;
-    }
-    default:
-        throw std::runtime_error("Invalid type label given to place in mega struct: " + std::to_string(static_cast<uint8_t>(data->type_label)));
-    }
+    //std::cout << "Placing data in mega struct: " << to_string(data->type_label) << std::endl;
+    firmware_data.set_data(data);
 
     Hive::env->comms_layer->set_firmware_data(firmware_data);
     
@@ -328,37 +241,26 @@ void PacketPayload::place_data_in_mega_struct(CommsData* data) {
     HiveData hive_data = comms_layer.get_hive_data();
     
     Serial.printf("Placing data in mega struct: %s\n", to_string(data->type_label).c_str());
-    switch (data->type_label) {
-    case TypeLabel::TestData: {
-        // place the data in the mega struct
-        TestData* test_data = static_cast<TestData*>(data);
-        memcpy(&hive_data.test_data, test_data, sizeof(TestData));
-        break;
-    }
-    case TypeLabel::TargetState: {
-        // place the data in the mega struct
-        TargetState* target_state = static_cast<TargetState*>(data);
-        memcpy(&hive_data.target_state, target_state, sizeof(TargetState));
-        break;
-    }
-    case TypeLabel::OverrideState: {
-        // place the data in the mega struct
-        OverrideState* override_state = static_cast<OverrideState*>(data);
-        memcpy(&hive_data.override_state, override_state, sizeof(OverrideState));
-        break;
-    }
-    case TypeLabel::ConfigSection: {
-        // place the data in the mega struct
-        ConfigSection* config_section = static_cast<ConfigSection*>(data);
-        memcpy(&hive_data.config_section, config_section, sizeof(ConfigSection));
-        break;
-    }
-    default:
-        assert(false && "Invalid type label given to place in mega struct");
-    }
-
+    hive_data.set_data(data);
+    
     comms_layer.set_hive_data(hive_data);
+#endif
+}
 
+void PacketPayload::place_outgoing_data_in_mega_struct(CommsData* data) {
+#if defined(HIVE)
+    HiveData hive_data = Hive::env->comms_layer->get_hive_data();
+
+    hive_data.set_data(data);
+
+    Hive::env->comms_layer->set_hive_data(hive_data);
+#elif defined(FIRMWARE)
+    FirmwareData firmware_data = comms_layer.get_firmware_data();
+
+    Serial.printf("Placing data in mega struct: %s\n", to_string(data->type_label).c_str());
+    firmware_data.set_data(data);
+
+    comms_layer.set_firmware_data(firmware_data);
 #endif
 }
 
@@ -660,7 +562,8 @@ TEST_CASE("Testing packet payload") {
         // add and construct
         payload.add(new TestData(data));
 
-        payload.construct_data();
+        // construct should throw an error
+        REQUIRE_THROWS_AS(payload.construct_data(), std::runtime_error);
 
         // deconstruct should throw an error
         REQUIRE_THROWS_AS(payload.deconstruct_data(payload.data(), PACKET_SIZE), std::runtime_error);

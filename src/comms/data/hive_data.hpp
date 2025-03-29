@@ -1,27 +1,22 @@
 #pragma once
 
-#if defined(FIRMWARE)
-
-#include "comms/data/comms_data.hpp"        // for CommsData
-#include "comms/data/data_structs.hpp"      // for shared data structs
-
-/// @brief Data struct for testing purposes
-struct TestData : Comms::CommsData {
-    TestData() : Comms::CommsData(Comms::TypeLabel::TestData, Comms::PhysicalMedium::Ethernet, Comms::Priority::High, sizeof(TestData)) {}
-    /// @brief x value
-    float x = 1.f;
-    /// @brief y value
-    float y = 2.f;
-    /// @brief z value
-    float z = 3.f;
-    /// @brief w value
-    uint32_t w = 0x98765432;
-};
+#if defined(HIVE)
+#include "modules/comms/data/comms_data.hpp"    // for CommsData
+#include "modules/comms/data/data_structs.hpp"  // for shared data structs
+#elif defined(FIRMWARE)
+#include "comms/data/comms_data.hpp"            // for CommsData
+#include "comms/data/data_structs.hpp"          // for shared data structs
+#endif
 
 namespace Comms {
 
 /// @brief Megastruct for receiving data from Hive, filled on firmware.
 struct HiveData {
+    /// @brief Set a data section in the mega struct.
+    /// @param data The data to be set.
+    /// @warning This is not thread safe, call this on local copies only
+    void set_data(CommsData* data);
+    
     /// @brief Test data
     TestData test_data;
 
@@ -36,5 +31,3 @@ struct HiveData {
 };
 
 } // namespace Comms
-
-#endif  // FIRMWARE
