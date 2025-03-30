@@ -61,12 +61,6 @@ public:
     /// @param data The firmware data to set
     void set_firmware_data(FirmwareData& data);
 
-    // TODO: remove these sometime soon
-    HIDPacket get_hid_incoming();
-    void set_hid_outgoing(HIDPacket& packet);
-    EthernetPacket get_ethernet_incoming();
-    void set_ethernet_outgoing(EthernetPacket& packet);
-    
 private:
     /// @brief Initializes HID and starts its thread
     /// @return True if successful, false if failed
@@ -79,13 +73,9 @@ private:
 private:
     /// @brief Ethernet physical layer
     Comms::EthernetComms m_ethernet;
-    /// @brief Ethernet outgoing packet
-    EthernetPacket m_ethernet_outgoing;
 
     /// @brief HID physical layer
     Comms::HIDComms m_hid;
-    /// @brief HID outgoing packet
-    HIDPacket m_hid_outgoing;
 
     /// @brief Packet payload for Ethernet
     PacketPayload m_ethernet_payload{ETHERNET_PACKET_PAYLOAD_MAX_SIZE};

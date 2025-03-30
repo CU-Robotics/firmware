@@ -2,6 +2,7 @@
 #include "comms_layer.hpp"
 
 #include "comms/data/sendable.hpp"
+#include "hid_comms.hpp"
 
 /// @brief This resets the whole processor and kicks it back to program entry (teensy4/startup.c)
 /// @param void specify no arguments (needed in C)
@@ -35,8 +36,7 @@ const Config* const ConfigLayer::configure(Comms::CommsLayer* comms, bool config
         }
         delta_time = millis() - prev_time;
     #endif
-        process(comms->get_hid_incoming(), &outgoing);
-        comms->set_hid_outgoing(outgoing);
+        process();
         comms->run();
     }
 
@@ -134,10 +134,12 @@ void ConfigLayer::config_SD_init() {
     }
 }
 
-void ConfigLayer::process(Comms::HIDPacket in, Comms::HIDPacket* out) {
+void ConfigLayer::process() {
     ConfigSection in_section = comms_layer.get_hive_data().config_section;
     ConfigSection out_section;
 
+    // TODO: with the config refactor, remove this
+    Comms::HIDPacket in;
     in.raw[0] = 0xff; // filler byte (needed for some reason)
     in.raw[1] = in_section.section_id;
     in.raw[2] = in_section.subsection_id;
@@ -145,8 +147,6 @@ void ConfigLayer::process(Comms::HIDPacket in, Comms::HIDPacket* out) {
     *reinterpret_cast<uint16_t*>(in.raw + 4) = in_section.section_size;
     *reinterpret_cast<uint16_t*>(in.raw + 6) = in_section.subsection_size;
     memcpy(in.raw + 8, in_section.raw, 1000);
-
-    char* out_raw = out->raw;
 
     // if this is the packet we want
     if (in_section.section_id == seek_sec && in_section.subsection_id == seek_subsec && in_section.info_bit == 1) {
@@ -207,11 +207,6 @@ void ConfigLayer::process(Comms::HIDPacket in, Comms::HIDPacket* out) {
 
     // if configuration isn't complete, request the next packet
     if (!configured) {
-        out_raw[0] = 0xff; // filler byte (needed for some reason)
-        out_raw[1] = out_section.section_id;
-        out_raw[2] = out_section.subsection_id;
-        out_raw[3] = out_section.info_bit;
-
         Comms::Sendable<ConfigSection> sendable = out_section;
         sendable.send_to_comms();
     }
@@ -219,7 +214,7 @@ void ConfigLayer::process(Comms::HIDPacket in, Comms::HIDPacket* out) {
 
 void Config::fill_data(Comms::HIDPacket packets[MAX_CONFIG_PACKETS], uint8_t sizes[MAX_CONFIG_PACKETS]) {
     for (int i = 0; i < MAX_CONFIG_PACKETS; i++) {
-        uint8_t id = packets[i].get_id();
+        uint8_t sec_id = *reinterpret_cast<uint8_t*>(packets[i].raw + 1);
         uint8_t subsec_id = *reinterpret_cast<uint8_t*>(packets[i].raw + 2);
         uint16_t sub_size = *reinterpret_cast<uint16_t*>(packets[i].raw + 6);
 
@@ -227,15 +222,15 @@ void Config::fill_data(Comms::HIDPacket packets[MAX_CONFIG_PACKETS], uint8_t siz
             index = 0;
 
         if (sub_size != 0) {
-            Serial.printf("id: %d, subsec_id: %d, sub_size: %d\n", id, subsec_id, sub_size);
+            Serial.printf("id: %d, subsec_id: %d, sub_size: %d\n", sec_id, subsec_id, sub_size);
         }
 
-        if (id == yaml_section_id_mappings.at("robot")) {
+        if (sec_id == yaml_section_id_mappings.at("robot")) {
             memcpy(&robot, packets[i].raw + 8, sub_size);
             index += sub_size;
         }
 
-        if (id == yaml_section_id_mappings.at("motor_info")) {
+        if (sec_id == yaml_section_id_mappings.at("motor_info")) {
 
             size_t linear_index = index / sizeof(float);
             size_t i1 = linear_index / (CAN_MAX_MOTORS);
@@ -244,7 +239,7 @@ void Config::fill_data(Comms::HIDPacket packets[MAX_CONFIG_PACKETS], uint8_t siz
             index += sub_size;
         }
 
-        if (id == yaml_section_id_mappings.at("sensor_info")) {
+        if (sec_id == yaml_section_id_mappings.at("sensor_info")) {
             size_t linear_index = index / sizeof(float);
             size_t i1 = linear_index / (NUM_SENSORS);
             size_t i2 = linear_index % NUM_SENSORS;
@@ -252,14 +247,14 @@ void Config::fill_data(Comms::HIDPacket packets[MAX_CONFIG_PACKETS], uint8_t siz
             index += sub_size;
         }
 
-        if (id == yaml_section_id_mappings.at("gains")) {
+        if (sec_id == yaml_section_id_mappings.at("gains")) {
             size_t linear_index = index / sizeof(float);
             size_t i1 = linear_index / (NUM_GAINS);
             size_t i2 = linear_index % NUM_GAINS;
             memcpy(&gains[i1][i2], packets[i].raw + 8, sub_size);
             index += sub_size;
         }
-        if (id == yaml_section_id_mappings.at("gear_ratios")) {
+        if (sec_id == yaml_section_id_mappings.at("gear_ratios")) {
             size_t linear_index = index / sizeof(float);
             size_t i1 = linear_index / (NUM_GAINS);
             size_t i2 = linear_index % NUM_GAINS;
@@ -267,7 +262,7 @@ void Config::fill_data(Comms::HIDPacket packets[MAX_CONFIG_PACKETS], uint8_t siz
             index += sub_size;
         }
 
-        if (id == yaml_section_id_mappings.at("reference_limits")) {
+        if (sec_id == yaml_section_id_mappings.at("reference_limits")) {
             size_t linear_index = index / sizeof(float);
             size_t i1 = linear_index / (STATE_LEN * 3 * 2);
             size_t i2 = (linear_index % (STATE_LEN * 3 * 2)) / (3 * 2);
@@ -275,17 +270,17 @@ void Config::fill_data(Comms::HIDPacket packets[MAX_CONFIG_PACKETS], uint8_t siz
             memcpy(&set_reference_limits[i1][i2][i3], packets[i].raw + 8, sub_size);
             index += sub_size;
         }
-        if (id == yaml_section_id_mappings.at("controller_info")) {
+        if (sec_id == yaml_section_id_mappings.at("controller_info")) {
             size_t linear_index = index / sizeof(float);
             size_t i1 = linear_index / (CAN_MAX_MOTORS);
             size_t i2 = linear_index % CAN_MAX_MOTORS;
             memcpy(&controller_info[i1][i2], packets[i].raw + 8, sub_size);
             index += sub_size;
         }
-        if (id == yaml_section_id_mappings.at("governor_types")) {
+        if (sec_id == yaml_section_id_mappings.at("governor_types")) {
             memcpy(governor_types, packets[i].raw + 8, sub_size);
         }
-        if (id == yaml_section_id_mappings.at("estimator_info")) {
+        if (sec_id == yaml_section_id_mappings.at("estimator_info")) {
             size_t linear_index = index / sizeof(float);
             size_t i1 = linear_index / (STATE_LEN);
             size_t i2 = linear_index % STATE_LEN;

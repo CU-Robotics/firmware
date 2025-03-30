@@ -124,6 +124,7 @@ int main() {
     float temp_reference[STATE_LEN][3] = { 0 }; //Temp governed state
     float target_state[STATE_LEN][3] = { 0 }; //Temp ungoverned state
     float hive_state_offset[STATE_LEN][3] = { 0 }; //Hive offset state
+    bool override_request = false;
     // float motor_inputs[CAN_MAX_MOTORS] = { 0 }; //Array for storing controller outputs to send to CAN
 
     // manual controls variables
@@ -167,13 +168,6 @@ int main() {
 
         test_data.send_to_comms();
         sensor_manager.send_sensor_data_to_comms();
-
-        Comms::HIDPacket hid_incoming = comms_layer.get_hid_incoming();
-        Comms::HIDPacket hid_outgoing;
-        // Comms::EthernetPacket eth_incoming = comms_layer.get_ethernet_incoming();
-        Comms::EthernetPacket eth_outgoing;
-
-        eth_outgoing.header.sequence = loopc;
 
         // check whether this packet is a config packet
         if (comms_layer.get_hive_data().config_section.info_bit == 1) {
@@ -269,14 +263,19 @@ int main() {
         // }
         
         // override temp state if needed
-        if (hid_incoming.get_hive_override_request() == 1) {
+        if (comms_layer.get_hive_data().override_state.active) {
+            // clear the request
+            comms_layer.get_hive_data().override_state.active = false;
+            
             Serial.printf("Overriding state with hive state\n");
-            hid_incoming.get_hive_override_state(hive_state_offset);
+            memcpy(hive_state_offset, comms_layer.get_hive_data().override_state.state, sizeof(hive_state_offset));
             memcpy(temp_state, hive_state_offset, sizeof(hive_state_offset));
+            override_request = true;
         }
 
         // step estimates and construct estimated state
-        estimator_manager.step(temp_state, temp_micro_state, hid_incoming.get_hive_override_request());
+        estimator_manager.step(temp_state, temp_micro_state, override_request);
+        override_request = false;
 
         // if first loop set target state to estimated state
         if (count_one == 0) {
@@ -308,15 +307,11 @@ int main() {
 
         // can.print_state();
 
-        // construct sensor data packet
-        Comms::SensorData sensor_data;
-
         // construct ref data packet
         CommsRefData ref_data = ref->get_data_for_comms();
         Comms::Sendable<CommsRefData> ref_data_sendable = ref_data;
         ref_data_sendable.send_to_comms();
 
-        // TODO: phase out this temp state sendable
         Comms::Sendable<EstimatedState> estimated_state;
         memcpy(estimated_state.data.state, temp_state, sizeof(temp_state));
         estimated_state.data.time = millis() / 1000.0;
@@ -342,9 +337,6 @@ int main() {
         // logging_data.deserialize(logging_data_str, strlen(logging_data_str));
         // logging_data.send_to_comms();
 
-        comms_layer.set_ethernet_outgoing(eth_outgoing);
-        comms_layer.set_hid_outgoing(hid_outgoing);
-
         comms_layer.run();
 
         bool is_slow_loop = false;
@@ -360,7 +352,6 @@ int main() {
             // mark this as a slow loop to trigger safety mode
             is_slow_loop = true;
         }
-
 
         //  SAFETY MODE
         if (dr16.is_connected() && (dr16.get_l_switch() == 2 || dr16.get_l_switch() == 3) && config_layer.is_configured() && !is_slow_loop) {

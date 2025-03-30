@@ -229,6 +229,8 @@ struct OverrideState : Comms::CommsData {
     float state[24][3] = { {0} };
     /// @brief The delay in communication between the teensy and the khadas
     double comms_delay = 0;
+    /// @brief Whether this request is active or not
+    bool active = false;
 };
 
 /// @brief Section of a config packet

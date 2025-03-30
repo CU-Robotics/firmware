@@ -125,22 +125,6 @@ void CommsLayer::set_firmware_data(FirmwareData& data) {
     m_firmware_data = data;
 };
 
-HIDPacket CommsLayer::get_hid_incoming() {
-    return m_hid.get_incoming_packet();
-};
-
-void CommsLayer::set_hid_outgoing(HIDPacket& packet) {
-    m_hid_outgoing = packet;
-};
-
-EthernetPacket CommsLayer::get_ethernet_incoming() {
-    return m_ethernet.get_incoming_packet();
-};
-
-void CommsLayer::set_ethernet_outgoing(EthernetPacket& packet) {
-    m_ethernet_outgoing = packet;
-};
-
 bool CommsLayer::initialize_hid() {
     // Initialize the HID physical layer
     m_hid.init();
@@ -150,7 +134,12 @@ bool CommsLayer::initialize_hid() {
 
 bool CommsLayer::initialize_ethernet() {
     // Initialize the Ethernet physical layer
-    m_ethernet.begin();
+    if (!m_ethernet.begin()) {
+        Serial.println("Ethernet initialization failed");
+        return false;
+    }
+    
+    Serial.println("Ethernet initialized successfully");
 
     return true;
 };

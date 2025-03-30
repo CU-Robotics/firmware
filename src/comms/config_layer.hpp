@@ -158,9 +158,7 @@ public:
     [[noreturn]] void reconfigure(Comms::CommsLayer* comms);
 
     /// @brief check incoming packet from the comms layer and update outgoing packet accordingly to request next config packet
-    /// @param in incoming comms packet
-    /// @param out outgoing comms packet to write config requests to
-    void process(Comms::HIDPacket in, Comms::HIDPacket* out);
+    void process();
 
     /// @brief return configured flag (check if all config packets have been received)
     /// @return the configured flag
