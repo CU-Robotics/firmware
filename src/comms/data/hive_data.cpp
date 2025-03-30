@@ -11,7 +11,6 @@ namespace Comms {
 
 void HiveData::set_data(CommsData* data) {
     // place the data in the mega struct
-    Serial.printf("blah\n");
     switch (data->type_label) {
     case TypeLabel::TestData: {
         TestData *test = static_cast<TestData*>(data);

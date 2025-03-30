@@ -240,7 +240,7 @@ void PacketPayload::place_incoming_data_in_mega_struct(CommsData* data) {
 
     HiveData& hive_data = comms_layer.get_hive_data();
     
-    Serial.printf("Placing incoming in mega struct: %s\n", to_string(data->type_label).c_str());
+    // Serial.printf("Placing incoming in mega struct: %s\n", to_string(data->type_label).c_str());
     hive_data.set_data(data);
 #endif
 }
@@ -255,7 +255,7 @@ void PacketPayload::place_outgoing_data_in_mega_struct(CommsData* data) {
 #elif defined(FIRMWARE)
     FirmwareData& firmware_data = comms_layer.get_firmware_data();
 
-    Serial.printf("Placing outgoing in mega struct: %s\n", to_string(data->type_label).c_str());
+    // Serial.printf("Placing outgoing in mega struct: %s\n", to_string(data->type_label).c_str());
     firmware_data.set_data(data);
 #endif
 }
