@@ -69,9 +69,10 @@ CPPFLAGS := $(INCLUDE_FLAGS) $(DEFINES) -MMD -MP -ffunction-sections -fdata-sect
 CFLAGS := $(CPU_CFLAGS)
 
 # Compiler flags for C++ files
-CXXFLAGS := $(CPU_CFLAGS) -std=gnu++17 \
+CXXFLAGS := $(CPU_CFLAGS) -std=gnu++23 \
             -felide-constructors -fno-exceptions -fpermissive -fno-rtti \
-            -Wno-error=narrowing -Wno-trigraphs -Wno-comment -Wall -Werror
+            -Wno-error=narrowing -Wno-trigraphs -Wno-comment -Wall -Werror \
+			-Wno-volatile
 
 # Linker flags, including Teensy-specific linker script
 # --gc-sections: Remove unused sections to reduce binary size
