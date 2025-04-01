@@ -4,7 +4,7 @@ namespace Comms {
 
 HIDComms::HIDComms() {}
 
-void HIDComms::init() { Serial.println("Starting HID layer"); }
+void HIDComms::init() { Serial.println("HIDComms: Starting HID layer"); }
 
 std::optional<HIDPacket> HIDComms::sendReceive(HIDPacket& outgoing_packet) {
     // loop until the packet buffer is empty (this is only ever 1 packet large)
@@ -15,7 +15,7 @@ std::optional<HIDPacket> HIDComms::sendReceive(HIDPacket& outgoing_packet) {
         if (read(incoming_packet)) {
             // if we read, attempt to write
             if (!write(outgoing_packet))
-                Serial.printf("Failed to send: %llu\n", m_packetsSent);
+                Serial.printf("HIDComms: Failed to send: %llu\n", m_packetsSent);
 
             return m_incomingPacket;
         }
@@ -25,7 +25,7 @@ std::optional<HIDPacket> HIDComms::sendReceive(HIDPacket& outgoing_packet) {
 }
 
 void HIDComms::print_outgoing() {
-    Serial.println("Outgoing packet:");
+    Serial.println("HIDComms: Outgoing packet:");
     for (unsigned int i = 0; i < HID_PACKET_MAX_SIZE; i++)
         Serial.printf("%.2x ", m_outgoingPacket.data_start()[i]);
 
@@ -33,7 +33,7 @@ void HIDComms::print_outgoing() {
 }
 
 void HIDComms::print_incoming() {
-    Serial.println("Incoming packet:");
+    Serial.println("HIDComms: Incoming packet:");
     for (unsigned int i = 0; i < HID_PACKET_MAX_SIZE; i++)
         Serial.printf("%.2x ", m_incomingPacket.data_start()[i]);
 
