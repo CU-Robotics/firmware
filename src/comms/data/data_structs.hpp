@@ -237,6 +237,8 @@ struct OverrideState : Comms::CommsData {
 struct ConfigSection : Comms::CommsData {
     ConfigSection() : CommsData(Comms::TypeLabel::ConfigSection, Comms::PhysicalMedium::Ethernet, Comms::Priority::High, sizeof(ConfigSection)) { }
 
+    /// @brief filler byte
+    uint8_t filler = 0xff;
     /// @brief Section ID
     int8_t section_id = 0;
     /// @brief Subsection ID

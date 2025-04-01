@@ -6,21 +6,9 @@
 #include "../controls/state.hpp"	// STATE_LEN macro
 #include <optional>
 
+#include "hid_packet.hpp"
+
 namespace Comms {
-
-/// @brief Packet size for communication packets
-constexpr unsigned int HID_PACKET_SIZE = 1023u;
-/// @brief The max size of the payload in a packet
-constexpr unsigned int HID_PACKET_PAYLOAD_SIZE = HID_PACKET_SIZE - 1u;
-
-/// @brief An encapsulating data struct managing a HID packet
-struct HIDPacket {
-	/// @brief The raw array of bytes of a packet
-	char raw[HID_PACKET_SIZE] = { 0 };
-
-	/// @brief the starting address of the payload section in the packet
-	uint8_t* payload() { return reinterpret_cast<uint8_t*>(raw + 1); }
-};
 
 /// @brief The communications layer between Khadas and Teensy
 class HIDComms {

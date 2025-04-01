@@ -140,13 +140,13 @@ void ConfigLayer::process() {
 
     // TODO: with the config refactor, remove this
     Comms::HIDPacket in;
-    in.raw[0] = 0xff; // filler byte (needed for some reason)
-    in.raw[1] = in_section.section_id;
-    in.raw[2] = in_section.subsection_id;
-    in.raw[3] = in_section.info_bit;
-    *reinterpret_cast<uint16_t*>(in.raw + 4) = in_section.section_size;
-    *reinterpret_cast<uint16_t*>(in.raw + 6) = in_section.subsection_size;
-    memcpy(in.raw + 8, in_section.raw, 1000);
+    in.payload()[0] = 0xff; // filler byte (needed for some reason)
+    in.payload()[1] = in_section.section_id;
+    in.payload()[2] = in_section.subsection_id;
+    in.payload()[3] = in_section.info_bit;
+    *reinterpret_cast<uint16_t*>(in.payload() + 4) = in_section.section_size;
+    *reinterpret_cast<uint16_t*>(in.payload() + 6) = in_section.subsection_size;
+    memcpy(in.payload() + 8, in_section.raw, 1000);
 
     // if this is the packet we want
     if (in_section.section_id == seek_sec && in_section.subsection_id == seek_subsec && in_section.info_bit == 1) {
@@ -214,9 +214,9 @@ void ConfigLayer::process() {
 
 void Config::fill_data(Comms::HIDPacket packets[MAX_CONFIG_PACKETS], uint8_t sizes[MAX_CONFIG_PACKETS]) {
     for (int i = 0; i < MAX_CONFIG_PACKETS; i++) {
-        uint8_t sec_id = *reinterpret_cast<uint8_t*>(packets[i].raw + 1);
-        uint8_t subsec_id = *reinterpret_cast<uint8_t*>(packets[i].raw + 2);
-        uint16_t sub_size = *reinterpret_cast<uint16_t*>(packets[i].raw + 6);
+        uint8_t sec_id = *reinterpret_cast<uint8_t*>(packets[i].payload() + 1);
+        uint8_t subsec_id = *reinterpret_cast<uint8_t*>(packets[i].payload() + 2);
+        uint16_t sub_size = *reinterpret_cast<uint16_t*>(packets[i].payload() + 6);
 
         if (subsec_id == 0)
             index = 0;
@@ -226,7 +226,7 @@ void Config::fill_data(Comms::HIDPacket packets[MAX_CONFIG_PACKETS], uint8_t siz
         }
 
         if (sec_id == yaml_section_id_mappings.at("robot")) {
-            memcpy(&robot, packets[i].raw + 8, sub_size);
+            memcpy(&robot, packets[i].payload() + 8, sub_size);
             index += sub_size;
         }
 
@@ -235,7 +235,7 @@ void Config::fill_data(Comms::HIDPacket packets[MAX_CONFIG_PACKETS], uint8_t siz
             size_t linear_index = index / sizeof(float);
             size_t i1 = linear_index / (CAN_MAX_MOTORS);
             size_t i2 = linear_index % CAN_MAX_MOTORS;
-            memcpy(&motor_info[i1][i2], packets[i].raw + 8, sub_size);
+            memcpy(&motor_info[i1][i2], packets[i].payload() + 8, sub_size);
             index += sub_size;
         }
 
@@ -243,7 +243,7 @@ void Config::fill_data(Comms::HIDPacket packets[MAX_CONFIG_PACKETS], uint8_t siz
             size_t linear_index = index / sizeof(float);
             size_t i1 = linear_index / (NUM_SENSORS);
             size_t i2 = linear_index % NUM_SENSORS;
-            memcpy(&sensor_info[i1][i2], packets[i].raw + 8, sub_size);
+            memcpy(&sensor_info[i1][i2], packets[i].payload() + 8, sub_size);
             index += sub_size;
         }
 
@@ -251,14 +251,14 @@ void Config::fill_data(Comms::HIDPacket packets[MAX_CONFIG_PACKETS], uint8_t siz
             size_t linear_index = index / sizeof(float);
             size_t i1 = linear_index / (NUM_GAINS);
             size_t i2 = linear_index % NUM_GAINS;
-            memcpy(&gains[i1][i2], packets[i].raw + 8, sub_size);
+            memcpy(&gains[i1][i2], packets[i].payload() + 8, sub_size);
             index += sub_size;
         }
         if (sec_id == yaml_section_id_mappings.at("gear_ratios")) {
             size_t linear_index = index / sizeof(float);
             size_t i1 = linear_index / (NUM_GAINS);
             size_t i2 = linear_index % NUM_GAINS;
-            memcpy(&gear_ratios[i1][i2], packets[i].raw + 8, sub_size);
+            memcpy(&gear_ratios[i1][i2], packets[i].payload() + 8, sub_size);
             index += sub_size;
         }
 
@@ -267,24 +267,24 @@ void Config::fill_data(Comms::HIDPacket packets[MAX_CONFIG_PACKETS], uint8_t siz
             size_t i1 = linear_index / (STATE_LEN * 3 * 2);
             size_t i2 = (linear_index % (STATE_LEN * 3 * 2)) / (3 * 2);
             size_t i3 = (linear_index % (STATE_LEN * 3 * 2)) % (3 * 2);
-            memcpy(&set_reference_limits[i1][i2][i3], packets[i].raw + 8, sub_size);
+            memcpy(&set_reference_limits[i1][i2][i3], packets[i].payload() + 8, sub_size);
             index += sub_size;
         }
         if (sec_id == yaml_section_id_mappings.at("controller_info")) {
             size_t linear_index = index / sizeof(float);
             size_t i1 = linear_index / (CAN_MAX_MOTORS);
             size_t i2 = linear_index % CAN_MAX_MOTORS;
-            memcpy(&controller_info[i1][i2], packets[i].raw + 8, sub_size);
+            memcpy(&controller_info[i1][i2], packets[i].payload() + 8, sub_size);
             index += sub_size;
         }
         if (sec_id == yaml_section_id_mappings.at("governor_types")) {
-            memcpy(governor_types, packets[i].raw + 8, sub_size);
+            memcpy(governor_types, packets[i].payload() + 8, sub_size);
         }
         if (sec_id == yaml_section_id_mappings.at("estimator_info")) {
             size_t linear_index = index / sizeof(float);
             size_t i1 = linear_index / (STATE_LEN);
             size_t i2 = linear_index % STATE_LEN;
-            memcpy(&estimator_info[i1][i2], packets[i].raw + 8, sub_size);
+            memcpy(&estimator_info[i1][i2], packets[i].payload() + 8, sub_size);
             index += sub_size;
         }
     }
