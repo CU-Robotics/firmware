@@ -62,6 +62,10 @@ public:
     /// @note This is not thread safe
     uint8_t* data();
 
+    /// @brief Clear the queues and the raw data buffer.
+    /// @note This is thread safe
+    void clear_queues();
+
 private:
     /// @brief Clear the raw data buffer.
     void clear_raw_data();

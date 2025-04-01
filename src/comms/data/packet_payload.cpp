@@ -128,6 +128,31 @@ uint8_t* PacketPayload::data() {
     return raw_data;
 }
 
+void PacketPayload::clear_queues() {
+#if defined(HIVE)
+    std::lock_guard<std::mutex> lock(m_mutex);
+#endif
+
+    // clear the queues
+    while (!high_priority_send_queue.empty()) {
+        delete high_priority_send_queue.front();
+        high_priority_send_queue.pop();
+    }
+
+    while (!medium_priority_send_queue.empty()) {
+        delete medium_priority_send_queue.front();
+        medium_priority_send_queue.pop();
+    }
+
+    while (!logging_send_queue.empty()) {
+        delete logging_send_queue.front();
+        logging_send_queue.pop();
+    }
+
+    // clear the raw data buffer
+    clear_raw_data();
+}
+
 void PacketPayload::clear_raw_data() {
     // fill raw data with 0's, and reset remaining size
     memset(raw_data, 0, max_data_size);
@@ -232,9 +257,7 @@ void PacketPayload::place_incoming_data_in_mega_struct(CommsData* data) {
     firmware_data.set_data(data);
 
     Hive::env->comms_layer->set_firmware_data(firmware_data);
-    
 #elif defined(FIRMWARE)
-
     HiveData& hive_data = comms_layer.get_hive_data();
     
     // Serial.printf("Placing incoming in mega struct: %s\n", to_string(data->type_label).c_str());
