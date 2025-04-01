@@ -66,7 +66,6 @@ bool HIDComms::write(HIDPacket& outgoing_packet) {
         // increment total number of packets sent and return success
         m_packetsSent++;
         m_outgoingPacket = outgoing_packet;
-        Serial.printf("Sent packet: %llu\n", m_packetsSent);
         return true;
     } else {
         m_packetsFailed++;

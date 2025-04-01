@@ -78,7 +78,9 @@ const Config* const ConfigLayer::configure(Comms::CommsLayer* comms, bool config
 
     // Hive marks the config process as done once teensy sends a packet with info_bit == 0
     // Hive then sends a packet back with info_bit == 0 as well, so ping until we get a non-config back
-    while (comms_layer.get_hive_data().config_section.info_bit == 1) {
+    // TODO: this timeout is a hack, but it seems to work very well. Hive ends up seeing the 0 info bit before firmware does, causing this loop to never end
+    uint32_t start = micros();
+    while (comms_layer.get_hive_data().config_section.info_bit == 1 || micros() - start < 500000) {
         Comms::Sendable<ConfigSection> sendable;
         sendable.data.info_bit = 0;
         sendable.send_to_comms();
@@ -101,6 +103,8 @@ void ConfigLayer::reconfigure(Comms::CommsLayer* comms) {
     // perform a normal config, but dont try to load from the config, just process and store
     configure(comms, false);
 
+    Serial.printf("Config: Rebooting Teensy...\n");
+    delay(10);  // delay to allow the print to finish before the reboot
     // issue the reboot call
     reset_teensy();
 

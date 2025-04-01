@@ -233,9 +233,10 @@ struct OverrideState : Comms::CommsData {
     bool active = false;
 };
 
+// TODO: make this ethernet capable
 /// @brief Section of a config packet
 struct ConfigSection : Comms::CommsData {
-    ConfigSection() : CommsData(Comms::TypeLabel::ConfigSection, Comms::PhysicalMedium::Ethernet, Comms::Priority::High, sizeof(ConfigSection)) { }
+    ConfigSection() : CommsData(Comms::TypeLabel::ConfigSection, Comms::PhysicalMedium::HID, Comms::Priority::High, sizeof(ConfigSection)) { }
 
     /// @brief filler byte
     uint8_t filler = 0xff;

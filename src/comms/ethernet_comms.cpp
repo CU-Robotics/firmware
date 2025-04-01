@@ -95,13 +95,6 @@ std::optional<EthernetPacket> EthernetComms::sendReceive(EthernetPacket& outgoin
 	EthernetPacket incoming_packet;
 	bool received = recv_packet(&incoming_packet);
 
-	// if we detect a handshake request from Jetson, respond
-	if (incoming_packet.header.type == Comms::EthernetPacketType::HANDSHAKE) {
-		Serial.printf("Handshake received...\n");
-		connect_jetson();
-		Serial.printf("Handshake finished!\n");
-	}
-
 	// check whether the connection is still alive
 	check_connection();
 
