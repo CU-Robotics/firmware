@@ -78,7 +78,7 @@ void FirmwareData::set_data(CommsData* data) {
     }
     case TypeLabel::LidarDataPacketSI: {
         //determine which lidar sensor the data is for
-        // TODO: implement this on firmware
+        // TODO: implement this on firmware, do we actually need it on firmware?
         // LidarDataPacketSI* lidar_sensor_data = static_cast<LidarDataPacketSI*>(data);
         // if (lidar_sensor_data->id == 0) {
         //     lidars[0].push_back(*lidar_sensor_data);
@@ -94,7 +94,7 @@ void FirmwareData::set_data(CommsData* data) {
     }
     case TypeLabel::CommsRefData: {
         // place the data in the mega struct
-        // TODO: implement this on firmware
+        // TODO: implement this on firmware, do we actually need it on firmware?
         // CommsRefData* comms_ref_data = static_cast<CommsRefData*>(data);
         // ref_data.set_data(comms_ref_data->raw);
         break;

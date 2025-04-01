@@ -83,11 +83,6 @@ std::optional<EthernetPacket> EthernetComms::sendReceive(EthernetPacket& outgoin
 		return {};
 	}
 
-	// BUG: I'm not sure yet, but it takes an unknown amount of time for Hive and Teensy to handshake if Teensy was online AND unconfigured first. 
-	// 		Hive fails to receive any packets until a point if it has to manually configure Teensy. Possible workarounds involve Hive restarting 
-	// 		Teensy if it is unable to handshake for a certain amount of time.
-	//      None of this happens if Teensy is already configured when Hive starts, or if Hive restarts and manually issues a reconfigure command.
-
 	// send the outgoing packet
 	send_packet(outgoing_packet);
 

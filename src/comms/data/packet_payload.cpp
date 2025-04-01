@@ -180,9 +180,6 @@ void PacketPayload::fill_logging_data_from_queue(std::queue<LoggingData*>& queue
         bool finished_append = try_append_splittable_logging_data(next_data);
 
         if (finished_append) {
-            // TODO: set the data in the mega struct
-            // place_outgoing_data_in_mega_struct(next_data);
-            
             // if we have appended the entirety of the splittlable comms data
             queue.pop(); // remove the appended item from the queue, going to the next.
         } else {
