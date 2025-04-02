@@ -178,8 +178,9 @@ int IMU_filter::step_EKF_6axis(IMU_data data){
             }
         }
     }
-    float temp1 = filtered_data.pitch;
-    float temp2 = filtered_data.roll;
+    // These are the last time data
+    float temp1 = filtered_data.pitch; 
+    float temp2 = filtered_data.roll; 
     float temp3 = filtered_data.yaw;
     filtered_data = data; // Reset all filtered data to the raw data
     filtered_data.pitch = (atan2f(2.0f * (x[0] * x[1] + x[2] * x[3]), 1.0f - 2.0f * (x[1] * x[1] + x[2] * x[2])));
@@ -194,6 +195,7 @@ int IMU_filter::step_EKF_6axis(IMU_data data){
         filtered_data.roll =  asinf(2.0f * (x[0]*x[2] - x[1]*x[3]));
     }
     filtered_data.yaw = atan2f(2.0f*(x[0]*x[3] + x[1]*x[2]), 1.0f - 2.0f*(x[2]*x[2] + x[3]*x[3]));
+    // Calculate the filtered gyro data
     filtered_data.gyro_yaw = (filtered_data.yaw - temp3)/dt;
     filtered_data.gyro_roll = (filtered_data.roll - temp2)/dt;
     filtered_data.gyro_pitch = (filtered_data.pitch - temp1)/dt;

@@ -8,32 +8,33 @@
 #include "Sensor.hpp"
 #define CALIBRATION_NUM 100000
 
-
+/// @brief the data structure that holds all the IMU data
 struct IMU_data{
-float accel_X = 0; //acceleration raw value
+//acceleration raw value
+float accel_X = 0; 
 float accel_Y = 0;
 float accel_Z = 0;
-
-float gyro_X = 0; //raw gyroscope value (rad/s) x(along roll) y(along pitch) z(up-down)
+// raw gyroscope value (rad/s) x(along roll) y(along pitch) z(up-down)
+float gyro_X = 0; 
 float gyro_Y = 0;
 float gyro_Z = 0; 
-
-float temperature = 0; //(c)
-
-float pitch = 0; //Angle (rad)
+// Temperature in Celcius
+float temperature = 0; 
+// Angle (rad)
+float pitch = 0; 
 float roll = 0;
 float yaw = 0;
-
-float accel_world_X = 0; //Acceleration in world frame (m/s)
+// Acceleration in world frame (m/s)
+float accel_world_X = 0; 
 float accel_world_Y = 0;
 float accel_world_Z = 0;
-
-float gyro_pitch = 0; //Filtered angular velocity (rad/s)
+// angular velocity (rad/s)
+float gyro_pitch = 0; 
 float gyro_roll = 0;
 float gyro_yaw = 0;
-
-float roll_bias = 0;
-float pitch_bias = 0;
+// Bias for roll angle (rad)
+float roll_bias = 0; 
+float pitch_bias = 0; 
 };
 
 /// @brief Abstract parent class for all IMUSensors, which give acceleration and gyroscope data. 
@@ -74,7 +75,8 @@ public:
     /// @brief Get the change in gyroscope orientation relative to the z axis
     /// @return gyroscope z in radians/s
     inline float get_gyro_Z() { return data.gyro_Z;};
-
+    /// @brief get the data structure that holds all the IMU data
+    /// @return the IMU data structure
     IMU_data get_data();
 
     /// @brief Set offsets that we calculate during calibration
@@ -86,16 +88,17 @@ public:
         offset_Y = y;
         offset_Z = z;
     }
-
+    /// @brief set the scale of the accelerometer
+    /// @param a the scale of the accelerometer
     inline void set_scale(float a){
         scale_accel = a;
     }
-
+    /// @brief add bias to gyro and scale to accel
     void fix_raw_data();
 
     /// @brief Print out all IMU data to Serial for debugging purposes
     void print();
-
+    /// @brief Calibrate the IMU sensor
     void calibration_all();
 protected:
     // sensor events to read from

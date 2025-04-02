@@ -24,17 +24,17 @@ class IMU_filter{
         /// @brief Initalize everything including filter constant
         void init_EKF_6axis(IMU_data);
         
+        /// @brief Do one step of the EKF filter
+        /// @param  IMU_data is the IMU data structure that holds all the IMU data
+        /// @return int 0 if successful
         int step_EKF_6axis(IMU_data); 
-
-        void init_Kalman_Mahony(IMU_data);
-
-        void step_Kalman_Mahony(IMU_data);
 
         /// @brief Print out data for debugging
         void print();
         /// @brief Print out data for a Python 3D visulize function
         void serial_data_for_plot();
-
+        /// @brief get the filtered data
+        /// @return IMU data structure
         IMU_data* get_filter_data();
 };
 #endif
