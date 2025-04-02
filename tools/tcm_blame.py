@@ -35,11 +35,9 @@ with open(map_file_path, "r") as map_file:
     for line in map_file:
         # skip the discarded input section
         if (line == "Discarded input sections\n"):
-            print("discarded!")
             is_discarded = True
         
         if (line == "Memory Configuration\n"):
-            print("not discarded!")
             is_discarded = False
 
         line_num += 1
