@@ -83,6 +83,7 @@ struct write_data
 };
 struct observer_data
 {
+    float timer_1;
     float s_dot_filtered;
     float imu_speed_x;
     float imu_s;
@@ -114,7 +115,7 @@ struct observer_data
     float gyro_yaw_dot;
 
     float control_yaw;
-    float control_s;
+    float s;
 
     float body_speed_filtered;
     float body_accel_filtered; 
@@ -177,6 +178,7 @@ class balancing_test{
 
 
     public:
+        bool saftymode;
         /// @brief setting all constant array
         void init();
         /// @brief Set private data the data from main

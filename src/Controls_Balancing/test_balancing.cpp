@@ -2,10 +2,10 @@
 
 void balancing_test::init(){
     slowdalay_help = micros();
-    timer_1 = 0;
-    timer_2 = 0;
+    saftymode = 0;
+    o_data.timer_1 = 0;
     o_data.Q = 0.6; // Need tune
-    o_data.R_v = 0.0001; // Need tune
+    o_data.R_v = 0.00008; // Need tune
     o_data.R_a = 0.1; // Need tune
     o_data.P[0][0] = 10;
     o_data.P[0][1] = 10;
@@ -24,30 +24,32 @@ void balancing_test::init(){
     // p matrix for average leg length
     float tempp[P_LOCO_ROW][4][10] = {
         {
-            {-0.311626, -1.159928, -0.931607, -1.967591, 5.159878, 5.190632, -25.334997, 4.144864, -4.551144, 13.775539, },
-            {-0.311626, -1.159928, 0.931607, 1.967591, -25.334997, 4.144864, 5.159878, 5.190632, -4.551144, 13.775539, },
-            {-3.806412, -24.751227, -6.417710, -13.189415, 13.455799, -4.005782, -39.302868, -1.473885, -25.789983, -11.338040, },
-            {-3.806412, -24.751227, 6.417710, 13.189415, -39.302868, -1.473885, 13.455799, -4.005782, -25.789983, -11.338040, },
+            {-0.004145, -1.650315, -0.909907, -1.923823, 1.086632, 3.824680, -29.214293, 2.731081, -10.583794, 11.319160, },
+            {-0.004145, -1.650315, 0.909907, 1.923823, -29.214293, 2.731081, 1.086632, 3.824680, -10.583794, 11.319160, },
+            {-0.052346, -20.956400, -6.721955, -13.773410, 8.644970, -3.443012, -46.854420, -1.980743, -9.143605, -11.091483, },
+            {-0.052346, -20.956400, 6.721955, 13.773410, -46.854420, -1.980743, 8.644970, -3.443012, -9.143605, -11.091483, },
         },
         {
-            {0.288875, 1.136392, 0.492321, 1.068965, -3.001126, -5.635519, 25.402768, -3.648833, 2.159649, -13.523640, },
-            {0.288875, 1.136392, -0.492321, -1.068965, 25.402768, -3.648833, -3.001126, -5.635519, 2.159649, -13.523640, },
-            {3.670858, 23.760678, 8.382573, 17.315233, -41.237122, 2.842363, 61.706509, 0.831003, 24.926018, 10.442681, },
-            {3.670858, 23.760678, -8.382573, -17.315233, 61.706509, 0.831003, -41.237122, 2.842363, 24.926018, 10.442681, },
+            {0.003761, 1.497828, 0.469100, 1.022121, -0.172691, -4.268710, 27.999438, -2.254039, 8.859689, -11.127184, },
+            {0.003761, 1.497828, -0.469100, -1.022121, 27.999438, -2.254039, -0.172691, -4.268710, 8.859689, -11.127184, },
+            {0.050282, 20.129348, 8.650866, 17.828988, -34.611734, 2.678647, 70.742862, 1.746581, 9.099123, 10.059307, },
+            {0.050282, 20.129348, -8.650866, -17.828988, 70.742862, 1.746581, -34.611734, 2.678647, 9.099123, 10.059307, },
         },
         {
-            {-0.100158, -0.548560, 0.406640, 0.856828, -11.469955, -0.312079, -6.143024, 0.110402, 1.648687, 5.275870, },
-            {-0.100158, -0.548560, -0.406640, -0.856828, -6.143024, 0.110402, -11.469955, -0.312079, 1.648687, 5.275870, },
-            {-1.428865, -9.183442, -4.304230, -9.014479, 43.407934, 1.984265, -49.170667, -1.881759, -9.257165, -3.511889, },
-            {-1.428865, -9.183442, 4.304230, 9.014479, -49.170667, -1.881759, 43.407934, 1.984265, -9.257165, -3.511889, },
+            {-0.001233, -0.492250, 0.415544, 0.874718, -10.157713, -0.129480, -4.728724, 0.298218, -2.285644, 4.261764, },
+            {-0.001233, -0.492250, -0.415544, -0.874718, -4.728724, 0.298218, -10.157713, -0.129480, -2.285644, 4.261764, },
+            {-0.018559, -7.429150, -4.384514, -9.167199, 40.264658, 1.729683, -53.034326, -2.547287, -3.438399, -3.270813, },
+            {-0.018559, -7.429150, 4.384514, 9.167199, -53.034326, -2.547287, 40.264658, 1.729683, -3.438399, -3.270813, },
         },
         {
-            {-0.267277, -1.777999, -0.293152, -0.601085, -2.697777, -0.375268, -2.865341, -0.361960, -1.823804, -1.065403, },
-            {-0.267277, -1.777999, 0.293152, 0.601085, -2.865341, -0.361960, -2.697777, -0.375268, -1.823804, -1.065403, },
-            {0.347165, 2.251524, -0.124597, -0.278757, 1.425459, 0.385984, 1.192278, -0.073532, -46.760420, -6.535535, },
-            {0.347165, 2.251524, 0.124597, 0.278757, 1.192278, -0.073532, 1.425459, 0.385984, -46.760420, -6.535535, },
+            {-0.002662, -1.065952, -0.294251, -0.603243, -2.176490, -0.303823, -2.362789, -0.298025, -0.091200, -0.830732, },
+            {-0.002662, -1.065952, 0.294251, 0.603243, -2.362789, -0.298025, -2.176490, -0.303823, -0.091200, -0.830732, },
+            {0.003726, 1.491480, -0.116587, -0.263753, 1.291839, 0.334237, 1.144705, -0.059424, -23.026828, -6.386012, },
+            {0.003726, 1.491480, 0.116587, 0.263753, 1.144705, -0.059424, 1.291839, 0.334237, -23.026828, -6.386012, },
         },
     };
+    
+    
     memcpy(p,tempp,sizeof(tempp));
     
     // For test purpose
@@ -93,7 +95,7 @@ void balancing_test::init(){
     o_data.gyro_yaw_old = 0;
     o_data.wheel_speed_dot = 0;
     o_data.gyro_yaw_dot = 0;
-    o_data.control_s = 0;
+    o_data.s = 0;
     o_data.b_speed = 0;
     o_data.b_accel = 0;
     o_data.s_dot_filtered = 0;
@@ -332,7 +334,7 @@ void balancing_test::observer(){
         o_data.s_dot_filtered = 0;
     }
     
-    o_data.control_s += o_data.s_dot_filtered * _dt; 
+    o_data.s += o_data.s_dot_filtered * _dt; 
 
     return;
 }
@@ -388,7 +390,7 @@ void balancing_test::control(){
     // dx[0] = 0; //Ignore // s
 
 
-    dx[0] = _ref_data.s - o_data.control_s; // s
+    dx[0] = _ref_data.s - o_data.s; // s
     if (abs(dx[0])>1) { dx[0] = 1 * dx[0]/abs(dx[0]); } // reference governor
     dx[1] = _ref_data.s_dot - o_data.s_dot_filtered; // speed
     if (abs(dx[1])>0.7) { dx[1] = 0.7 * dx[1]/abs(dx[1]); }
@@ -499,13 +501,25 @@ void balancing_test::control(){
 
 
     //check torque integration to prevent motor overheating
-    timer_1 = timer_1+_dt;
+    o_data.timer_1 = o_data.timer_1+_dt;
     o_data.leg_motor_torque_integration_old[0] += _dt * abs(_write.torque_fl);
     o_data.leg_motor_torque_integration_old[1] += _dt * abs(_write.torque_bl);
     o_data.leg_motor_torque_integration_old[2] += _dt * abs(_write.torque_fr);
     o_data.leg_motor_torque_integration_old[3] += _dt * abs(_write.torque_br);
+    
+    if(o_data.timer_1 >= 10.0){
+        o_data.timer_1 = 0;
+        o_data.leg_motor_torque_integration_new[0] = 0;
+        o_data.leg_motor_torque_integration_new[1] = 0;
+        o_data.leg_motor_torque_integration_new[2] = 0;
+        o_data.leg_motor_torque_integration_new[3] = 0;
+        o_data.leg_motor_torque_integration_old[0] = 0;
+        o_data.leg_motor_torque_integration_old[1] = 0;
+        o_data.leg_motor_torque_integration_old[2] = 0;
+        o_data.leg_motor_torque_integration_old[3] = 0;
+    }
 
-    if(timer_1 >= 2.0){
+    if(o_data.timer_1 >= 0.5){
         o_data.leg_motor_torque_integration_new[0] += _dt * abs(_write.torque_fl);
         o_data.leg_motor_torque_integration_new[1] += _dt * abs(_write.torque_bl);
         o_data.leg_motor_torque_integration_new[2] += _dt * abs(_write.torque_fr);
@@ -514,7 +528,7 @@ void balancing_test::control(){
 
     for (int i = 0; i < 4; i++){
         o_data.leg_motor_torque_integration[i] =  o_data.leg_motor_torque_integration_old[i] -  o_data.leg_motor_torque_integration_new[i];
-        if (o_data.leg_motor_torque_integration[i]>0.2)
+        if (o_data.leg_motor_torque_integration[i]>0.15)
         {
             _write.torque_fl = 0;
             _write.torque_bl = 0;
@@ -522,7 +536,20 @@ void balancing_test::control(){
             _write.torque_fr = 0;
             _write.torque_br = 0;
             _write.torque_wr = 0;
+            saftymode = 1;
         }
+    }
+
+    //-----------------------------------------------------------Safety limit--------------------------------------------------------------------
+ 
+    if(abs(o_data.theta_ll) > 0.78  || abs(o_data.theta_lr) > 0.78){ // 45 deg soft stop
+        _write.torque_fl = 0;
+        _write.torque_bl = 0;
+        _write.torque_wl = 0;
+        _write.torque_fr = 0;
+        _write.torque_br = 0;
+        _write.torque_wr = 0;
+        saftymode = true;
     }
 
 //----------------------------Save data to printout for debug-------------------------------------------------------------
@@ -535,7 +562,7 @@ void balancing_test::control(){
 }
 
 void balancing_test::reset_s(){
-    o_data.control_s = 0.2; //compensate for movements caused by inertial 
+    o_data.s = 0; //compensate for movements caused by inertial 
 }
 
 void balancing_test::reset_yaw(){
@@ -544,16 +571,7 @@ void balancing_test::reset_yaw(){
 
 write_data balancing_test::getwrite(){
 
-//-----------------------------------------------------------Safety limit--------------------------------------------------------------------
-    // if(o_data.theta_ll > 0.8 || o_data.theta_ll < -0.8 || o_data.theta_lr > 0.8 || o_data.theta_ll < -0.8){
-    //     _write.torque_fl = 0;
-    //     _write.torque_bl = 0;
-    //     _write.torque_wl = 0;
-    //     _write.torque_fr = 0;
-    //     _write.torque_br = 0;
-    //     _write.torque_wr = 0;
-    //     saftymode = true;ç
-    // }
+
     return _write;
 }
 
@@ -564,86 +582,28 @@ ref_data* balancing_test::get_ref(){
 
 
 void balancing_test::printdata(){
-    getwrite();
-    Serial.print("torque_fr: ");
-    Serial.println(_write.torque_fr * 37);
-    Serial.print("torque_fl: ");
-    Serial.println(_write.torque_fl * 37);
-    Serial.print("torque_bl: ");
-    Serial.println(_write.torque_bl * 37);
-    Serial.print("torque_br: ");
-    Serial.println(_write.torque_br * 37);
-    Serial.print("torque_wl: ");
-    Serial.println(_write.torque_wl * 5);
-    Serial.print("torque_wr: ");
-    Serial.println(_write.torque_wr * 5);
 }
 void balancing_test::print_observer(){
-    Serial.print("speed_wl ");
-    Serial.println(_data.speed_wl);
-    Serial.print("speed_wr ");
-    Serial.println(_data.speed_wr);
-    Serial.print("s: ");
-    Serial.println(o_data.control_s);
-    Serial.print("s_dot_filtered: ");
-    Serial.println(o_data.s_dot_filtered);
-    Serial.print("imu_s: ");
-    Serial.println(o_data.imu_s);
-    Serial.print("imu_speed: ");
-    Serial.println(o_data.imu_speed_x);
-    Serial.print("b_accel: ");
-    Serial.println(o_data.b_accel);
-    Serial.print("leglength ll: ");
-    Serial.printf("%f", o_data.ll);
-    Serial.println();
-    Serial.print("leglength lr: ");
-    Serial.printf("%f", o_data.lr);
-    Serial.println();
-    Serial.print("leglength_dot ll: ");
-    Serial.printf("%f\n", o_data.ll_dot);
-    Serial.print("leglength_dot lr: ");
-    Serial.printf("%f\n", o_data.lr_dot);
-    Serial.print("ll_ddot: ");
-    Serial.println(o_data.ll_ddot);
-    Serial.print("lr_ddot: ");
-    Serial.println(o_data.lr_ddot);
-    Serial.print("theta_ll: ");
-    Serial.printf("%f", o_data.theta_ll*RAD_TO_DEG);
-    Serial.println();
-    Serial.print("theta_lr: ");
-    Serial.printf("%f", o_data.theta_lr*RAD_TO_DEG);
-    Serial.println();
-    Serial.print("theta_ll_dot: ");
-    Serial.printf("%f", o_data.theta_ll_dot*RAD_TO_DEG);
-    Serial.println();
-    Serial.print("theta_lr_dot: ");
-    Serial.printf("%f", o_data.theta_lr_dot*RAD_TO_DEG);
-    Serial.println();
-    // Serial.print("jl: ");
-    // Serial.print(o_data.jl[0][0]);
-    // Serial.print(" ");
-    // Serial.println(o_data.jl[0][1]);
-    // Serial.print(o_data.jl[1][0]);
-    // Serial.print(" ");
-    // Serial.println(o_data.jl[1][1]);
-    // Serial.print("jr: ");
-    // Serial.print(o_data.jr[0][0]);
-    // Serial.print(" ");
-    // Serial.println(o_data.jr[0][1]);
-    // Serial.print(o_data.jr[1][0]);
-    // Serial.print(" ");
-    // Serial.println(o_data.jr[1][1]);
-    Serial.printf("pitch: %f, roll: %f, yaw: %f\n", _data.imu_angle_pitch * RAD_TO_DEG, _data.imu_angle_roll * RAD_TO_DEG, _data.imu_angle_yaw * RAD_TO_DEG);
-    Serial.printf("gyro pitch: %f, roll: %f, yaw: %f\n", _data.gyro_pitch * RAD_TO_DEG, _data.gyro_roll * RAD_TO_DEG, _data.gyro_yaw * RAD_TO_DEG);
 }
 
 void balancing_test::print_visual(){
+    // Serial.printf("waggle graph %s %f \n", "T_fl", _write.torque_fl);
+    // Serial.printf("waggle graph %s %f \n", "intold", o_data.leg_motor_torque_integration_old[0]);
+    // Serial.printf("waggle graph %s %f \n", "intnew", o_data.leg_motor_torque_integration_new[0]);
+    // Serial.printf("waggle graph %s %f \n", "int", o_data.leg_motor_torque_integration[0]);
+
     // Serial.printf("waggle graph %s %f \n", "theta_lr", o_data.theta_lr * RAD_TO_DEG);
     // Serial.printf("waggle graph %s %f \n", "theta_ll", o_data.theta_ll * RAD_TO_DEG);
     // Serial.printf("waggle graph %s %f \n", "theta_lr_dot", o_data.theta_lr_dot * RAD_TO_DEG);
     // Serial.printf("waggle graph %s %f \n", "theta_ll_dot", o_data.theta_ll_dot * RAD_TO_DEG);
     Serial.printf("waggle graph %s %f \n", "Pitch", _data.imu_angle_pitch * RAD_TO_DEG);
     Serial.printf("waggle graph %s %f \n", "Roll", _data.imu_angle_roll * RAD_TO_DEG);
+    Serial.printf("waggle graph %s %f \n", "ref_s", _ref_data.s);
+    Serial.printf("waggle graph %s %f \n", "ref_s_dot", _ref_data.s_dot);
+    Serial.printf("waggle graph %s %f \n", "s", o_data.s);
+    Serial.printf("waggle graph %s %f \n", "s_dot", o_data.s_dot_filtered);
+    // Serial.printf("waggle graph %s %f \n", "Leg_l", o_data.ll);
+    // Serial.printf("waggle graph %s %f \n", "Leg_r", o_data.lr);
     // Serial.printf("waggle graph %s %f \n", "Yaw", _data.imu_angle_yaw * RAD_TO_DEG);
     // Serial.printf("waggle graph %s %f \n", "Gyro_Pitch", _data.gyro_pitch * RAD_TO_DEG);
     // Serial.printf("waggle graph %s %f \n", "Gyro_Roll", _data.gyro_roll * RAD_TO_DEG);
@@ -657,7 +617,7 @@ void balancing_test::print_visual(){
     // Serial.printf("waggle graph %s %f \n", "o_data.b_speed", o_data.b_speed); // Speed without filter
     // Serial.printf("waggle graph %s %f \n", "o_data.b_accel", o_data.b_accel); // Acceleration without filter
 
-    // Serial.printf("waggle graph %s %f \n", "s_dot_filtered", o_data.s_dot_filtered); // Speed with filter
+    
     // Serial.printf("waggle graph %s %f \n", "body_accel_filtered", o_data.body_accel_filtered); // Acceleration with filter
 
     // Serial.printf("waggle graph %s %f \n", "ref_s", _ref_data.s );

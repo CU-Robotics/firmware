@@ -13,9 +13,9 @@
 #define HEARTBEAT_FREQ 2
 
 // Speed scale will give the maximum desire speed (m/s)
-#define SPEED_SCALE 1.5   
+#define SPEED_SCALE 4.5
 // Speed scale will give the maximum desire rotation speed (rad/s)
-#define ROTATION_SCALE 7 * M_1_PI //multiples of 1/pi radian/s = deg/s
+#define ROTATION_SCALE 26 * M_1_PI //multiples of 1/pi radian/s = deg/s
 #define MAX_LEG_LENGTH 0.33
 #define MIN_LEG_LENGTH 0.18
 // Declare global objects
@@ -57,6 +57,8 @@ void print_logo() {
     }
 }
 int main() {
+    uint32_t loopc = 0; // Loop counter for heartbeat
+    pinMode(13, OUTPUT);
     Serial.begin(1000000); // the serial monitor is actually always active (for debug use Serial.println & tycmd)
     debug.begin(SerialUSB1);
     if (CrashReport) {
@@ -167,9 +169,15 @@ int main() {
                 // control_ref->yaw += control_ref->yaw_dot * _dt;
                 test_control.reset_yaw(); // Ignore yaw data when rotating
             }
+
             float leg_control = dr16.get_r_stick_y() * 0.00007;
             if((leg_control > 0 && control_ref->goal_l < MAX_LEG_LENGTH) || (leg_control < 0 && control_ref->goal_l > MIN_LEG_LENGTH )){
                 control_ref->goal_l += leg_control;
+            }
+
+            if (dr16.get_r_stick_y() < -0.9) // reset safety mode after mulfunctioning is addressed
+            {
+                test_control.saftymode = 0;
             }
         }
         test_control.control();
@@ -185,13 +193,11 @@ int main() {
         // test_control.printdata();
         test_control.print_visual();
         
-        if (!dr16.is_connected() || dr16.get_l_switch() == 1) {
+        if (!dr16.is_connected() || dr16.get_l_switch() == 1 || test_control.saftymode) {
             // SAFETY ON
             // TODO: Reset all controller integrators here
             Serial.println("SAFTYON");
             can.issue_safety_mode();
-            
-            
 
             // reset s and yaw
             test_control.reset_s();
@@ -218,6 +224,10 @@ int main() {
         // Serial.printf("waggle graph %s %f \n", "BL motor current", can.get_motor(2)->get_state().torque);
         // Serial.printf("waggle graph %s %f \n", "BR motor current", can.get_motor(3)->get_state().torque);
         // Keep the loop running at the desired rate
+        // LED heartbeat -- linked to loop count to reveal slowdowns and freezes.
+        loopc % (int)(1E3 / float(HEARTBEAT_FREQ)) < (int)(1E3 / float(5 * HEARTBEAT_FREQ)) ? digitalWrite(13, HIGH) : digitalWrite(13, LOW);
+        loopc++;
+        
         loop_timer.delay_micros((int)(1E6 / (float)(LOOP_FREQ)));
     }
     return 0;
