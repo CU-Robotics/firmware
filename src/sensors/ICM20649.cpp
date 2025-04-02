@@ -53,23 +53,14 @@ bool ICM20649::read() {
     // could increase efficiency by specifying which values we need, and only assigning values to the object's members from that.
     // However, getEvent will read all values from the sensor regardless, and assigning these values is very fast
 
-    accel_X = accel.acceleration.x;
-    accel_Y = accel.acceleration.y;
-    accel_Z = accel.acceleration.z;
-    gyro_X = gyro.gyro.x;
-    gyro_Y = gyro.gyro.y;
-    gyro_Z = gyro.gyro.z;
+    data.accel_X = accel.acceleration.x;
+    data.accel_Y = accel.acceleration.y;
+    data.accel_Z = accel.acceleration.z;
+    data.gyro_X = gyro.gyro.x;
+    data.gyro_Y = gyro.gyro.y;
+    data.gyro_Z = gyro.gyro.z;
 
-    temperature = temp.temperature;
-
-    //copy the values to the data struct
-    icm_sensor_data.accel_X = accel_X;
-    icm_sensor_data.accel_Y = accel_Y;
-    icm_sensor_data.accel_Z = accel_Z;
-    icm_sensor_data.gyro_X = gyro_X;
-    icm_sensor_data.gyro_Y = gyro_Y;
-    icm_sensor_data.gyro_Z = gyro_Z;
-    icm_sensor_data.temperature = temperature;
+    data.temperature = temp.temperature;
     return true;
 }
 
@@ -104,3 +95,4 @@ void ICM20649::set_gyro_range(int gyro_rate_range) {
         break;
     }
 }
+
