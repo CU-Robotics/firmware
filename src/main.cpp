@@ -72,8 +72,10 @@ int main() {
     SPI.begin(); // Start SPI for IMU
     icm.init(icm.SPI); // Initialize IMU 
     icm.set_gyro_range(4000); // Set gyro range to 4000 dps
-    icm.calibration_all(); // Calibrate IMU
+    icm.calibration_all_w_angle_bias(); // Calibrate IMU
+    // icm.calibration_all(); // Calibrate IMU
     imu_filter.init_EKF_6axis(icm.get_data()); // Initialize EKF filter
+    
     // [controller_type, motor_id, bus_id]
     // controller_type: 
     // 0: invalid
@@ -116,8 +118,10 @@ int main() {
         data.imu_accel_x = abs(-filtered_data->accel_world_X) > 0.1 ? -filtered_data->accel_world_X : 0; // Front (+)
         data.imu_accel_y = filtered_data->accel_world_Y; // Right (+)
         data.imu_accel_z = -filtered_data->accel_world_Z; // up (+)
-        data.imu_angle_pitch = -filtered_data->roll;// - 0.935*DEG_TO_RAD;  // Front(+)
-        data.imu_angle_roll = -filtered_data->pitch;// - 1.12*DEG_TO_RAD; // Right(+)
+        data.imu_angle_pitch = -(filtered_data->roll - filtered_data->roll_bias);// Front(+)
+        data.imu_angle_roll = -(filtered_data->pitch - filtered_data->pitch_bias);// Right(+)
+        // data.imu_angle_pitch = -filtered_data->roll;// Front(+)
+        // data.imu_angle_roll = -filtered_data->pitch;// Right(+)
         data.imu_angle_yaw = filtered_data->yaw; // CounterClockwise(+)
         data.angle_fr = can.get_motor(0)->get_state().position; // see from robot outor side clockwise (+) 
         data.angle_fl = can.get_motor(1)->get_state().position; // see from robot outor side clockwise (+)

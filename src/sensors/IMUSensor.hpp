@@ -31,6 +31,9 @@ float accel_world_Z = 0;
 float gyro_pitch = 0; //Filtered angular velocity (rad/s)
 float gyro_roll = 0;
 float gyro_yaw = 0;
+
+float roll_bias = 0;
+float pitch_bias = 0;
 };
 
 /// @brief Abstract parent class for all IMUSensors, which give acceleration and gyroscope data. 
@@ -89,7 +92,7 @@ public:
     void print();
 
     void calibration_all();
-
+    void calibration_all_w_angle_bias();
     void calibration_Z();
 protected:
     // sensor events to read from
@@ -114,6 +117,8 @@ protected:
     float offset_Z = 0;
 
     float scale_accel = 1;
+
+    
 };
 
 #endif
