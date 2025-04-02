@@ -10,30 +10,41 @@
 
 /// @brief the data structure that holds all the IMU data
 struct IMU_data{
-//acceleration raw value
+/// @brief raw acceleration value (m/s^2)
 float accel_X = 0; 
-float accel_Y = 0;
+/// @brief raw acceleration value (m/s^2)
+float accel_Y = 0; 
+/// @brief raw acceleration value (m/s^2)
 float accel_Z = 0;
-// raw gyroscope value (rad/s) x(along roll) y(along pitch) z(up-down)
+/// @brief  raw gyroscope value (rad/s)
 float gyro_X = 0; 
+/// @brief  raw gyroscope value (rad/s)
 float gyro_Y = 0;
+/// @brief  raw gyroscope value (rad/s)
 float gyro_Z = 0; 
-// Temperature in Celcius
+/// @brief Temperature in Celcius
 float temperature = 0; 
-// Angle (rad)
+/// @brief Angle (rad)
 float pitch = 0; 
+/// @brief Angle (rad)
 float roll = 0;
+/// @brief Angle (rad)
 float yaw = 0;
-// Acceleration in world frame (m/s)
-float accel_world_X = 0; 
+/// @brief Acceleration in world frame (m/s)
+float accel_world_X = 0;
+/// @brief Acceleration in world frame (m/s)
 float accel_world_Y = 0;
+/// @brief Acceleration in world frame (m/s)
 float accel_world_Z = 0;
-// angular velocity (rad/s)
+/// @brief angular velocity (rad/s)
 float gyro_pitch = 0; 
+/// @brief angular velocity (rad/s)
 float gyro_roll = 0;
+/// @brief angular velocity (rad/s)
 float gyro_yaw = 0;
-// Bias for roll angle (rad)
+/// @brief Bias for roll angle (rad)
 float roll_bias = 0; 
+/// @brief Bias for pitch angle (rad)
 float pitch_bias = 0; 
 };
 
@@ -121,7 +132,7 @@ protected:
     float offset_Y = 0;
     /// @brief offset z value
     float offset_Z = 0;
-
+    /// @brief scale of the accelerometer
     float scale_accel = 1;
 };
 
