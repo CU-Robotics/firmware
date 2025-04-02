@@ -58,6 +58,7 @@ FLASHMEM void startup_default_late_hook(void) {}
 void startup_late_hook(void)	__attribute__ ((weak, alias("startup_default_late_hook")));
 extern void startup_debug_reset(void) __attribute__((noinline));
 FLASHMEM void startup_debug_reset(void) { __asm__ volatile("nop"); }
+extern void my_abort(void);
 
 static void ResetHandler2(void);
 
@@ -588,6 +589,8 @@ extern void usb_isr(void);
 __attribute__((naked))
 void unused_interrupt_vector(void)
 {
+	//print crash report for abort and issue can safety mode
+	my_abort();
 	uint32_t i, ipsr, crc, count;
 	const uint32_t *stack;
 	struct arm_fault_info_struct *info;
@@ -618,12 +621,11 @@ void unused_interrupt_vector(void)
 		for (i=0; i < 32; i++) crc = (crc >> 1) ^ (crc & 1)*0xEDB88320;
 	}
 	info->crc = crc;
-	arm_dcache_flush_delete(info, sizeof(*info));
-
+	arm_dcache_flush_delete(info, sizeof(*info)); 
 	// LED blink can show fault mode - by default we don't mess with pin 13
-	//IOMUXC_SW_MUX_CTL_PAD_GPIO_B0_03 = 5; // pin 13
-	//IOMUXC_SW_PAD_CTL_PAD_GPIO_B0_03 = IOMUXC_PAD_DSE(7);
-	//GPIO7_GDIR |= (1 << 3);
+	// IOMUXC_SW_MUX_CTL_PAD_GPIO_B0_03 = 5; // pin 13
+	// IOMUXC_SW_PAD_CTL_PAD_GPIO_B0_03 = IOMUXC_PAD_DSE(7);
+	// GPIO7_GDIR |= (1 << 3);
 
 	// reinitialize PIT timer and CPU clock
 	CCM_CCGR1 |= CCM_CCGR1_PIT(CCM_CCGR_ON);
@@ -661,7 +663,7 @@ void unused_interrupt_vector(void)
 	USB1_USBCMD = USB_USBCMD_RST;
 	USBPHY1_CTRL_SET = USBPHY_CTRL_SFTRST;
 	while (PIT_TFLG0 == 0) /* wait 0.1 second for PC to know USB unplugged */
-	// reboot
+	// reboot 
 	SRC_GPR5 = 0x0BAD00F1;
 	SCB_AIRCR = 0x05FA0004;
 	while (1) ;

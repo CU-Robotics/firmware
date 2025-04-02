@@ -74,6 +74,32 @@ void print_logo() {
     }
 }
 
+/*
+@brief: My_abort function, the updated abort function calls this function. Flushes can safety mode and then prints
+the crash report
+*/
+extern "C" void my_abort(void)
+{
+    Serial.println("Issuing Can Safety mode");
+    // make sure can is in safety mode, avoids missed calls with this for loop
+    for(int i = 0; i < 100; i++)
+    {
+        can.issue_safety_mode();
+        delay(10);
+    }
+    CrashReport.printTo(Serial);
+}
+/*
+Updated abort function, will call the my_abort function, afterwards it calls while(1) to infinitly stall
+*/
+void abort(void)
+{
+    //print abort has occured
+    Serial.println("Abort Called!");
+    // call my_abort function to flush the can in safety mode and print the crash report
+    my_abort();
+    while (1) asm ("WFI");
+}
 // Master loop
 int main() {
     uint32_t loopc = 0; // Loop counter for heartbeat
