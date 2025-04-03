@@ -3,6 +3,7 @@
 #include "utils/timing.hpp"
 #include "sensors/can/can_manager.hpp"
 #include "sensors/can/MG8016EI6.hpp"
+#include "sensors/ET16S.hpp"
 #include "sensors/dr16.hpp"
 #include "sensors/ICM20649.hpp"
 #include "filters/IMU_filter.hpp"
@@ -19,12 +20,12 @@
 #define MAX_LEG_LENGTH 0.33
 #define MIN_LEG_LENGTH 0.18
 // Declare global objects
-DR16 dr16;
 CANManager can;
 Timer loop_timer;
 ICM20649 icm;
 IMU_filter imu_filter;
 balancing_test test_control;
+Transmitter* transmitter = nullptr;
 // DONT put anything else in this function. It is not a setup function
 void print_logo() {
     if (Serial) {
@@ -68,7 +69,16 @@ int main() {
         }
     }
     print_logo();
-    dr16.init();
+
+    TransmitterType transmitter_type = transmitter->who_am_i();
+    if (transmitter_type == TransmitterType::DR16){
+        transmitter = new DR16();
+    }
+    else if (transmitter_type == TransmitterType::ET16S){
+        transmitter = new ET16S();
+    }
+    transmitter->init();
+    
     test_control.init();
     can.init();
     SPI.begin(); // Start SPI for IMU
@@ -106,7 +116,7 @@ int main() {
     // Main loop
     while (true) {
         // Read sensors
-        dr16.read();
+        transmitter->read();
         icm.read();
         icm.fix_raw_data(); // Fix the bias and scale factor
         can.read(); 
@@ -139,7 +149,7 @@ int main() {
         test_control.observer();
 
         // float _dt = loop_timer.delta();
-        if(dr16.get_l_switch() == 3){
+        if(transmitter->get_l_switch() == SwitchPos::MIDDLE){
             ref_data* control_ref = test_control.get_ref();
             // Set all data to 0 for balancing
             control_ref->s = 0;
@@ -153,7 +163,7 @@ int main() {
             control_ref->pitch = 0;
             control_ref->pitch_dot = 0;
             
-            control_ref->s_dot = dr16.get_l_stick_y(); 
+            control_ref->s_dot = transmitter->get_l_stick_y(); 
             if(abs(control_ref->s_dot) < 0.05){
                 control_ref->s_dot = 0; // Ignore small data
             }else{
@@ -161,7 +171,7 @@ int main() {
                 // control_ref->s += control_ref->speed * _dt;
                 test_control.reset_s(); // Ignore the position when running 
             }
-            control_ref->yaw_dot = -dr16.get_l_stick_x(); 
+            control_ref->yaw_dot = -transmitter->get_l_stick_x(); 
             if(abs(control_ref->yaw_dot) < 0.05){
                 control_ref->yaw_dot = 0; // Ignore small data
             }else{
@@ -170,12 +180,12 @@ int main() {
                 test_control.reset_yaw(); // Ignore yaw data when rotating
             }
 
-            float leg_control = dr16.get_r_stick_y() * 0.00007;
+            float leg_control = transmitter->get_r_stick_y() * 0.00007;
             if((leg_control > 0 && control_ref->goal_l < MAX_LEG_LENGTH) || (leg_control < 0 && control_ref->goal_l > MIN_LEG_LENGTH )){
                 control_ref->goal_l += leg_control;
             }
 
-            if (dr16.get_r_stick_y() < -0.9) // reset safety mode after mulfunctioning is addressed
+            if (transmitter->get_r_stick_y() < -0.9) // reset safety mode after mulfunctioning is addressed
             {
                 test_control.saftymode = 0;
             }
@@ -193,7 +203,7 @@ int main() {
         // test_control.printdata();
         test_control.print_visual();
         
-        if (!dr16.is_connected() || dr16.get_l_switch() == 1 || test_control.saftymode) {
+        if (!transmitter->is_connected() || transmitter->get_l_switch() == SwitchPos::FORWARD || test_control.saftymode) {
             // SAFETY ON
             // TODO: Reset all controller integrators here
             Serial.println("SAFTYON");
@@ -202,7 +212,7 @@ int main() {
             // reset s and yaw
             test_control.reset_s();
             test_control.reset_yaw();
-        } else if (dr16.is_connected() && dr16.get_l_switch() != 1) {
+        } else if (transmitter->is_connected() && transmitter->get_l_switch() != SwitchPos::FORWARD) {
             // SAFETY OFF
             Serial.println("SAFTYOFF");
             can.write();
