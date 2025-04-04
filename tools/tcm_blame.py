@@ -34,10 +34,10 @@ is_debug = False
 with open(map_file_path, "r") as map_file:
     for line in map_file:
         # skip the discarded input section
-        if (line == "Discarded input sections\n"):
+        if (line.strip() == "Discarded input sections"):
             is_discarded = True
         # end of the discarded input section
-        if (line == "Memory Configuration\n"):
+        if (line.strip() == "Memory Configuration"):
             is_discarded = False
 
         line_num += 1
