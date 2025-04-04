@@ -85,7 +85,17 @@ int main() {
     debug.begin(SerialUSB1);
     
     print_logo();
-    
+
+    // check to see if there is a crash report, and if so, print it repeatedly over Serial
+    // in the future, we'll send this directly over comms
+    if (CrashReport) {
+        while (1) {
+            Serial.println(CrashReport);
+            Serial.println("\nReflash to clear CrashReport (and also please fix why it crashed)");
+            delay(1000);
+        }
+    }
+
     // Execute setup functions
     pinMode(LED_BUILTIN, OUTPUT);
     
