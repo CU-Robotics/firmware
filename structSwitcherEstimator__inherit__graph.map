@@ -1,0 +1,4 @@
+<map id="SwitcherEstimator" name="SwitcherEstimator">
+<area shape="rect" id="node1" title="Estimate the state of the switcher in millimeters." alt="" coords="5,80,133,107"/>
+<area shape="rect" id="node2" href="$structEstimator.html" title="Parent estimator struct. All estimators should inherit from this." alt="" coords="31,5,108,32"/>
+</map>
