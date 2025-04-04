@@ -36,7 +36,7 @@ with open(map_file_path, "r") as map_file:
         # skip the discarded input section
         if (line == "Discarded input sections\n"):
             is_discarded = True
-        
+        # end of the discarded input section
         if (line == "Memory Configuration\n"):
             is_discarded = False
 
@@ -48,7 +48,7 @@ with open(map_file_path, "r") as map_file:
         debug_match = re.match(r'^\s*\.debug_', line)
         if (debug_match):
             is_debug = True
-        
+        # end of the debug sections
         if (line == "Cross Reference Table\n"):
             is_debug = False
         
