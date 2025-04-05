@@ -29,7 +29,7 @@ struct PIDFilter {
         float error = setpoint - measurement;
         if (error > PI && wrap) error -= 2 * PI;
         if (error < -PI && wrap) error += 2 * PI;
-        // if(wrap) Serial.println(error);
+        // if(wrap) logger.println(error);
         sumError += error * dt;
         float output = (K[0] * error) + (K[2] * ((error - prevError) / dt)) + K[3];
         // + (K[1] * sumError)
