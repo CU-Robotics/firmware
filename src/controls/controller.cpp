@@ -294,3 +294,29 @@ void SwitcherController::step(float reference[STATE_LEN][3], float estimate[STAT
 
     outputs[0] = output;
 }
+
+void NewFeederController::step(float reference[STATE_LEN][3], float estimate[STATE_LEN][3], float micro_estimate[CAN_MAX_MOTORS][MICRO_STATE_LEN], float outputs[CAN_MAX_MOTORS]) {
+    float dt = timer.delta();
+
+    pidp.K[0] = gains[0];
+    pidp.K[1] = gains[1];
+    pidp.K[2] = gains[2];
+    pidp.K[3] = 0;
+
+    pidv.K[0] = gains[4];
+    pidv.K[1] = gains[5];
+    pidv.K[2] = gains[6];
+    
+
+    pidp.setpoint = reference[0][0]; // 1st index = position
+    pidp.measurement = estimate[0][0];
+
+    // pidv.setpoint = reference[7][1];
+    // pidv.measurement = estimate[7][1];
+
+    float outputp = pidp.filter(dt, true, true);
+    // float outputv = pidv.filter(dt, true, false);
+    // float output = outputp + outputv;
+
+    outputs[0] = -outputp;
+}

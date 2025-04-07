@@ -1,4 +1,5 @@
 #include "estimator.hpp"
+#include "controller.hpp"
 
 GimbalEstimator::GimbalEstimator(Config config_data, SensorManager* sensor_manager, CANManager* _can) {
         buff_enc_yaw = sensor_manager->get_buff_encoder(0); // sensor object definitions
@@ -543,5 +544,24 @@ void LocalEstimator::step_states(float output[CAN_MAX_MOTORS][MICRO_STATE_LEN], 
                 output[(i * CAN_MAX_MOTORS_PER_BUS) + j][1] = can->get_motor_state(i, j + 1).speed;
         }
     }
+}
+
+NewFeederEstimator::NewFeederEstimator(CANManager* _can, SensorManager* _sensor_manager) {
+    micro_estimator = false;
+    can = _can;
+    sensor_manager = _sensor_manager;
+}
+
+void NewFeederEstimator::step_states(float output[CAN_MAX_MOTORS][MICRO_STATE_LEN], float curr_state[CAN_MAX_MOTORS][MICRO_STATE_LEN], int override) {
+    dt = time.delta();
+    if (dt > .1) dt = 0; // first dt loop generates huge time so check for that
+    float feeder_angle = sensor_manager->get_buff_encoder(0)->get_angle();
+    while (feeder_angle >= PI) feeder_angle -= 2 * PI;
+    while (feeder_angle <= -PI) feeder_angle += 2 * PI;
+    float feeder_velocity = (feeder_angle - prev_feeder_angle)/dt;
+    prev_feeder_angle = feeder_angle;
+    output[0][0] = feeder_angle;
+    output[0][1] = feeder_velocity;
+    output[0][2] = 0;
 }
 

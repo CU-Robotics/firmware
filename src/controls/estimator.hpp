@@ -541,4 +541,27 @@ public:
     void step_states(float output[CAN_MAX_MOTORS][MICRO_STATE_LEN], float curr_state[CAN_MAX_MOTORS][MICRO_STATE_LEN], int override);
 };
 
+/// @brief This estimator estimates our "micro" state which is stores all the motor velocities(in rad/s), whereas the other estimators estimate "macro" state which stores robot joints
+struct NewFeederEstimator : public Estimator {
+    private:
+        /// @brief can from EstimatorManager
+        CANManager* can;
+        /// @brief sensor manager
+        SensorManager* sensor_manager;
+        /// @brief delta time
+        float dt = 0;
+        /// @brief previous feeder angle
+        float prev_feeder_angle = 0;
+    public:
+        /// @brief Make new local estimator and set can data pointer and num states
+        /// @param can can pointer from EstimatorManager
+        NewFeederEstimator(CANManager* can, SensorManager* sensor_manager);
+    
+        /// @brief step through each motor and add to micro state
+        /// @param output entire micro state 
+        /// @param curr_state current micro state
+        /// @param override override flag
+        void step_states(float output[CAN_MAX_MOTORS][MICRO_STATE_LEN], float curr_state[CAN_MAX_MOTORS][MICRO_STATE_LEN], int override);
+    };
+
 #endif
