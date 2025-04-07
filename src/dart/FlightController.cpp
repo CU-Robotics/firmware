@@ -1,15 +1,20 @@
 #include "FlightController.hpp"
+#include "ICM20649.hpp"
 #include "IMU.hpp"
 #include "IMUSensor.hpp"
 #include "IMU_filter.hpp"
+#include "core_pins.h"
 #include "usb_serial.h"
+#include "wiring.h"
+
+#define SETPOINT 45
 
 IMU_data imu_data;
 
-FlightController::FlightController(ServoController &sc, IMU_filter &imuf,
-                                   Dartcam &dartcam)
-    : servoController(sc), imuf(imuf), dartcam(dartcam), currentMode(FIN_HOLD),
-      pitchPID(0.1, 0.01, 0.05, -10, 10),
+FlightController::FlightController(ServoController &sc, ICM20649 &imu,
+                                   IMU_filter &imuF, Dartcam &dartcam)
+    : servoController(sc), imu(imu), imuF(imuF), dartcam(dartcam),
+      currentMode(FIN_HOLD), pitchPID(0.1, 0.01, 0.05, -10, 10),
       rollPID(0.1, 0.01, 0.05, -10, 10), // TODO Will need to tune these
       yawPID(0.1, 0.01, 0.05, -10, 10) {}
 
@@ -38,10 +43,10 @@ void FlightController::update() {
 }
 
 void FlightController::init() {
-  // icmF.init();
-  servoController.set_all_servos(90, 90, 90, 90);
+  servoController.set_all_servos(SETPOINT, SETPOINT, SETPOINT, SETPOINT);
   delay(1000);
 }
+
 // Mode 1: Fin Hold
 void FlightController::hold_fin_position() {
   //  current fin positions
@@ -51,15 +56,20 @@ void FlightController::hold_fin_position() {
 void FlightController::align_to_velocity_vector() {
   // This is currently just stable flight, will need to be set to the actual
   // velo vector if we want it to fly a true arc.
-  /*
+
   float pitchSetpoint = 0.0; // Target pitch angle in degrees
   float yawSetpoint = 0.0;
   float rollSetpoint = 0.0;
 
-  IMUData imuData = imu.read_data();
-  float currentPitch = imuData.pitch;
-  float currentYaw = imuData.yaw;
-  float currentRoll = imuData.roll;
+  imu.read();
+  imu.fix_raw_data();
+
+  imuF.step_EKF_6axis(imu.get_data());
+
+  IMU_data *filtered_data = imuF.get_filter_data();
+  float currentRoll = (filtered_data->roll * RAD_TO_DEG);
+  float currentPitch = (filtered_data->pitch * RAD_TO_DEG);
+  float currentYaw = (filtered_data->yaw * RAD_TO_DEG);
 
   float pitchAdjustment =
       pitchPID.calculate(pitchSetpoint, currentPitch);             // For pitch
@@ -81,7 +91,6 @@ void FlightController::align_to_velocity_vector() {
   servoController.set_servo_angle(1, rightElevator);
   servoController.set_servo_angle(2, leftRudder);
   servoController.set_servo_angle(3, rightRudder);
-  */
 }
 
 // Mode 3: Guided
@@ -108,39 +117,47 @@ void FlightController::guided() {
 void FlightController::fin_test_mode() {
 
   Serial.println("trying to spin servo");
-  servoController.set_servo_angle(3, 180);
+  // servoController.set_servo_angle(3, 180);
 
   static int testStep = 0;
   float testAngle = (testStep % 2 == 0) ? 30 : -30;
 
   if (testStep % 4 == 0) {
-    servoController.set_servo_angle(0, testAngle);
+    servoController.set_servo_angle(0, testAngle - SETPOINT);
   } else if (testStep % 4 == 1) {
-    servoController.set_servo_angle(1, testAngle);
+    servoController.set_servo_angle(1, testAngle - SETPOINT);
   } else if (testStep % 4 == 2) {
-    servoController.set_servo_angle(2, testAngle);
+    servoController.set_servo_angle(2, testAngle - SETPOINT);
   } else {
-    servoController.set_servo_angle(3, testAngle);
+    servoController.set_servo_angle(3, testAngle - SETPOINT);
   }
 
   testStep++;
 }
 
 void FlightController::test_gyro_level() {
+
+  imu.read();
+  imu.fix_raw_data();
+
+  imuF.step_EKF_6axis(imu.get_data());
+
+  IMU_data *filtered_data = imuF.get_filter_data();
+
   // float pitchSetpoint = 0.0; // Target pitch angle in degrees
   //  float yawSetpoint = 0.0;
-  float rollSetpoint = 90;
+  // float rollSetpoint = SETPOINT;
 
-  imu_data = *imuf.get_filter_data();
-
-  float currentRoll = imu_data.roll;
+  float currentRoll = (filtered_data->roll * RAD_TO_DEG);
   // float currentYaw = imu_data.;
   // float currentRoll = imu_data.k_roll;
 
-  Serial.println(currentRoll);
-  servoController.set_servo_angle(2, (currentRoll * 10) + rollSetpoint);
-  servoController.set_servo_angle(3, -1 * (currentRoll * 10 + rollSetpoint));
-
+  // Serial.println();
+  // servoController.set_servo_angle(2, currentRoll + rollSetpoint);
+  // servoController.set_servo_angle(3, (currentRoll  + rollSetpoint));
+  servoController.set_all_servos(
+      -1 * (currentRoll + SETPOINT), -1 * (currentRoll + SETPOINT),
+      -1 * (currentRoll + SETPOINT), -1 * (currentRoll + SETPOINT));
   /**
 
     float pitchAdjustment =
@@ -168,8 +185,9 @@ void FlightController::test_gyro_level() {
 
 // helpers
 void FlightController::maintain_level_roll() {
-  float rollSetpoint = 0.0;
+  // float rollSetpoint = 0.0;
 
+  /*
   imu_data = *imuf.get_filter_data();
   float currentRoll = imu_data.roll;
 
@@ -177,5 +195,5 @@ void FlightController::maintain_level_roll() {
 
   // [left_roll, right_roll, other_pitch_yaw]
   servoController.set_servo_angle(0, rollAdjustment);
-  servoController.set_servo_angle(1, -rollAdjustment);
+  servoController.set_servo_angle(1, -rollAdjustment);*/
 }

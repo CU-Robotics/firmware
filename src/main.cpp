@@ -2,15 +2,12 @@
 #include <Arduino.h>
 #include <TeensyDebug.h>
 
-#include "core_pins.h"
-#include "git_info.h"
-// #include "Dartcam.hpp"
-#include "IMU.hpp"
-// #include "PIDController.hpp"
 #include "FlightController.hpp"
 #include "IMUSensor.hpp"
 #include "IMU_filter.hpp"
 #include "ServoController.hpp"
+#include "core_pins.h"
+#include "git_info.h"
 #include "sensors/ICM20649.hpp"
 #include "usb_serial.h"
 #include "wiring.h"
@@ -24,12 +21,12 @@
 
 ServoController servoCont;
 // IMU imu;
+ICM20649 imu;
 IMU_filter imuF;
 IMU_data imuData;
 Dartcam dartcam;
-FlightController flightController(servoCont, imuF, dartcam);
 
-ICM20649 imu;
+FlightController flightController(servoCont, imu, imuF, dartcam);
 
 // commet this out to use production main
 #define CHOOSE_TEST_MAIN
@@ -56,8 +53,10 @@ int main() {
 
   servoCont.init();
   imuF.init_EKF_6axis(imuData);
-  dartcam.init();
+  // dartcam.init();
   flightController.init();
+
+  // flightController.set_control_mode(TEST_FIN);
 
   Serial.println("Entering flight control mode: TEST_GYRO_LEVEL");
   flightController.set_control_mode(TEST_GYRO_LEVEL);
@@ -67,23 +66,23 @@ int main() {
 
   while (true) {
 
-    imu.read();
-    imu.fix_raw_data();
+    // imu.read();
+    // imu.fix_raw_data();
 
-    imuF.step_EKF_6axis(imu.get_data());
-    IMU_data *filtered_data = imuF.get_filter_data();
+    // imuF.step_EKF_6axis(imu.get_data());
+    // IMU_data *filtered_data = imuF.get_filter_data();
 
     // Serial.println(filtered_data->pitch * RAD_TO_DEG);
 
-    Serial.print(filtered_data->pitch);
-    Serial.print(filtered_data->roll);
-    Serial.println(filtered_data->yaw);
+    // Serial.print(filtered_data->pitch);
+    // Serial.print(filtered_data->roll);
+    // Serial.println(filtered_data->yaw);
 
     // delay(1000);
     //  Serial.println("in loop");
     //  imuData = *imuF.get_filter_data();
     //  Serial.print(imuData.pitch);
-    //  flightController.update();
+    flightController.update();
     //    dartcam.send_frame_serial();
     //     servoCont.set_all_servos(180, 180, 180, 180);
     //     delay(1000);
