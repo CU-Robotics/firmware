@@ -1526,17 +1526,22 @@ enum DrawType {
     DRAW_CHARACTER_GRAPHIC = 0x0110,
 };
 
-struct RobotInteractionDeleteLayer {
+/// @brief packet to delete graphic layers
+/// @note sub-content-id 0x0100
+struct DeleteLayer {
     /// @brief 0: no operation is performed. 1: delete a graphic layer. 2: delete all graphics layers
     uint8_t delete_operation;
     /// @brief number of layers to delete (0-9)
     uint8_t num_layers;
 };
 
-struct RobotInteractionDrawFigure {
+/// @brief struct for generic graphics data.
+/// @note This struct is used in DrawOneGraphic, DrawTwoGraphics, etc.
+struct GraphicData {
+    /// @brief Figure name (24 bits, three uint8_t)
     uint8_t figure_name[3];
 
-    // GRAPHICS CONFIGURATION 1
+    // GRAPHICS CONFIGURATION 1 (one uint32_t)
     /// @brief Bits 0-2: graphic operation (0: none, 1: add, 2: modify)
     uint32_t operate_type : 3;
     /// @brief Bits 3-5: graphic type (i.e. 0: straight line, 1: rectangle...)
@@ -1550,7 +1555,7 @@ struct RobotInteractionDrawFigure {
     /// @brief Second half of Bits 14-31: details differ based on drawn graphics. Described in table 2-26 of the Ref system manual.
     uint32_t details_b : 9;
 
-    // GRAPHICS CONFIGURATION 2
+    // GRAPHICS CONFIGURATION 2 (one uint32_t)
     /// @brief Bits 0-9: line width. Recommended ratio between font size and line width is 10:1
     uint32_t width : 10;
     /// @brief Bits 10-20: the start point/origin's x coordinate
@@ -1558,7 +1563,7 @@ struct RobotInteractionDrawFigure {
     /// @brief Bits 21-31: the start point/origin's y coordinate
     uint32_t start_y : 11;
 
-    // GRAPHICS CONFIGURATION 3
+    // GRAPHICS CONFIGURATION 3 (one uint32_t)
     /// @brief Meaning differs based on drawn graphics. Table 2-26 of the ref system manual.
     uint32_t details_c : 10;
     /// @brief Meaning differs based on drawn graphics. Table 2-26 of the ref system manual.
@@ -1566,6 +1571,44 @@ struct RobotInteractionDrawFigure {
     /// @brief Meaning differs based on drawn graphics. Table 2-26 of the ref system manual.
     uint32_t details_e : 11;
 };
+
+/// @brief packet to draw one graphic
+/// @note sub-content-id 0x101
+struct DrawOneGraphic {
+   /// @brief The GraphicData to draw
+    GraphicData graphic;
+};
+
+/// @brief packet to draw two graphics
+/// @note sub-content-id 0x0102
+struct DrawTwoGraphics {
+    /// @brief The array of GraphicData to draw
+    GraphicData graphic[2];
+};
+
+/// @brief packet to draw five graphics
+/// @note sub-content-id 0x0103
+struct DrawFiveGraphics {
+    /// @brief The array of GraphicData to draw
+    GraphicData graphic[5];
+};
+
+/// @brief packet to draw seven graphics
+/// @note sub-content-id 0x0104
+struct DrawSevenGraphics {
+    /// @brief The array of GraphicData to draw
+    GraphicData graphic[7];
+};
+
+/// @brief packet to draw a character graphic
+struct DrawCustomCharacter {
+    /// @brief character configuration, see GraphicData for details
+    GraphicData graphic;
+    /// @brief characters to draw, up to 30 characters
+    uint8_t data[30] = { 0 };
+};
+
+
 
 /// @brief Encompassing all read-able packet structs of the Ref System
 struct RefData {
