@@ -1538,7 +1538,7 @@ struct DeleteLayer {
 /// @brief struct for generic graphics data.
 /// @note This struct is used in DrawOneGraphic, DrawTwoGraphics, etc.
 struct GraphicData {
-    /// @brief Figure name (24 bits, three uint8_t)
+    /// @brief Index for graphic deletion, revision, etc.
     uint8_t figure_name[3];
 
     // GRAPHICS CONFIGURATION 1 (one uint32_t)
