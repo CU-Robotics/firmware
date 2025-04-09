@@ -144,8 +144,8 @@ struct GameStatus {
 
     /// @brief The raw byte array of data received from ref
     /// @note this is only the FrameData data rather than the whole ref packet
-    uint8_t raw[REF_MAX_PACKET_SIZE] = {0};
-    
+    uint8_t raw[REF_MAX_PACKET_SIZE] = { 0 };
+
     /// @brief Competition type \n
     /// @brief 1: RMUC. 2: RMUT. 3: RMUA. 4: RMUL 3v3. 5: RUML 1v1.
     uint8_t competition_type = 0;
@@ -200,7 +200,7 @@ struct GameResult {
 
     /// @brief The raw byte array of data received from ref
     /// @note this is only the FrameData data rather than the whole ref packet
-    uint8_t raw[REF_MAX_PACKET_SIZE] = {0};
+    uint8_t raw[REF_MAX_PACKET_SIZE] = { 0 };
 
     /// @brief Winner
     /// @brief 0: Draw. 1: Red team wins. 2: Blue team wins.
@@ -229,7 +229,7 @@ struct GameRobotHP {
 
     /// @brief The raw byte array of data received from ref
     /// @note this is only the FrameData data rather than the whole ref packet
-    uint8_t raw[REF_MAX_PACKET_SIZE] = {0};
+    uint8_t raw[REF_MAX_PACKET_SIZE] = { 0 };
 
     /// @brief Red team's robot HPs
     /// @brief 0: Robot 1. 1: Robot 2. 2: Robot 3. 3: Robot 4. 4: Robot 5. 5: Robot 7. 6: Outpost. 7: Base.
@@ -272,7 +272,7 @@ struct EventData {
 
     /// @brief The raw byte array of data received from ref
     /// @note this is only the FrameData data rather than the whole ref packet
-    uint8_t raw[REF_MAX_PACKET_SIZE] = {0};
+    uint8_t raw[REF_MAX_PACKET_SIZE] = { 0 };
 
     /// @brief Site event type
     /// @todo Fill this out before china
@@ -301,7 +301,7 @@ struct ProjectileSupplierStatus {
 
     /// @brief The raw byte array of data received from ref
     /// @note this is only the FrameData data rather than the whole ref packet
-    uint8_t raw[REF_MAX_PACKET_SIZE] = {0};
+    uint8_t raw[REF_MAX_PACKET_SIZE] = { 0 };
 
     /// @brief Reserved
     uint8_t reserved = 0;
@@ -341,7 +341,7 @@ struct RefereeWarning {
 
     /// @brief The raw byte array of data received from ref
     /// @note this is only the FrameData data rather than the whole ref packet
-    uint8_t raw[REF_MAX_PACKET_SIZE] = {0};
+    uint8_t raw[REF_MAX_PACKET_SIZE] = { 0 };
 
     /// @brief Level of penalty that was last received by the own side.
     /// @brief 1: Both teams received yellow card. 2: Yellow card. 3: Red card. 4: Forfeiture.
@@ -380,7 +380,7 @@ struct DartStatus {
 
     /// @brief The raw byte array of data received from ref
     /// @note this is only the FrameData data rather than the whole ref packet
-    uint8_t raw[REF_MAX_PACKET_SIZE] = {0};
+    uint8_t raw[REF_MAX_PACKET_SIZE] = { 0 };
 
     /// @brief Time remaining for the dart to be launched in seconds
     uint8_t time_remaining = 0;
@@ -414,7 +414,7 @@ struct DartStatus {
         num_recent_hits = (data[1] >> 2) & 0x07;
         current_target = (data[1] >> 5) & 0x03;
         reserved = (data[2] << 8) | data[3];
-    }    
+    }
 };
 
 /// @brief Robot performance system data
@@ -426,7 +426,7 @@ struct RobotPerformance {
 
     /// @brief The raw byte array of data received from ref
     /// @note this is only the FrameData data rather than the whole ref packet
-    uint8_t raw[REF_MAX_PACKET_SIZE] = {0};
+    uint8_t raw[REF_MAX_PACKET_SIZE] = { 0 };
 
     /// @brief ID of the robot
     uint8_t robot_ID = 0;
@@ -493,7 +493,7 @@ struct RobotPowerHeat {
 
     /// @brief The raw byte array of data received from ref
     /// @note this is only the FrameData data rather than the whole ref packet
-    uint8_t raw[REF_MAX_PACKET_SIZE] = {0};
+    uint8_t raw[REF_MAX_PACKET_SIZE] = { 0 };
 
     /// @brief Output voltage of the chassis port in the Power Management Module; unit: mV
     uint16_t chassis_voltage_output = 0;
@@ -531,7 +531,7 @@ struct RobotPowerHeat {
 
         uint32_t chassis_power_raw = (data[7] << 24) | (data[6] << 16) | (data[5] << 8) | data[4];
         memcpy(&chassis_power, &chassis_power_raw, sizeof(chassis_power));
-        
+
         buffer_energy = (data[9] << 8) | data[8];
         barrel_heat_1_17mm = (data[11] << 8) | data[10];
         barrel_heat_2_17mm = (data[13] << 8) | data[12];
@@ -548,7 +548,7 @@ struct RobotPosition {
 
     /// @brief The raw byte array of data received from ref
     /// @note this is only the FrameData data rather than the whole ref packet
-    uint8_t raw[REF_MAX_PACKET_SIZE] = {0};
+    uint8_t raw[REF_MAX_PACKET_SIZE] = { 0 };
 
     /// @brief The x-coordinate of the robot's position; unit: m.
     float x = 0.f;
@@ -588,7 +588,7 @@ struct RobotBuff {
 
     /// @brief The raw byte array of data received from ref
     /// @note this is only the FrameData data rather than the whole ref packet
-    uint8_t raw[REF_MAX_PACKET_SIZE] = {0};
+    uint8_t raw[REF_MAX_PACKET_SIZE] = { 0 };
 
     /// @brief Robot's HP recovery buff (in percentage; a value of 10 indicates that HP recovery per second is 10% of the maximum HP.)
     uint8_t hp_recovery = 0;
@@ -632,7 +632,7 @@ struct AirSupportStatus {
 
     /// @brief The raw byte array of data received from ref
     /// @note this is only the FrameData data rather than the whole ref packet
-    uint8_t raw[REF_MAX_PACKET_SIZE] = {0};
+    uint8_t raw[REF_MAX_PACKET_SIZE] = { 0 };
 
     /// @brief Aerial Robot's status
     /// @brief 0: Cooling. 1: Cooling finished. 2: Active.
@@ -666,7 +666,7 @@ struct DamageStatus {
 
     /// @brief The raw byte array of data received from ref
     /// @note this is only the FrameData data rather than the whole ref packet
-    uint8_t raw[REF_MAX_PACKET_SIZE] = {0};
+    uint8_t raw[REF_MAX_PACKET_SIZE] = { 0 };
 
     /// @brief ID of the armor plate that was hit
     /// @note This is only valid if the damage was from projectiles, collisions, going offline, or Speed Monitor Module going offline.
@@ -700,7 +700,7 @@ struct LaunchingStatus {
 
     /// @brief The raw byte array of data received from ref
     /// @note this is only the FrameData data rather than the whole ref packet
-    uint8_t raw[REF_MAX_PACKET_SIZE] = {0};
+    uint8_t raw[REF_MAX_PACKET_SIZE] = { 0 };
 
     /// @brief Type of the projectile
     /// @brief 1: 17mm. 2: 42mm.
@@ -743,7 +743,7 @@ struct ProjectileAllowance {
 
     /// @brief The raw byte array of data received from ref
     /// @note this is only the FrameData data rather than the whole ref packet
-    uint8_t raw[REF_MAX_PACKET_SIZE] = {0};
+    uint8_t raw[REF_MAX_PACKET_SIZE] = { 0 };
 
     /// @brief Number of 17mm projectiles remaining
     uint16_t num_17mm = 0;
@@ -779,7 +779,7 @@ struct RFIDStatus {
 
     /// @brief The raw byte array of data received from ref
     /// @note this is only the FrameData data rather than the whole ref packet
-    uint8_t raw[REF_MAX_PACKET_SIZE] = {0};
+    uint8_t raw[REF_MAX_PACKET_SIZE] = { 0 };
 
     // Meaning of bit value 0 or 1: whether the Buff Point's RFID card is detected.
 
@@ -828,7 +828,7 @@ struct RFIDStatus {
 
     /// @brief Prints the RFIDStatus packet
     /// @todo Implement this before china
-    void print() {}
+    void print() { }
 
     /// @brief Fills in this struct with the data from a FrameData object
     /// @param data FrameData object to extract data from
@@ -867,7 +867,7 @@ struct DartCommand {
 
     /// @brief The raw byte array of data received from ref
     /// @note this is only the FrameData data rather than the whole ref packet
-    uint8_t raw[REF_MAX_PACKET_SIZE] = {0};
+    uint8_t raw[REF_MAX_PACKET_SIZE] = { 0 };
 
     /// @brief Status of the Launching Status
     /// @brief 0: Opened. 1: Closed. 2: Opening/Closing
@@ -908,7 +908,7 @@ struct GroundRobotPositions {
 
     /// @brief The raw byte array of data received from ref
     /// @note this is only the FrameData data rather than the whole ref packet
-    uint8_t raw[REF_MAX_PACKET_SIZE] = {0};
+    uint8_t raw[REF_MAX_PACKET_SIZE] = { 0 };
 
     /// @brief The x-axis coordinate of the own side's Hero Robot; unit: m.
     float hero_x = 0.f;
@@ -971,7 +971,7 @@ struct GroundRobotPositions {
         memcpy(&standard_5_x, &standard_5_x_raw, sizeof(standard_5_x));
         uint32_t standard_5_y_raw = (data[39] << 24) | (data[38] << 16) | (data[37] << 8) | data[36];
         memcpy(&standard_5_y, &standard_5_y_raw, sizeof(standard_5_y));
-    }    
+    }
 };
 
 /// @brief Radar-marked progress data
@@ -983,7 +983,7 @@ struct RadarProgress {
 
     /// @brief The raw byte array of data received from ref
     /// @note this is only the FrameData data rather than the whole ref packet
-    uint8_t raw[REF_MAX_PACKET_SIZE] = {0};
+    uint8_t raw[REF_MAX_PACKET_SIZE] = { 0 };
 
     /// @brief Marked progress of the opponent's Hero Robot. 0-120
     uint8_t hero = 0;
@@ -1031,7 +1031,7 @@ struct SentryDecision {
 
     /// @brief The raw byte array of data received from ref
     /// @note this is only the FrameData data rather than the whole ref packet
-    uint8_t raw[REF_MAX_PACKET_SIZE] = {0};
+    uint8_t raw[REF_MAX_PACKET_SIZE] = { 0 };
 
     /// @todo implement before china
     uint32_t sentry_info = 0;
@@ -1059,7 +1059,7 @@ struct RadarDecision {
 
     /// @brief The raw byte array of data received from ref
     /// @note this is only the FrameData data rather than the whole ref packet
-    uint8_t raw[REF_MAX_PACKET_SIZE] = {0};
+    uint8_t raw[REF_MAX_PACKET_SIZE] = { 0 };
 
     /// @todo implement before china
     uint8_t radar_info = 0;
@@ -1087,7 +1087,7 @@ struct RobotInteraction {
 
     /// @brief The raw byte array of data received from ref
     /// @note this is only the FrameData data rather than the whole ref packet
-    uint8_t raw[REF_MAX_PACKET_SIZE] = {0};
+    uint8_t raw[REF_MAX_PACKET_SIZE] = { 0 };
 
     /// @brief ID that is specified by user. Not critical to REF
     uint16_t content_id = 0;
@@ -1133,7 +1133,7 @@ struct CustomControllerRobot {
 
     /// @brief The raw byte array of data received from ref
     /// @note this is only the FrameData data rather than the whole ref packet
-    uint8_t raw[REF_MAX_PACKET_SIZE] = {0};
+    uint8_t raw[REF_MAX_PACKET_SIZE] = { 0 };
 
     /// @brief Custom data
     uint8_t data[30] = { 0 };
@@ -1165,7 +1165,7 @@ struct SmallMapCommand {
 
     /// @brief The raw byte array of data received from ref
     /// @note this is only the FrameData data rather than the whole ref packet
-    uint8_t raw[REF_MAX_PACKET_SIZE] = {0};
+    uint8_t raw[REF_MAX_PACKET_SIZE] = { 0 };
 
     /// @brief The x-axis coordinate of the target position; unit: m.
     /// @note When the target robot ID is sent, the value is 0.
@@ -1203,7 +1203,7 @@ struct SmallMapCommand {
         cmd_keyboard = data[8];
         target_robot_id = data[9];
         cmd_source = data[10];
-    }    
+    }
 };
 
 /// @brief Keyboard, mouse, and remote control data
@@ -1215,7 +1215,7 @@ struct KBMInteraction {
 
     /// @brief The raw byte array of data received from ref
     /// @note this is only the FrameData data rather than the whole ref packet
-    uint8_t raw[REF_MAX_PACKET_SIZE] = {0};
+    uint8_t raw[REF_MAX_PACKET_SIZE] = { 0 };
 
     /// @brief x-axis moving speed of the mouse. A negative value indicates a left movement.
     int16_t mouse_speed_x = 0;
@@ -1327,7 +1327,7 @@ struct SmallMapRadarPosition {
 
     /// @brief The raw byte array of data received from ref
     /// @note this is only the FrameData data rather than the whole ref packet
-    uint8_t raw[REF_MAX_PACKET_SIZE] = {0};
+    uint8_t raw[REF_MAX_PACKET_SIZE] = { 0 };
 
     /// @brief The target robot's ID.
     uint16_t target_ID = 0;
@@ -1365,7 +1365,7 @@ struct CustomControllerClient {
 
     /// @brief The raw byte array of data received from ref
     /// @note this is only the FrameData data rather than the whole ref packet
-    uint8_t raw[REF_MAX_PACKET_SIZE] = {0};
+    uint8_t raw[REF_MAX_PACKET_SIZE] = { 0 };
 
     /// @brief value of Key 1
     uint8_t key_1 = 0;
@@ -1383,7 +1383,7 @@ struct CustomControllerClient {
     uint16_t mouse_right : 4;
     /// @brief Reserved
     uint16_t reserved = 0;
-    
+
     /// @brief Prints the ControllerClient packet
     void print() {
         Serial.println("ControllerClient:");
@@ -1419,7 +1419,7 @@ struct SmallMapSentryCommand {
 
     /// @brief The raw byte array of data received from ref
     /// @note this is only the FrameData data rather than the whole ref packet
-    uint8_t raw[REF_MAX_PACKET_SIZE] = {0};
+    uint8_t raw[REF_MAX_PACKET_SIZE] = { 0 };
 
     /// @brief Specific command sent to the sentry
     /// @brief 1: Go to target point to attack. 2: Go to target point to defend. 3: Go to target point;
@@ -1429,9 +1429,9 @@ struct SmallMapSentryCommand {
     /// @brief The y-axis coordinate of the target position; unit: dm.
     uint16_t start_y = 0;
     /// @brief The array of x-axis incremental values of route points; unit: dm.
-    int8_t delta_x[49] = {0};
+    int8_t delta_x[49] = { 0 };
     /// @brief The array of y-axis incremental values of route points; unit: dm.
-    int8_t delta_y[49] = {0};
+    int8_t delta_y[49] = { 0 };
     /// @brief The ID of the sender.
     uint16_t sender_ID = 0;
 
@@ -1478,14 +1478,14 @@ struct SmallMapRobotData {
 
     /// @brief The raw byte array of data received from ref
     /// @note this is only the FrameData data rather than the whole ref packet
-    uint8_t raw[REF_MAX_PACKET_SIZE] = {0};
+    uint8_t raw[REF_MAX_PACKET_SIZE] = { 0 };
 
     /// @brief Sender ID
     uint16_t sender_ID = 0;
     /// @brief Receiver ID
     uint16_t receiver_ID = 0;
     /// @brief Character array
-    uint8_t data[30] = {0};
+    uint8_t data[30] = { 0 };
 
     /// @brief Prints the SmallMapRobotPosition packet
     void print() {
@@ -1510,66 +1510,123 @@ struct SmallMapRobotData {
     }
 };
 
+// Sub-content IDs for various drawing commands
+enum DrawType {
+    /// @brief a player client deletes graphic layers
+    DELETE_LAYER = 0x0100,
+    /// @brief a player client draws one graphic
+    DRAW_ONE_GRAPHIC = 0x0101,
+    /// @brief a player client draws two graphics
+    DRAW_TWO_GRAPHICS = 0x0102,
+    /// @brief a player client draws five graphics
+    DRAW_FIVE_GRAPHICS = 0x0103,
+    /// @brief a player client draws seven graphics
+    DRAW_SEVEN_GRAPHICS = 0x0104,
+    /// @brief a player client draws a character graphic
+    DRAW_CHARACTER_GRAPHIC = 0x0110,
+};
+
+struct RobotInteractionDeleteLayer {
+    /// @brief 0: no operation is performed. 1: delete a graphic layer. 2: delete all graphics layers
+    uint8_t delete_operation;
+    /// @brief number of layers to delete (0-9)
+    uint8_t num_layers;
+};
+
+struct RobotInteractionDrawFigure {
+    uint8_t figure_name[3];
+
+    // GRAPHICS CONFIGURATION 1
+    /// @brief Bits 0-2: graphic operation (0: none, 1: add, 2: modify)
+    uint32_t operate_type : 3;
+    /// @brief Bits 3-5: graphic type (i.e. 0: straight line, 1: rectangle...)
+    uint32_t figure_type : 3;
+    /// @brief Bits 6-9: number of graphics layers
+    uint32_t layer : 4;
+    /// @brief Bits 10-13: color (0: own side's color (red/blue), 1: yellow, etc..)
+    uint32_t color : 4;
+    /// @brief First half of Bits 14-31: details differ based on drawn graphics. Described in table 2-26 of the Ref system manual.
+    uint32_t details_a : 9;
+    /// @brief Second half of Bits 14-31: details differ based on drawn graphics. Described in table 2-26 of the Ref system manual.
+    uint32_t details_b : 9;
+
+    // GRAPHICS CONFIGURATION 2
+    /// @brief Bits 0-9: line width. Recommended ratio between font size and line width is 10:1
+    uint32_t width : 10;
+    /// @brief Bits 10-20: the start point/origin's x coordinate
+    uint32_t start_x : 11;
+    /// @brief Bits 21-31: the start point/origin's y coordinate
+    uint32_t start_y : 11;
+
+    // GRAPHICS CONFIGURATION 3
+    /// @brief Meaning differs based on drawn graphics. Table 2-26 of the ref system manual.
+    uint32_t details_c : 10;
+    /// @brief Meaning differs based on drawn graphics. Table 2-26 of the ref system manual.
+    uint32_t details_d : 11;
+    /// @brief Meaning differs based on drawn graphics. Table 2-26 of the ref system manual.
+    uint32_t details_e : 11;
+};
+
 /// @brief Encompassing all read-able packet structs of the Ref System
 struct RefData {
     /// @brief Competition status data
-    GameStatus game_status{};
+    GameStatus game_status {};
     /// @brief Competition result data
-    GameResult game_result{};
+    GameResult game_result {};
     /// @brief Robot health data
-    GameRobotHP game_robot_hp{};
+    GameRobotHP game_robot_hp {};
     /// @brief Site event data
-    EventData event_data{};
+    EventData event_data {};
     /// @brief Action identifier data of the Official Projectile Supplier
-    ProjectileSupplierStatus projectile_supplier_status{};
+    ProjectileSupplierStatus projectile_supplier_status {};
     /// @brief Referee warning data
-    RefereeWarning referee_warning{};
+    RefereeWarning referee_warning {};
     /// @brief Dart launching data
-    DartStatus dart_status{};
+    DartStatus dart_status {};
     /// @brief Robot performance system data
-    RobotPerformance robot_performance{};
+    RobotPerformance robot_performance {};
     /// @brief Real-time chassis power and barrel heat data
-    RobotPowerHeat robot_power_heat{};
+    RobotPowerHeat robot_power_heat {};
     /// @brief Robot position data
-    RobotPosition robot_position{};
+    RobotPosition robot_position {};
     /// @brief Robot buff data
-    RobotBuff robot_buff{};
+    RobotBuff robot_buff {};
     /// @brief Air support time data
-    AirSupportStatus air_support_status{};
+    AirSupportStatus air_support_status {};
     /// @brief Damage status data
-    DamageStatus damage_status{};
+    DamageStatus damage_status {};
     /// @brief Real-time launching data
-    LaunchingStatus launching_status{};
+    LaunchingStatus launching_status {};
     /// @brief Projectile allowance data
-    ProjectileAllowance projectile_allowance{};
+    ProjectileAllowance projectile_allowance {};
     /// @brief RFID status data
-    RFIDStatus rfid_status{};
+    RFIDStatus rfid_status {};
     /// @brief Dart command data
-    DartCommand dart_command{};
+    DartCommand dart_command {};
     /// @brief Ground robot positions data
-    GroundRobotPositions ground_robot_positions{};
+    GroundRobotPositions ground_robot_positions {};
     /// @brief Radar progress data
-    RadarProgress radar_progress{};
+    RadarProgress radar_progress {};
     /// @brief Sentry decision data
-    SentryDecision sentry_decision{};
+    SentryDecision sentry_decision {};
     /// @brief Radar decision data
-    RadarDecision radar_decision{};
+    RadarDecision radar_decision {};
     /// @brief Robot interaction data
-    RobotInteraction robot_interaction{};
+    RobotInteraction robot_interaction {};
     /// @brief Data about the interaction between the Custom Controller and robots
-    CustomControllerRobot custom_controller_robot{};
+    CustomControllerRobot custom_controller_robot {};
     /// @brief Player client's small map interaction data
-    SmallMapCommand small_map_command{};
+    SmallMapCommand small_map_command {};
     /// @brief Keyboard, mouse, and remote control data
-    KBMInteraction kbm_interaction{};
+    KBMInteraction kbm_interaction {};
     /// @brief Radar data received by player clients' Small Maps
-    SmallMapRadarPosition small_map_radar_position{};
+    SmallMapRadarPosition small_map_radar_position {};
     /// @brief Data about the interaction between the Custom Controller and player clients
-    CustomControllerClient custom_controller_client{};
+    CustomControllerClient custom_controller_client {};
     /// @brief Sentry data received by player clients' Small Maps
-    SmallMapSentryCommand small_map_sentry_command{};
+    SmallMapSentryCommand small_map_sentry_command {};
     /// @brief Robot data received by player clients' Small Map
-    SmallMapRobotData small_map_robot_data{};
+    SmallMapRobotData small_map_robot_data {};
 };
 
 /// @brief Game Staus packet offset for comms
@@ -1604,5 +1661,7 @@ constexpr uint32_t REF_COMMS_RFID_STATUS_OFFSET = 120;
 constexpr uint32_t REF_COMMS_KBM_INTERACTION_OFFSET = 124;
 /// @brief End of the Ref Data packet for comms
 constexpr uint32_t REF_COMMS_END_OFFSET = 136;
+
+
 
 #endif // REF_SYSTEM_PACKET_DEFINITIONS_HPP
