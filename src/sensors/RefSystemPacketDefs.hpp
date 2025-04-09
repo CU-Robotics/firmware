@@ -1608,8 +1608,6 @@ struct DrawCustomCharacter {
     uint8_t data[30] = { 0 };
 };
 
-
-
 /// @brief Encompassing all read-able packet structs of the Ref System
 struct RefData {
     /// @brief Competition status data
