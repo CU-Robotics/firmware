@@ -133,6 +133,10 @@ public:
 	/// @return Amount of points since last read
 	std::optional<int> get_mouse_y();
 
+	/// @brief Get mouse velocity z (scroll wheel)
+	/// @return Amount of points since last read
+	int get_mouse_z();
+
 	/// @brief status of left mouse button
 	/// @return Is left mouse button pressed
 	std::optional<bool> get_l_mouse_button();
@@ -165,8 +169,10 @@ private:
 	/// @brief Keep track of mouse x velocity
 	int16_t mouse_x = 0;
 	/// @brief Keep track of mouse y velocity
-	int16_t mouse_y = 0;
 
+	int16_t mouse_y;
+	/// @brief Keep track of mouse z velocity (scroll wheel)
+	int16_t mouse_z;
 	/// @brief Keep track of left mouse button status
 	bool l_mouse_button = 0;
 	/// @brief Keep track of right mouse button status

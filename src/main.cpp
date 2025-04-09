@@ -1,5 +1,6 @@
 #include <Arduino.h>
 
+#include "comms/comms_layer.hpp"
 #include "git_info.h"
 
 #include "utils/profiler.hpp"
@@ -18,6 +19,8 @@
 #include "SensorManager.hpp"
 
 #include "utils/watchdog.hpp"
+#include "comms/data/sendable.hpp"
+#include "comms/data/hive_data.hpp"
 
 // Loop constants
 #define LOOP_FREQ 1000
@@ -27,9 +30,10 @@
 
 CANManager can;
 RefSystem* ref;
-HIDLayer comms;
 ACS712 current_sensor;
 Transmitter* transmitter = nullptr;
+
+Comms::CommsLayer comms_layer;
 
 StereoCamTrigger stereoCamTrigger(60);
 
@@ -42,8 +46,6 @@ EstimatorManager estimator_manager;
 ControllerManager controller_manager;
 
 Governor governor;
-
-LEDBoard led;
 
 Watchdog watchdog;
 
@@ -88,7 +90,7 @@ int main() {
 
     Serial.begin(115200); // the serial monitor is actually always active (for debug use Serial.println & tycmd)
     debug.begin(SerialUSB1);
-
+    
     print_logo();
 
     // check to see if there is a crash report, and if so, print it repeatedly over Serial
@@ -112,14 +114,17 @@ int main() {
     else if (transmitter_type == TransmitterType::ET16S){
         transmitter = new ET16S;
     }
+    
+    //initialize objects
     can.init();
-    transmitter->init();
-    comms.init();
+    dr16.init();
+    comms_layer.init();
+	
     ref = sensor_manager.get_ref();
 
     // Config config
     Serial.println("Configuring...");
-    const Config* config = config_layer.configure(&comms);
+    const Config* config = config_layer.configure(&comms_layer);
     Serial.println("Configured!");
 
     // configure motors
@@ -146,6 +151,7 @@ int main() {
     float temp_reference[STATE_LEN][3] = { 0 }; //Temp governed state
     float target_state[STATE_LEN][3] = { 0 }; //Temp ungoverned state
     float hive_state_offset[STATE_LEN][3] = { 0 }; //Hive offset state
+    bool override_request = false;
     // float motor_inputs[CAN_MAX_MOTORS] = { 0 }; //Array for storing controller outputs to send to CAN
 
     // manual controls variables
@@ -170,7 +176,11 @@ int main() {
     // start the main loop watchdog
     watchdog.start();
 
+
     Serial.println("Entering main loop...\n");
+
+    Comms::Sendable<TestData> test_data;
+    test_data.data.w = 0xdeaddead;
 
     // Main loop
     while (true) {
@@ -183,18 +193,15 @@ int main() {
         can.read();
         transmitter->read();
 
-        // read and write comms packets
-        comms.ping();
-
-        CommsPacket* incoming = comms.get_incoming_packet();
-        CommsPacket* outgoing = comms.get_outgoing_packet();
+        test_data.send_to_comms();
+        sensor_manager.send_sensor_data_to_comms();
 
         // check whether this packet is a config packet
-        if (incoming->raw[3] == 1) {
+        if (comms_layer.get_hive_data().config_section.info_bit == 1) {
             Serial.println("\n\nConfig request received, reconfiguring from comms!\n\n");
             // trigger safety mode
             can.issue_safety_mode();
-            config_layer.reconfigure(&comms);
+            config_layer.reconfigure(&comms_layer);
         }
 
         // print loopc every second to verify it is still alive
@@ -272,8 +279,11 @@ int main() {
         target_state[7][0] = 1;
 
         // if the left switch is all the way down use Hive controls
-        if (transmitter->get_l_switch() == SwitchPos::BACKWARD) {
-            incoming->get_target_state(target_state);
+
+		if (transmitter.get_l_switch() == SwitchPos::Backward) {
+            // hid_incoming.get_target_state(target_state);
+            memcpy(target_state, comms_layer.get_hive_data().target_state.state, sizeof(target_state));
+
             // if you just switched to hive controls, set the reference to the current state
             if (hive_toggle) {
                 governor.set_reference(temp_state);
@@ -291,23 +301,31 @@ int main() {
         }
 
         // print dr16
-        //Serial.printf("DR16:\n\t");
-        transmitter->print();
 
-        Serial.printf("Target state:\n");
-        for (int i = 0; i < 8; i++) {
-            Serial.printf("\t%d: %f %f %f\n", i, target_state[i][0], target_state[i][1], target_state[i][2]);
-        }
+        // Serial.printf("DR16:\n\t");
+        // dr16.print();
 
+        // Serial.printf("Target state:\n");
+        // for (int i = 0; i < 8; i++) {
+        //     Serial.printf("\t%d: %f %f %f\n", i, target_state[i][0], target_state[i][1], target_state[i][2]);
+        // }
+        
         // override temp state if needed
-        if (incoming->get_hive_override_request() == 1) {
-            //Serial.printf("Overriding state with hive state\n");
-            incoming->get_hive_override_state(hive_state_offset);
+
+        if (comms_layer.get_hive_data().override_state.active) {
+            // clear the request
+            comms_layer.get_hive_data().override_state.active = false;
+            
+            Serial.printf("Overriding state with hive state\n");
+            memcpy(hive_state_offset, comms_layer.get_hive_data().override_state.state, sizeof(hive_state_offset));
+
             memcpy(temp_state, hive_state_offset, sizeof(hive_state_offset));
+            override_request = true;
         }
 
         // step estimates and construct estimated state
-        estimator_manager.step(temp_state, temp_micro_state, incoming->get_hive_override_request());
+        estimator_manager.step(temp_state, temp_micro_state, override_request);
+        override_request = false;
 
         // if first loop set target state to estimated state
         if (count_one == 0) {
@@ -316,54 +334,62 @@ int main() {
             count_one++;
         }
 
-        Serial.printf("Estimated state:\n");
-        for (int i = 0; i < 8; i++) {
-            Serial.printf("\t%d: %f %f %f\n", i, temp_state[i][0], temp_state[i][1], temp_state[i][2]);
-        }
+        // Serial.printf("Estimated state:\n");
+        // for (int i = 0; i < 8; i++) {
+        //     Serial.printf("\t%d: %f %f %f\n", i, temp_state[i][0], temp_state[i][1], temp_state[i][2]);
+        // }
+
+        // give the sensors the current estimated state
+        sensor_manager.set_estimated_state(temp_state);
 
         // reference govern
         governor.set_estimate(temp_state);
         governor.step_reference(target_state, config->governor_types);
         governor.get_reference(temp_reference);
 
-        Serial.printf("Reference state:\n");
-        for (int i = 0; i < 8; i++) {
-            Serial.printf("\t%d: %f %f %f\n", i, temp_reference[i][0], temp_reference[i][1], temp_reference[i][2]);
-        }
+        // Serial.printf("Reference state:\n");
+        // for (int i = 0; i < 8; i++) {
+        //     Serial.printf("\t%d: %f %f %f\n", i, temp_reference[i][0], temp_reference[i][1], temp_reference[i][2]);
+        // }
 
         // generate motor outputs from controls
         controller_manager.step(temp_reference, temp_state, temp_micro_state);
 
-        can.print_state();
 
-        // construct sensor data packet
-        SensorData sensor_data;
+        // can.print_state();
 
-        // set transmitter raw data
-        if (transmitter_type == TransmitterType::DR16) {
-            memcpy(sensor_data.raw + SENSOR_DR16_OFFSET, transmitter->get_raw(), DR16_PACKET_SIZE);
-        } else {
-            Serial.printf("Transmitter type not supported yet\n");
-        }
-
-        // set lidars
-        uint8_t lidar_data[D200_NUM_PACKETS_CACHED * D200_PAYLOAD_SIZE] = { 0 };
-        sensor_manager.get_lidar_sensor(0)->export_data(lidar_data);
-        memcpy(sensor_data.raw + SENSOR_LIDAR1_OFFSET, lidar_data, D200_NUM_PACKETS_CACHED * D200_PAYLOAD_SIZE);
-        sensor_manager.get_lidar_sensor(1)->export_data(lidar_data);
-        memcpy(sensor_data.raw + SENSOR_LIDAR2_OFFSET, lidar_data, D200_NUM_PACKETS_CACHED * D200_PAYLOAD_SIZE);
 
         // construct ref data packet
-        uint8_t ref_data_raw[180] = { 0 };
-        ref->get_data_for_comms(ref_data_raw);
+        CommsRefData ref_data = ref->get_data_for_comms();
+        Comms::Sendable<CommsRefData> ref_data_sendable = ref_data;
+        ref_data_sendable.send_to_comms();
 
-        // set the outgoing packet
-        outgoing->set_id((uint16_t)loopc);
-        outgoing->set_info(0x0000);
-        outgoing->set_time(millis() / 1000.0);
-        outgoing->set_sensor_data(&sensor_data);
-        outgoing->set_ref_data(ref_data_raw);
-        outgoing->set_estimated_state(temp_state);
+        Comms::Sendable<EstimatedState> estimated_state;
+        memcpy(estimated_state.data.state, temp_state, sizeof(temp_state));
+        estimated_state.data.time = millis() / 1000.0;
+        estimated_state.send_to_comms();
+
+        Comms::Sendable<DR16Data> dr16_sendable;
+        dr16_sendable.data.l_mouse_button = dr16.get_l_mouse_button();
+        dr16_sendable.data.r_mouse_button = dr16.get_r_mouse_button();
+        dr16_sendable.data.l_switch = dr16.get_l_switch();
+        dr16_sendable.data.r_switch = dr16.get_r_switch();
+        dr16_sendable.data.l_stick_x = dr16.get_l_stick_x();
+        dr16_sendable.data.l_stick_y = dr16.get_l_stick_y();
+        dr16_sendable.data.r_stick_x = dr16.get_r_stick_x();
+        dr16_sendable.data.r_stick_y = dr16.get_r_stick_y();
+        dr16_sendable.data.wheel = dr16.get_wheel();
+        dr16_sendable.data.mouse_x = dr16.get_mouse_x();
+        dr16_sendable.data.mouse_y = dr16.get_mouse_y();
+        dr16_sendable.data.keys.raw = *(uint16_t*)(dr16.get_raw() + 14);
+        dr16_sendable.send_to_comms();
+
+        // Comms::LoggingData logging_data;
+        // const char* logging_data_str = "Logging data test string";
+        // logging_data.deserialize(logging_data_str, strlen(logging_data_str));
+        // logging_data.send_to_comms();
+
+        comms_layer.run();
 
         bool is_slow_loop = false;
 
@@ -380,17 +406,16 @@ int main() {
             is_slow_loop = true;
         }
 
-
         //  SAFETY MODE
         if (transmitter->is_connected() && (transmitter->get_l_switch() == SwitchPos::MIDDLE || transmitter->get_l_switch() == SwitchPos::BACKWARD) && config_layer.is_configured() && !is_slow_loop) {
             // SAFETY OFF
             can.write();
-            Serial.printf("Can write\n");
+            // Serial.printf("Can write\n");
         } else {
             // SAFETY ON
             // TODO: Reset all controller integrators here
             can.issue_safety_mode();
-            Serial.printf("Can zero\n");
+            // Serial.printf("Can zero\n");
         }
 
         // LED heartbeat -- linked to loop count to reveal slowdowns and freezes.
