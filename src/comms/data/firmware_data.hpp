@@ -1,19 +1,18 @@
 #pragma once
 
 #if defined(HIVE)
-#include "modules/comms/data/logging_data.hpp"  // for LoggingData
-#include "modules/comms/data/data_structs.hpp"  // for shared data structs
-#include "modules/comms/data/comms_data.hpp"    // for CommsData
-// TODO: find a better home for this
-#include "modules/comms/RefSystemPacketDefs.hpp"// for RefData
+#include "modules/comms/data/logging_data.hpp"      // for LoggingData
+#include "modules/comms/data/data_structs.hpp"      // for shared data structs
+#include "modules/comms/data/comms_data.hpp"        // for CommsData
+#include "modules/comms/RefSystemPacketDefs.hpp"    // for RefData
 #elif defined(FIRMWARE)
-#include "comms/data/logging_data.hpp"          // for LoggingData
-#include "comms/data/data_structs.hpp"          // for shared data structs
-#include "comms/data/comms_data.hpp"            // for CommsData
-#include "sensors/RefSystemPacketDefs.hpp"        // for RefData
+#include "comms/data/logging_data.hpp"              // for LoggingData
+#include "comms/data/data_structs.hpp"              // for shared data structs
+#include "comms/data/comms_data.hpp"                // for CommsData
+#include "sensors/RefSystemPacketDefs.hpp"          // for RefData
 #endif
 
-#include <vector>                               // for std::vector
+#include <vector>                                   // for std::vector
 
 namespace Comms {
 
@@ -26,6 +25,8 @@ struct FirmwareData {
         
     /// @brief Test data
     TestData test_data;
+    /// @brief Big test data
+    BigTestData big_test_data;
     /// @brief TempRobotState data
     TempRobotState temp_robot_state;
 

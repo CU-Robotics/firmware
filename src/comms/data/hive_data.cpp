@@ -18,6 +18,12 @@ void HiveData::set_data(CommsData* data) {
         memcpy(&test_data, test, sizeof(TestData));
         break;
     }
+    case TypeLabel::BigTestData: {
+        BigTestData *big_test = static_cast<BigTestData*>(data);
+        memcpy(&big_test_data, big_test, sizeof(BigTestData));
+        // big_test_data = *static_cast<BigTestData*>(data);
+        break;
+    }
     case TypeLabel::TargetState: {
         TargetState* target = static_cast<TargetState*>(data);
         memcpy(&target_state, target, sizeof(TargetState));

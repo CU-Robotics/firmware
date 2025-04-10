@@ -28,6 +28,9 @@ namespace Comms {
 /// @brief Constructs and stores the data part of a packet we want to send over a physical layer.
 class PacketPayload {
 public:
+    /// @brief The maximum size of the queue.
+    constexpr static uint16_t MAX_QUEUE_SIZE = 50;
+
     /// @brief Default constructor.
     PacketPayload() = default;
 
@@ -65,6 +68,18 @@ public:
     /// @brief Clear the queues and the raw data buffer.
     /// @note This is thread safe
     void clear_queues();
+
+    /// @brief Get the size of the high priority send queue.
+    /// @return The size of the high priority send queue.
+    uint16_t get_high_priority_queue_size() const;
+
+    /// @brief Get the size of the medium priority send queue.
+    /// @return The size of the medium priority send queue.
+    uint16_t get_medium_priority_queue_size() const;
+    
+    /// @brief Get the size of the logging send queue.
+    /// @return The size of the logging send queue.
+    uint16_t get_logging_queue_size() const;
 
 private:
     /// @brief Clear the raw data buffer.
@@ -112,9 +127,6 @@ private:
     uint16_t max_data_size = 0;
     /// @brief The remaining size of the data packet.
     uint16_t remaining_data_size = 0;
-
-    /// @brief The maximum size of the queue.
-    constexpr static uint16_t MAX_QUEUE_SIZE = 50;
 
 #if defined(HIVE)
     /// @brief Mutex to protect concurrent accesses to this PacketPayload

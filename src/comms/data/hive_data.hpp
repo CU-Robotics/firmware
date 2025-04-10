@@ -19,6 +19,8 @@ struct HiveData {
     
     /// @brief Test data
     TestData test_data;
+    /// @brief Big test data
+    BigTestData big_test_data;
 
     /// @brief Target state
     TargetState target_state;

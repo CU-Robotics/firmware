@@ -18,6 +18,11 @@ void FirmwareData::set_data(CommsData* data) {
         test_data = *static_cast<TestData*>(data);
         break;
     }
+    case TypeLabel::BigTestData: {
+        // place the data in the mega struct
+        big_test_data = *static_cast<BigTestData*>(data);
+        break;
+    }
     case TypeLabel::LoggingData: {
         // place the data in the mega struct
         logging_data = *static_cast<LoggingData*>(data);
@@ -97,7 +102,7 @@ void FirmwareData::set_data(CommsData* data) {
     case TypeLabel::CommsRefData: {
         // place the data in the mega struct
     #if defined(HIVE)
-        // TODO: implement this on firmware
+        // TODO: implement this on firmware, do we actually need it on firmware?
         CommsRefData* comms_ref_data = static_cast<CommsRefData*>(data);
         ref_data.set_data(comms_ref_data->raw);
     #endif

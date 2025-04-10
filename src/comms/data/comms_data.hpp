@@ -9,6 +9,7 @@ namespace Comms {
 enum class TypeLabel : uint8_t {
     NONE = 0x00,
     TestData,
+    BigTestData,
     LoggingData,
     BuffEncoderData,
     ICMSensorData,
@@ -33,6 +34,8 @@ inline std::string to_string(TypeLabel type_label) {
         return "NONE";
     case TypeLabel::TestData:
         return "TestData";
+    case TypeLabel::BigTestData:
+        return "BigTestData";
     case TypeLabel::LoggingData:
         return "LoggingData";
     case TypeLabel::BuffEncoderData:

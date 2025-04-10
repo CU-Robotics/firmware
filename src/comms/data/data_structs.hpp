@@ -22,6 +22,14 @@ struct TestData : Comms::CommsData {
     uint32_t w = 0x98765432;
 };
 
+/// @brief Data struct for testing purposes
+struct BigTestData : Comms::CommsData {
+    BigTestData() : Comms::CommsData(Comms::TypeLabel::BigTestData, Comms::PhysicalMedium::Ethernet, Comms::Priority::High, sizeof(BigTestData)) {}
+
+    /// @brief a bunch of data
+    float blah[128] = { 0 };
+};
+
 /// @brief Structure for the buff encoder sensor.
 struct BuffEncoderData : Comms::CommsData {
     BuffEncoderData() : CommsData(Comms::TypeLabel::BuffEncoderData, Comms::PhysicalMedium::Ethernet, Comms::Priority::Medium, sizeof(BuffEncoderData)) { }
