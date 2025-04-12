@@ -58,7 +58,6 @@ void GimbalEstimator::step_states(float output[STATE_LEN][3], float curr_state[S
         yaw_axis_spherical[1] = atan(imu_yaw_axis_vector[1] / imu_yaw_axis_vector[0]); // theta
     }
     yaw_axis_spherical[2] = acos(imu_yaw_axis_vector[2] / __magnitude(imu_yaw_axis_vector, 3)) - pitch_diff; // phi
-
     // roll_axis_spherical[1] = yaw_axis_spherical[1]; // theta
     // roll_axis_spherical[2] = yaw_axis_spherical[2]-(PI*0.5); // phi
 
@@ -87,7 +86,6 @@ void GimbalEstimator::step_states(float output[STATE_LEN][3], float curr_state[S
     float magicNum = 0; // left yaw increases with 0.8
     __rotateVector3D(roll_axis_unitvector, yaw_axis_unitvector, magicNum, yaw_axis_unitvector);
     __rotateVector3D(roll_axis_unitvector, pitch_axis_unitvector, magicNum, pitch_axis_unitvector);
-
     // __rotateVector3D(yaw_axis_unitvector,roll_axis_unitvector,(PI*0.5),pitch_axis_unitvector);
 
     // offset the axis' based on the pitch yaw and roll data, These vectors give global pitch yaw and roll
@@ -108,7 +106,6 @@ void GimbalEstimator::step_states(float output[STATE_LEN][3], float curr_state[S
     __crossProduct(yaw_axis_unitvector, pitch_axis_unitvector, temp1);
     __crossProduct(yaw_axis_unitvector, roll_axis_unitvector, temp2);
     __crossProduct(roll_axis_unitvector, pitch_axis_unitvector, temp3);
-
     // update previous to the current value before current is updated
     previous_pitch_velocity = current_pitch_velocity;
     previous_yaw_velocity = current_yaw_velocity;
@@ -119,14 +116,12 @@ void GimbalEstimator::step_states(float output[STATE_LEN][3], float curr_state[S
     current_pitch_velocity = __vectorProduct(pitch_axis_unitvector, raw_omega_vector, 3) / imu_vel_offset;
     current_yaw_velocity = __vectorProduct(yaw_axis_unitvector, raw_omega_vector, 3) / imu_vel_offset;
     current_roll_velocity = -__vectorProduct(roll_axis_unitvector, raw_omega_vector, 3) / imu_vel_offset;
-
     // calculate the pitch yaw and roll velocities (Global Reference)
     global_pitch_velocity = __vectorProduct(pitch_axis_global, raw_omega_vector, 3);
     global_yaw_velocity = __vectorProduct(yaw_axis_global, raw_omega_vector, 3);
     global_roll_velocity = __vectorProduct(roll_axis_global, raw_omega_vector, 3);
     // position integration
     dt = time.delta();
-
     // chassis_angle = yaw_angle - yaw_enc_angle;
     chassis_angle = -yaw_enc_angle;
     if (count1 == 0) {
@@ -174,7 +169,6 @@ void GimbalEstimator::step_states(float output[STATE_LEN][3], float curr_state[S
         odom_pos_diff[i] = rev_diff[i] * odom_wheel_radius;
         total_odom_pos[i] = odom_pos_diff[i] + total_odom_pos[i];
     }
-
 
     chassis_angle = yaw_angle - yaw_enc_angle;
     // chassis_angle = -(total_odom_pos[0] + total_odom_pos[2])/(2*odom_axis_offset_x)+initial_chassis_angle;  
@@ -541,9 +535,37 @@ void LocalEstimator::step_states(float output[CAN_MAX_MOTORS][MICRO_STATE_LEN], 
     for (size_t i = 0; i < CAN_NUM_BUSSES; i++) {
         for (size_t j = 0; j < CAN_MAX_MOTORS_PER_BUS; j++) {
             // j + 1 for motor ID on get_motor_state since j starts at 0 but it expects a 1-indexed ID
-            if (can->get_motor(i, j + 1))
+            if (can->get_motor(i, j + 1)){
                 output[(i * CAN_MAX_MOTORS_PER_BUS) + j][1] = can->get_motor_state(i, j + 1).speed;
+                Serial.println(output[(i * CAN_MAX_MOTORS_PER_BUS) + j][1]);
+            }
         }
     }
+}
+
+NewFeederEstimator::NewFeederEstimator(CANManager* _can, SensorManager* _sensor_manager) {
+    micro_estimator = false;
+    can = _can;
+    sensor_manager = _sensor_manager;
+}
+
+void NewFeederEstimator::step_states(float output[CAN_MAX_MOTORS][MICRO_STATE_LEN], float curr_state[CAN_MAX_MOTORS][MICRO_STATE_LEN], int override) {
+    dt = time.delta();
+    float feeder_angle = sensor_manager->get_buff_encoder(2)->get_angle();
+    if (count == 0) {
+        prev_feeder_angle = feeder_angle;
+        dt = 0; // first dt loop generates huge time so check for that
+        count++;
+    }
+    float diff = feeder_angle - prev_feeder_angle;
+    prev_feeder_angle = feeder_angle;
+    if (diff > PI) diff -= 2 * PI;
+    else if (diff < -PI) diff += 2 * PI;
+    float feeder_velocity = (diff/(M_PI/2.0))/dt;
+    float ball_count = prev_ball_count + diff/(M_PI/2.0);
+
+    output[0][0] = ball_count;
+    output[0][1] = feeder_velocity;
+    output[0][2] = 0;
 }
 

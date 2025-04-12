@@ -12,6 +12,7 @@
 #include "sensor_constants.hpp"
 #include "SensorManager.hpp"
 
+#include "utils/timing.hpp"
 #include "utils/watchdog.hpp"
 
 // Loop constants
@@ -143,6 +144,7 @@ int main() {
     float dr16_pos_y = 0;
     float pos_offset_x = 0;
     float pos_offset_y = 0;
+    float feed = 0;
 
     // param to specify whether this is the first loop
     int count_one = 0;
@@ -152,6 +154,7 @@ int main() {
 
     // main loop timers
     Timer loop_timer;
+    Timer timer;
     Timer stall_timer;
     Timer control_input_timer;
     
@@ -224,7 +227,10 @@ int main() {
             - vtm_pos_x;
         float fly_wheel_target = (dr16.get_r_switch() == 1 || dr16.get_r_switch() == 3) ? 20 : 0; //m/s
         float feeder_target = (((dr16.get_l_mouse_button() || ref->ref_data.kbm_interaction.button_left) && dr16.get_r_switch() != 2) || dr16.get_r_switch() == 1) ? 10 : 0;
-
+        float dt2 = timer.delta();
+        if (dt2 > 0.1) dt2 = 0;
+        feed += feeder_target*dt2;
+        Serial.printf("Feed: %f dt: %f\n", feed, dt2);
         // set manual controls
         target_state[0][0] = chassis_pos_x;
         target_state[0][1] = chassis_vel_x;
@@ -235,9 +241,8 @@ int main() {
         target_state[3][1] = 0;
         target_state[4][0] = pitch_target;
         target_state[4][1] = 0;
-
         target_state[5][1] = fly_wheel_target;
-        target_state[6][1] = feeder_target;
+        target_state[6][0] = feed;
         target_state[7][0] = 1;
 
         // if the left switch is all the way down use Hive controls
@@ -273,6 +278,10 @@ int main() {
         if (count_one == 0) {
             temp_state[7][0] = 0;
             governor.set_reference(temp_state);
+            // print temp state
+            for(int i = 0; i < 8; i++) {
+                Serial.printf("\t%d: %f %f %f\n", i, temp_state[i][0], temp_state[i][1], temp_state[i][2]);
+            }
             count_one++;
         }
 
@@ -324,12 +333,11 @@ int main() {
             is_slow_loop = true;
         }
 
-
         //  SAFETY MODE
         if (dr16.is_connected() && (dr16.get_l_switch() == 2 || dr16.get_l_switch() == 3) && config_layer.is_configured() && !is_slow_loop) {
             // SAFETY OFF
             can.write();
-            // Serial.printf("Can write\n");
+            Serial.printf("Can write\n");
         } else {
             // SAFETY ON
             // TODO: Reset all controller integrators here

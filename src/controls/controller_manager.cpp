@@ -37,6 +37,9 @@ void ControllerManager::init_controller(int controller_type, const float gains[N
     case 7:
         controllers[num_controllers] = new SwitcherController();
         break;
+    case 8:
+        controllers[num_controllers] = new NewFeederController();
+        break;
     default:
         if (controllers[num_controllers] == nullptr) controllers[num_controllers] = new NullController();
         break;

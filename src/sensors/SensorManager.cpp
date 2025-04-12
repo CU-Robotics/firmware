@@ -48,7 +48,7 @@ void SensorManager::init(const Config* config_data) {
         icm_sensors[i]->set_gyro_range(4000);
 
     }
-    calibrate_imus();
+    if(icm_sensor_count > 0) calibrate_imus();
 
     // initialize rev encoders
     for (int i = 0; i < rev_sensor_count; i++) {
