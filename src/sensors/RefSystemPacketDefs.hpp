@@ -1510,29 +1510,13 @@ struct SmallMapRobotData {
     }
 };
 
-// Sub-content IDs for various drawing commands
-enum DrawType {
-    /// @brief a player client deletes graphic layers
-    DELETE_LAYER = 0x0100,
-    /// @brief a player client draws one graphic
-    DRAW_ONE_GRAPHIC = 0x0101,
-    /// @brief a player client draws two graphics
-    DRAW_TWO_GRAPHICS = 0x0102,
-    /// @brief a player client draws five graphics
-    DRAW_FIVE_GRAPHICS = 0x0103,
-    /// @brief a player client draws seven graphics
-    DRAW_SEVEN_GRAPHICS = 0x0104,
-    /// @brief a player client draws a character graphic
-    DRAW_CHARACTER_GRAPHIC = 0x0110,
-};
-
 /// @brief packet to delete graphic layers
 /// @note sub-content-id 0x0100
-struct DeleteLayer {
+struct DeleteLayerData {
     /// @brief 0: no operation is performed. 1: delete a graphic layer. 2: delete all graphics layers
-    uint8_t delete_operation;
+    uint8_t delete_type;
     /// @brief number of layers to delete (0-9)
-    uint8_t num_layers;
+    uint8_t layer;
 };
 
 /// @brief struct for generic graphics data.
@@ -1574,28 +1558,28 @@ struct GraphicData {
 
 /// @brief packet to draw one graphic
 /// @note sub-content-id 0x101
-struct DrawOneGraphic {
+struct DrawOneGraphicData {
    /// @brief The GraphicData to draw
     GraphicData graphic;
 };
 
 /// @brief packet to draw two graphics
 /// @note sub-content-id 0x0102
-struct DrawTwoGraphics {
+struct DrawTwoGraphicsData {
     /// @brief The array of GraphicData to draw
     GraphicData graphic[2];
 };
 
 /// @brief packet to draw five graphics
 /// @note sub-content-id 0x0103
-struct DrawFiveGraphics {
+struct DrawFiveGraphicsData {
     /// @brief The array of GraphicData to draw
     GraphicData graphic[5];
 };
 
 /// @brief packet to draw seven graphics
 /// @note sub-content-id 0x0104
-struct DrawSevenGraphics {
+struct DrawSevenGraphicsData {
     /// @brief The array of GraphicData to draw
     GraphicData graphic[7];
 };
