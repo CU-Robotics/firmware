@@ -162,6 +162,9 @@ int main() {
 
     // Main loop
     while (true) {
+        LimitSwitch* limit_switch = sensor_manager.get_limit_switch(0);
+        Serial.printf("Limit Switch: %d\n", limit_switch->isPressed());
+        
         // start main loop time timer
         stall_timer.start();
         
