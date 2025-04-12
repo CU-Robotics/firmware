@@ -98,6 +98,7 @@ private:
 	/// @brief The outgoing packet buffer
 	EthernetPacket m_outgoing = {};
 
+	/// @brief Timer for the regulation time
 	Timer m_regulation_timer;
 };
 

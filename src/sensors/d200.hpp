@@ -166,6 +166,9 @@ public:
   /// @return true if successful, false if no data available
   bool read() override;
 
+  /// @brief Set the current yaw angle and velocity of the robot
+  /// @param yaw current yaw angle of the robot (rad)
+  /// @param yaw_velocity current yaw velocity of the robot (rad/s)
   void set_yaw(float yaw, float yaw_velocity) {
     robot_yaw = yaw;
     robot_yaw_velocity = yaw_velocity;
