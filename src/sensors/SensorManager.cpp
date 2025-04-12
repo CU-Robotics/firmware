@@ -122,6 +122,11 @@ TOFSensor* SensorManager::get_tof_sensor(int index) {
     return tof_sensors[index];
 }
 
+LimitSwitch* SensorManager::get_limit_switch(int index) {
+    return limit_switches[index];
+}
+
+
 D200LD14P* SensorManager::get_lidar_sensor(int index) {
     if (index == 0) {
         return lidar1;
