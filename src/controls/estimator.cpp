@@ -537,7 +537,6 @@ void LocalEstimator::step_states(float output[CAN_MAX_MOTORS][MICRO_STATE_LEN], 
             // j + 1 for motor ID on get_motor_state since j starts at 0 but it expects a 1-indexed ID
             if (can->get_motor(i, j + 1)){
                 output[(i * CAN_MAX_MOTORS_PER_BUS) + j][1] = can->get_motor_state(i, j + 1).speed;
-                Serial.println(output[(i * CAN_MAX_MOTORS_PER_BUS) + j][1]);
             }
         }
     }
@@ -562,8 +561,8 @@ void NewFeederEstimator::step_states(float output[CAN_MAX_MOTORS][MICRO_STATE_LE
     if (diff > PI) diff -= 2 * PI;
     else if (diff < -PI) diff += 2 * PI;
     float feeder_velocity = (diff/(M_PI/2.0))/dt;
-    float ball_count = prev_ball_count + diff/(M_PI/2.0);
-
+    ball_count += diff/(M_PI/2.0);
+    Serial.printf("Feeder Angle: %f, Feeder Velocity: %f, Ball Count: %f\n", feeder_angle, feeder_velocity, ball_count);
     output[0][0] = ball_count;
     output[0][1] = feeder_velocity;
     output[0][2] = 0;

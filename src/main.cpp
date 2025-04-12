@@ -230,7 +230,6 @@ int main() {
         float dt2 = timer.delta();
         if (dt2 > 0.1) dt2 = 0;
         feed += feeder_target*dt2;
-        Serial.printf("Feed: %f dt: %f\n", feed, dt2);
         // set manual controls
         target_state[0][0] = chassis_pos_x;
         target_state[0][1] = chassis_vel_x;
@@ -337,7 +336,7 @@ int main() {
         if (dr16.is_connected() && (dr16.get_l_switch() == 2 || dr16.get_l_switch() == 3) && config_layer.is_configured() && !is_slow_loop) {
             // SAFETY OFF
             can.write();
-            Serial.printf("Can write\n");
+            // Serial.printf("Can write\n");
         } else {
             // SAFETY ON
             // TODO: Reset all controller integrators here

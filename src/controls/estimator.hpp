@@ -553,7 +553,7 @@ struct NewFeederEstimator : public Estimator {
         /// @brief previous feeder angle
         float prev_feeder_angle = 0;
         /// @brief previous ball count
-        float prev_ball_count = 0;
+        float ball_count = 0;
         /// @brief first loop counter
         int count = 0;
     public:

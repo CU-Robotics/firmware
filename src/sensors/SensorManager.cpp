@@ -27,10 +27,12 @@ void SensorManager::init(const Config* config_data) {
     // initilize the sensors
 
     // configure pins for the encoders
-    for (int i = 0; i < buff_sensor_count; i++) {
+    int buff_enc_index = 0;
+    for (int i = 0; i < NUM_SENSORS; i++) {
+        if (config_data->sensor_info[i][0] != 0) continue;
         pinMode(config_data->sensor_info[i][1], OUTPUT);
         digitalWrite(config_data->sensor_info[i][1], HIGH);
-        buff_encoders[i] = new BuffEncoder(config_data->sensor_info[i][1]);
+        buff_encoders[buff_enc_index++] = new BuffEncoder(config_data->sensor_info[i][1]);
     }
 
     // configure pins for the ICM

@@ -308,9 +308,9 @@ void NewFeederController::step(float reference[STATE_LEN][3], float estimate[STA
     pidv.K[2] = gains[6];
     
 
-    pidp.setpoint = reference[0][0]; // 1st index = position
-    pidp.measurement = estimate[0][0];
-
+    pidp.setpoint = reference[6][0]; // 1st index = position
+    pidp.measurement = estimate[6][0];
+    Serial.printf("reference: %f, estimate: %f\n", reference[6][0], estimate[6][0]);
     // pidv.setpoint = reference[7][1];
     // pidv.measurement = estimate[7][1];
 
