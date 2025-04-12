@@ -222,7 +222,7 @@ int main() {
         float yaw_target = -dr16.get_r_stick_x() * 1.5
             - dr16_pos_x
             - vtm_pos_x;
-        float fly_wheel_target = (dr16.get_r_switch() == 1 || dr16.get_r_switch() == 3) ? 18 : 0; //m/s
+        float fly_wheel_target = (dr16.get_r_switch() == 1 || dr16.get_r_switch() == 3) ? 20 : 0; //m/s
         float feeder_target = (((dr16.get_l_mouse_button() || ref->ref_data.kbm_interaction.button_left) && dr16.get_r_switch() != 2) || dr16.get_r_switch() == 1) ? 10 : 0;
 
         // set manual controls
