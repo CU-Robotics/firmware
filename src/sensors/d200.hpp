@@ -78,6 +78,15 @@ const float D200_MAX_SPEED = (float)(8 * 360 - 1) * M_PI / 180.0;
 /// @brief max millis before lidar timestamp wraps (30s)
 const int D200_TIMESTAMP_WRAP_LIMIT = 30000;
 
+/// @brief points per D200 data packet
+const int D200_POINTS_PER_PACKET = 12;
+
+/// @brief number of timestamp calibration packets. new packet read rate of 333 Hz = 1 packet / 3ms
+const int D200_MAX_CALIBRATION_PACKETS = 333;
+
+/// @brief number of packets stored teensy-side
+const int D200_NUM_PACKETS_CACHED = 2;
+
 /// @brief struct storing timestamp calibration results 
 struct D200Calibration {
   /// @brief how many packets are used for calibration
