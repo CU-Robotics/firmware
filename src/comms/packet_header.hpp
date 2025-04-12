@@ -1,6 +1,5 @@
 #pragma once
 
-// shared packet header
 #include <stdint.h>	    // uintX_t
 #include <string.h>	    // memset
 

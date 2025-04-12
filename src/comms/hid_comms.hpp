@@ -2,15 +2,12 @@
 #define HID_COMMS_HPP
 
 #include "Arduino.h"
-#include "usb_rawhid.h"				// usb_rawhid functions
-#include "../controls/state.hpp"	// STATE_LEN macro
-#include <optional>
-
-#include "hid_packet.hpp"
+#include "usb_rawhid.h"				// for usb_rawhid
+#include "hid_packet.hpp"			// for HIDPacket
 
 namespace Comms {
 
-/// @brief The communications layer between Khadas and Teensy
+/// @brief The communications layer between Hive and Teensy
 class HIDComms {
 public:
 	/// @brief Default constructor
@@ -29,9 +26,6 @@ public:
     /// @param packet The packet to fill with data
     /// @return True if successful, false if failed
     bool recv_packet(HIDPacket& packet);
-
-	/// @brief Attempt to read and write a packet to Khadas
-	// std::optional<HIDPacket> sendReceive(HIDPacket& outgoing_packet);
 
 	/// @brief Get the connection status
     /// @return True if connected, false if not

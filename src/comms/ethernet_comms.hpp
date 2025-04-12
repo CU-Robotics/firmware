@@ -1,18 +1,12 @@
 #pragma once
 
 #include <Arduino.h>
-#include <optional>
 
-// QNEthernet has warnings that are not fixable (-Wattributes)
-// This is a useful warning so we dont want to permanently disable it
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wattributes"
 #include <QNEthernet.h>
 namespace qn = qindesign::network;
-#pragma GCC diagnostic pop
 
-#include "ethernet_data.hpp"
-#include "utils/timing.hpp"
+#include "utils/timing.hpp"				// for Timer
+#include "comms/ethernet_packet.hpp"	// for EthernetPacket
 
 // DEBUG define for displaying all comms errors/status updates
 // This is very noisy on start up

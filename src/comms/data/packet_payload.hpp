@@ -1,11 +1,11 @@
 #pragma once
 
-#include <queue>                // for std::queue
+#include <queue>                                // for std::queue
 
 #if defined(HIVE)
-#include <stdexcept>            // for std::runtime_error
+#include <stdexcept>                            // for std::runtime_error
 #elif defined(FIRMWARE)
-#include <cassert>              // for assert
+#include <cassert>                              // for assert
 #endif
 
 #if defined(HIVE)

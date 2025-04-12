@@ -1,5 +1,4 @@
 #include "ethernet_comms.hpp"
-#include "ethernet_packet.hpp"
 
 namespace Comms {
 

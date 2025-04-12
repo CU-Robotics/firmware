@@ -1,7 +1,6 @@
 #include "sendable.hpp"
 
 #if defined(HIVE)
-#include "modules/comms/data/comms_data.hpp"
 #include "modules/comms/data/data_structs.hpp"
 #include "modules/comms/hid_packet.hpp"
 

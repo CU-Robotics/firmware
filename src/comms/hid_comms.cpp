@@ -41,24 +41,6 @@ bool HIDComms::send_packet(HIDPacket& outgoing_packet) {
     }
 }
 
-// std::optional<HIDPacket> HIDComms::sendReceive(HIDPacket& outgoing_packet) {
-//     // loop until the packet buffer is empty (this is only ever 1 packet large)
-//     while (usb_rawhid_available()) {
-//         HIDPacket incoming_packet;
-        
-//         // attempt to read
-//         if (read(incoming_packet)) {
-//             // if we read, attempt to write
-//             if (!write(outgoing_packet))
-//                 Serial.printf("HIDComms: Failed to send: %llu\n", m_packetsSent);
-
-//             return m_incomingPacket;
-//         }
-//     }
-
-//     return {};
-// }
-
 bool HIDComms::is_connected() const {
     return true;
 }

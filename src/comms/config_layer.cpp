@@ -1,8 +1,6 @@
 #include "config_layer.hpp"
-#include "comms_layer.hpp"
 
-#include "comms/data/sendable.hpp"
-#include "hid_comms.hpp"
+#include "comms/data/sendable.hpp"  // for Sendable<>
 
 /// @brief This resets the whole processor and kicks it back to program entry (teensy4/startup.c)
 /// @param void specify no arguments (needed in C)

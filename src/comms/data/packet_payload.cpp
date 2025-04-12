@@ -1,13 +1,11 @@
 #include "packet_payload.hpp"
 
-#include <algorithm>    // for min
-#include <mutex>        // for std::lock_guard, std::mutex
-#include <string.h>     // for memset/memcpy
-#include <assert.h>     // for assert
+#include <algorithm>                        // for min
 
 #if defined(HIVE)
 #include <iostream>                         // for std::cout
 #include "modules/comms/comms_layer.hpp"    // for CommsLayer
+#include <mutex>                            // for std::lock_guard, std::mutex
 #elif defined(FIRMWARE)
 #include "comms/comms_layer.hpp"            // for CommsLayer
 #endif

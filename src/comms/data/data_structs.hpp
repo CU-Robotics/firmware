@@ -7,7 +7,7 @@
 #include "modules/comms/data/comms_data.hpp"    // for CommsData
 #endif
 
-#include <stdint.h>     // uintN_t
+#include <stdint.h>                             // uintN_t
 
 /// @brief Data struct for testing purposes
 struct TestData : Comms::CommsData {

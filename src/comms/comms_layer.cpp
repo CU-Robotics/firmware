@@ -42,38 +42,11 @@ int CommsLayer::run() {
 };
 
 void CommsLayer::queue_data(CommsData* data) {
-#if defined(HIVE)
     switch (data->physical_medium) {
     case PhysicalMedium::HID:
         if (!is_hid_connected()) {
             // discard attempt to send
-            printf("Attempting to re-route %s to HID but HID is not connected\n", to_string(data->type_label).c_str());
-            break;
-        }
-        m_hid_payload.add(data);
-        break;
-    case PhysicalMedium::Ethernet:
-        // if ethernet is down and it is a small enough packet, route it through HID instead
-        if (!is_ethernet_connected() && data->size < HID_PACKET_PAYLOAD_SIZE) {
-            m_hid_payload.add(data);
-            break;
-        } else if (data->size > HID_PACKET_PAYLOAD_SIZE) {
-            // discard attempt to send
-            printf("Attempting to re-route %s to HID but packet is too large\n", to_string(data->type_label).c_str());
-            break;
-        }
-
-        m_ethernet_payload.add(data);
-        break;
-    default:
-        throw std::runtime_error("Invalid PhysicalMedium " + std::to_string(static_cast<uint8_t>(data->physical_medium)));
-    }   
-#elif defined(FIRMWARE)
-    switch (data->physical_medium) {
-    case PhysicalMedium::HID:
-        if (!is_hid_connected()) {
-            // discard attempt to send
-            printf("Attempting to re-route %s to HID but HID is not connected\n", to_string(data->type_label).c_str());
+            Serial.printf("Attempting to re-route %s to HID but HID is not connected\n", to_string(data->type_label).c_str());
             break;
         }
         m_hid_payload.add(data);
@@ -94,7 +67,6 @@ void CommsLayer::queue_data(CommsData* data) {
     default:
         assert(false && "Invalid PhysicalMedium");
     }
-#endif
 };
 
 void CommsLayer::send_packets() {

@@ -1,12 +1,13 @@
 #ifndef CONFIG_LAYER
 #define CONFIG_LAYER
 
-#include "comms/comms_layer.hpp"
-#include "controls/controller.hpp"
-#include "SDManager.hpp"
+#include "comms/comms_layer.hpp"        // for CommsLayer
+#include "controls/controller.hpp"      // for NUM_ROBOT_CONTROLLERS
+#include "SDManager.hpp"                // for SDManager
 
 #include <map>
 #include <string>
+
 #define CONFIG_LAYER_DEBUG
 
 #define NUM_SENSOR_VALUES 12
