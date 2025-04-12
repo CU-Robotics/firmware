@@ -27,54 +27,35 @@ public:
 	EthernetComms() = default;
 	/// @brief Defaulted constructor, does nothing
 	~EthernetComms() = default;
-
+	
+public:
 	/// @brief Initialize Ethernet comms and start the UDP connection
 	/// @param data_rate (optional) The data rate in mbps
 	/// @return True for success
-	bool begin(uint32_t data_rate = 95);
+	bool init(uint32_t data_rate = 95);
+
+	/// @brief Send a packet to Hive
+    /// @param packet The packet to send
+    /// @return True if success
+    bool send_packet(EthernetPacket& packet);
+
+    /// @brief Receive a packet from Hive
+    /// @param packet The packet to fill with data
+    /// @return True if success
+    bool recv_packet(EthernetPacket& packet);
+
+	/// @brief Get the current connection status to Hive
+    /// @return Connected or not
+    bool is_connected() const;
+
+    /// @brief Get the current initialized status of the Ethernet layer
+    /// @return True if the Ethernet layer is initialized
+    bool is_initialized();
 
 	/// @brief Cycle comms, this issues packet read and write calls
-	std::optional<EthernetPacket> sendReceive(EthernetPacket& outgoing_packet);
-
-public:
-	/// @brief Get a pointer to the incoming packet
-	/// @return The incoming packet
-	EthernetPacket get_incoming_packet();
-
-	/// @brief Set the outgoing packet
-	/// @param packet The packet to send
-	void set_outgoing_packet(EthernetPacket& packet);
-
-	/// @brief Get the connection status with the Jetson
-	/// @return True if connected
-	bool is_connected() const;
-
-	/// @brief Get the current status of the comms
-	/// @return The current status of the comms
-	const EthernetStatus& get_status() const;
-
-	/// @brief Get the regulation time of the comms
-	/// @return The regulation time in microseconds
-	uint32_t get_regulation_time() const;
+	// std::optional<EthernetPacket> sendReceive(EthernetPacket& outgoing_packet);
 
 private:
-	/// @brief Attempt a handshake with Jetson. This only runs if Jetson requests a handshake
-	/// @note This is a blocking call, but has a timeout
-	/// @return -1 for error, 0 for success
-	int connect_jetson();
-
-	/// @brief Send a packet to the Jetson
-	/// @param packet The packet reference to send
-	/// @return True for success
-	/// @note If this returns false, the packet contents are unknown
-	bool send_packet(EthernetPacket& packet);
-
-	/// @brief Receive a packet from the Jetson
-	/// @param packet The receiving packet destination
-	/// @return True for success
-	/// @note If this returns false, the packet destination's contents are unchanged
-	bool recv_packet(EthernetPacket* packet);
-
 	/// @brief Check to see if the connection is still alive. This acts on a timeout of the last packet received
 	void check_connection();
 
@@ -108,15 +89,15 @@ private:
 	/// @brief The last time a packet was received in microseconds
 	uint32_t m_last_recv_time = 0;
 
+	/// @brief The last time a packet was sent in microseconds
+	uint32_t m_last_send_time = 0;
+
 	/// @brief The receive packet timeout in microseconds
 	const uint32_t m_connection_timeout = 500000;
 	/// @brief The handshake timeout in microseconds
 	const uint32_t m_handshake_timeout = 1000000;
 	/// @brief The UDP warmup timeout in microseconds
 	const uint32_t m_warmup_timeout = 5000000;
-
-	/// @brief The current status of the comms
-	EthernetStatus m_status = {};
 
 	/// @brief The incoming packet buffer
 	EthernetPacket m_incoming = {};

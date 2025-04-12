@@ -4,6 +4,7 @@
 #include "modules/comms/comms_layer.hpp"    // for CommsLayer
 #include "modules/hive/environment.hpp"     // for Hive::env
 #include <stdexcept>                        // for std::runtime_error
+#include "doctest/doctest.h"                // for doctest
 #elif defined(FIRMWARE)
 #include "comms/comms_layer.hpp"            // for CommsLayer
 #include <cassert>                          // for assert
@@ -120,3 +121,90 @@ void FirmwareData::set_data(CommsData* data) {
 
 }   // namespace Comms
     
+#if defined(HIVE) 
+
+TEST_CASE("setting firmware data structs") {
+    Comms::FirmwareData firmware_data;
+    
+    TestData test_data;
+    test_data.x = 55;
+    firmware_data.set_data(&test_data);
+    CHECK(firmware_data.test_data.x == 55);
+
+    BigTestData big_test_data;
+    big_test_data.blah[1] = 55;
+    firmware_data.set_data(&big_test_data);
+    CHECK(firmware_data.big_test_data.blah[1] == 55);
+
+    TempRobotState temp_robot_state;
+    temp_robot_state.time = 55;
+    firmware_data.set_data(&temp_robot_state);
+    CHECK(firmware_data.temp_robot_state.time == 55);
+
+    EstimatedState estimated_state;
+    estimated_state.time = 55;
+    firmware_data.set_data(&estimated_state);
+    CHECK(firmware_data.estimated_state.time == 55);
+
+    BuffEncoderData buff_encoder_data;
+    buff_encoder_data.m_angle = 55;
+    buff_encoder_data.id = 0;
+    firmware_data.set_data(&buff_encoder_data);
+    CHECK(firmware_data.yaw_buff_encoder.m_angle == 55);
+    buff_encoder_data.m_angle = 55;
+    buff_encoder_data.id = 1;
+    firmware_data.set_data(&buff_encoder_data);
+    CHECK(firmware_data.yaw_buff_encoder.m_angle == 55);
+    
+
+    RevSensorData rev_sensor_data;
+    rev_sensor_data.ticks = 55;
+    rev_sensor_data.id = 0;
+    firmware_data.set_data(&rev_sensor_data);
+    CHECK(firmware_data.rev_sensor_0.ticks == 55);
+    rev_sensor_data.ticks = 55;
+    rev_sensor_data.id = 1;
+    firmware_data.set_data(&rev_sensor_data);
+    CHECK(firmware_data.rev_sensor_1.ticks == 55);
+    rev_sensor_data.ticks = 55;
+    rev_sensor_data.id = 2;
+    firmware_data.set_data(&rev_sensor_data);
+    CHECK(firmware_data.rev_sensor_2.ticks == 55);
+
+    ICMSensorData icm_sensor_data;
+    icm_sensor_data.accel_X = 55;
+    firmware_data.set_data(&icm_sensor_data);
+    CHECK(firmware_data.icm_sensor.accel_X == 55);
+
+    TOFSensorData tof_sensor_data;
+    tof_sensor_data.latest_distance = 55;
+    firmware_data.set_data(&tof_sensor_data);
+    CHECK(firmware_data.tof_sensor.latest_distance == 55);
+
+    LidarDataPacketSI lidar_sensor_data;
+    lidar_sensor_data.id = 0;
+    lidar_sensor_data.lidar_speed = 55;
+    firmware_data.set_data(&lidar_sensor_data);
+    CHECK(firmware_data.lidars[0].back().lidar_speed == 55);
+    lidar_sensor_data.id = 1;
+    lidar_sensor_data.lidar_speed = 55;
+    firmware_data.set_data(&lidar_sensor_data);
+    CHECK(firmware_data.lidars[1].back().lidar_speed == 55);
+
+    DR16Data dr16_data;
+    dr16_data.mouse_x = 55;
+    firmware_data.set_data(&dr16_data);
+    CHECK(firmware_data.dr16_data.mouse_x == 55);
+
+    ConfigSection config_section;
+    config_section.section_id = 55;
+    firmware_data.set_data(&config_section);
+    CHECK(firmware_data.config_section.section_id == 55);
+
+    CommsRefData comms_ref_data;
+    comms_ref_data.raw[0] = 55;
+    firmware_data.set_data(&comms_ref_data);
+    CHECK(firmware_data.ref_data.game_status.raw[0] == 55);
+}
+
+#endif  // defined(HIVE)

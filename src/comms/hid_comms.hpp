@@ -16,11 +16,30 @@ public:
 	/// @brief Default constructor
 	HIDComms();
 
+public:
 	/// @brief Initialize the HID 
 	void init();
 
+    /// @brief Send an HID packet to Hive
+    /// @param packet The packet to send
+    /// @return True if successful, false if failed
+    bool send_packet(HIDPacket& packet);
+
+    /// @brief Receive an HID packet from Hive
+    /// @param packet The packet to fill with data
+    /// @return True if successful, false if failed
+    bool recv_packet(HIDPacket& packet);
+
 	/// @brief Attempt to read and write a packet to Khadas
-	std::optional<HIDPacket> sendReceive(HIDPacket& outgoing_packet);
+	// std::optional<HIDPacket> sendReceive(HIDPacket& outgoing_packet);
+
+	/// @brief Get the connection status
+    /// @return True if connected, false if not
+    bool is_connected() const;
+
+    /// @brief Get the current initialized status of the HID layer
+    /// @return True if the HID layer is initialized
+    bool is_initialized();
 
 	/// @brief Print the outgoing packet
 	/// @note This massively slows the loop down
@@ -29,22 +48,6 @@ public:
 	/// @brief Print the incomming packet
 	/// @note This massively slows the loop down
 	void print_incoming();
-
-	/// @brief Get the packet comming from Khadas
-	/// @return A pointer to the received Khadas packet
-	inline HIDPacket get_incoming_packet() { return m_incomingPacket; }
-
-	/// @brief Set the packet to be sent to Khadas
-	/// @param packet The packet to send
-	inline void set_outgoing_packet(HIDPacket& packet) { m_outgoingPacket = packet; }
-
-private:
-	/// @brief Attempt a read on HID
-	/// @return True/False on read success
-	bool read(HIDPacket& incoming_packet);
-	/// @brief Attempt a write on HID
-	/// @return True/False on write success
-	bool write(HIDPacket& outgoing_packet);
 
 private:
 	/// @brief An encapsulating struct around the packet received from Khadas

@@ -1,19 +1,19 @@
 #pragma once 
 
-#include "comms/data/comms_data.hpp"        // CommsData
-#include "comms/hid_comms.hpp"              // HIDComms
-#include "comms/ethernet_comms.hpp"         // EthernetComms
-#include "comms/data/packet_payload.hpp"    // PacketPayload
+#include "comms/data/comms_data.hpp"        // for CommsData
+#include "comms/hid_comms.hpp"              // for HIDComms
+#include "comms/ethernet_comms.hpp"         // for EthernetComms
+#include "comms/data/packet_payload.hpp"    // for PacketPayload
 
 namespace Comms {
 
 /// @brief The CommsLayer class is the top-level class for the communication layer. Handles HID and Ethernet communications
 class CommsLayer {
 public:
-    // Default constructor
+    /// @brief Defualt constructor
     CommsLayer();
 
-    // Destructor
+    /// @brief Destructor
     ~CommsLayer();
 
 public:
@@ -31,11 +31,13 @@ public:
     /// @param data The CommsData packet to send
     void queue_data(CommsData* data);
 
-    /// @brief Process the HID layer by sending, receiving, and processing HID packets
-    void process_hid_layer();
+    /// @brief Prepare and send packets to the appropriate physical layer
+    /// @note This function should only be ran internally
+    void send_packets();
 
-    /// @brief Process the Ethernet layer by sending, receiving, and processing Ethernet packets
-    void process_ethernet_layer();
+    /// @brief Receive and process packets from the appropriate physical layer
+    /// @note This function should only be ran internally
+    void recv_packets();
 
     /// @brief Check if Ethernet is connected
     /// @return True if connected, false if not
@@ -45,21 +47,36 @@ public:
     /// @return True if connected, false if not
     bool is_hid_connected();
 
-    /// @brief Get the hive data
-    /// @return The hive data
-    HiveData& get_hive_data();
+    /// @brief Clear all physical layer outgoing buffers
+    void clear_outgoing_buffers();
 
-    /// @brief Set the hive data
-    /// @param data The hive data to set
-    void set_hive_data(HiveData& data);
+public:
+    /// @brief Get the outgoing ethernet packet
+    /// @return The outgoing ethernet packet
+    EthernetPacket get_ethernet_outgoing();
+    /// @brief Get the outgoing HID packet
+    /// @return The outgoing HID packet
+    HIDPacket get_hid_outgoing();
+    /// @brief Set the incoming ethernet packet
+    /// @param packet The incoming ethernet packet
+    void set_ethernet_incoming(EthernetPacket&& packet);
+    /// @brief Set the incoming HID packet
+    /// @param packet The incoming HID packet
+    void set_hid_incoming(HIDPacket&& packet);
 
     /// @brief Get the firmware data
     /// @return The firmware data
     FirmwareData& get_firmware_data();
-
     /// @brief Set the firmware data
     /// @param data The firmware data to set
     void set_firmware_data(FirmwareData& data);
+
+    /// @brief Get the hive data
+    /// @return The hive data
+    HiveData& get_hive_data();
+    /// @brief Set the hive data
+    /// @param data The hive data to set
+    void set_hive_data(HiveData& data);
 
 private:
     /// @brief Initializes HID and starts its thread
@@ -73,12 +90,20 @@ private:
 private:
     /// @brief Ethernet physical layer
     Comms::EthernetComms m_ethernet;
+    /// @brief Incoming ethernet packet
+    EthernetPacket m_ethernet_incoming;
+    /// @brief Outgoing ethernet packet
+    EthernetPacket m_ethernet_outgoing;
 
     /// @brief HID physical layer
     Comms::HIDComms m_hid;
+    /// @brief Incoming HID packet
+    HIDPacket m_hid_incoming;
+    /// @brief Outgoing HID packet
+    HIDPacket m_hid_outgoing;
 
     /// @brief Packet payload for Ethernet
-    PacketPayload m_ethernet_payload{ETHERNET_PACKET_PAYLOAD_MAX_SIZE};
+    PacketPayload m_ethernet_payload{ETHERNET_PACKET_PAYLOAD_SIZE};
     /// @brief Packet payload for HID
     PacketPayload m_hid_payload{HID_PACKET_PAYLOAD_SIZE};
 

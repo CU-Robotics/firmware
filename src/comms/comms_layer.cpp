@@ -1,33 +1,42 @@
 #include "comms_layer.hpp"
-#include "hid_comms.hpp"
 
 namespace Comms {
 
 CommsLayer::CommsLayer() {
+    Serial.printf("CommsLayer: constructed\n");
 };
 
 CommsLayer::~CommsLayer() {
-
+    Serial.printf("CommsLayer: destructed\n");
 };
 
 int CommsLayer::init() {
-    // Initialize the HID and Ethernet physical layers
-    if (!initialize_hid()) {
+    Serial.printf("CommsLayer: initializing\n");
+    
+    // hid failing is a fatal error
+    bool hid_init = initialize_hid();
+    if (!hid_init) {
+        Serial.printf("CommsLayer: HIDComms init failed\n");
         return -1;
     }
-    if (!initialize_ethernet()) {
-        return -1;
+
+    // ethernet init failing is not a fatal error
+    bool ethernet_init = initialize_ethernet();
+    if (!ethernet_init) {
+        Serial.printf("CommsLayer: EthernetComms init failed\n");
     }
+
+    Serial.printf("CommsLayer: initialized\n");
 
     return 0;
 };
 
 int CommsLayer::run() {
-    // process Ethernet stack
-    process_ethernet_layer();
+    // read packets from the physical layers
+    recv_packets();
 
-    // process HID stack
-    process_hid_layer();
+    // write packets to the physical layers
+    send_packets();
 
     return 0;
 };
@@ -36,6 +45,11 @@ void CommsLayer::queue_data(CommsData* data) {
 #if defined(HIVE)
     switch (data->physical_medium) {
     case PhysicalMedium::HID:
+        if (!is_hid_connected()) {
+            // discard attempt to send
+            printf("Attempting to re-route %s to HID but HID is not connected\n", to_string(data->type_label).c_str());
+            break;
+        }
         m_hid_payload.add(data);
         break;
     case PhysicalMedium::Ethernet:
@@ -57,6 +71,11 @@ void CommsLayer::queue_data(CommsData* data) {
 #elif defined(FIRMWARE)
     switch (data->physical_medium) {
     case PhysicalMedium::HID:
+        if (!is_hid_connected()) {
+            // discard attempt to send
+            printf("Attempting to re-route %s to HID but HID is not connected\n", to_string(data->type_label).c_str());
+            break;
+        }
         m_hid_payload.add(data);
         break;
     case PhysicalMedium::Ethernet:
@@ -76,37 +95,70 @@ void CommsLayer::queue_data(CommsData* data) {
         assert(false && "Invalid PhysicalMedium");
     }
 #endif
-}
-
-void CommsLayer::process_hid_layer() {
-    HIDPacket hid_outgoing;
-    m_hid_payload.construct_data();
-    memcpy(hid_outgoing.payload(), m_hid_payload.data(), HID_PACKET_PAYLOAD_SIZE);
-    std::optional<HIDPacket> hid_incoming = m_hid.sendReceive(hid_outgoing);
-
-    if (hid_incoming.has_value()) {
-        m_hid_payload.deconstruct_data((uint8_t*)hid_incoming.value().payload(), HID_PACKET_PAYLOAD_SIZE);
-    }
 };
 
-void CommsLayer::process_ethernet_layer() {
-    EthernetPacket eth_outgoing;
+void CommsLayer::send_packets() {
+    // prepare packets to send
+    m_hid_payload.construct_data();
+    memcpy(m_hid_outgoing.payload(), m_hid_payload.data(), HID_PACKET_PAYLOAD_SIZE);
+    
     m_ethernet_payload.construct_data();
-    memcpy(eth_outgoing.payload.data, m_ethernet_payload.data(), ETHERNET_PACKET_PAYLOAD_MAX_SIZE);
-    std::optional<EthernetPacket> ethernet_incoming = m_ethernet.sendReceive(eth_outgoing);
+    memcpy(m_ethernet_outgoing.payload(), m_ethernet_payload.data(), ETHERNET_PACKET_PAYLOAD_SIZE);
 
-    if (ethernet_incoming.has_value()) {
-        m_ethernet_payload.deconstruct_data(ethernet_incoming.value().payload.data, ETHERNET_PACKET_PAYLOAD_MAX_SIZE);
+    // send packets to the appropriate physical layer
+    m_hid.send_packet(m_hid_outgoing);
+    m_ethernet.send_packet(m_ethernet_outgoing);
+};
+
+void CommsLayer::recv_packets() {
+    // defaulted to true so tests can run without physical layers
+    bool hid_recv = true;
+    bool ethernet_recv = true;
+    
+    // receive packets from the appropriate physical layer
+    if (m_hid.is_initialized()) {
+        hid_recv = m_hid.recv_packet(m_hid_incoming);
     }
+    if (m_ethernet.is_initialized()) {
+        ethernet_recv = m_ethernet.recv_packet(m_ethernet_incoming);
+    }
+
+    // process packets
+    if (hid_recv) {
+        m_hid_payload.deconstruct_data(m_hid_incoming.payload(), HID_PACKET_PAYLOAD_SIZE);
+    }
+    if (ethernet_recv) {
+        m_ethernet_payload.deconstruct_data(m_ethernet_incoming.payload(), ETHERNET_PACKET_PAYLOAD_SIZE);
+    }    
 };
 
 bool CommsLayer::is_ethernet_connected() {
-    return m_ethernet.is_connected();
+    return m_ethernet.is_initialized() && m_ethernet.is_connected();
 };
 
 bool CommsLayer::is_hid_connected() {
-    // HID is always connected
-    return true;
+    return m_hid.is_initialized() && m_hid.is_connected();
+};
+
+void CommsLayer::clear_outgoing_buffers() {
+    m_hid_payload.clear_queues();
+    m_ethernet_payload.clear_queues();
+};
+
+EthernetPacket CommsLayer::get_ethernet_outgoing() {
+    return m_ethernet_outgoing;
+};
+
+HIDPacket CommsLayer::get_hid_outgoing() {
+    return m_hid_outgoing;
+};
+
+void CommsLayer::set_ethernet_incoming(EthernetPacket&& packet) {
+    m_ethernet_incoming = packet;
+};
+
+void CommsLayer::set_hid_incoming(HIDPacket&& packet) {
+    m_hid_incoming = packet;
 };
 
 HiveData& CommsLayer::get_hive_data() {
@@ -134,7 +186,7 @@ bool CommsLayer::initialize_hid() {
 
 bool CommsLayer::initialize_ethernet() {
     // Initialize the Ethernet physical layer
-    if (!m_ethernet.begin()) {
+    if (!m_ethernet.init()) {
         Serial.println("Ethernet initialization failed");
         return false;
     }
