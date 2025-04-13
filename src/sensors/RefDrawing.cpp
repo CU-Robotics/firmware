@@ -10,13 +10,16 @@ void deleteLayer(DeleteOperation deleteOperation, uint8_t layer) {
     // populate RobotInteraction packet with the data
     RobotInteraction robotInteraction = {};
     robotInteraction.content_id = DrawType::DELETE_LAYER; // ID for DELETE_LAYER
-    robotInteraction.sender_id = 0; // ID of the robot that should send this packet
-    robotInteraction.receiver_id = 0; // ID of the robot that should receive this packet
+    robotInteraction.sender_id = ref->ref_data.robot_performance.robot_ID; // ID of the robot that should send this packet
+    robotInteraction.receiver_id = ref->ref_data.robot_performance.robot_ID >> 8; // ID of the robot that should receive this packet
     robotInteraction.size = sizeof(DeleteLayerData); // size of the data
     memcpy(robotInteraction.data, &deleteLayerData, sizeof(DeleteLayerData)); // copy the data to the packet
 
-    // Send the RobotInteraction packet to the ref
-    // TODO once we rewrite ref->write(...);
+    // put the robotInteraction packet into a FrameData
+    FrameData frameData {};
+    memcpy(frameData.data, &robotInteraction, sizeof(RobotInteraction)); // copy the packet data to frameData
+
+    ref->write(&frameData, sizeof(frameData)); // send the frameData to the ref
 }
 
 void drawOneGraphic(GraphicData graphicData) {

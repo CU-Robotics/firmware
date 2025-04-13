@@ -84,10 +84,10 @@ public:
     void read();
 
     /// @brief Send a pre-constructed packet to Ref
-    /// @param packet Byte array of the packet to be sent
+    /// @param frameData Pointer to the FrameData structure containing the packet to be sent
     /// @param length The total size of the packet, including header/tail
     /// @note Re-computes the CRC, so no need to do it yourself
-    void write(uint8_t* packet, uint8_t length);
+    void write(FrameData* frameData, uint8_t length);
 
     /// @brief Generate a byte array for all ref data to be sent over comms
     /// @param output_array Byte array to store the data

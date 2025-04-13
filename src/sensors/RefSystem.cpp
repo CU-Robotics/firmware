@@ -39,7 +39,7 @@ void RefSystem::read() {
     read_mcm();
 }
 
-void RefSystem::write(uint8_t* packet, uint8_t length) {
+void RefSystem::write(FrameData* frameData, uint8_t length) {
     // return if over baud rate
     if (bytes_sent >= REF_MAX_BAUD_RATE) {
         Serial.println("Too many bytes");
@@ -52,22 +52,30 @@ void RefSystem::write(uint8_t* packet, uint8_t length) {
         return;
     }
 
-    // length of actual sendable data (without the IDs)
-    uint8_t data_length = packet[1] - 6;
+    // make a new frameData, limited to 113 bytes (max for RobotInteraction data)
+    FrameData cappedFrameData {};
+    memcpy(&cappedFrameData, frameData, 113);
 
-    // update header
-    packet[0] = 0xA5;                       // set SOF
-    packet[3] = get_seq();                  // set SEQ
-    packet[4] = generateCRC8(packet, 4);    // set CRC
+    // make a FrameHeader
+    FrameHeader header {};
+    header.SOF = 0xA5; // set SOF
+    header.data_length = sizeof(cappedFrameData);
+    header.sequence = get_seq(); // set SEQ
+    header.CRC = generateCRC8(reinterpret_cast<uint8_t*>(&header), sizeof(header));
 
-    // update sender ID
-    packet[9] = ref_data.robot_performance.robot_ID;
-    packet[10] = ref_data.robot_performance.robot_ID >> 8;
+    // make a Frame
+    Frame frame {};
+    frame.header = header;
+    frame.commandID = 0x301;
+    frame.data = cappedFrameData;
+    frame.CRC = generateCRC16(frame.data.data, sizeof(frame.data.data));
 
-    // update tail
-    uint16_t footerCRC = generateCRC16(packet, 13 + data_length);
-    packet[13 + data_length] = (footerCRC & 0x00FF);    // set CRC
-    packet[14 + data_length] = (footerCRC >> 8);        // set CRC
+    // OLD CODE
+    // // update tail
+    // uint16_t footerCRC = generateCRC16(packet, 13 + data_length);
+    // packet[13 + data_length] = (footerCRC & 0x00FF);    // set CRC
+    // packet[14 + data_length] = (footerCRC >> 8);        // set CRC
+    // OLD CODE
 
     if (Serial7.write(packet, length) == length) {
         packets_sent++;
