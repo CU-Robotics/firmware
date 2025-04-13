@@ -16,6 +16,7 @@ void SensorManager::init(const Config* config_data) {
     rev_sensor_count = config_data->num_of_revEnc;
     tof_sensor_count = config_data->num_of_tof;
     lidar_sensor_count = config_data->num_of_lidar;
+    limit_switch_count = config_data->num_of_limit_switch;
 
     for (int i = 0; i < NUM_SENSORS; i++) {
         int type = config_data->sensor_info[i][0];
@@ -70,7 +71,12 @@ void SensorManager::init(const Config* config_data) {
 
     }
 
-
+    // initialize limit switches
+    int limit_switch_index = 0;
+    for (int i = 0; i < NUM_SENSORS; i++) {
+        if (config_data->sensor_info[i][0] != 6) continue;
+        limit_switches[limit_switch_index++] = new LimitSwitch(config_data->sensor_info[i][1]);
+    }
 }
 
 void SensorManager::read() {
@@ -111,6 +117,11 @@ RevEncoder* SensorManager::get_rev_sensor(int index) {
 TOFSensor* SensorManager::get_tof_sensor(int index) {
     return tof_sensors[index];
 }
+
+LimitSwitch* SensorManager::get_limit_switch(int index) {
+    return limit_switches[index];
+}
+
 
 D200LD14P* SensorManager::get_lidar_sensor(int index) {
     if (index == 0) {

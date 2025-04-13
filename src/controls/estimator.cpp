@@ -542,7 +542,8 @@ void LocalEstimator::step_states(float output[CAN_MAX_MOTORS][MICRO_STATE_LEN], 
     }
 }
 
-NewFeederEstimator::NewFeederEstimator(CANManager* _can, SensorManager* _sensor_manager) {
+NewFeederEstimator::NewFeederEstimator(CANManager* _can, SensorManager* _sensor_manager, Config config_data) {
+    feeder_offset = config_data.sensor_info[10][2];
     micro_estimator = false;
     can = _can;
     sensor_manager = _sensor_manager;
@@ -551,18 +552,22 @@ NewFeederEstimator::NewFeederEstimator(CANManager* _can, SensorManager* _sensor_
 void NewFeederEstimator::step_states(float output[CAN_MAX_MOTORS][MICRO_STATE_LEN], float curr_state[CAN_MAX_MOTORS][MICRO_STATE_LEN], int override) {
     dt = time.delta();
     float feeder_angle = sensor_manager->get_buff_encoder(2)->get_angle();
+    Serial.printf("waggle graph feeder_angle %f\n",feeder_angle);
+    Serial.printf("feeder_offset %f\n",feeder_offset);
+    float diff;
     if (count == 0) {
-        prev_feeder_angle = feeder_angle;
+        Serial.printf("prev_feeder_angle %f\n",prev_feeder_angle);
         dt = 0; // first dt loop generates huge time so check for that
+        diff = fmod((feeder_angle - feeder_offset), (float)(M_PI / 2.0)) ;
         count++;
+    } else {
+        diff = feeder_angle - prev_feeder_angle;
     }
-    float diff = feeder_angle - prev_feeder_angle;
     prev_feeder_angle = feeder_angle;
     if (diff > PI) diff -= 2 * PI;
     else if (diff < -PI) diff += 2 * PI;
-    float feeder_velocity = (diff/(M_PI/2.0))/dt;
+    float feeder_velocity = (dt > 0) ? (diff/(M_PI/2.0))/dt : 0;
     ball_count += diff/(M_PI/2.0);
-    Serial.printf("Feeder Angle: %f, Feeder Velocity: %f, Ball Count: %f\n", feeder_angle, feeder_velocity, ball_count);
     output[0][0] = ball_count;
     output[0][1] = feeder_velocity;
     output[0][2] = 0;

@@ -54,7 +54,7 @@ void EstimatorManager::init_estimator(int estimator_id) {
         estimators[num_estimators++] = new GimbalEstimatorNoOdom(*config_data, sensor_manager, can);        
         break;
     case 7:
-        estimators[num_estimators++] = new NewFeederEstimator(can, sensor_manager);
+        estimators[num_estimators++] = new NewFeederEstimator(can, sensor_manager, *config_data);
         break;
     default:
         break;

@@ -556,10 +556,12 @@ struct NewFeederEstimator : public Estimator {
         float ball_count = 0;
         /// @brief first loop counter
         int count = 0;
+        /// @brief feeder encoder offset for improving feeder delay
+        float feeder_offset = 0;
     public:
         /// @brief Make new local estimator and set can data pointer and num states
         /// @param can can pointer from EstimatorManager
-        NewFeederEstimator(CANManager* can, SensorManager* sensor_manager);
+        NewFeederEstimator(CANManager* can, SensorManager* sensor_manager, Config config_data);
     
         /// @brief step through each motor and add to micro state
         /// @param output entire micro state 

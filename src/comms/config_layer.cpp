@@ -298,6 +298,10 @@ void Config::fill_data(CommsPacket packets[MAX_CONFIG_PACKETS], uint8_t sizes[MA
                 break;
             case 5:
                 this->num_of_realsense++;
+                break;
+            case 6:
+                this->num_of_limit_switch++;
+                break;
             default:
                 break;
             }
