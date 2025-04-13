@@ -100,8 +100,8 @@ int main() {
         {3 , 2 , 2 , 0},
         {3 , 3 , 2 , 0},
         {3 , 4 , 2 , 0},
-        {2 , 1 , 2 , 0},
-        {2 , 3 , 2 , 0},
+        {6 , 5 , 2 , 0},
+        {6 , 6 , 2 , 0},
     }; 
     can.configure(motor_info);
     // Reset all motor ROM
@@ -143,8 +143,8 @@ int main() {
         data.speed_fl = can.get_motor(1)->get_state().speed/ MG8016RATIO; // see from robot outor side clockwise (+)
         data.speed_bl = can.get_motor(2)->get_state().speed/ MG8016RATIO; // see from robot outor side clockwise (+)
         data.speed_br = can.get_motor(3)->get_state().speed/ MG8016RATIO; // see from robot outor side clockwise (+)
-        data.speed_wl = can.get_motor(4)->get_state().speed/ M3508RATIO; // see from robot outor side clockwise (+)
-        data.speed_wr = can.get_motor(5)->get_state().speed/ M3508RATIO; // see from robot outor side clockwise (+)
+        data.speed_wl = can.get_motor(4)->get_state().speed; // see from robot outor side clockwise (+)
+        data.speed_wr = can.get_motor(5)->get_state().speed; // see from robot outor side clockwise (+)
         test_control.set_data(data); 
         test_control.observer();
 
@@ -191,10 +191,10 @@ int main() {
             }
         }
         test_control.control();
-        can.write_motor_torque(0,test_control.getwrite().torque_fr);
-        can.write_motor_torque(1,test_control.getwrite().torque_fl);
-        can.write_motor_torque(2,test_control.getwrite().torque_bl);
-        can.write_motor_torque(3,test_control.getwrite().torque_br);
+        // can.write_motor_torque(0,test_control.getwrite().torque_fr);
+        // can.write_motor_torque(1,test_control.getwrite().torque_fl);
+        // can.write_motor_torque(2,test_control.getwrite().torque_bl);
+        // can.write_motor_torque(3,test_control.getwrite().torque_br);
         can.write_motor_torque(4,test_control.getwrite().torque_wl);
         can.write_motor_torque(5,test_control.getwrite().torque_wr);
 

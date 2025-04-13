@@ -467,13 +467,13 @@ void balancing_test::control(){
     _write.torque_wl = WHEEL_MOTOR_limit;
     if(_write.torque_wl < -WHEEL_MOTOR_limit)
     _write.torque_wl = -WHEEL_MOTOR_limit;
-    _write.torque_wl /= wheel_motor__left_sign * 5.0;
+    _write.torque_wl /= wheel_motor__left_sign * 8.0;
     
     if(_write.torque_wr > WHEEL_MOTOR_limit)
     _write.torque_wr = WHEEL_MOTOR_limit;
     if(_write.torque_wr < -WHEEL_MOTOR_limit)
     _write.torque_wr = -WHEEL_MOTOR_limit;
-    _write.torque_wr /= wheel_motor__right_sign * 5.0;
+    _write.torque_wr /= wheel_motor__right_sign * 8.0;
     
     if(_write.torque_fl > MGlimit)
     _write.torque_fl = MGlimit;
