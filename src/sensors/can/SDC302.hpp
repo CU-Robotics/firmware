@@ -2,7 +2,7 @@
 
 #include "motor.hpp"
 #include <cstdint>
-
+// Data of the GIM6010-6 motor https://steadywin.cn/en/pd.jsp?id=12#_jcp=3_3
 /// @brief SDC302 motor controller class
 class SDC302 : public Motor {
 public:
