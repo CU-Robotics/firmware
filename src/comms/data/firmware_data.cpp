@@ -39,9 +39,9 @@ void FirmwareData::set_data(CommsData* data) {
 
         break;
     }
-    case TypeLabel::DR16Data: {
+    case TypeLabel::TransmitterData: {
         // place the data in the mega struct
-        dr16_data = *static_cast<DR16Data*>(data);
+        transmitter_data = *static_cast<TransmitterData*>(data);
         break;
     }
     case TypeLabel::BuffEncoderData: {

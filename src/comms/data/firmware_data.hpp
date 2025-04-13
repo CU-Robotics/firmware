@@ -61,8 +61,8 @@ struct FirmwareData {
     /// @brief lidar_sensor_0
     std::vector<LidarDataPacketSI> lidars[2];
 
-    /// @brief DR16 data
-    DR16Data dr16_data;
+    /// @brief Transmitter data
+    TransmitterData transmitter_data;
 
     /// @brief Config section
     ConfigSection config_section;

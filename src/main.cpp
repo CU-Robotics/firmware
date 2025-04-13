@@ -106,7 +106,6 @@ int main() {
     // Execute setup functions
     pinMode(LED_BUILTIN, OUTPUT);
 
-    led.init();
     TransmitterType transmitter_type = transmitter->who_am_i();
     if (transmitter_type == TransmitterType::DR16){
         transmitter = new DR16;
@@ -117,7 +116,7 @@ int main() {
     
     //initialize objects
     can.init();
-    dr16.init();
+    transmitter->init();
     comms_layer.init();
 	
     ref = sensor_manager.get_ref();
@@ -280,7 +279,7 @@ int main() {
 
         // if the left switch is all the way down use Hive controls
 
-		if (transmitter.get_l_switch() == SwitchPos::Backward) {
+		if (transmitter->get_l_switch() == SwitchPos::BACKWARD) {
             // hid_incoming.get_target_state(target_state);
             memcpy(target_state, comms_layer.get_hive_data().target_state.state, sizeof(target_state));
 
@@ -369,20 +368,8 @@ int main() {
         estimated_state.data.time = millis() / 1000.0;
         estimated_state.send_to_comms();
 
-        Comms::Sendable<DR16Data> dr16_sendable;
-        dr16_sendable.data.l_mouse_button = dr16.get_l_mouse_button();
-        dr16_sendable.data.r_mouse_button = dr16.get_r_mouse_button();
-        dr16_sendable.data.l_switch = dr16.get_l_switch();
-        dr16_sendable.data.r_switch = dr16.get_r_switch();
-        dr16_sendable.data.l_stick_x = dr16.get_l_stick_x();
-        dr16_sendable.data.l_stick_y = dr16.get_l_stick_y();
-        dr16_sendable.data.r_stick_x = dr16.get_r_stick_x();
-        dr16_sendable.data.r_stick_y = dr16.get_r_stick_y();
-        dr16_sendable.data.wheel = dr16.get_wheel();
-        dr16_sendable.data.mouse_x = dr16.get_mouse_x();
-        dr16_sendable.data.mouse_y = dr16.get_mouse_y();
-        dr16_sendable.data.keys.raw = *(uint16_t*)(dr16.get_raw() + 14);
-        dr16_sendable.send_to_comms();
+        Comms::Sendable<TransmitterData> transmitter_sendable = transmitter->get_transmitter_data();
+        transmitter_sendable.send_to_comms();
 
         // Comms::LoggingData logging_data;
         // const char* logging_data_str = "Logging data test string";

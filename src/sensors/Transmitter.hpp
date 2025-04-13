@@ -2,6 +2,7 @@
 
 #include <Arduino.h>
 #include <optional>
+#include "../comms/data/data_structs.hpp"
 
 /// @brief The enum of what type of transmitter is being used
 enum class TransmitterType {
@@ -10,13 +11,7 @@ enum class TransmitterType {
 	ET16S
 };
 
-/// @brief The enum of the switch positions
-enum class SwitchPos{
-	INVALID = 0,
-	FORWARD,
-	BACKWARD,
-	MIDDLE
-};
+
 
 /// @brief A unifying interface for all transmitters
 class Transmitter {
@@ -36,6 +31,7 @@ public:
 	virtual void init() {}
 	
 	/// @brief prints all output values
+
 	virtual void print() {}
 	
 	/// @brief zeros all buffers
@@ -230,5 +226,10 @@ public:
 	/// @brief get keys
 	/// @return keys pressed
 	virtual std::optional<Keys> get_keys() { return {}; }
+
+	
+	/// @brief getter for transmitter data
+	/// @return Filled Transmitter data struct
+	virtual TransmitterData get_transmitter_data(){return TransmitterData();}
 
 };

@@ -306,4 +306,8 @@ private:
 
 	/// @brief raw data packet
 	uint8_t m_inputRaw[ET16S_PACKET_SIZE] = { 0 };
+	
+	/// @brief getter for transmitter data
+	/// @return Filled Transmitter data struct
+	TransmitterData get_transmitter_data();
 };

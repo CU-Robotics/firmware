@@ -596,3 +596,34 @@ float ET16S::get_wheel(){
 	// index will need to be changed to use a different control for wheel
 	return channel[l_slider_num.value()].data;
 }
+TransmitterData ET16S::get_transmitter_data(){
+	TransmitterData transmitter_data;
+	transmitter_data.l_mouse_button = get_l_mouse_button();
+	transmitter_data.r_mouse_button = get_r_mouse_button();
+	transmitter_data.l_switch = get_l_switch();
+	transmitter_data.r_switch = get_r_switch();
+	transmitter_data.l_stick_x = get_l_stick_x();
+	transmitter_data.l_stick_y = get_l_stick_y();
+	transmitter_data.r_stick_x = get_r_stick_x();
+	transmitter_data.r_stick_y = get_r_stick_y();
+	transmitter_data.wheel = get_wheel();
+	transmitter_data.l_dial = get_l_dial();
+	transmitter_data.r_dial = get_r_dial();
+	transmitter_data.safety_switch = get_safety_switch();
+	transmitter_data.switch_b = get_switch_b();
+	transmitter_data.switch_c = get_switch_c();
+	transmitter_data.switch_d = get_switch_d();
+	transmitter_data.switch_e = get_switch_e();
+	transmitter_data.switch_f = get_switch_f();
+	transmitter_data.switch_g = get_switch_g();
+	transmitter_data.switch_h = get_switch_h();
+	transmitter_data.l_slider = get_l_slider();
+	transmitter_data.r_slider = get_r_slider();
+	transmitter_data.trim_one = get_trim_one();
+	transmitter_data.trim_two = get_trim_two();
+	transmitter_data.trim_three = get_trim_three();
+	transmitter_data.trim_four = get_trim_four();
+	transmitter_data.trim_five = get_trim_five();
+	transmitter_data.trim_six = get_trim_six();
+	return transmitter_data;
+}

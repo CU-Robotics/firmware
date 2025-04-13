@@ -8,7 +8,16 @@
 #endif
 
 #include <stdint.h>     // uintN_t
+#include <optional>
 
+
+/// @brief The enum of the switch positions
+enum class SwitchPos{
+	INVALID = 0,
+	FORWARD,
+	BACKWARD,
+	MIDDLE
+};
 /// @brief Data struct for testing purposes
 struct TestData : Comms::CommsData {
     TestData() : Comms::CommsData(Comms::TypeLabel::TestData, Comms::PhysicalMedium::Ethernet, Comms::Priority::High, sizeof(TestData)) {}
@@ -120,27 +129,28 @@ struct LidarDataPacketSI : Comms::CommsData {
     float yaw_velocity = 0;
 };
 
-/// @brief Structure for the DR16
-struct DR16Data : Comms::CommsData {
-    DR16Data() : CommsData(Comms::TypeLabel::DR16Data, Comms::PhysicalMedium::Ethernet, Comms::Priority::High, sizeof(DR16Data)) { }
+/// @brief Structure for the Transmitter
+struct TransmitterData : Comms::CommsData {
+    TransmitterData() : CommsData(Comms::TypeLabel::TransmitterData, Comms::PhysicalMedium::Ethernet, Comms::Priority::High, sizeof(TransmitterData)) { }
+
     /// Sensor ID.
-    uint8_t id;
+	uint8_t id;
     /// mouse x velocity
-    int16_t mouse_x = 0;
+	std::optional<int16_t> mouse_x = {};
     /// mouse y velocity
-    int16_t mouse_y = 0;
+	std::optional<int16_t> mouse_y = {};
     /// mouse z velocity
-    int16_t mouse_z = 0;
+	std::optional<int16_t> mouse_z = {};
     /// left mouse button status
-    bool l_mouse_button = 0;
+	std::optional<bool> l_mouse_button = {};
     /// right mouse button status
-    bool r_mouse_button = 0;
+	std::optional<bool> r_mouse_button = {};
     /// left switch status
-    float l_switch = 0;
+	SwitchPos l_switch = SwitchPos::INVALID;
     /// right switch status
-    float r_switch = 0;
+	SwitchPos r_switch = SwitchPos::INVALID;
     /// left stick x axis
-    float l_stick_x = 0;
+	float  l_stick_x = 0;
     /// left stick y axis
     float l_stick_y = 0;
     /// right stick x axis
@@ -148,18 +158,46 @@ struct DR16Data : Comms::CommsData {
     /// right stick y axis
     float r_stick_y = 0;
     /// wheel
-    float wheel = 0;
-
-    /**
-     * Usage example of how to acces the keys bitfield:
-        DR16Data data;
-        data.w = 1;          // Mark key 'w' as pressed
-        if (data.s) {        // Check if key 's' is pressed
-        // do something
-        }
-     * 
-     */
-    union {
+	std::optional<float> wheel = {};
+	/// safety switch
+	std::optional<SwitchPos> safety_switch = {};
+	/// switch b
+	std::optional<SwitchPos> switch_b = {};
+	/// switch c
+	std::optional<SwitchPos> switch_c = {};
+	/// switch d
+	std::optional<SwitchPos> switch_d = {};
+	/// switch e
+	std::optional<SwitchPos> switch_e = {};
+	/// switch f
+	std::optional<SwitchPos> switch_f = {};
+	/// switch g
+	std::optional<SwitchPos> switch_g = {};
+	/// switch h
+	std::optional<SwitchPos> switch_h = {};
+	/// left dial
+	std::optional<float> l_dial = {};
+	/// right dial
+	std::optional<float> r_dial = {};
+	/// trim one
+	std::optional<float> trim_one = {};
+	/// trim two
+	std::optional<float> trim_two = {};
+	/// trim three
+	std::optional<float> trim_three = {};
+	/// trim four
+	std::optional<float> trim_four = {};
+	/// trim five
+	std::optional<float> trim_five = {};
+	/// trim six
+	std::optional<float> trim_six = {};
+	/// left slider
+	std::optional<float> l_slider = {};
+	/// right slider
+	std::optional<float> r_slider = {};
+	
+	
+	union {
         uint16_t raw = 0;
         struct {
             uint16_t w     : 1;
@@ -180,6 +218,7 @@ struct DR16Data : Comms::CommsData {
             uint16_t b     : 1;
         } key;
     } keys;
+	
 };
 
 // TODO: replace with kyle3's new state struct

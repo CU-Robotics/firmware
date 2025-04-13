@@ -152,6 +152,9 @@ public:
 	std::optional<Keys> get_keys() override {
 		return keys;
 	}
+	/// @brief getter for transmitter data
+	/// @return Filled Transmitter data struct
+	TransmitterData get_transmitter_data();
 
 	/// @brief A simple check to see if read data is within expected values
 	/// @return True/false whether data is deemed valid or not

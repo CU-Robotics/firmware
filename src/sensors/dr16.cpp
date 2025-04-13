@@ -258,15 +258,31 @@ std::optional<int> DR16::get_mouse_x() {
 	return mouse_x;
 }
 
-
 int DR16::get_mouse_z() {
 	return mouse_z;
 }
 
-bool DR16::get_l_mouse_button() {
+std::optional<bool> DR16::get_l_mouse_button() {
 	return l_mouse_button;
 }
 
 std::optional<bool> DR16::get_r_mouse_button() {
 	return r_mouse_button;
+}
+TransmitterData DR16::get_transmitter_data(){
+	TransmitterData transmitter_data;
+	transmitter_data.mouse_x = mouse_x;
+	transmitter_data.mouse_y = mouse_y;
+	transmitter_data.mouse_z = mouse_z;
+	transmitter_data.l_mouse_button = l_mouse_button;
+	transmitter_data.r_mouse_button = r_mouse_button;
+	transmitter_data.l_switch = get_l_switch();
+	transmitter_data.r_switch = get_r_switch();
+	transmitter_data.l_stick_x = get_l_stick_x();
+	transmitter_data.l_stick_y = get_l_stick_y();
+	transmitter_data.r_stick_x = get_r_stick_x();
+	transmitter_data.r_stick_y = get_r_stick_y();
+	transmitter_data.wheel = get_wheel();
+	transmitter_data.safety_switch = get_safety_switch();
+	return transmitter_data;
 }
