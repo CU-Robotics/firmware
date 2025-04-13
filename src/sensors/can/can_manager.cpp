@@ -6,6 +6,7 @@
 #include "can/MG8016EI6.hpp"
 #include "can/GIM.hpp"
 #include "can/SDC104.hpp"
+#include "can/SDC302.hpp"
 
 // FlexCAN_T4 moment
 CANManager::CANManager() { }
@@ -83,6 +84,11 @@ void CANManager::configure(const float motor_info[CAN_MAX_MOTORS][4]) {
             Serial.printf("Creating SDC104 Motor: %d on bus %d\n", new_motor->get_id(), new_motor->get_bus_id(), new_motor->get_motor_type());
             break;
         }
+        case MotorControllerType::SDC302: {
+            new_motor = new SDC302(motor_id, physical_id, bus_id, motor_type);
+            Serial.printf("Creating SDC302 Motor: %d on bus %d\n", new_motor->get_id(), new_motor->get_bus_id(), new_motor->get_motor_type());
+            break;
+        }
         default: {
             Serial.printf("CANManager tried to create a motor of invalid type: %d\n", controller_type);
             continue;   // continue in order to not call the later map insert since new_motor would be null
@@ -155,7 +161,8 @@ void CANManager::write() {
             }
             case MotorControllerType::MG8016:
             case MotorControllerType::GIM:
-            case MotorControllerType::SDC104: {
+            case MotorControllerType::SDC104: 
+            case MotorControllerType::SDC302: {
                 // these motors dont require msg merging so just write it to the bus
                 CAN_message_t msg;
 

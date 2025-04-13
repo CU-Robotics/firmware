@@ -13,6 +13,7 @@ enum class MotorControllerType {
     MG8016,
     GIM,
     SDC104,
+    SDC302,
 };
 
 // Todo
