@@ -10,7 +10,7 @@ namespace qn = qindesign::network;
 
 // DEBUG define for displaying all comms errors/status updates
 // This is very noisy on start up
-// #define COMMS_DEBUG
+#define COMMS_DEBUG
 
 namespace Comms {
 
@@ -44,7 +44,7 @@ public:
 
     /// @brief Get the current initialized status of the Ethernet layer
     /// @return True if the Ethernet layer is initialized
-    bool is_initialized();
+    bool is_initialized() const;
 
 	/// @brief Cycle comms, this issues packet read and write calls
 	// std::optional<EthernetPacket> sendReceive(EthernetPacket& outgoing_packet);
@@ -79,6 +79,9 @@ private:
 
 	/// @brief The current connection status with the Jetson
 	bool m_connected = false;
+
+	/// @brief The current initialized status of the Ethernet server
+	bool m_initialized = false;
 
 	/// @brief The last time a packet was received in microseconds
 	uint32_t m_last_recv_time = 0;

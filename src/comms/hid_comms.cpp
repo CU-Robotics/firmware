@@ -16,13 +16,23 @@ bool HIDComms::recv_packet(HIDPacket& incoming_packet) {
         // increment total number of packets read and return success
         m_packetsRead++;
         m_incomingPacket = incoming_packet;
+        m_received_last = true;
         return true;
     } else {
+        m_received_last = false;
         return false;
     }
 }
 
 bool HIDComms::send_packet(HIDPacket& outgoing_packet) {
+    // check if the last packet was received
+    if (!m_received_last) {
+        return false;
+    }
+    
+    // reset the received last flag
+    m_received_last = false;
+    
     // verify that the first byte is set to something (0xff)
     // prevents a weird comms issue where the whole packet is shifted left by one byte if the first byte is not ever set
     outgoing_packet.header.SOF = 0xff;
@@ -45,7 +55,7 @@ bool HIDComms::is_connected() const {
     return true;
 }
 
-bool HIDComms::is_initialized() {
+bool HIDComms::is_initialized() const {
     return true;
 }
 

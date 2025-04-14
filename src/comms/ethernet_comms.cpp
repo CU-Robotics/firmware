@@ -68,6 +68,9 @@ bool EthernetComms::init(uint32_t data_rate) {
 	// ethernet is now setup and udp server is online
 	Serial.printf("EthernetComms: Ethernet online!\n");
 
+	// set the initialized flag
+	m_initialized = true;
+
 	return true;
 }
 
@@ -146,8 +149,8 @@ bool EthernetComms::is_connected() const {
     return m_connected;
 }
 
-bool EthernetComms::is_initialized() {
-    return m_connected;
+bool EthernetComms::is_initialized() const {
+	return m_initialized;
 }
 
 // std::optional<EthernetPacket> EthernetComms::sendReceive(EthernetPacket& outgoing_packet) {

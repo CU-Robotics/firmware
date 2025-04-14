@@ -70,15 +70,14 @@ void CommsLayer::queue_data(CommsData* data) {
 };
 
 void CommsLayer::send_packets() {
-    // prepare packets to send
+    // prepare and send a HID packet
     m_hid_payload.construct_data();
     memcpy(m_hid_outgoing.payload(), m_hid_payload.data(), HID_PACKET_PAYLOAD_SIZE);
+    m_hid.send_packet(m_hid_outgoing);
     
+    // prepare and send an ethernet packet
     m_ethernet_payload.construct_data();
     memcpy(m_ethernet_outgoing.payload(), m_ethernet_payload.data(), ETHERNET_PACKET_PAYLOAD_SIZE);
-
-    // send packets to the appropriate physical layer
-    m_hid.send_packet(m_hid_outgoing);
     m_ethernet.send_packet(m_ethernet_outgoing);
 };
 

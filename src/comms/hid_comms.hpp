@@ -33,7 +33,7 @@ public:
 
     /// @brief Get the current initialized status of the HID layer
     /// @return True if the HID layer is initialized
-    bool is_initialized();
+    bool is_initialized() const;
 
 	/// @brief Print the outgoing packet
 	/// @note This massively slows the loop down
@@ -44,9 +44,9 @@ public:
 	void print_incoming();
 
 private:
-	/// @brief An encapsulating struct around the packet received from Khadas
+	/// @brief An encapsulating struct around the packet received from Hive
 	HIDPacket m_incomingPacket{};
-	/// @brief An encapsulating struct around the packet to be sent to Khadas
+	/// @brief An encapsulating struct around the packet to be sent to Hive
 	HIDPacket m_outgoingPacket{};
 
 	/// @brief Counter on how many packets have been received
@@ -56,6 +56,11 @@ private:
 	/// @brief Counter on how many packets have failed to be sent
 	/// @note This is only incremented on a failed write, not read
 	long long unsigned m_packetsFailed = 0;
+
+	/// @brief A flag to specifiy whether the last call to recv_packet was successful
+	/// @note If HID does not actually have a connection, it's writes will block
+	/// @note this flag is used to only write when it actually received a packet
+	bool m_received_last = false;
 };
 
 extern HIDComms comms;

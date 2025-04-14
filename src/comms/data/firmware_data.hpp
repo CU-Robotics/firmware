@@ -59,7 +59,7 @@ struct FirmwareData {
     TOFSensorData tof_sensor;
     
     //two liadars
-    /// @brief lidar_sensor_0
+    /// @brief lidar vector
     std::vector<LidarDataPacketSI> lidars[2];
 
     /// @brief DR16 data

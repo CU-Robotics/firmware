@@ -12,14 +12,10 @@
 #include <doctest/doctest.h>                    // for TEST_CASE
 #include "modules/comms/data/comms_data.hpp"    // for CommsData
 #include "modules/comms/data/logging_data.hpp"  // for LoggingData
-#include "modules/comms/data/firmware_data.hpp" // for FirmwareData
-#include "modules/comms/data/hive_data.hpp"     // for HiveData
-#include "modules/hive/environment.hpp"         // for Hive
+#include <mutex>                                // for std::mutex
 #elif defined(FIRMWARE)
 #include "comms/data/comms_data.hpp"            // for CommsData
 #include "comms/data/logging_data.hpp"          // for LoggingData
-#include "comms/data/hive_data.hpp"             // for HiveData
-#include "comms/data/firmware_data.hpp"         // for FirmwareData
 #include <Arduino.h>                            // for Serial
 #endif
 

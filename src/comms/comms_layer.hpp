@@ -4,6 +4,8 @@
 #include "comms/hid_comms.hpp"              // for HIDComms
 #include "comms/ethernet_comms.hpp"         // for EthernetComms
 #include "comms/data/packet_payload.hpp"    // for PacketPayload
+#include "comms/data/hive_data.hpp"         // for HiveData
+#include "comms/data/firmware_data.hpp"     // for FirmwareData
 
 namespace Comms {
 
