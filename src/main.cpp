@@ -17,7 +17,7 @@
 #define LOOP_FREQ 1000
 #define HEARTBEAT_FREQ 2
 
-StereoCamTrigger stereoCamTrigger(60);
+StereoCamTrigger stereoCamTrigger(50);
 
 Comms::EthernetComms comms;
 
@@ -74,7 +74,7 @@ int main() {
 
     print_logo();
 
-    comms.begin();
+    // comms.begin();
 
     for (int i = 0; i < NUM_LEDS; i++)
         pinMode(leds[i], OUTPUT);
@@ -90,11 +90,11 @@ int main() {
 
         write_to_leds(val);
 
-        auto* outgoing = comms.get_outgoing_packet();
-        outgoing->header.sequence = stereoCamTrigger.get_latest_exposure_timestamp() & 0x3FF;
-        outgoing->header.time_stamp = millis();
+        // auto* outgoing = comms.get_outgoing_packet();
+        // outgoing->header.sequence = stereoCamTrigger.get_latest_exposure_timestamp() & 0x3FF;
+        // outgoing->header.time_stamp = millis();
 
-        comms.loop();
+        // comms.loop();
 
         // LED heartbeat -- linked to loop count to reveal slowdowns and freezes.
         loopc % (int)(1E3 / float(HEARTBEAT_FREQ)) < (int)(1E3 / float(5 * HEARTBEAT_FREQ)) ? digitalWrite(13, HIGH) : digitalWrite(13, LOW);
