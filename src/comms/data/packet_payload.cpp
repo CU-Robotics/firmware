@@ -92,10 +92,12 @@ void PacketPayload::add(CommsData* data) {
     case Priority::High: {
         if (high_priority_send_queue.size() < MAX_QUEUE_SIZE) {
             high_priority_send_queue.push(data);
+            break;
         } else {
-            delete data;
+            // since we could not successfully add to the high priority queue,
+            // we intentionally fall through to the medium priority queue
+            [[fallthrough]];
         }
-        break;
     } case Priority::Medium: {
         if (medium_priority_send_queue.size() < MAX_QUEUE_SIZE) {
             medium_priority_send_queue.push(data);
