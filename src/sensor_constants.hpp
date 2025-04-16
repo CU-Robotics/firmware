@@ -26,4 +26,15 @@ enum SensorType : uint8_t {
     // Add other sensor types here
 };
 
+//some constants for lidar sensors needed for comms as well as the sensor
+/// @brief points per D200 data packet
+const int D200_POINTS_PER_PACKET = 12;
+
+/// @brief number of timestamp calibration packets. new packet read rate of 333 Hz = 1 packet / 3ms
+const int D200_MAX_CALIBRATION_PACKETS = 333;
+
+/// @brief number of packets stored teensy-side
+const int D200_NUM_PACKETS_CACHED = 2;
+
+
 #endif // CONSTANTS_HPP

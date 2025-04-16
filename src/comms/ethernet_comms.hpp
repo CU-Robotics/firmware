@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Arduino.h>
+#include <optional>
 
 // QNEthernet has warnings that are not fixable (-Wattributes)
 // This is a useful warning so we dont want to permanently disable it
@@ -11,6 +12,7 @@ namespace qn = qindesign::network;
 #pragma GCC diagnostic pop
 
 #include "ethernet_data.hpp"
+#include "utils/timing.hpp"
 
 // DEBUG define for displaying all comms errors/status updates
 // This is very noisy on start up
@@ -32,18 +34,16 @@ public:
 	bool begin(uint32_t data_rate = 95);
 
 	/// @brief Cycle comms, this issues packet read and write calls
-	void loop();
+	std::optional<EthernetPacket> sendReceive(EthernetPacket& outgoing_packet);
 
 public:
 	/// @brief Get a pointer to the incoming packet
-	/// @return The pointer to the internal incoming packet
-	/// @note Pointer is const, the data is not; you shouldn't change the pointer itself
-	EthernetPacket* const get_incoming_packet();
+	/// @return The incoming packet
+	EthernetPacket get_incoming_packet();
 
-	/// @brief Get a pointer to the outgoing packet
-	/// @return The pointer to the internal outgoing packet
-	/// @note Pointer is const, the data is not; you shouldn't change the pointer itself
-	EthernetPacket* const get_outgoing_packet();
+	/// @brief Set the outgoing packet
+	/// @param packet The packet to send
+	void set_outgoing_packet(EthernetPacket& packet);
 
 	/// @brief Get the connection status with the Jetson
 	/// @return True if connected
@@ -112,6 +112,8 @@ private:
 	const uint32_t m_connection_timeout = 500000;
 	/// @brief The handshake timeout in microseconds
 	const uint32_t m_handshake_timeout = 1000000;
+	/// @brief The UDP warmup timeout in microseconds
+	const uint32_t m_warmup_timeout = 5000000;
 
 	/// @brief The current status of the comms
 	EthernetStatus m_status = {};
@@ -120,6 +122,8 @@ private:
 	EthernetPacket m_incoming = {};
 	/// @brief The outgoing packet buffer
 	EthernetPacket m_outgoing = {};
+
+	Timer m_regulation_timer;
 };
 
 }	// namespace Comms
