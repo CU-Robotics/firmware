@@ -53,6 +53,9 @@ void EstimatorManager::init_estimator(int estimator_id) {
     case 6:
         estimators[num_estimators++] = new GimbalEstimatorNoOdom(*config_data, sensor_manager, can);        
         break;
+    case 7: 
+        estimators[num_estimators++] = new BalancingChassisEstimator(*config_data, sensor_manager, can);
+        break;
     default:
         break;
     }

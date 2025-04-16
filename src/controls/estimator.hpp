@@ -541,4 +541,20 @@ public:
     void step_states(float output[CAN_MAX_MOTORS][MICRO_STATE_LEN], float curr_state[CAN_MAX_MOTORS][MICRO_STATE_LEN], int override);
 };
 
+///
+struct BalancingChassisEstimator : public Estimator {
+private:
+    /// @brief can from EstimatorManager
+    CANManager* can;
+
+    /// @brief imu from EstimatorManager
+    ICM20649* icm_imu;
+
+    /// @brief chassis angle
+    float chassis_angle = 0;
+
+    /// @brief chassis angle offset
+    float chassis_angle_offset = 0;
+    
+};
 #endif

@@ -37,6 +37,9 @@ void ControllerManager::init_controller(int controller_type, const float gains[N
     case 7:
         controllers[num_controllers] = new SwitcherController();
         break;
+    case 9:
+        controllers[num_controllers] = new BalancingController();
+        break;
     default:
         if (controllers[num_controllers] == nullptr) controllers[num_controllers] = new NullController();
         break;
