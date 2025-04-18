@@ -1,0 +1,11 @@
+<map id="Controller" name="Controller">
+<area shape="rect" id="node1" title="Parent controller struct, all controllers should be based off of this." alt="" coords="5,183,83,209"/>
+<area shape="rect" id="node2" href="$structFeederController.html" title="Controls the feeder." alt="" coords="153,5,271,32"/>
+<area shape="rect" id="node3" href="$structFlywheelController.html" title="Controller for the flywheels." alt="" coords="148,56,276,83"/>
+<area shape="rect" id="node4" href="$structNullController.html" title="Default controller." alt="" coords="162,107,262,133"/>
+<area shape="rect" id="node5" href="$structPitchController.html" title="Controller for the pitch." alt="" coords="159,157,265,184"/>
+<area shape="rect" id="node6" href="$structSwitcherController.html" title="Controller for the switcher, which is a fullstate controller with feedforward." alt="" coords="148,208,276,235"/>
+<area shape="rect" id="node7" href="$structXDrivePositionController.html" title="Position controller for the chassis." alt="" coords="131,259,293,285"/>
+<area shape="rect" id="node8" href="$structXDriveVelocityController.html" title="Controller for all chassis movement, which includes power limiting." alt="" coords="131,309,293,336"/>
+<area shape="rect" id="node9" href="$structYawController.html" title="Controller for the yaw." alt="" coords="161,360,263,387"/>
+</map>
