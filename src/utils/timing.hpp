@@ -50,7 +50,7 @@ struct Timer {
     /// @note Other calls like delay will cause this function to return the delta since that call
     /// @return The delta in s since last timer method call
     float delta() {
-        float delta = US_TO_S(get_elapsed());    // time in s since last start() call
+        float delta = US_TO_S(get_elapsed_micros_no_restart());    // time in s since last start() call
         start();    // restart the timer for next run
         return delta;
     }
@@ -59,7 +59,7 @@ struct Timer {
     /// @note Other calls like delay will cause this function to return the delta since that call
     /// @return The delta in us since last timer method call
     float delta_micros() {
-        float delta = get_elapsed();
+        float delta = get_elapsed_micros_no_restart();
         start();    // restart the timer for next run
         return delta;
     }
@@ -68,11 +68,30 @@ struct Timer {
     /// @note Other calls like delay will cause this function to return the delta since that call
     /// @return The delta in ms since last timer method call
     float delta_millis() {
-        float delta = US_TO_MS(get_elapsed());  // time in ms since last start() call
+        float delta = US_TO_MS(get_elapsed_micros_no_restart());  // time in ms since last start() call
         start();    // restart the timer for next run
         return delta;
     }
-    
+
+    /// @brief Get delta in us since last call to start()
+    /// @note This handles potential overflows within micros()
+    /// @note This does not restart the timer
+    /// @return Delta in us
+    uint32_t get_elapsed_micros_no_restart() {
+        uint32_t curr_time = micros();
+        
+        // if curr_time is less than start_time, then this overflowed
+        if (curr_time < start_time) {
+            // calculate elapsed micros
+            // elapsed = (max - t1 + 1) + t2 assuming t2 < t1
+            // + 1 is from the time going from MAX -> 0, this is still a microsecond
+            return (__UINT32_MAX__ - start_time + 1) + curr_time;
+
+        }
+
+        // return the last time since start() call
+        return curr_time - start_time;
+    }
 
 private:
     /// @brief Helper to use when waiting until a duration is finished
@@ -96,25 +115,6 @@ private:
 
         // not elapsed
         return false;
-    }
-
-    /// @brief Get delta in us since last call to start()
-    /// @note This handles potential overflows within micros()
-    /// @return Delta in us
-    uint32_t get_elapsed() {
-        uint32_t curr_time = micros();
-        
-        // if curr_time is less than start_time, then this overflowed
-        if (curr_time < start_time) {
-            // calculate elapsed micros
-            // elapsed = (max - t1 + 1) + t2 assuming t2 < t1
-            // + 1 is from the time going from MAX -> 0, this is still a microsecond
-            return (__UINT32_MAX__ - start_time + 1) + curr_time;
-
-        }
-
-        // return the last time since start() call
-        return curr_time - start_time;
     }
 
 };

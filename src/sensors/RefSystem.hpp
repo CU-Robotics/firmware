@@ -5,6 +5,8 @@
 
 #include "RefSystemPacketDefs.hpp"
 
+#include "comms/data/data_structs.hpp"
+
 /// @brief Time (in us) between packet writes
 constexpr uint32_t REF_MAX_PACKET_DELAY = 40000;
 /// @brief Maximum number of bytes that is allowed to be sent within a second. Includes Ref header/tail
@@ -90,9 +92,9 @@ public:
     void write(uint8_t* packet, uint8_t length);
 
     /// @brief Generate a byte array for all ref data to be sent over comms
-    /// @param output_array Byte array to store the data
+    /// @return The data struct
     /// @note Only sends some packets, not all
-    void get_data_for_comms(uint8_t output_array[180]);
+    CommsRefData get_data_for_comms();
 
 private:
     /// @brief Helper function: Reads and stores frame header

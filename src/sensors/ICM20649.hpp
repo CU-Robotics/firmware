@@ -6,6 +6,8 @@
 
 #include "IMUSensor.hpp"
 
+#include <data_structs.hpp>
+
 // Configure pin numbers used for SPI communication on the teensy
 
 /// @brief CS (Chip Select) pin for SPI mode
@@ -17,25 +19,6 @@
 /// @brief SCL/SCK (SPI Clock) pin for software-SPI mode
 #define ICM_SCK 27
 
-/// @brief Structure for the ICM sensor.
-struct ICMSensorData {
-    /// Sensor ID.
-    uint8_t id;
-    /// Acceleration in X-axis.
-    float accel_X;
-    /// Acceleration in Y-axis.
-    float accel_Y;
-    /// Acceleration in Z-axis.
-    float accel_Z;
-    /// Gyroscope reading in X-axis.
-    float gyro_X;
-    /// Gyroscope reading in Y-axis.
-    float gyro_Y;
-    /// Gyroscope reading in Z-axis.
-    float gyro_Z;
-    /// Temperature reading.
-    float temperature;
-};
 
 /// @brief Sensor access for an ICM20649 IMU Sensor. Child of the abstract IMUSensor class.
 /// @note supports I2C and SPI communication. 

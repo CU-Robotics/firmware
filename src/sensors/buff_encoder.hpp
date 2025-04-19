@@ -4,17 +4,7 @@
 #include <Arduino.h>
 #include <SPI.h>
 #include "Sensor.hpp"
-#include "sensor_constants.hpp"
-
-
-/// @brief Structure for the buff encoder sensor.
-struct BuffEncoderData {
-    /// Sensor ID.
-    uint8_t id;
-    /// Measured angle.
-    float m_angle;
-};
-
+#include "data_structs.hpp"
 
 // Encoder Registers and Config
 constexpr uint32_t MT6835_OP_READ = 0b0011;

@@ -132,6 +132,10 @@ public:
 	/// @return Amount of points since last read
 	int get_mouse_y();
 
+	/// @brief Get mouse velocity z (scroll wheel)
+	/// @return Amount of points since last read
+	int get_mouse_z();
+
 	/// @brief status of left mouse button
 	/// @return Is left mouse button pressed
 	bool get_l_mouse_button();
@@ -163,6 +167,8 @@ private:
 	int16_t mouse_x;
 	/// @brief Keep track of mouse y velocity
 	int16_t mouse_y;
+	/// @brief Keep track of mouse z velocity (scroll wheel)
+	int16_t mouse_z;
 
 	/// @brief Keep track of left mouse button status
 	bool l_mouse_button;
