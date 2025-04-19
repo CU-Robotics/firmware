@@ -1,4 +1,5 @@
 #include "IMU_filter.hpp"
+// For more detail about imu filter Check https://github.com/OAOJim/Study_Notes/blob/main/IMU_filter.md
 
 void IMU_filter::init_EKF_6axis(IMU_data data){
     // Set a initial value for the quaternion
@@ -8,7 +9,7 @@ void IMU_filter::init_EKF_6axis(IMU_data data){
     data.accel_Z = data.accel_Z * recipNorm;//This is the unit gravity
     float axis_norm = sqrt(data.accel_Y * data.accel_Y + data.accel_X * data.accel_X);   
     float sin_halfangle = sinf(acosf(data.accel_Z)/2.0f);
-    if(axis_norm > 1e-6){
+    if(axis_norm > 1e-6){ // Just some stupid way to initialize the quaternion. Quaternion is not easy to initialize since 2 quaternion can represent the same rotation
         x[0] = cosf(data.accel_Z/2.0f);
         x[1] = data.accel_Y * sin_halfangle / axis_norm;
         x[2] = -data.accel_X * sin_halfangle / axis_norm;
@@ -20,11 +21,10 @@ void IMU_filter::init_EKF_6axis(IMU_data data){
         x[3] = 0;
     }
     // After test. within 0.5 second pitch and roll will get to the right value when IMU facing up;
-
     //Since the weight of Q and R for all element should be the same
-    Q = 1;
-    R = 1000;
-    P[0] = {1000,0,0,0};
+    Q = 1; // Process noise covariance for model update
+    R = 1000; // measure noise
+    P[0] = {1000,0,0,0}; // Initial P matrix
     P[1] = {0,1000,0,0};
     P[2] = {0,0,1000,0};
     P[3] = {0,0,0,1000};    
