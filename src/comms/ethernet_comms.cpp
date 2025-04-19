@@ -1,9 +1,8 @@
 #include "ethernet_comms.hpp"
-#include "ethernet_packet.hpp"
 
 namespace Comms {
 
-bool EthernetComms::begin(uint32_t data_rate) {
+bool EthernetComms::init(uint32_t data_rate) {
 	// begin the ethernet library and verify the status of the line
 	uint8_t ethernet_status = qn::Ethernet.begin(m_teensy_ip, m_teensy_netmask, m_teensy_gateway);
 	if (!ethernet_status) {
@@ -69,13 +68,15 @@ bool EthernetComms::begin(uint32_t data_rate) {
 	// ethernet is now setup and udp server is online
 	Serial.printf("EthernetComms: Ethernet online!\n");
 
+	// set the initialized flag
+	m_initialized = true;
+
 	return true;
 }
 
-std::optional<EthernetPacket> EthernetComms::sendReceive(EthernetPacket& outgoing_packet) {
-	// call the library's loop function
-	// this progresses the ethernet stack allowing new data in/out
-	qn::Ethernet.loop();
+bool EthernetComms::send_packet(EthernetPacket& packet) {
+	// update the connection status if needed
+	check_connection();
 
 	// check if the last call to this function is within the regulation time
 	// this is to prevent the Teensy from running too fast and overloading the hardware
@@ -83,141 +84,31 @@ std::optional<EthernetPacket> EthernetComms::sendReceive(EthernetPacket& outgoin
 		return {};
 	}
 
-	// send the outgoing packet
-	send_packet(outgoing_packet);
-
-	// receive the incoming packet
-	EthernetPacket incoming_packet;
-	bool received = recv_packet(&incoming_packet);
-
-	// check whether the connection is still alive
-	check_connection();
+	m_last_send_time = micros();
 
 	// restart the regulation timer to indicate the next call to this function
 	m_regulation_timer.start();
-
-	if (received) {
-		// return the incoming packet
-		return incoming_packet;
-	}
-
-	// return an empty optional
-	return {};
-}
-
-EthernetPacket EthernetComms::get_incoming_packet() {
-	return m_incoming;
-}
-
-void EthernetComms::set_outgoing_packet(EthernetPacket& packet) {
-	m_outgoing = packet;
-}
-
-bool EthernetComms::is_connected() const {
-	return m_connected;
-}
-
-const EthernetStatus& EthernetComms::get_status() const {
-	return m_status;
-}
-
-uint32_t EthernetComms::get_regulation_time() const {
-	return m_regulation_time;
-}
-
-int EthernetComms::connect_jetson() {
-	// clear the packet buffers
-	m_incoming.clear();
-	m_outgoing.clear();
-
-	// assemble the packet to be a HANDSHAKE packet with the ACK flag set
-	m_outgoing.header.type = Comms::EthernetPacketType::HANDSHAKE;
-	m_outgoing.header.flags = Comms::EthernetPacketFlags::ACK;
-
-	uint32_t handshake_start = micros();
-
-	uint32_t last_loop = micros();
-
-	bool handshake = false;
-
-	// loop until handshake is complete or a timeout is reached
-	while (!handshake) {
-		// regulate time
-		// this is to prevent the Teensy from running too fast and overloading the hardware
-		if (micros() - last_loop < m_regulation_time)
-			continue;
-
-		// process the ethernet stack
-		qn::Ethernet.loop();
-
-		// if we havnt received a packet, keep trying
-		if (!recv_packet(&m_incoming))
-			continue;
-
-		// if we received a packet that is not a handshake, call it done
-		// this indicates that khadas received our ACK and is now sending normal data
-		// note that we will lose the first packet sent after a handshake, this is an acceptable loss
-		if (m_incoming.header.type != Comms::EthernetPacketType::HANDSHAKE) {
-			handshake = true;
-
-			// reset the buffers to prevent infinite running this handshake protocol
-			m_incoming.clear();
-			m_outgoing.clear();
-
-			// reset the comms status
-			m_status.packets_received = 0;
-			m_status.packets_received_failed = 0;
-			m_status.packets_sent = 0;
-			m_status.packets_sent_failed = 0;
-
-			// log the handshake time
-			m_status.handshake_time = micros();
-
-		#ifdef COMMS_DEBUG
-			Serial.printf("EthernetComms: Handshake took %lu us\n", m_status.handshake_time - handshake_start);
-		#endif
-
-			// return success
-			return 0;
-		}
-
-		// send our ACK packet
-		send_packet(m_outgoing);
-
-		// check to see if this handshake is taking too long and time it out to prevent Teensy from being soft locked
-		// this does not prevent Hive from just spamming the Teensy with handshake requests, although that should be impossible
-		// I have yet to see a handshake fail, so consider this a sanity check if nothing else
-		if (micros() - handshake_start >= m_handshake_timeout) {
-			Serial.printf("EthernetComms: Handshake failed: timeout!\n");
-			// return failure
-			return -1;
-		}
-	}
-
-	// return failure (program never reaches this point)
-	return -1;
-}
-
-bool EthernetComms::send_packet(EthernetPacket& packet) {
+	
 	// attempt to send the packet to the Jetson
-	bool send_status = m_udp_server.send(m_jetson_ip, m_jetson_port, packet.data(), Comms::ETHERNET_PACKET_MAX_SIZE);
+	bool send_status = m_udp_server.send(m_jetson_ip, m_jetson_port, packet.data_start(), Comms::ETHERNET_PACKET_MAX_SIZE);
 	if (!send_status) {
 		// log the fail, this almost always happens when the udp server is not "warmed up"
-		m_status.packets_sent_failed++;
 	#if defined(COMMS_DEBUG)
-		Serial.printf("EthernetComms: Comms: Send fail: %lu\n", m_status.packets_sent_failed);
+		Serial.printf("EthernetComms: Send fail\n");
 	#endif
 		return false;
 	} else {
 		// log the success
-		m_status.packets_sent++;
 		return true;
 	}
 
 	return false;
 }
 
-bool EthernetComms::recv_packet(EthernetPacket* packet) {
+bool EthernetComms::recv_packet(EthernetPacket& packet) {
+	// update the connection status if needed
+	check_connection();
+	
 	// attempt to receive a packet
 	// parsePacket returns the current size of the RX buffer
 	int current_buffer_size = m_udp_server.parsePacket();
@@ -228,26 +119,22 @@ bool EthernetComms::recv_packet(EthernetPacket* packet) {
 		return false;
 	} else if (current_buffer_size != Comms::ETHERNET_PACKET_MAX_SIZE) {
 		// half-read, log as a failure
-		m_status.packets_received_failed++;
 	#if defined(COMMS_DEBUG)
-		Serial.printf("EthernetComms: Comms: Recv fail: %d %lu\n", current_buffer_size, m_status.packets_received_failed);
+		Serial.printf("EthernetComms: Recv fail: %d\n", current_buffer_size);
 	#endif
 		return false;
 	} else {
-		// log the success
-		m_status.packets_received++;
-
 		// grab the data pointer
 		const uint8_t* packet_data = m_udp_server.data();
 		// this should never happen, but sanity check
 		if (packet_data == NULL) {
 		#if defined(COMMS_DEBUG)
-			Serial.printf("EthernetComms: Comms: Recv data NULL\n");
+			Serial.printf("EthernetComms: Recv data NULL\n");
 		#endif
 		}
 
 		// copy the data of the buffer into the receive packet
-		memcpy(packet, m_udp_server.data(), current_buffer_size);
+		memcpy(packet.data_start(), m_udp_server.data(), current_buffer_size);
 
 		// log this packet as the last packet received
 		m_last_recv_time = micros();
@@ -258,14 +145,53 @@ bool EthernetComms::recv_packet(EthernetPacket* packet) {
 	return false;
 }
 
+bool EthernetComms::is_connected() const {
+    return m_connected;
+}
+
+bool EthernetComms::is_initialized() const {
+	return m_initialized;
+}
+
+// std::optional<EthernetPacket> EthernetComms::sendReceive(EthernetPacket& outgoing_packet) {
+// 	// call the library's loop function
+// 	// this progresses the ethernet stack allowing new data in/out
+// 	qn::Ethernet.loop();
+
+// 	// check if the last call to this function is within the regulation time
+// 	// this is to prevent the Teensy from running too fast and overloading the hardware
+// 	if (m_regulation_timer.get_elapsed_micros_no_restart() < m_regulation_time) {
+// 		return {};
+// 	}
+
+// 	// send the outgoing packet
+// 	send_packet(outgoing_packet);
+
+// 	// receive the incoming packet
+// 	EthernetPacket incoming_packet;
+// 	bool received = recv_packet(&incoming_packet);
+
+// 	// check whether the connection is still alive
+// 	check_connection();
+
+// 	// restart the regulation timer to indicate the next call to this function
+// 	m_regulation_timer.start();
+
+// 	if (received) {
+// 		// return the incoming packet
+// 		return incoming_packet;
+// 	}
+
+// 	// return an empty optional
+// 	return {};
+// }
+
 void EthernetComms::check_connection() {
 	// if the last packet was received too long ago, timeout the connection
 	if (micros() - m_last_recv_time > m_connection_timeout) {
-	#ifdef COMMS_DEBUG
 		// this check ensures this is only printed once
 		if (m_connected)
 			Serial.printf("EthernetComms: Connection lost!\n");
-	#endif
 		// mark the connection as disconnected
 		m_connected = false;
 	} else {

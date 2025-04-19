@@ -18,9 +18,11 @@ struct HIDPacket {
     uint8_t data[HID_PACKET_PAYLOAD_SIZE] = { 0 };
 
     /// @brief The first byte of the packet itself
+    /// @return A pointer to the first byte of the packet
     uint8_t* data_start() { return reinterpret_cast<uint8_t*>(this); }
 
     /// @brief The first byte of the payload
+    /// @return A pointer to the first byte of the payload
     uint8_t* payload() { return data; }
 };
 

@@ -15,7 +15,6 @@
 
 #include <TeensyDebug.h>
 #include "sensors/LEDBoard.hpp"
-#include "sensor_constants.hpp"
 #include "SensorManager.hpp"
 
 #include "utils/watchdog.hpp"

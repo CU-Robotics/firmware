@@ -1,12 +1,13 @@
 #ifndef CONFIG_LAYER
 #define CONFIG_LAYER
 
-#include "comms/comms_layer.hpp"
-#include "controls/controller.hpp"
-#include "SDManager.hpp"
+#include "comms/comms_layer.hpp"        // for CommsLayer
+#include "controls/controller.hpp"      // for NUM_ROBOT_CONTROLLERS
+#include "SDManager.hpp"                // for SDManager
 
 #include <map>
 #include <string>
+
 #define CONFIG_LAYER_DEBUG
 
 #define NUM_SENSOR_VALUES 12
@@ -26,7 +27,7 @@
 #define CONFIG_PATH "/config.pack"
 
 // define DISABLE_REF_CONFIG_SAFETY_CHECK macro when running off of real robot (testing firmware away from actual robot)
-#define DISABLE_REF_CONFIG_SAFETY_CHECK 
+// #define DISABLE_REF_CONFIG_SAFETY_CHECK 
 
 /// @brief arbitrary cap on config packets that can be received (make sure it's enough)
 const int MAX_CONFIG_PACKETS = 64;
@@ -103,7 +104,7 @@ private:
 
 };
 
-/// @brief Handle seeking and reading configuration packets coming from khadas
+/// @brief Handle seeking and reading configuration packets coming from Hive
 class ConfigLayer {
 private:
     /// @brief array to save config packets

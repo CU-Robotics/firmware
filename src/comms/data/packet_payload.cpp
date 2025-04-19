@@ -1,13 +1,11 @@
 #include "packet_payload.hpp"
 
-#include <algorithm>    // for min
-#include <mutex>        // for std::lock_guard, std::mutex
-#include <string.h>     // for memset/memcpy
-#include <assert.h>     // for assert
+#include <algorithm>                        // for min
 
 #if defined(HIVE)
 #include <iostream>                         // for std::cout
 #include "modules/comms/comms_layer.hpp"    // for CommsLayer
+#include <mutex>                            // for std::lock_guard, std::mutex
 #elif defined(FIRMWARE)
 #include "comms/comms_layer.hpp"            // for CommsLayer
 #endif
@@ -92,14 +90,16 @@ void PacketPayload::add(CommsData* data) {
 
     switch (data->priority) {
     case Priority::High: {
-        if (high_priority_send_queue.size() <= MAX_QUEUE_SIZE) {
+        if (high_priority_send_queue.size() < MAX_QUEUE_SIZE) {
             high_priority_send_queue.push(data);
+            break;
         } else {
-            delete data;
+            // since we could not successfully add to the high priority queue,
+            // we intentionally fall through to the medium priority queue
+            [[fallthrough]];
         }
-        break;
     } case Priority::Medium: {
-        if (medium_priority_send_queue.size() <= MAX_QUEUE_SIZE) {
+        if (medium_priority_send_queue.size() < MAX_QUEUE_SIZE) {
             medium_priority_send_queue.push(data);
         } else {
             delete data;
@@ -108,7 +108,7 @@ void PacketPayload::add(CommsData* data) {
     } case Priority::Logging: {
         // a logging priority item must be of type logging data since we grab data from logs dynamically (handled in this file)
         LoggingData* logging = static_cast<LoggingData*>(data);
-        if (logging_send_queue.size() <= MAX_QUEUE_SIZE) {
+        if (logging_send_queue.size() < MAX_QUEUE_SIZE) {
             logging_send_queue.push(logging);
         } else {
             delete data;
@@ -151,6 +151,18 @@ void PacketPayload::clear_queues() {
 
     // clear the raw data buffer
     clear_raw_data();
+}
+
+uint16_t PacketPayload::get_high_priority_queue_size() const {
+    return high_priority_send_queue.size();
+}
+
+uint16_t PacketPayload::get_medium_priority_queue_size() const {
+    return medium_priority_send_queue.size();
+}
+
+uint16_t PacketPayload::get_logging_queue_size() const {
+    return logging_send_queue.size();
 }
 
 void PacketPayload::clear_raw_data() {
@@ -573,7 +585,7 @@ TEST_CASE("Testing packet payload") {
         data.w = 0x12345678;
 
         // set data to have a bad type label
-        data.type_label = static_cast<Comms::TypeLabel>(15);
+        data.type_label = static_cast<Comms::TypeLabel>(0xFF);
 
         // add and construct
         payload.add(new TestData(data));
@@ -597,6 +609,50 @@ TEST_CASE("Testing packet payload") {
 
         data.priority = Comms::Priority::Logging;
         payload.add(new TestData(data));
+    }
+
+    SUBCASE("Clear queues") {
+        TestData high_priority_data;
+
+        TestData medium_priority_data;
+        medium_priority_data.priority = Comms::Priority::Medium;
+        
+        Comms::LoggingData logging_data;
+
+        payload.add(new TestData(medium_priority_data));
+        payload.add(new TestData(high_priority_data));
+        payload.add(new Comms::LoggingData(logging_data));
+
+        // clear the queues
+        payload.clear_queues();
+
+        payload.construct_data();
+
+        uint8_t empty_buffer[PACKET_SIZE] = { 0 };
+
+        // ensure the raw data buffer is empty
+        REQUIRE(memcmp(payload.data(), empty_buffer, PACKET_SIZE) == 0);
+    }
+
+    SUBCASE("Testing adding past the cap") {
+        TestData high_priority_data;
+
+        TestData medium_priority_data;
+        medium_priority_data.priority = Comms::Priority::Medium;
+        
+        Comms::LoggingData logging_data;
+
+        // hit the cap on all three queues
+        for (int i = 0; i < Comms::PacketPayload::MAX_QUEUE_SIZE + 1; i++) {
+            payload.add(new TestData(high_priority_data));
+            payload.add(new TestData(medium_priority_data));
+            payload.add(new Comms::LoggingData(logging_data));
+        }
+
+        // ensure the queues are at max size
+        REQUIRE(payload.get_high_priority_queue_size() == Comms::PacketPayload::MAX_QUEUE_SIZE);
+        REQUIRE(payload.get_medium_priority_queue_size() == Comms::PacketPayload::MAX_QUEUE_SIZE);
+        REQUIRE(payload.get_logging_queue_size() == Comms::PacketPayload::MAX_QUEUE_SIZE);
     }
 }
 

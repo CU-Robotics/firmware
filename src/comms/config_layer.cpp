@@ -1,8 +1,6 @@
 #include "config_layer.hpp"
-#include "comms_layer.hpp"
 
-#include "comms/data/sendable.hpp"
-#include "hid_comms.hpp"
+#include "comms/data/sendable.hpp"  // for Sendable<>
 
 /// @brief This resets the whole processor and kicks it back to program entry (teensy4/startup.c)
 /// @param void specify no arguments (needed in C)
@@ -157,7 +155,7 @@ void ConfigLayer::process() {
         // received the initial config packet
         if (in_section.section_id == -1) {
             /*
-           the khadas sends a config packet with its raw data set to a byte
+           Hive sends a config packet with its raw data set to a byte
            array where each index corresponds to a YAML section, and the value
            at that index indicates the number of subsections for the given section
            */

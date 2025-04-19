@@ -1,25 +1,21 @@
 #pragma once
 
-#include <queue>                // for std::queue
+#include <queue>                                // for std::queue
 
 #if defined(HIVE)
-#include <stdexcept>            // for std::runtime_error
+#include <stdexcept>                            // for std::runtime_error
 #elif defined(FIRMWARE)
-#include <cassert>              // for assert
+#include <cassert>                              // for assert
 #endif
 
 #if defined(HIVE)
 #include <doctest/doctest.h>                    // for TEST_CASE
 #include "modules/comms/data/comms_data.hpp"    // for CommsData
 #include "modules/comms/data/logging_data.hpp"  // for LoggingData
-#include "modules/comms/data/firmware_data.hpp" // for FirmwareData
-#include "modules/comms/data/hive_data.hpp"     // for HiveData
-#include "modules/hive/environment.hpp"         // for Hive
+#include <mutex>                                // for std::mutex
 #elif defined(FIRMWARE)
 #include "comms/data/comms_data.hpp"            // for CommsData
 #include "comms/data/logging_data.hpp"          // for LoggingData
-#include "comms/data/hive_data.hpp"             // for HiveData
-#include "comms/data/firmware_data.hpp"         // for FirmwareData
 #include <Arduino.h>                            // for Serial
 #endif
 
@@ -28,6 +24,9 @@ namespace Comms {
 /// @brief Constructs and stores the data part of a packet we want to send over a physical layer.
 class PacketPayload {
 public:
+    /// @brief The maximum size of the queue.
+    constexpr static uint16_t MAX_QUEUE_SIZE = 50;
+
     /// @brief Default constructor.
     PacketPayload() = default;
 
@@ -65,6 +64,18 @@ public:
     /// @brief Clear the queues and the raw data buffer.
     /// @note This is thread safe
     void clear_queues();
+
+    /// @brief Get the size of the high priority send queue.
+    /// @return The size of the high priority send queue.
+    uint16_t get_high_priority_queue_size() const;
+
+    /// @brief Get the size of the medium priority send queue.
+    /// @return The size of the medium priority send queue.
+    uint16_t get_medium_priority_queue_size() const;
+    
+    /// @brief Get the size of the logging send queue.
+    /// @return The size of the logging send queue.
+    uint16_t get_logging_queue_size() const;
 
 private:
     /// @brief Clear the raw data buffer.
@@ -112,9 +123,6 @@ private:
     uint16_t max_data_size = 0;
     /// @brief The remaining size of the data packet.
     uint16_t remaining_data_size = 0;
-
-    /// @brief The maximum size of the queue.
-    constexpr static uint16_t MAX_QUEUE_SIZE = 50;
 
 #if defined(HIVE)
     /// @brief Mutex to protect concurrent accesses to this PacketPayload

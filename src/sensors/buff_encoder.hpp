@@ -4,7 +4,6 @@
 #include <Arduino.h>
 #include <SPI.h>
 #include "Sensor.hpp"
-#include "sensor_constants.hpp"
 #include "data_structs.hpp"
 
 // Encoder Registers and Config

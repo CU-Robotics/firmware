@@ -1,6 +1,5 @@
 #pragma once
 
-// shared packet header
 #include <stdint.h>	    // uintX_t
 #include <string.h>	    // memset
 
@@ -11,10 +10,13 @@ enum class PacketFlags : uint8_t {
     CONFIGURED  = 1 << 0,    // 0x01
 };
 
+/// @brief The start of frame (SOF) byte
+constexpr uint8_t PACKET_SOF = 0xAB;
+
 /// @brief Comms packet header struct
 struct PacketHeader {
     /// @brief Starter byte (Start of Frame)
-    uint8_t SOF = 0xAB; // must be first
+    uint8_t SOF = PACKET_SOF; // must be first
     /// @brief Info flags for this packet
     PacketFlags flags = PacketFlags::NONE;
     /// @brief A sequential ID of this packet. Value is incremented every time a packet is sent

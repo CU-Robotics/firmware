@@ -2,7 +2,6 @@
 #define SENSOR_MANAGER_HPP
 
 #include "Sensor.hpp"
-#include "sensor_constants.hpp"
 #include "config_layer.hpp"
 #include "d200.hpp"
 #include "dr16.hpp"

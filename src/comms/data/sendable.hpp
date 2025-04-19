@@ -5,8 +5,6 @@
 #if defined(HIVE)
 #include "modules/hive/environment.hpp"         // for Hive::env
 #include "modules/comms/comms_layer.hpp"        // for CommsLayer
-#include "modules/comms/data/firmware_data.hpp" // for TestData
-#include "modules/hive/robot_info.hpp"          // for Hive::RobotInfo
 #elif defined(FIRMWARE)
 #include "comms_layer.hpp"                      // for CommsLayer
 #endif
