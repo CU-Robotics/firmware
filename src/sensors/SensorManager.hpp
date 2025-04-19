@@ -74,9 +74,6 @@ public:
         return ref;
     }
 
-    /// @brief Calibrate the IMUs
-    void calibrate_imus();
-
     // TODO: Create function that will create a struct to work with the new comms
 
 private:

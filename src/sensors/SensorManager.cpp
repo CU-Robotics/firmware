@@ -46,9 +46,8 @@ void SensorManager::init(const Config* config_data) {
         icm_sensors[i] = new ICM20649();
         icm_sensors[i]->init(icm_sensors[i]->CommunicationProtocol::SPI);
         icm_sensors[i]->set_gyro_range(4000);
-
+        icm_sensors[i]->calibration_all();
     }
-    calibrate_imus();
 
     // initialize rev encoders
     for (int i = 0; i < rev_sensor_count; i++) {
@@ -78,7 +77,8 @@ void SensorManager::read() {
     }
     for (int i = 0; i < icm_sensor_count; i++) {
         icm_sensors[i]->read();
-        // icm_sensors[i]->print();
+        icm_sensors[i]->fix_raw_data();
+        icm_sensors[i]->print();
     }
 
     for (int i = 0; i < rev_sensor_count; i++) {
@@ -124,31 +124,6 @@ D200LD14P* SensorManager::get_lidar_sensor(int index) {
     } else {
         return nullptr;
     }
-}
-
-void SensorManager::calibrate_imus() {
-    Serial.println("Calibrating IMU's...");
-    float sum_x = 0;
-    float sum_y = 0;
-    float sum_z = 0;
-
-    float sum_accel_x = 0;
-    float sum_accel_y = 0;
-    float sum_accel_z = 0;
-
-    for (int i = 0; i < NUM_IMU_CALIBRATION; i++) {
-        icm_sensors[0]->read();
-        sum_x += icm_sensors[0]->get_gyro_X();
-        sum_y += icm_sensors[0]->get_gyro_Y();
-        sum_z += icm_sensors[0]->get_gyro_Z();
-
-        sum_accel_x += icm_sensors[0]->get_accel_X();
-        sum_accel_y += icm_sensors[0]->get_accel_Y();
-        sum_accel_z += icm_sensors[0]->get_accel_Z();
-    }
-
-    Serial.printf("Calibrated offsets: %f, %f, %f\n", sum_x / NUM_IMU_CALIBRATION, sum_y / NUM_IMU_CALIBRATION, sum_z / NUM_IMU_CALIBRATION);
-    icm_sensors[0]->set_offsets(sum_x / NUM_IMU_CALIBRATION, sum_y / NUM_IMU_CALIBRATION, sum_z / NUM_IMU_CALIBRATION);
 }
 
 int SensorManager::get_num_sensors(SensorType sensor_type) {
