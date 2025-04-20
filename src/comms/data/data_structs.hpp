@@ -144,11 +144,11 @@ struct TransmitterData : Comms::CommsData {
     /// Sensor ID.
 	uint8_t id;
     /// mouse x velocity
-	std::optional<int16_t> mouse_x = {};
+	std::optional<float> mouse_x = {};
     /// mouse y velocity
-	std::optional<int16_t> mouse_y = {};
+	std::optional<float> mouse_y = {};
     /// mouse z velocity
-	std::optional<int16_t> mouse_z = {};
+	std::optional<float> mouse_z = {};
     /// left mouse button status
 	std::optional<bool> l_mouse_button = {};
     /// right mouse button status
