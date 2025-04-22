@@ -37,6 +37,9 @@ void ControllerManager::init_controller(int controller_type, const float gains[N
     case 7:
         controllers[num_controllers] = new SwitcherController();
         break;
+    case 9:
+        controllers[num_controllers] = new EngineerArmController();
+        break;
     default:
         if (controllers[num_controllers] == nullptr) controllers[num_controllers] = new NullController();
         break;
@@ -53,12 +56,12 @@ void ControllerManager::step(float macro_reference[STATE_LEN][3], float macro_es
         // grab the motor outputs for this controller
         controllers[i]->step(macro_reference, macro_estimate, micro_estimate, outputs);
 
-        Serial.printf("Controller %d\n", i);
+        // Serial.printf("Controller %d\n", i);
         
         // iterate through all the motors this controller sets
         for (size_t j = 0; j < CAN_MAX_MOTORS + 1; j++) {
             if (config_data->controller_info[i][j + 1] < 0) break;
-            Serial.printf("\tMotor %d: %f\n", config_data->controller_info[i][j + 1], outputs[j]);
+            // Serial.printf("\tMotor %d: %f\n", config_data->controller_info[i][j + 1], outputs[j]);
             actuator_write(config_data->controller_info[i][j + 1], outputs[j]);
         }
     }

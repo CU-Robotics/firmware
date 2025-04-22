@@ -1,4 +1,5 @@
 #include "estimator_manager.hpp"
+#include "estimator.hpp"
 
 EstimatorManager::~EstimatorManager() {
     Serial.println("Ending SPI");
@@ -53,6 +54,12 @@ void EstimatorManager::init_estimator(int estimator_id) {
     case 6:
         estimators[num_estimators++] = new GimbalEstimatorNoOdom(*config_data, sensor_manager, can);        
         break;
+    case 8:
+        estimators[num_estimators++] = new EngChassisYawEstimator(*config_data, sensor_manager, can);        
+        break;
+    case 9:
+        estimators[num_estimators++] = new EngineerArmEstimator(can);        
+        break;
     default:
         break;
     }
@@ -63,7 +70,6 @@ void EstimatorManager::step(float macro_outputs[STATE_LEN][3], float micro_outpu
     float curr_state[STATE_LEN][3] = { 0 };
     memcpy(curr_state, macro_outputs, sizeof(curr_state));
     clear_outputs(macro_outputs, micro_outputs);
-
 
     for (int i = 0; i < num_estimators; i++) {
         float macro_states[STATE_LEN][3] = { 0 };

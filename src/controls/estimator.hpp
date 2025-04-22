@@ -541,4 +541,167 @@ public:
     void step_states(float output[CAN_MAX_MOTORS][MICRO_STATE_LEN], float curr_state[CAN_MAX_MOTORS][MICRO_STATE_LEN], int override);
 };
 
+/// @brief Estimate the yaw, pitch, and chassis heading
+struct EngChassisYawEstimator : public Estimator {
+    private:
+        /// @brief yaw encoder offset for 0 radians
+        float YAW_ENCODER_OFFSET; // input variables
+        
+        /// @brief calculated pitch angle
+        float pitch_angle;
+        /// @brief calculated yaw angle
+        float yaw_angle;
+        /// @brief calculated roll angle
+        float roll_angle;
+        /// @brief calculated chassis angle
+        float chassis_angle;
+    
+        /// @brief yaw imu vector
+        float imu_yaw_axis_vector[3];
+    
+        /// @brief pitch imu vector
+        float imu_pitch_axis_vector[3];
+    
+        /// @brief gravity pitch angle
+        float starting_pitch_angle;
+        /// @brief yaw axis in spherical coords
+        float yaw_axis_spherical[3];
+    
+        /// @brief pitch axis in spherical coords
+        float pitch_axis_spherical[3];
+    
+        /// @brief roll axis in spherical coords
+        float roll_axis_spherical[3];
+    
+        /// @brief yaw axis unit vector
+        float yaw_axis_unitvector[3];
+    
+        /// @brief pitch axis unit vector
+        float pitch_axis_unitvector[3];
+    
+        /// @brief roll axis unit vector
+        float roll_axis_unitvector[3];
+    
+        /// @brief global relative yaw
+        float yaw_axis_global[3];
+    
+        /// @brief global relative pitch
+        float pitch_axis_global[3];
+    
+        /// @brief global relative roll
+        float roll_axis_global[3];
+        /// @brief current calculated yaw velocity
+        float current_yaw_velocity = 0;
+        /// @brief previous calculated yaw velocity
+        float previous_yaw_velocity = 0;
+        /// @brief current calculated pitch velocity
+        float current_pitch_velocity = 0;
+        /// @brief previous calculated pitch velocity
+        float previous_pitch_velocity = 0;
+        /// @brief current calculated roll velocity
+        float current_roll_velocity = 0;
+        /// @brief previous calculated roll velocity
+        float previous_roll_velocity = 0;
+        /// @brief global relative yaw velocity
+        float global_yaw_velocity = 0;
+        /// @brief global relative roll velocity
+        float global_roll_velocity = 0;
+        /// @brief global relative pitch velocity
+        float global_pitch_velocity = 0;
+        /// @brief global pitch angle
+        float global_pitch_angle = 1.92;
+        /// @brief global yaw angle
+        float global_yaw_angle = 0;
+        /// @brief global roll angle
+        float global_roll_angle = 0;
+        /// @brief current rev encoder raw value
+        float curr_rev_raw[3] = { 0 };
+    
+        /// @brief previous rev encoder raw value
+        float prev_rev_raw[3] = { 0 };
+    
+        /// @brief total meters travelled by each odom wheel
+        float total_odom_pos[3] = { 0 };
+    
+        /// @brief rev encoder difference
+        float rev_diff[3] = { 0 };
+    
+        /// @brief odom pos difference
+        float odom_pos_diff[3] = { 0 };
+        /// @brief previous chassis angle
+        float prev_chassis_angle = 0;
+        /// @brief odom pod offset from the center of the robot
+        float odom_axis_offset_x;
+        /// @brief odom pod offset from the center of the robot
+        float odom_axis_offset_y;
+        /// @brief odom pod angle offset radians
+        float odom_angle_offset = 0.1745; // 10 degrees
+        // float odom_angle_offset = 0;
+        /// @brief odom wheel radius
+        float odom_wheel_radius;
+        /// @brief initial chassis angle
+        float initial_chassis_angle = 0;
+        /// @brief counts one time to set the starting chassis angle
+        int count1 = 0;
+        /// @brief delta time
+        float dt = 0;
+    
+        /// @brief buff encoder on the yaw
+        BuffEncoder* buff_enc_yaw;
+        /// @brief can pointer from EstimatorManager
+        CANManager* can;
+        /// @brief icm imu
+        ICM20649* icm_imu;
+    
+        /// @brief position estimate to store position after integrating used for chassis odometry
+        float pos_estimate[3] = { 0,0,0 };
+    
+        /// @brief previous pose to store the previous pose for chassis odometry
+        float previous_pos[3] = { 0,0,0 };
+    
+    public:
+        /// @brief estimate the state of the gimbal
+        /// @param config_data inputted sensor values from khadas yaml
+        /// @param sensor_manager sensor manager object 
+        /// @param can can data from Estimator Manager
+        EngChassisYawEstimator(Config config_data, SensorManager* sensor_manager, CANManager* can);
+      
+        /// @brief calculate estimated states and add to output array
+        /// @param output output array to add estimated states to
+        /// @param curr_state current state array to update with new state
+        /// @param override true if we want to override the current state with the new state
+        void step_states(float output[STATE_LEN][3], float curr_state[STATE_LEN][3], int override) override;
+    };
+
+    /// @brief Estimate the state of the flywheels as meters/second of balls exiting the barrel.
+struct EngineerArmEstimator : public Estimator {
+    private:
+        /// @brief can pointer from EstimatorManager
+        CANManager* can;
+        /// @brief encoder offset to make the pitch encoder 0 at the bottom
+        float pitch_encoder_offset = 0;
+        /// @brief encoder offset to make the linear encoder 0 at the bottom
+        float linear_encoder_offset = 0;
+        /// @brief encoder offset to make the pitch2 encoder 0 at the correct position
+        float pitch2_encoder_offset = 0;
+        /// @brief encoder offset to make the yaw2 encoder 0 at the correct position
+        float yaw2_encoder_offset = 0;
+        /// @brief encoder offset to make the pitch3 encoder 0 at the correct position
+        float pitch3_encoder_offset = 0;
+        /// @brief encoder offset to make the roll encoder 0 at the correct position
+        float roll_encoder_offset = -9.4;
+    
+    public:
+        /// @brief make new flywheel estimator and set can data pointer and num states
+        /// @param can can pointer from EstimatorManager
+        EngineerArmEstimator(CANManager* can);
+    
+        ~EngineerArmEstimator() { };
+    
+        /// @brief generate estimated states and replace in output array
+        /// @param output array to be updated with the calculated states
+        /// @param curr_state current state of the flywheel
+        /// @param override override flag
+        void step_states(float output[STATE_LEN][3], float curr_state[STATE_LEN][3], int override);
+    };
 #endif

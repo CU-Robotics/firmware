@@ -32,7 +32,7 @@ struct MotorState {
     float speed = 0;
     /// @brief Motor specific position output. The unit is dependent on the motor but it is normally in a range corresponding to it's encoder
     // TODO: This should be in radians and be a float
-    uint16_t position = 0;
+    float position = 0;
     /// @brief Temperature of the motor in degrees Celsius
     /// @note This is signed but it shouldn't matter since normal temperatures wouldn't overflow to negative
     int8_t temperature = 0;
@@ -83,7 +83,7 @@ public:
 
     /// @brief Print the current state of the motor
     virtual void print_state() const {
-        Serial.printf("Bus: %x\tID: %x\tTemp: %.2dc\tTorque: % 4.3f%%\tSpeed: % 6.2frad/s\tPos: %5.5d?\n", m_bus_id, m_id, m_state.temperature, m_state.torque, m_state.speed, m_state.position);
+        Serial.printf("Bus: %x\tID: %x\tTemp: %.2dc\tTorque: % 4.3f%%\tSpeed: % 6.2frad/s\tPos: %5.5f?\n", m_bus_id, m_id, m_state.temperature, m_state.torque, m_state.speed, m_state.position);
     }
 
 public:

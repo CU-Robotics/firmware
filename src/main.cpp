@@ -85,6 +85,12 @@ int main() {
 
     print_logo();
 
+    pinMode(24, OUTPUT);
+    pinMode(25, OUTPUT);
+    digitalWrite(24, LOW);
+    digitalWrite(25, LOW);
+    
+    Serial.printf("yo\n");
     // check to see if there is a crash report, and if so, print it repeatedly over Serial
     // in the future, we'll send this directly over comms
     if (CrashReport) {
@@ -260,13 +266,13 @@ int main() {
         }
 
         // print dr16
-        Serial.printf("DR16:\n\t");
-        dr16.print();
+        // Serial.printf("DR16:\n\t");
+        // dr16.print();
 
-        Serial.printf("Target state:\n");
-        for (int i = 0; i < 8; i++) {
-            Serial.printf("\t%d: %f %f %f\n", i, target_state[i][0], target_state[i][1], target_state[i][2]);
-        }
+        // Serial.printf("Target state:\n");
+        // for (int i = 0; i < 8; i++) {
+        //     Serial.printf("\t%d: %f %f %f\n", i, target_state[i][0], target_state[i][1], target_state[i][2]);
+        // }
 
         // override temp state if needed
         if (incoming->get_hive_override_request() == 1) {
@@ -285,25 +291,25 @@ int main() {
             count_one++;
         }
 
-        Serial.printf("Estimated state:\n");
-        for (int i = 0; i < 8; i++) {
-            Serial.printf("\t%d: %f %f %f\n", i, temp_state[i][0], temp_state[i][1], temp_state[i][2]);
-        }
+        // Serial.printf("Estimated state:\n");
+        // for (int i = 5; i < 11; i++) {
+        //     Serial.printf("\t%d: %f %f %f\n", i, temp_state[i][0], temp_state[i][1], temp_state[i][2]);
+        // }
 
         // reference govern
         governor.set_estimate(temp_state);
         governor.step_reference(target_state, config->governor_types);
         governor.get_reference(temp_reference);
 
-        Serial.printf("Reference state:\n");
-        for (int i = 0; i < 8; i++) {
-            Serial.printf("\t%d: %f %f %f\n", i, temp_reference[i][0], temp_reference[i][1], temp_reference[i][2]);
-        }
+        // Serial.printf("Reference state:\n");
+        // for (int i = 0; i < 8; i++) {
+        //     Serial.printf("\t%d: %f %f %f\n", i, temp_reference[i][0], temp_reference[i][1], temp_reference[i][2]);
+        // }
 
         // generate motor outputs from controls
         controller_manager.step(temp_reference, temp_state, temp_micro_state);
 
-        can.print_state();
+        // can.print_state();
 
         // construct sensor data packet
         SensorData sensor_data;
@@ -334,7 +340,7 @@ int main() {
 
         // check whether this was a slow loop or not
         float dt = stall_timer.delta();
-        Serial.printf("Loop %d, dt: %f\n", loopc, dt);
+        // Serial.printf("Loop %d, dt: %f\n", loopc, dt);
         if (dt > 0.002) {
             // zero the can bus just in case
             can.issue_safety_mode();
@@ -349,12 +355,12 @@ int main() {
         if (dr16.is_connected() && (dr16.get_l_switch() == 2 || dr16.get_l_switch() == 3) && config_layer.is_configured() && !is_slow_loop) {
             // SAFETY OFF
             can.write();
-            Serial.printf("Can write\n");
+            // Serial.printf("Can write\n");
         } else {
             // SAFETY ON
             // TODO: Reset all controller integrators here
             can.issue_safety_mode();
-            Serial.printf("Can zero\n");
+            // Serial.printf("Can zero\n");
         }
 
         // LED heartbeat -- linked to loop count to reveal slowdowns and freezes.

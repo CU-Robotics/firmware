@@ -294,3 +294,112 @@ void SwitcherController::step(float reference[STATE_LEN][3], float estimate[STAT
 
     outputs[0] = output;
 }
+
+void EngineerArmController::step(float reference[STATE_LEN][3], float estimate[STATE_LEN][3], float micro_estimate[CAN_MAX_MOTORS][MICRO_STATE_LEN], float outputs[CAN_MAX_MOTORS]) {
+    float dt = timer.delta();
+    
+    // Pitch controller
+    pid_pitch_position.K[0] = gains[0];
+    pid_pitch_position.K[1] = 0;
+    pid_pitch_position.K[2] = 0;
+    pid_pitch_velocity.K[0] = gains[1];
+    pid_pitch_velocity.K[1] = 0;
+    pid_pitch_velocity.K[2] = 0;
+    // set the setpoint and measurement for the pitch controller
+    // Convert the reference and estimate to the linkage input 
+    // pid_pitch_position.setpoint = to_pitch_linkage_angle(reference[4][0]);
+    // pid_pitch_position.measurement = to_pitch_linkage_angle(estimate[4][0]);
+    pid_pitch_velocity.setpoint = reference[4][1];
+    pid_pitch_velocity.measurement = estimate[4][1];
+    // calculate the output for the pitch controller
+    // float pitch_output = pid_pitch_position.filter(dt, true, false) + pid_pitch_velocity.filter(dt, true, false);
+   
+    // outputs[0] = pitch_output;
+
+    // Linear contoller
+    pid_linear_position.K[0] = gains[2];
+    pid_linear_position.K[1] = 0;
+    pid_linear_position.K[2] = 0;
+    pid_linear_velocity.K[0] = gains[3];
+    pid_linear_velocity.K[1] = 0;
+    pid_linear_velocity.K[2] = 0;
+    // set the setpoint and measurement for the linear controller
+    // Convert the reference and estimate to the linkage input
+    // pid_linear_position.setpoint = to_linear_linkage_angle(reference[4][0]);
+    // pid_linear_position.measurement = to_linear_linkage_angle(estimate[4][0]);
+    pid_linear_velocity.setpoint = reference[4][1];
+    pid_linear_velocity.measurement = estimate[4][1];
+    // calculate the output for the linear controller
+    // float linear_output = pid_linear_position.filter(dt, true, false) + pid_linear_velocity.filter(dt, true, false);
+
+    // outputs[1] = linear_output;
+
+    // Pitch2 controller
+    pid_pitch2_position.K[0] = gains[4];
+    pid_pitch2_position.K[1] = 0;
+    pid_pitch2_position.K[2] = 0;
+    pid_pitch2_velocity.K[0] = gains[5];
+    pid_pitch2_velocity.K[1] = 0;
+    pid_pitch2_velocity.K[2] = 0;
+    // set the setpoint and measurement for the pitch2 controller
+    pid_pitch2_position.setpoint = reference[4][0];
+    pid_pitch2_position.measurement = estimate[4][0];
+    pid_pitch2_velocity.setpoint = reference[4][1];
+    pid_pitch2_velocity.measurement = estimate[4][1];
+    // calculate the output for the pitch2 controller
+    float pitch2_output = pid_pitch2_position.filter(dt, true, false) + pid_pitch2_velocity.filter(dt, true, false);
+    outputs[2] = pitch2_output;
+
+    // yaw2 controller
+    pid_yaw2_position.K[0] = gains[6];
+    pid_yaw2_position.K[1] = 0;
+    pid_yaw2_position.K[2] = 0;
+    pid_yaw2_velocity.K[0] = gains[7];
+    pid_yaw2_velocity.K[1] = 0;
+    pid_yaw2_velocity.K[2] = 0;
+    // set the setpoint and measurement for the yaw2 controller
+    pid_yaw2_position.setpoint = reference[4][0];
+    pid_yaw2_position.measurement = estimate[4][0];
+    pid_yaw2_velocity.setpoint = reference[4][1];
+    pid_yaw2_velocity.measurement = estimate[4][1];
+    // calculate the output for the yaw2 controller
+    float yaw2_output = pid_yaw2_position.filter(dt, true, false) + pid_yaw2_velocity.filter(dt, true, false);
+    outputs[3] = yaw2_output;
+
+    // Pitch3 controller
+    pid_pitch3_position.K[0] = gains[8];
+    pid_pitch3_position.K[1] = 0;
+    pid_pitch3_position.K[2] = 0;
+    pid_pitch3_velocity.K[0] = gains[9];
+    pid_pitch3_velocity.K[1] = 0;
+    pid_pitch3_velocity.K[2] = 0;
+    // set the setpoint and measurement for the pitch3 controller
+    pid_pitch3_position.setpoint = reference[4][0];
+    pid_pitch3_position.measurement = estimate[4][0];
+    pid_pitch3_velocity.setpoint = reference[4][1];
+    pid_pitch3_velocity.measurement = estimate[4][1];
+    // calculate the output for the pitch3 controller
+    float pitch3_output = pid_pitch3_position.filter(dt, true, false) + pid_pitch3_velocity.filter(dt, true, false);
+    outputs[4] = pitch3_output;
+
+    // roll controller
+    pid_roll_position.K[0] = gains[10];
+    pid_roll_position.K[1] = 0;
+    pid_roll_position.K[2] = 0;
+    pid_roll_velocity.K[0] = gains[11];
+    pid_roll_velocity.K[1] = 0;
+    pid_roll_velocity.K[2] = 0;
+    // set the setpoint and measurement for the roll controller
+    pid_roll_position.setpoint = reference[4][0];
+    pid_roll_position.measurement = estimate[4][0];
+    pid_roll_velocity.setpoint = reference[4][1];
+    pid_roll_velocity.measurement = estimate[4][1];
+    // calculate the output for the roll controller
+    float roll_output = pid_roll_position.filter(dt, true, false) + pid_roll_velocity.filter(dt, true, false);
+    outputs[5] = roll_output;
+
+    for(int i = 0; i < 6; i++){
+        outputs[i] = constrain(outputs[i], -1.0, 1.0);
+    }
+    Serial.printf("Pitch output: %f, Linear output: %f, Pitch2 output: %f, Yaw2 output: %f, Pitch3 output: %f, Roll output: %f\n", outputs[0], outputs[1], outputs[2], outputs[3], outputs[4], outputs[5]);
+}
