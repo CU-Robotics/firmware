@@ -16,10 +16,18 @@ void deleteLayer(DeleteOperation deleteOperation, uint8_t layer) {
     memcpy(robotInteraction.data, &deleteLayerData, sizeof(DeleteLayerData)); // copy the data to the packet
 
     // put the robotInteraction packet into a FrameData
-    FrameData frameData {};
-    memcpy(frameData.data, &robotInteraction, sizeof(RobotInteraction)); // copy the packet data to frameData
+    FrameData frameData = {};
+    uint8_t index = 0;
+    memcpy(frameData.data + index, &robotInteraction.content_id, sizeof(robotInteraction.content_id)); // copy the content_id
+    index += sizeof(robotInteraction.content_id);
+    memcpy(frameData.data + index, &robotInteraction.sender_id, sizeof(robotInteraction.sender_id)); // copy the sender_id
+    index += sizeof(robotInteraction.sender_id);
+    memcpy(frameData.data + index, &robotInteraction.receiver_id, sizeof(robotInteraction.receiver_id)); // copy the receiver_id
+    index += sizeof(robotInteraction.receiver_id);
+    memcpy(frameData.data + index, &robotInteraction.data, robotInteraction.size); // copy the data
+    index += robotInteraction.size;
 
-    ref->write(&frameData, sizeof(frameData)); // send the frameData to the ref
+    ref->write(&frameData, index); // send the frameData to the ref
 }
 
 void drawOneGraphic(GraphicData graphicData) {

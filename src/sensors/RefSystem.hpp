@@ -85,7 +85,7 @@ public:
 
     /// @brief Send a pre-constructed packet to Ref
     /// @param frameData Pointer to the FrameData structure containing the packet to be sent
-    /// @param length The total size of the packet, including header/tail
+    /// @param length The size of the data to be sent, not including the header and tail
     /// @note Re-computes the CRC, so no need to do it yourself
     void write(FrameData* frameData, uint8_t length);
 

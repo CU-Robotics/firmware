@@ -52,23 +52,40 @@ void RefSystem::write(FrameData* frameData, uint8_t length) {
         return;
     }
 
-    // make a new frameData, limited to 113 bytes (max for RobotInteraction data)
-    FrameData cappedFrameData {};
-    memcpy(&cappedFrameData, frameData, 113);
+    uint8_t raw_packet[REF_MAX_PACKET_SIZE] = { 0 };
+    uint8_t index = 0;
 
     // make a FrameHeader
     FrameHeader header {};
     header.SOF = 0xA5; // set SOF
-    header.data_length = sizeof(cappedFrameData);
+    header.data_length = length; // set length
     header.sequence = get_seq(); // set SEQ
     header.CRC = generateCRC8(reinterpret_cast<uint8_t*>(&header), sizeof(header));
 
+    // set header
+    memcpy(raw_packet + index, &header, sizeof(FrameHeader));
+    index += sizeof(FrameHeader);
+
+    // set command ID
+    uint16_t command_id = 0x0301;
+    memcpy(raw_packet + index, &command_id, sizeof(command_id));
+    index += sizeof(command_id);
+
+    // set data
+    memcpy(raw_packet + index, frameData->data, length);
+    index += length;
+
+    // set CRC
+    uint16_t footerCRC = generateCRC16(raw_packet, index);
+    memcpy(raw_packet + index, &footerCRC, sizeof(uint16_t));
+    index += sizeof(uint16_t);
+
     // make a Frame
-    Frame frame {};
-    frame.header = header;
-    frame.commandID = 0x301;
-    frame.data = cappedFrameData;
-    frame.CRC = generateCRC16(frame.data.data, sizeof(frame.data.data));
+    // Frame frame {};
+    // frame.header = header;
+    // frame.commandID = 0x301;
+    // frame.data = *frameData;
+    // frame.CRC = generateCRC16(frame.data.data, sizeof(frame.data.data));
 
     // OLD CODE
     // // update tail
@@ -77,7 +94,7 @@ void RefSystem::write(FrameData* frameData, uint8_t length) {
     // packet[14 + data_length] = (footerCRC >> 8);        // set CRC
     // OLD CODE
 
-    if (Serial7.write(packet, length) == length) {
+    if (Serial7.write(raw_packet, index) == index) {
         packets_sent++;
         bytes_sent += length;
     } else
