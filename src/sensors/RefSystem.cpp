@@ -94,7 +94,7 @@ void RefSystem::write(FrameData* frameData, uint8_t length) {
     // packet[14 + data_length] = (footerCRC >> 8);        // set CRC
     // OLD CODE
 
-    if (Serial7.write(raw_packet, index) == index) {
+    if (Serial2.write(raw_packet, index) == index) {
         packets_sent++;
         bytes_sent += length;
     } else

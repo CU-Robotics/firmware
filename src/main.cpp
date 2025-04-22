@@ -14,6 +14,8 @@
 
 #include "utils/watchdog.hpp"
 
+#include "sensors/RefDrawing.hpp"
+
 // Loop constants
 #define LOOP_FREQ 1000
 #define HEARTBEAT_FREQ 2
@@ -304,6 +306,8 @@ int main() {
         controller_manager.step(temp_reference, temp_state, temp_micro_state);
 
         // can.print_state();
+
+        drawOneGraphic(createLineData(20, 20, 120, 120, Color::GREEN));
 
         // construct sensor data packet
         SensorData sensor_data;
