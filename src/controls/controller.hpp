@@ -314,318 +314,99 @@ struct EngineerArmController : public Controller {
         /// @param state state to convert
         /// @return converted state
         /// @note see the matlab code at the bottom of the file for to generate the equation
-        // float to_pitch_linkage_angle(float state) {
-        //     return atan(
-        //         (
-        //             (
-        //                 75 * pow((1087 * sin(x)) / 4 + 72, 2)
-        //                 + ((1087 * sin(x)) / 4 + 147) * (
-        //                     pow((1087 * sin(x)) / 4 + 72, 2)
-        //                     + pow((1087 * cos(x)) / 4 + 140, 2)
-        //                     - 150745.0 / 4
-        //                 )
-        //                 + ((1087 * cos(x)) / 4 + 140) * sqrt(
-        //                     162409 * pow((1087 * sin(x)) / 4 + 72, 2)
-        //                     - pow(
-        //                         pow((1087 * sin(x)) / 4 + 72, 2)
-        //                         + pow((1087 * cos(x)) / 4 + 140, 2)
-        //                         + 150745.0 / 4,
-        //                         2
-        //                     )
-        //                     + 162409 * pow((1087 * cos(x)) / 4 + 140, 2)
-        //                 )
-        //                 + 75 * pow((1087 * cos(x)) / 4 + 140, 2)
-        //                 + 11305875.0 / 4
-        //             ) / (
-        //                 2 * pow((1087 * sin(x)) / 4 + 72, 2)
-        //                 + 2 * pow((1087 * cos(x)) / 4 + 140, 2)
-        //             )
-        //             - 75
-        //         ) /
-        //         (
-        //             (
-        //                 180 * pow((1087 * sin(x)) / 4 + 72, 2)
-        //                 + ((1087 * cos(x)) / 4 + 320) * (
-        //                     pow((1087 * sin(x)) / 4 + 72, 2)
-        //                     + pow((1087 * cos(x)) / 4 + 140, 2)
-        //                     - 150745.0 / 4
-        //                 )
-        //                 - ((1087 * sin(x)) / 4 + 72) * sqrt(
-        //                     162409 * pow((1087 * sin(x)) / 4 + 72, 2)
-        //                     - pow(
-        //                         pow((1087 * sin(x)) / 4 + 72, 2)
-        //                         + pow((1087 * cos(x)) / 4 + 140, 2)
-        //                         + 150745.0 / 4,
-        //                         2
-        //                     )
-        //                     + 162409 * pow((1087 * cos(x)) / 4 + 140, 2)
-        //                 )
-        //                 + 180 * pow((1087 * cos(x)) / 4 + 140, 2)
-        //                 + 6783525
-        //             ) / (
-        //                 2 * pow((1087 * sin(x)) / 4 + 72, 2)
-        //                 + 2 * pow((1087 * cos(x)) / 4 + 140, 2)
-        //             )
-        //             - 180
-        //         )
-        //     );
-        // }
+        float to_pitch_linkage_angle(float state) {
+            double a = (1087 * sin(x)) / 4;
+            double b = (1087 * cos(x)) / 4;
+            double c = pow(b + 140, 2);
+            double d = pow(a + 72, 2);
+            return atan(((75 * d + (a + 147) * (d + c - 150745.0 / 4) + (b + 140) * sqrt(162409 * d - pow(d + c + 150745.0 / 4, 2) + 162409 * c) + 75 * c + 11305875.0 / 4) / (2 * d + 2 * c) - 75)
+             / ((180 * d + (b + 320) * (d + c - 150745.0 / 4) - (a + 72) * sqrt(162409 * d - pow(d + c + 150745.0 / 4, 2) + 162409 * c) + 180 * c + 6783525) / (2 * d + 2 * c) - 180));
+        }
 
     /// @brief convert the state to the linkage input velocity
     /// @param state state to convert
     /// @return converted state
     /// @note see the matlab code at the bottom of the file for to generate the equation
-    // // float to_pitch_linkage_velocity(float state) {
-    //     double value = (
-    //         (
-    //             (
-    //                 (1087 * cos(x) * ((1087 * sin(x)) / 4 + 72)) / 2
-    //                 - (1087 * sin(x) * ((1087 * cos(x)) / 4 + 140)) / 2
-    //             ) * ((1087 * sin(x)) / 4 + 147)
-    //             + (1087 * cos(x) * (pow((1087 * sin(x)) / 4 + 72, 2) + pow((1087 * cos(x)) / 4 + 140, 2) - 150745.0 / 4)) / 4
-    //             + (81525 * cos(x) * ((1087 * sin(x)) / 4 + 72)) / 2
-    //             - (81525 * sin(x) * ((1087 * cos(x)) / 4 + 140)) / 2
-    //             - (1087 * sin(x) * sqrt(
-    //                 162409 * pow((1087 * sin(x)) / 4 + 72, 2)
-    //                 - pow(
-    //                     pow((1087 * sin(x)) / 4 + 72, 2)
-    //                     + pow((1087 * cos(x)) / 4 + 140, 2)
-    //                     + 150745.0 / 4,
-    //                     2
-    //                 )
-    //                 + 162409 * pow((1087 * cos(x)) / 4 + 140, 2)
-    //             )) / 4
-    //             - (
-    //                 ((1087 * cos(x)) / 4 + 140) * (
-    //                     (176538583 * sin(x) * ((1087 * cos(x)) / 4 + 140)) / 2
-    //                     - (176538583 * cos(x) * ((1087 * sin(x)) / 4 + 72)) / 2
-    //                     + 2 * (
-    //                         (1087 * cos(x) * ((1087 * sin(x)) / 4 + 72)) / 2
-    //                         - (1087 * sin(x) * ((1087 * cos(x)) / 4 + 140)) / 2
-    //                     ) * (
-    //                         pow((1087 * sin(x)) / 4 + 72, 2)
-    //                         + pow((1087 * cos(x)) / 4 + 140, 2)
-    //                         + 150745.0 / 4
-    //                     )
-    //                 )
-    //             ) / (
-    //                 2 * sqrt(
-    //                     162409 * pow((1087 * sin(x)) / 4 + 72, 2)
-    //                     - pow(
-    //                         pow((1087 * sin(x)) / 4 + 72, 2)
-    //                         + pow((1087 * cos(x)) / 4 + 140, 2)
-    //                         + 150745.0 / 4,
-    //                         2
-    //                     )
-    //                     + 162409 * pow((1087 * cos(x)) / 4 + 140, 2)
-    //                 )
-    //             )
-    //         ) / (
-    //             2 * pow((1087 * sin(x)) / 4 + 72, 2)
-    //             + 2 * pow((1087 * cos(x)) / 4 + 140, 2)
-    //         )
-    //         - (
-    //             (
-    //                 (1087 * cos(x) * ((1087 * sin(x)) / 4 + 72))
-    //                 - (1087 * sin(x) * ((1087 * cos(x)) / 4 + 140))
-    //             ) * (
-    //                 75 * pow((1087 * sin(x)) / 4 + 72, 2)
-    //                 + ((1087 * sin(x)) / 4 + 147) * (
-    //                     pow((1087 * sin(x)) / 4 + 72, 2)
-    //                     + pow((1087 * cos(x)) / 4 + 140, 2)
-    //                     - 150745.0 / 4
-    //                 )
-    //                 + ((1087 * cos(x)) / 4 + 140) * sqrt(
-    //                     162409 * pow((1087 * sin(x)) / 4 + 72, 2)
-    //                     - pow(
-    //                         pow((1087 * sin(x)) / 4 + 72, 2)
-    //                         + pow((1087 * cos(x)) / 4 + 140, 2)
-    //                         + 150745.0 / 4,
-    //                         2
-    //                     )
-    //                     + 162409 * pow((1087 * cos(x)) / 4 + 140, 2)
-    //                 )
-    //                 + 75 * pow((1087 * cos(x)) / 4 + 140, 2)
-    //                 + 11305875.0 / 4
-    //             )
-    //         ) / pow(
-    //             2 * pow((1087 * sin(x)) / 4 + 72, 2)
-    //             + 2 * pow((1087 * cos(x)) / 4 + 140, 2),
-    //             2
-    //         )
-    //     ) / (
-    //         (
-    //             180 * pow((1087 * sin(x)) / 4 + 72, 2)
-    //             + ((1087 * cos(x)) / 4 + 320) * (
-    //                 pow((1087 * sin(x)) / 4 + 72, 2)
-    //                 + pow((1087 * cos(x)) / 4 + 140, 2)
-    //                 - 150745.0 / 4
-    //             )
-    //             - ((1087 * sin(x)) / 4 + 72) * sqrt(
-    //                 162409 * pow((1087 * sin(x)) / 4 + 72, 2)
-    //                 - pow(
-    //                     pow((1087 * sin(x)) / 4 + 72, 2)
-    //                     + pow((1087 * cos(x)) / 4 + 140, 2)
-    //                     + 150745.0 / 4,
-    //                     2
-    //                 )
-    //                 + 162409 * pow((1087 * cos(x)) / 4 + 140, 2)
-    //             )
-    //             + 180 * pow((1087 * cos(x)) / 4 + 140, 2)
-    //             + 6783525
-    //         ) / (
-    //             2 * pow((1087 * sin(x)) / 4 + 72, 2)
-    //             + 2 * pow((1087 * cos(x)) / 4 + 140, 2)
-    //         )
-    //         - 180
-    //     )
-    //     - (
-    //         (
-    //             (
-    //                 (
-    //                     (1087 * cos(x) * ((1087 * sin(x)) / 4 + 72)) / 2
-    //                     - (1087 * sin(x) * ((1087 * cos(x)) / 4 + 140)) / 2
-    //                 ) * ((1087 * cos(x)) / 4 + 320)
-    //                 - (1087 * sin(x) * (
-    //                     pow((1087 * sin(x)) / 4 + 72, 2)
-    //                     + pow((1087 * cos(x)) / 4 + 140, 2)
-    //                     - 150745.0 / 4
-    //                 )) / 4
-    //                 - (1087 * cos(x) * sqrt(
-    //                     162409 * pow((1087 * sin(x)) / 4 + 72, 2)
-    //                     - pow(
-    //                         pow((1087 * sin(x)) / 4 + 72, 2)
-    //                         + pow((1087 * cos(x)) / 4 + 140, 2)
-    //                         + 150745.0 / 4,
-    //                         2
-    //                     )
-    //                     + 162409 * pow((1087 * cos(x)) / 4 + 140, 2)
-    //                 )) / 4
-    //                 + 97830 * cos(x) * ((1087 * sin(x)) / 4 + 72)
-    //                 - 97830 * sin(x) * ((1087 * cos(x)) / 4 + 140)
-    //                 + (
-    //                     ((1087 * sin(x)) / 4 + 72) * (
-    //                         (176538583 * sin(x) * ((1087 * cos(x)) / 4 + 140)) / 2
-    //                         - (176538583 * cos(x) * ((1087 * sin(x)) / 4 + 72)) / 2
-    //                         + 2 * (
-    //                             (1087 * cos(x) * ((1087 * sin(x)) / 4 + 72)) / 2
-    //                             - (1087 * sin(x) * ((1087 * cos(x)) / 4 + 140)) / 2
-    //                         ) * (
-    //                             pow((1087 * sin(x)) / 4 + 72, 2)
-    //                             + pow((1087 * cos(x)) / 4 + 140, 2)
-    //                             + 150745.0 / 4
-    //                         )
-    //                     )
-    //                 ) / (
-    //                     2 * sqrt(
-    //                         162409 * pow((1087 * sin(x)) / 4 + 72, 2)
-    //                         - pow(
-    //                             pow((1087 * sin(x)) / 4 + 72, 2)
-    //                             + pow((1087 * cos(x)) / 4 + 140, 2)
-    //                             + 150745.0 / 4,
-    //                             2
-    //                         )
-    //                         + 162409 * pow((1087 * cos(x)) / 4 + 140, 2)
-    //                     )
-    //                 )
-    //             ) / (
-    //                 2 * pow((1087 * sin(x)) / 4 + 72, 2)
-    //                 + 2 * pow((1087 * cos(x)) / 4 + 140, 2)
-    //             )
-    //         )
-    //         - (
-    //             (
-    //                 (1087 * cos(x) * ((1087 * sin(x)) / 4 + 72))
-    //                 - (1087 * sin(x) * ((1087 * cos(x)) / 4 + 140))
-    //             ) * (
-    //                 180 * pow((1087 * sin(x)) / 4 + 72, 2)
-    //                 + ((1087 * cos(x)) / 4 + 320) * (
-    //                     pow((1087 * sin(x)) / 4 + 72, 2)
-    //                     + pow((1087 * cos(x)) / 4 + 140, 2)
-    //                     - 150745.0 / 4
-    //                 )
-    //                 - ((1087 * sin(x)) / 4 + 72) * sqrt(
-    //                     162409 * pow((1087 * sin(x)) / 4 + 72, 2)
-    //                     - pow(
-    //                         pow((1087 * sin(x)) / 4 + 72, 2)
-    //                         + pow((1087 * cos(x)) / 4 + 140, 2)
-    //                         + 150745.0 / 4,
-    //                         2
-    //                     )
-    //                     + 162409 * pow((1087 * cos(x)) / 4 + 140, 2)
-    //                 )
-    //                 + 180 * pow((1087 * cos(x)) / 4 + 140, 2)
-    //                 + 6783525
-    //             )
-    //         ) / pow(
-    //             2 * pow((1087 * sin(x)) / 4 + 72, 2)
-    //             + 2 * pow((1087 * cos(x)) / 4 + 140, 2),
-    //             2
-    //         )
-    //     )
-    //     * (
-    //         (
-    //             75 * pow((1087 * sin(x)) / 4 + 72, 2)
-    //             + ((1087 * sin(x)) / 4 + 147) * (
-    //                 pow((1087 * sin(x)) / 4 + 72, 2)
-    //                 + pow((1087 * cos(x)) / 4 + 140, 2)
-    //                 - 150745.0 / 4
-    //             )
-    //             + ((1087 * cos(x)) / 4 + 140) * sqrt(
-    //                 162409 * pow((1087 * sin(x)) / 4 + 72, 2)
-    //                 - pow(
-    //                     pow((1087 * sin(x)) / 4 + 72, 2)
-    //                     + pow((1087 * cos(x)) / 4 + 140, 2)
-    //                     + 150745.0 / 4,
-    //                     2
-    //                 )
-    //                 + 162409 * pow((1087 * cos(x)) / 4 + 140, 2)
-    //             )
-    //             + 75 * pow((1087 * cos(x)) / 4 + 140, 2)
-    //             + 11305875.0 / 4
-    //         ) / (
-    //             2 * pow((1087 * sin(x)) / 4 + 72, 2)
-    //             + 2 * pow((1087 * cos(x)) / 4 + 140, 2)
-    //         )
-    //         - 75
-    //     )
-    //     ) / (
-    //         pow(
-    //             (
-    //                 180 * pow((1087 * sin(x)) / 4 + 72, 2)
-    //                 + ((1087 * cos(x)) / 4 + 320) * (
-    //                     pow((1087 * sin(x)) / 4 + 72, 2)
-    //                     + pow((1087 * cos(x)) / 4 + 140, 2)
-    //                     - 150745.0 / 4
-    //                 )
-    //                 - ((1087 * sin(x)) / 4 + 72) * sqrt(
-    //                     162409 * pow((1087 * sin(x)) / 4 + 72, 2)
-    //                     - pow(
-    //                         pow((1087 * sin(x)) / 4 + 72, 2)
-    //                         + pow((1087 * cos(x)) / 4 + 140, 2)
-    //                         + 150745.0 / 4,
-    //                         2
-    //                     )
-    //                     + 162409 * pow((1087 * cos(x)) / 4 + 140, 2)
-    //                 )
-    //                 + 180 * pow((1087 * cos(x)) / 4 + 140, 2)
-    //                 + 6783525
-    //             ) / (
-    //                 2 * pow((1087 * sin(x)) / 4 + 72, 2)
-    //                 + 2 * pow((1087 * cos(x)) / 4 + 140, 2)
-    //             )
-    //             - 180,
-    //             2
-    //         )
-    //         + 1
-    //     );
-    //     return value;
-    // }
+    float to_pitch_linkage_velocity(float state) {
+       // Precompute sin(x) and cos(x)
+        double sin_x = std::sin(x);
+        double cos_x = std::cos(x);
+
+        // Precompute frequently used terms
+        double A = (1087.0 * sin_x) / 4.0 + 72.0;
+        double B = (1087.0 * cos_x) / 4.0 + 140.0;
+        double A2 = std::pow(A, 2);
+        double B2 = std::pow(B, 2);
+
+        // Common sum of squares
+        double sum_squares = A2 + B2;
+
+        // Precompute the constant adjustment
+        double sum_squares_minus = sum_squares + 150745.0 / 4.0;
+
+        // Precompute the massive radical term
+        double radical = std::sqrt(162409.0 * A2 - std::pow(sum_squares_minus, 2) + 162409.0 * B2);
+
+        // Precompute more common terms
+        double denom = 2.0 * (A2 + B2);
+
+        // Precompute outer denominators
+        double denom_full = denom - 180.0;
+
+        // Precompute big numerator piece
+        double big_numerator_piece = (
+            180.0 * A2 +
+            (B + 180.0) * (sum_squares - 150745.0 / 4.0) -
+            A * radical +
+            180.0 * B2 +
+            6783525.0
+        ) / denom - 180.0;
+
+        // Precompute small term
+        double small_term = (
+            75.0 * A2 +
+            A * (sum_squares - 150745.0 / 4.0) +
+            B * radical +
+            75.0 * B2 +
+            11305875.0 / 4.0
+        ) / denom - 75.0;
+
+        // Precompute another large factor
+        double big_factor = (
+            (176538583.0 * sin_x * B) / 2.0 -
+            (176538583.0 * cos_x * A) / 2.0 +
+            2.0 * ((1087.0 * cos_x * A) / 2.0 - (1087.0 * sin_x * B) / 2.0) * sum_squares_minus
+        );
+
+        // Now build up the top expression
+        double top_expr = (
+            (1087.0 * cos_x * A - 1087.0 * sin_x * B) / 2.0 * (A + 75.0)
+            + (1087.0 * cos_x * sum_squares_minus) / 4.0
+            + (81525.0 * cos_x * A) / 2.0
+            - (81525.0 * sin_x * B) / 2.0
+            - (1087.0 * sin_x * radical) / 4.0
+            - ((B * big_factor) / (2.0 * radical)) / denom
+            - ((1087.0 * cos_x * A - 1087.0 * sin_x * B) * (small_term)) / (std::pow(denom, 2))
+        );
+
+        // Build bottom expression
+        double bottom_expr = (
+            big_numerator_piece
+            - (top_expr * small_term) / (std::pow(denom_full, 2))
+        ) / (
+            (std::pow(small_term, 2) / std::pow(denom_full, 2)) + 1.0
+        );
+
+        // Finally divide top by bottom
+        double result = top_expr / bottom_expr;
+
+        return result;
+    }
     };
 
 #endif // CONTROLLER_H
 /*
-Matlab code to generate the equation for to_pitch_linkage_angle
+Matlab code to generate the equation for to_pitch_linkage_angle and to_pitch_linkage_velocity
 x4 = 180;
 y4 = 75;
 x0 = 320;
@@ -643,4 +424,6 @@ eq = atan( ...
     ( x4 - ( ( (cos(x).*l1 + x0).*(a1+C(x4,(cos(x).*l1 + x0),y4,(sin(x).*l1 + y0))) - x4.*(a1-C(x4,(cos(x).*l1 + x0),y4,(sin(x).*l1 + y0))) + m.*((sin(x).*l1 + y0) - y4).*sqrt(4.*C(x4,(cos(x).*l1 + x0),y4,(sin(x).*l1 + y0)).*l2.^2 - (a1-C(x4,(cos(x).*l1 + x0),y4,(sin(x).*l1 + y0))).^2) ) ./ (2.*C(x4,(cos(x).*l1 + x0),y4,(sin(x).*l1 + y0))) ) ) ...
 );
 simplify(eq)
+diff(eq)
 */
+

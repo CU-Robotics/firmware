@@ -299,6 +299,7 @@ void EngineerArmController::step(float reference[STATE_LEN][3], float estimate[S
     float dt = timer.delta();
     
     // Pitch controller
+    // pitch_feed_forward = (comms.get_ff(1)/gear_ratios[0]);
     pid_pitch_position.K[0] = gains[0];
     pid_pitch_position.K[1] = 0;
     pid_pitch_position.K[2] = 0;
