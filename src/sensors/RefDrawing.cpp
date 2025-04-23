@@ -137,6 +137,29 @@ GraphicData createEllipseData(uint32_t x, uint32_t y, uint32_t width, uint32_t h
     return graphicData;
 }
 
+GraphicData createArcData(uint32_t x, uint32_t y, uint32_t start_angle, uint32_t end_angle, uint32_t width, uint32_t height, Color color) {
+    GraphicData graphicData {};
+    uint32_t id = getNextGraphicId();
+    graphicData.figure_name[0] = (id >> 16) & 0xFF;
+    graphicData.figure_name[1] = (id >> 8) & 0xFF;
+    graphicData.figure_name[2] = id & 0xFF;
+    graphicData.operate_type = static_cast<uint32_t>(GraphicOperation::ADD);
+    graphicData.figure_type = static_cast<uint32_t>(GraphicType::ARC);
+    graphicData.layer = 1;
+    graphicData.color = static_cast<uint32_t>(color);
+    // note: meaning of angle values: 0 degrees points to 12 o'clock, and angles increase clockwise.
+    graphicData.details_a = start_angle; // start angle
+    graphicData.details_b = end_angle; // end angle
+    graphicData.width = 10; // line width
+    graphicData.start_x = x;
+    graphicData.start_y = y;
+    graphicData.details_c = 0;
+    graphicData.details_d = width; // length of the x axis
+    graphicData.details_e = height; // length of the y axis
+    return graphicData;
+}
+
+
 GraphicData createFloatData(uint32_t x, uint32_t y, float number, uint32_t font_size, Color color) {
     GraphicData graphicData {};
     uint32_t id = getNextGraphicId();

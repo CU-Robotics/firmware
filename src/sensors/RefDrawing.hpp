@@ -125,15 +125,15 @@ GraphicData createCircleData(uint32_t x, uint32_t y, uint32_t radius, Color colo
 /// @param color color of the ellipse
 GraphicData createEllipseData(uint32_t x, uint32_t y, uint32_t width, uint32_t height, Color color = Color::SIDE_COLOR);
 
-// /// @brief Get GraphicData for an arc
-// /// @param x x coordinate of the center
-// /// @param y y coordinate of the center
-// /// @param start_angle start angle of the arc
-// /// @param end_angle end angle of the arc
-// /// @param width width of the arc
-// /// @param height height of the arc
-// /// @param color color of the arc
-// GraphicData getArc(uint32_t x, uint32_t y, uint32_t start_angle, uint32_t end_angle, uint32_t width, uint32_t height, Color color = Color::SIDE_COLOR);
+/// @brief Get GraphicData for an arc
+/// @param x x coordinate of the center
+/// @param y y coordinate of the center
+/// @param start_angle start angle of the arc
+/// @param end_angle end angle of the arc
+/// @param width width of the arc
+/// @param height height of the arc
+/// @param color color of the arc
+GraphicData createArcData(uint32_t x, uint32_t y, uint32_t start_angle, uint32_t end_angle, uint32_t width, uint32_t height, Color color = Color::SIDE_COLOR);
 
 /// @brief Get GraphicData for a floating point number
 /// @param x x coordinate
