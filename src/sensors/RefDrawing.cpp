@@ -3,8 +3,7 @@
 static uint32_t getNextGraphicId() {
     // generate a unique 24 bit graphic id each time this is called.
     static uint32_t id = 0;
-    id = (id + 1) & 0x00FFFFFF; // add 1 and wrap at 24bits max
-    return id;
+    return id++ & 0x00FFFFFF; // add 1 and wrap at 24bits max
 }
 
 void deleteLayer(DeleteOperation deleteOperation, uint8_t layer) {
@@ -64,12 +63,12 @@ GraphicData createLineData(uint32_t x1, uint32_t y1, uint32_t x2, uint32_t y2, C
     graphicData.figure_type = static_cast<uint32_t>(GraphicType::LINE);
     graphicData.layer = 1;
     graphicData.color = static_cast<uint32_t>(color);
-    graphicData.details_a = 0; // not used for line
-    graphicData.details_b = 0; // not used for line
+    graphicData.details_a = 0;
+    graphicData.details_b = 0;
     graphicData.width = 10; // line width
     graphicData.start_x = x1; // x coordinate of start point
     graphicData.start_y = y1; // y coordinate of start point
-    graphicData.details_c = 0; // not used for line
+    graphicData.details_c = 0;
     graphicData.details_d = x2; // x coordinate of end point
     graphicData.details_e = y2; // y coordinate of end point
     return graphicData;
@@ -156,13 +155,13 @@ GraphicData createFloatData(uint32_t x, uint32_t y, float number, uint32_t font_
     // Floating number: all integers are 32 bit. the actual displayed value is 1/1000 of the entered values. 
     // Entering 1234 into details c, d, e will display 1.234.
     // multiply by 1000 to get the value we will pack into the details c, d, e
-    int32_t value = static_cast<int32_t>(number * 1000);
-    // most significant 10 bits go in details c
-    graphicData.details_c = (value >> 22) & 0x3FF; // 10 bits
-    // next 11 bits go in details d
-    graphicData.details_d = (value >> 11) & 0x7FF; // 11 bits
-    // least significant 11 bits go in details e
-    graphicData.details_e = value & 0x7FF; // 11 bits
+    uint32_t unumber = static_cast<uint32_t>(number * 1000);
+    // most significant 10 bits into details c
+    graphicData.details_c = (unumber >> 22) & 0x3FF; // 10 bits
+    // next 11 bits go into details d
+    graphicData.details_d = (unumber >> 11) & 0x7FF; // 11 bits
+    // least significant 11 bits go into details e
+    graphicData.details_e = unumber & 0x7FF; // 11 bits
     return graphicData;
 }
 
@@ -183,11 +182,12 @@ GraphicData createIntegerData(uint32_t x, uint32_t y, int32_t number, uint32_t f
     graphicData.start_y = y;
     // 32 bit integer goes into details c, d and e
     // most significant 10 bits into details c
-    graphicData.details_c = (number >> 22) & 0x3FF; // 10 bits
+    uint32_t unumber = static_cast<uint32_t>(number);
+    graphicData.details_c = (unumber >> 22) & 0x3FF; // 10 bits
     // next 11 bits go into details d
-    graphicData.details_d = (number >> 11) & 0x7FF; // 11 bits
+    graphicData.details_d = (unumber >> 11) & 0x7FF; // 11 bits
     // least significant 11 bits go into details e
-    graphicData.details_e = number & 0x7FF; // 11 bits
+    graphicData.details_e = unumber & 0x7FF; // 11 bits
     return graphicData;
 }
 
