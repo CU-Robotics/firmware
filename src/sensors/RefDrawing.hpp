@@ -139,19 +139,15 @@ GraphicData createLineData(uint32_t x1, uint32_t y1, uint32_t x2, uint32_t y2, C
 /// @param x x coordinate
 /// @param y y coordinate
 /// @param number number to be drawn
-/// @param font_size font size of the number
-/// @param color color of the number
+/// @param font_size font size of the number, default is 12
+/// @param color color of the number, default is SIDE_COLOR
 GraphicData createFloatData(uint32_t x, uint32_t y, float number, uint32_t font_size = 12, Color color = Color::SIDE_COLOR);
 
 // /// @brief Get GraphicData for an integer
 // /// @param x x coordinate
 // /// @param y y coordinate
 // /// @param number number to be drawn
-// /// @param font_size font size of the number
-// /// @param color color of the number
-// GraphicData getInteger(uint32_t x, uint32_t y, int32_t number, uint32_t font_size = 12, Color color = Color::SIDE_COLOR) {
-//     // TODO
-//     // draw 32-bit integer, int32_t
-// }
+// /// @param font_size font size of the number, default is 12
+// /// @param color color of the number, default is SIDE_COLOR
+GraphicData createIntegerData(uint32_t x, uint32_t y, int32_t number, uint32_t font_size = 12, Color color = Color::SIDE_COLOR);
 
-// TODO: Draw character?

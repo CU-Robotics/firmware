@@ -1,5 +1,12 @@
 #include "RefDrawing.hpp"
 
+static uint32_t getNextGraphicId() {
+    // generate a unique 24 bit graphic id each time this is called.
+    static uint32_t id = 0;
+    id = (id + 1) & 0x00FFFFFF; // add 1 and wrap at 24bits max
+    return id;
+}
+
 void deleteLayer(DeleteOperation deleteOperation, uint8_t layer) {
     // make DeleteLayerData
     DeleteLayerData deleteLayerData {};
@@ -52,15 +59,10 @@ GraphicData createLineData(uint32_t x1, uint32_t y1, uint32_t x2, uint32_t y2, C
     // populate graphicData struct
 
     /// put a unique id in the figure_name field
-    static uint32_t id = 0;
+    uint32_t id = getNextGraphicId();
     graphicData.figure_name[0] = (id >> 16) & 0xFF;
     graphicData.figure_name[1] = (id >> 8) & 0xFF;
     graphicData.figure_name[2] = id & 0xFF;
-    id++;
-    if (id >= (1 << 24)) { // 0x00FFFFFF is the max value for our id
-        // Handle overflow — reset or ceiling
-        id = 0;
-    }
 
     graphicData.operate_type = static_cast<uint32_t>(GraphicOperation::ADD);
     graphicData.figure_type = static_cast<uint32_t>(GraphicType::LINE);
@@ -78,22 +80,15 @@ GraphicData createLineData(uint32_t x1, uint32_t y1, uint32_t x2, uint32_t y2, C
     return graphicData;
 }
 
-
-
 GraphicData createFloatData(uint32_t x, uint32_t y, float number, uint32_t font_size, Color color) {
     GraphicData graphicData {};
     // populate graphicData struct
 
     /// put a unique id in the figure_name field
-    static uint32_t id = 0;
+    uint32_t id = getNextGraphicId();
     graphicData.figure_name[0] = (id >> 16) & 0xFF;
     graphicData.figure_name[1] = (id >> 8) & 0xFF;
     graphicData.figure_name[2] = id & 0xFF;
-    id++;
-    if (id >= (1 << 24)) { // 0x00FFFFFF is the max value for our id
-        // Handle overflow — reset or ceiling
-        id = 0;
-    }
 
     graphicData.operate_type = static_cast<uint32_t>(GraphicOperation::ADD);
     graphicData.figure_type = static_cast<uint32_t>(GraphicType::FLOAT);
@@ -101,18 +96,44 @@ GraphicData createFloatData(uint32_t x, uint32_t y, float number, uint32_t font_
     graphicData.color = static_cast<uint32_t>(color);
     graphicData.details_a = font_size; // font size
     graphicData.details_b = 0; // not used for float
+
     graphicData.width = 10; // line width
     graphicData.start_x = x; // x coordinate of start point
     graphicData.start_y = y; // y coordinate of start point
 
-    // Floating number: all integers are 32 bit. the actual displayed value is 1/1000 of the entered values. Entering 1234 into de, dd, de will display 1.234.
-
+    // Floating number: all integers are 32 bit. the actual displayed value is 1/1000 of the entered values. Entering 1234 into details c, d, e will display 1.234.
     // multiply by 1000 to get the actual value
     int32_t value = static_cast<int32_t>(number * 1000);
-    graphicData.details_c = value; // least significant 11 bits
+    graphicData.details_c = value & 0x7FF; // least significant 11 bits
     graphicData.details_d = (value >> 11) & 0x7FF; // next 11 bits
     graphicData.details_e = (value >> 21) & 0x3FF; // the last 10 bits
 
+    return graphicData;
+}
+
+GraphicData createIntegerData(uint32_t x, uint32_t y, int32_t number, uint32_t font_size = 12, Color color = Color::SIDE_COLOR) {
+    GraphicData graphicData {};
+
+    uint32_t id = getNextGraphicId();
+    graphicData.figure_name[0] = (id >> 16) & 0xFF;
+    graphicData.figure_name[1] = (id >> 8) & 0xFF;
+    graphicData.figure_name[2] = id & 0xFF;
+
+    graphicData.operate_type = static_cast<uint32_t>(GraphicOperation::ADD);
+    graphicData.figure_type = static_cast<uint32_t>(GraphicType::INTEGER);
+    graphicData.layer = 1;
+    graphicData.color = static_cast<uint32_t>(color);
+    graphicData.details_a = font_size; // font size
+    graphicData.details_b = 0; // not used for integer
+
+    graphicData.width = 10; // line width
+    graphicData.start_x = x; // x coordinate of start point
+    graphicData.start_y = y; // y coordinate of start point
+
+    // 32 bit integer goes into details c, d and e
+    graphicData.details_c = number & 0x7FF; // least significant 11 bits
+    graphicData.details_d = (number >> 11) & 0x7FF; // next 11 bits
+    graphicData.details_e = (number >> 22) & 0x3FF; // the last 10 bits
     return graphicData;
 }
 
