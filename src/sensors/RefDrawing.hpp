@@ -51,7 +51,7 @@ enum class GraphicType {
     /// @brief Arc (4)
     ARC,
     /// @brief Float (5)
-    FLOATING_NUMBER,
+    FLOAT,
     /// @brief Integer (6)
     INTEGER,
     /// @brief Character (7)
@@ -135,13 +135,13 @@ GraphicData createLineData(uint32_t x1, uint32_t y1, uint32_t x2, uint32_t y2, C
 // /// @param color color of the arc
 // GraphicData getArc(uint32_t x, uint32_t y, uint32_t start_angle, uint32_t end_angle, uint32_t width, uint32_t height, Color color = Color::SIDE_COLOR);
 
-// /// @brief Get GraphicData for a floating point number
-// /// @param x x coordinate
-// /// @param y y coordinate
-// /// @param number number to be drawn
-// /// @param font_size font size of the number
-// /// @param color color of the number
-// GraphicData getFloatingPointNumber(uint32_t x, uint32_t y, float number, uint32_t font_size = 12, Color color = Color::SIDE_COLOR);
+/// @brief Get GraphicData for a floating point number
+/// @param x x coordinate
+/// @param y y coordinate
+/// @param number number to be drawn
+/// @param font_size font size of the number
+/// @param color color of the number
+GraphicData createFloatData(uint32_t x, uint32_t y, float number, uint32_t font_size = 12, Color color = Color::SIDE_COLOR);
 
 // /// @brief Get GraphicData for an integer
 // /// @param x x coordinate
