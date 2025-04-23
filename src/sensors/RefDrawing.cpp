@@ -111,7 +111,7 @@ GraphicData createFloatData(uint32_t x, uint32_t y, float number, uint32_t font_
     return graphicData;
 }
 
-GraphicData createIntegerData(uint32_t x, uint32_t y, int32_t number, uint32_t font_size = 12, Color color = Color::SIDE_COLOR) {
+GraphicData createIntegerData(uint32_t x, uint32_t y, int32_t number, uint32_t font_size, Color color) {
     GraphicData graphicData {};
 
     uint32_t id = getNextGraphicId();
