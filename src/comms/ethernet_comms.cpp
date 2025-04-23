@@ -153,45 +153,11 @@ bool EthernetComms::is_initialized() const {
 	return m_initialized;
 }
 
-// std::optional<EthernetPacket> EthernetComms::sendReceive(EthernetPacket& outgoing_packet) {
-// 	// call the library's loop function
-// 	// this progresses the ethernet stack allowing new data in/out
-// 	qn::Ethernet.loop();
-
-// 	// check if the last call to this function is within the regulation time
-// 	// this is to prevent the Teensy from running too fast and overloading the hardware
-// 	if (m_regulation_timer.get_elapsed_micros_no_restart() < m_regulation_time) {
-// 		return {};
-// 	}
-
-// 	// send the outgoing packet
-// 	send_packet(outgoing_packet);
-
-// 	// receive the incoming packet
-// 	EthernetPacket incoming_packet;
-// 	bool received = recv_packet(&incoming_packet);
-
-// 	// check whether the connection is still alive
-// 	check_connection();
-
-// 	// restart the regulation timer to indicate the next call to this function
-// 	m_regulation_timer.start();
-
-// 	if (received) {
-// 		// return the incoming packet
-// 		return incoming_packet;
-// 	}
-
-// 	// return an empty optional
-// 	return {};
-// }
-
 void EthernetComms::check_connection() {
 	// if the last packet was received too long ago, timeout the connection
 	if (micros() - m_last_recv_time > m_connection_timeout) {
 		// this check ensures this is only printed once
-		if (m_connected)
-			Serial.printf("EthernetComms: Connection lost!\n");
+		if (m_connected) Serial.printf("EthernetComms: Connection lost!\n");
 		// mark the connection as disconnected
 		m_connected = false;
 	} else {
