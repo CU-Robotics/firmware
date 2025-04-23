@@ -102,28 +102,28 @@ void deleteLayer(DeleteOperation deleteOperation, uint8_t layer = 0);
 /// @param color color of the line
 GraphicData createLineData(uint32_t x1, uint32_t y1, uint32_t x2, uint32_t y2, Color color = Color::SIDE_COLOR);
 
-// /// @brief Get GraphicData for a rectangle
-// /// @param x1 x coordinate of the starting point
-// /// @param y1 y coordinate of the starting point
-// /// @param x2 x coordinate of the diagonal point
-// /// @param y2 y coordinate of the diagonal point
-// /// @param color color of the rectangle
-// GraphicData getRectangle(uint32_t x1, uint32_t y1, uint32_t x2, uint32_t y2, Color color = Color::SIDE_COLOR);
+/// @brief Get GraphicData for a rectangle
+/// @param x1 x coordinate of the starting point
+/// @param y1 y coordinate of the starting point
+/// @param x2 x coordinate of the diagonal point
+/// @param y2 y coordinate of the diagonal point
+/// @param color color of the rectangle
+GraphicData createRectangleData(uint32_t x1, uint32_t y1, uint32_t x2, uint32_t y2, Color color = Color::SIDE_COLOR);
 
-// /// @brief Get GraphicData for a circle
-// /// @param x x coordinate of the center
-// /// @param y y coordinate of the center
-// /// @param radius radius of the circle
-// /// @param color color of the circle
-// GraphicData getCircle(uint32_t x, uint32_t y, uint32_t radius, Color color = Color::SIDE_COLOR);
+/// @brief Get GraphicData for a circle
+/// @param x x coordinate of the center
+/// @param y y coordinate of the center
+/// @param radius radius of the circle
+/// @param color color of the circle
+GraphicData createCircleData(uint32_t x, uint32_t y, uint32_t radius, Color color = Color::SIDE_COLOR);
 
-// /// @brief Get GraphicData for an ellipse
-// /// @param x x coordinate of the center
-// /// @param y y coordinate of the center
-// /// @param width width of the ellipse
-// /// @param height height of the ellipse
-// /// @param color color of the ellipse
-// GraphicData getEllipse(uint32_t x, uint32_t y, uint32_t width, uint32_t height, Color color = Color::SIDE_COLOR);
+/// @brief Get GraphicData for an ellipse
+/// @param x x coordinate of the center
+/// @param y y coordinate of the center
+/// @param width width of the ellipse
+/// @param height height of the ellipse
+/// @param color color of the ellipse
+GraphicData createEllipseData(uint32_t x, uint32_t y, uint32_t width, uint32_t height, Color color = Color::SIDE_COLOR);
 
 // /// @brief Get GraphicData for an arc
 // /// @param x x coordinate of the center

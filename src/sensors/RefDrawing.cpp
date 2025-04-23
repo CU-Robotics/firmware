@@ -56,14 +56,10 @@ void drawOneGraphic(GraphicData graphicData) {
 
 GraphicData createLineData(uint32_t x1, uint32_t y1, uint32_t x2, uint32_t y2, Color color) {
     GraphicData graphicData {};
-    // populate graphicData struct
-
-    /// put a unique id in the figure_name field
     uint32_t id = getNextGraphicId();
     graphicData.figure_name[0] = (id >> 16) & 0xFF;
     graphicData.figure_name[1] = (id >> 8) & 0xFF;
     graphicData.figure_name[2] = id & 0xFF;
-
     graphicData.operate_type = static_cast<uint32_t>(GraphicOperation::ADD);
     graphicData.figure_type = static_cast<uint32_t>(GraphicType::LINE);
     graphicData.layer = 1;
@@ -76,64 +72,122 @@ GraphicData createLineData(uint32_t x1, uint32_t y1, uint32_t x2, uint32_t y2, C
     graphicData.details_c = 0; // not used for line
     graphicData.details_d = x2; // x coordinate of end point
     graphicData.details_e = y2; // y coordinate of end point
+    return graphicData;
+}
 
+GraphicData createRectangleData(uint32_t x1, uint32_t y1, uint32_t x2, uint32_t y2, Color color) {
+    GraphicData graphicData {};
+    uint32_t id = getNextGraphicId();
+    graphicData.figure_name[0] = (id >> 16) & 0xFF;
+    graphicData.figure_name[1] = (id >> 8) & 0xFF;
+    graphicData.figure_name[2] = id & 0xFF;
+    graphicData.operate_type = static_cast<uint32_t>(GraphicOperation::ADD);
+    graphicData.figure_type = static_cast<uint32_t>(GraphicType::RECTANGLE);
+    graphicData.layer = 1;
+    graphicData.color = static_cast<uint32_t>(color);
+    graphicData.details_a = 0;
+    graphicData.details_b = 0;
+    graphicData.width = 10; // line width
+    graphicData.start_x = x1;
+    graphicData.start_y = y1;
+    graphicData.details_c = 0;
+    graphicData.details_d = x2; // x coordinate of the diagonal point
+    graphicData.details_e = y2; // y coordinate of the diagonal point
+    return graphicData;
+}
+
+GraphicData createCircleData(uint32_t x, uint32_t y, uint32_t radius, Color color) {
+    GraphicData graphicData {};
+    uint32_t id = getNextGraphicId();
+    graphicData.figure_name[0] = (id >> 16) & 0xFF;
+    graphicData.figure_name[1] = (id >> 8) & 0xFF;
+    graphicData.figure_name[2] = id & 0xFF;
+    graphicData.operate_type = static_cast<uint32_t>(GraphicOperation::ADD);
+    graphicData.figure_type = static_cast<uint32_t>(GraphicType::CIRCLE);
+    graphicData.layer = 1;
+    graphicData.color = static_cast<uint32_t>(color);
+    graphicData.details_a = 0;
+    graphicData.details_b = 0;
+    graphicData.width = 10; // line width
+    graphicData.start_x = x;
+    graphicData.start_y = y;
+    graphicData.details_c = radius; // radius of the circle
+    graphicData.details_d = 0;
+    graphicData.details_e = 0;
+    return graphicData;
+}
+
+GraphicData createEllipseData(uint32_t x, uint32_t y, uint32_t width, uint32_t height, Color color) {
+    GraphicData graphicData {};
+    uint32_t id = getNextGraphicId();
+    graphicData.figure_name[0] = (id >> 16) & 0xFF;
+    graphicData.figure_name[1] = (id >> 8) & 0xFF;
+    graphicData.figure_name[2] = id & 0xFF;
+    graphicData.operate_type = static_cast<uint32_t>(GraphicOperation::ADD);
+    graphicData.figure_type = static_cast<uint32_t>(GraphicType::ELLIPSE);
+    graphicData.layer = 1;
+    graphicData.color = static_cast<uint32_t>(color);
+    graphicData.details_a = 0;
+    graphicData.details_b = 0;
+    graphicData.width = 10; // line width
+    graphicData.start_x = x;
+    graphicData.start_y = y;
+    graphicData.details_c = 0;
+    graphicData.details_d = width; // length of the x axis
+    graphicData.details_e = height; // length of the y axis
     return graphicData;
 }
 
 GraphicData createFloatData(uint32_t x, uint32_t y, float number, uint32_t font_size, Color color) {
     GraphicData graphicData {};
-    // populate graphicData struct
-
-    /// put a unique id in the figure_name field
     uint32_t id = getNextGraphicId();
     graphicData.figure_name[0] = (id >> 16) & 0xFF;
     graphicData.figure_name[1] = (id >> 8) & 0xFF;
     graphicData.figure_name[2] = id & 0xFF;
-
     graphicData.operate_type = static_cast<uint32_t>(GraphicOperation::ADD);
     graphicData.figure_type = static_cast<uint32_t>(GraphicType::FLOAT);
     graphicData.layer = 1;
     graphicData.color = static_cast<uint32_t>(color);
     graphicData.details_a = font_size; // font size
-    graphicData.details_b = 0; // not used for float
-
+    graphicData.details_b = 0;
     graphicData.width = 10; // line width
-    graphicData.start_x = x; // x coordinate of start point
-    graphicData.start_y = y; // y coordinate of start point
-
-    // Floating number: all integers are 32 bit. the actual displayed value is 1/1000 of the entered values. Entering 1234 into details c, d, e will display 1.234.
-    // multiply by 1000 to get the actual value
+    graphicData.start_x = x;
+    graphicData.start_y = y;
+    // Floating number: all integers are 32 bit. the actual displayed value is 1/1000 of the entered values. 
+    // Entering 1234 into details c, d, e will display 1.234.
+    // multiply by 1000 to get the value we will pack into the details c, d, e
     int32_t value = static_cast<int32_t>(number * 1000);
-    graphicData.details_c = value & 0x7FF; // least significant 11 bits
-    graphicData.details_d = (value >> 11) & 0x7FF; // next 11 bits
-    graphicData.details_e = (value >> 21) & 0x3FF; // the last 10 bits
-
+    // most significant 10 bits go in details c
+    graphicData.details_c = (value >> 22) & 0x3FF; // 10 bits
+    // next 11 bits go in details d
+    graphicData.details_d = (value >> 11) & 0x7FF; // 11 bits
+    // least significant 11 bits go in details e
+    graphicData.details_e = value & 0x7FF; // 11 bits
     return graphicData;
 }
 
 GraphicData createIntegerData(uint32_t x, uint32_t y, int32_t number, uint32_t font_size, Color color) {
     GraphicData graphicData {};
-
     uint32_t id = getNextGraphicId();
     graphicData.figure_name[0] = (id >> 16) & 0xFF;
     graphicData.figure_name[1] = (id >> 8) & 0xFF;
     graphicData.figure_name[2] = id & 0xFF;
-
     graphicData.operate_type = static_cast<uint32_t>(GraphicOperation::ADD);
     graphicData.figure_type = static_cast<uint32_t>(GraphicType::INTEGER);
     graphicData.layer = 1;
     graphicData.color = static_cast<uint32_t>(color);
     graphicData.details_a = font_size; // font size
-    graphicData.details_b = 0; // not used for integer
-
+    graphicData.details_b = 0;
     graphicData.width = 10; // line width
-    graphicData.start_x = x; // x coordinate of start point
-    graphicData.start_y = y; // y coordinate of start point
-
+    graphicData.start_x = x;
+    graphicData.start_y = y;
     // 32 bit integer goes into details c, d and e
-    graphicData.details_c = number & 0x7FF; // least significant 11 bits
-    graphicData.details_d = (number >> 11) & 0x7FF; // next 11 bits
-    graphicData.details_e = (number >> 22) & 0x3FF; // the last 10 bits
+    // most significant 10 bits into details c
+    graphicData.details_c = (number >> 22) & 0x3FF; // 10 bits
+    // next 11 bits go into details d
+    graphicData.details_d = (number >> 11) & 0x7FF; // 11 bits
+    // least significant 11 bits go into details e
+    graphicData.details_e = number & 0x7FF; // 11 bits
     return graphicData;
 }
 
