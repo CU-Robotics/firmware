@@ -88,7 +88,7 @@ int main() {
     pinMode(24, OUTPUT);
     pinMode(25, OUTPUT);
     digitalWrite(24, LOW);
-    digitalWrite(25, LOW);
+    digitalWrite(25, HIGH);
     
     Serial.printf("yo\n");
     // check to see if there is a crash report, and if so, print it repeatedly over Serial

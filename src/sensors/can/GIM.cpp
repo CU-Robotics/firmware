@@ -84,8 +84,8 @@ void GIM::write_motor_torque(float torque) {
     if (torque > 1.0f) torque = 1.0f;
 
     // map the -1f to 1f torque value to the actual torque value for this specific motor
-    float mapped_torque = torque * m_max_torque;
-
+    float mapped_torque = torque * m_max_torque*50;
+    Serial.printf("GIM::write_motor_torque: %f\n", m_max_torque);
     // create the command
     uint8_t buf[8];
     create_cmd_torque_control(buf, mapped_torque, 0);

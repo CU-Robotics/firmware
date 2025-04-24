@@ -804,6 +804,7 @@ void EngineerArmEstimator::step_states(float output[STATE_LEN][3], float curr_st
     // output[4][0] = can->get_motor_state(CAN_2, 7).position - pitch3_encoder_offset;
     // output[4][1] = can->get_motor_state(CAN_2, 7).speed;
     // output[4][2] = 0;
+    Serial.printf("roll torque: %f\n", can->get_motor_state(CAN_2, 8).torque);
     output[5][0] = can->get_motor_state(CAN_2, 8).position - roll_encoder_offset;
     output[5][1] = can->get_motor_state(CAN_2, 8).speed;
     output[5][2] = 0;

@@ -315,91 +315,53 @@ struct EngineerArmController : public Controller {
         /// @return converted state
         /// @note see the matlab code at the bottom of the file for to generate the equation
         float to_pitch_linkage_angle(float state) {
-            double a = (1087 * sin(x)) / 4;
-            double b = (1087 * cos(x)) / 4;
+            double a = (1087 * sin(state)) / 4;
+            double b = (1087 * cos(state)) / 4;
             double c = pow(b + 140, 2);
             double d = pow(a + 72, 2);
             return atan(((75 * d + (a + 147) * (d + c - 150745.0 / 4) + (b + 140) * sqrt(162409 * d - pow(d + c + 150745.0 / 4, 2) + 162409 * c) + 75 * c + 11305875.0 / 4) / (2 * d + 2 * c) - 75)
              / ((180 * d + (b + 320) * (d + c - 150745.0 / 4) - (a + 72) * sqrt(162409 * d - pow(d + c + 150745.0 / 4, 2) + 162409 * c) + 180 * c + 6783525) / (2 * d + 2 * c) - 180));
         }
 
-    /// @brief convert the state to the linkage input velocity
-    /// @param state state to convert
-    /// @return converted state
+    /// @brief gets the effective gear ratio of the linkage at the given angle
+    /// @param x input angle
+    /// @return effective gear ratio
+    /// @note this is the derivative of the to_pitch_linkage_angle function
     /// @note see the matlab code at the bottom of the file for to generate the equation
-    float to_pitch_linkage_velocity(float state) {
-       // Precompute sin(x) and cos(x)
-        double sin_x = std::sin(x);
-        double cos_x = std::cos(x);
+    float pitch_linkage_gear_ratio(float x) {
+        const float s = sin(x);
+        const float c = cos(x);
 
-        // Precompute frequently used terms
-        double A = (1087.0 * sin_x) / 4.0 + 72.0;
-        double B = (1087.0 * cos_x) / 4.0 + 140.0;
-        double A2 = std::pow(A, 2);
-        double B2 = std::pow(B, 2);
+        const float A = s*2.7175e2+7.2e1;
+        const float B = c*2.7175e2+1.4e2;
+        
+        const float A2 = (A*A);
+        const float B2 = (B*B);
+        
+        const float C = A2+B2;
 
-        // Common sum of squares
-        double sum_squares = A2 + B2;
+        const float cA = c*A;
+        const float sB = s*B;
 
-        // Precompute the constant adjustment
-        double sum_squares_minus = sum_squares + 150745.0 / 4.0;
+        const float D = (s*2.7175e2+1.47e2);
+        const float E = (cA*5.435e2-sB*5.435e2);
 
-        // Precompute the massive radical term
-        double radical = std::sqrt(162409.0 * A2 - std::pow(sum_squares_minus, 2) + 162409.0 * B2);
+        const float F = (C-3.768625e4);
 
-        // Precompute more common terms
-        double denom = 2.0 * (A2 + B2);
+        const float G = A2*1.62409e5;
 
-        // Precompute outer denominators
-        double denom_full = denom - 180.0;
+        const float H = sqrt(G-pow(C+3.768625e4, 2)+B2*1.62409e5);
 
-        // Precompute big numerator piece
-        double big_numerator_piece = (
-            180.0 * A2 +
-            (B + 180.0) * (sum_squares - 150745.0 / 4.0) -
-            A * radical +
-            180.0 * B2 +
-            6783525.0
-        ) / denom - 180.0;
+        const float I = A2*2.0+B2*2.0;
 
-        // Precompute small term
-        double small_term = (
-            75.0 * A2 +
-            A * (sum_squares - 150745.0 / 4.0) +
-            B * radical +
-            75.0 * B2 +
-            11305875.0 / 4.0
-        ) / denom - 75.0;
+        const float J = cA*1.087e3-sB*1.087e3;
+        const float K = A2*7.5e1+D*F+(B)*H+B2*7.5e1+2.82646875e6;
+        const float L = A2*1.8e2+(c*2.7175e2+3.2e2)*F-(A)*H+B2*1.8e2+6.783525e6;
 
-        // Precompute another large factor
-        double big_factor = (
-            (176538583.0 * sin_x * B) / 2.0 -
-            (176538583.0 * cos_x * A) / 2.0 +
-            2.0 * ((1087.0 * cos_x * A) / 2.0 - (1087.0 * sin_x * B) / 2.0) * sum_squares_minus
-        );
-
-        // Now build up the top expression
-        double top_expr = (
-            (1087.0 * cos_x * A - 1087.0 * sin_x * B) / 2.0 * (A + 75.0)
-            + (1087.0 * cos_x * sum_squares_minus) / 4.0
-            + (81525.0 * cos_x * A) / 2.0
-            - (81525.0 * sin_x * B) / 2.0
-            - (1087.0 * sin_x * radical) / 4.0
-            - ((B * big_factor) / (2.0 * radical)) / denom
-            - ((1087.0 * cos_x * A - 1087.0 * sin_x * B) * (small_term)) / (std::pow(denom, 2))
-        );
-
-        // Build bottom expression
-        double bottom_expr = (
-            big_numerator_piece
-            - (top_expr * small_term) / (std::pow(denom_full, 2))
-        ) / (
-            (std::pow(small_term, 2) / std::pow(denom_full, 2)) + 1.0
-        );
-
-        // Finally divide top by bottom
-        double result = top_expr / bottom_expr;
-
+        const float result = (((E*D+c*F*2.7175e2+cA*4.07625e4-sB*4.07625e4-s*H*2.7175e2-((B)*(cA*(-8.82692915e7)+sB*8.82692915e7+E*(A2+B2+3.768625e4)*2.0)*1.0/sqrt(G-pow(C+3.768625e4,2)+B2*1.62409e5))/2.0)/(I)-1.0/pow(I,2)*(J)*(K))
+            /((L)/(I)-1.8e2)-((E*(c*2.7175e2+3.2e2)-s*(A2+B2-3.768625e4)*2.7175e2-c*H*2.7175e2+cA*9.783e4-sB*9.783e4+((A)*(cA*(-8.82692915e7)+sB*8.82692915e7+E*(C+3.768625e4)*2.0)*1.0/H)/2.0)/(I)-1.0/pow(I, 2)*(J)*(L))
+            *1.0/pow((L)/(I)-1.8e2, 2)*((K)/(I)-7.5e1))/(1.0/pow((L)/(I)-1.8e2, 2)*pow((K)/(I)-7.5e1, 2)+1.0);
+    
         return result;
     }
     };
@@ -407,10 +369,12 @@ struct EngineerArmController : public Controller {
 #endif // CONTROLLER_H
 /*
 Matlab code to generate the equation for to_pitch_linkage_angle and to_pitch_linkage_velocity
+%base joint positions
 x4 = 180;
 y4 = 75;
 x0 = 320;
 y0 = 147;
+%link lengths
 l1 = 271.75;
 l2 = 201.5;
 l3 = 54;
@@ -419,9 +383,9 @@ C = @(a,b,c,d) (a-b).^2 + (c-d).^2;
 m = -1;
 syms x
 eq = atan( ...
-    ( y4 - ( ( (sin(x).*l1 + y0).*(a1+C(x4,(cos(x).*l1 + x0),y4,(sin(x).*l1 + y0))) - y4.*(a1-C(x4,(cos(x).*l1 + x0),y4,(sin(x).*l1 + y0))) + m.*(x4 - (cos(x).*l1 + x0)).*sqrt(4.*C(x4,(cos(x).*l1 + x0),y4,(sin(x).*l1 + y0)).*l2.^2 - (a1-C(x4,(cos(x).*l1 + x0),y4,(sin(x).*l1 + y0))).^2) ) ./ (2.*C(x4,(cos(x).*l1 + x0),y4,(sin(x).*l1 + y0))) ) ) ...
+    ( y4 - ( ( (sin(x).*l1 + y0).*(a1+C(x4,(cos(x).*l1 + x0),y4,(sin(x).*l1 + y0))) - y4.*(a1-C(x4,(cos(x).*l1 + x0),y4,(sin(x).*l1 + y0))) + m.*(x4 - (cos(x).*l1 + x0)).*sqrt(4.*C(x4,(cos(x).*l1 + x0),y4,(sin(x).*l1 + y0)).*l2.^2 - (a1-C(x4,(cos(x).*l1 + x0),y4,(sin(x).*l1 + y0))).^2) ) / (2.*C(x4,(cos(x).*l1 + x0),y4,(sin(x).*l1 + y0))) ) ) ...
     ./ ...
-    ( x4 - ( ( (cos(x).*l1 + x0).*(a1+C(x4,(cos(x).*l1 + x0),y4,(sin(x).*l1 + y0))) - x4.*(a1-C(x4,(cos(x).*l1 + x0),y4,(sin(x).*l1 + y0))) + m.*((sin(x).*l1 + y0) - y4).*sqrt(4.*C(x4,(cos(x).*l1 + x0),y4,(sin(x).*l1 + y0)).*l2.^2 - (a1-C(x4,(cos(x).*l1 + x0),y4,(sin(x).*l1 + y0))).^2) ) ./ (2.*C(x4,(cos(x).*l1 + x0),y4,(sin(x).*l1 + y0))) ) ) ...
+    ( x4 - ( ( (cos(x).*l1 + x0).*(a1+C(x4,(cos(x).*l1 + x0),y4,(sin(x).*l1 + y0))) - x4.*(a1-C(x4,(cos(x).*l1 + x0),y4,(sin(x).*l1 + y0))) + m.*((sin(x).*l1 + y0) - y4).*sqrt(4.*C(x4,(cos(x).*l1 + x0),y4,(sin(x).*l1 + y0)).*l2.^2 - (a1-C(x4,(cos(x).*l1 + x0),y4,(sin(x).*l1 + y0))).^2) ) / (2.*C(x4,(cos(x).*l1 + x0),y4,(sin(x).*l1 + y0))) ) ) ...
 );
 simplify(eq)
 diff(eq)
