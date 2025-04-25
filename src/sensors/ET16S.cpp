@@ -1,5 +1,5 @@
 #include "ET16S.hpp"
-
+#include "ET16S.hpp"
 ET16S::ET16S() { }
 
 
@@ -10,12 +10,13 @@ void ET16S::init() {
 	//configure safety switch
 	//InputKind three_switch=THREE_SWITCH;
 	channel[4].kind = InputKind::THREE_SWITCH;
+	channel[4].id = ChannelId::SWITCH_A;
 	//Turn safety on
 	channel[4].data = static_cast<float>(SwitchPos::FORWARD);
 
 	//configure sticks
 	//right stick horizontal
-	channel[0].kind = InputKind::STICK;
+	channel[r_stick_x_num.value()].kind = InputKind::STICK;
 	//right stick vertical
 	channel[1].kind = InputKind::STICK;
 	//left stick vertical
@@ -27,19 +28,37 @@ void ET16S::init() {
 }
 
 void ET16S::read() {
-	// Raw data stored in array
-	uint8_t m_inputRaw[ET16S_PACKET_SIZE] = { 0 };
-	// Store 2 packets (50 bytes) in the buffer to prevent incomplete packet reads
-	if (Serial8.available() < (2*ET16S_PACKET_SIZE)) {
+	static uint8_t last_byte = 0xAA;
+	
+	// if we have missed more than 4 packets (for example on startup), clear the buffer and start fresh
+	if (Serial8.available() > ET16S_PACKET_SIZE * 4) {
+		Serial8.clear();
+	}
+
+	// only start the "peeking" process if we have at least 2 packets worth of data, therefore we can afford to skip some bytes
+	if (Serial8.available() < ET16S_PACKET_SIZE * 2) {
 		return;
 	}
-	// We read until we find the start byte of the new packet (0x0f)
-	// this ensures we read one packet per loop
+
+	// try to find the start of the frame. This is achieved by seeing if the current byte to read is 0x0f and the previous byte read was 0x00
+	// if this is the case, we have found the start of the frame
 	while (Serial8.peek() != 0x0f) {
-		Serial8.read();
+		last_byte = Serial8.read();
 	}
-	// Fill raw input array
-	for (int i = 0; i < ET16S_PACKET_SIZE;i++) {
+
+	// if the last byte was not 0x00, we have not found the start of the frame
+	if (last_byte != 0x00) {
+		return;
+	}
+
+	// if we have less than a full packet available, we cannot read the full frame
+	// however we are "aligned" with the start of the frame, so we can wait for the next frame
+	if (Serial8.available() < ET16S_PACKET_SIZE) {
+		return;
+	}
+
+	// read the full frame
+	for (int i = 0; i < ET16S_PACKET_SIZE; i++) {
 		m_inputRaw[i] = Serial8.read();
 	}
 
@@ -51,17 +70,11 @@ void ET16S::read() {
 	set_channel_data();
 	//Check flag byte for disconnect
 	test_connection();
-	//if(channel[5].kind==InputKind::THREE_SWITCH){Serial.print("ITS TRUE");}
-	///print_raw_bin(m_inputRaw);
-	//print_format_bin(16);
-	print();
-	//print_raw();
 }
 
 void ET16S::print() {
 	for (int i = 0; i < ET16S_INPUT_VALUE_COUNT; i++) {
-		Serial.print(channel[i].data);
-		Serial.print(" ");
+		Serial.printf("%f ", channel[i].data);
 	}
 
 	Serial.println();
@@ -238,10 +251,16 @@ float ET16S::map_raw(InputChannel input) {
 	case InputKind::THREE_SWITCH: {
 		if (val == max_in) {
 			val = static_cast<float>(SwitchPos::BACKWARD);
+			//bad fix this
+			//val = static_cast<float>(SwitchPos::MIDDLE);
 		} else if (val == min_in) {
 			val = static_cast<float>(SwitchPos::FORWARD);
+		
+
 		} else {
 			val = static_cast<float>(SwitchPos::MIDDLE);
+			//BAD FIX THIS
+			//val = static_cast<float>(SwitchPos::BACKWARD);
 		}
 		break;
 	}
@@ -288,25 +307,47 @@ void ET16S::set_config() {
 	//Valid channel types include STICK,TWO_SWITCH_THREE_SWITCH,
 	//DIAL,SLIDER,TRIM,FLAG,INVALID
 	//note (trim is not mapped)
-	channel[0].id = ChannelId::R_STICK_X;
-	channel[1].id = ChannelId::R_STICK_Y;
-	channel[2].id = ChannelId::L_STICK_Y;
-	channel[3].id = ChannelId::L_STICK_X;
-	channel[4].id = ChannelId::SWITCH_A;
-	channel[5].id = ChannelId::SWITCH_B;
-	channel[6].id = ChannelId::SWITCH_C;
-	channel[7].id = ChannelId::SWITCH_D;
-	channel[8].id = ChannelId::SWITCH_E;
-	channel[9].id = ChannelId::SWITCH_F;
-	channel[10].id = ChannelId::SWITCH_G;
-	channel[11].id = ChannelId::SWITCH_H;
-	channel[12].id = ChannelId::R_SLIDER;
-	channel[14].id = ChannelId::L_SLIDER;
-	channel[13].id = ChannelId::R_DIAL;
+	channel[r_stick_x_num.value()].id = ChannelId::R_STICK_X;
+	channel[r_stick_y_num.value()].id = ChannelId::R_STICK_Y;
+	channel[l_stick_x_num.value()].id = ChannelId::L_STICK_X;
+	channel[l_stick_y_num.value()].id = ChannelId::L_STICK_Y;
+	if (switch_b_num.has_value()) {
+		channel[switch_b_num.value()].id = ChannelId::SWITCH_B;
+	}
+	if (switch_c_num.has_value()) {
+		channel[switch_c_num.value()].id = ChannelId::SWITCH_C;
+	}
+	if (switch_d_num.has_value()) {
+		channel[switch_d_num.value()].id = ChannelId::SWITCH_D;
+	}
+	if (switch_e_num.has_value()) {
+		channel[switch_e_num.value()].id = ChannelId::SWITCH_E;
+	}
+	if (switch_f_num.has_value()) {
+		channel[switch_f_num.value()].id = ChannelId::SWITCH_F;
+	}
+	if (switch_g_num.has_value()) {
+		channel[switch_g_num.value()].id = ChannelId::SWITCH_G;
+	}
+	if (switch_h_num.has_value()) {
+		channel[switch_h_num.value()].id = ChannelId::SWITCH_H;
+	}
+	if (r_slider_num.has_value()) {
+		channel[r_slider_num.value()].id = ChannelId::R_SLIDER;
+	}
+	if (l_slider_num.has_value()) {
+		channel[l_slider_num.value()].id = ChannelId::L_SLIDER;
+	}
+	if (r_dial_num.has_value()) {
+		channel[r_dial_num.value()].id = ChannelId::R_DIAL;
+	}
+	if(l_dial_num.has_value()){
+		channel[l_dial_num.value()].id = ChannelId::L_DIAL;
+	}
 	channel[15].id = ChannelId::UNMAPPED; //channel[15] is non-functional
 	channel[16].id = ChannelId::FLAG;
 
-	for (int i=5; i<ET16S_INPUT_VALUE_COUNT;i++){
+	for (int i = 5; i < ET16S_INPUT_VALUE_COUNT; i++){
 		ChannelId id = channel[i].id;
 		switch(id){
 		case ChannelId::L_STICK_X:
@@ -386,67 +427,91 @@ void ET16S::set_config() {
 	}
 }
 
+float ET16S::average_channel(float sample, int channel_index) {
+	// set the sample
+	// circular buffer 
+	int channel_value_index = value_indices[channel_index];
+	channel_values_circular_buf[channel_index][channel_value_index] = sample;
+	value_indices[channel_index] = (channel_value_index + 1) % AVERAGE_SAMPLE_COUNT;
+	
+	float sum = 0;
+	float average = 0;
+	for (int i = 0; i < AVERAGE_SAMPLE_COUNT; i++) {
+		sum += channel_values_circular_buf[channel_index][i];
+	}
+
+	average = sum / AVERAGE_SAMPLE_COUNT;
+	return average;
+}
+
 void ET16S::set_channel_data() {
 	for (int i = 0; i < ET16S_INPUT_VALUE_COUNT;i++) {
-		channel[i].data = map_raw(channel[i]);
+		// we only want to average the stick, dial, and slider channels
+		// the transmitter's output for continuous data is a bit noisy, enough to move the yaw back and forth
+		// we average the last few samples to smoothen the output
+		if (channel[i].kind == InputKind::STICK || channel[i].kind == InputKind::DIAL || channel[i].kind == InputKind::SLIDER) {
+			channel[i].data = average_channel(map_raw(channel[i]), i);
+		} else {
+			channel[i].data = map_raw(channel[i]);
+		}
 	}
 }
 
 void ET16S::test_connection() {
-	uint16_t flag_byte = channel[16].data;
+	uint16_t flag_byte = channel[16].raw_format;
 	if (flag_byte & ERROR) {
-		is_connected = false;
+		is_connect = false;
 	} else {
-		is_connected = true;
+		is_connect = true;
 	}
 }
 
-uint8_t ET16S::get_safety_switch() {
-	return channel[4].data;
+SwitchPos ET16S::get_safety_switch() {
+	return static_cast<SwitchPos> (channel[4].data);
 }
 
 float ET16S::get_r_stick_x() {
-	return channel[0].data;
+	return channel[r_stick_x_num.value()].data;
 }
 
 float ET16S::get_r_stick_y() {
-	return channel[1].data;
+	return channel[r_stick_y_num.value()].data;
 }
 
 float ET16S::get_l_stick_x() {
-	return channel[2].data;
+	return channel[l_stick_x_num.value()].data;
 }
 
 float ET16S::get_l_stick_y() {
-	return channel[3].data;
+	return channel[l_stick_y_num.value()].data;
 }
-std::optional<float> ET16S::get_switch_b(){
+std::optional<SwitchPos> ET16S::get_switch_b(){
 	if (!switch_b_num.has_value()){ return {}; }
-		return channel[switch_b_num.value()].data;
+	return static_cast<SwitchPos> (channel[switch_b_num.value()].data);
 }
-std::optional<float> ET16S::get_switch_c(){
+std::optional<SwitchPos> ET16S::get_switch_c(){
 	if (!switch_c_num.has_value()){ return {}; }
-	return channel[switch_c_num.value()].data;
+	return static_cast<SwitchPos> (channel[switch_c_num.value()].data);
 }
-std::optional<float> ET16S::get_switch_d(){
+std::optional<SwitchPos> ET16S::get_switch_d(){
 	if (!switch_d_num.has_value()){ return {}; }
-	return channel[switch_d_num.value()].data;
+	return static_cast<SwitchPos> (channel[switch_d_num.value()].data);
 }
-std::optional<float> ET16S::get_switch_e(){
+std::optional<SwitchPos> ET16S::get_switch_e(){
 	if (!switch_e_num.has_value()){ return {}; }
-	return channel[switch_e_num.value()].data;
+	return static_cast<SwitchPos> (channel[switch_e_num.value()].data);
 }
-std::optional<float> ET16S::get_switch_f(){
+std::optional<SwitchPos> ET16S::get_switch_f(){
 	if (!switch_f_num.has_value()){ return {}; }
-	return channel[switch_f_num.value()].data;
+	return static_cast<SwitchPos> (channel[switch_f_num.value()].data);
 }
-std::optional<float> ET16S::get_switch_g(){
+std::optional<SwitchPos> ET16S::get_switch_g(){
 	if (!switch_g_num.has_value()){ return {}; }
-	return channel[switch_g_num.value()].data;
+	return static_cast<SwitchPos> (channel[switch_g_num.value()].data);
 }
-std::optional<float> ET16S::get_switch_h(){
+std::optional<SwitchPos> ET16S::get_switch_h(){
 	if (!switch_h_num.has_value()){ return {}; }
-	return channel[switch_h_num.value()].data;
+	return static_cast<SwitchPos> (channel[switch_h_num.value()].data);
 }
 std::optional<float> ET16S::get_l_slider(){
 	if (!l_slider_num.has_value()){ return {}; }
@@ -490,14 +555,28 @@ std::optional<float> ET16S::get_r_dial(){
 }
 
 std::optional<float> ET16S::get_channel_data(int chan_num){
-	// Will return nothing if an incorrect channel number is given
+	// Will return nothing if an incorrect channel  number is given
 	if ((chan_num < 0) || (chan_num > 16)){
 		return {};
 	}
 	return channel[chan_num].data;
 }
 
-bool ET16S::get_connection_status() {
-	return is_connected;
+bool ET16S::is_connected() {
+	return is_connect;
 }
-
+SwitchPos ET16S::get_l_switch(){
+	return static_cast<SwitchPos> (get_safety_switch());
+}
+SwitchPos ET16S::get_r_switch(){
+	return static_cast<SwitchPos> (channel[switch_d_num.value()].data);
+}
+float ET16S::get_wheel(){
+	// index will need to be changed to use a different control for wheel
+	return channel[l_slider_num.value()].data;
+}
+ET16S_Data ET16S::get_channels(){
+	ET16S_Data temp_channels;
+	memcpy(temp_channels.channels,channel,sizeof(ET16S_Data));
+	return temp_channels;
+}

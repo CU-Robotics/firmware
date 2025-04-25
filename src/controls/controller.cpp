@@ -403,7 +403,7 @@ void EngineerArmController::step(float reference[STATE_LEN][3], float estimate[S
     // calculate the output for the roll controller
     float roll_output = pid_roll_position.filter(dt, false, false) + pid_roll_velocity.filter(dt, false, false);
     outputs[5] = roll_output;
-    Serial.printf("roll out: %f est: %f ref: %f\n", outputs[5], estimate[9][0], reference[9][0]);
+    // Serial.printf("roll out: %f est: %f ref: %f\n", outputs[5], estimate[9][0], reference[9][0]);
 
     for(int i = 0; i < 6; i++){
         // outputs[i] = constrain(outputs[i], -1.0, 1.0);

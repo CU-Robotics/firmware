@@ -7,7 +7,7 @@ void ControllerManager::init(CANManager* _can, const Config* config) {
     for (int i = 0; i < NUM_ROBOT_CONTROLLERS; i++) {
         init_controller(config_data->controller_info[i][0], config_data->gains[i], config_data->gear_ratios[i]);
     }
-    Serial.printf("num controllers: %d\n", num_controllers);
+    //Serial.printf("num controllers: %d\n", num_controllers);
 }
 
 void ControllerManager::init_controller(int controller_type, const float gains[NUM_GAINS], const float gear_ratios[CAN_MAX_MOTORS]) {
@@ -63,6 +63,7 @@ void ControllerManager::step(float macro_reference[STATE_LEN][3], float macro_es
             if (config_data->controller_info[i][j + 1] < 0) break;
             // Serial.printf("\tMotor %f: %f\n", config_data->controller_info[i][j + 1], outputs[j]);
             actuator_write(config_data->controller_info[i][j + 1], outputs[j]);
+
         }
     }
 }

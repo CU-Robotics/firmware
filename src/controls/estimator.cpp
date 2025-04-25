@@ -789,9 +789,10 @@ EngineerArmEstimator::EngineerArmEstimator(CANManager* _can) {
 }
 
 void EngineerArmEstimator::step_states(float output[STATE_LEN][3], float curr_state[STATE_LEN][3], int override) {
-    // output[0][0] = to_pitch_state_angle(can->get_motor_state(CAN_2, 3).position - pitch_encoder_offset);
-    // output[0][1] = to_pitch_state_velocity(can->get_motor_state(CAN_2, 3).speed);
+    // output[0][0] = (can->get_motor_state(CAN_2, 3).position - pitch_encoder_offset);
+    // output[0][1] = (can->get_motor_state(CAN_2, 3).speed);
     // output[0][2] = 0;
+    // Serial.printf("pitch pos: %f velocity: %f\n", output[0][0], output[0][1]);
     // output[1][0] = to_linear_state_position(can->get_motor_state(CAN_2, 4).position - linear_encoder_offset);
     // output[1][1] = to_linear_state_velocity(can->get_motor_state(CAN_2, 4).speed);
     // output[1][2] = 0;
@@ -804,7 +805,7 @@ void EngineerArmEstimator::step_states(float output[STATE_LEN][3], float curr_st
     // output[4][0] = can->get_motor_state(CAN_2, 7).position - pitch3_encoder_offset;
     // output[4][1] = can->get_motor_state(CAN_2, 7).speed;
     // output[4][2] = 0;
-    Serial.printf("roll torque: %f\n", can->get_motor_state(CAN_2, 8).torque);
+    // Serial.printf("roll torque: %f\n", can->get_motor_state(CAN_2, 8).torque);
     output[5][0] = can->get_motor_state(CAN_2, 8).position - roll_encoder_offset;
     output[5][1] = can->get_motor_state(CAN_2, 8).speed;
     output[5][2] = 0;

@@ -3,6 +3,7 @@
 #include <Arduino.h>
 #include <string>
 #include <optional>
+#include "./Transmitter.hpp"
 //http://www.wflysz.com/wflyftp/ET16S/ET16SENV1.00.pdf
 
 //channel[15] is broken
@@ -14,13 +15,13 @@ constexpr uint16_t ET16S_INPUT_VALUE_COUNT = 17;
 /// @brief maximum raw input value for stick,dial,wheel
 constexpr float max_in = 1695;
 /// @brief minimum raw input value for stick,dial,wheel
-constexpr float min_in = 352;
+constexpr float min_in = 353;	// this is 352 if Port9 is set to w.bus2
 /// @brief flag byte displaying disconnect (found through testing)
 constexpr uint16_t ERROR = 0b0000000000001100;
 
 /// @brief organizes the kinds of inputs the transmitter has
 enum class InputKind {
-	INVALID,
+	INVALID = 0,
 	STICK,
 	TWO_SWITCH,
 	THREE_SWITCH,
@@ -31,7 +32,7 @@ enum class InputKind {
 };
 /// @brief enum for all possible inputs on transmitter
 enum class ChannelId{
-	UNMAPPED,
+	UNMAPPED = 0,
 	L_STICK_X,
 	L_STICK_Y,
 	R_STICK_X,
@@ -58,12 +59,6 @@ enum class ChannelId{
 };
 /// @brief three switch possible positions
 /// @note for switch on the front plate forward is up
-enum class SwitchPos{
-	INVALID,
-	FORWARD,
-	MIDDLE,
-	BACKWARD
-};
 
 /// @brief stores data and kind of data for the  15 data channels and 1 flag channel
 /// for the W-fly Transmitter
@@ -80,9 +75,12 @@ struct InputChannel {
 	/// @brief stores the specific control on the transmitter
 	ChannelId id = ChannelId::UNMAPPED;
 };
+struct ET16S_Data{
+	InputChannel channels[ET16S_INPUT_VALUE_COUNT];
+};
 
 /// @brief Class for W-Fly transmitter and reciever to gather and map control data
-class ET16S {
+class ET16S : public Transmitter {
 public:
 	/// @brief Constructor, left empty
 	ET16S();
@@ -102,7 +100,7 @@ public:
 
 	/// @brief get safety values
 	/// @return safety value(1-3) 1 is safe
-	uint8_t get_safety_switch();
+	SwitchPos get_safety_switch();
 
 	/// @brief get right stick x axis value
 	/// @return (-1 to 1)
@@ -122,31 +120,31 @@ public:
 	
 	/// @brief get switch b value 
 	/// @return switch b value if it exists otherwise return nothing
-	std::optional<float> get_switch_b();
+	std::optional<SwitchPos> get_switch_b();
 	
 	/// @brief get switch c value 
 	/// @return switch c value if it exists otherwise return nothing
-	std::optional<float> get_switch_c();
+	std::optional<SwitchPos> get_switch_c();
 	
 	/// @brief get switch d value 
 	/// @return switch d value if it exists otherwise return nothing
-	std::optional<float> get_switch_d();
+	std::optional<SwitchPos> get_switch_d();
 	
 	/// @brief get switch e value 
 	/// @return switch e value if it exists otherwise return nothing
-	std::optional<float> get_switch_e();
+	std::optional<SwitchPos> get_switch_e();
 	
 	/// @brief get switch f value 
 	/// @return switch f value if it exists otherwise return nothing
-	std::optional<float> get_switch_f();
+	std::optional<SwitchPos> get_switch_f();
 	
 	/// @brief get switch g value 
 	/// @return switch g value if it exists otherwise return nothing
-	std::optional<float> get_switch_g();
+	std::optional<SwitchPos> get_switch_g();
 	
 	/// @brief get switch h value 
 	/// @return switch h value if it exists otherwise return nothing
-	std::optional<float> get_switch_h();
+	std::optional<SwitchPos> get_switch_h();
 
 	/// @brief get left slider value
 	/// @return left slider value if it exists otherwise return nothing
@@ -188,7 +186,6 @@ public:
 	/// @return trim six value if it exists otherwise return nothing
 	std::optional<float> get_trim_six();
 	
-
 	/// @brief get channel data
 	/// @param chan_num is the channel number from 5-16
 	/// @return channel data
@@ -196,8 +193,29 @@ public:
 
 	/// @brief getter for connection status
 	/// @return false if disconnected
-	bool get_connection_status();
+	bool is_connected();
+	
+	/// @brief returns switch A
+	/// @note exists for DR16 Backwards Compatability
+	/// @return left most front face switch value
+	SwitchPos get_l_switch();
+	
+	/// @brief returns switch D
+	/// @note exists for DR16 Backwards Compatability
+	/// @return right most front face switch value
+	SwitchPos get_r_switch();
+	
+	/// @brief returns left slider
+	/// @note exists for DR16 Backwards Compatability
+	/// @return back left spin wheel value
+	float get_wheel();
 
+	/// @brief returns struct containing all data channels for comms
+	/// @return returns ET16S_Data Struct
+	ET16S_Data get_channels();
+
+	uint8_t* get_raw() { return m_inputRaw; }
+	
 private:
 	/// @brief prints the entire raw binary data packet exactly as it is recieved
 	/// @param m_inputRaw raw bit array
@@ -219,6 +237,12 @@ private:
 	/// @param m_inputRaw takes in 8 bit chunks of the total data packet
 	void format_raw(uint8_t m_inputRaw[ET16S_PACKET_SIZE]);
 
+	/// @brief averages the last 5 samples of a channel
+	/// @param sample is the current sample
+	/// @param channel_index is the index of the channel
+	/// @return the average of the last 5 samples
+	float average_channel(float sample, int channel_index);
+
 	/// @brief assigns the mapped input values to their respective channels
 	void set_channel_data();
 
@@ -232,28 +256,36 @@ private:
 	InputChannel channel[ET16S_INPUT_VALUE_COUNT];
 
 	/// @brief signifies whether a disconnect flag has been read
-	bool is_connected=false;
-	//switch a (safety switch) and joysticks are not configurable
-	/// @brief switch b index
-	std::optional<int> switch_b_num=5;
+	bool is_connect = false;
+	// switch a (safety switch / index 4) is not configurable
+	/// @brief r stick x index
+	std::optional<int> r_stick_x_num = 0;
+	/// @brief right y stick index
+	std::optional<int> r_stick_y_num = 1;
+	/// @brief left x stick index
+	std::optional<int> l_stick_x_num = 3;
+	/// @brief left y stick index
+	std::optional<int> l_stick_y_num = 2;
+	/// @brief stich b index
+	std::optional<int> switch_b_num = 5;
 	/// @brief switch c index	
-	std::optional<int> switch_c_num=6;
+	std::optional<int> switch_c_num = 6;
 	/// @brief switch d index	
-	std::optional<int> switch_d_num=7;
+	std::optional<int> switch_d_num = 7;
 	/// @brief switch e index	
-	std::optional<int> switch_e_num=8;
+	std::optional<int> switch_e_num = 8;
 	/// @brief switch f index	
-	std::optional<int> switch_f_num=9;
+	std::optional<int> switch_f_num = 9;
 	/// @brief switch g index	
-	std::optional<int> switch_g_num=10;
+	std::optional<int> switch_g_num = 10;
 	/// @brief switch h index	
-	std::optional<int> switch_h_num=11;
+	std::optional<int> switch_h_num = 11;
 	/// @brief right slider index	
-	std::optional<int> r_slider_num=12;
+	std::optional<int> r_slider_num = 12;
 	/// @brief left slider index	
-	std::optional<int> l_slider_num=14;
+	std::optional<int> l_slider_num = 14;
 	/// @brief right dial index	
-	std::optional<int> r_dial_num=13;
+	std::optional<int> r_dial_num = 13;
 	/// @brief left dial index	
 	std::optional<int> l_dial_num;
 	/// @brief trim one index	
@@ -268,4 +300,11 @@ private:
 	std::optional<int> trim_five_num;
 	/// @brief trim six index	
 	std::optional<int> trim_six_num;
+
+	const static int AVERAGE_SAMPLE_COUNT = 2;
+
+	float channel_values_circular_buf[ET16S_INPUT_VALUE_COUNT][AVERAGE_SAMPLE_COUNT] = { 0 };
+	int value_indices[ET16S_INPUT_VALUE_COUNT] = { 0 };
+
+	uint8_t m_inputRaw[ET16S_PACKET_SIZE] = { 0 };
 };
