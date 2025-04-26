@@ -57,7 +57,13 @@ void PacketPayload::deconstruct_data(uint8_t* data, uint16_t size) {
 #endif
 
     // ensure the data is the correct size
-    assert(size == max_data_size);
+    if (size != max_data_size) {
+    #if defined(HIVE)
+        throw std::runtime_error("Data size does not match max data size");
+    #elif defined(FIRMWARE)
+        assert(false && "Data size does not match max data size");
+    #endif
+    }
 
     uint16_t offset = 0;
 
@@ -163,6 +169,10 @@ uint16_t PacketPayload::get_medium_priority_queue_size() const {
 
 uint16_t PacketPayload::get_logging_queue_size() const {
     return logging_send_queue.size();
+}
+
+uint16_t PacketPayload::get_max_size() const {
+    return max_data_size;
 }
 
 void PacketPayload::clear_raw_data() {

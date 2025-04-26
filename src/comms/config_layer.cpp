@@ -74,13 +74,13 @@ const Config* const ConfigLayer::configure(Comms::CommsLayer* comms, bool config
     // memset(outgoing.raw, 0, sizeof(outgoing.raw));
     // comms->set_hid_outgoing(outgoing);
 
-    // Hive marks the config process as done once teensy sends a packet with info_bit == 0
-    // Hive then sends a packet back with info_bit == 0 as well, so ping until we get a non-config back
+    // Hive marks the config process as done once teensy sends a packet with request_bit == 0
+    // Hive then sends a packet back with request_bit == 0 as well, so ping until we get a non-config back
     // TODO: this timeout is a hack, but it seems to work very well. Hive ends up seeing the 0 info bit before firmware does, causing this loop to never end
     uint32_t start = micros();
-    while (comms_layer.get_hive_data().config_section.info_bit == 1 || micros() - start < 500000) {
+    while (comms_layer.get_hive_data().config_section.request_bit == 1 || micros() - start < 500000) {
         Comms::Sendable<ConfigSection> sendable;
-        sendable.data.info_bit = 0;
+        sendable.data.request_bit = 0;
         sendable.send_to_comms();
         comms->run();
     }
@@ -145,13 +145,13 @@ void ConfigLayer::process() {
     in.payload()[0] = 0xff; // filler byte (needed for some reason)
     in.payload()[1] = in_section.section_id;
     in.payload()[2] = in_section.subsection_id;
-    in.payload()[3] = in_section.info_bit;
+    in.payload()[3] = in_section.request_bit;
     *reinterpret_cast<uint16_t*>(in.payload() + 4) = in_section.section_size;
     *reinterpret_cast<uint16_t*>(in.payload() + 6) = in_section.subsection_size;
     memcpy(in.payload() + 8, in_section.raw, 1000);
 
     // if this is the packet we want
-    if (in_section.section_id == seek_sec && in_section.subsection_id == seek_subsec && in_section.info_bit == 1) {
+    if (in_section.section_id == seek_sec && in_section.subsection_id == seek_subsec && in_section.request_bit == 1) {
         // received the initial config packet
         if (in_section.section_id == -1) {
             /*
@@ -205,7 +205,7 @@ void ConfigLayer::process() {
 
     out_section.section_id = seek_sec;
     out_section.subsection_id = seek_subsec;
-    out_section.info_bit = 1;
+    out_section.request_bit = 1;
 
     // if configuration isn't complete, request the next packet
     if (!configured) {

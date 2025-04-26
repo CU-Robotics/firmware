@@ -4,7 +4,7 @@
 #include "modules/comms/comms_layer.hpp"    // for CommsLayer
 #include "modules/hive/environment.hpp"     // for Hive::env
 #include <stdexcept>                        // for std::runtime_error
-#include "doctest/doctest.h"                // for doctest
+#include <doctest/doctest.h>                // for doctest
 #elif defined(FIRMWARE)
 #include "comms/comms_layer.hpp"            // for CommsLayer
 #include <cassert>                          // for assert
@@ -40,7 +40,7 @@ void FirmwareData::set_data(CommsData* data) {
 
     #if defined(HIVE)
         // update the state lookup history
-        Hive::env->comms_layer->update_state_lookback(&estimated_state);
+        Hive::env->comms_layer->add_estimated_state_to_lookup(&estimated_state);
     #endif
 
         break;

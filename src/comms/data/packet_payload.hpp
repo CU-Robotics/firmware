@@ -77,6 +77,10 @@ public:
     /// @return The size of the logging send queue.
     uint16_t get_logging_queue_size() const;
 
+    /// @brief Get the max size of the raw data buffer.
+    /// @return The max size of the raw data buffer.
+    uint16_t get_max_size() const;
+
 private:
     /// @brief Clear the raw data buffer.
     void clear_raw_data();

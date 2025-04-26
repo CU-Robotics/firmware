@@ -50,7 +50,7 @@ TEST_CASE("Sendable sends data to CommsLayer") {
     comms_layer.send_packets();
     comms_layer.set_hid_incoming(comms_layer.get_hid_outgoing());
     comms_layer.set_ethernet_incoming(comms_layer.get_ethernet_outgoing());
-    comms_layer.recv_packets();
+    comms_layer.receive_packets();
 
     REQUIRE(comms_layer.get_firmware_data().test_data.x == data.x);
     REQUIRE(comms_layer.get_firmware_data().test_data.y == data.y);
@@ -80,7 +80,7 @@ TEST_CASE("Sending too much data to fit in one packet") {
     comms_layer.send_packets();
     comms_layer.set_hid_incoming(comms_layer.get_hid_outgoing());
     comms_layer.set_ethernet_incoming(comms_layer.get_ethernet_outgoing());
-    comms_layer.recv_packets();
+    comms_layer.receive_packets();
 
     // The first possible big test data should be the one that was sent first
     REQUIRE(comms_layer.get_firmware_data().big_test_data.blah[0] == 0);
@@ -88,7 +88,7 @@ TEST_CASE("Sending too much data to fit in one packet") {
     comms_layer.send_packets();
     comms_layer.set_hid_incoming(comms_layer.get_hid_outgoing());
     comms_layer.set_ethernet_incoming(comms_layer.get_ethernet_outgoing());
-    comms_layer.recv_packets();
+    comms_layer.receive_packets();
 
     // then the second
     REQUIRE(comms_layer.get_firmware_data().big_test_data.blah[0] == 1);
@@ -98,7 +98,7 @@ TEST_CASE("Sending too much data to fit in one packet") {
         comms_layer.send_packets();
         comms_layer.set_hid_incoming(comms_layer.get_hid_outgoing());
         comms_layer.set_ethernet_incoming(comms_layer.get_ethernet_outgoing());
-        comms_layer.recv_packets();
+        comms_layer.receive_packets();
         REQUIRE(comms_layer.get_firmware_data().big_test_data.blah[0] == i);
     }
 
@@ -126,7 +126,7 @@ TEST_CASE("Sending more than one Sendable") {
     comms_layer.send_packets();
     comms_layer.set_hid_incoming(comms_layer.get_hid_outgoing());
     comms_layer.set_ethernet_incoming(comms_layer.get_ethernet_outgoing());
-    comms_layer.recv_packets();
+    comms_layer.receive_packets();
 
     REQUIRE(comms_layer.get_firmware_data().test_data.x == data1.x);
     REQUIRE(comms_layer.get_firmware_data().test_data.y == data1.y);
@@ -155,7 +155,7 @@ TEST_CASE("Sendable works if it gets out of scope") {
     comms_layer.send_packets();
     comms_layer.set_hid_incoming(comms_layer.get_hid_outgoing());
     comms_layer.set_ethernet_incoming(comms_layer.get_ethernet_outgoing());
-    comms_layer.recv_packets();
+    comms_layer.receive_packets();
 
     REQUIRE(comms_layer.get_firmware_data().test_data.x == data.x);
     REQUIRE(comms_layer.get_firmware_data().test_data.y == data.y);

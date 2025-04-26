@@ -39,7 +39,7 @@ public:
 
     /// @brief Receive and process packets from the appropriate physical layer
     /// @note This function should only be ran internally
-    void recv_packets();
+    void receive_packets();
 
     /// @brief Check if Ethernet is connected
     /// @return True if connected, false if not
@@ -66,14 +66,16 @@ public:
     /// @param packet The incoming HID packet
     void set_hid_incoming(HIDPacket&& packet);
 
-    /// @brief Get the firmware data
+    /// @brief Get the data from Firmware
+    /// @note Populated on outgoing packets
     /// @return The firmware data
     FirmwareData& get_firmware_data();
     /// @brief Set the firmware data
     /// @param data The firmware data to set
     void set_firmware_data(FirmwareData& data);
 
-    /// @brief Get the hive data
+    /// @brief Get the data from Hive
+    /// @note Populated on incoming packets
     /// @return The hive data
     HiveData& get_hive_data();
     /// @brief Set the hive data

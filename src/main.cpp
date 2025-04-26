@@ -175,7 +175,7 @@ int main() {
         sensor_manager.send_sensor_data_to_comms();
 
         // check whether this packet is a config packet
-        if (comms_layer.get_hive_data().config_section.info_bit == 1) {
+        if (comms_layer.get_hive_data().config_section.request_bit == 1) {
             Serial.println("\n\nConfig request received, reconfiguring from comms!\n\n");
             // trigger safety mode
             can.issue_safety_mode();
