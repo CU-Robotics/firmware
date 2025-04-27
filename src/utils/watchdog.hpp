@@ -12,10 +12,10 @@ class Watchdog {
 private:
     /// @brief tigger variable is used as a warning that a trigger should happen (callback time - trigger time) = time the callback will be triggered, this is in seconds, range: (0, 128), the callback will be called,
     /// @note that 0 is actually 0.5 seconds, 128 seconds is actually 127.5 seconds(subtract )
-    double trigger = 0;
+    double trigger = 2;
     /// @brief  timout varible is used to reference after a certain amount a time if the watchdog has not been fed it will restart the CPU, units: seconds, range: (0, 128)
     /// @note that 0 is actually 0.5 seconds, 128 seconds is actually 127.5 seconds(subtract )
-    double timeout = 1;
+    double timeout = 3;
     
     /// @brief the wdt is the type to initialize the watchdog and the watchdog you used is selected, here watchdog 1 is selected which is used to reset the CPU
     WDT_T4<WDT1> wdt;

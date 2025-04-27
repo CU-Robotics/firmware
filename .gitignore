@@ -20,6 +20,12 @@ build/
 *.a
 *.tar.xz
 
+# Ignore clangd files
+compile_commands.json
+.cache/
+.clangd
+.clang-format
+
 # Ignore any tools/ directory artifacts
 tools/*.txt
 tools/*.out

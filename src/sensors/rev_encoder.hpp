@@ -1,6 +1,7 @@
 #include <cmath>
 #include <FreqMeasureMulti.h>
 #include "Sensor.hpp"
+#include "data_structs.hpp"
 
 #ifndef REV_ENCODER_H
 #define REV_ENCODER_H
@@ -10,15 +11,6 @@
 #define REV_ENC_PIN2 3
 #define REV_ENC_PIN3 4
 
-/// @brief Structure for the Rev encoder sensor.
-struct RevSensorData {
-	/// Sensor ID.
-	uint8_t id;
-	/// Encoder ticks.
-	int ticks;
-	/// Angle in radians.
-	float radians;
-};
 
 /// @brief the class for the Rev Through Bore Encoder(www.revrobotics.com/rev-11-1271/)
 class RevEncoder : public Sensor {

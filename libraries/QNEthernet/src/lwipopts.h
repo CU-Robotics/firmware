@@ -64,7 +64,7 @@ void qnethernet_hal_check_core_locking(const char *file, int line,
 #define MEMP_NUM_UDP_PCB                   8  /* 4 */
 #endif  // !MEMP_NUM_UDP_PCB
 #ifndef MEMP_NUM_TCP_PCB
-#define MEMP_NUM_TCP_PCB                   8  /* 5 */
+#define MEMP_NUM_TCP_PCB                   0  /* 5 */
 #endif  // !MEMP_NUM_TCP_PCB
 #ifndef MEMP_NUM_TCP_PCB_LISTEN
 // #define MEMP_NUM_TCP_PCB_LISTEN            8
@@ -75,7 +75,7 @@ void qnethernet_hal_check_core_locking(const char *file, int line,
 // #define MEMP_NUM_FRAG_PBUF                 15
 // #define MEMP_NUM_ARP_QUEUE                 30
 #ifndef MEMP_NUM_IGMP_GROUP
-#define MEMP_NUM_IGMP_GROUP                9  /* 8 */
+#define MEMP_NUM_IGMP_GROUP                0  /* 8 */
 #endif  // !MEMP_NUM_IGMP_GROUP
 /* #define LWIP_NUM_SYS_TIMEOUT_INTERNAL                                \
    (LWIP_TCP + IP_REASSEMBLY + LWIP_ARP + (2*LWIP_DHCP) + LWIP_ACD + \
@@ -135,7 +135,7 @@ void qnethernet_hal_check_core_locking(const char *file, int line,
 
 // ICMP options
 #ifndef LWIP_ICMP
-#define LWIP_ICMP           LWIP_IPV4  /* 1 */
+#define LWIP_ICMP           0  /* 1 */
 #endif  // LWIP_ICMP
 // #define ICMP_TTL            IP_DEFAULT_TTL
 // #define LWIP_BROADCAST_PING 0
@@ -147,7 +147,7 @@ void qnethernet_hal_check_core_locking(const char *file, int line,
 
 // DHCP options
 #ifndef LWIP_DHCP
-#define LWIP_DHCP                       (LWIP_IPV4 && LWIP_UDP)  /* 0 */
+#define LWIP_DHCP                       0  /* 0 */
 #endif  // !LWIP_DHCP
 #define LWIP_DHCP_DOES_ACD_CHECK        0  /* LWIP_DHCP */
 // #define LWIP_DHCP_BOOTP_FILE            0
@@ -181,7 +181,7 @@ void qnethernet_hal_check_core_locking(const char *file, int line,
 
 // IGMP options
 #ifndef LWIP_IGMP
-#define LWIP_IGMP LWIP_IPV4  /* 0 */
+#define LWIP_IGMP 0  /* 0 */
 #endif  // !LWIP_IGMP
 
 // DNS options
@@ -216,7 +216,7 @@ void qnethernet_hal_check_core_locking(const char *file, int line,
 // TCP options
 
 #ifndef LWIP_TCP
-#define LWIP_TCP                   (LWIP_IPV4 || LWIP_IPV6)  /* 1 */
+#define LWIP_TCP                      0  /* 1 */
 #endif  // !LWIP_TCP
 // #define TCP_TTL                    IP_DEFAULT_TTL
 // #define TCP_MAXRTX                 12
