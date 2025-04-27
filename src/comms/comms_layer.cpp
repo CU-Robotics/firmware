@@ -33,7 +33,7 @@ int CommsLayer::init() {
 
 int CommsLayer::run() {
     // read packets from the physical layers
-    recv_packets();
+    receive_packets();
 
     // write packets to the physical layers
     send_packets();
@@ -72,16 +72,16 @@ void CommsLayer::queue_data(CommsData* data) {
 void CommsLayer::send_packets() {
     // prepare and send a HID packet
     m_hid_payload.construct_data();
-    memcpy(m_hid_outgoing.payload(), m_hid_payload.data(), HID_PACKET_PAYLOAD_SIZE);
+    memcpy(m_hid_outgoing.payload(), m_hid_payload.data(), m_hid_payload.get_max_size());
     m_hid.send_packet(m_hid_outgoing);
     
     // prepare and send an ethernet packet
     m_ethernet_payload.construct_data();
-    memcpy(m_ethernet_outgoing.payload(), m_ethernet_payload.data(), ETHERNET_PACKET_PAYLOAD_SIZE);
+    memcpy(m_ethernet_outgoing.payload(), m_ethernet_payload.data(), m_ethernet_payload.get_max_size());
     m_ethernet.send_packet(m_ethernet_outgoing);
 };
 
-void CommsLayer::recv_packets() {
+void CommsLayer::receive_packets() {
     // defaulted to true so tests can run without physical layers
     bool hid_recv = true;
     bool ethernet_recv = true;
@@ -96,10 +96,10 @@ void CommsLayer::recv_packets() {
 
     // process packets
     if (hid_recv) {
-        m_hid_payload.deconstruct_data(m_hid_incoming.payload(), HID_PACKET_PAYLOAD_SIZE);
+        m_hid_payload.deconstruct_data(m_hid_incoming.payload(), m_hid_payload.get_max_size());
     }
     if (ethernet_recv) {
-        m_ethernet_payload.deconstruct_data(m_ethernet_incoming.payload(), ETHERNET_PACKET_PAYLOAD_SIZE);
+        m_ethernet_payload.deconstruct_data(m_ethernet_incoming.payload(), m_ethernet_payload.get_max_size());
     }    
 };
 

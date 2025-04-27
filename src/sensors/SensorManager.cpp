@@ -76,14 +76,7 @@ void SensorManager::init(const Config* config_data) {
     if (lidar_sensor_count > 0) {
         lidar1 = new D200LD14P(&Serial4, 0);
         lidar2 = new D200LD14P(&Serial5, 1);
-
-
-        // //assign id for comms
-        // lidar1->setId(0);
-        // lidar2->setId(1);
     }
-
-
 }
 
 void SensorManager::read() {

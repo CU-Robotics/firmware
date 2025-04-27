@@ -177,9 +177,6 @@ int main() {
 
     Serial.println("Entering main loop...\n");
 
-    Comms::Sendable<TestData> test_data;
-    test_data.data.w = 0xdeaddead;
-
     // Main loop
     while (true) {
         // start main loop time timer
@@ -191,11 +188,10 @@ int main() {
         can.read();
         transmitter->read();
 
-        test_data.send_to_comms();
         sensor_manager.send_sensor_data_to_comms();
 
         // check whether this packet is a config packet
-        if (comms_layer.get_hive_data().config_section.info_bit == 1) {
+        if (comms_layer.get_hive_data().config_section.request_bit == 1) {
             Serial.println("\n\nConfig request received, reconfiguring from comms!\n\n");
             // trigger safety mode
             can.issue_safety_mode();
@@ -369,11 +365,6 @@ int main() {
 
         Comms::Sendable<TransmitterData> transmitter_sendable = transmitter->get_transmitter_data();
         transmitter_sendable.send_to_comms();
-
-        // Comms::LoggingData logging_data;
-        // const char* logging_data_str = "Logging data test string";
-        // logging_data.deserialize(logging_data_str, strlen(logging_data_str));
-        // logging_data.send_to_comms();
 
         comms_layer.run();
 

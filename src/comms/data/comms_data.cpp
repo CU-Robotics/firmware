@@ -1,7 +1,7 @@
 #include "comms_data.hpp"
 
 #if defined(HIVE)
-#include "doctest/doctest.h"    // for doctest
+#include <doctest/doctest.h>    // for doctest
 
 TEST_CASE("To string does stuff") {
     CHECK(Comms::to_string(Comms::TypeLabel::NONE) == "NONE");

@@ -3,7 +3,7 @@
 #if defined(HIVE)
 #include "modules/comms/comms_layer.hpp"    // for CommsLayer
 #include "modules/hive/environment.hpp"     // for Hive::env
-#include "doctest/doctest.h"                // for doctest
+#include <doctest/doctest.h>                // for doctest
 #elif defined(FIRMWARE)
 #include "comms/comms_layer.hpp"            // for CommsLayer
 #endif
