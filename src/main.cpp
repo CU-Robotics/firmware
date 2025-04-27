@@ -201,7 +201,6 @@ int main() {
         // clamp mouse y to the pitch limits from config
         float pitch_min = config->set_reference_limits[4][0][0];
         float pitch_max = config->set_reference_limits[4][0][1];
-        //float pos_y = dr16_pos_y;
         if (dr16_pos_y < pitch_min) { dr16_pos_y = pitch_min; }
         if (dr16_pos_y > pitch_max) { dr16_pos_y = pitch_max; }
       
