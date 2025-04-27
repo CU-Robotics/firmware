@@ -61,7 +61,7 @@ void ControllerManager::step(float macro_reference[STATE_LEN][3], float macro_es
         // iterate through all the motors this controller sets
         for (size_t j = 0; j < CAN_MAX_MOTORS + 1; j++) {
             if (config_data->controller_info[i][j + 1] < 0) break;
-            // Serial.printf("\tMotor %f: %f\n", config_data->controller_info[i][j + 1], outputs[j]);
+            // Serial.printf("\tMotor %d: %f\n", config_data->controller_info[i][j + 1], outputs[j]);
             actuator_write(config_data->controller_info[i][j + 1], outputs[j]);
 
         }
