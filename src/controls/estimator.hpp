@@ -273,7 +273,7 @@ private:
 
 public:
     /// @brief estimate the state of the gimbal
-    /// @param config_data inputted sensor values from khadas yaml
+    /// @param config_data inputted sensor values from Hive yaml
     /// @param sensor_manager sensor manager object 
     /// @param can can data from Estimator Manager
     GimbalEstimator(Config config_data, SensorManager* sensor_manager, CANManager* can);
@@ -406,7 +406,7 @@ private:
 
 public:
     /// @brief estimate the state of the gimbal
-    /// @param config_data inputted sensor values from khadas yaml
+    /// @param config_data inputted sensor values from Hive yaml
     /// @param sensor_manager sensor manager object 
     /// @param can can from Estimator Manager
     GimbalEstimatorNoOdom(Config config_data, SensorManager* sensor_manager, CANManager* can);

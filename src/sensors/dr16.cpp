@@ -117,6 +117,7 @@ void DR16::read() {
   
 	mouse_x = (m_inputRaw[7] << 8) | m_inputRaw[6]; 
 	mouse_y = (m_inputRaw[9] << 8) | m_inputRaw[8]; 
+	mouse_z = (m_inputRaw[11] << 8) | m_inputRaw[10];
 	l_mouse_button = m_inputRaw[12];
 	r_mouse_button = m_inputRaw[13];
 	s1 = (m_inputRaw[5] & 0x30) >> 4;
@@ -257,6 +258,10 @@ int DR16::get_mouse_y() {
 
 int DR16::get_mouse_x() {
 	return mouse_x;
+}
+
+int DR16::get_mouse_z() {
+	return mouse_z;
 }
 
 bool DR16::get_l_mouse_button() {

@@ -49,7 +49,7 @@ SRC_INC_FLAGS := $(addprefix -I,$(SRC_INC_DIRS))
 INCLUDE_FLAGS := $(TEENSY_INC_FLAGS) $(LIBRARY_INC_FLAGS) $(SRC_INC_FLAGS)
 
 # Compiler flags specific to Teensy 4.1
-TEENSY4_FLAGS = -DF_CPU=600000000 -DUSB_CUSTOM -DLAYOUT_US_ENGLISH -D__IMXRT1062__ -DTEENSYDUINO=159 -DARDUINO_TEENSY41 -DARDUINO=10813 -g3
+TEENSY4_FLAGS = -DF_CPU=600000000 -DUSB_CUSTOM -DLAYOUT_US_ENGLISH -D__IMXRT1062__ -DTEENSYDUINO=159 -DARDUINO_TEENSY41 -DARDUINO=10813 -DFIRMWARE
 
 # CPU flags to optimize code for the Teensy processor
 CPU_CFLAGS = -mcpu=cortex-m7 -mfloat-abi=hard -mfpu=fpv5-d16 -mthumb
@@ -70,9 +70,10 @@ CPPFLAGS := $(INCLUDE_FLAGS) $(DEFINES) -MMD -MP -ffunction-sections -fdata-sect
 CFLAGS := $(CPU_CFLAGS)
 
 # Compiler flags for C++ files
-CXXFLAGS := $(CPU_CFLAGS) -std=gnu++17 \
+CXXFLAGS := $(CPU_CFLAGS) -std=gnu++23 \
             -felide-constructors -fno-exceptions -fpermissive -fno-rtti \
-            -Wno-error=narrowing -Wno-trigraphs -Wno-comment -Wall -Werror
+            -Wno-error=narrowing -Wno-trigraphs -Wno-comment -Wall -Werror \
+			-Wno-volatile
 
 # Linker flags, including Teensy-specific linker script
 # --gc-sections: Remove unused sections to reduce binary size

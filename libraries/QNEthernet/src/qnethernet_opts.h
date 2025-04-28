@@ -9,9 +9,9 @@
 
 // Enables the 'altcp_tls_adapter' functions for easier TLS library integration.
 // It's set, by default here, to be enabled if MbedTLS is enabled.
-#ifndef QNETHERNET_ALTCP_TLS_ADAPTER
-#define QNETHERNET_ALTCP_TLS_ADAPTER LWIP_ALTCP_TLS_MBEDTLS
-#endif
+// #ifndef QNETHERNET_ALTCP_TLS_ADAPTER
+// #define QNETHERNET_ALTCP_TLS_ADAPTER LWIP_ALTCP_TLS_MBEDTLS
+// #endif
 
 // Put the RX and TX buffers into RAM1. (Teensy 4)
 #ifndef QNETHERNET_BUFFERS_IN_RAM1

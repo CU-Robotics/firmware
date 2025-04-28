@@ -105,6 +105,10 @@ bool D200LD14P::read() {
       p->lidar_speed = (float) lidar_speed * M_PI / 180.0; // deg/s -> rad/s
       p->start_angle = ((float) (start_angle % 36000) / 100.0) * M_PI / 180.0; // 0.01 deg -> rad
       p->end_angle = ((float) (end_angle % 36000) / 100.0) * M_PI / 180.0; // 0.01 deg -> rad
+      p->sample_time = (float) millis() / 1000.0; // ms -> s
+      p->yaw = robot_yaw;
+      p->yaw_velocity = robot_yaw_velocity;
+      p->id = id;
       
       for (int i = 0; i < D200_POINTS_PER_PACKET; i++) {
         // points start at byte 6, each point is 3 bytes
@@ -112,18 +116,17 @@ bool D200LD14P::read() {
         uint16_t distance = (buf[base + 1] << 8) | buf[base];
 
         // convert measurements to SI
-        p->points[i].distance = (float) distance / 1000.0; // mm -> m
-        p->points[i].intensity = buf[base + 2]; // units are ambiguous (not documented)
+        p->distances[i] = (float) distance / 1000.0; // mm -> m
+        p->intensities[i] = buf[base + 2]; // units are ambiguous (not documented)
       }
     }
   }
 
-  //add data to struct
-  lidar_sensor_data.cal = cal;
-  lidar_sensor_data.current_packet = current_packet;
-  lidar_sensor_data.id = id;
-  memcpy(lidar_sensor_data.packets, packets, D200_NUM_PACKETS_CACHED * sizeof(LidarDataPacketSI));
   return true;
+}
+
+void D200LD14P::get_data(LidarDataPacketSI data[D200_NUM_PACKETS_CACHED]) {
+  memcpy(data, packets, sizeof(packets));
 }
 
 void D200LD14P::flush_packet_buffer() {
@@ -169,14 +172,14 @@ void D200LD14P::export_data(uint8_t bytes[D200_NUM_PACKETS_CACHED * D200_PAYLOAD
 
     for (int j = 0; j < D200_POINTS_PER_PACKET; j++) {
       int point_offset = offset + 9 + j * 5;
-      uint32_t distance = bitcast_float(packet.points[j].distance);
+      uint32_t distance = bitcast_float(packet.distances[j]);
 
       bytes[point_offset + 0] = distance & 0xff;
       bytes[point_offset + 1] = (distance >> 8) & 0xff;
       bytes[point_offset + 2] = (distance >> 16) & 0xff;
       bytes[point_offset + 3] = (distance >> 24) & 0xff;
 
-      bytes[point_offset + 4] = packet.points[j].intensity;
+      bytes[point_offset + 4] = packet.intensities[j];
     }
 
     bytes[offset + 69] = end_angle & 0xff;
