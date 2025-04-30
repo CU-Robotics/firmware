@@ -160,6 +160,13 @@ int main() {
     float pos_offset_x = 0;
     float pos_offset_y = 0;
 
+    // get the pitch min and max, and shift them to be centered around 0
+    float pitch_min = config->set_reference_limits[4][0][0];
+    float pitch_max = config->set_reference_limits[4][0][1];
+    float pitch_average = 0.5 * (pitch_min + pitch_max);
+    pitch_min -= pitch_average;
+    pitch_max -= pitch_average;
+
     // param to specify whether this is the first loop
     int count_one = 0;
 
@@ -219,9 +226,8 @@ int main() {
         vtm_pos_x += ref->ref_data.kbm_interaction.mouse_speed_x * 0.05 * delta;
         vtm_pos_y += ref->ref_data.kbm_interaction.mouse_speed_y * 0.05 * delta;
 
-        // clamp mouse y to the pitch limits from config
-        float pitch_min = config->set_reference_limits[4][0][0];
-        float pitch_max = config->set_reference_limits[4][0][1];
+
+        // clamp to pitch limits
         if (transmitter_pos_y < pitch_min) { transmitter_pos_y = pitch_min; }
         if (transmitter_pos_y > pitch_max) { transmitter_pos_y = pitch_max; }
       
@@ -253,7 +259,7 @@ int main() {
         float chassis_spin = transmitter->get_wheel() * 25;
         float pitch_target = 1.57
             + -transmitter->get_r_stick_y() * 0.3
-            + transmitter_pos_y - ((pitch_min + pitch_max) / 2)
+            + transmitter_pos_y
             + vtm_pos_y;
         float yaw_target = -transmitter->get_r_stick_x() * 1.5
             - transmitter_pos_x
