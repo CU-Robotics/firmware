@@ -144,6 +144,13 @@ int main() {
     float pos_offset_x = 0;
     float pos_offset_y = 0;
 
+    // get the pitch min and max, and shift them to be centered around 0
+    float pitch_min = config->set_reference_limits[4][0][0];
+    float pitch_max = config->set_reference_limits[4][0][1];
+    float pitch_average = 0.5 * (pitch_min + pitch_max);
+    pitch_min -= pitch_average;
+    pitch_max -= pitch_average;
+
     // param to specify whether this is the first loop
     int count_one = 0;
 
@@ -195,9 +202,7 @@ int main() {
         vtm_pos_x += ref->ref_data.kbm_interaction.mouse_speed_x * 0.05 * delta;
         vtm_pos_y += ref->ref_data.kbm_interaction.mouse_speed_y * 0.05 * delta;
 
-        // clamp mouse y to the pitch limits from config
-        float pitch_min = config->set_reference_limits[4][0][0];
-        float pitch_max = config->set_reference_limits[4][0][1];
+        // clamp to pitch limits
         if (dr16_pos_y < pitch_min) { dr16_pos_y = pitch_min; }
         if (dr16_pos_y > pitch_max) { dr16_pos_y = pitch_max; }
       
@@ -220,7 +225,7 @@ int main() {
         float chassis_spin = dr16.get_wheel() * 25;
         float pitch_target = 1.57
             + -dr16.get_r_stick_y() * 0.3
-            + dr16_pos_y - ((pitch_min + pitch_max) / 2)
+            + dr16_pos_y
             + vtm_pos_y;
         float yaw_target = -dr16.get_r_stick_x() * 1.5
             - dr16_pos_x
