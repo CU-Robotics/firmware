@@ -1,4 +1,7 @@
 #include "logger.hpp"
+#include "comms/comms_layer.hpp"
+#include "comms/data/logging_data.hpp"
+#include "comms/data/sendable.hpp"
 
 /// @brief internal buffer with 4kb capacity
 /// @note will need to change size if we every print more than 4096 characters per loop
@@ -20,6 +23,10 @@ size_t Logger::write(const uint8_t* buffer, size_t size, LogDestination destinat
     if (destination == LogDestination::Serial) {
         // print to serial monitor
         Serial.print(print_statement);
+    } else if (destination == LogDestination::Comms) {
+        Comms::Sendable<Comms::LoggingData> logging_sendable;
+        logging_sendable.data.deserialize(print_statement, size);
+        logging_sendable.send_to_comms();
     }
 
     // sets cursor to current place in memory
