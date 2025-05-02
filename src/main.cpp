@@ -84,22 +84,22 @@ int main() {
 
     Serial.begin(115200); // the serial monitor is actually always active (for debug use logger.println & tycmd)
     debug.begin(SerialUSB1);
-    
+
     print_logo();
 
     // check to see if there is a crash report, and if so, print it repeatedly over Serial
     // in the future, we'll send this directly over comms
     if (CrashReport) {
         while (1) {
-            logger.println(CrashReport);
-            logger.println("\nReflash to clear CrashReport (and also please fix why it crashed)");
+            logger.println(LogDestination::Serial, CrashReport);
+            logger.println(LogDestination::Serial, "\nReflash to clear CrashReport (and also please fix why it crashed)");
             delay(1000);
         }
     }
 
     // Execute setup functions
     pinMode(LED_BUILTIN, OUTPUT);
-    
+
     //initialize objects
     can.init();
     dr16.init();
@@ -107,9 +107,9 @@ int main() {
     ref = sensor_manager.get_ref();
 
     // Config config
-    logger.println("Configuring...");
+    logger.println(LogDestination::Serial, "Configuring...");
     const Config* config = config_layer.configure(&comms_layer);
-    logger.println("Configured!");
+    logger.println(LogDestination::Serial, "Configured!");
 
     // configure motors
     can.configure(config->motor_info);
@@ -163,11 +163,11 @@ int main() {
     Timer loop_timer;
     Timer stall_timer;
     Timer control_input_timer;
-    
+
     // start the main loop watchdog
     watchdog.start();
 
-    logger.println("Entering main loop...\n");
+    logger.println(LogDestination::Serial, "Entering main loop...\n");
 
     uint8_t log_buffer_copy[LOGGER_BUFFER_SIZE];
 
@@ -175,7 +175,7 @@ int main() {
     while (true) {
         // start main loop time timer
         stall_timer.start();
-        
+
         // read sensors
         sensor_manager.read();
         // read CAN and DR16 -- These are kept out of sensor manager for safety reasons
@@ -194,7 +194,7 @@ int main() {
 
         // print loopc every second to verify it is still alive
         if (loopc % 1000 == 0) {
-            Serial.println(loopc);
+            logger.println(loopc);
         }
 
         // manual controls on firmware
@@ -208,7 +208,7 @@ int main() {
         // clamp to pitch limits
         if (dr16_pos_y < pitch_min) { dr16_pos_y = pitch_min; }
         if (dr16_pos_y > pitch_max) { dr16_pos_y = pitch_max; }
-      
+
         float chassis_vel_x = 0;
         float chassis_vel_y = 0;
         float chassis_pos_x = 0;
@@ -273,19 +273,19 @@ int main() {
         }
 
         // print dr16
-        // Serial.printf("DR16:\n\t");
+        // logger.printf("DR16:\n\t");
         // dr16.print();
 
-        // Serial.printf("Target state:\n");
+        // logger.printf("Target state:\n");
         // for (int i = 0; i < 8; i++) {
-        //     Serial.printf("\t%d: %f %f %f\n", i, target_state[i][0], target_state[i][1], target_state[i][2]);
+        //     logger.printf("\t%d: %f %f %f\n", i, target_state[i][0], target_state[i][1], target_state[i][2]);
         // }
-        
+
         // override temp state if needed
         if (comms_layer.get_hive_data().override_state.active) {
             // clear the request
             comms_layer.get_hive_data().override_state.active = false;
-            
+
             logger.printf("Overriding state with hive state\n");
             memcpy(hive_state_offset, comms_layer.get_hive_data().override_state.state, sizeof(hive_state_offset));
             memcpy(temp_state, hive_state_offset, sizeof(hive_state_offset));
@@ -303,9 +303,9 @@ int main() {
             count_one++;
         }
 
-        // Serial.printf("Estimated state:\n");
+        // logger.printf("Estimated state:\n");
         // for (int i = 0; i < 8; i++) {
-        //     Serial.printf("\t%d: %f %f %f\n", i, temp_state[i][0], temp_state[i][1], temp_state[i][2]);
+        //     logger.printf("\t%d: %f %f %f\n", i, temp_state[i][0], temp_state[i][1], temp_state[i][2]);
         // }
 
         // give the sensors the current estimated state
@@ -316,9 +316,9 @@ int main() {
         governor.step_reference(target_state, config->governor_types);
         governor.get_reference(temp_reference);
 
-        // Serial.printf("Reference state:\n");
+        // logger.printf("Reference state:\n");
         // for (int i = 0; i < 8; i++) {
-        //     Serial.printf("\t%d: %f %f %f\n", i, temp_reference[i][0], temp_reference[i][1], temp_reference[i][2]);
+        //     logger.printf("\t%d: %f %f %f\n", i, temp_reference[i][0], temp_reference[i][1], temp_reference[i][2]);
         // }
 
         // generate motor outputs from controls
