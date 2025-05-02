@@ -1,11 +1,12 @@
 #include "hid_comms.hpp"
+#include "logger.hpp"
 
 namespace Comms {
 
 HIDComms::HIDComms() {}
 
 void HIDComms::init() { 
-    Serial.println("HIDComms: Starting HID layer"); 
+    logger.println(LogDestination::Serial, "HIDComms: Starting HID layer");
 }
 
 bool HIDComms::recv_packet(HIDPacket& incoming_packet) {
@@ -60,19 +61,19 @@ bool HIDComms::is_initialized() const {
 }
 
 void HIDComms::print_outgoing() {
-    Serial.println("HIDComms: Outgoing packet:");
+    logger.println(LogDestination::Serial, "HIDComms: Outgoing packet:");
     for (unsigned int i = 0; i < HID_PACKET_MAX_SIZE; i++)
-        Serial.printf("%.2x ", m_outgoingPacket.data_start()[i]);
+        logger.printf(LogDestination::Serial, "%.2x ", m_outgoingPacket.data_start()[i]);
 
-    Serial.println();
+    logger.println(LogDestination::Serial );
 }
 
 void HIDComms::print_incoming() {
-    Serial.println("HIDComms: Incoming packet:");
+    logger.println(LogDestination::Serial, "HIDComms: Incoming packet:");
     for (unsigned int i = 0; i < HID_PACKET_MAX_SIZE; i++)
-        Serial.printf("%.2x ", m_incomingPacket.data_start()[i]);
+        logger.printf(LogDestination::Serial, "%.2x ", m_incomingPacket.data_start()[i]);
 
-    Serial.println();
+    logger.println(LogDestination::Serial);
 }
 
 }  // namespace Comms

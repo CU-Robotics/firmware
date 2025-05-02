@@ -3,30 +3,30 @@
 namespace Comms {
 
 CommsLayer::CommsLayer() {
-    Serial.printf("CommsLayer: constructed\n");
+    logger.printf(LogDestination::Serial, "CommsLayer: constructed\n");
 };
 
 CommsLayer::~CommsLayer() {
-    Serial.printf("CommsLayer: destructed\n");
+    logger.printf(LogDestination::Serial, "CommsLayer: destructed\n");
 };
 
 int CommsLayer::init() {
-    Serial.printf("CommsLayer: initializing\n");
+    logger.printf(LogDestination::Serial, "CommsLayer: initializing\n");
     
     // hid failing is a fatal error
     bool hid_init = initialize_hid();
     if (!hid_init) {
-        Serial.printf("CommsLayer: HIDComms init failed\n");
+        logger.printf(LogDestination::Serial, "CommsLayer: HIDComms init failed\n");
         return -1;
     }
 
     // ethernet init failing is not a fatal error
     bool ethernet_init = initialize_ethernet();
     if (!ethernet_init) {
-        Serial.printf("CommsLayer: EthernetComms init failed\n");
+        logger.printf(LogDestination::Serial, "CommsLayer: EthernetComms init failed\n");
     }
 
-    Serial.printf("CommsLayer: initialized\n");
+    logger.printf(LogDestination::Serial, "CommsLayer: initialized\n");
 
     return 0;
 };
@@ -46,7 +46,7 @@ void CommsLayer::queue_data(CommsData* data) {
     case PhysicalMedium::HID:
         if (!is_hid_connected()) {
             // discard attempt to send
-            Serial.printf("Attempting to re-route %s to HID but HID is not connected\n", to_string(data->type_label).c_str());
+            logger.printf(LogDestination::Serial, "Attempting to re-route %s to HID but HID is not connected\n", to_string(data->type_label).c_str());
             break;
         }
         m_hid_payload.add(data);
@@ -58,7 +58,7 @@ void CommsLayer::queue_data(CommsData* data) {
             break;
         } else if (data->size > HID_PACKET_PAYLOAD_SIZE) {
             // discard attempt to send
-            Serial.printf("Attempting to re-route %s to HID but packet is too large\n", to_string(data->type_label).c_str());
+            logger.printf(LogDestination::Serial, "Attempting to re-route %s to HID but packet is too large\n", to_string(data->type_label).c_str());
             break;
         }
 
@@ -158,11 +158,11 @@ bool CommsLayer::initialize_hid() {
 bool CommsLayer::initialize_ethernet() {
     // Initialize the Ethernet physical layer
     if (!m_ethernet.init()) {
-        Serial.println("Ethernet initialization failed");
+        logger.println(LogDestination::Serial, "Ethernet initialization failed");
         return false;
     }
     
-    Serial.println("Ethernet initialized successfully");
+    logger.println(LogDestination::Serial, "Ethernet initialized successfully");
 
     return true;
 };

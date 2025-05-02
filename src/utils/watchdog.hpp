@@ -4,7 +4,7 @@
 
 /// @brief watchdog callback that is triggered before the CPU is reset, this is used to give a warning that the CPU is about to be reset
 void watchdog_callback() {
-    Serial.println("Watchdog is almost out of time, please feed the watchdog");
+    logger.println(LogDestination::Serial, "Watchdog is almost out of time, please feed the watchdog");
 }
 
 /// @brief This watchdog timer restarts the CPU if the trigger variable has not been sensed after the timout time, this is used to safely exits out when a software error occurs
@@ -68,10 +68,10 @@ public:
     /// @brief This function is to help debug and verify your timeout has the values of trigger 
     /// and timeout that you expect, will print it to the serial terminal
     void print_config() {
-        Serial.println("Trigger");
-        Serial.println(this->config.trigger);
-        Serial.println("Timeout");
-        Serial.println(this->config.timeout);
+        logger.println(LogDestination::Serial, "Trigger");
+        logger.println(LogDestination::Serial, this->config.trigger);
+        logger.println(LogDestination::Serial, "Timeout");
+        logger.println(LogDestination::Serial, this->config.timeout);
     }
 
     /// @brief this function is to recongiure the trigger and timeout values, if you need the watchdog for another use than previouly
