@@ -333,7 +333,7 @@ void Config::print() const {
         for (size_t j = 0; j < CAN_MAX_MOTORS; j++) {
             logger.printf("%.3f ", controller_info[i][j]);
         }
-        logger.println();
+        logger.println(LogDestination::Serial);
     }
     // gains
     logger.printf("Gains:\n");
@@ -342,7 +342,7 @@ void Config::print() const {
         for (size_t j = 0; j < NUM_GAINS; j++) {
             logger.printf("%.3f ", gains[i][j]);
         }
-        logger.println();
+        logger.println(LogDestination::Serial);
     }
 
     // gear ratios
@@ -352,7 +352,7 @@ void Config::print() const {
         for (size_t j = 0; j < CAN_MAX_MOTORS; j++) {
             logger.printf("%.3f ", gear_ratios[i][j]);
         }
-        logger.println();
+        logger.println(LogDestination::Serial);
     }
 
     // sensor info
@@ -362,7 +362,7 @@ void Config::print() const {
         for (size_t j = 0; j < NUM_SENSOR_VALUES; j++) {
             logger.printf("%.3f ", sensor_info[i][j]);
         }
-        logger.println();
+        logger.println(LogDestination::Serial);
     }
 
     // estimator info
@@ -372,7 +372,7 @@ void Config::print() const {
         for (size_t j = 0; j < STATE_LEN; j++) {
             logger.printf("%.3f ", estimator_info[i][j]);
         }
-        logger.println();
+        logger.println(LogDestination::Serial);
     }
 
     // governor types
@@ -388,7 +388,7 @@ void Config::print() const {
         for (size_t j = 0; j < 3; j++) {
             logger.printf("%.3f ", motor_info[i][j]);
         }
-        logger.println();
+        logger.println(LogDestination::Serial);
     }
 }
 
