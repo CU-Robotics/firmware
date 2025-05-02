@@ -146,6 +146,13 @@ int main() {
     float pos_offset_x = 0;
     float pos_offset_y = 0;
 
+    // get the pitch min and max, and shift them to be centered around 0
+    float pitch_min = config->set_reference_limits[4][0][0];
+    float pitch_max = config->set_reference_limits[4][0][1];
+    float pitch_average = 0.5 * (pitch_min + pitch_max);
+    pitch_min -= pitch_average;
+    pitch_max -= pitch_average;
+
     // param to specify whether this is the first loop
     int count_one = 0;
 
@@ -198,6 +205,10 @@ int main() {
         vtm_pos_x += ref->ref_data.kbm_interaction.mouse_speed_x * 0.05 * delta;
         vtm_pos_y += ref->ref_data.kbm_interaction.mouse_speed_y * 0.05 * delta;
 
+        // clamp to pitch limits
+        if (dr16_pos_y < pitch_min) { dr16_pos_y = pitch_min; }
+        if (dr16_pos_y > pitch_max) { dr16_pos_y = pitch_max; }
+      
         float chassis_vel_x = 0;
         float chassis_vel_y = 0;
         float chassis_pos_x = 0;
