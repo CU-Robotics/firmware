@@ -87,6 +87,9 @@ int main() {
 
     print_logo();
 
+    // HACK test logger over comms
+    logger.println(LogDestination::Comms, "Hello from Teensy!");
+
     // check to see if there is a crash report, and if so, print it repeatedly over Serial
     // in the future, we'll send this directly over comms
     if (CrashReport) {
@@ -168,8 +171,6 @@ int main() {
     watchdog.start();
 
     logger.println(LogDestination::Serial, "Entering main loop...\n");
-
-    uint8_t log_buffer_copy[LOGGER_BUFFER_SIZE];
 
     // Main loop
     while (true) {
@@ -389,11 +390,6 @@ int main() {
         // Keep the loop running at the desired rate
         loop_timer.delay_micros((int)(1E6 / (float)(LOOP_FREQ)));
 
-        // Print logger's buffer at the end of every loop
-        uint32_t bytes_copied = logger.grab_log_data(LOGGER_BUFFER_SIZE, log_buffer_copy);
-        if (bytes_copied > 0) {
-            Serial.write(log_buffer_copy, bytes_copied);
-        }
     }
 
     return 0;
