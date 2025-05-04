@@ -13,6 +13,7 @@
 #include "SensorManager.hpp"
 
 #include "utils/watchdog.hpp"
+#include "LEDBoard.hpp"
 
 // Loop constants
 #define LOOP_FREQ 1000
@@ -78,8 +79,7 @@ void print_logo() {
 @brief: My_abort function, the updated abort function calls this function. Flushes can safety mode and then prints
 the crash report
 */
-extern "C" void my_abort(void)
-{
+extern "C" void my_abort(void){
     Serial.println("Issuing Can Safety mode");
     // make sure can is in safety mode, avoids missed calls with this for loop
     for(int i = 0; i < 100; i++)
@@ -92,11 +92,11 @@ extern "C" void my_abort(void)
 /*
 Updated abort function, will call the my_abort function, afterwards it calls while(1) to infinitly stall
 */
-void abort(void)
-{
+void abort(void){
     //print abort has occured
     Serial.println("Abort Called!");
     // call my_abort function to flush the can in safety mode and print the crash report
+    led.setState(STATE_ERROR);
     my_abort();
     while (1) asm ("WFI");
 }
@@ -106,25 +106,23 @@ int main() {
 
     Serial.begin(115200); // the serial monitor is actually always active (for debug use Serial.println & tycmd)
     debug.begin(SerialUSB1);
-
     print_logo();
 
-    // Execute setup functions
-    pinMode(LED_BUILTIN, OUTPUT);
-
-    led.init();
+    // indicate with the led the status that everything is unitialized
     //initialize objects
+    led.init();
+    led.setState(STATE_UNINITIALIZED);
+    Serial.println("Uninitialized");
     can.init();
     dr16.init();
     comms.init();
     ref = sensor_manager.get_ref();
-
-    // Config config
+    led.setState(STATE_INITIALIZED);
     Serial.println("Configuring...");
     const Config* config = config_layer.configure(&comms);
     Serial.println("Configured!");
-
-    // configure motors
+    led.setState(STATE_CONFIGURED);
+    //configure motors
     can.configure(config->motor_info);
 
     // initialize sensors
@@ -365,11 +363,13 @@ int main() {
             // SAFETY OFF
             can.write();
             Serial.printf("Can write\n");
+            led.setState(STATE_SAFETY_MODE_OFF);
         } else {
             // SAFETY ON
             // TODO: Reset all controller integrators here
             can.issue_safety_mode();
             Serial.printf("Can zero\n");
+            led.setState(STATE_SAFETY_MODE_ON);
         }
 
         // LED heartbeat -- linked to loop count to reveal slowdowns and freezes.

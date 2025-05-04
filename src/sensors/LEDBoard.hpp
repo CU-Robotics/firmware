@@ -5,11 +5,25 @@
 #include <core_pins.h>
 #include "utils/profiler.hpp"
 
+typedef enum
+{
+    STATE_UNINITIALIZED,
+    STATE_INITIALIZED,
+    STATE_CONFIGURED,
+    STATE_SAFETY_MODE_ON,
+    STATE_SAFETY_MODE_OFF,
+    STATE_ERROR
+}state_t;
+
+// Pin where NEOPIXEL is connected
+constexpr uint8_t NEOPIXEL_PIN = 33;
+
+
 /// @brief The maximum allowed LEDs. You can initialize less than this amount, but not more
 constexpr uint32_t LED_MAX = 8;
 
 /// @brief The pin number where the LEDs are connected (compile-time constant).
-constexpr uint32_t LED_PIN = 6;
+constexpr uint32_t LED_PIN = 33;
 
 ///@class LEDBoard
 ///@brief A class to control a matrix of LEDs.
@@ -18,7 +32,7 @@ public:
     /// @brief Constructs an LEDController object with specified parameters.
     /// @param num_leds The number of LEDs in the matrix. Default is 8.
     /// @param brightness The brightness level of the LEDs (0-255). Default is 100.
-    LEDBoard(int num_leds = LED_MAX, uint8_t brightness = 100);
+    LEDBoard(int num_leds = 2, uint8_t brightness = 255);
 
     /// @brief Initialize the LED array and set LED parameters
     void init();
@@ -35,7 +49,7 @@ public:
      */
     void blinkLED();
 
-    
+       
     /// @brief Displays a hexadecimal value on the LED matrix.
     /// @param hexValue A 16-bit hexadecimal value to display on the LEDs.
      /*
@@ -74,6 +88,8 @@ public:
     
     /// @brief Updates the LED matrix display to reflect any changes made. This function should be called after setting LED colors to update the physical LEDs.
     void updateLEDMatrix();
+
+    void setState(state_t state);
 
 private:
      /// @brief Maps a 2-bit value to a CRGB color.

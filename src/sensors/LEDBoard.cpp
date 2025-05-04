@@ -2,6 +2,26 @@
 #include <core_pins.h>
 #include "utils/profiler.hpp"
 #include "LEDBoard.hpp"
+ 
+// void ButtonLED::buttonLed_init()
+// {
+//     FastLED.addLeds<WS2812B, NEOPIXEL_PIN, GRB>(buttonBoard_led, num_leds);
+//     FastLED.setBrightness(brightness);
+// }
+
+// // Update the LED based on the state of the robot
+// void ButtonLED::buttonLed_status(uint16_t state)
+// {
+//     switch(state)
+//     {
+//         case(UNITIALIZED_STATE):
+//             buttonBoard_led = CRGB::Red;
+//             break;
+//         case (SAFETY_MODE_STATE):
+//             buttonBoard_led = CRGB::Green; 
+//             break;
+//     } 
+// }
 
 // Constructor
 LEDBoard::LEDBoard(int num_leds, uint8_t brightness)
@@ -12,9 +32,11 @@ void LEDBoard::init() {
     setup_LEDS();
 }
 
+
 // Initialize the LEDs
 void LEDBoard::setup_LEDS() {
-    FastLED.addLeds<WS2812B, LED_PIN, GRB>(leds, num_leds);
+    FastLED.addLeds<WS2812B, LED_PIN, GRB>(leds, num_leds).setRgbw(RgbwDefault());
+    pinMode(33, OUTPUT);
     FastLED.setBrightness(brightness);
 }
 
@@ -24,19 +46,57 @@ void LEDBoard::blinkLED() {
     // Toggle the LED on and off as fast as possible
     for (int i = 0; i < 10; i++) {
         prof.begin("blink");
-        leds[0] = CRGB::Black; // Turn off
-        leds[1] = CRGB::Black; // Turn off
+        //leds[0] = CRGB::Red; // Turn off
+        //leds[1] = CRGB::Red; // Turn off
         FastLED.show();
         prof.end("blink");
         delayMicroseconds(500000); // Minimum reset time
-        leds[0] = CRGB::White;     // Turn on
-        leds[1] = CRGB::White;
+        leds[0] = CHSV(165,255, 255);   // Turn on
+        //leds[1] = CRGB::Bla;
         FastLED.show();
         delayMicroseconds(500000); // Minimum reset time
     }
-    leds[0] = CRGB::Black; // Turn off
+    leds[0] = CHSV(165,255, 255); // Turn off
     FastLED.show();
     prof.print("blink");
+}
+
+void LEDBoard::setState(state_t state){
+    switch (state)
+    {
+    case STATE_UNINITIALIZED:
+        /* code */
+        leds[0] = CRGB::Magenta;
+        FastLED.show();
+        break;
+    case STATE_INITIALIZED:
+        leds[0] = CRGB::Green;
+        FastLED.show();
+        break;
+    case STATE_CONFIGURED:
+        leds[0] = CRGB::Blue;
+        FastLED.show();
+        break;
+    case STATE_SAFETY_MODE_OFF:
+        leds[0] = CRGB::Yellow;
+        FastLED.show();
+        break;
+    case STATE_SAFETY_MODE_ON:
+        leds[0] = CRGB::Green;
+        FastLED.show();
+        break;
+    case STATE_ERROR:
+        leds[0] = CRGB::Red;
+        FastLED.show();
+        delay(1000);
+        leds[0] = CRGB::Black;
+        FastLED.show();
+        delay(1000);
+        break;
+    default:
+        break;
+    }
+
 }
 
 // Display a hexadecimal value on the LED matrix
@@ -76,6 +136,8 @@ void LEDBoard::setLedOnMatrix(int led_index, CRGB color) {
 void LEDBoard::updateLEDMatrix() {
     FastLED.show();
 }
+
+
 
 // Map 2 bits to a color
 CRGB LEDBoard::getColorFromBits(uint8_t bits) {
