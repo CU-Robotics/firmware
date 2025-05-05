@@ -48,7 +48,8 @@ void PacketPayload::construct_data() {
     append_data_from_queue(high_priority_send_queue);
     append_data_from_queue(medium_priority_send_queue);
 
-    fill_logging_data_from_queue(logging_send_queue);
+    // TODO: this is a temporary fix to get logging data to work
+    try_append_data(&log_data);
 }
 
 void PacketPayload::deconstruct_data(uint8_t* data, uint16_t size) {
@@ -112,13 +113,10 @@ void PacketPayload::add(CommsData* data) {
         }
         break;
     } case Priority::Logging: {
-        // a logging priority item must be of type logging data since we grab data from logs dynamically (handled in this file)
-        LoggingData* logging = static_cast<LoggingData*>(data);
-        if (logging_send_queue.size() < MAX_QUEUE_SIZE) {
-            logging_send_queue.push(logging);
-        } else {
-            delete data;
-        }
+        // TODO: this is a temporary fix to get logging data to work
+        LogData* l_data = reinterpret_cast<LogData*>(data);
+        memcpy(log_data.log_message, l_data->log_message, sizeof(l_data->log_message));
+        delete data;
         break;
     }
     default:

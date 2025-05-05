@@ -24,7 +24,7 @@ enum class LogDestination {
 class Logger {
 public:
     /// @brief Default Constructor.
-    Logger() : cursor(0), write_error(0) { }
+    Logger();
     /// @brief Default Destructor.
     ~Logger() = default;
 

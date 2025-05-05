@@ -352,6 +352,10 @@ int main() {
         dr16_sendable.data.keys.raw = *(uint16_t*)(dr16.get_raw() + 14);
         dr16_sendable.send_to_comms();
 
+        Comms::Sendable<Comms::LogData> logging_sendable;
+        logger.grab_log_data(LOGGER_BUFFER_SIZE, (uint8_t*)logging_sendable.data.log_message);
+        logging_sendable.send_to_comms();
+
         comms_layer.run();
 
         bool is_slow_loop = false;
