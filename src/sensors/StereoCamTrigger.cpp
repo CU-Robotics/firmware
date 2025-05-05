@@ -1,4 +1,5 @@
 #include "StereoCamTrigger.hpp"
+#include "utils/logger.hpp"
 
 void StereoCamTrigger::track_exposures() {
   // disable interrupts to protect volatile access
@@ -20,7 +21,7 @@ void StereoCamTrigger::track_exposures() {
   uint32_t delta = latest_exposure_timestamp - prev_timestamp;
 
   // print FPS estimate
-  Serial.printf("fps: %f\n", 1/(float(delta) * 1.0e-6));
+  logger.printf("fps: %f\n", 1/(float(delta) * 1.0e-6));
 #endif
 
   // reenable interrupts

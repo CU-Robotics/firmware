@@ -1,4 +1,6 @@
 #include "ET16S.hpp"
+#include "utils/logger.hpp"
+
 
 ET16S::ET16S() { }
 
@@ -51,7 +53,7 @@ void ET16S::read() {
 	set_channel_data();
 	//Check flag byte for disconnect
 	test_connection();
-	//if(channel[5].kind==InputKind::THREE_SWITCH){Serial.print("ITS TRUE");}
+	//if(channel[5].kind==InputKind::THREE_SWITCH){logger.print("ITS TRUE");}
 	///print_raw_bin(m_inputRaw);
 	//print_format_bin(16);
 	print();
@@ -60,19 +62,19 @@ void ET16S::read() {
 
 void ET16S::print() {
 	for (int i = 0; i < ET16S_INPUT_VALUE_COUNT; i++) {
-		Serial.print(channel[i].data);
-		Serial.print(" ");
+		logger.print(channel[i].data);
+		logger.print(" ");
 	}
 
-	Serial.println();
+	logger.println();
 }
 
 void ET16S::print_raw() {
 	for (int i = 0; i < ET16S_INPUT_VALUE_COUNT; i++) {
-		Serial.printf("%.3u ", channel[i].raw_format);
+		logger.printf("%.3u ", channel[i].raw_format);
 	}
 
-	Serial.println();
+	logger.println();
 }
 
 void ET16S::print_raw_bin(uint8_t m_inputRaw[ET16S_PACKET_SIZE]) {
@@ -80,33 +82,33 @@ void ET16S::print_raw_bin(uint8_t m_inputRaw[ET16S_PACKET_SIZE]) {
 		for (int ii = 0; ii <= 7; ii++) {
 			int k = m_inputRaw[i] >> ii;
 			if (k & 1)
-				Serial.print("1");
+				logger.print("1");
 			else
-				Serial.print("0");
+				logger.print("0");
 		}
 
-		Serial.printf(" ");
+		logger.printf(" ");
 	}
 
-	Serial.println();
+	logger.println();
 }
 
 void ET16S::print_format_bin(int channel_num) {
 	if (channel_num > ET16S_INPUT_VALUE_COUNT || channel_num < 0) {
-		Serial.print("Invalid channel used for print_format_bin. Must be 0-16");
+		logger.print("Invalid channel used for print_format_bin. Must be 0-16");
 		return;
 	}
 
 	for (int ii = 0; ii <= 16; ii++) {
 		int k = channel[channel_num].raw_format >> ii;
 		if (k & 1)
-			Serial.print("1");
+			logger.print("1");
 		else
-			Serial.print("0");
+			logger.print("0");
 	}
 
-	Serial.printf(" ");
-	Serial.println();
+	logger.printf(" ");
+	logger.println();
 }
 
 void ET16S::format_raw(uint8_t m_inputRaw[ET16S_PACKET_SIZE]) {

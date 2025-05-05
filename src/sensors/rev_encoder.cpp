@@ -1,4 +1,5 @@
 #include "rev_encoder.hpp"
+#include "utils/logger.hpp"
 
  RevEncoder::RevEncoder(uint8_t encoder_pin) : Sensor(SensorType::REVENC) {
 		this->in_pin = encoder_pin;
@@ -46,9 +47,9 @@ float RevEncoder::get_angle_radians() {
 }
 
 void RevEncoder::print() {
-    Serial.println("Rev Encoder:");
-    Serial.print("\tTicks: ");
-    Serial.println(ticks);
-    Serial.print("\tRadians: ");
-    Serial.println(radians);
+    logger.println("Rev Encoder:");
+    logger.print("\tTicks: ");
+    logger.println(ticks);
+    logger.print("\tRadians: ");
+    logger.println(radians);
 }

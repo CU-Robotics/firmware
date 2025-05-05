@@ -1,4 +1,5 @@
 #include "profiler.hpp"
+#include "logger.hpp"
 
 /// @brief Array of profiling sections.
 #ifdef PROFILE
@@ -77,7 +78,7 @@ void Profiler::print(const char* name) {
             if (delta > max) max = delta;
         }
         // print stats
-        Serial.printf("Profiling for: %s\n  Min: %u us\n  Max: %u us\n  Avg: %u us\n",
+        logger.printf("Profiling for: %s\n  Min: %u us\n  Max: %u us\n  Avg: %u us\n",
                         name, min, max, sum / actual_count);
         return;
     }

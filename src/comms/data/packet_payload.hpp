@@ -121,6 +121,10 @@ private:
     /// @brief The logging send queue.
     std::queue<LoggingData*> logging_send_queue;
 
+    /// @brief LogData object to hold the logging data.
+    // TODO: this is a temporary fix to get logging data to work
+    LogData log_data;
+
     /// @brief The raw data buffer. This is the complete data packet.
     uint8_t* raw_data = nullptr;
     /// @brief The maximum size of this data packet.

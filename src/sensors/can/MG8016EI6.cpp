@@ -1,4 +1,6 @@
 #include "MG8016EI6.hpp"
+#include "utils/logger.hpp"
+
 
 void MG8016EI6::init() {
     write_motor_on();
@@ -124,7 +126,7 @@ int MG8016EI6::read(CAN_message_t& msg) {
         break;
     }
     default:
-        Serial.printf("Unknown command byte: 0x%02X\n", cmd_byte);
+        logger.printf("Unknown command byte: 0x%02X\n", cmd_byte);
         break;
     }
 
