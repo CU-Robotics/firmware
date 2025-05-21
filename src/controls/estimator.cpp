@@ -130,7 +130,10 @@ void GimbalEstimator::step_states(float output[STATE_LEN][3], float curr_state[S
         count1++;
         dt = 0;
     }
-    if (override == 1 && curr_state[3][0] != 0)yaw_angle = curr_state[3][0];
+    if (override == 1 && curr_state[3][0] != 0){
+        yaw_angle += 0.1 * curr_state[3][0];
+    }
+
     yaw_angle += current_yaw_velocity * (dt);
     pitch_angle += current_pitch_velocity * (dt);
     roll_angle += current_roll_velocity * (dt);

@@ -166,8 +166,8 @@ int main() {
 
     // Main loop
     while (true) {
-        LimitSwitch* limit_switch = sensor_manager.get_limit_switch(0);
-        Serial.printf("Limit Switch: %d\n", limit_switch->isPressed());
+        // LimitSwitch* limit_switch = sensor_manager.get_limit_switch(0);
+        // Serial.printf("Limit Switch: %d\n", limit_switch->isPressed());
         
         // start main loop time timer
         stall_timer.start();
@@ -267,6 +267,7 @@ int main() {
             if (!hive_toggle) {
                 pos_offset_x = temp_state[0][0];
                 pos_offset_y = temp_state[1][0];
+                feed = temp_state[6][0];
             }
             hive_toggle = true;
         }
@@ -345,12 +346,12 @@ int main() {
             // SAFETY OFF
             can.write();
             // Serial.printf("Can write\n");
-            // Serial.printf("Can write\n");
+            Serial.printf("Can write\n");
         } else {
             // SAFETY ON
             // TODO: Reset all controller integrators here
             can.issue_safety_mode();
-            // Serial.printf("Can zero\n");
+            Serial.printf("Can zero\n");
         }
 
         // LED heartbeat -- linked to loop count to reveal slowdowns and freezes.

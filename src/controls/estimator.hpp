@@ -225,6 +225,8 @@ private:
     /// @brief current rev encoder raw value
     float curr_rev_raw[3] = { 0 };
 
+    float prev_yaw = 0;
+
     /// @brief previous rev encoder raw value
     float prev_rev_raw[3] = { 0 };
 
