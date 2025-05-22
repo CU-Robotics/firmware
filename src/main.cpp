@@ -383,12 +383,12 @@ int main() {
             // SAFETY OFF
             can.write();
             // Serial.printf("Can write\n");
-            Serial.printf("Can write\n");
+            // Serial.printf("Can write\n");
         } else {
             // SAFETY ON
             // TODO: Reset all controller integrators here
             can.issue_safety_mode();
-            Serial.printf("Can zero\n");
+            // Serial.printf("Can zero\n");
         }
 
         // LED heartbeat -- linked to loop count to reveal slowdowns and freezes.

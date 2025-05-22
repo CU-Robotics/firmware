@@ -220,6 +220,7 @@ void SensorManager::send_sensor_data_to_comms()
 
         for (int i = 0; i < 2; i++) {
             lidar_sensor_sendables[i] = lidar_data[i];
+            lidar_sensor_sendables[i].data.id = 0;
             lidar_sensor_sendables[i].send_to_comms();
         }
 
@@ -227,6 +228,7 @@ void SensorManager::send_sensor_data_to_comms()
 
         for (int i = 0; i < 2; i++) {
             lidar_sensor_sendables[i] = lidar_data[i];
+            lidar_sensor_sendables[i].data.id = 1;
             lidar_sensor_sendables[i].send_to_comms();
         }
     }
