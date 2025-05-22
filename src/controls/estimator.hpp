@@ -224,7 +224,8 @@ private:
     float global_roll_angle = 0;
     /// @brief current rev encoder raw value
     float curr_rev_raw[3] = { 0 };
-
+    
+    /// @brief previous angle of the yaw 
     float prev_yaw = 0;
 
     /// @brief previous rev encoder raw value
@@ -563,6 +564,8 @@ struct NewFeederEstimator : public Estimator {
     public:
         /// @brief Make new local estimator and set can data pointer and num states
         /// @param can can pointer from EstimatorManager
+        /// @param sensor_manager sensor manager object
+        /// @param config_data config data from yaml
         NewFeederEstimator(CANManager* can, SensorManager* sensor_manager, Config config_data);
     
         /// @brief step through each motor and add to micro state
