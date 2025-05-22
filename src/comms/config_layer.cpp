@@ -1,5 +1,7 @@
 #include "config_layer.hpp"
 
+#include "comms/data/sendable.hpp"  // for Sendable<>
+
 /// @brief This resets the whole processor and kicks it back to program entry (teensy4/startup.c)
 /// @param void specify no arguments (needed in C)
 /// @note Dont abuse this function, it is not to be used lightly
@@ -12,10 +14,10 @@ extern "C" void reset_teensy(void) {
     while (1);
 }
 
-const Config* const ConfigLayer::configure(HIDLayer* comms, bool config_off_SD) {
+const Config* const ConfigLayer::configure(Comms::CommsLayer* comms, bool config_off_SD) {
     if (config_off_SD) {
         // attempt SD card load
-        config_SD_init(comms);
+        config_SD_init();
         if (configured) return &config;
     }
 
@@ -23,6 +25,7 @@ const Config* const ConfigLayer::configure(HIDLayer* comms, bool config_off_SD) 
     // grab and process all config packets until finished
     uint32_t prev_time = millis();
     uint32_t delta_time = 0;
+    Comms::HIDPacket outgoing;
     while (!is_configured()) {
     #ifdef CONFIG_LAYER_DEBUG
         if (delta_time >= 2000) {
@@ -31,8 +34,8 @@ const Config* const ConfigLayer::configure(HIDLayer* comms, bool config_off_SD) 
         }
         delta_time = millis() - prev_time;
     #endif
-        comms->ping();
-        process(comms->get_incoming_packet(), comms->get_outgoing_packet());
+        process();
+        comms->run();
     }
 
     // put the data from the packets into the config object
@@ -68,20 +71,26 @@ const Config* const ConfigLayer::configure(HIDLayer* comms, bool config_off_SD) 
     }
 
     // get the outgoing packet and set it to 0
-    CommsPacket* outgoing = comms->get_outgoing_packet();
-    memset(outgoing->raw, 0, sizeof(outgoing->raw));
+    // memset(outgoing.raw, 0, sizeof(outgoing.raw));
+    // comms->set_hid_outgoing(outgoing);
 
-    // Hive marks the config process as done once teensy sends a packet with info_bit == 0
-    // Hive then sends a packet back with info_bit == 0 as well, so ping until we get a non-config back
-    while (comms->get_incoming_packet()->raw[3] == 1) {
-        comms->ping();
+    // Hive marks the config process as done once teensy sends a packet with request_bit == 0
+    // Hive then sends a packet back with request_bit == 0 as well, so ping until we get a non-config back
+    // TODO: this timeout is a hack, but it seems to work very well. Hive ends up seeing the 0 info bit before firmware does, causing this loop to never end
+    uint32_t start = micros();
+    while (comms_layer.get_hive_data().config_section.request_bit == 1 || micros() - start < 500000) {
+        Serial.printf("Waiting for config to finish...\n");
+        Comms::Sendable<ConfigSection> sendable;
+        sendable.data.request_bit = 0;
+        sendable.send_to_comms();
+        comms->run();
     }
 
     // update the num_of_(sensor) variables in the config struct
     return &config;
 }
 
-void ConfigLayer::reconfigure(HIDLayer* comms) {
+void ConfigLayer::reconfigure(Comms::CommsLayer* comms) {
     // force it to reconfigure
     configured = false;
 
@@ -93,6 +102,8 @@ void ConfigLayer::reconfigure(HIDLayer* comms) {
     // perform a normal config, but dont try to load from the config, just process and store
     configure(comms, false);
 
+    Serial.printf("Config: Rebooting Teensy...\n");
+    delay(10);  // delay to allow the print to finish before the reboot
     // issue the reboot call
     reset_teensy();
 
@@ -100,7 +111,7 @@ void ConfigLayer::reconfigure(HIDLayer* comms) {
     __builtin_unreachable();
 }
 
-void ConfigLayer::config_SD_init(HIDLayer* comms) {
+void ConfigLayer::config_SD_init() {
     // if on robot, we need to wait for ref to send robot_id
 #ifndef DISABLE_REF_CONFIG_SAFETY_CHECK
     Serial.println("Waiting for ref system to initialize...");
@@ -126,26 +137,33 @@ void ConfigLayer::config_SD_init(HIDLayer* comms) {
     }
 }
 
-void ConfigLayer::process(CommsPacket* in, CommsPacket* out) {
-    char* in_raw = in->raw;
-    char* out_raw = out->raw;
-    int8_t sec_id = in_raw[1];
-    uint8_t subsec_id = in_raw[2];
-    uint8_t info_bit = in_raw[3];
+void ConfigLayer::process() {
+    ConfigSection in_section = comms_layer.get_hive_data().config_section;
+    ConfigSection out_section;
+
+    // TODO: with the config refactor, remove this
+    Comms::HIDPacket in;
+    in.payload()[0] = 0xff; // filler byte (needed for some reason)
+    in.payload()[1] = in_section.section_id;
+    in.payload()[2] = in_section.subsection_id;
+    in.payload()[3] = in_section.request_bit;
+    *reinterpret_cast<uint16_t*>(in.payload() + 4) = in_section.section_size;
+    *reinterpret_cast<uint16_t*>(in.payload() + 6) = in_section.subsection_size;
+    memcpy(in.payload() + 8, in_section.raw, 1000);
 
     // if this is the packet we want
-    if (sec_id == seek_sec && subsec_id == seek_subsec && info_bit == 1) {
+    if (in_section.section_id == seek_sec && in_section.subsection_id == seek_subsec && in_section.request_bit == 1) {
         // received the initial config packet
-        if (sec_id == -1) {
+        if (in_section.section_id == -1) {
             /*
-           the khadas sends a config packet with its raw data set to a byte
+           Hive sends a config packet with its raw data set to a byte
            array where each index corresponds to a YAML section, and the value
            at that index indicates the number of subsections for the given section
            */
-            num_sec = (in_raw[5] << 8) | in_raw[4];
+            num_sec = in_section.section_size;
             memcpy(
                 subsec_sizes,
-                in_raw + 8, // byte array starts at byte 8
+                in_section.raw,
                 num_sec);
 
         #ifdef CONFIG_LAYER_DEBUG
@@ -158,15 +176,15 @@ void ConfigLayer::process(CommsPacket* in, CommsPacket* out) {
                     // look for the next YAML section
             seek_sec++;
         } else {
-            config_packets[index] = *in;
+            config_packets[index] = in;
             index++;
 
         #ifdef CONFIG_LAYER_DEBUG
-            Serial.printf("Received YAML configuration packet: (%u, %u)\n", sec_id, subsec_id);
+            Serial.printf("Received YAML configuration packet: (%u, %u)\n", in_section.section_id, in_section.subsection_id);
         #endif
 
                     // add one because subsections are zero-indexed
-            if (subsec_id + 1 < subsec_sizes[sec_id]) {
+            if (in_section.subsection_id + 1 < subsec_sizes[in_section.section_id]) {
                 // if we haven't received all subsections, request the next one
                 seek_subsec++;
             } else {
@@ -186,89 +204,90 @@ void ConfigLayer::process(CommsPacket* in, CommsPacket* out) {
         }
     }
 
+    out_section.section_id = seek_sec;
+    out_section.subsection_id = seek_subsec;
+    out_section.request_bit = 1;
+
     // if configuration isn't complete, request the next packet
     if (!configured) {
-        out_raw[0] = 0xff; // filler byte (needed for some reason)
-        out_raw[1] = seek_sec;
-        out_raw[2] = seek_subsec;
-        out_raw[3] = 1; // set info bit
-
+        Comms::Sendable<ConfigSection> sendable = out_section;
+        sendable.send_to_comms();
     }
 }
 
-void Config::fill_data(CommsPacket packets[MAX_CONFIG_PACKETS], uint8_t sizes[MAX_CONFIG_PACKETS]) {
+void Config::fill_data(Comms::HIDPacket packets[MAX_CONFIG_PACKETS], uint8_t sizes[MAX_CONFIG_PACKETS]) {
     for (int i = 0; i < MAX_CONFIG_PACKETS; i++) {
-        uint8_t id = packets[i].get_id();
-        uint8_t subsec_id = *reinterpret_cast<uint8_t*>(packets[i].raw + 2);
-        uint16_t sub_size = *reinterpret_cast<uint16_t*>(packets[i].raw + 6);
+        uint8_t sec_id = *reinterpret_cast<uint8_t*>(packets[i].payload() + 1);
+        uint8_t subsec_id = *reinterpret_cast<uint8_t*>(packets[i].payload() + 2);
+        uint16_t sub_size = *reinterpret_cast<uint16_t*>(packets[i].payload() + 6);
 
         if (subsec_id == 0)
             index = 0;
 
         if (sub_size != 0) {
-            Serial.printf("id: %d, subsec_id: %d, sub_size: %d\n", id, subsec_id, sub_size);
+            Serial.printf("id: %d, subsec_id: %d, sub_size: %d\n", sec_id, subsec_id, sub_size);
         }
 
-        if (id == yaml_section_id_mappings.at("robot")) {
-            memcpy(&robot, packets[i].raw + 8, sub_size);
+        if (sec_id == yaml_section_id_mappings.at("robot")) {
+            memcpy(&robot, packets[i].payload() + 8, sub_size);
             index += sub_size;
         }
 
-        if (id == yaml_section_id_mappings.at("motor_info")) {
+        if (sec_id == yaml_section_id_mappings.at("motor_info")) {
 
             size_t linear_index = index / sizeof(float);
             size_t i1 = linear_index / (CAN_MAX_MOTORS);
             size_t i2 = linear_index % CAN_MAX_MOTORS;
-            memcpy(&motor_info[i1][i2], packets[i].raw + 8, sub_size);
+            memcpy(&motor_info[i1][i2], packets[i].payload() + 8, sub_size);
             index += sub_size;
         }
 
-        if (id == yaml_section_id_mappings.at("sensor_info")) {
+        if (sec_id == yaml_section_id_mappings.at("sensor_info")) {
             size_t linear_index = index / sizeof(float);
             size_t i1 = linear_index / (NUM_SENSORS);
             size_t i2 = linear_index % NUM_SENSORS;
-            memcpy(&sensor_info[i1][i2], packets[i].raw + 8, sub_size);
+            memcpy(&sensor_info[i1][i2], packets[i].payload() + 8, sub_size);
             index += sub_size;
         }
 
-        if (id == yaml_section_id_mappings.at("gains")) {
+        if (sec_id == yaml_section_id_mappings.at("gains")) {
             size_t linear_index = index / sizeof(float);
             size_t i1 = linear_index / (NUM_GAINS);
             size_t i2 = linear_index % NUM_GAINS;
-            memcpy(&gains[i1][i2], packets[i].raw + 8, sub_size);
+            memcpy(&gains[i1][i2], packets[i].payload() + 8, sub_size);
             index += sub_size;
         }
-        if (id == yaml_section_id_mappings.at("gear_ratios")) {
+        if (sec_id == yaml_section_id_mappings.at("gear_ratios")) {
             size_t linear_index = index / sizeof(float);
             size_t i1 = linear_index / (NUM_GAINS);
             size_t i2 = linear_index % NUM_GAINS;
-            memcpy(&gear_ratios[i1][i2], packets[i].raw + 8, sub_size);
+            memcpy(&gear_ratios[i1][i2], packets[i].payload() + 8, sub_size);
             index += sub_size;
         }
 
-        if (id == yaml_section_id_mappings.at("reference_limits")) {
+        if (sec_id == yaml_section_id_mappings.at("reference_limits")) {
             size_t linear_index = index / sizeof(float);
             size_t i1 = linear_index / (STATE_LEN * 3 * 2);
             size_t i2 = (linear_index % (STATE_LEN * 3 * 2)) / (3 * 2);
             size_t i3 = (linear_index % (STATE_LEN * 3 * 2)) % (3 * 2);
-            memcpy(&set_reference_limits[i1][i2][i3], packets[i].raw + 8, sub_size);
+            memcpy(&set_reference_limits[i1][i2][i3], packets[i].payload() + 8, sub_size);
             index += sub_size;
         }
-        if (id == yaml_section_id_mappings.at("controller_info")) {
+        if (sec_id == yaml_section_id_mappings.at("controller_info")) {
             size_t linear_index = index / sizeof(float);
             size_t i1 = linear_index / (CAN_MAX_MOTORS);
             size_t i2 = linear_index % CAN_MAX_MOTORS;
-            memcpy(&controller_info[i1][i2], packets[i].raw + 8, sub_size);
+            memcpy(&controller_info[i1][i2], packets[i].payload() + 8, sub_size);
             index += sub_size;
         }
-        if (id == yaml_section_id_mappings.at("governor_types")) {
-            memcpy(governor_types, packets[i].raw + 8, sub_size);
+        if (sec_id == yaml_section_id_mappings.at("governor_types")) {
+            memcpy(governor_types, packets[i].payload() + 8, sub_size);
         }
-        if (id == yaml_section_id_mappings.at("estimator_info")) {
+        if (sec_id == yaml_section_id_mappings.at("estimator_info")) {
             size_t linear_index = index / sizeof(float);
             size_t i1 = linear_index / (STATE_LEN);
             size_t i2 = linear_index % STATE_LEN;
-            memcpy(&estimator_info[i1][i2], packets[i].raw + 8, sub_size);
+            memcpy(&estimator_info[i1][i2], packets[i].payload() + 8, sub_size);
             index += sub_size;
         }
     }
@@ -378,9 +397,9 @@ void Config::print() const {
 }
 
 bool ConfigLayer::sd_load() {
-    // total size of /config.pack: MAX_CONFIG_PACKETS * (sizeof(CommsPacket) + 1)
+    // total size of /config.pack: MAX_CONFIG_PACKETS * (sizeof(HIDPacket) + 1)
     // num of packets * size of each packet == num of bytes for all packets
-    const int config_byte_size = MAX_CONFIG_PACKETS * sizeof(CommsPacket);
+    const int config_byte_size = MAX_CONFIG_PACKETS * sizeof(Comms::HIDPacket);
 
     if (sdcard.open(CONFIG_PATH) != 0)
         return false;
@@ -432,10 +451,8 @@ bool ConfigLayer::sd_load() {
 bool ConfigLayer::config_SD_read_packets(uint64_t& checksum) {
     // read checksum and each packet
     // grab first packet and checksum (kept separate in order to validate subsequent checksum values)
-    if (sdcard.read((uint8_t*)(&checksum), sizeof(uint64_t)) != sizeof(uint64_t))
-        return false;
-    if (sdcard.read((uint8_t*)(&config_packets[0]), sizeof(CommsPacket)) != sizeof(CommsPacket))
-        return false;
+    if (sdcard.read((uint8_t*)(&checksum), sizeof(uint64_t)) != sizeof(uint64_t)) return false;
+    if (sdcard.read((uint8_t*)(&config_packets[0]), sizeof(Comms::HIDPacket)) != sizeof(Comms::HIDPacket)) return false;
     // read remaining packets
     for (int i = 1; i < MAX_CONFIG_PACKETS; i++) {
         uint64_t temp_checksum;
@@ -447,7 +464,7 @@ bool ConfigLayer::config_SD_read_packets(uint64_t& checksum) {
             Serial.printf("Inconsistent data found in config file, requesting config from hive...\n");
             return false;
         }
-        if (sdcard.read((uint8_t*)(&config_packets[i]), sizeof(CommsPacket)) != sizeof(CommsPacket)) {
+        if (sdcard.read((uint8_t*)(&config_packets[i]), sizeof(Comms::HIDPacket)) != sizeof(Comms::HIDPacket)) {
             Serial.printf("Unexpected mismatch in number of bytes read, requesting config from hive...\n");
             return false;
         }
@@ -461,9 +478,9 @@ bool ConfigLayer::config_SD_read_packets(uint64_t& checksum) {
 }
 
 bool ConfigLayer::store_config() {
-    // total size of /config.pack: MAX_CONFIG_PACKETS * (sizeof(CommsPacket) + 1)
+    // total size of /config.pack: MAX_CONFIG_PACKETS * (sizeof(HIDPacket) + 1)
     // num of packets * size of each packet == num of bytes for all packets
-    const int config_byte_size = MAX_CONFIG_PACKETS * sizeof(CommsPacket);
+    const int config_byte_size = MAX_CONFIG_PACKETS * sizeof(Comms::HIDPacket);
     const char* config_path = "/config.pack";
 
     // initialize: erase config.pack if exists, reopen
@@ -500,7 +517,7 @@ bool ConfigLayer::store_config() {
         // write checksum once
         sdcard.write((uint8_t*)(&checksum), sizeof(uint64_t)); // reinterpret addr of checksum as byte array
         // write one packet
-        sdcard.write((uint8_t*)(&config_packets[i]), sizeof(CommsPacket));
+        sdcard.write((uint8_t*)(&config_packets[i]), sizeof(Comms::HIDPacket));
     }
     sdcard.write(subsec_sizes, MAX_CONFIG_PACKETS);
 

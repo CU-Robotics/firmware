@@ -5,6 +5,7 @@
 #include <Wire.h>
 // Include TOF sensor library
 #include <vl53l4cd_class.h>
+#include "data_structs.hpp"
 
 #include "Sensor.hpp"
 
@@ -13,13 +14,6 @@ constexpr TwoWire* TOF_DEFAULT_I2C_BUS = &Wire2;
 /// @brief Default pin to turn off and on the sensor (-1 to disable this feature)
 constexpr int TOF_DEFAULT_SHUTOFF_PIN = -1;
 
-/// @brief Structure for the TOF (Time-of-Flight) sensor.
-struct TOFSensorData {
-    /// Sensor ID.
-    uint8_t id;
-    /// Latest distance measurement.
-    uint16_t latest_distance;
-};
 
 /// @brief A time of flight sensor to measure distance in millimeters
 class TOFSensor : public Sensor {
