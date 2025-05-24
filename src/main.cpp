@@ -159,7 +159,7 @@ int main() {
 
     // whether we are in hive mode or not
     bool hive_toggle = false;
-    int last_switch = 0;
+    // int last_switch = 0;
 
     // main loop timers
     Timer loop_timer;
@@ -240,15 +240,20 @@ int main() {
         float yaw_target = -dr16.get_r_stick_x() * 1.5
             - dr16_pos_x
             - vtm_pos_x;
-        float fly_wheel_target = (dr16.get_r_switch() == 1 || dr16.get_r_switch() == 3) ? 20 : 0; //m/s
-        // float feeder_target = (((dr16.get_l_mouse_button() || ref->ref_data.kbm_interaction.button_left) && dr16.get_r_switch() != 2) || dr16.get_r_switch() == 1) ? 10 : 0;
-        // float dt2 = timer.delta();
-        // if (dt2 > 0.1) dt2 = 0;
-        // feed += feeder_target*dt2;
-        if (dr16.get_r_switch() == 1 && last_switch != 1) {
-            feed++;
+        float fly_wheel_target = (dr16.get_r_switch() == 1 || dr16.get_r_switch() == 3) ? 18 : 0; //m/s
+        float feeder_target = (((dr16.get_l_mouse_button() || ref->ref_data.kbm_interaction.button_left) && dr16.get_r_switch() != 2) || dr16.get_r_switch() == 1) ? 10 : 0;
+        if(config->governor_types[6] == 1) {
+            float dt2 = timer.delta();
+            if (dt2 > 0.1) dt2 = 0;
+            feed += feeder_target*dt2;
+            target_state[6][0] = feed;
+        }else{
+            target_state[6][1] = feeder_target;
         }
-        last_switch = dr16.get_r_switch();
+        // if (dr16.get_r_switch() == 1 && last_switch != 1) {
+        //     feed++;
+        // }
+        // last_switch = dr16.get_r_switch();
         // set manual controls
         target_state[0][0] = chassis_pos_x;
         target_state[0][1] = chassis_vel_x;
@@ -260,7 +265,6 @@ int main() {
         target_state[4][0] = pitch_target;
         target_state[4][1] = 0;
         target_state[5][1] = fly_wheel_target;
-        target_state[6][0] = feed;
         target_state[7][0] = 1;
 
         // if the left switch is all the way down use Hive controls
