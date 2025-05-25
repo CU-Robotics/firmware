@@ -146,6 +146,7 @@ int main() {
     float pos_offset_x = 0;
     float pos_offset_y = 0;
     float feed = 0;
+    float last_feed = 0;
 
     // get the pitch min and max, and shift them to be centered around 0
     float pitch_min = config->set_reference_limits[4][0][0];
@@ -169,7 +170,6 @@ int main() {
     
     // start the main loop watchdog
     watchdog.start();
-
 
     Serial.println("Entering main loop...\n");
 
@@ -271,7 +271,7 @@ int main() {
         if (dr16.get_l_switch() == 2) {
             // hid_incoming.get_target_state(target_state);
             memcpy(target_state, comms_layer.get_hive_data().target_state.state, sizeof(target_state));
-
+            last_feed = target_state[6][0];
             // if you just switched to hive controls, set the reference to the current state
             if (hive_toggle) {
                 governor.set_reference(temp_state);
@@ -284,7 +284,7 @@ int main() {
             if (!hive_toggle) {
                 pos_offset_x = temp_state[0][0];
                 pos_offset_y = temp_state[1][0];
-                feed = temp_state[6][0];
+                feed = last_feed;
             }
             hive_toggle = true;
         }
