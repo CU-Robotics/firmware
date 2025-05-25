@@ -3,6 +3,7 @@
 #include "comms/comms_layer.hpp"
 #include "git_info.h"
 
+#include "sensors/buff_encoder.hpp"
 #include "utils/profiler.hpp"
 #include "sensors/StereoCamTrigger.hpp"
 #include "controls/estimator_manager.hpp"
@@ -12,6 +13,7 @@
 #include "sensors/LEDBoard.hpp"
 #include "SensorManager.hpp"
 
+#include "utils/timing.hpp"
 #include "utils/watchdog.hpp"
 #include "comms/data/sendable.hpp"
 #include "comms/data/hive_data.hpp"
@@ -143,6 +145,8 @@ int main() {
     float dr16_pos_y = 0;
     float pos_offset_x = 0;
     float pos_offset_y = 0;
+    float feed = 0;
+    float last_feed = 0;
 
     // get the pitch min and max, and shift them to be centered around 0
     float pitch_min = config->set_reference_limits[4][0][0];
@@ -156,28 +160,34 @@ int main() {
 
     // whether we are in hive mode or not
     bool hive_toggle = false;
+    // int last_switch = 0;
 
     // main loop timers
     Timer loop_timer;
+    Timer timer;
     Timer stall_timer;
     Timer control_input_timer;
     
     // start the main loop watchdog
     watchdog.start();
 
-
     Serial.println("Entering main loop...\n");
 
     // Main loop
     while (true) {
+        // LimitSwitch* limit_switch = sensor_manager.get_limit_switch(0);
+        // Serial.printf("Limit Switch: %d\n", limit_switch->isPressed());
+    
         // start main loop time timer
         stall_timer.start();
         
         // read sensors
         sensor_manager.read();
+
         // read CAN and DR16 -- These are kept out of sensor manager for safety reasons
         can.read();
         dr16.read();
+
 
         sensor_manager.send_sensor_data_to_comms();
 
@@ -232,7 +242,18 @@ int main() {
             - vtm_pos_x;
         float fly_wheel_target = (dr16.get_r_switch() == 1 || dr16.get_r_switch() == 3) ? 18 : 0; //m/s
         float feeder_target = (((dr16.get_l_mouse_button() || ref->ref_data.kbm_interaction.button_left) && dr16.get_r_switch() != 2) || dr16.get_r_switch() == 1) ? 10 : 0;
-
+        if(config->governor_types[6] == 1) {
+            float dt2 = timer.delta();
+            if (dt2 > 0.1) dt2 = 0;
+            feed += feeder_target*dt2;
+            target_state[6][0] = feed;
+        }else{
+            target_state[6][1] = feeder_target;
+        }
+        // if (dr16.get_r_switch() == 1 && last_switch != 1) {
+        //     feed++;
+        // }
+        // last_switch = dr16.get_r_switch();
         // set manual controls
         target_state[0][0] = chassis_pos_x;
         target_state[0][1] = chassis_vel_x;
@@ -243,16 +264,14 @@ int main() {
         target_state[3][1] = 0;
         target_state[4][0] = pitch_target;
         target_state[4][1] = 0;
-
         target_state[5][1] = fly_wheel_target;
-        target_state[6][1] = feeder_target;
         target_state[7][0] = 1;
 
         // if the left switch is all the way down use Hive controls
         if (dr16.get_l_switch() == 2) {
             // hid_incoming.get_target_state(target_state);
             memcpy(target_state, comms_layer.get_hive_data().target_state.state, sizeof(target_state));
-
+            last_feed = target_state[6][0];
             // if you just switched to hive controls, set the reference to the current state
             if (hive_toggle) {
                 governor.set_reference(temp_state);
@@ -265,6 +284,7 @@ int main() {
             if (!hive_toggle) {
                 pos_offset_x = temp_state[0][0];
                 pos_offset_y = temp_state[1][0];
+                feed = last_feed;
             }
             hive_toggle = true;
         }
@@ -297,6 +317,10 @@ int main() {
         if (count_one == 0) {
             temp_state[7][0] = 0;
             governor.set_reference(temp_state);
+            // print temp state
+            for(int i = 0; i < 8; i++) {
+                Serial.printf("\t%d: %f %f %f\n", i, temp_state[i][0], temp_state[i][1], temp_state[i][2]);
+            }
             count_one++;
         }
 
@@ -312,11 +336,6 @@ int main() {
         governor.set_estimate(temp_state);
         governor.step_reference(target_state, config->governor_types);
         governor.get_reference(temp_reference);
-
-        // Serial.printf("Reference state:\n");
-        // for (int i = 0; i < 8; i++) {
-        //     Serial.printf("\t%d: %f %f %f\n", i, temp_reference[i][0], temp_reference[i][1], temp_reference[i][2]);
-        // }
 
         // generate motor outputs from controls
         controller_manager.step(temp_reference, temp_state, temp_micro_state);
@@ -354,7 +373,6 @@ int main() {
 
         // check whether this was a slow loop or not
         float dt = stall_timer.delta();
-        Serial.printf("Loop %d, dt: %f\n", loopc, dt);
         if (dt > 0.002) {
             // zero the can bus just in case
             can.issue_safety_mode();
@@ -368,6 +386,7 @@ int main() {
         if (dr16.is_connected() && (dr16.get_l_switch() == 2 || dr16.get_l_switch() == 3) && config_layer.is_configured() && !is_slow_loop) {
             // SAFETY OFF
             can.write();
+            // Serial.printf("Can write\n");
             // Serial.printf("Can write\n");
         } else {
             // SAFETY ON

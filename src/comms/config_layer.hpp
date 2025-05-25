@@ -79,6 +79,9 @@ struct Config {
     /// @brief Number of RealSense sensors
     int num_of_realsense = 0;
 
+    /// @brief Number of limit switches
+    int num_of_limit_switch = 0;
+
     /// @brief gains matrix
     float gains[NUM_ROBOT_CONTROLLERS][NUM_GAINS];
 

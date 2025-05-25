@@ -211,6 +211,8 @@ void FlywheelController::step(float reference[STATE_LEN][3], float estimate[STAT
 
     pid_high.setpoint = reference[5][1];
     pid_high.measurement = estimate[5][1];
+    // Serial.printf("waggle graph flywheel %f\n", estimate[5][1]);
+
     float target_motor_velocity = pid_high.filter(dt, false, false) * gear_ratios[0];
     for (int i = 0; i < 2; i++) {
         pid_low.K[0] = gains[4];
@@ -293,4 +295,31 @@ void SwitcherController::step(float reference[STATE_LEN][3], float estimate[STAT
     float output = outputp + outputv;
 
     outputs[0] = output;
+}
+
+void NewFeederController::step(float reference[STATE_LEN][3], float estimate[STATE_LEN][3], float micro_estimate[CAN_MAX_MOTORS][MICRO_STATE_LEN], float outputs[CAN_MAX_MOTORS]) {
+    float dt = timer.delta();
+
+    pidp.K[0] = gains[0];
+    pidp.K[1] = gains[1];
+    pidp.K[2] = gains[2];
+    pidp.K[3] = 0;
+
+    pidv.K[0] = gains[4];
+    pidv.K[1] = gains[5];
+    pidv.K[2] = gains[6];
+    
+
+    pidp.setpoint = reference[6][0]; // 1st index = position
+    pidp.measurement = estimate[6][0];
+    // Serial.printf("reference: %f, estimate: %f\n", reference[6][0], estimate[6][0]);
+    // pidv.setpoint = reference[7][1];
+    // pidv.measurement = estimate[7][1];
+
+    float outputp = pidp.filter(dt, true, true);
+    // Serial.printf("waggle graph outputp: %f\n", outputp);
+    // float outputv = pidv.filter(dt, true, false);
+    // float output = outputp + outputv;
+
+    outputs[0] = -outputp;
 }
