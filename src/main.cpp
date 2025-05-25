@@ -160,6 +160,8 @@ int main() {
 
     // whether we are in hive mode or not
     bool hive_toggle = false;
+    bool not_safety_mode = false;
+    bool last_gimbal_power = false; // used to detect gimbal power changes
     // int last_switch = 0;
 
     // main loop timers
@@ -167,6 +169,7 @@ int main() {
     Timer timer;
     Timer stall_timer;
     Timer control_input_timer;
+    Timer gimbal_power_timer;
     
     // start the main loop watchdog
     watchdog.start();
@@ -245,7 +248,8 @@ int main() {
         if(config->governor_types[6] == 1) {
             float dt2 = timer.delta();
             if (dt2 > 0.1) dt2 = 0;
-            feed += feeder_target*dt2;
+            // check if the shooter is active
+            if(not_safety_mode && ref->ref_data.robot_performance.shooter_power_active) feed += feeder_target*dt2;
             target_state[6][0] = feed;
         }else{
             target_state[6][1] = feeder_target;
@@ -382,8 +386,15 @@ int main() {
             is_slow_loop = true;
         }
 
+        if(!last_gimbal_power && ref->ref_data.robot_performance.gimbol_power_active) {
+            gimbal_power_timer.start();
+        }
+        last_gimbal_power = ref->ref_data.robot_performance.gimbol_power_active;
+        bool gimbal_power_recently_turned_on = gimbal_power_timer.get_elapsed_micros_no_restart() < 3000000;
+
+        not_safety_mode = (dr16.is_connected() && (dr16.get_l_switch() == 2 || dr16.get_l_switch() == 3) && config_layer.is_configured() && !is_slow_loop && ref->ref_data.robot_performance.gimbol_power_active && !gimbal_power_recently_turned_on);
         //  SAFETY MODE
-        if (dr16.is_connected() && (dr16.get_l_switch() == 2 || dr16.get_l_switch() == 3) && config_layer.is_configured() && !is_slow_loop) {
+        if (not_safety_mode) {
             // SAFETY OFF
             can.write();
             // Serial.printf("Can write\n");
