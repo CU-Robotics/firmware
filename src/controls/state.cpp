@@ -5,6 +5,10 @@ void Governor::set_reference(float reference[STATE_LEN][3]) {
     Serial.println("Don't use this, bitch 'one time is ok :)'");
 }
 
+void Governor::set_reference_at_index(float value, int state_val, int state_type){
+    this->reference[state_val][state_type] = value;
+}
+
 void Governor::get_reference(float reference[STATE_LEN][3]) {
     memcpy(reference, this->reference, sizeof(this->reference));
 }
