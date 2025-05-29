@@ -1,0 +1,4 @@
+<map id="DR16" name="DR16">
+<area shape="rect" id="node1" title="Wrapper for reading and mapping input from the DR16&#45;Receiver and associated controller." alt="" coords="23,95,77,121"/>
+<area shape="rect" id="node2" href="$structDR16_1_1Keys.html" title="keeps track of keys pressed on the rm client" alt="" coords="5,5,95,32"/>
+</map>
