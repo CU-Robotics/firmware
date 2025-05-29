@@ -86,16 +86,16 @@ void XDriveVelocityController::step(float reference[STATE_LEN][3], float estimat
         pidv[i].K[0] = gains[0];
         pidv[i].K[1] = gains[1];
         pidv[i].K[2] = gains[2];
-        pidv[i].K[3] = gains[3];
+        pidv[i].K[3] = reference[i][1];
 
         pidv[i].setpoint = reference[i][1];
         pidv[i].measurement = estimate[i][1];
         output[i] = pidv[i].filter(dt, false, false) * gear_ratios[i];
     }
     pidp[2].setpoint = reference[2][0];
-    pidp[2].measurement = estimate[2][0];
+    pidp[2].measurement = 0;//estimate[2][0];
     pidv[2].setpoint = reference[2][1];
-    pidv[2].measurement = estimate[2][1];
+    pidv[2].measurement = 0;//estimate[2][1];
     if (reference[2][2] == 1) { // if state [2][2] is 1 (We dont use the accel spot for anything) then chassis heading is position controlled 
         pidp[2].K[0] = gains[4];
         pidp[2].K[1] = gains[5];
@@ -108,10 +108,10 @@ void XDriveVelocityController::step(float reference[STATE_LEN][3], float estimat
         pidp[2].K[0] = 0;
         pidp[2].K[1] = 0;
         pidp[2].K[2] = 0;
-        pidv[2].K[0] = 1;
+        pidv[2].K[0] = 0;
         pidv[2].K[1] = 0;
         pidv[2].K[2] = 0;
-        pidv[2].K[3] = 0;
+        pidv[2].K[3] = reference[2][1];
     }
     outputp[2] = pidp[2].filter(dt, false, false);
     outputv[2] = pidv[2].filter(dt, false, false);
