@@ -99,7 +99,6 @@ void SensorManager::read() {
     for (int i = 0; i < rev_sensor_count; i++) {
         rev_sensors[i].read();
     }
-
     if (lidar_sensor_count > 0) {
         lidar1->set_yaw(estimated_state[3][0], estimated_state[3][1]);
         lidar1->read();
@@ -107,7 +106,6 @@ void SensorManager::read() {
         lidar2->set_yaw(estimated_state[3][0], estimated_state[3][1]);
         lidar2->read();
     }
-
     // read ref system
     ref->read();
 

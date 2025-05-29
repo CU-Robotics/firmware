@@ -22,6 +22,8 @@
 #define LOOP_FREQ 1000
 #define HEARTBEAT_FREQ 2
 
+extern "C" void reset_teensy(void);
+
 // Declare global objects
 DR16 dr16;
 CANManager can;
@@ -162,6 +164,8 @@ int main() {
     bool hive_toggle = false;
     bool not_safety_mode = false;
     bool last_gimbal_power = false; // used to detect gimbal power changes
+    bool last_loop_slow = false; // used to detect multiple slow loops in a row
+    int slow_loop_counter = 0; // used to count slow loops in a row
     // int last_switch = 0;
 
     // main loop timers
@@ -190,7 +194,6 @@ int main() {
         // read CAN and DR16 -- These are kept out of sensor manager for safety reasons
         can.read();
         dr16.read();
-
 
         sensor_manager.send_sensor_data_to_comms();
 
@@ -317,6 +320,12 @@ int main() {
         estimator_manager.step(temp_state, temp_micro_state, override_request);
         override_request = false;
 
+        if ((feed - temp_state[6][0] > 2 && dr16.get_l_switch() == 3) || (comms_layer.get_hive_data().target_state.state[6][0] - temp_state[6][0] > 2 && dr16.get_l_switch() == 2)) {
+            Serial.printf("Feeder is lowkey jammed. current ball count: %f, feed: %f, hive target: %f\n", temp_state[6][0], feed, comms_layer.get_hive_data().target_state.state[6][0]);
+            feed = temp_state[6][0] + 1;
+            governor.set_reference_at_index(feed, 6, 0);
+        }
+
         // if first loop set target state to estimated state
         if (count_one == 0) {
             temp_state[7][0] = 0;
@@ -381,18 +390,30 @@ int main() {
             // zero the can bus just in case
             can.issue_safety_mode();
 
-            Serial.printf("Slow loop with dt: %f\n", dt);
+            Serial.printf("Slow loop with dt: %f, slow loop count %d\n", dt, slow_loop_counter);
             // mark this as a slow loop to trigger safety mode
             is_slow_loop = true;
+            if(last_loop_slow) {
+                slow_loop_counter++;
+                if(slow_loop_counter > 10) {
+                    Serial.printf("Kowabunga bitches\n");
+                    reset_teensy();
+                }
+            }else{
+                slow_loop_counter = 0;
+            }
         }
+        last_loop_slow = is_slow_loop;
 
         if(!last_gimbal_power && ref->ref_data.robot_performance.gimbol_power_active) {
             gimbal_power_timer.start();
         }
         last_gimbal_power = ref->ref_data.robot_performance.gimbol_power_active;
-        bool gimbal_power_recently_turned_on = gimbal_power_timer.get_elapsed_micros_no_restart() < 3000000;
-
-        not_safety_mode = (dr16.is_connected() && (dr16.get_l_switch() == 2 || dr16.get_l_switch() == 3) && config_layer.is_configured() && !is_slow_loop && ref->ref_data.robot_performance.gimbol_power_active && !gimbal_power_recently_turned_on);
+        bool gimbal_power_recently_turned_on = gimbal_power_timer.get_elapsed_micros_no_restart() < 2000000;
+        if (gimbal_power_recently_turned_on) {
+            governor.set_reference(temp_state);
+        }
+        not_safety_mode = (dr16.is_connected() && (dr16.get_l_switch() == 2 || dr16.get_l_switch() == 3) && config_layer.is_configured() && !is_slow_loop && ref->ref_data.robot_performance.gimbol_power_active); //&& !gimbal_power_recently_turned_on);
         //  SAFETY MODE
         if (not_safety_mode) {
             // SAFETY OFF
@@ -403,6 +424,8 @@ int main() {
             // SAFETY ON
             // TODO: Reset all controller integrators here
             can.issue_safety_mode();
+            governor.set_reference_at_index(temp_state[6][0], 6, 0);
+            feed = temp_state[6][0]; // reset feed to the current state
             // Serial.printf("Can zero\n");
         }
 

@@ -17,6 +17,7 @@ void XDrivePositionController::step(float reference[STATE_LEN][3], float estimat
         pidv[i].K[0] = gains[3];
         pidv[i].K[1] = gains[4];
         pidv[i].K[2] = gains[5];
+        pidv[i].K[3] = reference[i][1]; 
 
         outputp[i] = pidp[i].filter(dt, false, false);
         outputv[i] = pidv[i].filter(dt, false, false);
@@ -38,15 +39,15 @@ void XDrivePositionController::step(float reference[STATE_LEN][3], float estimat
         pidp[2].K[0] = 0;
         pidp[2].K[1] = 0;
         pidp[2].K[2] = 0;
-        pidv[2].K[0] = 1;
+        pidv[2].K[0] = 0;
         pidv[2].K[1] = 0;
         pidv[2].K[2] = 0;
-        pidv[2].K[3] = 0;
+        pidv[2].K[3] = reference[2][1];
     }
     outputp[2] = pidp[2].filter(dt, false, false);
     outputv[2] = pidv[2].filter(dt, false, false);
     output[2] = (outputp[2] + outputv[2]) * gear_ratios[2];
-
+    Serial.printf("outputv[2]: %f \n", outputv[2]);
     float chassis_heading = estimate[2][0];
 
     // Convert to motor velocities
