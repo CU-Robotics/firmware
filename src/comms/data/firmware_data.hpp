@@ -30,6 +30,8 @@ struct FirmwareData {
     /// @brief TempRobotState data
     TempRobotState temp_robot_state;
 
+    TargetState temp_reference;
+
     /// @brief Estimated state
     EstimatedState estimated_state;
     
