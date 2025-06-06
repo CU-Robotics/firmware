@@ -1,0 +1,10 @@
+<map id="Graphical Class Hierarchy" name="Graphical Class Hierarchy">
+<area shape="rect" id="node1" href="$structEstimator.html" title="Parent estimator struct. All estimators should inherit from this." alt="" coords="5,157,83,184"/>
+<area shape="rect" id="node2" href="$structFeederEstimator.html" title="Estimate the state of the feeder in balls/s." alt="" coords="157,5,275,32"/>
+<area shape="rect" id="node3" href="$structFlyWheelEstimator.html" title="Estimate the state of the flywheels as meters/second of balls exiting the barrel." alt="" coords="151,56,281,83"/>
+<area shape="rect" id="node4" href="$structGimbalEstimator.html" title="Estimate the yaw, pitch, and chassis heading." alt="" coords="157,107,275,133"/>
+<area shape="rect" id="node5" href="$structGimbalEstimatorNoOdom.html" title="Estimate the yaw, pitch, and chassis heading." alt="" coords="131,157,301,184"/>
+<area shape="rect" id="node6" href="$structLocalEstimator.html" title="This estimator estimates our &quot;micro&quot; state which is stores all the motor velocities(in rad/s),..." alt="" coords="161,208,271,235"/>
+<area shape="rect" id="node7" href="$structNewFeederEstimator.html" title="This estimator estimates our &quot;micro&quot; state which is stores all the motor velocities(in rad/s),..." alt="" coords="144,259,288,285"/>
+<area shape="rect" id="node8" href="$structSwitcherEstimator.html" title="Estimate the state of the switcher in millimeters." alt="" coords="152,309,280,336"/>
+</map>

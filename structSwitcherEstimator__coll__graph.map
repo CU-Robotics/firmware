@@ -1,0 +1,10 @@
+<map id="SwitcherEstimator" name="SwitcherEstimator">
+<area shape="rect" id="node1" title="Estimate the state of the switcher in millimeters." alt="" coords="92,260,220,287"/>
+<area shape="rect" id="node2" href="$structEstimator.html" title="Parent estimator struct. All estimators should inherit from this." alt="" coords="5,171,83,197"/>
+<area shape="rect" id="node3" href="$structTimer.html" title="Timer class. Operates based on micros() and provides a simple interface for timing operations." alt="" coords="17,81,71,108"/>
+<area shape="rect" id="node4" href="$classCANManager.html" title="The overall manager for the CAN busses and motors." alt="" coords="106,171,206,197"/>
+<area shape="rect" id="node5" href="$classTOFSensor.html" title="A time of flight sensor to measure distance in millimeters." alt="" coords="230,171,319,197"/>
+<area shape="rect" id="node6" href="$classSensor.html" title="Base class for all sensors." alt="" coords="203,81,266,108"/>
+<area shape="rect" id="node7" href="$structTOFSensorData.html" title="Structure for the TOF (Time&#45;of&#45;Flight) sensor." alt="" coords="290,81,406,108"/>
+<area shape="rect" id="node8" href="$structComms_1_1CommsData.html" title="base class for all data structs that want to be sent over comms." alt="" coords="275,5,421,32"/>
+</map>
