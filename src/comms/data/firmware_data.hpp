@@ -29,7 +29,7 @@ struct FirmwareData {
     BigTestData big_test_data;
     /// @brief TempRobotState data
     TempRobotState temp_robot_state;
-
+    /// @brief TargetState data
     TargetState temp_reference;
 
     /// @brief Estimated state
