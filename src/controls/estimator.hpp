@@ -561,6 +561,11 @@ struct NewFeederEstimator : public Estimator {
         int count = 0;
         /// @brief feeder encoder offset for improving feeder delay
         float feeder_offset = 0;
+        /// @brief feeder direction multiplier
+        /// @note 1 for normal direction, -1 for reverse direction
+        float feeder_direction = 1;
+        /// @brief gear ratio of the feeder
+        float feeder_ratio = 1;
     public:
         /// @brief Make new local estimator and set can data pointer and num states
         /// @param can can pointer from EstimatorManager

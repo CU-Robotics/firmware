@@ -321,5 +321,5 @@ void NewFeederController::step(float reference[STATE_LEN][3], float estimate[STA
     // float outputv = pidv.filter(dt, true, false);
     // float output = outputp + outputv;
 
-    outputs[0] = -outputp;
+    outputs[0] = outputp * gear_ratios[0]; // negative because the feeder motor is reversed
 }
