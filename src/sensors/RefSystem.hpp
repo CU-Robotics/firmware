@@ -148,6 +148,8 @@ private:
     /// @brief Current sequence number. Used to send packets
     uint8_t seq = 0;
 
+    bool damage_status_changed = false;
+
     /// @brief Internal data struct for the RefSystem. This contains all the meta data required to read a frame
     struct RefInternalData {
         /// @brief Raw buffer to store incoming data

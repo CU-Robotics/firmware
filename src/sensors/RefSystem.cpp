@@ -1,4 +1,5 @@
 #include "RefSystem.hpp"
+#include "RefSystemPacketDefs.hpp"
 
 uint8_t generateCRC8(uint8_t* data, uint32_t len) {
     uint8_t CRC8 = 0xFF;
@@ -90,12 +91,22 @@ CommsRefData RefSystem::get_data_for_comms() {
     memcpy(output_array.raw + REF_COMMS_ROBOT_POWER_HEAT_OFFSET, ref_data.robot_power_heat.raw, ref_data.robot_power_heat.packet_size);
     memcpy(output_array.raw + REF_COMMS_ROBOT_POSITION_OFFSET, ref_data.robot_position.raw, ref_data.robot_position.packet_size);
     memcpy(output_array.raw + REF_COMMS_ROBOT_BUFF_OFFSET, ref_data.robot_buff.raw, ref_data.robot_buff.packet_size);
+    // printf("damage status changed: %d\n", damage_status_changed);
+    if(damage_status_changed) {
+        printf("Damage status changed, sending new data\n");
+        memcpy(output_array.raw + REF_COMMS_DAMAGE_STATUS_OFFSET, ref_data.damage_status.raw, ref_data.damage_status.packet_size);
+        damage_status_changed = false; // reset the flag
+    } else {
+        //if the damage status has not changed, just send 0's
+        memset(output_array.raw + REF_COMMS_DAMAGE_STATUS_OFFSET, 0, ref_data.damage_status.packet_size);
+    }
     memcpy(output_array.raw + REF_COMMS_DAMAGE_STATUS_OFFSET, ref_data.damage_status.raw, ref_data.damage_status.packet_size);
+
     memcpy(output_array.raw + REF_COMMS_LAUNCHING_STATUS_OFFSET, ref_data.launching_status.raw, ref_data.launching_status.packet_size);
     memcpy(output_array.raw + REF_COMMS_PROJECTILE_ALLOWANCE_OFFSET, ref_data.projectile_allowance.raw, ref_data.projectile_allowance.packet_size);
     memcpy(output_array.raw + REF_COMMS_RFID_STATUS_OFFSET, ref_data.rfid_status.raw, ref_data.rfid_status.packet_size);
     memcpy(output_array.raw + REF_COMMS_KBM_INTERACTION_OFFSET, ref_data.kbm_interaction.raw, ref_data.kbm_interaction.packet_size);
-
+    
     return output_array;
 }
 
@@ -280,6 +291,7 @@ void RefSystem::set_ref_data(Frame& frame, uint8_t raw_buffer[REF_MAX_PACKET_SIZ
         break;
     case FrameType::DAMAGE_STATUS:
         ref_data.damage_status.set_data(frame.data);
+        damage_status_changed = true;
         break;
     case FrameType::LAUNCHING_STATUS:
         ref_data.launching_status.set_data(frame.data);
@@ -438,6 +450,7 @@ void RefSystem::read_mcm() {
 
     // process the data
     if (success) {
+
         set_ref_data(mcm_data.curr_frame, mcm_data.raw_buffer);
 
         // reset flags
