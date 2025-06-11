@@ -360,10 +360,17 @@ int main() {
         Comms::Sendable<CommsRefData> ref_data_sendable = ref_data;
         ref_data_sendable.send_to_comms();
 
+        Comms::Sendable<TargetState> target_state_sendable;
+        memcpy(target_state_sendable.data.state, temp_reference, sizeof(temp_reference));
+        target_state_sendable.data.time = millis() / 1000.0;
+        target_state_sendable.send_to_comms();
+
+
         Comms::Sendable<EstimatedState> estimated_state;
         memcpy(estimated_state.data.state, temp_state, sizeof(temp_state));
         estimated_state.data.time = millis() / 1000.0;
         estimated_state.send_to_comms();
+
 
         Comms::Sendable<DR16Data> dr16_sendable;
         dr16_sendable.data.l_mouse_button = dr16.get_l_mouse_button();
