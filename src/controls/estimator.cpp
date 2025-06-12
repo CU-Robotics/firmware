@@ -572,6 +572,6 @@ void NewFeederEstimator::step_states(float output[CAN_MAX_MOTORS][MICRO_STATE_LE
     ball_count += diff/(M_PI/2.0);
     output[0][0] = ball_count;
     output[0][1] = feeder_velocity;
-    output[0][2] = 0;
+    output[0][2] = feeder_angle; // this is not the acceleration just the encoder value for debugging
 }
 
