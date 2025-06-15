@@ -91,14 +91,13 @@ CommsRefData RefSystem::get_data_for_comms() {
     memcpy(output_array.raw + REF_COMMS_ROBOT_POWER_HEAT_OFFSET, ref_data.robot_power_heat.raw, ref_data.robot_power_heat.packet_size);
     memcpy(output_array.raw + REF_COMMS_ROBOT_POSITION_OFFSET, ref_data.robot_position.raw, ref_data.robot_position.packet_size);
     memcpy(output_array.raw + REF_COMMS_ROBOT_BUFF_OFFSET, ref_data.robot_buff.raw, ref_data.robot_buff.packet_size);
-    // printf("damage status changed: %d\n", damage_status_changed);
+
     if(damage_status_changed) {
         Serial.println("Damage status changed, sending new data");
         memcpy(output_array.raw + REF_COMMS_DAMAGE_STATUS_OFFSET, ref_data.damage_status.raw, ref_data.damage_status.packet_size);
         damage_status_changed = false; // reset the flag
     } else {
-        //Serial.println("Sending 0");
-        //if the damage status has not changed, just send 0's
+        //if the damage status has not changed, send (15, 15) which means invalid
         memset(output_array.raw + REF_COMMS_DAMAGE_STATUS_OFFSET, 255, ref_data.damage_status.packet_size);
     }
 
