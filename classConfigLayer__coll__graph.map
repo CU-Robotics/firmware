@@ -1,0 +1,7 @@
+<map id="ConfigLayer" name="ConfigLayer">
+<area shape="rect" id="node1" title="Handle seeking and reading configuration packets coming from Hive." alt="" coords="88,184,179,211"/>
+<area shape="rect" id="node2" href="$structConfig.html" title="struct to hold configuration data" alt="" coords="5,95,64,121"/>
+<area shape="rect" id="node3" href="$classSDManager.html" title="Wrapper for built in SD card." alt="" coords="88,95,179,121"/>
+<area shape="rect" id="node4" href="$structComms_1_1HIDPacket.html" title="A complete HID packet, including the header and payload." alt="" coords="203,95,341,121"/>
+<area shape="rect" id="node5" href="$structPacketHeader.html" title="Comms packet header struct." alt="" coords="219,5,325,32"/>
+</map>
