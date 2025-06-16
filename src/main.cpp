@@ -253,7 +253,7 @@ int main() {
             if (dt2 > 0.1) dt2 = 0;
             // check if the shooter is active
             if(not_safety_mode && ref->ref_data.robot_performance.shooter_power_active) feed += feeder_target*dt2;
-            target_state[6][0] = feed;
+            target_state[6][0] = (int)feed;
         }else{
             target_state[6][1] = feeder_target;
         }
@@ -416,11 +416,9 @@ int main() {
             gimbal_power_timer.start();
         }
         last_gimbal_power = ref->ref_data.robot_performance.gimbol_power_active;
-        bool gimbal_power_recently_turned_on = gimbal_power_timer.get_elapsed_micros_no_restart() < 2000000;
-        if (gimbal_power_recently_turned_on) {
-            governor.set_reference(temp_state);
-        }
-        not_safety_mode = (dr16.is_connected() && (dr16.get_l_switch() == 2 || dr16.get_l_switch() == 3) && config_layer.is_configured() && !is_slow_loop && ref->ref_data.robot_performance.gimbol_power_active); //&& !gimbal_power_recently_turned_on);
+        bool gimbal_power_recently_turned_on = gimbal_power_timer.get_elapsed_micros_no_restart() < 3000000;
+
+        not_safety_mode = (dr16.is_connected() && (dr16.get_l_switch() == 2 || dr16.get_l_switch() == 3) && config_layer.is_configured() && !is_slow_loop && ref->ref_data.robot_performance.gimbol_power_active && !gimbal_power_recently_turned_on);
         //  SAFETY MODE
         if (not_safety_mode) {
             // SAFETY OFF
@@ -432,7 +430,7 @@ int main() {
             // TODO: Reset all controller integrators here
             can.issue_safety_mode();
             governor.set_reference_at_index(temp_state[6][0], 6, 0);
-            feed = temp_state[6][0]; // reset feed to the current state
+            feed = (fmod(fmod(temp_state[6][0],1) + 1,1) > 0.2) ? (int)floor(temp_state[6][0]) + 1 : (int)floor(temp_state[6][0]); // reset feed to the current state
             // Serial.printf("Can zero\n");
         }
 
