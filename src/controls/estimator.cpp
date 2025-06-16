@@ -147,11 +147,6 @@ void GimbalEstimator::step_states(float output[STATE_LEN][3], float curr_state[S
     while (yaw_angle <= -PI)
         yaw_angle += 2 * PI;
 
-    while (chassis_angle >= PI)
-        chassis_angle -= 2 * PI;
-    while (chassis_angle <= -PI)
-        chassis_angle += 2 * PI;
-
     // output[2][0] = chassis_angle;
     // output[2][1] = 0;
     // output[2][2] = 0;
@@ -174,6 +169,10 @@ void GimbalEstimator::step_states(float output[STATE_LEN][3], float curr_state[S
     }
 
     chassis_angle = yaw_angle - yaw_enc_angle;
+    while (chassis_angle >= PI)
+        chassis_angle -= 2 * PI;
+    while (chassis_angle <= -PI)
+        chassis_angle += 2 * PI;
     // chassis_angle = -(total_odom_pos[0] + total_odom_pos[2])/(2*odom_axis_offset_x)+initial_chassis_angle;  
     float d_chassis_heading = (chassis_angle - prev_chassis_angle);
     if (d_chassis_heading > PI) d_chassis_heading -= 2 * PI;
@@ -573,6 +572,6 @@ void NewFeederEstimator::step_states(float output[CAN_MAX_MOTORS][MICRO_STATE_LE
     ball_count += diff/(M_PI/2.0);
     output[0][0] = ball_count;
     output[0][1] = feeder_velocity;
-    output[0][2] = 0;
+    output[0][2] = feeder_angle; // this is not the acceleration just the encoder value for debugging
 }
 
