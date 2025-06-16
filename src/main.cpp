@@ -165,9 +165,8 @@ int main() {
     bool not_safety_mode = false;
     bool last_gimbal_power = false; // used to detect gimbal power changes
     bool last_loop_slow = false; // used to detect multiple slow loops in a row
-    bool feed_read = true;
     int slow_loop_counter = 0; // used to count slow loops in a row
-    int last_switch = 0;
+    // int last_switch = 0;
 
     // main loop timers
     Timer loop_timer;
@@ -175,7 +174,6 @@ int main() {
     Timer stall_timer;
     Timer control_input_timer;
     Timer gimbal_power_timer;
-    Timer feed_timer;
     
     // start the main loop watchdog
     watchdog.start();
@@ -249,28 +247,20 @@ int main() {
             - dr16_pos_x
             - vtm_pos_x;
         float fly_wheel_target = (dr16.get_r_switch() == 1 || dr16.get_r_switch() == 3) ? 18 : 0; //m/s
-        // float feeder_target = (((dr16.get_l_mouse_button() || ref->ref_data.kbm_interaction.button_left) && dr16.get_r_switch() != 2) || dr16.get_r_switch() == 1) ? 10 : 0;
-        // if(config->governor_types[6] == 1) {
-        //     float dt2 = timer.delta();
-        //     if (dt2 > 0.1) dt2 = 0;
-        //     // check if the shooter is active
-        //     if(not_safety_mode && ref->ref_data.robot_performance.shooter_power_active) feed += feeder_target*dt2;
-        //     target_state[6][0] = feed;
-        // }else{
-        //     target_state[6][1] = feeder_target;
-        // }
-        if (dr16.get_r_switch() == 1 && last_switch != 1) {
-            feed++;
+        float feeder_target = (((dr16.get_l_mouse_button() || ref->ref_data.kbm_interaction.button_left) && dr16.get_r_switch() != 2) || dr16.get_r_switch() == 1) ? 10 : 0;
+        if(config->governor_types[6] == 1) {
+            float dt2 = timer.delta();
+            if (dt2 > 0.1) dt2 = 0;
+            // check if the shooter is active
+            if(not_safety_mode && ref->ref_data.robot_performance.shooter_power_active) feed += feeder_target*dt2;
             target_state[6][0] = feed;
-            feed_timer.start();
-            feed_read = false;
+        }else{
+            target_state[6][1] = feeder_target;
         }
-        if(temp_state[5][1] < 0.985*fly_wheel_target && feed_timer.get_elapsed_micros_no_restart() < 1000000 && !feed_read) {
-            Serial.printf("feed delay: %f\n", feed_timer.get_elapsed_micros_no_restart()/1000.0);
-            feed_read = true;
-        }
-
-        last_switch = dr16.get_r_switch();
+        // if (dr16.get_r_switch() == 1 && last_switch != 1) {
+        //     feed++;
+        // }
+        // last_switch = dr16.get_r_switch();
         // set manual controls
         target_state[0][0] = chassis_pos_x;
         target_state[0][1] = chassis_vel_x;

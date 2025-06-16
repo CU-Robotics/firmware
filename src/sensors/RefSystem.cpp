@@ -93,7 +93,6 @@ CommsRefData RefSystem::get_data_for_comms() {
     memcpy(output_array.raw + REF_COMMS_ROBOT_BUFF_OFFSET, ref_data.robot_buff.raw, ref_data.robot_buff.packet_size);
 
     if(damage_status_changed) {
-        Serial.println("Damage status changed, sending new data");
         memcpy(output_array.raw + REF_COMMS_DAMAGE_STATUS_OFFSET, ref_data.damage_status.raw, ref_data.damage_status.packet_size);
         damage_status_changed = false; // reset the flag
     } else {
@@ -449,7 +448,6 @@ void RefSystem::read_mcm() {
 
     // process the data
     if (success) {
-
         set_ref_data(mcm_data.curr_frame, mcm_data.raw_buffer);
 
         // reset flags
