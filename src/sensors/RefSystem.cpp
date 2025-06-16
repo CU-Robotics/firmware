@@ -104,7 +104,6 @@ CommsRefData RefSystem::get_data_for_comms() {
     memcpy(output_array.raw + REF_COMMS_PROJECTILE_ALLOWANCE_OFFSET, ref_data.projectile_allowance.raw, ref_data.projectile_allowance.packet_size);
     memcpy(output_array.raw + REF_COMMS_RFID_STATUS_OFFSET, ref_data.rfid_status.raw, ref_data.rfid_status.packet_size);
     memcpy(output_array.raw + REF_COMMS_KBM_INTERACTION_OFFSET, ref_data.kbm_interaction.raw, ref_data.kbm_interaction.packet_size);
-    
     return output_array;
 }
 
