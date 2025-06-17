@@ -147,11 +147,6 @@ void GimbalEstimator::step_states(float output[STATE_LEN][3], float curr_state[S
     while (yaw_angle <= -PI)
         yaw_angle += 2 * PI;
 
-    while (chassis_angle >= PI)
-        chassis_angle -= 2 * PI;
-    while (chassis_angle <= -PI)
-        chassis_angle += 2 * PI;
-
     // output[2][0] = chassis_angle;
     // output[2][1] = 0;
     // output[2][2] = 0;
@@ -174,6 +169,10 @@ void GimbalEstimator::step_states(float output[STATE_LEN][3], float curr_state[S
     }
 
     chassis_angle = yaw_angle - yaw_enc_angle;
+    while (chassis_angle >= PI)
+        chassis_angle -= 2 * PI;
+    while (chassis_angle <= -PI)
+        chassis_angle += 2 * PI;
     // chassis_angle = -(total_odom_pos[0] + total_odom_pos[2])/(2*odom_axis_offset_x)+initial_chassis_angle;  
     float d_chassis_heading = (chassis_angle - prev_chassis_angle);
     if (d_chassis_heading > PI) d_chassis_heading -= 2 * PI;
@@ -547,6 +546,8 @@ void LocalEstimator::step_states(float output[CAN_MAX_MOTORS][MICRO_STATE_LEN], 
 
 NewFeederEstimator::NewFeederEstimator(CANManager* _can, SensorManager* _sensor_manager, Config config_data) {
     feeder_offset = config_data.sensor_info[10][2];
+    feeder_direction = config_data.sensor_info[10][3];
+    feeder_ratio = config_data.sensor_info[10][4];
     micro_estimator = false;
     can = _can;
     sensor_manager = _sensor_manager;
@@ -561,18 +562,22 @@ void NewFeederEstimator::step_states(float output[CAN_MAX_MOTORS][MICRO_STATE_LE
     if (count == 0) {
         Serial.printf("prev_feeder_angle %f\n",prev_feeder_angle);
         dt = 0; // first dt loop generates huge time so check for that
-        diff = fmod((feeder_angle - feeder_offset), (float)(M_PI / 2.0)) ;
+        diff = fmod((feeder_angle - feeder_offset), (float)(M_PI / feeder_ratio)) ;
         count++;
     } else {
         diff = feeder_angle - prev_feeder_angle;
     }
+  
     prev_feeder_angle = feeder_angle;
     if (diff > PI) diff -= 2 * PI;
     else if (diff < -PI) diff += 2 * PI;
-    float feeder_velocity = (dt > 0) ? (diff/(M_PI/2.0))/dt : 0;
-    ball_count += diff/(M_PI/2.0);
-    output[0][0] = ball_count;
-    output[0][1] = feeder_velocity;
-    output[0][2] = 0;
+  
+    float feeder_velocity = (dt > 0) ? (diff/(M_PI/feeder_ratio))/dt : 0;
+  
+    ball_count += diff/(M_PI/feeder_ratio);
+    output[0][0] = ball_count * feeder_direction; // ball count
+    output[0][1] = feeder_velocity * feeder_direction; // ball velocity
+    output[0][2] = feeder_angle; // this is not the acceleration just the encoder value for debugging
+
 }
 

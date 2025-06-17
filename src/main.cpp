@@ -430,7 +430,9 @@ int main() {
             // TODO: Reset all controller integrators here
             can.issue_safety_mode();
             governor.set_reference_at_index(temp_state[6][0], 6, 0);
+
             feed = (fmod(fmod(temp_state[6][0],1) + 1,1) > 0.2) ? (int)floor(temp_state[6][0]) + 1 : (int)floor(temp_state[6][0]); // reset feed to the current state
+            last_feed = feed; // reset last feed to the current state
             // Serial.printf("Can zero\n");
         }
 
