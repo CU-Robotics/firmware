@@ -305,8 +305,8 @@ int main() {
         //     Serial.printf("\t%d: %f %f %f\n", i, target_state[i][0], target_state[i][1], target_state[i][2]);
         // }
         
-        // override temp state if needed
-        if (comms_layer.get_hive_data().override_state.active) {
+        // override temp state if needed. Dont override in teensy mode so the sentry doesnt move during inspection
+        if (comms_layer.get_hive_data().override_state.active && !(dr16.get_l_switch() == 3)) {
             // clear the request
             comms_layer.get_hive_data().override_state.active = false;
             
