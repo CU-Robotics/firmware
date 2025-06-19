@@ -1,0 +1,4 @@
+<map id="EstimatedState" name="EstimatedState">
+<area shape="rect" id="node1" title="Full robot state, in the form of EstimatedState." alt="" coords="23,80,133,107"/>
+<area shape="rect" id="node2" href="$structComms_1_1CommsData.html" title="base class for all data structs that want to be sent over comms." alt="" coords="5,5,151,32"/>
+</map>
