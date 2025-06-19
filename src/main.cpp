@@ -162,6 +162,7 @@ int main() {
 
     // whether we are in hive mode or not
     bool hive_toggle = false;
+    bool safety_toggle = false; 
     bool not_safety_mode = false;
     bool last_gimbal_power = false; // used to detect gimbal power changes
     bool last_loop_slow = false; // used to detect multiple slow loops in a row
@@ -288,12 +289,14 @@ int main() {
 
         // when in teensy control mode reset hive toggle
         if (dr16.get_l_switch() == 3) {
-            if (!hive_toggle) {
+            if (!hive_toggle || !safety_toggle) {
                 pos_offset_x = temp_state[0][0];
                 pos_offset_y = temp_state[1][0];
                 feed = last_feed;
+                governor.set_reference(temp_state);
             }
             hive_toggle = true;
+            safety_toggle = true;
         }
 
         // print dr16
@@ -434,6 +437,7 @@ int main() {
             feed = (fmod(fmod(temp_state[6][0],1) + 1,1) > 0.2) ? (int)floor(temp_state[6][0]) + 1 : (int)floor(temp_state[6][0]); // reset feed to the current state
             last_feed = feed; // reset last feed to the current state
             // Serial.printf("Can zero\n");
+            safety_toggle = false; // reset hive toggle
         }
 
         // LED heartbeat -- linked to loop count to reveal slowdowns and freezes.
