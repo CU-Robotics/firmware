@@ -23,18 +23,28 @@ if [[ "$(uname -s)" == "Linux" ]]; then
         wget $AArch64_Linux -O $TAR_NAME
     fi
 elif [[ "$(uname -s)" == "Darwin" ]]; then
+    # Check for wget and install if missing
+    if ! command -v wget >/dev/null 2>&1; then
+        echo "wget not found. Installing via Homebrew..."
+        if command -v brew >/dev/null 2>&1; then
+            brew install wget
+        else
+            echo "Homebrew is not installed. Please install Homebrew first: https://brew.sh/"
+            exit 1
+        fi
+    fi
     if [[ $(uname -m) == "x86_64" ]]; then
-        wget $x86_64_MacOS -O $TAR_NAME
+        wget "$x86_64_MacOS" -O "$TAR_NAME"
     elif [[ $(uname -m) == "arm64" ]]; then
-        wget $Arm64_MacOS -O $TAR_NAME
+        wget "$Arm64_MacOS" -O "$TAR_NAME"
     fi
 fi
 
 # extract the compiler
-echo "Extracting the compiler..."
-tar -xf $TAR_NAME -C $OUTPUT
-mv $OUTPUT/arm-gnu-toolchain* $OUTPUT/arm-gnu-toolchain
+echo "⬆️ Extracting the compiler..."
+tar -xf "$TAR_NAME" -C "$OUTPUT"
+mv "$OUTPUT"/arm-gnu-toolchain* "$OUTPUT"/arm-gnu-toolchain
 
-# remove the downloaded tar files
-echo "Cleaning up..."
-rm -f $TAR_NAME
+# remove the downloaded tar file
+echo "🧹Cleaning up..."
+rm -f "$TAR_NAME"
