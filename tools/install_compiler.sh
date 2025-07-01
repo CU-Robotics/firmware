@@ -23,9 +23,11 @@ if [[ "$(uname -s)" == "Linux" ]]; then
         wget $AArch64_Linux -O $TAR_NAME
     fi
 elif [[ "$(uname -s)" == "Darwin" ]]; then
-    # Check for wget and install if missing
+    # If wget is not installed, install it using Homebrew
+    # Suppress output with >/dev/null and 2>&1 sends errors to /dev/null
     if ! command -v wget >/dev/null 2>&1; then
         echo "wget not found. Installing via Homebrew..."
+        # If homebrew is installed, use it
         if command -v brew >/dev/null 2>&1; then
             brew install wget
         else
