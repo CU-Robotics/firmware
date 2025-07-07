@@ -72,7 +72,7 @@ public:
     /// @brief Get the size of the medium priority send queue.
     /// @return The size of the medium priority send queue.
     uint16_t get_medium_priority_queue_size() const;
-    
+
     /// @brief Get the size of the logging send queue.
     /// @return The size of the logging send queue.
     uint16_t get_logging_queue_size() const;
@@ -119,11 +119,8 @@ private:
     /// @brief The medium priority send queue.
     std::queue<CommsData*> medium_priority_send_queue;
     /// @brief The logging send queue.
-    std::queue<LoggingData*> logging_send_queue;
-
-    /// @brief LogData object to hold the logging data.
-    // TODO: this is a temporary fix to get logging data to work
-    LogData log_data;
+    // TODO: Make this a queue of LoggingData instead of CommsData
+    std::queue<CommsData*> logging_send_queue;
 
     /// @brief The raw data buffer. This is the complete data packet.
     uint8_t* raw_data = nullptr;

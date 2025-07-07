@@ -32,7 +32,7 @@ public:
     /// @param size Number of bytes to copy.
     /// @param data Pointer to the buffer where log data will be copied.
     /// @return Number of bytes copied.
-    uint32_t grab_log_data(uint32_t size, uint8_t* data);
+    uint32_t grab_log_data(uint32_t size, uint8_t* dest);
 
 private:
     /// @brief Main write function that copies a buffer to the internal log.
@@ -98,11 +98,11 @@ public:
     /// @param dest Destination for the output.
     /// @param s C-string to print.
     /// @return Number of bytes written.
-    size_t print(LogDestination dest, const char s[ ]);
+    size_t print(LogDestination dest, const char s[]);
     /// @brief Prints a C-string to the default destination (Comms).
     /// @param s C-string to print.
     /// @return Number of bytes written.
-    size_t print(const char s[ ]);
+    size_t print(const char s[]);
 
     // Printing unsigned numbers ----------------
 
@@ -311,11 +311,11 @@ public:
     /// @param dest Destination for the output.
     /// @param s C-string to print.
     /// @return Number of bytes written.
-    size_t println(LogDestination dest, const char s[ ]);
+    size_t println(LogDestination dest, const char s[]);
     /// @brief Prints a C-string followed by a newline to the default destination (Comms).
     /// @param s C-string to print.
     /// @return Number of bytes written.
-    size_t println(const char s[ ]);
+    size_t println(const char s[]);
 
     /// @brief Prints an unsigned byte followed by a newline to a specified destination.
     /// @param dest Destination for the output.

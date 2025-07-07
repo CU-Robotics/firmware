@@ -42,14 +42,11 @@ void PacketPayload::construct_data() {
 #if defined(HIVE)
     std::lock_guard<std::mutex> lock(m_mutex);
 #endif
-    
     clear_raw_data();
 
     append_data_from_queue(high_priority_send_queue);
     append_data_from_queue(medium_priority_send_queue);
-
-    // TODO: this is a temporary fix to get logging data to work
-    try_append_data(&log_data);
+    append_data_from_queue(logging_send_queue);
 }
 
 void PacketPayload::deconstruct_data(uint8_t* data, uint16_t size) {
@@ -79,7 +76,7 @@ void PacketPayload::deconstruct_data(uint8_t* data, uint16_t size) {
         if (header->type_label == TypeLabel::NONE) {
             break;
         }
-        
+
         // send the data to the mega struct
         place_incoming_data_in_mega_struct(header);
 
@@ -87,7 +84,7 @@ void PacketPayload::deconstruct_data(uint8_t* data, uint16_t size) {
         if (offset >= size - sizeof(CommsData)) {
             break;
         }
-    }    
+    }
 }
 
 void PacketPayload::add(CommsData* data) {
@@ -113,10 +110,14 @@ void PacketPayload::add(CommsData* data) {
         }
         break;
     } case Priority::Logging: {
-        // TODO: this is a temporary fix to get logging data to work
-        LogData* l_data = reinterpret_cast<LogData*>(data);
-        memcpy(log_data.log_message, l_data->log_message, sizeof(l_data->log_message));
-        delete data;
+        if (logging_send_queue.size() < MAX_QUEUE_SIZE) {
+            // this bouncer only lets LoggingData through
+            if (data->type_label == TypeLabel::LoggingData) {
+                logging_send_queue.push(data);
+            }
+        } else {
+            delete data;
+        }
         break;
     }
     default:
@@ -188,7 +189,7 @@ void PacketPayload::append_data_from_queue(std::queue<CommsData*>& queue) {
         if (successful_append) {
             // set the data in the mega struct
             place_outgoing_data_in_mega_struct(next_data);
-            
+
             // free the pointer
             delete next_data;
             queue.pop(); // remove the appended item from the queue, going to the next.
@@ -279,7 +280,7 @@ void PacketPayload::place_incoming_data_in_mega_struct(CommsData* data) {
     Hive::env->comms_layer->set_firmware_data(firmware_data);
 #elif defined(FIRMWARE)
     HiveData& hive_data = comms_layer.get_hive_data();
-    
+
     // Serial.printf("Placing incoming in mega struct: %s\n", to_string(data->type_label).c_str());
     hive_data.set_data(data);
 #endif
@@ -326,7 +327,7 @@ TEST_CASE("Testing packet payload") {
 
     SUBCASE("Testing payload fills raw data") {
         payload.add(new TestData(data));
-        
+
         payload.construct_data();
 
         uint8_t* raw_data = payload.data();
@@ -397,7 +398,7 @@ TEST_CASE("Testing packet payload") {
         medium_priority_data.y = 5.5f;
         medium_priority_data.z = 6.5f;
         medium_priority_data.w = 0x87654321;
-        
+
         Comms::LoggingData logging_data;
         char log_buffer[] = "This is a test log message.";
         logging_data.deserialize(log_buffer, sizeof(log_buffer));
@@ -624,7 +625,7 @@ TEST_CASE("Testing packet payload") {
 
         TestData medium_priority_data;
         medium_priority_data.priority = Comms::Priority::Medium;
-        
+
         Comms::LoggingData logging_data;
 
         payload.add(new TestData(medium_priority_data));
@@ -647,7 +648,7 @@ TEST_CASE("Testing packet payload") {
 
         TestData medium_priority_data;
         medium_priority_data.priority = Comms::Priority::Medium;
-        
+
         Comms::LoggingData logging_data;
 
         // hit the cap on all three queues

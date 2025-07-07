@@ -8,7 +8,7 @@
 DMAMEM char log_buffer[LOGGER_BUFFER_SIZE];
 
 // need to clear the buffer before using it
-Logger::Logger()  : cursor(0), write_error(0) {
+Logger::Logger() : cursor(0), write_error(0) {
     // Initialize the log buffer
     memset(log_buffer, 0, sizeof(log_buffer));
 }
@@ -19,7 +19,6 @@ size_t Logger::write(const uint8_t* buffer, size_t size, LogDestination destinat
     Serial.printf("%d %d\n", cursor, size);
     // guard against cursor going beyond buffer size
     if (cursor + size >= sizeof(log_buffer)) { return 0; }
-    
 
     // writes incoming content (buffer) to cursor position
     memcpy(log_buffer + cursor, buffer, size);
@@ -33,21 +32,20 @@ size_t Logger::write(const uint8_t* buffer, size_t size, LogDestination destinat
         Serial.print(print_statement);
     }
 
-    
     // sets cursor to current place in memory
     cursor += size;
     return size;
 }
 
-uint32_t Logger::grab_log_data(uint32_t size, uint8_t* data) {
-    // ensure data isn't a null pointer
-    if (data == nullptr) { return 0; }
+uint32_t Logger::grab_log_data(uint32_t size, uint8_t* dest) {
+    // ensure dest isn't a null pointer
+    if (dest == nullptr) { return 0; }
 
     // make sure we don't copy more than the buffer size
     uint32_t bytes_to_copy = std::min(cursor, size);
 
-    // copy internal buffer into *data
-    memcpy(data, log_buffer, bytes_to_copy);
+    // copy internal buffer into *dest
+    memcpy(dest, log_buffer, bytes_to_copy);
 
     // reset cursor
     cursor = 0;
@@ -98,8 +96,8 @@ size_t Logger::print(int n) { return print(LogDestination::Comms, n); }
 size_t Logger::print(LogDestination dest, char c) { return write((uint8_t)c, dest); }
 size_t Logger::print(char c) { return print(LogDestination::Comms, c); }
 
-size_t Logger::print(LogDestination dest, const char s[ ]) { return write(s, dest); }
-size_t Logger::print(const char s[ ]) { return print(LogDestination::Comms, s); }
+size_t Logger::print(LogDestination dest, const char s[]) { return write(s, dest); }
+size_t Logger::print(const char s[]) { return print(LogDestination::Comms, s); }
 
 size_t Logger::print(LogDestination dest, uint8_t b) { return printNumber(dest, b, 10, 0); }
 size_t Logger::print(uint8_t b) { return print(LogDestination::Comms, b); }
@@ -145,8 +143,8 @@ size_t Logger::println(const String& s) { return println(LogDestination::Comms, 
 size_t Logger::println(LogDestination dest, char c) { return print(dest, c) + println(dest); }
 size_t Logger::println(char c) { return println(LogDestination::Comms, c); }
 
-size_t Logger::println(LogDestination dest, const char s[ ]) { return print(dest, s) + println(dest); }
-size_t Logger::println(const char s[ ]) { return println(LogDestination::Comms, s); }
+size_t Logger::println(LogDestination dest, const char s[]) { return print(dest, s) + println(dest); }
+size_t Logger::println(const char s[]) { return println(LogDestination::Comms, s); }
 
 size_t Logger::println(LogDestination dest, uint8_t b) { return print(dest, b) + println(dest); }
 size_t Logger::println(uint8_t b) { return println(LogDestination::Comms, b); }

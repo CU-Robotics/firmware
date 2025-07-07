@@ -352,8 +352,11 @@ int main() {
         dr16_sendable.data.keys.raw = *(uint16_t*)(dr16.get_raw() + 14);
         dr16_sendable.send_to_comms();
 
-        Comms::Sendable<Comms::LogData> logging_sendable;
-        logger.grab_log_data(LOGGER_BUFFER_SIZE, (uint8_t*)logging_sendable.data.log_message);
+        // send logging to hive
+        Comms::Sendable<Comms::LoggingData> logging_sendable;
+        char temp_log_buffer[LOGGER_BUFFER_SIZE] = {0};
+        logger.grab_log_data(LOGGER_BUFFER_SIZE, (uint8_t*)temp_log_buffer);
+        logging_sendable.data.deserialize(temp_log_buffer, LOGGER_BUFFER_SIZE);
         logging_sendable.send_to_comms();
 
         comms_layer.run();

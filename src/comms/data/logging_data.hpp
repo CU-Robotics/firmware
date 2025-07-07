@@ -6,23 +6,8 @@
 
 namespace Comms {
 
-/// @brief LogData is a struct that contains a log message.
-// TODO: this is a temporary fix to get logging data to work
-struct LogData : public CommsData {
-    LogData() : CommsData(TypeLabel::LogData, PhysicalMedium::Ethernet, Priority::Logging, sizeof(*this)) { };
-
-    /// @brief A constant sized buffer for the log message
-    char log_message[4096] = { 0 };
-
-    /// @brief Return a string representation of the log message
-    /// @return The log message as a string
-    std::string get_log_message() const {
-        return std::string(log_message);
-    }
-};
-
 /// @todo handle logging behavior
-struct LoggingData : public CommsData {
+struct LoggingData : Comms::CommsData {
     // choose your label, physical medium, and priority for this data struct here.
     /// @brief Primary constructor, initializes CommsData fields
     LoggingData() : CommsData(TypeLabel::LoggingData, PhysicalMedium::Ethernet, Priority::Logging, sizeof(*this)) { };
