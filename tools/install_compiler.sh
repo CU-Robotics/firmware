@@ -43,10 +43,10 @@ elif [[ "$(uname -s)" == "Darwin" ]]; then
 fi
 
 # extract the compiler
-echo "⬆️ Extracting the compiler..."
+echo "Extracting the compiler..."
 tar -xf "$TAR_NAME" -C "$OUTPUT"
 mv "$OUTPUT"/arm-gnu-toolchain* "$OUTPUT"/arm-gnu-toolchain
 
 # remove the downloaded tar file
-echo "🧹Cleaning up..."
+echo "Cleaning up..."
 rm -f "$TAR_NAME"
