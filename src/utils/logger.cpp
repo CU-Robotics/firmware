@@ -386,6 +386,28 @@ size_t Logger::print(LogDestination dest, int64_t n) {
 }
 size_t Logger::print(int64_t n) { return print(LogDestination::Comms, n); }
 
+size_t Logger::print(LogDestination dest, int n, int base) {
+    return print(dest, (long)n, base);
+}
+size_t Logger::print(int n, int base) {
+    return print(LogDestination::Comms, n, base);
+}
+
+size_t Logger::print(LogDestination dest, long n, int base) {
+    return printNumber(dest, n, base, 0);
+}
+size_t Logger::print(long n, int base) {
+    return print(LogDestination::Comms, n, base);
+}
+
+size_t Logger::print(LogDestination dest, int64_t n, int base) {
+    if (n < 0) return printNumber64(dest, -n, base, 1);
+    return printNumber64(dest, n, base, 0);
+}
+size_t Logger::print(int64_t n, int base) {
+    return print(LogDestination::Comms, n, base);
+}
+
 size_t Logger::print(LogDestination dest, double n, int digits) {
     return printFloat(dest, n, digits);
 }
