@@ -11,7 +11,7 @@ constexpr uint16_t REF_MAX_COMMAND_ID = 0x0308;
 /*--- Ref System Frame Structs ---*/
 
 /// @brief Base enum maping the ref structs to their ID
-enum FrameType {
+enum class FrameType : uint16_t {
     /// @brief Competition status data
     GAME_STATUS = 0x0001,
     /// @brief Competition result data
@@ -1510,27 +1510,18 @@ struct SmallMapRobotData {
     }
 };
 
-/// @brief packet to delete graphic layers
-/// @note sub-content-id 0x0100
-struct DeleteLayerData {
-    /// @brief 0: no operation is performed. 1: delete a graphic layer. 2: delete all graphics layers
-    uint8_t delete_type;
-    /// @brief number of layers to delete (0-9)
-    uint8_t layer;
-};
-
-/// @brief struct for generic graphics data.
+/// @brief A graphic/figure operation for RefDrawer to send
 /// @note This struct is used in DrawOneGraphic, DrawTwoGraphics, etc.
 struct GraphicData {
     /// @brief Index for graphic deletion, revision, etc.
     uint8_t figure_name[3];
 
-    // GRAPHICS CONFIGURATION 1 (one uint32_t)
-    /// @brief Bits 0-2: graphic operation (0: none, 1: add, 2: modify)
+    // GRAPHICS CONFIGURATION 1 (first uint32_t)
+    /// @brief Bits 0-2: graphic operation (1: add, 2: modify, 3: delete)
     uint32_t operate_type : 3;
-    /// @brief Bits 3-5: graphic type (i.e. 0: straight line, 1: rectangle...)
+    /// @brief Bits 3-5: graphic type (i.e. 0: straight line, 1: rectangle, etc.)
     uint32_t figure_type : 3;
-    /// @brief Bits 6-9: number of graphics layers
+    /// @brief Bits 6-9: number of graphics layer (0-9)
     uint32_t layer : 4;
     /// @brief Bits 10-13: color (0: own side's color (red/blue), 1: yellow, etc..)
     uint32_t color : 4;
@@ -1539,7 +1530,7 @@ struct GraphicData {
     /// @brief Second half of Bits 14-31: details differ based on drawn graphics. Described in table 2-26 of the Ref system manual.
     uint32_t details_b : 9;
 
-    // GRAPHICS CONFIGURATION 2 (one uint32_t)
+    // GRAPHICS CONFIGURATION 2 (second uint32_t)
     /// @brief Bits 0-9: line width. Recommended ratio between font size and line width is 10:1
     uint32_t width : 10;
     /// @brief Bits 10-20: the start point/origin's x coordinate
@@ -1547,7 +1538,7 @@ struct GraphicData {
     /// @brief Bits 21-31: the start point/origin's y coordinate
     uint32_t start_y : 11;
 
-    // GRAPHICS CONFIGURATION 3 (one uint32_t)
+    // GRAPHICS CONFIGURATION 3 (third uint32_t)
     /// @brief Meaning differs based on drawn graphics. Table 2-26 of the ref system manual.
     uint32_t details_c : 10;
     /// @brief Meaning differs based on drawn graphics. Table 2-26 of the ref system manual.
@@ -1556,40 +1547,13 @@ struct GraphicData {
     uint32_t details_e : 11;
 };
 
-/// @brief packet to draw one graphic
-/// @note sub-content-id 0x101
-struct DrawOneGraphicData {
-   /// @brief The GraphicData to draw
-    GraphicData graphic;
-};
-
-/// @brief packet to draw two graphics
-/// @note sub-content-id 0x0102
-struct DrawTwoGraphicsData {
-    /// @brief The array of GraphicData to draw
-    GraphicData graphic[2];
-};
-
-/// @brief packet to draw five graphics
-/// @note sub-content-id 0x0103
-struct DrawFiveGraphicsData {
-    /// @brief The array of GraphicData to draw
-    GraphicData graphic[5];
-};
-
-/// @brief packet to draw seven graphics
-/// @note sub-content-id 0x0104
-struct DrawSevenGraphicsData {
-    /// @brief The array of GraphicData to draw
-    GraphicData graphic[7];
-};
-
-/// @brief packet to draw a character graphic
-struct DrawCustomCharacter {
-    /// @brief character configuration, see GraphicData for details
-    GraphicData graphic;
-    /// @brief characters to draw, up to 30 characters
-    uint8_t data[30] = { 0 };
+/// @brief A layer operation for RefDrawer to send
+/// @note sub-content-id 0x0100
+struct LayerData {
+    /// @brief 1: delete a graphic layer. 2: delete all graphics layers
+    uint8_t delete_type;
+    /// @brief number of layers to delete (0-9)
+    uint8_t layer;
 };
 
 /// @brief Encompassing all read-able packet structs of the Ref System

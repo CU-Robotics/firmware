@@ -14,7 +14,7 @@
 
 #include "utils/watchdog.hpp"
 
-#include "sensors/RefDrawing.hpp"
+#include "sensors/RefDrawer.hpp"
 
 // Loop constants
 #define LOOP_FREQ 1000
@@ -307,7 +307,6 @@ int main() {
 
         // can.print_state();
 
-        drawOneGraphic(createLineData(20, 20, 120, 120, Color::GREEN));
 
         // construct sensor data packet
         SensorData sensor_data;
