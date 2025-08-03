@@ -40,65 +40,41 @@ void RefSystem::read() {
 }
 
 void RefSystem::write(FrameData* frameData, uint8_t length) {
-    // return if over baud rate
     if (bytes_sent >= REF_MAX_BAUD_RATE) {
-        Serial.println("Too many bytes");
+        Serial.println("RefSystem::write exceeded max baud rate");
         return;
     }
 
-    // return if writing too many bytes
     if (length > REF_MAX_PACKET_SIZE) {
-        Serial.println("Packet Too Long to Send!");
+        Serial.println("RefSystem::write exceeded max packet size");
         return;
     }
 
-    uint8_t raw_packet[REF_MAX_PACKET_SIZE] = { 0 };
-    uint8_t index = 0;
-
-    // make a FrameHeader
-    FrameHeader header {};
-    header.SOF = 0xA5; // set SOF
-    header.data_length = length; // set length
-    header.sequence = get_seq(); // set SEQ
+    FrameHeader header{};
+    header.SOF = 0xA5;
+    header.data_length = length;
+    header.sequence = get_seq();
     header.CRC = generateCRC8(reinterpret_cast<uint8_t*>(&header), sizeof(header));
 
-    // set header
-    memcpy(raw_packet + index, &header, sizeof(FrameHeader));
-    index += sizeof(FrameHeader);
-
-    // set command ID
+    uint8_t raw_packet[REF_MAX_PACKET_SIZE] = {0};
+    size_t idx = 0;
+    memcpy(raw_packet + idx, &header, sizeof(FrameHeader));
+    idx += sizeof(FrameHeader);
     uint16_t command_id = 0x0301;
-    memcpy(raw_packet + index, &command_id, sizeof(command_id));
-    index += sizeof(command_id);
+    memcpy(raw_packet + idx, &command_id, sizeof(command_id));
+    idx += sizeof(command_id);
+    memcpy(raw_packet + idx, frameData->data, length);
+    idx += length;
+    uint16_t footerCRC = generateCRC16(raw_packet, idx);
+    memcpy(raw_packet + idx, &footerCRC, sizeof(uint16_t));
+    idx += sizeof(uint16_t);
 
-    // set data
-    memcpy(raw_packet + index, frameData->data, length);
-    index += length;
-
-    // set CRC
-    uint16_t footerCRC = generateCRC16(raw_packet, index);
-    memcpy(raw_packet + index, &footerCRC, sizeof(uint16_t));
-    index += sizeof(uint16_t);
-
-    // make a Frame
-    // Frame frame {};
-    // frame.header = header;
-    // frame.commandID = 0x301;
-    // frame.data = *frameData;
-    // frame.CRC = generateCRC16(frame.data.data, sizeof(frame.data.data));
-
-    // OLD CODE
-    // // update tail
-    // uint16_t footerCRC = generateCRC16(packet, 13 + data_length);
-    // packet[13 + data_length] = (footerCRC & 0x00FF);    // set CRC
-    // packet[14 + data_length] = (footerCRC >> 8);        // set CRC
-    // OLD CODE
-
-    if (Serial2.write(raw_packet, index) == index) {
+    if (Serial2.write(raw_packet, idx) == idx) {
         packets_sent++;
         bytes_sent += length;
-    } else
+    } else {
         Serial.println("Failed to write");
+    }
 }
 
 void RefSystem::get_data_for_comms(uint8_t output_array[180]) {

@@ -83,7 +83,7 @@ class RefDrawer {
         RobotInteraction ri = {};
         ri.content_id = static_cast<uint16_t>(type);
         ri.sender_id = ref->ref_data.robot_performance.robot_ID;
-        ri.receiver_id = ri.sender_id >> 8;  // TODO: Check if/why this is correct
+        ri.receiver_id = ri.sender_id >> 8;  // Send to own team's player client (upper byte of robot ID is team ID)
         ri.size = sizeof(data);
         memcpy(ri.data, &data, ri.size);
 
