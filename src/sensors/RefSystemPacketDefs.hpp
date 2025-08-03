@@ -1510,7 +1510,7 @@ struct SmallMapRobotData {
     }
 };
 
-/// @brief A graphic/figure operation for RefDrawer to send
+/// @brief Graphic data sent by RefDrawer, for drawing shapes and text
 /// @note This struct is used in DrawOneGraphic, DrawTwoGraphics, etc.
 struct GraphicData {
     /// @brief Index for graphic deletion, revision, etc.
@@ -1547,12 +1547,12 @@ struct GraphicData {
     uint32_t details_e : 11;
 };
 
-/// @brief A layer operation for RefDrawer to send
+/// @brief Layer data sent by RefDrawer to delete one/all layers.
 /// @note sub-content-id 0x0100
 struct LayerData {
     /// @brief 1: delete a graphic layer. 2: delete all graphics layers
     uint8_t delete_type;
-    /// @brief number of layers to delete (0-9)
+    /// @brief layer to delete (0-9)
     uint8_t layer;
 };
 

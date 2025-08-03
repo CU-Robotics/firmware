@@ -44,8 +44,26 @@ class RefDrawer {
     /// @param y1 y coordinate of the start point
     /// @param x2 x coordinate of the end point
     /// @param y2 y coordinate of the end point
-    /// @param color color of the line
+    /// @param color color of the line (default SIDE_COLOR)
+    /// @param layer layer to draw the line on (default 0)
     void drawLine(uint32_t x1, uint32_t y1, uint32_t x2, uint32_t y2, uint8_t color = 0, uint8_t layer = 0);
+
+    /// @brief Draw a rectangle
+    /// @param x1 x coordinate of the top-left corner
+    /// @param y1 y coordinate of the top-left corner
+    /// @param x2 x coordinate of the bottom-right corner
+    /// @param y2 y coordinate of the bottom-right corner
+    /// @param color color of the rectangle (default SIDE_COLOR)
+    /// @param layer layer to draw the rectangle on (default 0)
+    void drawRectangle(uint32_t x1, uint32_t y1, uint32_t x2, uint32_t y2, uint8_t color = 0, uint8_t layer = 0);
+
+    /// @brief Draw a circle
+    /// @param x x coordinate of the center
+    /// @param y y coordinate of the center
+    /// @param radius radius of the circle
+    /// @param color color of the circle (default SIDE_COLOR)
+    /// @param layer layer to draw the circle on (default 0)
+    void drawCircle(uint32_t x, uint32_t y, uint32_t radius, uint8_t color = 0, uint8_t layer = 0);
 
    private:
     /// @brief Available drawing commands
@@ -56,18 +74,18 @@ class RefDrawer {
         DRAW_ONE_GRAPHIC = 0x0101,
     };
 
-    /// @brief Sends a RobotInteraction packet with a drawing/layer command
-    /// @tparam T Type of the payload data (either GraphicData or LayerData)
+    /// @brief Sends a drawing command through ref
+    /// @tparam T Type of the drawing data (either GraphicData or LayerData)
     /// @param type Type of drawing command
-    /// @param payload Payload data to send
+    /// @param data GraphicData or LayerData to send
     template <typename T>
-    void sendPacket(DrawType type, const T& payload) {
+    void sendPacket(DrawType type, const T& data) {
         RobotInteraction ri = {};
         ri.content_id = static_cast<uint16_t>(type);
         ri.sender_id = ref->ref_data.robot_performance.robot_ID;
         ri.receiver_id = ri.sender_id >> 8;  // TODO: Check if/why this is correct
-        ri.size = sizeof(payload);
-        memcpy(ri.data, &payload, ri.size);
+        ri.size = sizeof(data);
+        memcpy(ri.data, &data, ri.size);
 
         FrameData fd = {};
         size_t idx = 0;

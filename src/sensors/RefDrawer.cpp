@@ -39,13 +39,55 @@ void RefDrawer::drawLine(uint32_t x1, uint32_t y1, uint32_t x2, uint32_t y2, uin
     gd.figure_type = GraphicType::LINE;
     gd.layer = layer;
     gd.color = color;
-    gd.details_a = 0;
-    gd.details_b = 0;
     gd.width = 10;    // line width
     gd.start_x = x1;  // x coordinate of start point
     gd.start_y = y1;  // y coordinate of start point
+    gd.details_a = 0;
+    gd.details_b = 0;
     gd.details_c = 0;
     gd.details_d = x2;  // x coordinate of end point
     gd.details_e = y2;  // y coordinate of end point
+    sendPacket(DrawType::DRAW_ONE_GRAPHIC, gd);
+}
+
+void RefDrawer::drawRectangle(uint32_t x1, uint32_t y1, uint32_t x2, uint32_t y2, uint8_t color, uint8_t layer) {
+    GraphicData gd = {};
+    uint32_t id = getNextGraphicId();
+    gd.figure_name[0] = (id >> 16) & 0xFF;
+    gd.figure_name[1] = (id >> 8) & 0xFF;
+    gd.figure_name[2] = id & 0xFF;
+    gd.operate_type = GraphicOperation::ADD;
+    gd.figure_type = GraphicType::RECTANGLE;
+    gd.layer = layer;
+    gd.color = color;
+    gd.width = 10;    // line width
+    gd.start_x = x1;  // start x
+    gd.start_y = y1;  // start y
+    gd.details_a = 0;
+    gd.details_b = 0;
+    gd.details_c = 0;
+    gd.details_d = x2;  // diagonal x
+    gd.details_e = y2;  // diagonal y
+    sendPacket(DrawType::DRAW_ONE_GRAPHIC, gd);
+}
+
+void RefDrawer::drawCircle(uint32_t x, uint32_t y, uint32_t radius, uint8_t color, uint8_t layer) {
+    GraphicData gd = {};
+    uint32_t id = getNextGraphicId();
+    gd.figure_name[0] = (id >> 16) & 0xFF;
+    gd.figure_name[1] = (id >> 8) & 0xFF;
+    gd.figure_name[2] = id & 0xFF;
+    gd.operate_type = GraphicOperation::ADD;
+    gd.figure_type = GraphicType::CIRCLE;
+    gd.layer = layer;
+    gd.color = color;
+    gd.details_a = 0;
+    gd.details_b = 0;
+    gd.width = 10;          // line width
+    gd.start_x = x;         // center x
+    gd.start_y = y;         // center y
+    gd.details_c = radius;  // radius
+    gd.details_d = 0;
+    gd.details_e = 0;
     sendPacket(DrawType::DRAW_ONE_GRAPHIC, gd);
 }
