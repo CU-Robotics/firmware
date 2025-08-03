@@ -221,6 +221,7 @@ bool isDHCP = (ip == INADDR_NONE) &&
       dhcpActive_ = false;
     }
 #endif  // LWIP_DHCP
+    (void)isDHCP;  // Avoid unused variable warning
   }
 #else
   LWIP_UNUSED_ARG(ip);

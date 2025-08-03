@@ -224,6 +224,9 @@ private:
     float global_roll_angle = 0;
     /// @brief current rev encoder raw value
     float curr_rev_raw[3] = { 0 };
+    
+    /// @brief previous angle of the yaw 
+    float prev_yaw = 0;
 
     /// @brief previous rev encoder raw value
     float prev_rev_raw[3] = { 0 };
@@ -273,7 +276,7 @@ private:
 
 public:
     /// @brief estimate the state of the gimbal
-    /// @param config_data inputted sensor values from khadas yaml
+    /// @param config_data inputted sensor values from Hive yaml
     /// @param sensor_manager sensor manager object 
     /// @param can can data from Estimator Manager
     GimbalEstimator(Config config_data, SensorManager* sensor_manager, CANManager* can);
@@ -406,7 +409,7 @@ private:
 
 public:
     /// @brief estimate the state of the gimbal
-    /// @param config_data inputted sensor values from khadas yaml
+    /// @param config_data inputted sensor values from Hive yaml
     /// @param sensor_manager sensor manager object 
     /// @param can can from Estimator Manager
     GimbalEstimatorNoOdom(Config config_data, SensorManager* sensor_manager, CANManager* can);
@@ -540,5 +543,41 @@ public:
     /// @param override override flag
     void step_states(float output[CAN_MAX_MOTORS][MICRO_STATE_LEN], float curr_state[CAN_MAX_MOTORS][MICRO_STATE_LEN], int override);
 };
+
+/// @brief This estimator estimates our "micro" state which is stores all the motor velocities(in rad/s), whereas the other estimators estimate "macro" state which stores robot joints
+struct NewFeederEstimator : public Estimator {
+    private:
+        /// @brief can from EstimatorManager
+        CANManager* can;
+        /// @brief sensor manager
+        SensorManager* sensor_manager;
+        /// @brief delta time
+        float dt = 0;
+        /// @brief previous feeder angle
+        float prev_feeder_angle = 0;
+        /// @brief previous ball count
+        float ball_count = 0;
+        /// @brief first loop counter
+        int count = 0;
+        /// @brief feeder encoder offset for improving feeder delay
+        float feeder_offset = 0;
+        /// @brief feeder direction multiplier
+        /// @note 1 for normal direction, -1 for reverse direction
+        float feeder_direction = 1;
+        /// @brief gear ratio of the feeder
+        float feeder_ratio = 1;
+    public:
+        /// @brief Make new local estimator and set can data pointer and num states
+        /// @param can can pointer from EstimatorManager
+        /// @param sensor_manager sensor manager object
+        /// @param config_data config data from yaml
+        NewFeederEstimator(CANManager* can, SensorManager* sensor_manager, Config config_data);
+    
+        /// @brief step through each motor and add to micro state
+        /// @param output entire micro state 
+        /// @param curr_state current micro state
+        /// @param override override flag
+        void step_states(float output[CAN_MAX_MOTORS][MICRO_STATE_LEN], float curr_state[CAN_MAX_MOTORS][MICRO_STATE_LEN], int override);
+    };
 
 #endif

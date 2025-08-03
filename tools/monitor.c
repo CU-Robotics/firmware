@@ -9,13 +9,13 @@
 #include <fts.h>            // FTS stuff
 
 /// @brief Max path size for the serial device
-#define PATH_MAX 4096
+#define SERIAL_PATH_MAX 4096
 
 /// @brief Size of the serial buffers
 const size_t read_size = 8ul * 1024ul;
 
 /// @brief Max size of the serial path, - 1 for null terminator
-const size_t SERIAL_PATH_SIZE = PATH_MAX - 1;
+const size_t SERIAL_PATH_SIZE = SERIAL_PATH_MAX - 1;
 
 /// @brief In serial buffer
 char* in_buffer = NULL;

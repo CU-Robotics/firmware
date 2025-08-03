@@ -1,12 +1,13 @@
 #ifndef CONFIG_LAYER
 #define CONFIG_LAYER
 
-#include "usb_hid.hpp"
-#include "controls/controller.hpp"
-#include "SDManager.hpp"
+#include "comms/comms_layer.hpp"        // for CommsLayer
+#include "controls/controller.hpp"      // for NUM_ROBOT_CONTROLLERS
+#include "SDManager.hpp"                // for SDManager
 
 #include <map>
 #include <string>
+
 #define CONFIG_LAYER_DEBUG
 
 #define NUM_SENSOR_VALUES 12
@@ -47,9 +48,9 @@ static const std::map<std::string, u_int8_t> yaml_section_id_mappings = {
 /// @brief struct to hold configuration data
 struct Config {
     /// @brief fill all config data from packets
-    /// @param packets CommsPacket array filled with data from yaml
+    /// @param packets HIDPacket array filled with data from yaml
     /// @param sizes Number of sections for each section
-    void fill_data(CommsPacket packets[MAX_CONFIG_PACKETS], uint8_t sizes[MAX_CONFIG_PACKETS]);
+    void fill_data(Comms::HIDPacket packets[MAX_CONFIG_PACKETS], uint8_t sizes[MAX_CONFIG_PACKETS]);
 
     /// @brief print all config data
     void print() const;
@@ -78,6 +79,9 @@ struct Config {
     /// @brief Number of RealSense sensors
     int num_of_realsense = 0;
 
+    /// @brief Number of limit switches
+    int num_of_limit_switch = 0;
+
     /// @brief gains matrix
     float gains[NUM_ROBOT_CONTROLLERS][NUM_GAINS];
 
@@ -103,11 +107,11 @@ private:
 
 };
 
-/// @brief Handle seeking and reading configuration packets coming from khadas
+/// @brief Handle seeking and reading configuration packets coming from Hive
 class ConfigLayer {
 private:
     /// @brief array to save config packets
-    CommsPacket config_packets[MAX_CONFIG_PACKETS];
+    Comms::HIDPacket config_packets[MAX_CONFIG_PACKETS];
 
     /// @brief array to store number of subsections per YAML section
     uint8_t subsec_sizes[MAX_CONFIG_PACKETS] = { 0 };
@@ -142,7 +146,7 @@ public:
     /// @param config_off_SD Defaulted to true. Whether we should look at the SD card first before pinging comms for a config
     /// @return a const pointer const config object holding all the data within the config yaml
     /// @note its double const so its enforced as a read-only object
-    const Config* const configure(HIDLayer* comms, bool config_off_SD = true);
+    const Config* const configure(Comms::CommsLayer* comms, bool config_off_SD = true);
 
     /// @brief Grab all incoming config packets, process them, and store them onto the sd card. Then issue a processor reset call.
     /// @param comms Pointer to the HID comms layer
@@ -155,12 +159,10 @@ public:
     ///     4. Teensy processes this request, stores it to the SD card (if it exists) and reboots
     ///     5. Goto 1.
     /// This process works with or without the SD card, although without one makes it a bit slow (double config with the first one wasted)
-    [[noreturn]] void reconfigure(HIDLayer* comms);
+    [[noreturn]] void reconfigure(Comms::CommsLayer* comms);
 
     /// @brief check incoming packet from the comms layer and update outgoing packet accordingly to request next config packet
-    /// @param in incoming comms packet
-    /// @param out outgoing comms packet to write config requests to
-    void process(CommsPacket* in, CommsPacket* out);
+    void process();
 
     /// @brief return configured flag (check if all config packets have been received)
     /// @return the configured flag
@@ -169,14 +171,13 @@ public:
     /// @brief get config and size arrays
     /// @param packets return array of packets
     /// @param sizes return array of sizes
-    void get_config_packets(CommsPacket packets[MAX_CONFIG_PACKETS], uint8_t sizes[MAX_CONFIG_PACKETS]) {
-        memcpy(packets, config_packets, sizeof(CommsPacket) * MAX_CONFIG_PACKETS);
+    void get_config_packets(Comms::HIDPacket packets[MAX_CONFIG_PACKETS], uint8_t sizes[MAX_CONFIG_PACKETS]) {
+        memcpy(packets, config_packets, sizeof(Comms::HIDPacket) * MAX_CONFIG_PACKETS);
         memcpy(sizes, subsec_sizes, sizeof(uint8_t) * MAX_CONFIG_PACKETS);
     }
 
     /// @brief check if SD card is available to load from, and wait for ref system initialization
-    /// @param comms Pointer to the HID comms layer
-    void config_SD_init(HIDLayer* comms);
+    void config_SD_init();
 
     /// @brief read packet data from SD card at /config.pack
     /// @param checksum variable to store checksum into (passed by reference in order to use outside of function)
