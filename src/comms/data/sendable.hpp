@@ -6,7 +6,7 @@
 #include "modules/hive/environment.hpp"         // for Hive::env
 #include "modules/comms/comms_layer.hpp"        // for CommsLayer
 #elif defined(FIRMWARE)
-#include "comms_layer.hpp"                      // for CommsLayer
+#include "comms/comms_layer.hpp"                // for CommsLayer
 #endif
 
 namespace Comms {

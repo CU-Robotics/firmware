@@ -2,17 +2,13 @@
 #define ESTIMATOR_H
 
 #include "state.hpp"
-#include "sensors/dr16.hpp"
-#include "sensors/ICM20649.hpp"
-#include "sensors/IMUSensor.hpp"
-#include "sensors/LSM6DSOX.hpp"
-#include "sensors/rev_encoder.hpp"
-#include "sensors/TOFSensor.hpp"
-#include "sensors/buff_encoder.hpp"
-#include "sensors/RefSystem.hpp"
+#include "sensors/can/can_manager.hpp"  // for CAN_MAX_MOTORS
 #include "estimator.hpp"
-#include <SPI.h>
-#include "../sensors/SensorManager.hpp"
+
+// Forward declarations to avoid heavy includes in the header
+class CANManager;
+class SensorManager;
+struct Config;
 
 // maximum number of each sensor (arbitrary)
 #define NUM_SENSOR_TYPE 16

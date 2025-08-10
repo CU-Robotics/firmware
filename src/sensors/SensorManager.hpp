@@ -2,7 +2,7 @@
 #define SENSOR_MANAGER_HPP
 
 #include "Sensor.hpp"
-#include "config_layer.hpp"
+#include "comms/config_layer.hpp"
 #include "d200.hpp"
 #include "dr16.hpp"
 #include "ICM20649.hpp"
@@ -94,7 +94,7 @@ public:
 
 private:
     /// @brief Array to store the estimated state of the robot, used by sensors that adjust from the estimated state
-    float estimated_state[STATE_LEN][3] = { 0 };
+    float estimated_state[STATE_LEN][3] = { {0} };
 
     /// @brief Number of buff sensors
     int buff_sensor_count;
