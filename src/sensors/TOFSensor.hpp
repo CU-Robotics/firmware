@@ -5,7 +5,7 @@
 #include <Wire.h>
 // Include TOF sensor library
 #include <vl53l4cd_class.h>
-#include "data_structs.hpp"
+#include "comms/data/data_structs.hpp"
 
 #include "Sensor.hpp"
 
