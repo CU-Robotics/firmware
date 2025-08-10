@@ -86,10 +86,11 @@ public:
     void read();
 
     /// @brief Send a pre-constructed packet to Ref
+    /// @param commandID The type of frame to send, i.e. FrameType::ROBOT_INTERACTION
     /// @param frameData Pointer to the FrameData structure containing the packet to be sent
     /// @param length The size of the data to be sent, not including the header and tail
     /// @note Re-computes the CRC, so no need to do it yourself
-    void write(FrameData* frameData, uint8_t length);
+    void write(FrameType commandID, FrameData* frameData, uint8_t length);
 
     /// @brief Generate a byte array for all ref data to be sent over comms
     /// @return The data struct

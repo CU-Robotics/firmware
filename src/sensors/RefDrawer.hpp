@@ -98,7 +98,7 @@ class RefDrawer {
         memcpy(fd.data + idx, ri.data, ri.size);
         idx += ri.size;
 
-        ref->write(&fd, idx);
+        ref->write(FrameType::ROBOT_INTERACTION, &fd, idx);
     }
 };
 

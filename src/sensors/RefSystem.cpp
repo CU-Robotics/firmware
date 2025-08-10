@@ -24,13 +24,14 @@ RefSystem::RefSystem() { }
 void RefSystem::init() {
     // clear and start the MCM serial
     MCM_SERIAL.clear();
-    MCM_SERIAL.begin(112500);
+    MCM_SERIAL.begin(115200);
     MCM_SERIAL.flush();
     MCM_SERIAL.clear();
 
     // clear and start the VTM serial
     VTM_SERIAL.clear();
-    VTM_SERIAL.begin(112500);
+    // TODO: this rate is 921600 in ver 1.9.0, when we update
+    VTM_SERIAL.begin(115200);
     VTM_SERIAL.flush();
     VTM_SERIAL.clear();
 }
@@ -40,32 +41,37 @@ void RefSystem::read() {
     read_mcm();
 }
 
-void RefSystem::write(FrameData* frameData, uint8_t length) {
+void RefSystem::write(FrameType commandID, FrameData* frameData, uint8_t length) {
     if (bytes_sent >= REF_MAX_BAUD_RATE) {
-        Serial.println("RefSystem::write exceeded max baud rate");
+        Serial.println("RefSystem::write exceeds max baud rate");
         return;
     }
 
-    if (length > REF_MAX_PACKET_SIZE) {
-        Serial.println("RefSystem::write exceeded max packet size");
+    if (length + 9 > REF_MAX_PACKET_SIZE) {
+        // note, the +9 is for the header (5 bytes) and footer (2 bytes) and command ID (2 bytes)
+        Serial.println("RefSystem::write exceeds max packet size");
         return;
     }
 
+    // make a frame header
     FrameHeader header{};
     header.SOF = 0xA5;
     header.data_length = length;
     header.sequence = get_seq();
-    header.CRC = generateCRC8(reinterpret_cast<uint8_t*>(&header), sizeof(header));
+    header.CRC = generateCRC8(reinterpret_cast<uint8_t*>(&header), 4);
 
+    // put header, commandID, and framedata together (same format as struct Frame)
     uint8_t raw_packet[REF_MAX_PACKET_SIZE] = {0};
     size_t idx = 0;
     memcpy(raw_packet + idx, &header, sizeof(FrameHeader));
     idx += sizeof(FrameHeader);
-    uint16_t command_id = 0x0301;
+    uint16_t command_id = static_cast<uint16_t>(commandID);
     memcpy(raw_packet + idx, &command_id, sizeof(command_id));
     idx += sizeof(command_id);
     memcpy(raw_packet + idx, frameData->data, length);
     idx += length;
+
+    // genereate the CRC for the footer
     uint16_t footerCRC = generateCRC16(raw_packet, idx);
     memcpy(raw_packet + idx, &footerCRC, sizeof(uint16_t));
     idx += sizeof(uint16_t);
