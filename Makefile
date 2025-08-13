@@ -246,16 +246,6 @@ restart:
 	@tycmd reset
 
 
-# Configure CMake build directory and link compile_commands.json at repo root
-.PHONY: cmake-config
-cmake-config:
-	@mkdir -p $(BUILD_DIR)
-	@echo [Configuring CMake]
-	@cmake -S $(PWD) -B $(PWD)/build -DCMAKE_TOOLCHAIN_FILE=$(PWD)/cmake/toolchain-teensy41.cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_EXPORT_COMPILE_COMMANDS=ON | cat
-	@ln -sf $(PWD)/build/compile_commands.json $(PWD)/compile_commands.json
-	@echo [CMake configured] compile_commands.json linked at repo root
-
-
 help: 
 	@echo "Basic usage: make [target]"
 	@echo "Targets:"
@@ -266,4 +256,3 @@ help:
 	@echo "  monitor:      monitors any actively running firmware and displays serial output"
 	@echo "  kill:         stops any running firmware"
 	@echo "  restart:      restarts any running firmware"
-	@echo "  cmake-config: configures CMake and links compile_commands.json at repo root"
