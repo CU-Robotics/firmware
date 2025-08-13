@@ -251,7 +251,7 @@ restart:
 cmake-config:
 	@mkdir -p $(BUILD_DIR)
 	@echo [Configuring CMake]
-	@cmake -S $(PWD) -B $(PWD)/build -DCMAKE_TOOLCHAIN_FILE=$(PWD)/cmake/toolchain-teensy41.cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo | cat
+	@cmake -S $(PWD) -B $(PWD)/build -DCMAKE_TOOLCHAIN_FILE=$(PWD)/cmake/toolchain-teensy41.cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_EXPORT_COMPILE_COMMANDS=ON | cat
 	@ln -sf $(PWD)/build/compile_commands.json $(PWD)/compile_commands.json
 	@echo [CMake configured] compile_commands.json linked at repo root
 
