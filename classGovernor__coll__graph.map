@@ -1,0 +1,4 @@
+<map id="Governor" name="Governor">
+<area shape="rect" id="node1" title="Use state estimate and ungoverned reference to generated governed references to be sent to controller..." alt="" coords="5,95,80,121"/>
+<area shape="rect" id="node2" href="$structTimer.html" title="Timer class. Operates based on micros() and provides a simple interface for timing operations." alt="" coords="15,5,70,32"/>
+</map>
