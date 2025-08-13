@@ -43,7 +43,7 @@ https://download.koromix.dev/debian stable main" \
 elif [[ "$OS" == "Darwin" ]]; then
   echo "--> Running macOS installer (tycmd)..."
 
-  REPO_URL="https://github.com/guywithhat99/tycmd.git"
+  REPO_URL="https://github.com/CU-Robotics/tycmd.git"
   BIN_NAME="tycmd"
   DEST_DIR="/usr/local/bin"
   TMP_DIR="$(mktemp -d)"
@@ -51,9 +51,9 @@ elif [[ "$OS" == "Darwin" ]]; then
   echo "Cloning ${REPO_URL} into ${TMP_DIR}..."
   git clone "${REPO_URL}" "${TMP_DIR}"
 
-  # Verify binary exists
-  if [[ ! -x "${TMP_DIR}/${BIN_NAME}" ]]; then
-    echo "Error: '${BIN_NAME}' not found or not executable in repo root."
+  # Verify file exists (may not be executable yet)
+  if [[ ! -e "${TMP_DIR}/${BIN_NAME}" ]]; then
+    echo "Error: '${BIN_NAME}' not found in repo root."
     exit 1
   fi
 
