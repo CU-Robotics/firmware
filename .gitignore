@@ -46,6 +46,3 @@ src/git_info.h
 
 # Ignore Rust tool's build directory
 /tools/waggle-interceptor/target
-
-#ignore the compile_commands.json file
-compile_commands.json

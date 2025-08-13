@@ -3,14 +3,15 @@
 #include "comms/comms_layer.hpp"
 #include "git_info.h"
 
+#include "sensors/buff_encoder.hpp"
 #include "utils/profiler.hpp"
 #include "sensors/StereoCamTrigger.hpp"
 #include "controls/estimator_manager.hpp"
 #include "controls/controller_manager.hpp"
 
 #include <TeensyDebug.h>
-#include "comms/config_layer.hpp"
-#include "sensors/SensorManager.hpp"
+#include "sensors/LEDBoard.hpp"
+#include "SensorManager.hpp"
 
 #include "utils/timing.hpp"
 #include "utils/watchdog.hpp"
@@ -131,11 +132,11 @@ int main() {
     config->print();
 
     // variables for use in main
-    float temp_state[STATE_LEN][3] = { {0} }; // Temp state array
-    float temp_micro_state[CAN_MAX_MOTORS][MICRO_STATE_LEN] = { {0} }; // Temp micro state array
-    float temp_reference[STATE_LEN][3] = { {0} }; //Temp governed state
-    float target_state[STATE_LEN][3] = { {0} }; //Temp ungoverned state
-    float hive_state_offset[STATE_LEN][3] = { {0} }; //Hive offset state
+    float temp_state[STATE_LEN][3] = { 0 }; // Temp state array
+    float temp_micro_state[CAN_MAX_MOTORS][MICRO_STATE_LEN] = { 0 }; // Temp micro state array
+    float temp_reference[STATE_LEN][3] = { 0 }; //Temp governed state
+    float target_state[STATE_LEN][3] = { 0 }; //Temp ungoverned state
+    float hive_state_offset[STATE_LEN][3] = { 0 }; //Hive offset state
     bool override_request = false;
     // float motor_inputs[CAN_MAX_MOTORS] = { 0 }; //Array for storing controller outputs to send to CAN
 

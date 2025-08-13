@@ -23,7 +23,7 @@ constexpr uint32_t DR16_ALIGNMENT_LONG_INTERVAL_THRESHOLD = 1000; 	// time in us
 /// (translated from this: https://rm-static.djicdn.com/tem/17348/4.RoboMaster%20%E6%9C%BA%E5%99%A8%E4%BA%BA%E4%B8%93%E7%94%A8%E9%81%A5%E6%8E%A7%E5%99%A8%EF%BC%88%E6%8E%A5%E6%94%B6%E6%9C%BA%EF%BC%89%E7%94%A8%E6%88%B7%E6%89%8B%E5%86%8C.pdf)
 
 // Total Size: 18 bytes
-// BYTE | BIT layout  --> <channel # | . bit # of channel>
+// BYTE | BIT layout (format is 'channel # . bit # of channel')
 // 1    |	c0.7	c0.6	c0.5	c0.4	c0.3	c0.2	c0.1	c0.0
 // 2    |	c1.4	c1.3	c1.2	c1.1	c1.0	c0.10	c0.9	c0.8
 // 3    |	c2.1	c2.0	c1.10	c1.9	c1.8	c1.7	c1.6	c1.5
