@@ -1,0 +1,4 @@
+<map id="NullController" name="NullController">
+<area shape="rect" id="node1" title="Default controller." alt="" coords="5,80,105,107"/>
+<area shape="rect" id="node2" href="$structController.html" title="Parent controller struct, all controllers should be based off of this." alt="" coords="17,5,94,32"/>
+</map>
