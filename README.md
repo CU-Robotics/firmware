@@ -48,7 +48,7 @@ make help
 ## Contributing
 `main` is the production branch, which is required to be in an always working state.
 - Only authorized members can merge to `main`. All merges must go through a review and pull request. Direct pushes to `main` branches are strictly forbidden.
-- To contribute, create a new branch dedicated to a specific purpose. Create a pull request when done, and include a short description of your change.
+- To contribute, create a new branch with a descriptive name. Create a pull request when done, and include a short description of your change.
 - Pull Requests (PRs) should be as small as possible, dedicated to a specific purpose. A feature does not have to be complete for a pull request to be made, but what *is* added must be functional and tested. Multiple small PRs is better than one large PR.
     - Smaller PRs are significantly faster to review and test, so expect a slower review process for massive PRs.
 - All software is required to pass [documentation](docs/README.md), build, and unit tests before being merged into the `main` branch.
