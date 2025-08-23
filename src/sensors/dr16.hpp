@@ -2,7 +2,6 @@
 #define DR16_HPP
 
 #include <cstdint>		// for access to fixed-width types
-#include "Arduino.h"	// for access to HardwareSerial defines
 
 constexpr uint16_t DR16_PACKET_SIZE = 18;				// the size in bytes of a DR16-Receiver packet
 constexpr uint16_t DR16_INPUT_VALUE_COUNT = 7;			// the size in floats of the normalized input

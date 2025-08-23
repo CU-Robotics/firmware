@@ -4,8 +4,7 @@
 #include <Arduino.h>
 #include <SPI.h>
 #include "Sensor.hpp"
-#include "comms/data/data_structs.hpp"
-
+#include "comms/data/buff_encoder_data.hpp"
 // Encoder Registers and Config
 constexpr uint32_t MT6835_OP_READ = 0b0011;
 constexpr uint32_t MT6835_OP_WRITE = 0b0110;

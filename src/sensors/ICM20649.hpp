@@ -6,8 +6,7 @@
 
 #include "IMUSensor.hpp"
 
-#include "comms/data/data_structs.hpp"
-
+#include "comms/data/icm_sensor_data.hpp"
 // Configure pin numbers used for SPI communication on the teensy
 
 /// @brief CS (Chip Select) pin for SPI mode

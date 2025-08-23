@@ -1,11 +1,8 @@
 #ifndef REF_SYSTEM_HPP
 #define REF_SYSTEM_HPP
 
-#include "Arduino.h"
-
 #include "RefSystemPacketDefs.hpp"
-
-#include "comms/data/data_structs.hpp"
+#include "comms/data/comms_ref_data.hpp"
 
 /// @brief Time (in us) between packet writes
 constexpr uint32_t REF_MAX_PACKET_DELAY = 40000;

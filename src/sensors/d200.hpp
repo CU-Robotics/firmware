@@ -6,8 +6,7 @@
 #include <HardwareSerial.h>
 
 #include "Sensor.hpp"
-#include "comms/data/data_structs.hpp"
-
+#include "comms/data/lidar_data_packet_si.hpp"
 // development manual
 // https://files.waveshare.com/upload/9/99/LD14P_Development_Manual.pdf
 

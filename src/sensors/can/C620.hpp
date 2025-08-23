@@ -26,7 +26,7 @@ public:
 
 public:
     /// @brief Initialize the motor by zeroing it
-    void init();
+    void init() override;
 
     /// @brief Common read command. Fills given message if successful
     /// @param msg The message buffer to fill data into

@@ -63,7 +63,7 @@ void print_logo() {
         Serial.println("?G~      .?7~:   .^~~^.    .^:.                :G5");
         Serial.println(".5P^     7BYJ5YJ7^.                          .~5P^");
         Serial.println(" .JPJ!~!JP?  .:~?PP^            .:.    .^!JYY5Y!. ");
-        Serial.println("   :!???!:       5P.         .!Y5YYYJ?Y5Y?!^:.    ");
+        Serial.println("   :!?!?!:       5P.         .!Y5YYYJ?Y5Y?!^:.    ");
         Serial.println("                 7G7        7GY!. .:~!^.          ");
         Serial.println("                  JG!      :G5                    ");
         Serial.println("                   7PY!^^~?PY:                    ");

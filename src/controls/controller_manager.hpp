@@ -3,7 +3,6 @@
 
 #include "controller.hpp"
 #include "sensors/can/can_manager.hpp"
-#include "sensors/RefSystem.hpp"
 #include "comms/config_layer.hpp"
 
 #define MOTOR_INFO_TYPE 0
