@@ -7,6 +7,8 @@
 #include "sensors/StereoCamTrigger.hpp"
 #include "controls/estimator_manager.hpp"
 #include "controls/controller_manager.hpp"
+#include "sensors/dr16.hpp"
+#include "sensors/ACS712.hpp"
 
 #include <TeensyDebug.h>
 #include "comms/config_layer.hpp"

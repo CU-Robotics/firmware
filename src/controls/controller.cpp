@@ -1,4 +1,5 @@
 #include "controller.hpp"
+#include "sensors/RefSystem.hpp"
 
 void XDrivePositionController::step(float reference[STATE_LEN][3], float estimate[STATE_LEN][3], float micro_estimate[CAN_MAX_MOTORS][MICRO_STATE_LEN], float outputs[CAN_MAX_MOTORS]) {
     float dt = timer.delta();
