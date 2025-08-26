@@ -32,7 +32,7 @@ class Serial
 {
 public:
 	Serial();
-	Serial(const char *port_str);
+	Serial(HardwareSerial* port);
 	~Serial();
 
 	/**

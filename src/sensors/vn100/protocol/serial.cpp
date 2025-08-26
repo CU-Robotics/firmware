@@ -14,149 +14,107 @@
 
 #include "serial.hpp"
 
-namespace vn
-{
+namespace vn {
 
-Serial::Serial()
-{
+Serial::Serial() {}
 
+Serial::Serial(HardwareSerial *port)
+    : Serial()  // defer to default constructor
+{
+    set_port(port);
+    set_baud(_baudrate);
 }
 
-Serial::Serial(const char *port_str) :
-	Serial() // defer to default constructor
-{
-	// FIX: teensy conversion
+Serial::~Serial() { close(); }
 
-	// set_port(port_str);
-	// set_baud(_baudrate);
+bool Serial::open() {
+    if (!_uart) {
+        ::Serial.println("No UART port set");
+        return false;
+    }
+
+    _uart->begin(static_cast<uint32_t>(_baudrate));
+    delayMicroseconds(_baudrate_change_delay);
+
+    return true;
 }
 
-Serial::~Serial()
-{
-	// FIX: teensy conversion
+bool Serial::close() {
+    if (!_uart) {
+        ::Serial.println("No UART port set");
+        return false;
+    }
 
-	// _uart.close();
+    _uart->end();
+
+    return true;
 }
 
-bool Serial::open()
-{
-	// FIX: teensy conversion
+void Serial::loop() {
+    // read as much data as possible from the UART
+    size_t bytes_read = read(sizeof(_read_buffer));
 
-	// if (_uart.open()) {
-	// 	return true;
-	// }
-	return false;
+    if (bytes_read > 0) {
+        process_read_buffer(bytes_read);
+    }
 }
 
-bool Serial::close()
-{
-	// FIX: teensy conversion
+ssize_t Serial::read(size_t size) {
+    if (!_uart) {
+        ::Serial.println("No UART port set");
+        return -1;
+    }
 
-	// if (_uart.close()) {
-	// 	return true;
-	// }
-	return false;
+    size_t bytes_read = _uart->readBytes(_read_buffer, size);
+    _read_buffer[sizeof(_read_buffer) - 1] = '\0';
+
+    if (bytes_read > sizeof(_read_buffer)) {
+        ::Serial.println("UART RX BUFFER OVERRUN");
+        return -1;
+    }
+
+    return bytes_read;
 }
 
-void Serial::loop()
-{
-	// read as much data as possible from the UART
-	// FIX: teensy conversion
+ssize_t Serial::write(const uint8_t *buffer, size_t size) {
+    if (!_uart) {
+        ::Serial.println("No UART port set");
+        return -1;
+    }
 
-	// ssize_t bytes_read = read(sizeof(_read_buffer));
+    size_t bytes_written = _uart->write(buffer, size);
 
-	// if (bytes_read > 0) {
-	// 	// Process the data read from the UART
-	// 	process_read_buffer(bytes_read);
-	// }
+    if (bytes_written != size) {
+        ::Serial.printf("Failed to write all bytes to UART: %zd/%zu\n", bytes_written, size);
+        return -1;
+    }
+
+    return bytes_written;
 }
 
-ssize_t Serial::read(size_t size)
-{
-	return -1;
-	// FIX: teensy conversion
+void Serial::set_baud(BaudrateSetting baudrate) {
+    if (baudrate == _baudrate) {
+        return;  // no change
+    }
+    if (!_uart) {
+        return;
+    }
 
-	// ssize_t bytes_read = _uart.read(_read_buffer, size);
-	// _read_buffer[sizeof(_read_buffer) - 1] = 0;
+    _baudrate = baudrate;
 
-	// if (bytes_read < 0) {
-	// 	// serial fd is opened in NONBLOCK so we expect EAGAIN or EWOULDBLOCK
-	// 	if (errno == EAGAIN || errno == EWOULDBLOCK) {
-	// 		perf_count(_no_data_interval);
-
-	// 	} else {
-	// 		Serial.println("Error reading from UART: %d (%s)", errno, strerror(errno));
-	// 		perf_count(_failed_receive_counter);
-	// 		return bytes_read;
-	// 	}
-	// }
-
-	// if (bytes_read > CONFIG_UART4_RXBUFSIZE) {
-	// 	Serial.println("UART RX BUFFER OVERRUN");
-	// 	perf_count(_rx_overrun_interval);
-	// 	return -1;
-	// }
-
-	// return bytes_read;
+    _uart->begin(static_cast<uint32_t>(_baudrate));
+    delayMicroseconds(_baudrate_change_delay);  // wait for the baudrate to stabilize
 }
 
-ssize_t Serial::write(const uint8_t *buffer, size_t size)
-{
-	return -1;
-	// FIX: teensy conversion
+BaudrateSetting Serial::get_baud() const { return _baudrate; }
 
-	// ssize_t bytes_written = _uart.write(buffer, size);
-
-	// if (bytes_written != ssize_t(size)) {
-	// 	Serial.println("Failed to write all bytes to UART: %zd/%zu", bytes_written, size);
-	// 	perf_count(_failed_transmit_counter);
-	// }
-
-	// return bytes_written;
+void Serial::set_port(HardwareSerial *serial) {
+    _uart = serial;  // set the UART interface to use
 }
 
-void Serial::set_baud(BaudrateSetting baudrate)
-{
-	// FIX: teensy conversion
-	// FIX: the open/close logic is likely not needed on teensy
-	
-	// the uart gets iffy if you change the baudrate without resetting the port
+HardwareSerial *Serial::get_port() const { return _uart; }
 
-	if (!close()) {
-		return;
-	}
-
-	_baudrate = baudrate;
-	// FIX: teensy conversion
-
-	// _uart.setBaudrate(static_cast<uint32_t>(baudrate));
-
-	if (!open()) {
-		return;
-	}
-
-	delayMicroseconds(_baudrate_change_delay); // wait for the baudrate to stabilize
-}
-
-BaudrateSetting Serial::get_baud() const
-{
-	return _baudrate;
-}
-
-void Serial::set_port(HardwareSerial* serial)
-{
-	_uart = serial; // set the UART interface to use
-}
-
-HardwareSerial* Serial::get_port() const
-{
-	return _uart;
-}
-
-void Serial::set_binary_callback(bin::binary_callback_t callback)
-{
-	_binary_callback = callback;
-}
+void Serial::set_binary_callback(bin::binary_callback_t callback) { _binary_callback = callback; }
 
 ErrorCode Serial::read_until_response(uint8_t reg_id, msg::MessageType msg_type, msg::buf_ref_t response_buf,
 				      msg::len_t &response_len)
@@ -497,6 +455,6 @@ ErrorCode Serial::write_register(Reg &reg)
 	return ErrorCode::OK;
 }
 
-} // namespace vn
+}  // namespace vn
 
 #include "serial.tpp" // include the template implementation
