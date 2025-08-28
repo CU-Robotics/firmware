@@ -1,4 +1,5 @@
 #include "dr16.hpp"
+#include <Arduino.h>
 
 DR16::DR16() {}
 

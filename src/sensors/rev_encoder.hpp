@@ -1,7 +1,8 @@
 #include <cmath>
 #include <FreqMeasureMulti.h>
 #include "Sensor.hpp"
-#include "data_structs.hpp"
+#include "comms/data/rev_sensor_data.hpp"
+
 
 #ifndef REV_ENCODER_H
 #define REV_ENCODER_H

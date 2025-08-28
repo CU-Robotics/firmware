@@ -1,7 +1,6 @@
 #pragma once
 
 #include <stdint.h>	    // uintX_t
-#include <string.h>	    // memset
 
 /// @brief Comms packet flags
 /// @note These flags are used to indicate the state of the packet
