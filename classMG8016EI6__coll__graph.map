@@ -1,0 +1,5 @@
+<map id="MG8016EI6" name="MG8016EI6">
+<area shape="rect" id="node1" title="MG8016E&#45;i6v3 controller driver. This manages generating CAN output messages and processing incomming ..." alt="" coords="5,171,96,197"/>
+<area shape="rect" id="node2" href="$classMotor.html" title="An abstract class holding common information for individual CAN&#45;capable motors." alt="" coords="23,95,78,121"/>
+<area shape="rect" id="node3" href="$structMotorState.html" title="Unified motor state." alt="" coords="7,5,94,32"/>
+</map>

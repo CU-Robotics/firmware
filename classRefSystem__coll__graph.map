@@ -1,0 +1,37 @@
+<map id="RefSystem" name="RefSystem">
+<area shape="rect" id="node1" title="Wrapper class to send and receive packets from the Referee System." alt="" coords="891,1031,977,1057"/>
+<area shape="rect" id="node2" href="$structRefData.html" title="Encompassing all read&#45;able packet structs of the Ref System." alt="" coords="651,759,721,785"/>
+<area shape="rect" id="node3" href="$structSmallMapCommand.html" title="Player client&#39;s small map interaction data." alt="" coords="216,24,355,51"/>
+<area shape="rect" id="node4" href="$structEventData.html" title="Site event data." alt="" coords="244,75,327,101"/>
+<area shape="rect" id="node5" href="$structGameStatus.html" title="Competition status data." alt="" coords="238,125,333,152"/>
+<area shape="rect" id="node6" href="$structProjectileAllowance.html" title="Projectile allowance data." alt="" coords="217,176,353,203"/>
+<area shape="rect" id="node7" href="$structDamageStatus.html" title="Damage status data." alt="" coords="231,227,339,253"/>
+<area shape="rect" id="node8" href="$structRobotPosition.html" title="Robot position data." alt="" coords="234,277,337,304"/>
+<area shape="rect" id="node9" href="$structSmallMapRadarPosition.html" title="Radar data received by player clients&#39; Small Maps." alt="" coords="205,328,366,355"/>
+<area shape="rect" id="node10" href="$structRFIDStatus.html" title="Robot RFID module status." alt="" coords="240,379,331,405"/>
+<area shape="rect" id="node11" href="$structSentryDecision.html" title="Decision&#45;making data of Sentry Robot." alt="" coords="231,429,340,456"/>
+<area shape="rect" id="node12" href="$structGameRobotHP.html" title="Robot health data." alt="" coords="230,480,341,507"/>
+<area shape="rect" id="node13" href="$structSmallMapRobotData.html" title="Robot data received by player clients&#39; Small Map." alt="" coords="215,531,356,557"/>
+<area shape="rect" id="node14" href="$structCustomControllerRobot.html" title="Data about the interaction between the Custom Controller and robots." alt="" coords="207,581,363,608"/>
+<area shape="rect" id="node15" href="$structRobotPowerHeat.html" title="Real&#45;time chassis power and barrel heat data." alt="" coords="225,632,346,659"/>
+<area shape="rect" id="node16" href="$structSmallMapSentryCommand.html" title="Sentry data received by player clients&#39; Small Maps." alt="" coords="197,683,373,709"/>
+<area shape="rect" id="node17" href="$structRobotInteraction.html" title="Robot interaction data." alt="" coords="227,733,344,760"/>
+<area shape="rect" id="node18" href="$structRadarProgress.html" title="Radar&#45;marked progress data." alt="" coords="231,784,339,811"/>
+<area shape="rect" id="node19" href="$structRadarDecision.html" title="Decision&#45;making data of Radar." alt="" coords="232,835,339,861"/>
+<area shape="rect" id="node20" href="$structLaunchingStatus.html" title="Real&#45;time launching data." alt="" coords="225,885,345,912"/>
+<area shape="rect" id="node21" href="$structRobotPerformance.html" title="Robot performance system data." alt="" coords="220,936,351,963"/>
+<area shape="rect" id="node22" href="$structGameResult.html" title="Competition result data." alt="" coords="238,987,333,1013"/>
+<area shape="rect" id="node23" href="$structDartStatus.html" title="Dart launching data." alt="" coords="243,1037,327,1064"/>
+<area shape="rect" id="node24" href="$structCustomControllerClient.html" title="Data about the interaction between the Custom Controller and player clients." alt="" coords="208,1088,363,1115"/>
+<area shape="rect" id="node25" href="$structAirSupportStatus.html" title="Air support time data." alt="" coords="225,1139,346,1165"/>
+<area shape="rect" id="node26" href="$structGroundRobotPositions.html" title="Ground Robot position data." alt="" coords="209,1189,361,1216"/>
+<area shape="rect" id="node27" href="$structDartCommand.html" title="Dart player&#39;s client command data." alt="" coords="233,1240,338,1267"/>
+<area shape="rect" id="node28" href="$structProjectileSupplierStatus.html" title="Action identifier data of the Official Projectile Supplier." alt="" coords="205,1291,366,1317"/>
+<area shape="rect" id="node29" href="$structKBMInteraction.html" title="Keyboard, mouse, and remote control data." alt="" coords="229,1341,341,1368"/>
+<area shape="rect" id="node30" href="$structRobotBuff.html" title="Robot buff data." alt="" coords="246,1392,325,1419"/>
+<area shape="rect" id="node31" href="$structRefereeWarning.html" title="Referee warning data." alt="" coords="228,1443,343,1469"/>
+<area shape="rect" id="node32" href="$structRefSystem_1_1RefInternalData.html" title="Internal data struct for the RefSystem. This contains all the meta data required to read a frame." alt="" coords="595,1381,777,1408"/>
+<area shape="rect" id="node33" href="$structFrame.html" title="Struct for the entire Frame. Consists of a FrameHeader, Command ID, FrameData, and CRC." alt="" coords="256,1493,315,1520"/>
+<area shape="rect" id="node34" href="$structFrameData.html" title="Struct for the Frame data portion." alt="" coords="13,1468,99,1495"/>
+<area shape="rect" id="node35" href="$structFrameHeader.html" title="Struct for the Frame header portion." alt="" coords="5,1519,107,1545"/>
+</map>

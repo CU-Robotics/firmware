@@ -1,0 +1,5 @@
+<map id="LSM6DSOX" name="LSM6DSOX">
+<area shape="rect" id="node1" title="Sensor access for an LSM6DSOX IMU Sensor. Child of the abstract IMUSensor class." alt="" coords="5,155,100,181"/>
+<area shape="rect" id="node2" href="$classIMUSensor.html" title="Abstract parent class for all IMUSensors, which give acceleration and gyroscope data." alt="" coords="9,80,97,107"/>
+<area shape="rect" id="node3" href="$classSensor.html" title="Base class for all sensors." alt="" coords="21,5,84,32"/>
+</map>
