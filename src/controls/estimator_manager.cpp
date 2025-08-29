@@ -63,13 +63,13 @@ void EstimatorManager::init_estimator(int estimator_id) {
 
 void EstimatorManager::step(float macro_outputs[STATE_LEN][3], float micro_outputs[CAN_MAX_MOTORS][MICRO_STATE_LEN], int override) {
     // clear output
-    float curr_state[STATE_LEN][3] = { 0 };
+    float curr_state[STATE_LEN][3] = { {0} };
     memcpy(curr_state, macro_outputs, sizeof(curr_state));
     clear_outputs(macro_outputs, micro_outputs);
 
     for (int i = 0; i < num_estimators; i++) {
-        float macro_states[STATE_LEN][3] = { 0 };
-        float micro_states[CAN_MAX_MOTORS][MICRO_STATE_LEN] = { 0 };
+        float macro_states[STATE_LEN][3] = { {0} };
+        float micro_states[CAN_MAX_MOTORS][MICRO_STATE_LEN] = { {0} };
         
         if (!estimators[i]->micro_estimator) {
 

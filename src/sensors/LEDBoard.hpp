@@ -3,7 +3,6 @@
 
 #include <FastLED.h>
 #include <core_pins.h>
-#include "utils/profiler.hpp"
 
 /// @brief The maximum allowed LEDs. You can initialize less than this amount, but not more
 constexpr uint32_t LED_MAX = 8;

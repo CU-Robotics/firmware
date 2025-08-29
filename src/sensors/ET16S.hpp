@@ -1,7 +1,6 @@
 #pragma once
 
 #include <Arduino.h>
-#include <string>
 #include <optional>
 //http://www.wflysz.com/wflyftp/ET16S/ET16SENV1.00.pdf
 

@@ -1,5 +1,5 @@
 #include "config_layer.hpp"
-
+#include "sensors/RefSystem.hpp"
 #include "comms/data/sendable.hpp"  // for Sendable<>
 
 /// @brief This resets the whole processor and kicks it back to program entry (teensy4/startup.c)
@@ -25,7 +25,7 @@ const Config* const ConfigLayer::configure(Comms::CommsLayer* comms, bool config
     // grab and process all config packets until finished
     uint32_t prev_time = millis();
     uint32_t delta_time = 0;
-    Comms::HIDPacket outgoing;
+    //Comms::HIDPacket outgoing;
     while (!is_configured()) {
     #ifdef CONFIG_LAYER_DEBUG
         if (delta_time >= 2000) {

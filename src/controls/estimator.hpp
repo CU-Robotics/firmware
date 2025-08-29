@@ -3,7 +3,6 @@
 
 #include "sensors/can/can_manager.hpp"
 #include "state.hpp"
-#include "sensors/RefSystem.hpp"
 #include "comms/config_layer.hpp"
 
 #include "sensors/buff_encoder.hpp"
