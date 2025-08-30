@@ -1,5 +1,4 @@
 #include "SensorManager.hpp"
-#include "../utils/profiler.hpp"
 
 SensorManager::SensorManager() {
      // initialize refereree system
@@ -16,6 +15,7 @@ void SensorManager::init(const Config* config_data) {
     rev_sensor_count = config_data->num_of_revEnc;
     tof_sensor_count = config_data->num_of_tof;
     lidar_sensor_count = config_data->num_of_lidar;
+    limit_switch_count = config_data->num_of_limit_switch;
 
     for (int i = 0; i < NUM_SENSORS; i++) {
         int type = config_data->sensor_info[i][0];
@@ -25,15 +25,17 @@ void SensorManager::init(const Config* config_data) {
     }
 
     // initilize the sensors
-
     // configure pins for the encoders
-    for (int i = 0; i < buff_sensor_count; i++) {
+    int buff_enc_index = 0;
+    for (int i = 0; i < NUM_SENSORS; i++) {
+        if (config_data->sensor_info[i][0] != 0) continue;
         pinMode(config_data->sensor_info[i][1], OUTPUT);
         digitalWrite(config_data->sensor_info[i][1], HIGH);
-        buff_encoders[i] = new BuffEncoder(config_data->sensor_info[i][1]);
+        buff_encoders[buff_enc_index] = new BuffEncoder(config_data->sensor_info[i][1]);
 
         //assign id for comms
-        buff_encoders[i]->setId(i);
+        buff_encoders[buff_enc_index]->setId(buff_enc_index);
+        buff_enc_index++;
     }
 
     // configure pins for the ICM
@@ -53,7 +55,7 @@ void SensorManager::init(const Config* config_data) {
         //assign id for comms
         icm_sensors[i]->setId(i);
     }
-    calibrate_imus();
+    if(icm_sensor_count > 0) calibrate_imus();
 
     // initialize rev encoders
     for (int i = 0; i < rev_sensor_count; i++) {
@@ -77,23 +79,25 @@ void SensorManager::init(const Config* config_data) {
         lidar1 = new D200LD14P(&Serial4, 0);
         lidar2 = new D200LD14P(&Serial5, 1);
     }
+
+    // initialize limit switches
+    int limit_switch_index = 0;
+    for (int i = 0; i < NUM_SENSORS; i++) {
+        if (config_data->sensor_info[i][0] != 6) continue;
+        limit_switches[limit_switch_index++] = new LimitSwitch(config_data->sensor_info[i][1]);
+    }
 }
 
 void SensorManager::read() {
     for (int i = 0; i < buff_sensor_count; i++) {
         buff_encoders[i]->read();
-        // buff_encoders[i]->print();
     }
     for (int i = 0; i < icm_sensor_count; i++) {
         icm_sensors[i]->read();
-        // icm_sensors[i]->print();
     }
-
     for (int i = 0; i < rev_sensor_count; i++) {
         rev_sensors[i].read();
-        // rev_sensors[i].print();
     }
-
     if (lidar_sensor_count > 0) {
         lidar1->set_yaw(estimated_state[3][0], estimated_state[3][1]);
         lidar1->read();
@@ -101,7 +105,6 @@ void SensorManager::read() {
         lidar2->set_yaw(estimated_state[3][0], estimated_state[3][1]);
         lidar2->read();
     }
-
     // read ref system
     ref->read();
 
@@ -127,6 +130,11 @@ TOFSensor* SensorManager::get_tof_sensor(int index) {
     return tof_sensors[index];
 }
 
+LimitSwitch* SensorManager::get_limit_switch(int index) {
+    return limit_switches[index];
+}
+
+
 D200LD14P* SensorManager::get_lidar_sensor(int index) {
     if (index == 0) {
         return lidar1;
@@ -143,19 +151,11 @@ void SensorManager::calibrate_imus() {
     float sum_y = 0;
     float sum_z = 0;
 
-    float sum_accel_x = 0;
-    float sum_accel_y = 0;
-    float sum_accel_z = 0;
-
     for (int i = 0; i < NUM_IMU_CALIBRATION; i++) {
         icm_sensors[0]->read();
         sum_x += icm_sensors[0]->get_gyro_X();
         sum_y += icm_sensors[0]->get_gyro_Y();
         sum_z += icm_sensors[0]->get_gyro_Z();
-
-        sum_accel_x += icm_sensors[0]->get_accel_X();
-        sum_accel_y += icm_sensors[0]->get_accel_Y();
-        sum_accel_z += icm_sensors[0]->get_accel_Z();
     }
 
     Serial.printf("Calibrated offsets: %f, %f, %f\n", sum_x / NUM_IMU_CALIBRATION, sum_y / NUM_IMU_CALIBRATION, sum_z / NUM_IMU_CALIBRATION);
@@ -209,6 +209,7 @@ void SensorManager::send_sensor_data_to_comms()
 
         for (int i = 0; i < 2; i++) {
             lidar_sensor_sendables[i] = lidar_data[i];
+            lidar_sensor_sendables[i].data.id = 0;
             lidar_sensor_sendables[i].send_to_comms();
         }
 
@@ -216,6 +217,7 @@ void SensorManager::send_sensor_data_to_comms()
 
         for (int i = 0; i < 2; i++) {
             lidar_sensor_sendables[i] = lidar_data[i];
+            lidar_sensor_sendables[i].data.id = 1;
             lidar_sensor_sendables[i].send_to_comms();
         }
     }

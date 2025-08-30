@@ -4,9 +4,7 @@
 #include "filters/pid_filter.hpp"
 #include "utils/timing.hpp"
 #include "sensors/can/can_manager.hpp"
-#include "sensors/RefSystem.hpp"
 #include "state.hpp"
-#include "sensors/ACS712.hpp"
 
 #define NUM_GAINS 24
 #define NUM_ROBOT_CONTROLLERS 12
@@ -262,5 +260,30 @@ public:
         pidv.sumError = 0.0;
     }
 };
+
+/// @brief Controller for the switcher, which is a fullstate controller with feedforward
+struct NewFeederController : public Controller {
+    private:
+        /// @brief filter for calculating pid position controller outputs
+        PIDFilter pidp;
+        /// @brief filter for calculating pid velocity controller outputs
+        PIDFilter pidv;
+    public:
+        /// @brief default
+        NewFeederController() { }
+        /// @brief calculate motor outputs based on reference and estimate
+        /// @param reference current target robot state
+        /// @param estimate current estimate robot state
+        /// @param micro_estimate current micro estimate robot state (state of motors, not joints)
+        /// @param outputs motor outputs
+        void step(float reference[STATE_LEN][3], float estimate[STATE_LEN][3], float micro_estimate[CAN_MAX_MOTORS][MICRO_STATE_LEN], float outputs[CAN_MAX_MOTORS]);
+    
+        /// @brief reset the controller
+        inline void reset() {
+            Controller::reset();
+            pidp.sumError = 0.0;
+            pidv.sumError = 0.0;
+        }
+    };
 
 #endif // CONTROLLER_H

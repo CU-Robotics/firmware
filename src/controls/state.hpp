@@ -41,6 +41,13 @@ public:
     /// @param reference start reference at the beginning(should equal current estimate)
     void set_reference(float reference[STATE_LEN][3]);
 
+    /// @brief Sets a specific value in the reference matrix at a specific state and derivative index
+    /// @param value The value to set in the reference matrix
+    /// @param state_val The index of the state to set; Corresponds to the sub-state index
+    /// @param state_type The index of the derivative to set; 0 for position, 1 for velocity, 2 for acceleration
+    /// @note This function should be used sparingly, as setting the reference defeats its purpose.
+    void set_reference_at_index(float value, int state_val, int state_type);
+
     /// @brief Gives the instantaneous governed state reference matrix (also known as desired state)
     /// @param reference The array to override with the reference matrix; Must be of shape [STATE_LEN][3]
     void get_reference(float reference[STATE_LEN][3]);

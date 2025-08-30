@@ -3,6 +3,7 @@
 #include "comms/comms_layer.hpp"
 #include "git_info.h"
 
+#include "sensors/buff_encoder.hpp"
 #include "utils/profiler.hpp"
 
 #include "sensors/d200.hpp"
@@ -12,11 +13,14 @@
 #include "sensors/StereoCamTrigger.hpp"
 #include "controls/estimator_manager.hpp"
 #include "controls/controller_manager.hpp"
+#include "sensors/dr16.hpp"
+#include "sensors/ACS712.hpp"
 
 #include <TeensyDebug.h>
 #include "sensors/LEDBoard.hpp"
 #include "SensorManager.hpp"
 
+#include "utils/timing.hpp"
 #include "utils/watchdog.hpp"
 #include "comms/data/sendable.hpp"
 #include "comms/data/hive_data.hpp"
@@ -24,6 +28,8 @@
 // Loop constants
 #define LOOP_FREQ 1000
 #define HEARTBEAT_FREQ 2
+
+extern "C" void reset_teensy(void);
 
 // Declare global objects
 
@@ -67,7 +73,7 @@ void print_logo() {
         Serial.println("?G~      .?7~:   .^~~^.    .^:.                :G5");
         Serial.println(".5P^     7BYJ5YJ7^.                          .~5P^");
         Serial.println(" .JPJ!~!JP?  .:~?PP^            .:.    .^!JYY5Y!. ");
-        Serial.println("   :!???!:       5P.         .!Y5YYYJ?Y5Y?!^:.    ");
+        Serial.println("   :!?!?!:       5P.         .!Y5YYYJ?Y5Y?!^:.    ");
         Serial.println("                 7G7        7GY!. .:~!^.          ");
         Serial.println("                  JG!      :G5                    ");
         Serial.println("                   7PY!^^~?PY:                    ");
@@ -160,6 +166,8 @@ int main() {
     float transmitter_pos_y = 0;
     float pos_offset_x = 0;
     float pos_offset_y = 0;
+    float feed = 0;
+    float last_feed = 0;
 
     // get the pitch min and max, and shift them to be centered around 0
     float pitch_min = config->set_reference_limits[4][0][0];
@@ -173,26 +181,37 @@ int main() {
 
     // whether we are in hive mode or not
     bool hive_toggle = false;
+    bool safety_toggle = false; 
+    bool not_safety_mode = false;
+    bool last_gimbal_power = false; // used to detect gimbal power changes
+    bool last_loop_slow = false; // used to detect multiple slow loops in a row
+    int slow_loop_counter = 0; // used to count slow loops in a row
+    // int last_switch = 0;
 
     // main loop timers
     Timer loop_timer;
+    Timer timer;
     Timer stall_timer;
     Timer control_input_timer;
+    Timer gimbal_power_timer;
     
     // start the main loop watchdog
     watchdog.start();
-
 
     Serial.println("Entering main loop...\n");
 
     // Main loop
     while (true) {
+        // LimitSwitch* limit_switch = sensor_manager.get_limit_switch(0);
+        // Serial.printf("Limit Switch: %d\n", limit_switch->isPressed());
+    
         // start main loop time timer
         stall_timer.start();
         
         // read sensors
         sensor_manager.read();
-        // read CAN and DR16 -- These are kept out of sensor manager for safety reasons
+
+        // read CAN and Transmitter -- These are kept out of sensor manager for safety reasons
         can.read();
         transmitter->read();
 
@@ -266,10 +285,23 @@ int main() {
             - transmitter_pos_x
             - vtm_pos_x;
 		
-        float fly_wheel_target = (transmitter->get_r_switch() == SwitchPos::FORWARD || transmitter->get_r_switch() == SwitchPos::MIDDLE) ? 18 : 0; //m/s
-        // if the right switch is forward, and either the left mouse button is pressed or the right switch is not backward, set the feeder to something. Otherwise, set it to 0
-        float feeder_target = ((((l_mouse_button.has_value() && l_mouse_button.value()) || ref->ref_data.kbm_interaction.button_left) && transmitter->get_r_switch() != SwitchPos::BACKWARD) || transmitter->get_r_switch() == SwitchPos::FORWARD) ? 10 : 0;
-
+       
+		float fly_wheel_target = (transmitter->get_r_switch() == SwitchPos::FORWARD || transmitter->get_r_switch() == SwitchPos::MIDDLE) ? 18 : 0; //m/s
+		// if the right switch is forward, and either the left mouse button is pressed or the right switch is not backward, set the feeder to something. Otherwise, set it to 0
+		float feeder_target = (((l_mouse_button.has_value() || ref->ref_data.kbm_interaction.button_left) && transmitter->get_r_switch() != SwitchPos::BACKWARD) || transmitter->get_r_switch() == SwitchPos::FORWARD) ? 10 : 0;
+        if(config->governor_types[6] == 1) {
+            float dt2 = timer.delta();
+            if (dt2 > 0.1) dt2 = 0;
+            // check if the shooter is active
+            if(not_safety_mode && ref->ref_data.robot_performance.shooter_power_active) feed += feeder_target*dt2;
+            target_state[6][0] = (int)feed;
+        }else{
+            target_state[6][1] = feeder_target;
+        }
+        // if (transmitter->get_r_switch() == 1 && last_switch != 1) {
+        //     feed++;
+        // }
+        // last_switch = transmitter->get_r_switch();
         // set manual controls
         target_state[0][0] = chassis_pos_x;
         target_state[0][1] = chassis_vel_x;
@@ -280,9 +312,7 @@ int main() {
         target_state[3][1] = 0;
         target_state[4][0] = pitch_target;
         target_state[4][1] = 0;
-
         target_state[5][1] = fly_wheel_target;
-        target_state[6][1] = feeder_target;
         target_state[7][0] = 1;
 
         // if the left switch is all the way down use Hive controls
@@ -290,7 +320,7 @@ int main() {
 		if (transmitter->get_l_switch() == SwitchPos::BACKWARD) {
             // hid_incoming.get_target_state(target_state);
             memcpy(target_state, comms_layer.get_hive_data().target_state.state, sizeof(target_state));
-
+            last_feed = target_state[6][0];
             // if you just switched to hive controls, set the reference to the current state
             if (hive_toggle) {
                 governor.set_reference(temp_state);
@@ -298,28 +328,31 @@ int main() {
             }
         }
 
-        // when in teensy control mode reset hive toggle
-        if (transmitter->get_l_switch() == SwitchPos::MIDDLE) {
-            if (!hive_toggle) {
+        // when in teensy control mode reset hive toggle<<<<<<< HEAD
+		if (transmitter->get_l_switch() == SwitchPos::MIDDLE) {
+            if (!hive_toggle || !safety_toggle) {
                 pos_offset_x = temp_state[0][0];
                 pos_offset_y = temp_state[1][0];
+                feed = last_feed;
+                governor.set_reference(temp_state);
             }
             hive_toggle = true;
+            safety_toggle = true;
         }
 
-        // print dr16
+        // print transmitter
 
-        // Serial.printf("DR16:\n\t");
-        // dr16.print();
+        // Serial.printf("transmitter:\n\t");
+        // transmitter->print();
 
         // Serial.printf("Target state:\n");
         // for (int i = 0; i < 8; i++) {
         //     Serial.printf("\t%d: %f %f %f\n", i, target_state[i][0], target_state[i][1], target_state[i][2]);
         // }
         
-        // override temp state if needed
 
-        if (comms_layer.get_hive_data().override_state.active) {
+        // override temp state if needed. Dont override in teensy mode so the sentry doesnt move during inspection
+        if (comms_layer.get_hive_data().override_state.active && !(transmitter->get_l_switch() == SwitchPos::MIDDLE)) {
             // clear the request
             comms_layer.get_hive_data().override_state.active = false;
             
@@ -334,10 +367,20 @@ int main() {
         estimator_manager.step(temp_state, temp_micro_state, override_request);
         override_request = false;
 
+        if ((feed - temp_state[6][0] > 2 && transmitter->get_l_switch() == SwitchPos::MIDDLE) || (comms_layer.get_hive_data().target_state.state[6][0] - temp_state[6][0] > 2 && transmitter->get_l_switch() == SwitchPos::BACKWARD)) {
+            Serial.printf("Feeder is lowkey jammed. current ball count: %f, feed: %f, hive target: %f\n", temp_state[6][0], feed, comms_layer.get_hive_data().target_state.state[6][0]);
+            feed = temp_state[6][0] + 1;
+            governor.set_reference_at_index(feed, 6, 0);
+        }
+
         // if first loop set target state to estimated state
         if (count_one == 0) {
             temp_state[7][0] = 0;
             governor.set_reference(temp_state);
+            // print temp state
+            for(int i = 0; i < 8; i++) {
+                Serial.printf("\t%d: %f %f %f\n", i, temp_state[i][0], temp_state[i][1], temp_state[i][2]);
+            }
             count_one++;
         }
 
@@ -354,11 +397,6 @@ int main() {
         governor.step_reference(target_state, config->governor_types);
         governor.get_reference(temp_reference);
 
-        // Serial.printf("Reference state:\n");
-        // for (int i = 0; i < 8; i++) {
-        //     Serial.printf("\t%d: %f %f %f\n", i, temp_reference[i][0], temp_reference[i][1], temp_reference[i][2]);
-        // }
-
         // generate motor outputs from controls
         controller_manager.step(temp_reference, temp_state, temp_micro_state);
 
@@ -370,6 +408,12 @@ int main() {
         CommsRefData ref_data = ref->get_data_for_comms();
         Comms::Sendable<CommsRefData> ref_data_sendable = ref_data;
         ref_data_sendable.send_to_comms();
+
+        Comms::Sendable<TargetState> target_state_sendable;
+        memcpy(target_state_sendable.data.state, temp_reference, sizeof(temp_reference));
+        target_state_sendable.data.time = millis() / 1000.0;
+        target_state_sendable.send_to_comms();
+
 
         Comms::Sendable<EstimatedState> estimated_state;
         memcpy(estimated_state.data.state, temp_state, sizeof(temp_state));
@@ -386,26 +430,48 @@ int main() {
         // check whether this was a slow loop or not
 
         float dt = stall_timer.delta();
-        Serial.printf("Loop %d, dt: %f\n", loopc, dt);
         if (dt > 0.002) {
             // zero the can bus just in case
             can.issue_safety_mode();
 
-            Serial.printf("Slow loop with dt: %f\n", dt);
+            Serial.printf("Slow loop with dt: %f, slow loop count %d\n", dt, slow_loop_counter);
             // mark this as a slow loop to trigger safety mode
             is_slow_loop = true;
+            if(last_loop_slow) {
+                slow_loop_counter++;
+                if(slow_loop_counter > 10) {
+                    Serial.printf("Kowabunga bitches\n");
+                    reset_teensy();
+                }
+            }else{
+                slow_loop_counter = 0;
+            }
         }
+        last_loop_slow = is_slow_loop;
 
+        if(!last_gimbal_power && ref->ref_data.robot_performance.gimbol_power_active) {
+            gimbal_power_timer.start();
+        }
+        last_gimbal_power = ref->ref_data.robot_performance.gimbol_power_active;
+        bool gimbal_power_recently_turned_on = gimbal_power_timer.get_elapsed_micros_no_restart() < 3000000;
+
+        not_safety_mode = (transmitter->is_connected() && (transmitter->get_l_switch() == SwitchPos::BACKWARD || transmitter->get_l_switch() == SwitchPos::MIDDLE) && config_layer.is_configured() && !is_slow_loop && ref->ref_data.robot_performance.gimbol_power_active && !gimbal_power_recently_turned_on);
         //  SAFETY MODE
-        if (transmitter->is_connected() && (transmitter->get_l_switch() == SwitchPos::MIDDLE || transmitter->get_l_switch() == SwitchPos::BACKWARD) && config_layer.is_configured() && !is_slow_loop) {
+        if (not_safety_mode) {
             // SAFETY OFF
             can.write();
+            // Serial.printf("Can write\n");
             // Serial.printf("Can write\n");
         } else {
             // SAFETY ON
             // TODO: Reset all controller integrators here
             can.issue_safety_mode();
+            governor.set_reference_at_index(temp_state[6][0], 6, 0);
+
+            feed = (fmod(fmod(temp_state[6][0],1) + 1,1) > 0.2) ? (int)floor(temp_state[6][0]) + 1 : (int)floor(temp_state[6][0]); // reset feed to the current state
+            last_feed = feed; // reset last feed to the current state
             // Serial.printf("Can zero\n");
+            safety_toggle = false; // reset hive toggle
         }
 
         // LED heartbeat -- linked to loop count to reveal slowdowns and freezes.

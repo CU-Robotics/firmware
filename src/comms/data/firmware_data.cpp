@@ -34,6 +34,11 @@ void FirmwareData::set_data(CommsData* data) {
         temp_robot_state = *static_cast<TempRobotState*>(data);
         break;
     }
+    case TypeLabel::TargetState: {
+        // place the data in the mega struct
+        temp_reference = *static_cast<TargetState*>(data);
+        break;
+    }
     case TypeLabel::EstimatedState: {
         // place the data in the mega struct
         estimated_state = *static_cast<EstimatedState*>(data);

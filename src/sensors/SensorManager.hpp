@@ -4,7 +4,6 @@
 #include "Sensor.hpp"
 #include "config_layer.hpp"
 #include "d200.hpp"
-#include "dr16.hpp"
 #include "ICM20649.hpp"
 #include <SPI.h>
 #include "buff_encoder.hpp"
@@ -14,6 +13,7 @@
 #include <Arduino.h>
 #include "RefSystem.hpp"
 #include "comms/data/sendable.hpp"
+#include "sensors/limit_switch.hpp"
 
 
 #define NUM_SENSOR_TYPE 16
@@ -62,6 +62,11 @@ public:
     /// @return pointer to the LiDAR sensor
     D200LD14P* get_lidar_sensor(int index);
 
+    /// @brief Get the specified limit switch
+    /// @param index index of the sensor object to get
+    /// @return pointer to the limit switch
+    LimitSwitch* get_limit_switch(int index);
+
     /// @brief Get the number of sensors of the specified type
     /// @param sensor_type the type of sensor
     /// @return number of sensors of that type
@@ -105,6 +110,9 @@ private:
     /// @brief Number of LiDAR sensors
     int lidar_sensor_count;
 
+    /// @brief Number of limit switches
+    int limit_switch_count;
+
     /// @brief Array to store the number of sensors for each sensor type (Indexes for each sensor type are defined in the config.yaml file)
     int num_sensors[NUM_SENSORS];
 
@@ -139,6 +147,9 @@ private:
 
     /// @brief Second LiDAR sensor
     D200LD14P* lidar2;
+
+    /// @brief Array of limit switches
+    LimitSwitch* limit_switches[NUM_SENSOR_TYPE];
 
     /// @brief Array of LiDAR sensor sendables to be used with comms
     Comms::Sendable<LidarDataPacketSI> lidar_sensor_sendables[2];
