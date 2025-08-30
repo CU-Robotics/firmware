@@ -1,7 +1,7 @@
 #include "Transmitter.hpp"
 
 TransmitterType Transmitter::who_am_i() {
-	uint16_t ET16S_PACKET_SIZE = 25; //Change this
+	uint16_t ET16S_PACKET_SIZE = 25; 
 	uint8_t raw_input[ET16S_PACKET_SIZE] = { 0 };
 	
 	//Serial Initilization

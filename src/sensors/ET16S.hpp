@@ -6,7 +6,6 @@
 #include "./Transmitter.hpp"
 //http://www.wflysz.com/wflyftp/ET16S/ET16SENV1.00.pdf
 
-//channel[15] is broken
 
 /// @brief The size of an SBUS packet is 25 bits
 constexpr uint16_t ET16S_PACKET_SIZE = 25;
@@ -17,7 +16,7 @@ constexpr float max_in = 1695;
 /// @brief minimum raw input value for stick,dial,wheel
 constexpr float min_in = 353;	// this is 352 if Port9 is set to w.bus2
 /// @brief flag byte displaying disconnect (found through testing)
-constexpr uint16_t ERROR = 0b0000000000001100;
+constexpr uint16_t DISCONNECT = 0b0000000000001100;
 
 /// @brief organizes the kinds of inputs the transmitter has
 enum class InputKind {
@@ -57,8 +56,6 @@ enum class ChannelId{
 	TRIM_6,
 	FLAG
 };
-/// @brief three switch possible positions
-/// @note for switch on the front plate forward is up
 
 /// @brief stores data and kind of data for the  15 data channels and 1 flag channel
 /// for the W-fly Transmitter
@@ -253,14 +250,16 @@ private:
 	/// @brief signifies whether a disconnect flag has been read
 	bool is_connect = false;
 	// switch a (safety switch / index 4) is not configurable
-	/// @brief r stick x index
+	// Following index system denotes which channel each input is configured through
+	// if the controls are changed the number below must be changed to  match the number displayed on the ET16S
+	/// @brief r stick x index		
 	std::optional<int> r_stick_x_num = 0;
 	/// @brief right y stick index
 	std::optional<int> r_stick_y_num = 1;
-	/// @brief left x stick index
-	std::optional<int> l_stick_x_num = 3;
 	/// @brief left y stick index
 	std::optional<int> l_stick_y_num = 2;
+	/// @brief left x stick index
+	std::optional<int> l_stick_x_num = 3;
 	/// @brief stich b index
 	std::optional<int> switch_b_num = 5;
 	/// @brief switch c index	

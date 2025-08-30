@@ -104,7 +104,8 @@ int main() {
 
     // Execute setup functions
     pinMode(LED_BUILTIN, OUTPUT);
-
+	// Determine which transmitter is in use and instantiate its respective object.
+	// This allows for 'transmitter' to be used everywhere dr16 would be used
     TransmitterType transmitter_type = transmitter->who_am_i();
     if (transmitter_type == TransmitterType::DR16){
         transmitter = new DR16;
@@ -141,7 +142,7 @@ int main() {
     governor.set_reference_limits(config->set_reference_limits);
 
     // print all of config
-    //config->print();
+    config->print();
 
     // variables for use in main
     float temp_state[STATE_LEN][3] = { 0 }; // Temp state array

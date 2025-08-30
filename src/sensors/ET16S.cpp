@@ -6,8 +6,7 @@ void ET16S::init() {
 	Serial8.begin(100000, SERIAL_8E1_RXINV_TXINV);
 	Serial8.flush();
 	Serial8.clear();
-	//configure safety switch
-	//InputKind three_switch=THREE_SWITCH;
+	//configure safety switch;
 	channel[4].kind = InputKind::THREE_SWITCH;
 	channel[4].id = ChannelId::SWITCH_A;
 	//Turn safety on
@@ -251,16 +250,10 @@ float ET16S::map_raw(InputChannel input) {
 	case InputKind::THREE_SWITCH: {
 		if (val == max_in) {
 			val = static_cast<float>(SwitchPos::BACKWARD);
-			//bad fix this
-			//val = static_cast<float>(SwitchPos::MIDDLE);
 		} else if (val == min_in) {
 			val = static_cast<float>(SwitchPos::FORWARD);
-		
-
 		} else {
 			val = static_cast<float>(SwitchPos::MIDDLE);
-			//BAD FIX THIS
-			//val = static_cast<float>(SwitchPos::BACKWARD);
 		}
 		break;
 	}
@@ -458,9 +451,9 @@ void ET16S::set_channel_data() {
 	}
 }
 
-void ET16S::test_connection() {
+void ET16S::test_connection() {		
 	uint16_t flag_byte = channel[16].raw_format;
-	if (flag_byte & ERROR) {
+	if (flag_byte & DISCONNECT) {
 		is_connect = false;
 	} else {
 		is_connect = true;
@@ -574,7 +567,7 @@ std::optional<float> ET16S::get_r_dial(){
 
 std::optional<float> ET16S::get_channel_data(int chan_num){
 	// Will return nothing if an incorrect channel  number is given
-	if ((chan_num < 0) || (chan_num > 16)){
+	if ((chan_num < 0) || (chan_num > 16)){		
 		return {};
 	}
 	return channel[chan_num].data;
