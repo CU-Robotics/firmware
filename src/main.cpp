@@ -114,6 +114,8 @@ int main() {
     const Config* config = config_layer.configure(&comms_layer);
     logger.println(LogDestination::Serial, "Configured!");
 
+    logger.println("yo from teensy");
+
     // configure motors
     can.configure(config->motor_info);
 
