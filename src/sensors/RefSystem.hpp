@@ -1,11 +1,8 @@
 #ifndef REF_SYSTEM_HPP
 #define REF_SYSTEM_HPP
 
-#include "Arduino.h"
-
 #include "RefSystemPacketDefs.hpp"
-
-#include "comms/data/data_structs.hpp"
+#include "comms/data/comms_ref_data.hpp"
 
 /// @brief Time (in us) between packet writes
 constexpr uint32_t REF_MAX_PACKET_DELAY = 40000;
@@ -147,6 +144,9 @@ private:
 private:
     /// @brief Current sequence number. Used to send packets
     uint8_t seq = 0;
+
+    /// @brief whether we have a new damage status since we last sent ref data to comms
+    bool damage_status_changed = false;
 
     /// @brief Internal data struct for the RefSystem. This contains all the meta data required to read a frame
     struct RefInternalData {

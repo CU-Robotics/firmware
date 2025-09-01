@@ -1,3 +1,4 @@
+#include <Arduino.h>
 #include "hid_comms.hpp"
 #include "logger.hpp"
 

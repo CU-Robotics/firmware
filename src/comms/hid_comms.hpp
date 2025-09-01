@@ -1,8 +1,6 @@
 #ifndef HID_COMMS_HPP
 #define HID_COMMS_HPP
 
-#include "Arduino.h"
-#include "usb_rawhid.h"				// for usb_rawhid
 #include "hid_packet.hpp"			// for HIDPacket
 
 namespace Comms {

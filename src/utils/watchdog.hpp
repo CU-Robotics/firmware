@@ -3,9 +3,7 @@
 #include <WDT_T4/Watchdog_t4.h>
 
 /// @brief watchdog callback that is triggered before the CPU is reset, this is used to give a warning that the CPU is about to be reset
-void watchdog_callback() {
-    logger.println("Watchdog is almost out of time, please feed the watchdog");
-}
+void watchdog_callback();
 
 /// @brief This watchdog timer restarts the CPU if the trigger variable has not been sensed after the timout time, this is used to safely exits out when a software error occurs
 class Watchdog {
@@ -24,72 +22,39 @@ private:
 
 public:
     /// @brief default watchdog if no user input is given, in order to start the watchdog, call start()
-    Watchdog() {
-        this->config.trigger = trigger; //default trigger value = 0.5 second
-        this->config.timeout = timeout; //default timeout value = 1 second
-        this->config.callback = watchdog_callback; 
-    }
+    Watchdog();
 
     /// @brief watchdog constructor, which initializes the watchdog
     /// @param trigger value given by the user that will set the watchdog configuration's timer, double which valid ranges go from 0 to 128 seconds
     /// @param timeout value given by user that will set the watchdog configuration's for the timout, it is a double which valid ranges go from 0 to 128 seconds
-    Watchdog(double trigger, double timeout) {
-        this->timeout = timeout; 
-        this->trigger = trigger;
-        this->config.trigger = trigger;
-        this->config.timeout = timeout;
-        this->config.callback = watchdog_callback;
-    }
+    Watchdog(double trigger, double timeout);
 
     /// @brief this must be called in order to start the watchdog, after this is called, watchdog 1 
     /// is turned on to keep track of when trigger and timouts should occur based on previous initializations
     /// of timer and trigger
-    void start() {
-        wdt.begin(config);
-    }
+    void start();
 
     /// @brief this resets the cpu, calling this will immediatly reset the cpu
     /// @note Dont call this lightly
-    void reset_teensey() {
-        wdt.reset();
-    }
+    void reset_teensey();
 
     /// @brief This function is to set up the configuration of the watchdog, this is what the watchdog will be restricted to
     /// @param trigger The trigger variable, is in seconds, that will call the callback function for the watchdog when it is trigger seconds away from a timeout
     /// @param timeout The timeout variable is the time, in seconds, when the cpu will be reset if a feed to the watchdog timer hasn't been recieved between the current time and the current time - timeout
-    void set(double trigger, double timeout) {
-        this->timeout = timeout;
-        this->trigger = trigger;
-        this->config.trigger = trigger;
-        this->config.timeout = timeout;
-        this->config.callback = watchdog_callback;
-    }
+    void set(double trigger, double timeout);
 
     /// @brief This function is to help debug and verify your timeout has the values of trigger 
     /// and timeout that you expect, will print it to the serial terminal
-    void print_config() {
-        logger.println("Trigger");
-        logger.println(this->config.trigger);
-        logger.println("Timeout");
-        logger.println(this->config.timeout);
-    }
+    void print_config();
 
     /// @brief this function is to recongiure the trigger and timeout values, if you need the watchdog for another use than previouly
     /// @param trigger (0-128 seconds)The trigger variable, is in seconds, that will call the callback function for the watchdog when it is trigger seconds away from a timeout
     /// @param timeout (0-128 seconds)The timeout variable is the time, in seconds, when the cpu will be reset if a feed to the watchdog timer hasn't been recieved between the current time and the current time - timeout
-    void reconfigure(double trigger, double timeout) {
-        this->timeout = timeout;
-        this->trigger = trigger;
-        this->config.trigger = trigger;
-        this->config.timeout = timeout;
-        wdt.feed();
-    }
+    void reconfigure(double trigger, double timeout);
 
     /// @brief this feeds the wathdog and restarts the time to avoid the timeout indicating everything is working correctly, 
     /// when this is called before a timeout, no CPU reset occurs atleast until the next timeout variable
-    void feed() {
-        wdt.feed();
-    }
+    void feed();
 };
 
 

@@ -5,15 +5,19 @@
 #include "comms/comms_layer.hpp"
 #include "git_info.h"
 
+#include "sensors/buff_encoder.hpp"
 #include "utils/profiler.hpp"
 #include "sensors/StereoCamTrigger.hpp"
 #include "controls/estimator_manager.hpp"
 #include "controls/controller_manager.hpp"
+#include "sensors/dr16.hpp"
+#include "sensors/ACS712.hpp"
 
 #include <TeensyDebug.h>
 #include "sensors/LEDBoard.hpp"
 #include "SensorManager.hpp"
 
+#include "utils/timing.hpp"
 #include "utils/watchdog.hpp"
 #include "comms/data/sendable.hpp"
 #include "comms/data/hive_data.hpp"
@@ -21,6 +25,8 @@
 // Loop constants
 #define LOOP_FREQ 1000
 #define HEARTBEAT_FREQ 2
+
+extern "C" void reset_teensy(void);
 
 // Declare global objects
 DR16 dr16;
@@ -62,7 +68,7 @@ void print_logo() {
         logger.println(LogDestination::Serial, "?G~      .?7~:   .^~~^.    .^:.                :G5");
         logger.println(LogDestination::Serial, ".5P^     7BYJ5YJ7^.                          .~5P^");
         logger.println(LogDestination::Serial, " .JPJ!~!JP?  .:~?PP^            .:.    .^!JYY5Y!. ");
-        logger.println(LogDestination::Serial, "   :!???!:       5P.         .!Y5YYYJ?Y5Y?!^:.    ");
+        logger.println(LogDestination::Serial, "   :!?!?!:       5P.         .!Y5YYYJ?Y5Y?!^:.    ");
         logger.println(LogDestination::Serial, "                 7G7        7GY!. .:~!^.          ");
         logger.println(LogDestination::Serial, "                  JG!      :G5                    ");
         logger.println(LogDestination::Serial, "                   7PY!^^~?PY:                    ");
@@ -150,6 +156,8 @@ int main() {
     float dr16_pos_y = 0;
     float pos_offset_x = 0;
     float pos_offset_y = 0;
+    float feed = 0;
+    float last_feed = 0;
 
     // get the pitch min and max, and shift them to be centered around 0
     float pitch_min = config->set_reference_limits[4][0][0];
@@ -163,12 +171,20 @@ int main() {
 
     // whether we are in hive mode or not
     bool hive_toggle = false;
+    bool safety_toggle = false; 
+    bool not_safety_mode = false;
+    bool last_gimbal_power = false; // used to detect gimbal power changes
+    bool last_loop_slow = false; // used to detect multiple slow loops in a row
+    int slow_loop_counter = 0; // used to count slow loops in a row
+    // int last_switch = 0;
 
     // main loop timers
     Timer loop_timer;
+    Timer timer;
     Timer stall_timer;
     Timer control_input_timer;
-
+    Timer gimbal_power_timer;
+    
     // start the main loop watchdog
     watchdog.start();
 
@@ -176,11 +192,15 @@ int main() {
 
     // Main loop
     while (true) {
+        // LimitSwitch* limit_switch = sensor_manager.get_limit_switch(0);
+        // logger.printf(LogDestination::Serial, "Limit Switch: %d\n", limit_switch->isPressed());
+    
         // start main loop time timer
         stall_timer.start();
 
         // read sensors
         sensor_manager.read();
+
         // read CAN and DR16 -- These are kept out of sensor manager for safety reasons
         can.read();
         dr16.read();
@@ -238,7 +258,19 @@ int main() {
             - vtm_pos_x;
         float fly_wheel_target = (dr16.get_r_switch() == 1 || dr16.get_r_switch() == 3) ? 18 : 0; //m/s
         float feeder_target = (((dr16.get_l_mouse_button() || ref->ref_data.kbm_interaction.button_left) && dr16.get_r_switch() != 2) || dr16.get_r_switch() == 1) ? 10 : 0;
-
+        if(config->governor_types[6] == 1) {
+            float dt2 = timer.delta();
+            if (dt2 > 0.1) dt2 = 0;
+            // check if the shooter is active
+            if(not_safety_mode && ref->ref_data.robot_performance.shooter_power_active) feed += feeder_target*dt2;
+            target_state[6][0] = (int)feed;
+        }else{
+            target_state[6][1] = feeder_target;
+        }
+        // if (dr16.get_r_switch() == 1 && last_switch != 1) {
+        //     feed++;
+        // }
+        // last_switch = dr16.get_r_switch();
         // set manual controls
         target_state[0][0] = chassis_pos_x;
         target_state[0][1] = chassis_vel_x;
@@ -249,16 +281,14 @@ int main() {
         target_state[3][1] = 0;
         target_state[4][0] = pitch_target;
         target_state[4][1] = 0;
-
         target_state[5][1] = fly_wheel_target;
-        target_state[6][1] = feeder_target;
         target_state[7][0] = 1;
 
         // if the left switch is all the way down use Hive controls
         if (dr16.get_l_switch() == 2) {
             // hid_incoming.get_target_state(target_state);
             memcpy(target_state, comms_layer.get_hive_data().target_state.state, sizeof(target_state));
-
+            last_feed = target_state[6][0];
             // if you just switched to hive controls, set the reference to the current state
             if (hive_toggle) {
                 governor.set_reference(temp_state);
@@ -268,28 +298,31 @@ int main() {
 
         // when in teensy control mode reset hive toggle
         if (dr16.get_l_switch() == 3) {
-            if (!hive_toggle) {
+            if (!hive_toggle || !safety_toggle) {
                 pos_offset_x = temp_state[0][0];
                 pos_offset_y = temp_state[1][0];
+                feed = last_feed;
+                governor.set_reference(temp_state);
             }
             hive_toggle = true;
+            safety_toggle = true;
         }
 
         // print dr16
-        // logger.printf("DR16:\n\t");
+        // logger.printf(LogDestination::Serial, "DR16:\n\t");
         // dr16.print();
 
         // logger.printf("Target state:\n");
         // for (int i = 0; i < 8; i++) {
-        //     logger.printf("\t%d: %f %f %f\n", i, target_state[i][0], target_state[i][1], target_state[i][2]);
+        //     logger.printf(LogDestination::Serial, "\t%d: %f %f %f\n", i, target_state[i][0], target_state[i][1], target_state[i][2]);
         // }
-
-        // override temp state if needed
-        if (comms_layer.get_hive_data().override_state.active) {
+        
+        // override temp state if needed. Dont override in teensy mode so the sentry doesnt move during inspection
+        if (comms_layer.get_hive_data().override_state.active && !(dr16.get_l_switch() == 3)) {
             // clear the request
             comms_layer.get_hive_data().override_state.active = false;
 
-            logger.printf("Overriding state with hive state\n");
+            logger.printf(LogDestination::Serial, "Overriding state with hive state\n");
             memcpy(hive_state_offset, comms_layer.get_hive_data().override_state.state, sizeof(hive_state_offset));
             memcpy(temp_state, hive_state_offset, sizeof(hive_state_offset));
             override_request = true;
@@ -299,16 +332,26 @@ int main() {
         estimator_manager.step(temp_state, temp_micro_state, override_request);
         override_request = false;
 
+        if ((feed - temp_state[6][0] > 2 && dr16.get_l_switch() == 3) || (comms_layer.get_hive_data().target_state.state[6][0] - temp_state[6][0] > 2 && dr16.get_l_switch() == 2)) {
+            logger.printf(LogDestination::Serial, "Feeder is lowkey jammed. current ball count: %f, feed: %f, hive target: %f\n", temp_state[6][0], feed, comms_layer.get_hive_data().target_state.state[6][0]);
+            feed = temp_state[6][0] + 1;
+            governor.set_reference_at_index(feed, 6, 0);
+        }
+
         // if first loop set target state to estimated state
         if (count_one == 0) {
             temp_state[7][0] = 0;
             governor.set_reference(temp_state);
+            // print temp state
+            for(int i = 0; i < 8; i++) {
+                logger.printf(LogDestination::Serial, "\t%d: %f %f %f\n", i, temp_state[i][0], temp_state[i][1], temp_state[i][2]);
+            }
             count_one++;
         }
 
         // logger.printf("Estimated state:\n");
         // for (int i = 0; i < 8; i++) {
-        //     logger.printf("\t%d: %f %f %f\n", i, temp_state[i][0], temp_state[i][1], temp_state[i][2]);
+        //     logger.printf(LogDestination::Serial, "\t%d: %f %f %f\n", i, temp_state[i][0], temp_state[i][1], temp_state[i][2]);
         // }
 
         // give the sensors the current estimated state
@@ -321,7 +364,7 @@ int main() {
 
         // logger.printf("Reference state:\n");
         // for (int i = 0; i < 8; i++) {
-        //     logger.printf("\t%d: %f %f %f\n", i, temp_reference[i][0], temp_reference[i][1], temp_reference[i][2]);
+        //     logger.printf(LogDestination::Serial, "\t%d: %f %f %f\n", i, temp_reference[i][0], temp_reference[i][1], temp_reference[i][2]);
         // }
 
         // generate motor outputs from controls
@@ -334,10 +377,17 @@ int main() {
         Comms::Sendable<CommsRefData> ref_data_sendable = ref_data;
         ref_data_sendable.send_to_comms();
 
+        Comms::Sendable<TargetState> target_state_sendable;
+        memcpy(target_state_sendable.data.state, temp_reference, sizeof(temp_reference));
+        target_state_sendable.data.time = millis() / 1000.0;
+        target_state_sendable.send_to_comms();
+
+
         Comms::Sendable<EstimatedState> estimated_state;
         memcpy(estimated_state.data.state, temp_state, sizeof(temp_state));
         estimated_state.data.time = millis() / 1000.0;
         estimated_state.send_to_comms();
+
 
         Comms::Sendable<DR16Data> dr16_sendable;
         dr16_sendable.data.l_mouse_button = dr16.get_l_mouse_button();
@@ -367,26 +417,47 @@ int main() {
 
         // check whether this was a slow loop or not
         float dt = stall_timer.delta();
-        logger.printf("Loop %d, dt: %f\n", loopc, dt);
         if (dt > 0.002) {
             // zero the can bus just in case
             can.issue_safety_mode();
 
-            logger.printf("Slow loop with dt: %f\n", dt);
+            logger.printf(LogDestination::Serial, "Slow loop with dt: %f, slow loop count %d\n", dt, slow_loop_counter);
             // mark this as a slow loop to trigger safety mode
             is_slow_loop = true;
+            if(last_loop_slow) {
+                slow_loop_counter++;
+                if(slow_loop_counter > 10) {
+                    logger.printf(LogDestination::Serial, "Kowabunga bitches\n");
+                    reset_teensy();
+                }
+            }else{
+                slow_loop_counter = 0;
+            }
         }
+        last_loop_slow = is_slow_loop;
 
+        if(!last_gimbal_power && ref->ref_data.robot_performance.gimbol_power_active) {
+            gimbal_power_timer.start();
+        }
+        last_gimbal_power = ref->ref_data.robot_performance.gimbol_power_active;
+        bool gimbal_power_recently_turned_on = gimbal_power_timer.get_elapsed_micros_no_restart() < 3000000;
+
+        not_safety_mode = (dr16.is_connected() && (dr16.get_l_switch() == 2 || dr16.get_l_switch() == 3) && config_layer.is_configured() && !is_slow_loop && ref->ref_data.robot_performance.gimbol_power_active && !gimbal_power_recently_turned_on);
         //  SAFETY MODE
-        if (dr16.is_connected() && (dr16.get_l_switch() == 2 || dr16.get_l_switch() == 3) && config_layer.is_configured() && !is_slow_loop) {
+        if (not_safety_mode) {
             // SAFETY OFF
             can.write();
-            // logger.printf("Can write\n");
+            // logger.printf(LogDestination::Serial, "Can write\n");
         } else {
             // SAFETY ON
             // TODO: Reset all controller integrators here
             can.issue_safety_mode();
-            // logger.printf("Can zero\n");
+            governor.set_reference_at_index(temp_state[6][0], 6, 0);
+
+            feed = (fmod(fmod(temp_state[6][0],1) + 1,1) > 0.2) ? (int)floor(temp_state[6][0]) + 1 : (int)floor(temp_state[6][0]); // reset feed to the current state
+            last_feed = feed; // reset last feed to the current state
+            // logger.printf(LogDestination::Serial, "Can zero\n");
+            safety_toggle = false; // reset hive toggle
         }
 
         // LED heartbeat -- linked to loop count to reveal slowdowns and freezes.

@@ -25,7 +25,6 @@ bool BuffEncoder::read() {
 
     // assign angle
     m_angle = radians;
-
     //add angle to the data struct
     buff_sensor_data.m_angle = m_angle;
     return true;

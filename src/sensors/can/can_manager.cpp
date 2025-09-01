@@ -2,11 +2,11 @@
 #include "utils/logger.hpp"
 
 // driver includes are here not in header since they're only needed in the implementation
-#include "can/C610.hpp"
-#include "can/C620.hpp"
-#include "can/MG8016EI6.hpp"
-#include "can/GIM.hpp"
-#include "can/SDC104.hpp"
+#include "sensors/can/C610.hpp"
+#include "sensors/can/C620.hpp"
+#include "sensors/can/MG8016EI6.hpp"
+#include "sensors/can/GIM.hpp"
+#include "sensors/can/SDC104.hpp"
 
 // FlexCAN_T4 moment
 CANManager::CANManager() { }
