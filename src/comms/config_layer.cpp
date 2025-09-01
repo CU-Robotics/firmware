@@ -81,7 +81,7 @@ const Config* const ConfigLayer::configure(Comms::CommsLayer* comms, bool config
     // TODO: this timeout is a hack, but it seems to work very well. Hive ends up seeing the 0 info bit before firmware does, causing this loop to never end
     uint32_t start = micros();
     while (comms_layer.get_hive_data().config_section.request_bit == 1 && micros() - start < 500000) {
-        Serial.printf("Waiting for config to finish...\n");
+        logger.printf(LogDestination::Serial, "Waiting for config to finish...\n");
         Comms::Sendable<ConfigSection> sendable;
         sendable.data.request_bit = 0;
         sendable.send_to_comms();

@@ -19,7 +19,7 @@ Logger::Logger() : cursor(0), write_error(0) {
 
 size_t Logger::write(const uint8_t* buffer, size_t size,
                      LogDestination destination) {
-    // Serial.printf("%d %d\n", cursor, size);
+    // logger.printf(LogDestination::Serial, "%d %d\n", cursor, size);
     // guard against cursor going beyond buffer size
     if (cursor + size >= sizeof(log_buffer)) {
         return 0;
@@ -34,7 +34,7 @@ size_t Logger::write(const uint8_t* buffer, size_t size,
 
     if (destination == LogDestination::Serial) {
         // print to serial monitor
-        Serial.print(print_statement);
+        logger.print(LogDestination::Serial, print_statement);
     }
 
     // sets cursor to current place in memory

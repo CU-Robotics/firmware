@@ -200,7 +200,7 @@ void PitchController::step(float reference[STATE_LEN][3], float estimate[STATE_L
     outputs[0] = output * gear_ratios[0];
     outputs[1] = output * gear_ratios[1];
 
-    // logger.printf("Pitch est: %f, pitch ref: %f, pitch output: %f\n", estimate[4][0], reference[4][0], output);
+    // logger.printf(LogDestination::Serial, "Pitch est: %f, pitch ref: %f, pitch output: %f\n", estimate[4][0], reference[4][0], output);
 }
 
 void FlywheelController::step(float reference[STATE_LEN][3], float estimate[STATE_LEN][3], float micro_estimate[CAN_MAX_MOTORS][MICRO_STATE_LEN], float outputs[CAN_MAX_MOTORS]) {
@@ -213,7 +213,7 @@ void FlywheelController::step(float reference[STATE_LEN][3], float estimate[STAT
 
     pid_high.setpoint = reference[5][1];
     pid_high.measurement = estimate[5][1];
-    // Serial.printf("waggle graph flywheel %f\n", estimate[5][1]);
+    // logger.printf(LogDestination::Serial, "waggle graph flywheel %f\n", estimate[5][1]);
 
     float target_motor_velocity = pid_high.filter(dt, false, false) * gear_ratios[0];
     for (int i = 0; i < 2; i++) {
@@ -314,12 +314,12 @@ void NewFeederController::step(float reference[STATE_LEN][3], float estimate[STA
 
     pidp.setpoint = reference[6][0]; // 1st index = position
     pidp.measurement = estimate[6][0];
-    // Serial.printf("reference: %f, estimate: %f\n", reference[6][0], estimate[6][0]);
+    // logger.printf(LogDestination::Serial, "reference: %f, estimate: %f\n", reference[6][0], estimate[6][0]);
     // pidv.setpoint = reference[7][1];
     // pidv.measurement = estimate[7][1];
 
     float outputp = pidp.filter(dt, true, true);
-    // Serial.printf("waggle graph outputp: %f\n", outputp);
+    // logger.printf(LogDestination::Serial, "waggle graph outputp: %f\n", outputp);
     // float outputv = pidv.filter(dt, true, false);
     // float output = outputp + outputv;
 

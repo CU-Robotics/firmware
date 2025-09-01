@@ -556,11 +556,11 @@ NewFeederEstimator::NewFeederEstimator(CANManager* _can, SensorManager* _sensor_
 void NewFeederEstimator::step_states(float output[CAN_MAX_MOTORS][MICRO_STATE_LEN], float curr_state[CAN_MAX_MOTORS][MICRO_STATE_LEN], int override) {
     dt = time.delta();
     float feeder_angle = sensor_manager->get_buff_encoder(2)->get_angle();
-    // Serial.printf("waggle graph feeder_angle %f\n",feeder_angle);
-    // Serial.printf("feeder_offset %f\n",feeder_offset);
+    // logger.printf(LogDestination::Serial, "waggle graph feeder_angle %f\n",feeder_angle);
+    // logger.printf(LogDestination::Serial, "feeder_offset %f\n",feeder_offset);
     float diff;
     if (count == 0) {
-        Serial.printf("prev_feeder_angle %f\n",prev_feeder_angle);
+        logger.printf(LogDestination::Serial, "prev_feeder_angle %f\n",prev_feeder_angle);
         dt = 0; // first dt loop generates huge time so check for that
         diff = fmod((feeder_angle - feeder_offset), (float)(M_PI / feeder_ratio)) ;
         count++;
