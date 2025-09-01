@@ -93,8 +93,7 @@ int main() {
 
     print_logo();
 
-    // HACK test logger over comms
-    logger.println(LogDestination::Comms, "Hello from Teensy!");
+    logger.println("yo from teensy"); // TEST for logger HACK take this out BEFORE merging
 
     // check to see if there is a crash report, and if so, print it repeatedly over Serial
     // in the future, we'll send this directly over comms
@@ -119,8 +118,6 @@ int main() {
     logger.println(LogDestination::Serial, "Configuring...");
     const Config* config = config_layer.configure(&comms_layer);
     logger.println(LogDestination::Serial, "Configured!");
-
-    logger.println("yo from teensy");
 
     // configure motors
     can.configure(config->motor_info);
@@ -209,7 +206,7 @@ int main() {
 
         // check whether this packet is a config packet
         if (comms_layer.get_hive_data().config_section.request_bit == 1) {
-            logger.println("\n\nConfig request received, reconfiguring from comms!\n\n");
+            logger.println(LogDestination::Serial, "\n\nConfig request received, reconfiguring from comms!\n\n");
             // trigger safety mode
             can.issue_safety_mode();
             config_layer.reconfigure(&comms_layer);
@@ -217,7 +214,7 @@ int main() {
 
         // print loopc every second to verify it is still alive
         if (loopc % 1000 == 0) {
-            logger.println(loopc);
+            logger.println(LogDestination::Serial, loopc);
         }
 
         // manual controls on firmware
@@ -312,7 +309,7 @@ int main() {
         // logger.printf(LogDestination::Serial, "DR16:\n\t");
         // dr16.print();
 
-        // logger.printf("Target state:\n");
+        // logger.printf(LogDestination::Serial, "Target state:\n");
         // for (int i = 0; i < 8; i++) {
         //     logger.printf(LogDestination::Serial, "\t%d: %f %f %f\n", i, target_state[i][0], target_state[i][1], target_state[i][2]);
         // }
@@ -349,7 +346,7 @@ int main() {
             count_one++;
         }
 
-        // logger.printf("Estimated state:\n");
+        // logger.printf(LogDestination::Serial, "Estimated state:\n");
         // for (int i = 0; i < 8; i++) {
         //     logger.printf(LogDestination::Serial, "\t%d: %f %f %f\n", i, temp_state[i][0], temp_state[i][1], temp_state[i][2]);
         // }
@@ -362,7 +359,7 @@ int main() {
         governor.step_reference(target_state, config->governor_types);
         governor.get_reference(temp_reference);
 
-        // logger.printf("Reference state:\n");
+        // logger.printf(LogDestination::Serial, "Reference state:\n");
         // for (int i = 0; i < 8; i++) {
         //     logger.printf(LogDestination::Serial, "\t%d: %f %f %f\n", i, temp_reference[i][0], temp_reference[i][1], temp_reference[i][2]);
         // }
