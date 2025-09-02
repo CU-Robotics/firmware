@@ -5,8 +5,6 @@
 #include "comms/data/sendable.hpp"
 
 /// @brief internal buffer with 4kb capacity
-/// @note will need to change size if we every print more than 4096 characters
-/// per loop
 DMAMEM char log_buffer[LOGGER_BUFFER_SIZE];
 
 // need to clear the buffer before using it

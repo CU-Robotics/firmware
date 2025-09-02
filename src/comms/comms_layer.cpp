@@ -58,7 +58,8 @@ void CommsLayer::queue_data(CommsData* data) {
             break;
         } else if (!is_ethernet_connected() && data->size > HID_PACKET_PAYLOAD_SIZE) {
             // discard attempt to send
-            logger.printf(LogDestination::Serial, "Attempting to re-route %s to HID but packet is too large\n", to_string(data->type_label).c_str());
+            logger.printf(LogDestination::Serial, "Attempting to re-route %s to HID but packet is too large: ", to_string(data->type_label).c_str(), data->size);
+            logger.printf(LogDestination::Serial, "(%d / %d)\n", data->size, HID_PACKET_PAYLOAD_SIZE);
             break;
         }
 

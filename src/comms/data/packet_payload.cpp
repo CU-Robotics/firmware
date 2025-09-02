@@ -110,11 +110,10 @@ void PacketPayload::add(CommsData* data) {
         }
         break;
     } case Priority::Logging: {
+        // a logging priority item must be of type logging data since we grab data from logs dynamically (handled in this file)
+        LoggingData* logging = static_cast<LoggingData*>(data);
         if (logging_send_queue.size() < MAX_QUEUE_SIZE) {
-            // this bouncer only lets LoggingData through
-            if (data->type_label == TypeLabel::LoggingData) {
-                logging_send_queue.push(data);
-            }
+            logging_send_queue.push(logging);
         } else {
             delete data;
         }
