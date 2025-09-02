@@ -124,7 +124,7 @@ build: $(BUILD_DIR)/$(TARGET_EXEC)
 # This rule links all the object files to produce the final ELF executable.
 # It depends on all object files and the 'git_scraper' target to ensure
 # that Git information is up-to-date before linking.
-$(BUILD_DIR)/$(TARGET_EXEC): git_scraper $(SRC_OBJS) $(LIBRARY_OBJS) $(TEENSY_OBJS) 
+$(BUILD_DIR)/$(TARGET_EXEC): $(SRC_OBJS) $(LIBRARY_OBJS) $(TEENSY_OBJS) 
     # Invoke the C++ compiler as the linker.
     # - $(COMPILER_CPP): The compiler executable.
     # - $(CPPFLAGS): Preprocessor and common compiler flags.
