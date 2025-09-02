@@ -126,7 +126,7 @@ int MG8016EI6::read(CAN_message_t& msg) {
         break;
     }
     default:
-        logger.printf("Unknown command byte: 0x%02X\n", cmd_byte);
+        logger.printf(LogDestination::Serial, "Unknown command byte: 0x%02X\n", cmd_byte);
         break;
     }
 

@@ -3,7 +3,7 @@
 
 void Governor::set_reference(float reference[STATE_LEN][3]) {
     memcpy(this->reference, reference, sizeof(this->reference));
-    logger.println("Don't use this, bitch 'one time is ok :)'");
+    logger.println(LogDestination::Serial, "Don't use this, bitch 'one time is ok :)'");
 }
 
 void Governor::set_reference_at_index(float value, int state_val, int state_type){

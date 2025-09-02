@@ -44,13 +44,13 @@ void RefSystem::read() {
 void RefSystem::write(uint8_t* packet, uint8_t length) {
     // return if over baud rate
     if (bytes_sent >= REF_MAX_BAUD_RATE) {
-        logger.println("Too many bytes");
+        logger.println(LogDestination::Serial, "Too many bytes");
         return;
     }
 
     // return if writing too many bytes
     if (length > REF_MAX_PACKET_SIZE) {
-        logger.println("Packet Too Long to Send!");
+        logger.println(LogDestination::Serial, "Packet Too Long to Send!");
         return;
     }
 
@@ -75,7 +75,7 @@ void RefSystem::write(uint8_t* packet, uint8_t length) {
         packets_sent++;
         bytes_sent += length;
     } else
-        logger.println("Failed to write");
+        logger.println(LogDestination::Serial, "Failed to write");
 }
 
 CommsRefData RefSystem::get_data_for_comms() {
@@ -125,7 +125,7 @@ bool RefSystem::read_frame_header(HardwareSerial* serial, uint8_t raw_buffer[REF
     // read and verify header
     int bytes_read = serial->readBytes(raw_buffer, FrameHeader::packet_size);
     if (bytes_read != FrameHeader::packet_size) {
-        logger.println("Couldnt read enough bytes for Header");
+        logger.println(LogDestination::Serial, "Couldnt read enough bytes for Header");
         packets_failed++;
         return false;
     }
@@ -133,7 +133,7 @@ bool RefSystem::read_frame_header(HardwareSerial* serial, uint8_t raw_buffer[REF
     // set read data
     frame.header.SOF = raw_buffer[buffer_index + 0];
     if (frame.header.SOF != 0xA5) {
-        logger.println("Not a valid frame");
+        logger.println(LogDestination::Serial, "Not a valid frame");
         return false;
     }
 
@@ -143,7 +143,7 @@ bool RefSystem::read_frame_header(HardwareSerial* serial, uint8_t raw_buffer[REF
 
     // verify the CRC is correct
     if (frame.header.CRC != generateCRC8(raw_buffer, 4)) {
-        logger.println("Header failed CRC");
+        logger.println(LogDestination::Serial, "Header failed CRC");
         packets_failed++;
         return false;
     }
@@ -162,7 +162,7 @@ bool RefSystem::read_frame_command_ID(HardwareSerial* serial, uint8_t raw_buffer
     // read and verify command ID
     int bytes_read = serial->readBytes(raw_buffer + buffer_index, 2);
     if (bytes_read != 2) {
-        logger.println("Couldnt read enough bytes for ID");
+        logger.println(LogDestination::Serial, "Couldnt read enough bytes for ID");
         packets_failed++;
         return false;
     }
@@ -172,7 +172,7 @@ bool RefSystem::read_frame_command_ID(HardwareSerial* serial, uint8_t raw_buffer
 
     // sanity check, verify the ID is valid
     if (frame.commandID > REF_MAX_COMMAND_ID) {
-        logger.println("Invalid Command ID");
+        logger.println(LogDestination::Serial, "Invalid Command ID");
         packets_failed++;
         return false;
     }
@@ -191,7 +191,7 @@ bool RefSystem::read_frame_data(HardwareSerial* serial, uint8_t raw_buffer[REF_M
     // read and verify data
     int bytes_read = serial->readBytes(raw_buffer + buffer_index, frame.header.data_length);
     if (bytes_read != frame.header.data_length) {
-        logger.println("Couldnt read enough bytes for Data");
+        logger.println(LogDestination::Serial, "Couldnt read enough bytes for Data");
         packets_failed++;
         return false;
     }
@@ -213,7 +213,7 @@ int RefSystem::read_frame_tail(HardwareSerial* serial, uint8_t raw_buffer[REF_MA
     // read and verify tail
     int bytes_read = serial->readBytes(raw_buffer + buffer_index, 2);
     if (bytes_read != 2) {
-        logger.println("Couldnt read enough bytes for CRC");
+        logger.println(LogDestination::Serial, "Couldnt read enough bytes for CRC");
         packets_failed++;
         return 0;
     }
@@ -222,7 +222,7 @@ int RefSystem::read_frame_tail(HardwareSerial* serial, uint8_t raw_buffer[REF_MA
     frame.CRC = (raw_buffer[buffer_index + 1] << 8) | raw_buffer[buffer_index + 0];
 
     if (frame.CRC != generateCRC16(raw_buffer, buffer_index)) {
-        logger.println("Tail failed CRC");
+        logger.println(LogDestination::Serial, "Tail failed CRC");
         packets_failed++;
         return -1;
     }
@@ -341,7 +341,7 @@ void RefSystem::set_ref_data(Frame& frame, uint8_t raw_buffer[REF_MAX_PACKET_SIZ
         ref_data.small_map_robot_data.set_data(frame.data);
         break;
     default:
-        logger.println("Unknown Frame Type");
+        logger.println(LogDestination::Serial, "Unknown Frame Type");
         break;
     }
 }

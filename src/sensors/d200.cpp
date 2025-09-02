@@ -196,12 +196,12 @@ void D200LD14P::export_data(uint8_t bytes[D200_NUM_PACKETS_CACHED * D200_PAYLOAD
 
 void D200LD14P::print_latest_packet() {
   LidarDataPacketSI p = get_latest_packet();
-  logger.println("==D200LD14P PACKET==");
+  logger.println(LogDestination::Serial, "==D200LD14P PACKET==");
   logger.print("LiDAR speed: ");
   logger.println(p.lidar_speed);
   logger.print("start angle: ");
   logger.println(p.start_angle);
-  logger.println("measurement data: ...");
+  logger.println(LogDestination::Serial, "measurement data: ...");
   logger.print("end angle: ");
   logger.println(p.end_angle);
   logger.print("timestamp: ");

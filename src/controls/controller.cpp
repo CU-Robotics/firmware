@@ -57,7 +57,7 @@ void XDrivePositionController::step(float reference[STATE_LEN][3], float estimat
     motor_velocity[3] = -output[0] * cos(chassis_heading) - output[1] * sin(chassis_heading) + output[2];
     motor_velocity[0] = -output[0] * sin(chassis_heading) + output[1] * cos(chassis_heading) + output[2];
 
-    // logger.printf("1: %f, 2: %f, 3: %f, 4: %f\n", motor_velocity[0], motor_velocity[1], motor_velocity[2], motor_velocity[3]);
+    // logger.printf(LogDestination::Serial, "1: %f, 2: %f, 3: %f, 4: %f\n", motor_velocity[0], motor_velocity[1], motor_velocity[2], motor_velocity[3]);
 
     // Power limiting
     float power_buffer = ref->ref_data.robot_power_heat.buffer_energy;
@@ -67,7 +67,7 @@ void XDrivePositionController::step(float reference[STATE_LEN][3], float estimat
     if (power_buffer < power_buffer_limit_thresh) {
         power_limit_ratio = constrain(((power_buffer - power_buffer_critical_thresh) / power_buffer_limit_thresh), 0.0, 1.0);
     }
-    // logger.printf("current_hp: %f", ref);
+    // logger.printf(LogDestination::Serial, "current_hp: %f", ref);
 
     // Low level velocity controller
     for (int i = 0; i < 4; i++) {
@@ -118,7 +118,7 @@ void XDriveVelocityController::step(float reference[STATE_LEN][3], float estimat
     outputp[2] = pidp[2].filter(dt, false, false);
     outputv[2] = pidv[2].filter(dt, false, false);
     output[2] = (outputp[2] + outputv[2]) * gear_ratios[2];
-    // logger.printf("chassis heading output: %f, chassis x output: %f, chassis y output: %f chassis angle:%f\n", output[2], output[0], output[1], estimate[2][0]);
+    // logger.printf(LogDestination::Serial, "chassis heading output: %f, chassis x output: %f, chassis y output: %f chassis angle:%f\n", output[2], output[0], output[1], estimate[2][0]);
     // Adjust for chassis heading so control is field relative
     float chassis_heading = estimate[2][0];
     // Convert to motor velocities
@@ -126,7 +126,7 @@ void XDriveVelocityController::step(float reference[STATE_LEN][3], float estimat
     motor_velocity[1] = output[0] * sin(chassis_heading) - output[1] * cos(chassis_heading) + output[2];
     motor_velocity[2] = -output[0] * cos(chassis_heading) - output[1] * sin(chassis_heading) + output[2];
     motor_velocity[3] = -output[0] * sin(chassis_heading) + output[1] * cos(chassis_heading) + output[2];
-    // logger.printf("motor 0: %f, motor 1: %f, motor 2: %f, motor 3: %f\n", motor_velocity[0], motor_velocity[1], motor_velocity[2], motor_velocity[3]);
+    // logger.printf(LogDestination::Serial, "motor 0: %f, motor 1: %f, motor 2: %f, motor 3: %f\n", motor_velocity[0], motor_velocity[1], motor_velocity[2], motor_velocity[3]);
     // Power limiting
     float power_buffer = ref->ref_data.robot_power_heat.buffer_energy;
     float power_limit_ratio = 1.0;
@@ -145,7 +145,7 @@ void XDriveVelocityController::step(float reference[STATE_LEN][3], float estimat
         pid.K[1] = gains[11];
         pid.K[2] = gains[12];
         outputs[i] = pid.filter(dt, true, false) * power_limit_ratio;
-        // logger.printf("motor %d error: %f output: %f\n", i, -micro_estimate[i][1] + motor_velocity[i], outputs[i]);
+        // logger.printf(LogDestination::Serial, "motor %d error: %f output: %f\n", i, -micro_estimate[i][1] + motor_velocity[i], outputs[i]);
     }
 }
 
@@ -172,7 +172,7 @@ void YawController::step(float reference[STATE_LEN][3], float estimate[STATE_LEN
     outputs[0] = -output;
     outputs[1] = -output;
 
-    // logger.printf("Yaw est: %f, yaw ref: %f, yaw output: %f\n", estimate[3][0], reference[3][0], output);
+    // logger.printf(LogDestination::Serial, "Yaw est: %f, yaw ref: %f, yaw output: %f\n", estimate[3][0], reference[3][0], output);
 }
 
 void PitchController::step(float reference[STATE_LEN][3], float estimate[STATE_LEN][3], float micro_estimate[CAN_MAX_MOTORS][MICRO_STATE_LEN], float outputs[CAN_MAX_MOTORS]) {
@@ -186,7 +186,7 @@ void PitchController::step(float reference[STATE_LEN][3], float estimate[STATE_L
     pidv.K[0] = gains[4];
     pidv.K[1] = gains[5];
     pidv.K[2] = gains[6];
-    // logger.printf("pitch angle: %f\n", estimate[4][0]);
+    // logger.printf(LogDestination::Serial, "pitch angle: %f\n", estimate[4][0]);
     pidp.setpoint = reference[4][0];
     pidp.measurement = estimate[4][0];
 
@@ -249,7 +249,7 @@ void FeederController::step(float reference[STATE_LEN][3], float estimate[STATE_
     pid_low.setpoint = output;
     pid_low.measurement = micro_estimate[12][1];
     output = pid_low.filter(dt, true, false);
-    // logger.printf("Feeder output: %f, ref: %f, FF: %f\n", output, pid_low.setpoint-micro_estimate[12][1], pid_low.K[3]);
+    // logger.printf(LogDestination::Serial, "Feeder output: %f, ref: %f, FF: %f\n", output, pid_low.setpoint-micro_estimate[12][1], pid_low.K[3]);
     outputs[0] = output;
 }
 
@@ -264,7 +264,7 @@ void SwitcherController::step(float reference[STATE_LEN][3], float estimate[STAT
     pidv.K[0] = gains[4];
     pidv.K[1] = gains[5];
     pidv.K[2] = gains[6];
-    // logger.printf("Pushing into wall: %f, %f\n", estimate[0], reference[0]);
+    // logger.printf(LogDestination::Serial, "Pushing into wall: %f, %f\n", estimate[0], reference[0]);
     // // Feed forward to push the switcher into the wall constantly with a small force
     if (estimate[7][0] > gains[7] && reference[7][0] > -gains[7] && !(reference[7][0] < gains[7])) {
         pidp.K[3] = gains[3];

@@ -42,7 +42,7 @@ public:
             break;
         }
         default: {
-            logger.printf("GIM motor type not recognized: %d\n", motor_type);
+            logger.printf(LogDestination::Serial, "GIM motor type not recognized: %d\n", motor_type);
             break;
         }
         }

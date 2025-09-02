@@ -12,7 +12,7 @@ void ICM20649::init(CommunicationProtocol protocol) {
     {
         // start I2C communication
         if (!sensor.begin_I2C()) {
-            logger.println("ICM: Failed to begin I2C");
+            logger.println(LogDestination::Serial, "ICM: Failed to begin I2C");
         }
         break;
     }
@@ -21,7 +21,7 @@ void ICM20649::init(CommunicationProtocol protocol) {
         // start SPI communication
         if (!sensor.begin_SPI(ICM_CS, ICM_SCK, ICM_MISO, ICM_MOSI))
         {
-            logger.println("ICM: Failed to begin SPI");
+            logger.println(LogDestination::Serial, "ICM: Failed to begin SPI");
         }
         break;
     }

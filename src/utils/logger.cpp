@@ -34,7 +34,7 @@ size_t Logger::write(const uint8_t* buffer, size_t size,
 
     if (destination == LogDestination::Serial) {
         // print to serial monitor
-        logger.print(LogDestination::Serial, print_statement);
+        Serial.print(print_statement);
     }
 
     // sets cursor to current place in memory

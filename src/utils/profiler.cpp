@@ -78,7 +78,7 @@ void Profiler::print(const char* name) {
             if (delta > max) max = delta;
         }
         // print stats
-        logger.printf("Profiling for: %s\n  Min: %u us\n  Max: %u us\n  Avg: %u us\n",
+        logger.printf(LogDestination::Serial, "Profiling for: %s\n  Min: %u us\n  Max: %u us\n  Avg: %u us\n",
                         name, min, max, sum / actual_count);
         return;
     }

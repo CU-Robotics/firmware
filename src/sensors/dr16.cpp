@@ -61,7 +61,7 @@ void DR16::read() {
 			while (last_available == Serial8.available() && micros() - start < DR16_ALIGNMENT_LONG_INTERVAL_THRESHOLD);
 			uint32_t end = micros();
 			
-			logger.printf("DR16: Still aligning (%d)\n", interval_count);
+			logger.printf(LogDestination::Serial, "DR16: Still aligning (%d)\n", interval_count);
 
 			// if this interval was a long interval (break in packets), call the alignment done and finish up
 			// also mark this as a successful alignment, rather than it timing out
@@ -73,11 +73,11 @@ void DR16::read() {
 
 		// print success or failure
 		if (alignment_timed_out) {
-			logger.printf("DR16: Alignment timed out, trying again next loop\n\n");
+			logger.printf(LogDestination::Serial, "DR16: Alignment timed out, trying again next loop\n\n");
 		} else {
 			uint32_t align_end = micros();
-			logger.printf("DR16: Aligned successfully\n");
-			logger.printf("DR16: Alignment took %fms\n\n", (align_end - align_start) / 1000.f);
+			logger.printf(LogDestination::Serial, "DR16: Aligned successfully\n");
+			logger.printf(LogDestination::Serial, "DR16: Alignment took %fms\n\n", (align_end - align_start) / 1000.f);
 		}
 
 		// clear the buffer to get ready for the next packet
@@ -197,12 +197,12 @@ float* DR16::get_input() {
 }
 
 void DR16::print() {
-	logger.printf("RStick X: %.2f\tRStick Y: %.2f\tLStick X: %.2f\tLStick Y: %.2f\tWheel: %.2f\tRSwitch: %.2f\tLSwitch: %.2f\n", m_input[0], m_input[1], m_input[2], m_input[3], m_input[4], m_input[5], m_input[6]);
+	logger.printf(LogDestination::Serial, "RStick X: %.2f\tRStick Y: %.2f\tLStick X: %.2f\tLStick Y: %.2f\tWheel: %.2f\tRSwitch: %.2f\tLSwitch: %.2f\n", m_input[0], m_input[1], m_input[2], m_input[3], m_input[4], m_input[5], m_input[6]);
 }
 
 void DR16::print_raw() {
 	for (int i = 0; i < DR16_PACKET_SIZE; i++)
-		logger.printf("%.2x\t", m_inputRaw[i]);
+		logger.printf(LogDestination::Serial, "%.2x\t", m_inputRaw[i]);
 	logger.println();
 }
 

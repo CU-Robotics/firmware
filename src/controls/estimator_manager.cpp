@@ -2,9 +2,9 @@
 #include "logger.hpp"
 
 EstimatorManager::~EstimatorManager() {
-    logger.println("Ending SPI");
+    logger.println(LogDestination::Serial, "Ending SPI");
     SPI.end();
-    logger.println("SPI Ended");
+    logger.println(LogDestination::Serial, "SPI Ended");
 
     for (int i = 0; i < STATE_LEN; i++) {
         if (estimators[i] == nullptr)
@@ -19,12 +19,12 @@ void EstimatorManager::init(CANManager* _can, const Config* _config_data, Sensor
     can = _can;
     config_data = _config_data;
     sensor_manager = _sensor_manager;
-    if (!config_data) logger.println("CONFIG DATA IS NULL!!!!!");
+    if (!config_data) logger.println(LogDestination::Serial, "CONFIG DATA IS NULL!!!!!");
 
     // create and initialize the estimators
     for (int i = 0; i < NUM_ESTIMATORS; i++) {
         int id = config_data->estimator_info[i][0];
-        // logger.printf("Init Estimator %d\n", id);
+        // logger.printf(LogDestination::Serial, "Init Estimator %d\n", id);
 
         if (id != -1) {
             init_estimator(id);
@@ -33,7 +33,7 @@ void EstimatorManager::init(CANManager* _can, const Config* _config_data, Sensor
 }
 
 void EstimatorManager::init_estimator(int estimator_id) {
-    if (!config_data) logger.println("CONFIG DATA IS NULL!!!!!");
+    if (!config_data) logger.println(LogDestination::Serial, "CONFIG DATA IS NULL!!!!!");
 
     switch (estimator_id) {
     case 1:

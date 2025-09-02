@@ -105,8 +105,8 @@ public:
 
     /// @brief function to deserialize the TOF sensor data
     void print() {
-        logger.println("TOF Sensor:");
-        logger.printf("\tDistance: %u mm\n", latest_distance);
+        logger.println(LogDestination::Serial, "TOF Sensor:");
+        logger.printf(LogDestination::Serial, "\tDistance: %u mm\n", latest_distance);
     }
 
     /// @brief funtion to return latest distance

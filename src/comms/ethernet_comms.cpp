@@ -8,18 +8,18 @@ bool EthernetComms::init(uint32_t data_rate) {
 	// begin the ethernet library and verify the status of the line
 	uint8_t ethernet_status = qn::Ethernet.begin(m_teensy_ip, m_teensy_netmask, m_teensy_gateway);
 	if (!ethernet_status) {
-		logger.printf("EthernetComms: Failed to start Ethernet!\n");
+		logger.printf(LogDestination::Serial, "EthernetComms: Failed to start Ethernet!\n");
 
 		// check if this teensy even has ethernet hardware support
 		qn::EthernetHardwareStatus hw_status = qn::Ethernet.hardwareStatus();
 		if (hw_status != qn::EthernetHardwareStatus::EthernetTeensy41)
-			logger.printf("Teensy Ethernet hardware not present!\n");
+			logger.printf(LogDestination::Serial, "Teensy Ethernet hardware not present!\n");
 
 		return false;
 	} else {
 	#ifdef COMMS_DEBUG
-		logger.printf("EthernetComms: Ethernet started!\n");
-		logger.printf("EthernetComms: IP: %u.%u.%u.%u:%u\n", qn::Ethernet.localIP()[0], qn::Ethernet.localIP()[1], qn::Ethernet.localIP()[2], qn::Ethernet.localIP()[3], m_teensy_port);
+		logger.printf(LogDestination::Serial, "EthernetComms: Ethernet started!\n");
+		logger.printf(LogDestination::Serial, "EthernetComms: IP: %u.%u.%u.%u:%u\n", qn::Ethernet.localIP()[0], qn::Ethernet.localIP()[1], qn::Ethernet.localIP()[2], qn::Ethernet.localIP()[3], m_teensy_port);
 	#endif
 	}
 
@@ -27,12 +27,12 @@ bool EthernetComms::init(uint32_t data_rate) {
 	uint8_t udp_status = m_udp_server.begin(m_teensy_port);
 	// this failing is extremely bad. Either the Teensy is out of memory, or the hardware is broken
 	if (!udp_status) {
-		logger.printf("EthernetComms: UDP server failed to start!\n");
+		logger.printf(LogDestination::Serial, "EthernetComms: UDP server failed to start!\n");
 
 		return false;
 	} else {
 	#ifdef COMMS_DEBUG
-		logger.printf("EthernetComms: UDP server started!\n");
+		logger.printf(LogDestination::Serial, "EthernetComms: UDP server started!\n");
 	#endif
 	}
 
@@ -59,8 +59,8 @@ bool EthernetComms::init(uint32_t data_rate) {
 		// this is generally a problem with the Linux side, not the Teensy
 		// (the ethernet cable might be disconnected or the Linux side is not running)
 		if (micros() - warmup_start >= m_warmup_timeout) {
-			logger.printf("EthernetComms: UDP server warmup failed!\n");
-			logger.printf("EthernetComms: Is the ethernet cable connected?\n");
+			logger.printf(LogDestination::Serial, "EthernetComms: UDP server warmup failed!\n");
+			logger.printf(LogDestination::Serial, "EthernetComms: Is the ethernet cable connected?\n");
 
 			return false;
 		}
@@ -68,7 +68,7 @@ bool EthernetComms::init(uint32_t data_rate) {
 	}
 
 	// ethernet is now setup and udp server is online
-	logger.printf("EthernetComms: Ethernet online!\n");
+	logger.printf(LogDestination::Serial, "EthernetComms: Ethernet online!\n");
 
 	// set the initialized flag
 	m_initialized = true;
@@ -96,7 +96,7 @@ bool EthernetComms::send_packet(EthernetPacket& packet) {
 	if (!send_status) {
 		// log the fail, this almost always happens when the udp server is not "warmed up"
 	#if defined(COMMS_DEBUG)
-		logger.printf("EthernetComms: Send fail\n");
+		logger.printf(LogDestination::Serial, "EthernetComms: Send fail\n");
 	#endif
 		return false;
 	} else {
@@ -122,7 +122,7 @@ bool EthernetComms::recv_packet(EthernetPacket& packet) {
 	} else if (current_buffer_size != Comms::ETHERNET_PACKET_MAX_SIZE) {
 		// half-read, log as a failure
 	#if defined(COMMS_DEBUG)
-		logger.printf("EthernetComms: Recv fail: %d\n", current_buffer_size);
+		logger.printf(LogDestination::Serial, "EthernetComms: Recv fail: %d\n", current_buffer_size);
 	#endif
 		return false;
 	} else {
@@ -131,7 +131,7 @@ bool EthernetComms::recv_packet(EthernetPacket& packet) {
 		// this should never happen, but sanity check
 		if (packet_data == NULL) {
 		#if defined(COMMS_DEBUG)
-			logger.printf("EthernetComms: Recv data NULL\n");
+			logger.printf(LogDestination::Serial, "EthernetComms: Recv data NULL\n");
 		#endif
 		}
 
@@ -159,7 +159,7 @@ void EthernetComms::check_connection() {
 	// if the last packet was received too long ago, timeout the connection
 	if (micros() - m_last_recv_time > m_connection_timeout) {
 		// this check ensures this is only printed once
-		if (m_connected) logger.printf("EthernetComms: Connection lost!\n");
+		if (m_connected) logger.printf(LogDestination::Serial, "EthernetComms: Connection lost!\n");
 		// mark the connection as disconnected
 		m_connected = false;
 	} else {

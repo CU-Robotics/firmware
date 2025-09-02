@@ -21,7 +21,7 @@ void StereoCamTrigger::track_exposures() {
   uint32_t delta = latest_exposure_timestamp - prev_timestamp;
 
   // print FPS estimate
-  logger.printf("fps: %f\n", 1/(float(delta) * 1.0e-6));
+  logger.printf(LogDestination::Serial, "fps: %f\n", 1/(float(delta) * 1.0e-6));
 #endif
 
   // reenable interrupts

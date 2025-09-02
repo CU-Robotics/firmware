@@ -61,31 +61,31 @@ void CANManager::configure(const float motor_info[CAN_MAX_MOTORS][4]) {
         switch (static_cast<MotorControllerType>(controller_type)) {
         case MotorControllerType::C610: {
             new_motor = new C610(motor_id, physical_id, bus_id, motor_type);
-            logger.printf("Creating C610 Motor: %d on bus %d\n", new_motor->get_id(), new_motor->get_bus_id(), new_motor->get_motor_type());
+            logger.printf(LogDestination::Serial, "Creating C610 Motor: %d on bus %d\n", new_motor->get_id(), new_motor->get_bus_id(), new_motor->get_motor_type());
             break;
         }
         case MotorControllerType::C620: {
             new_motor = new C620(motor_id, physical_id, bus_id, motor_type);
-            logger.printf("Creating C620 Motor: %d on bus %d\n", new_motor->get_id(), new_motor->get_bus_id(), new_motor->get_motor_type());
+            logger.printf(LogDestination::Serial, "Creating C620 Motor: %d on bus %d\n", new_motor->get_id(), new_motor->get_bus_id(), new_motor->get_motor_type());
             break;
         }
         case MotorControllerType::MG8016: {
             new_motor = new MG8016EI6(motor_id, physical_id, bus_id, motor_type);
-            logger.printf("Creating MG Motor: %d on bus %d\n", new_motor->get_id(), new_motor->get_bus_id(), new_motor->get_motor_type());
+            logger.printf(LogDestination::Serial, "Creating MG Motor: %d on bus %d\n", new_motor->get_id(), new_motor->get_bus_id(), new_motor->get_motor_type());
             break;
         }
         case MotorControllerType::GIM: {
             new_motor = new GIM(motor_id, physical_id, bus_id, motor_type);
-            logger.printf("Creating GIM Motor: %d on bus %d\n", new_motor->get_id(), new_motor->get_bus_id(), new_motor->get_motor_type());
+            logger.printf(LogDestination::Serial, "Creating GIM Motor: %d on bus %d\n", new_motor->get_id(), new_motor->get_bus_id(), new_motor->get_motor_type());
             break;
         }
         case MotorControllerType::SDC104: {
             new_motor = new SDC104(motor_id, physical_id, bus_id, motor_type);
-            logger.printf("Creating SDC104 Motor: %d on bus %d\n", new_motor->get_id(), new_motor->get_bus_id(), new_motor->get_motor_type());
+            logger.printf(LogDestination::Serial, "Creating SDC104 Motor: %d on bus %d\n", new_motor->get_id(), new_motor->get_bus_id(), new_motor->get_motor_type());
             break;
         }
         default: {
-            logger.printf("CANManager tried to create a motor of invalid type: %d\n", controller_type);
+            logger.printf(LogDestination::Serial, "CANManager tried to create a motor of invalid type: %d\n", controller_type);
             continue;   // continue in order to not call the later map insert since new_motor would be null
         }
         }
@@ -109,7 +109,7 @@ void CANManager::read() {
             // how would this happen?
             if (!distribute_msg(msg)) {
                 // - 1 on msg.bus to maintain bus IDs being 0-indexed
-                logger.printf("CANManager failed to distribute message with raw CAN ID: %.4x on bus: %x\n", msg.id, msg.bus - 1);
+                logger.printf(LogDestination::Serial, "CANManager failed to distribute message with raw CAN ID: %.4x on bus: %x\n", msg.id, msg.bus - 1);
             }
         }
     }
@@ -169,7 +169,7 @@ void CANManager::write() {
                 break;
             }
             default: {
-                logger.printf("CANManager tried to write to a motor of invalid type: %d\n", motor.second->get_controller_type());
+                logger.printf(LogDestination::Serial, "CANManager tried to write to a motor of invalid type: %d\n", motor.second->get_controller_type());
                 break;
             }
             }
@@ -196,7 +196,7 @@ void CANManager::issue_safety_mode() {
 void CANManager::write_motor_torque(uint32_t motor_gid, float torque) {
     // verify motor ID
     if (m_motor_map.count(motor_gid) == 0) {
-        logger.printf("CANManager tried to write to an invalid motor: %d\n", motor_gid);
+        logger.printf(LogDestination::Serial, "CANManager tried to write to an invalid motor: %d\n", motor_gid);
         return;
     }
 
@@ -209,7 +209,7 @@ void CANManager::write_motor_torque(uint32_t bus_id, uint32_t motor_id, float to
     Motor* motor = get_motor(bus_id, motor_id);
     if (!motor) {
     #ifdef CAN_MANAGER_DEBUG
-        logger.printf("CANManager tried to write to an invalid motor: %d on bus %d\n", motor_id, bus_id);
+        logger.printf(LogDestination::Serial, "CANManager tried to write to an invalid motor: %d on bus %d\n", motor_id, bus_id);
     #endif
         return;
     }
@@ -229,7 +229,7 @@ void CANManager::print_state() {
 void CANManager::print_motor_state(uint32_t motor_gid) {
     // verify motor ID
     if (m_motor_map.count(motor_gid) == 0) {
-        logger.printf("CANManager tried to print an invalid motor: %d\n", motor_gid);
+        logger.printf(LogDestination::Serial, "CANManager tried to print an invalid motor: %d\n", motor_gid);
         return;
     }
 
@@ -242,7 +242,7 @@ void CANManager::print_motor_state(uint32_t bus_id, uint32_t motor_id) {
     Motor* motor = get_motor(bus_id, motor_id);
     if (!motor) {
     #ifdef CAN_MANAGER_DEBUG
-        logger.printf("CANManager tried to print an invalid motor: %d on bus %d\n", motor_id, bus_id);
+        logger.printf(LogDestination::Serial, "CANManager tried to print an invalid motor: %d on bus %d\n", motor_id, bus_id);
     #endif
         return;
     }
@@ -254,7 +254,7 @@ void CANManager::print_motor_state(uint32_t bus_id, uint32_t motor_id) {
 Motor* CANManager::get_motor(uint32_t motor_gid) {
     // verify motor ID
     if (m_motor_map.count(motor_gid) == 0) {
-        logger.printf("CANManager tried to get an invalid motor: %d\n", motor_gid);
+        logger.printf(LogDestination::Serial, "CANManager tried to get an invalid motor: %d\n", motor_gid);
         return nullptr;
     }
 
@@ -272,7 +272,7 @@ Motor* CANManager::get_motor(uint32_t bus_id, uint32_t motor_id) {
 
     // could not find the motor
 #ifdef CAN_MANAGER_DEBUG
-    logger.printf("CANManager tried to get an invalid motor: %d on bus %d\n", motor_id, bus_id);
+    logger.printf(LogDestination::Serial, "CANManager tried to get an invalid motor: %d on bus %d\n", motor_id, bus_id);
 #endif
 
     return nullptr;
@@ -281,7 +281,7 @@ Motor* CANManager::get_motor(uint32_t bus_id, uint32_t motor_id) {
 MotorState CANManager::get_motor_state(uint32_t motor_gid) {
     // verify motor ID
     if (m_motor_map.count(motor_gid) == 0) {
-        logger.printf("CANManager tried to get the state of an invalid motor: %d\n", motor_gid);
+        logger.printf(LogDestination::Serial, "CANManager tried to get the state of an invalid motor: %d\n", motor_gid);
         return MotorState();
     }
 
@@ -294,7 +294,7 @@ MotorState CANManager::get_motor_state(uint32_t bus_id, uint32_t motor_id) {
     Motor* motor = get_motor(bus_id, motor_id);
     if (!motor) {
     #ifdef CAN_MANAGER_DEBUG
-        logger.printf("CANManager tried to get the state of an invalid motor: %d on bus %d\n", motor_id, bus_id);
+        logger.printf(LogDestination::Serial, "CANManager tried to get the state of an invalid motor: %d on bus %d\n", motor_id, bus_id);
     #endif
         return MotorState();
     }
@@ -342,7 +342,7 @@ void CANManager::init_motors() {
                 if (!motors_initialized[motor->get_global_id()]) {
                     motors_initialized[motor->get_global_id()] = true;
                 #ifdef CAN_MANAGER_DEBUG
-                    logger.printf("Motor %u on bus %u initialized!\n", motor->get_id(), motor->get_bus_id());
+                    logger.printf(LogDestination::Serial, "Motor %u on bus %u initialized!\n", motor->get_id(), motor->get_bus_id());
                 #endif
                 }
             }
@@ -353,7 +353,7 @@ void CANManager::init_motors() {
     // this is not fatal but should be investigated
     for (auto& motor : m_motor_map) {
         if (!motors_initialized[motor.second->get_global_id()]) {
-            logger.printf("Motor %u on bus %u failed to initialize!\n", motor.second->get_id(), motor.second->get_bus_id());
+            logger.printf(LogDestination::Serial, "Motor %u on bus %u failed to initialize!\n", motor.second->get_id(), motor.second->get_bus_id());
         }
     }
 }

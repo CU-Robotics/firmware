@@ -40,13 +40,13 @@ int SDC104::read(CAN_message_t& msg) {
             break;
         }
         default: {
-            logger.printf("Unknown error type: %d\n", static_cast<int>(m_error_request_type));
+            logger.printf(LogDestination::Serial, "Unknown error type: %d\n", static_cast<int>(m_error_request_type));
             break;
         }
         }
         break;
     }
-    case CMD_MIT_CONTROL: { logger.printf("MIT control command not implemented\n"); break; }
+    case CMD_MIT_CONTROL: { logger.printf(LogDestination::Serial, "MIT control command not implemented\n"); break; }
     case CMD_GET_ENCODER_ESTIMATES: {
         m_position_estimate = *((float*)&msg.buf[0]);
         m_velocity_estimate = *((float*)&msg.buf[4]);
@@ -93,7 +93,7 @@ int SDC104::read(CAN_message_t& msg) {
         break;
     }
     default: {
-        logger.printf("Unknown command byte: %d\n", cmd_byte);
+        logger.printf(LogDestination::Serial, "Unknown command byte: %d\n", cmd_byte);
         break;
     }
     }
@@ -152,7 +152,7 @@ void SDC104::write_motor_speed(float speed) {
 
 void SDC104::print_state() const {
     Motor::print_state();
-    logger.printf("Axis state: %d\n", static_cast<int>(m_heartbeat.axis_state));
+    logger.printf(LogDestination::Serial, "Axis state: %d\n", static_cast<int>(m_heartbeat.axis_state));
 }
 
 void SDC104::get_error(uint8_t error_type) {

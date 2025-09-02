@@ -91,9 +91,11 @@ int main() {
     Serial.begin(115200); // the serial monitor is actually always active (for debug use logger.println & tycmd)
     debug.begin(SerialUSB1);
 
+    Serial.println("Serial is open, im boutta log");
+
     print_logo();
 
-    logger.println("yo from teensy"); // TEST for logger HACK take this out BEFORE merging
+    logger.println(LogDestination::Serial, "yo from teensy"); // TEST for logger HACK take this out BEFORE merging
 
     // check to see if there is a crash report, and if so, print it repeatedly over Serial
     // in the future, we'll send this directly over comms

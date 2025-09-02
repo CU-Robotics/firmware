@@ -32,6 +32,6 @@ bool BuffEncoder::read() {
 
 
 void BuffEncoder::print() {
-    logger.printf("Buff Encoder:\n\t");
+    logger.printf(LogDestination::Serial, "Buff Encoder:\n\t");
     logger.println(m_angle);
 }

@@ -44,7 +44,7 @@ void SensorManager::init(const Config* config_data) {
     digitalWrite(ICM_CS, HIGH);
 
     // start SPI
-    logger.println("Starting SPI");
+    logger.println(LogDestination::Serial, "Starting SPI");
     SPI.begin();
 
     // initialize ICMs
@@ -147,7 +147,7 @@ D200LD14P* SensorManager::get_lidar_sensor(int index) {
 }
 
 void SensorManager::calibrate_imus() {
-    logger.println("Calibrating IMU's...");
+    logger.println(LogDestination::Serial, "Calibrating IMU's...");
     float sum_x = 0;
     float sum_y = 0;
     float sum_z = 0;
@@ -159,7 +159,7 @@ void SensorManager::calibrate_imus() {
         sum_z += icm_sensors[0]->get_gyro_Z();
     }
 
-    logger.printf("Calibrated offsets: %f, %f, %f\n", sum_x / NUM_IMU_CALIBRATION, sum_y / NUM_IMU_CALIBRATION, sum_z / NUM_IMU_CALIBRATION);
+    logger.printf(LogDestination::Serial, "Calibrated offsets: %f, %f, %f\n", sum_x / NUM_IMU_CALIBRATION, sum_y / NUM_IMU_CALIBRATION, sum_z / NUM_IMU_CALIBRATION);
     icm_sensors[0]->set_offsets(sum_x / NUM_IMU_CALIBRATION, sum_y / NUM_IMU_CALIBRATION, sum_z / NUM_IMU_CALIBRATION);
 }
 

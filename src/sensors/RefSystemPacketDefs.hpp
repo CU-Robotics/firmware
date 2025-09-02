@@ -91,10 +91,10 @@ struct FrameHeader {
 
     /// @brief Prints the FrameHeader
     void print() {
-        logger.printf("\tSOF: %x\n", SOF);
-        logger.printf("\tLength: %u\n", data_length);
-        logger.printf("\tSequence: %u\n", sequence);
-        logger.printf("\tCRC: %x\n", CRC);
+        logger.printf(LogDestination::Serial, "\tSOF: %x\n", SOF);
+        logger.printf(LogDestination::Serial, "\tLength: %u\n", data_length);
+        logger.printf(LogDestination::Serial, "\tSequence: %u\n", sequence);
+        logger.printf(LogDestination::Serial, "\tCRC: %x\n", CRC);
     }
 };
 
@@ -124,14 +124,14 @@ struct Frame {
 
     /// @brief Prints the Frame
     void print() {
-        logger.println("Read Frame:");
+        logger.println(LogDestination::Serial, "Read Frame:");
         header.print();
-        logger.printf("Command ID: %.2x\n", commandID);
+        logger.printf(LogDestination::Serial, "Command ID: %.2x\n", commandID);
         for (int i = 0; i < header.data_length; i++) {
-            logger.printf("%x ", data[i]);
+            logger.printf(LogDestination::Serial, "%x ", data[i]);
         }
         logger.println();
-        logger.printf("CRC: %.2x\n", CRC);
+        logger.printf(LogDestination::Serial, "CRC: %.2x\n", CRC);
     }
 };
 
@@ -161,11 +161,11 @@ struct GameStatus {
 
     /// @brief Prints the GameStatus packet
     void print() {
-        logger.println("GameStatus:");
-        logger.printf("\tCompetition Type: %u\n", competition_type);
-        logger.printf("\tCurrent Stage: %u\n", current_stage);
-        logger.printf("\tRound Time Remaining: %u\n", round_time_remaining);
-        logger.printf("\tUnix Time: %lu\n", unix_time);
+        logger.println(LogDestination::Serial, "GameStatus:");
+        logger.printf(LogDestination::Serial, "\tCompetition Type: %u\n", competition_type);
+        logger.printf(LogDestination::Serial, "\tCurrent Stage: %u\n", current_stage);
+        logger.printf(LogDestination::Serial, "\tRound Time Remaining: %u\n", round_time_remaining);
+        logger.printf(LogDestination::Serial, "\tUnix Time: %lu\n", unix_time);
     }
 
     /// @brief Fills in this struct with the data from a FrameData object
@@ -210,8 +210,8 @@ struct GameResult {
 
     /// @brief Prints the GameResult packet
     void print() {
-        logger.println("GameResult:");
-        logger.printf("\tWinner: %u\n", winner);
+        logger.println(LogDestination::Serial, "GameResult:");
+        logger.printf(LogDestination::Serial, "\tWinner: %u\n", winner);
     }
 
     /// @brief Fills in this struct with the data from a FrameData object
@@ -243,14 +243,14 @@ struct GameRobotHP {
 
     /// @brief Prints the GameRobotHP packet
     void print() {
-        logger.println("GameRobotHP:");
-        logger.println("Red Team:");
+        logger.println(LogDestination::Serial, "GameRobotHP:");
+        logger.println(LogDestination::Serial, "Red Team:");
         for (int i = 0; i < 8; i++) {
-            logger.printf("\tRobot %u: %u\n", i + 1, red_team_HP[i]);
+            logger.printf(LogDestination::Serial, "\tRobot %u: %u\n", i + 1, red_team_HP[i]);
         }
-        logger.println("Blue Team:");
+        logger.println(LogDestination::Serial, "Blue Team:");
         for (int i = 0; i < 8; i++) {
-            logger.printf("\tRobot %u: %u\n", i + 1, blue_team_HP[i]);
+            logger.printf(LogDestination::Serial, "\tRobot %u: %u\n", i + 1, blue_team_HP[i]);
         }
     }
 
@@ -282,8 +282,8 @@ struct EventData {
 
     /// @brief Prints the EventData packet
     void print() {
-        logger.println("EventData:");
-        logger.printf("\tSite Event Data: %.8x\n", site_event_data);
+        logger.println(LogDestination::Serial, "EventData:");
+        logger.printf(LogDestination::Serial, "\tSite Event Data: %.8x\n", site_event_data);
     }
 
     /// @brief Fills in this struct with the data from a FrameData object
@@ -317,10 +317,10 @@ struct ProjectileSupplierStatus {
 
     /// @brief Prints the ProjectileSupplierStatus packet
     void print() {
-        logger.println("ProjectileSupplierStatus:");
-        logger.printf("\tReloading Robot ID: %u\n", reloading_robot_ID);
-        logger.printf("\tSupplier Status: %u\n", supplier_status);
-        logger.printf("\tNum Projectiles Supplied: %u\n", num_projectiles_supplied);
+        logger.println(LogDestination::Serial, "ProjectileSupplierStatus:");
+        logger.printf(LogDestination::Serial, "\tReloading Robot ID: %u\n", reloading_robot_ID);
+        logger.printf(LogDestination::Serial, "\tSupplier Status: %u\n", supplier_status);
+        logger.printf(LogDestination::Serial, "\tNum Projectiles Supplied: %u\n", num_projectiles_supplied);
     }
 
     /// @brief Fills in this struct with the data from a FrameData object
@@ -357,10 +357,10 @@ struct RefereeWarning {
 
     /// @brief Prints the RefereeWarning packet
     void print() {
-        logger.println("RefereeWarning:");
-        logger.printf("\tLast Received Severity: %u\n", last_received_severity);
-        logger.printf("\tLast Received Robot ID: %u\n", last_received_robot_ID);
-        logger.printf("\tLast Num Violations: %u\n", last_num_violations);
+        logger.println(LogDestination::Serial, "RefereeWarning:");
+        logger.printf(LogDestination::Serial, "\tLast Received Severity: %u\n", last_received_severity);
+        logger.printf(LogDestination::Serial, "\tLast Received Robot ID: %u\n", last_received_robot_ID);
+        logger.printf(LogDestination::Serial, "\tLast Num Violations: %u\n", last_num_violations);
     }
 
     /// @brief Fills in this struct with the data from a FrameData object
@@ -400,11 +400,11 @@ struct DartStatus {
 
     /// @brief Prints the DartStatus packet
     void print() {
-        logger.println("DartStatus:");
-        logger.printf("\tTime Remaining: %u\n", time_remaining);
-        logger.printf("\tTarget Last Hit: %u\n", target_last_hit);
-        logger.printf("\tNum Recent Hits: %u\n", num_recent_hits);
-        logger.printf("\tCurrent Target: %u\n", current_target);
+        logger.println(LogDestination::Serial, "DartStatus:");
+        logger.printf(LogDestination::Serial, "\tTime Remaining: %u\n", time_remaining);
+        logger.printf(LogDestination::Serial, "\tTarget Last Hit: %u\n", target_last_hit);
+        logger.printf(LogDestination::Serial, "\tNum Recent Hits: %u\n", num_recent_hits);
+        logger.printf(LogDestination::Serial, "\tCurrent Target: %u\n", current_target);
     }
 
     /// @brief Fills in this struct with the data from a FrameData object
@@ -455,17 +455,17 @@ struct RobotPerformance {
 
     /// @brief Prints the RobotPerformance packet
     void print() {
-        logger.println("RobotPerformance:");
-        logger.printf("\tRobot ID: %u\n", robot_ID);
-        logger.printf("\tRobot Level: %u\n", robot_level);
-        logger.printf("\tCurrent HP: %u\n", current_HP);
-        logger.printf("\tMax HP: %u\n", max_HP);
-        logger.printf("\tBarrel Cooling Rate: %u\n", barrel_cooling_rate);
-        logger.printf("\tBarrel Heat Limit: %u\n", barrel_heat_limit);
-        logger.printf("\tChassis Power Limit: %u\n", chassis_power_limit);
-        logger.printf("\tGimbol Power Active: %u\n", gimbol_power_active);
-        logger.printf("\tChassis Power Active: %u\n", chassis_power_active);
-        logger.printf("\tShooter Power Active: %u\n", shooter_power_active);
+        logger.println(LogDestination::Serial, "RobotPerformance:");
+        logger.printf(LogDestination::Serial, "\tRobot ID: %u\n", robot_ID);
+        logger.printf(LogDestination::Serial, "\tRobot Level: %u\n", robot_level);
+        logger.printf(LogDestination::Serial, "\tCurrent HP: %u\n", current_HP);
+        logger.printf(LogDestination::Serial, "\tMax HP: %u\n", max_HP);
+        logger.printf(LogDestination::Serial, "\tBarrel Cooling Rate: %u\n", barrel_cooling_rate);
+        logger.printf(LogDestination::Serial, "\tBarrel Heat Limit: %u\n", barrel_heat_limit);
+        logger.printf(LogDestination::Serial, "\tChassis Power Limit: %u\n", chassis_power_limit);
+        logger.printf(LogDestination::Serial, "\tGimbol Power Active: %u\n", gimbol_power_active);
+        logger.printf(LogDestination::Serial, "\tChassis Power Active: %u\n", chassis_power_active);
+        logger.printf(LogDestination::Serial, "\tShooter Power Active: %u\n", shooter_power_active);
     }
 
     /// @brief Fills in this struct with the data from a FrameData object
@@ -514,14 +514,14 @@ struct RobotPowerHeat {
 
     /// @brief Prints the RobotPowerHeat packet
     void print() {
-        logger.println("RobotPowerHeat:");
-        logger.printf("\tChassis Voltage Output: %u\n", chassis_voltage_output);
-        logger.printf("\tChassis Current Output: %u\n", chassis_current_output);
-        logger.printf("\tChassis Power: %f\n", chassis_power);
-        logger.printf("\tBuffer Energy: %u\n", buffer_energy);
-        logger.printf("\tBarrel Heat 1 17mm: %u\n", barrel_heat_1_17mm);
-        logger.printf("\tBarrel Heat 2 17mm: %u\n", barrel_heat_2_17mm);
-        logger.printf("\tBarrel Heat 42mm: %u\n", barrel_heat_42mm);
+        logger.println(LogDestination::Serial, "RobotPowerHeat:");
+        logger.printf(LogDestination::Serial, "\tChassis Voltage Output: %u\n", chassis_voltage_output);
+        logger.printf(LogDestination::Serial, "\tChassis Current Output: %u\n", chassis_current_output);
+        logger.printf(LogDestination::Serial, "\tChassis Power: %f\n", chassis_power);
+        logger.printf(LogDestination::Serial, "\tBuffer Energy: %u\n", buffer_energy);
+        logger.printf(LogDestination::Serial, "\tBarrel Heat 1 17mm: %u\n", barrel_heat_1_17mm);
+        logger.printf(LogDestination::Serial, "\tBarrel Heat 2 17mm: %u\n", barrel_heat_2_17mm);
+        logger.printf(LogDestination::Serial, "\tBarrel Heat 42mm: %u\n", barrel_heat_42mm);
     }
 
     /// @brief Fills in this struct with the data from a FrameData object
@@ -561,10 +561,10 @@ struct RobotPosition {
 
     /// @brief Prints the RobotPosition packet
     void print() {
-        logger.println("RobotPosition:");
-        logger.printf("\tX: %f\n", x);
-        logger.printf("\tY: %f\n", y);
-        logger.printf("\tAngle: %f\n", angle);
+        logger.println(LogDestination::Serial, "RobotPosition:");
+        logger.printf(LogDestination::Serial, "\tX: %f\n", x);
+        logger.printf(LogDestination::Serial, "\tY: %f\n", y);
+        logger.printf(LogDestination::Serial, "\tAngle: %f\n", angle);
     }
 
     /// @brief Fills in this struct with the data from a FrameData object
@@ -605,12 +605,12 @@ struct RobotBuff {
 
     /// @brief Prints the RobotBuff packet
     void print() {
-        logger.println("RobotBuff:");
-        logger.printf("\tHP Recovery: %u\n", hp_recovery);
-        logger.printf("\tHeat Cooling: %u\n", heat_cooling);
-        logger.printf("\tDefence: %u\n", defence);
-        logger.printf("\tNegative Defence: %u\n", negative_defence);
-        logger.printf("\tAttack: %u\n", attack);
+        logger.println(LogDestination::Serial, "RobotBuff:");
+        logger.printf(LogDestination::Serial, "\tHP Recovery: %u\n", hp_recovery);
+        logger.printf(LogDestination::Serial, "\tHeat Cooling: %u\n", heat_cooling);
+        logger.printf(LogDestination::Serial, "\tDefence: %u\n", defence);
+        logger.printf(LogDestination::Serial, "\tNegative Defence: %u\n", negative_defence);
+        logger.printf(LogDestination::Serial, "\tAttack: %u\n", attack);
     }
 
     /// @brief Fills in this struct with the data from a FrameData object
@@ -645,9 +645,9 @@ struct AirSupportStatus {
 
     /// @brief Prints the AirSupportStatus packet
     void print() {
-        logger.println("AirSupportStatus:");
-        logger.printf("\tStatus: %u\n", status);
-        logger.printf("\tTime Remaining: %u\n", time_remaining);
+        logger.println(LogDestination::Serial, "AirSupportStatus:");
+        logger.printf(LogDestination::Serial, "\tStatus: %u\n", status);
+        logger.printf(LogDestination::Serial, "\tTime Remaining: %u\n", time_remaining);
     }
 
     /// @brief Fills in this struct with the data from a FrameData object
@@ -679,9 +679,9 @@ struct DamageStatus {
 
     /// @brief Prints the DamageStatus packet
     void print() {
-        logger.println("DamageStatus:");
-        logger.printf("\tArmor Plate ID: %u\n", armor_plate_ID);
-        logger.printf("\tDamage Type: %u\n", damage_type);
+        logger.println(LogDestination::Serial, "DamageStatus:");
+        logger.printf(LogDestination::Serial, "\tArmor Plate ID: %u\n", armor_plate_ID);
+        logger.printf(LogDestination::Serial, "\tDamage Type: %u\n", damage_type);
     }
 
     /// @brief Fills in this struct with the data from a FrameData object
@@ -717,11 +717,11 @@ struct LaunchingStatus {
 
     /// @brief Prints the LaunchingStatus packet
     void print() {
-        logger.println("LaunchingStatus:");
-        logger.printf("\tProjectile Type: %u\n", projectile_type);
-        logger.printf("\tLaunching Mechanism: %u\n", launching_mechanism);
-        logger.printf("\tLaunching Frequency: %u\n", launching_frequency);
-        logger.printf("\tInitial Speed: %f\n", initial_speed);
+        logger.println(LogDestination::Serial, "LaunchingStatus:");
+        logger.printf(LogDestination::Serial, "\tProjectile Type: %u\n", projectile_type);
+        logger.printf(LogDestination::Serial, "\tLaunching Mechanism: %u\n", launching_mechanism);
+        logger.printf(LogDestination::Serial, "\tLaunching Frequency: %u\n", launching_frequency);
+        logger.printf(LogDestination::Serial, "\tInitial Speed: %f\n", initial_speed);
     }
 
     /// @brief Fills in this struct with the data from a FrameData object
@@ -756,10 +756,10 @@ struct ProjectileAllowance {
 
     /// @brief Prints the ProjectileAllowance packet
     void print() {
-        logger.println("ProjectileAllowance:");
-        logger.printf("\tNum 17mm: %u\n", num_17mm);
-        logger.printf("\tNum 42mm: %u\n", num_42mm);
-        logger.printf("\tNum Gold: %u\n", num_gold);
+        logger.println(LogDestination::Serial, "ProjectileAllowance:");
+        logger.printf(LogDestination::Serial, "\tNum 17mm: %u\n", num_17mm);
+        logger.printf(LogDestination::Serial, "\tNum 42mm: %u\n", num_42mm);
+        logger.printf(LogDestination::Serial, "\tNum Gold: %u\n", num_gold);
     }
 
     /// @brief Fills in this struct with the data from a FrameData object
@@ -883,11 +883,11 @@ struct DartCommand {
 
     /// @brief Prints the DartCommand packet
     void print() {
-        logger.println("DartCommand:");
-        logger.printf("\tStatus: %u\n", status);
-        logger.printf("\tReserved: %u\n", reserved);
-        logger.printf("\tTime Remaining on Target Change: %u\n", time_remaining_on_target_change);
-        logger.printf("\tTime Remaining on Launch Confirm: %u\n", time_remaining_on_launch_confirm);
+        logger.println(LogDestination::Serial, "DartCommand:");
+        logger.printf(LogDestination::Serial, "\tStatus: %u\n", status);
+        logger.printf(LogDestination::Serial, "\tReserved: %u\n", reserved);
+        logger.printf(LogDestination::Serial, "\tTime Remaining on Target Change: %u\n", time_remaining_on_target_change);
+        logger.printf(LogDestination::Serial, "\tTime Remaining on Launch Confirm: %u\n", time_remaining_on_launch_confirm);
     }
 
     /// @brief Fills in this struct with the data from a FrameData object
@@ -935,17 +935,17 @@ struct GroundRobotPositions {
 
     /// @brief Prints the RobotPosition packet
     void print() {
-        logger.println("RobotPosition:");
-        logger.printf("\tHero X: %f\n", hero_x);
-        logger.printf("\tHero Y: %f\n", hero_y);
-        logger.printf("\tEngineer X: %f\n", engineer_x);
-        logger.printf("\tEngineer Y: %f\n", engineer_y);
-        logger.printf("\tStandard 3 X: %f\n", standard_3_x);
-        logger.printf("\tStandard 3 Y: %f\n", standard_3_y);
-        logger.printf("\tStandard 4 X: %f\n", standard_4_x);
-        logger.printf("\tStandard 4 Y: %f\n", standard_4_y);
-        logger.printf("\tStandard 5 X: %f\n", standard_5_x);
-        logger.printf("\tStandard 5 Y: %f\n", standard_5_y);
+        logger.println(LogDestination::Serial, "RobotPosition:");
+        logger.printf(LogDestination::Serial, "\tHero X: %f\n", hero_x);
+        logger.printf(LogDestination::Serial, "\tHero Y: %f\n", hero_y);
+        logger.printf(LogDestination::Serial, "\tEngineer X: %f\n", engineer_x);
+        logger.printf(LogDestination::Serial, "\tEngineer Y: %f\n", engineer_y);
+        logger.printf(LogDestination::Serial, "\tStandard 3 X: %f\n", standard_3_x);
+        logger.printf(LogDestination::Serial, "\tStandard 3 Y: %f\n", standard_3_y);
+        logger.printf(LogDestination::Serial, "\tStandard 4 X: %f\n", standard_4_x);
+        logger.printf(LogDestination::Serial, "\tStandard 4 Y: %f\n", standard_4_y);
+        logger.printf(LogDestination::Serial, "\tStandard 5 X: %f\n", standard_5_x);
+        logger.printf(LogDestination::Serial, "\tStandard 5 Y: %f\n", standard_5_y);
     }
 
     /// @brief Fills in this struct with the data from a FrameData object
@@ -1002,13 +1002,13 @@ struct RadarProgress {
 
     /// @brief Prints the RadarProgress packet
     void print() {
-        logger.println("RadarProgress:");
-        logger.printf("\tHero: %u\n", hero);
-        logger.printf("\tEngineer: %u\n", engineer);
-        logger.printf("\tStandard 3: %u\n", standard_3);
-        logger.printf("\tStandard 4: %u\n", standard_4);
-        logger.printf("\tStandard 5: %u\n", standard_5);
-        logger.printf("\tSentry: %u\n", sentry);
+        logger.println(LogDestination::Serial, "RadarProgress:");
+        logger.printf(LogDestination::Serial, "\tHero: %u\n", hero);
+        logger.printf(LogDestination::Serial, "\tEngineer: %u\n", engineer);
+        logger.printf(LogDestination::Serial, "\tStandard 3: %u\n", standard_3);
+        logger.printf(LogDestination::Serial, "\tStandard 4: %u\n", standard_4);
+        logger.printf(LogDestination::Serial, "\tStandard 5: %u\n", standard_5);
+        logger.printf(LogDestination::Serial, "\tSentry: %u\n", sentry);
     }
 
     /// @brief Fills in this struct with the data from a FrameData object
@@ -1040,8 +1040,8 @@ struct SentryDecision {
 
     /// @brief Prints the SentryDecision packet
     void print() {
-        logger.println("SentryDecision:");
-        logger.printf("\tSentry Info: %u\n", sentry_info);
+        logger.println(LogDestination::Serial, "SentryDecision:");
+        logger.printf(LogDestination::Serial, "\tSentry Info: %u\n", sentry_info);
     }
 
     /// @brief Fills in this struct with the data from a FrameData object
@@ -1068,8 +1068,8 @@ struct RadarDecision {
 
     /// @brief Prints the RadarDecision packet
     void print() {
-        logger.println("RadarDecision:");
-        logger.printf("\tRadar Info: %u\n", radar_info);
+        logger.println(LogDestination::Serial, "RadarDecision:");
+        logger.printf(LogDestination::Serial, "\tRadar Info: %u\n", radar_info);
     }
 
     /// @brief Fills in this struct with the data from a FrameData object
@@ -1106,7 +1106,7 @@ struct RobotInteraction {
     /// @brief Prints the RobotInteraction packet
     void print() {
         for (int i = 0; i < size; i++) {
-            logger.printf("%x ", data[i]);
+            logger.printf(LogDestination::Serial, "%x ", data[i]);
         }
         logger.println();
     }
@@ -1142,9 +1142,9 @@ struct CustomControllerRobot {
 
     /// @brief Prints the ControllerRobots packet
     void print() {
-        logger.println("ControllerRobots:");
+        logger.println(LogDestination::Serial, "ControllerRobots:");
         for (uint8_t i = 0; i < 30; i++) {
-            logger.printf("\tData[%u]: %u\n", i, data[i]);
+            logger.printf(LogDestination::Serial, "\tData[%u]: %u\n", i, data[i]);
         }
     }
 
@@ -1186,12 +1186,12 @@ struct SmallMapCommand {
 
     /// @brief Prints the SmallMapCommand packet
     void print() {
-        logger.println("SmallMapCommand:");
-        logger.printf("\tTarget Position X: %f\n", target_position_x);
-        logger.printf("\tTarget Position Y: %f\n", target_position_y);
-        logger.printf("\tCMD Keyboard: %u\n", cmd_keyboard);
-        logger.printf("\tTarget Robot ID: %u\n", target_robot_id);
-        logger.printf("\tCMD Source: %u\n", cmd_source);
+        logger.println(LogDestination::Serial, "SmallMapCommand:");
+        logger.printf(LogDestination::Serial, "\tTarget Position X: %f\n", target_position_x);
+        logger.printf(LogDestination::Serial, "\tTarget Position Y: %f\n", target_position_y);
+        logger.printf(LogDestination::Serial, "\tCMD Keyboard: %u\n", cmd_keyboard);
+        logger.printf(LogDestination::Serial, "\tTarget Robot ID: %u\n", target_robot_id);
+        logger.printf(LogDestination::Serial, "\tCMD Source: %u\n", cmd_source);
     }
 
     /// @brief Fills in this struct with the data from a FrameData object
@@ -1266,29 +1266,29 @@ struct KBMInteraction {
 
     /// @brief Prints the KBMInteraction packet
     void print() {
-        logger.println("KBMInteraction:");
-        logger.printf("\tMouse Speed X: %d\n", mouse_speed_x);
-        logger.printf("\tMouse Speed Y: %d\n", mouse_speed_y);
-        logger.printf("\tScroll Speed: %d\n", scroll_speed);
-        logger.printf("\tButton Left: %u\n", button_left);
-        logger.printf("\tButton Right: %u\n", button_right);
-        logger.printf("\tKey W: %u\n", key_w);
-        logger.printf("\tKey S: %u\n", key_s);
-        logger.printf("\tKey A: %u\n", key_a);
-        logger.printf("\tKey D: %u\n", key_d);
-        logger.printf("\tKey Shift: %u\n", key_shift);
-        logger.printf("\tKey Ctrl: %u\n", key_ctrl);
-        logger.printf("\tKey Q: %u\n", key_q);
-        logger.printf("\tKey E: %u\n", key_e);
-        logger.printf("\tKey R: %u\n", key_r);
-        logger.printf("\tKey F: %u\n", key_f);
-        logger.printf("\tKey G: %u\n", key_g);
-        logger.printf("\tKey Z: %u\n", key_z);
-        logger.printf("\tKey X: %u\n", key_x);
-        logger.printf("\tKey C: %u\n", key_c);
-        logger.printf("\tKey V: %u\n", key_v);
-        logger.printf("\tKey B: %u\n", key_b);
-        logger.printf("\tReserved: %u\n", reserved);
+        logger.println(LogDestination::Serial, "KBMInteraction:");
+        logger.printf(LogDestination::Serial, "\tMouse Speed X: %d\n", mouse_speed_x);
+        logger.printf(LogDestination::Serial, "\tMouse Speed Y: %d\n", mouse_speed_y);
+        logger.printf(LogDestination::Serial, "\tScroll Speed: %d\n", scroll_speed);
+        logger.printf(LogDestination::Serial, "\tButton Left: %u\n", button_left);
+        logger.printf(LogDestination::Serial, "\tButton Right: %u\n", button_right);
+        logger.printf(LogDestination::Serial, "\tKey W: %u\n", key_w);
+        logger.printf(LogDestination::Serial, "\tKey S: %u\n", key_s);
+        logger.printf(LogDestination::Serial, "\tKey A: %u\n", key_a);
+        logger.printf(LogDestination::Serial, "\tKey D: %u\n", key_d);
+        logger.printf(LogDestination::Serial, "\tKey Shift: %u\n", key_shift);
+        logger.printf(LogDestination::Serial, "\tKey Ctrl: %u\n", key_ctrl);
+        logger.printf(LogDestination::Serial, "\tKey Q: %u\n", key_q);
+        logger.printf(LogDestination::Serial, "\tKey E: %u\n", key_e);
+        logger.printf(LogDestination::Serial, "\tKey R: %u\n", key_r);
+        logger.printf(LogDestination::Serial, "\tKey F: %u\n", key_f);
+        logger.printf(LogDestination::Serial, "\tKey G: %u\n", key_g);
+        logger.printf(LogDestination::Serial, "\tKey Z: %u\n", key_z);
+        logger.printf(LogDestination::Serial, "\tKey X: %u\n", key_x);
+        logger.printf(LogDestination::Serial, "\tKey C: %u\n", key_c);
+        logger.printf(LogDestination::Serial, "\tKey V: %u\n", key_v);
+        logger.printf(LogDestination::Serial, "\tKey B: %u\n", key_b);
+        logger.printf(LogDestination::Serial, "\tReserved: %u\n", reserved);
     }
 
     /// @brief Fills in this struct with the data from a FrameData object
@@ -1340,10 +1340,10 @@ struct SmallMapRadarPosition {
 
     /// @brief Prints the SmallMapRadarPosition packet
     void print() {
-        logger.println("SmallMapRadarPosition:");
-        logger.printf("\tTarget ID: %u\n", target_ID);
-        logger.printf("\tTarget X: %f\n", target_x);
-        logger.printf("\tTarget Y: %f\n", target_y);
+        logger.println(LogDestination::Serial, "SmallMapRadarPosition:");
+        logger.printf(LogDestination::Serial, "\tTarget ID: %u\n", target_ID);
+        logger.printf(LogDestination::Serial, "\tTarget X: %f\n", target_x);
+        logger.printf(LogDestination::Serial, "\tTarget Y: %f\n", target_y);
     }
 
     /// @brief Fills in this struct with the data from a FrameData object
@@ -1388,14 +1388,14 @@ struct CustomControllerClient {
     
     /// @brief Prints the ControllerClient packet
     void print() {
-        logger.println("ControllerClient:");
-        logger.printf("\tKey 1: %u\n", key_1);
-        logger.printf("\tKey 2: %u\n", key_2);
-        logger.printf("\tMouse X: %u\n", mouse_x);
-        logger.printf("\tMouse Left: %u\n", mouse_left);
-        logger.printf("\tMouse Y: %u\n", mouse_y);
-        logger.printf("\tMouse Right: %u\n", mouse_right);
-        logger.printf("\tReserved: %u\n", reserved);
+        logger.println(LogDestination::Serial, "ControllerClient:");
+        logger.printf(LogDestination::Serial, "\tKey 1: %u\n", key_1);
+        logger.printf(LogDestination::Serial, "\tKey 2: %u\n", key_2);
+        logger.printf(LogDestination::Serial, "\tMouse X: %u\n", mouse_x);
+        logger.printf(LogDestination::Serial, "\tMouse Left: %u\n", mouse_left);
+        logger.printf(LogDestination::Serial, "\tMouse Y: %u\n", mouse_y);
+        logger.printf(LogDestination::Serial, "\tMouse Right: %u\n", mouse_right);
+        logger.printf(LogDestination::Serial, "\tReserved: %u\n", reserved);
     }
 
     /// @brief Fills in this struct with the data from a FrameData object
@@ -1439,19 +1439,19 @@ struct SmallMapSentryCommand {
 
     /// @brief Prints the SmallMapSentryPosition packet
     void print() {
-        logger.println("SmallMapSentryPosition:");
-        logger.printf("\tCommand: %u\n", command);
-        logger.printf("\tStart X: %u\n", start_x);
-        logger.printf("\tStart Y: %u\n", start_y);
-        logger.println("\tDelta X:");
+        logger.println(LogDestination::Serial, "SmallMapSentryPosition:");
+        logger.printf(LogDestination::Serial, "\tCommand: %u\n", command);
+        logger.printf(LogDestination::Serial, "\tStart X: %u\n", start_x);
+        logger.printf(LogDestination::Serial, "\tStart Y: %u\n", start_y);
+        logger.println(LogDestination::Serial, "\tDelta X:");
         for (uint8_t i = 0; i < 49; i++) {
-            logger.printf("\t\t%d\n", delta_x[i]);
+            logger.printf(LogDestination::Serial, "\t\t%d\n", delta_x[i]);
         }
-        logger.println("\tDelta Y:");
+        logger.println(LogDestination::Serial, "\tDelta Y:");
         for (uint8_t i = 0; i < 49; i++) {
-            logger.printf("\t\t%d\n", delta_y[i]);
+            logger.printf(LogDestination::Serial, "\t\t%d\n", delta_y[i]);
         }
-        logger.printf("\tSender ID: %u\n", sender_ID);
+        logger.printf(LogDestination::Serial, "\tSender ID: %u\n", sender_ID);
     }
 
     /// @brief Fills in this struct with the data from a FrameData object
@@ -1491,12 +1491,12 @@ struct SmallMapRobotData {
 
     /// @brief Prints the SmallMapRobotPosition packet
     void print() {
-        logger.println("SmallMapRobotPosition:");
-        logger.printf("\tSender ID: %u\n", sender_ID);
-        logger.printf("\tReceiver ID: %u\n", receiver_ID);
-        logger.println("\tData:");
+        logger.println(LogDestination::Serial, "SmallMapRobotPosition:");
+        logger.printf(LogDestination::Serial, "\tSender ID: %u\n", sender_ID);
+        logger.printf(LogDestination::Serial, "\tReceiver ID: %u\n", receiver_ID);
+        logger.println(LogDestination::Serial, "\tData:");
         for (uint8_t i = 0; i < 30; i++) {
-            logger.printf("\t\t%u\n", data[i]);
+            logger.printf(LogDestination::Serial, "\t\t%u\n", data[i]);
         }
     }
 

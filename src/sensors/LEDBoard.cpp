@@ -21,7 +21,7 @@ void LEDBoard::setup_LEDS() {
 
 // Blink LEDs
 void LEDBoard::blinkLED() {
-    logger.printf("in blinkled");
+    logger.printf(LogDestination::Serial, "in blinkled");
     // Toggle the LED on and off as fast as possible
     for (int i = 0; i < 10; i++) {
         prof.begin("blink");
