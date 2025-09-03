@@ -184,6 +184,7 @@ int main() {
     watchdog.start();
 
     logger.println(LogDestination::Serial, "Entering main loop...\n");
+    logger.println("Hello from logger, yo");
 
     // Main loop
     while (true) {
