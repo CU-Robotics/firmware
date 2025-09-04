@@ -15,39 +15,33 @@ Logger::Logger() : cursor(0), write_error(0) {
 
 // -------- Logger internal functions -----------------------------------------
 
-size_t Logger::write(const uint8_t* buffer, size_t size,
-                     LogDestination destination) {
-    // logger.printf(LogDestination::Serial, "%d %d\n", cursor, size);
-    // guard against cursor going beyond buffer size
-    if (cursor + size >= sizeof(log_buffer)) {
+size_t Logger::write(const uint8_t* buffer, size_t size, LogDestination destination) {
+    if (destination == LogDestination::Serial) {
+        // for now, lets EITHER write to comms or write to serial
+        // (to avoid maxing out log buffer during config serial prints)
+        Serial.write(buffer,size);
         return 0;
     }
-
-    // writes incoming content (buffer) to cursor position
-    memcpy(log_buffer + cursor, buffer, size);
-    char print_statement[sizeof(log_buffer)] = {0};  // temp variable
-
-    // print_statement captures only the most recent addition to log_buffer
-    memcpy(print_statement, log_buffer + cursor, size);
-
-    if (destination == LogDestination::Serial) {
-        // print to serial monitor
-        Serial.print(print_statement);
+    else {
+        // guard against cursor exceeding buffer size
+        if (cursor + size >= sizeof(log_buffer)) {
+            return 0;
+        }
+        // writes incoming buffer to cursor position
+        memcpy(log_buffer + cursor, buffer, size);
+        cursor += size;
+        return size;
     }
-
-    // sets cursor to current place in memory
-    cursor += size;
-    return size;
 }
 
-uint32_t Logger::grab_log_data(uint32_t size, uint8_t* dest) {
+size_t Logger::grab_log_data(size_t size, uint8_t* dest) {
     // ensure dest isn't a null pointer
     if (dest == nullptr) {
         return 0;
     }
 
     // make sure we don't copy more than the buffer size
-    uint32_t bytes_to_copy = std::min(cursor, size);
+    size_t bytes_to_copy = std::min(cursor, size);
 
     // copy internal buffer into *dest
     memcpy(dest, log_buffer, bytes_to_copy);

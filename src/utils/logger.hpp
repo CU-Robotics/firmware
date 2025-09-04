@@ -31,12 +31,12 @@ class Logger {
     /// @param size Number of bytes to copy.
     /// @param dest Pointer to the buffer where log data will be copied.
     /// @return Number of bytes copied.
-    uint32_t grab_log_data(uint32_t size, uint8_t* dest);
+    size_t grab_log_data(size_t size, uint8_t* dest);
 
    private:
     /// @brief Current number of bytes stored in the log (also serves as the
     /// current buffer position).
-    uint32_t cursor;
+    size_t cursor;
 
     /// @brief Main write function that copies a buffer to the internal log.
     /// @param buffer Pointer to the input buffer.

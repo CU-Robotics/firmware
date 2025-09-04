@@ -184,7 +184,8 @@ int main() {
     watchdog.start();
 
     logger.println(LogDestination::Serial, "Entering main loop...\n");
-    logger.println("Hello from logger, yo");
+    logger.println("[pre-main log (Default)]");
+    logger.println(LogDestination::Comms, "[pre-main log (Comms)]");
 
     // Main loop
     while (true) {
@@ -214,6 +215,8 @@ int main() {
         // print loopc every second to verify it is still alive
         if (loopc % 1000 == 0) {
             logger.println(LogDestination::Serial, loopc);
+            logger.printf("[loopc log: %d (Default)]\n", loopc); // HACK
+            logger.printf(LogDestination::Comms, "[loopc log: %d (Comms)]\n", loopc); // HACK
         }
 
         // manual controls on firmware
@@ -401,11 +404,14 @@ int main() {
         dr16_sendable.send_to_comms();
 
         // send logging to hive
-        Comms::Sendable<Comms::LoggingData> logging_sendable;
         char temp_log_buffer[LOGGER_BUFFER_SIZE] = {0};
-        logger.grab_log_data(LOGGER_BUFFER_SIZE, (uint8_t*)temp_log_buffer);
-        logging_sendable.data.deserialize(temp_log_buffer, LOGGER_BUFFER_SIZE);
-        logging_sendable.send_to_comms();
+        size_t bytes_copied = logger.grab_log_data(LOGGER_BUFFER_SIZE, (uint8_t*)temp_log_buffer);
+        if (bytes_copied > 0) {
+            Comms::Sendable<Comms::LoggingData> logging_sendable;
+            Serial.printf("logger bytes copied: %d\n", bytes_copied);
+            logging_sendable.data.deserialize(temp_log_buffer, bytes_copied);
+            logging_sendable.send_to_comms();
+        }
 
         comms_layer.run();
 
