@@ -65,6 +65,46 @@ class RefDrawer {
     /// @param layer layer to draw the circle on (default 0)
     void drawCircle(uint32_t x, uint32_t y, uint32_t radius, uint8_t color = 0, uint8_t layer = 0);
 
+    /// @brief Draw an ellipse
+    /// @param x x coordinate of the center
+    /// @param y y coordinate of the center
+    /// @param x1 length of x axis
+    /// @param y1 length of y axis
+    /// @param color color of the circle (default SIDE_COLOR)
+    /// @param layer layer to draw the circle on (default 0)
+    void drawEllipse(uint32_t x, uint32_t y, uint32_t x1, uint32_t y1, uint8_t color = 0, uint8_t layer = 0);
+
+    /// @brief Draw an arc
+    /// @param x x coordinate of the center
+    /// @param y y coordinate of the center
+    /// @param x1 length of x axis
+    /// @param y1 length of y axis
+    /// @param start_angle the initial angle clockwise away from the perfectly vertical position
+    /// @param end_angle the end of arc
+    /// NOTE: All angles are with clockwise reference to the 12 o'clock position
+    /// @param color color of the arc (default SIDE_COLOR)
+    /// @param layer layer to draw the circle on (default 0)
+    /// NOT DONE YET, HAVE TO FIGURE OUT WHAT DATA SHEET IS SAYING
+    void drawArc(uint32_t x, uint32_t y, uint32_t x1, uint32_t y1, uint32_t start_angle, uint32_t end_angle, uint8_t color = 0, uint8_t layer = 0);
+
+    /// @brief Draw an integer
+    /// @param x x coordinate of start point for textbox
+    /// @param y y coordinate of start point for tetbox
+    /// @param fontSize size of the printed text
+    /// @param integer the integer that will be printed
+    /// @param color color of the text (default SIDE_COLOR)
+    /// @param layer layer to draw the string on (default 0)
+    void drawInt(uint32_t x, uint32_t y, uint32_t fontSize, uint32_t integer, uint8_t color = 0, uint8_t layer = 0);
+
+    /// @brief Draw a character
+    /// @param x x coordinate of start point for textbox
+    /// @param y y coordinate of start point for tetbox
+    /// @param fontSize size of the printed text
+    /// @param charLength width of the printed character
+    /// @param color color of the text (default SIDE_COLOR)
+    /// @param layer layer to draw the string on (default 0)
+    void drawChar(uint32_t x, uint32_t y, uint32_t fontSize, uint32_t charLength, uint8_t color = 0, uint8_t layer = 0);
+
    private:
     /// @brief Available drawing commands
     enum DrawType {
