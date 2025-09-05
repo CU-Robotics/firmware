@@ -276,6 +276,11 @@ ifeq ($(wildcard $(BEAR_WRAPPER)),)
   BEAR_WRAPPER := /usr/lib/x86_64-linux-gnu/bear/wrapper
 endif
 
+# Run this target to generate compile_commands.json for clangd.
+# To make clangd parse our project correctly, configure extra args:
+# * --query-driver=/path/to/compiler so it trusts the cross-compiler in firmware/tools/compiler/arm-gnu-toolchain/bin
+# * --compile-args=-isystem./teensy4 and --compile-args=-isystem./libraries to silence errors in external headers
+# Add these in your IDE's clangd settings (e.g. .vscode/settings.json, .zed/settings.json, etc.).
 cdb:
 	@command -v bear >/dev/null || { echo "Error: bear not found in PATH"; exit 1; }
 	@test -x "$(BEAR_WRAPPER)" || { echo "Error: bear wrapper not found at $(BEAR_WRAPPER)"; exit 1; }
