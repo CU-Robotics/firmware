@@ -3,7 +3,6 @@
 #include "comms/comms_layer.hpp"
 #include "git_info.h"
 
-#include "sensors/buff_encoder.hpp"
 #include "utils/profiler.hpp"
 #include "sensors/StereoCamTrigger.hpp"
 #include "controls/estimator_manager.hpp"
@@ -12,7 +11,6 @@
 #include "sensors/ACS712.hpp"
 
 #include <TeensyDebug.h>
-#include "sensors/LEDBoard.hpp"
 #include "SensorManager.hpp"
 
 #include "utils/timing.hpp"
