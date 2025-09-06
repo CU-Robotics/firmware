@@ -1,5 +1,4 @@
 #include "SensorManager.hpp"
-#include "../utils/profiler.hpp"
 
 SensorManager::SensorManager() {
      // initialize refereree system
@@ -152,19 +151,11 @@ void SensorManager::calibrate_imus() {
     float sum_y = 0;
     float sum_z = 0;
 
-    float sum_accel_x = 0;
-    float sum_accel_y = 0;
-    float sum_accel_z = 0;
-
     for (int i = 0; i < NUM_IMU_CALIBRATION; i++) {
         icm_sensors[0]->read();
         sum_x += icm_sensors[0]->get_gyro_X();
         sum_y += icm_sensors[0]->get_gyro_Y();
         sum_z += icm_sensors[0]->get_gyro_Z();
-
-        sum_accel_x += icm_sensors[0]->get_accel_X();
-        sum_accel_y += icm_sensors[0]->get_accel_Y();
-        sum_accel_z += icm_sensors[0]->get_accel_Z();
     }
 
     Serial.printf("Calibrated offsets: %f, %f, %f\n", sum_x / NUM_IMU_CALIBRATION, sum_y / NUM_IMU_CALIBRATION, sum_z / NUM_IMU_CALIBRATION);

@@ -116,6 +116,7 @@ MAKEFLAGS += -j$(nproc)
 # Phony target to force a build every time
 .PHONY: build
 
+
 # Main build target; depends on the target executable and git scraper
 build: $(BUILD_DIR)/$(TARGET_EXEC)
 
@@ -256,3 +257,46 @@ help:
 	@echo "  monitor:      monitors any actively running firmware and displays serial output"
 	@echo "  kill:         stops any running firmware"
 	@echo "  restart:      restarts any running firmware"
+
+
+# --- Compile DB generation with Bear -----------------------------------------
+.PHONY: cdb
+
+# Directory to host wrapper symlinks
+BEAR_WRAPDIR ?= .bearwrap
+
+# Try to find Bear's wrapper path on common installs
+# 1) Homebrew (stable path via /opt, not versioned Cellar)
+BEAR_WRAPPER ?= $(shell brew --prefix bear 2>/dev/null)/lib/bear/wrapper
+# 2) Fallbacks for typical Linux layouts
+ifeq ($(wildcard $(BEAR_WRAPPER)),)
+  BEAR_WRAPPER := /usr/lib/bear/wrapper
+endif
+ifeq ($(wildcard $(BEAR_WRAPPER)),)
+  BEAR_WRAPPER := /usr/lib/x86_64-linux-gnu/bear/wrapper
+endif
+
+# Run this target to generate compile_commands.json for clangd.
+# To make clangd parse our project correctly, configure extra args:
+# * --query-driver=/path/to/compiler so it trusts the cross-compiler in firmware/tools/compiler/arm-gnu-toolchain/bin
+# * --compile-args=-isystem./teensy4 and --compile-args=-isystem./libraries to silence errors in external headers
+# Add these in your IDE's clangd settings (e.g. .vscode/settings.json, .zed/settings.json, etc.).
+cdb:
+	@command -v bear >/dev/null || { echo "Error: bear not found in PATH"; exit 1; }
+	@test -x "$(BEAR_WRAPPER)" || { echo "Error: bear wrapper not found at $(BEAR_WRAPPER)"; exit 1; }
+	@echo "[cdb] Preparing Bear wrapper links in $(BEAR_WRAPDIR)"
+	@rm -f compile_commands.json compile_commands.events.json
+	@mkdir -p $(BEAR_WRAPDIR)
+	# Create wrapper symlinks named like your cross-compilers:
+	@ln -sf "$(BEAR_WRAPPER)" "$(BEAR_WRAPDIR)/arm-none-eabi-g++"
+	@ln -sf "$(BEAR_WRAPPER)" "$(BEAR_WRAPDIR)/arm-none-eabi-gcc"
+	# Put toolchain bin in PATH so the wrapper can find the real compilers,
+	# and ask Bear to put $(BEAR_WRAPDIR) at the *front* of PATH for interception.
+	@echo "[cdb] Running build through Bear to capture commands"
+	@PATH="$(COMPILER_TOOLS_PATH):$$PATH" \
+	bear --wrapper-dir "$(BEAR_WRAPDIR)" -- \
+	  $(MAKE) -B build \
+	  COMPILER_CPP=arm-none-eabi-g++ \
+	  COMPILER_C=arm-none-eabi-gcc
+	@{ command -v jq >/dev/null && jq 'length' compile_commands.json; } >/dev/null 2>&1 || true
+	@echo "[cdb] Done: compile_commands.json generated"

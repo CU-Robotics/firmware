@@ -3,14 +3,14 @@
 #include "comms/comms_layer.hpp"
 #include "git_info.h"
 
-#include "sensors/buff_encoder.hpp"
 #include "utils/profiler.hpp"
 #include "sensors/StereoCamTrigger.hpp"
 #include "controls/estimator_manager.hpp"
 #include "controls/controller_manager.hpp"
+#include "sensors/dr16.hpp"
+#include "sensors/ACS712.hpp"
 
 #include <TeensyDebug.h>
-#include "sensors/LEDBoard.hpp"
 #include "SensorManager.hpp"
 
 #include "utils/timing.hpp"
@@ -66,7 +66,7 @@ void print_logo() {
         Serial.println("?G~      .?7~:   .^~~^.    .^:.                :G5");
         Serial.println(".5P^     7BYJ5YJ7^.                          .~5P^");
         Serial.println(" .JPJ!~!JP?  .:~?PP^            .:.    .^!JYY5Y!. ");
-        Serial.println("   :!???!:       5P.         .!Y5YYYJ?Y5Y?!^:.    ");
+        Serial.println("   :!?!?!:       5P.         .!Y5YYYJ?Y5Y?!^:.    ");
         Serial.println("                 7G7        7GY!. .:~!^.          ");
         Serial.println("                  JG!      :G5                    ");
         Serial.println("                   7PY!^^~?PY:                    ");

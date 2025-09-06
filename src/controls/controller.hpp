@@ -4,9 +4,7 @@
 #include "filters/pid_filter.hpp"
 #include "utils/timing.hpp"
 #include "sensors/can/can_manager.hpp"
-#include "sensors/RefSystem.hpp"
 #include "state.hpp"
-#include "sensors/ACS712.hpp"
 
 #define NUM_GAINS 24
 #define NUM_ROBOT_CONTROLLERS 12

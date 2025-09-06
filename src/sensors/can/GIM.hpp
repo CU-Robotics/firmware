@@ -75,7 +75,7 @@ public:
 
     /// @brief Write the motor's torque
     /// @param torque Torque from -1.0f to 1.0f. This gets clamped into this range and then scaled to the motor type's max torque.
-    void write_motor_torque(float torque);
+    void write_motor_torque(float torque) override;
 
     /// @brief Write the motor's speed
     /// @param speed Speed from -1.0f to 1.0f. This gets clamped into this range and then scaled to the individual motor type's max speed.
