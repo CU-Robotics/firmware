@@ -133,7 +133,7 @@ void RefDrawer::drawArc(uint32_t x, uint32_t y, uint32_t x1, uint32_t y1, uint32
     sendPacket(DrawType::DRAW_ONE_GRAPHIC, gd);
 }
 
-/*void drawInt(uint32_t x, uint32_t y, uint32_t fontSize, uint32_t integer, uint8_t color = 0, uint8_t layer = 0) {
+void RefDrawer::drawInt(uint32_t x, uint32_t y, uint32_t fontSize, uint32_t integer, uint8_t color, uint8_t layer) {
     GraphicData gd = {};
     uint32_t id = getNextGraphicId();
     gd.figure_name[0] = (id >> 16) & 0xFF;
@@ -151,7 +151,7 @@ void RefDrawer::drawArc(uint32_t x, uint32_t y, uint32_t x1, uint32_t y1, uint32
     gd.start_x = x;
     gd.start_y = y;
     sendPacket(DrawType::DRAW_ONE_GRAPHIC, gd);
-}*/
+}
 
 void RefDrawer::drawChar(uint32_t x, uint32_t y, uint32_t fontSize, uint32_t charLength, uint8_t color, uint8_t layer) {
     GraphicData gd = {};
