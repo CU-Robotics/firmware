@@ -1,4 +1,5 @@
 #include "profiler.hpp"
+#include <cstring>
 
 #ifdef PROFILE
 static DMAMEM Profiler::profiler_section_t sections[PROF_MAX_SECTIONS] = {0};
@@ -15,9 +16,9 @@ void Profiler::begin(const char* name) {
 #ifdef PROFILE
     //find section by name or first empty slot
     for(uint32_t i = 0; i < PROF_MAX_SECTIONS; i++) {
-        if(strcmp(sections[i].name, name) == 0 || sections[i].count == 0 && sections[i].overflow == 0) {
+        if(strcmp(sections[i].name, name) == 0 || (sections[i].count == 0 && sections[i].overflowed == 0)) {
 	    //start section
-	    sections[i].name = name;
+		strncpy(sections[i].name, name, PROF_MAX_NAME-1);
 	    if(sections[i].count < PROF_MAX_TIMES)
 	    {
 		sections[i].start_times[sections[i].count] = micros();
@@ -36,7 +37,7 @@ void Profiler::end(const char* name) {
 	if(strcmp(sections[i].name, name) == 0) {
 	    //end section
 	    if(sections[i].count < PROF_MAX_TIMES) {
-	        sections[i].end_times[count] = micros();
+	        sections[i].end_times[sections[i].count] = micros();
 	        sections[i].count++;
 		sections[i].started = 0;//label section as finished
 		
@@ -78,7 +79,7 @@ void Profiler::print(const char* name) {
 	    }
 
 	    //print values
-	    Serial.printf("Profiling for: %s\n Min: %u us\n Max: %u us\n Avg: %u us", name, min, max, sum/trueCount);
+	    Serial.printf("Profiling for: %s\n Min: %u us\n Max: %u us\n Avg: %u us\n", name, min, max, sum/trueCount);
 	    return;
 	}
     }
