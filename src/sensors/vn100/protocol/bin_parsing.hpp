@@ -15,7 +15,6 @@
 #pragma once
 
 #include "registers.hpp"
-#include <string.h>
 
 namespace vn
 {

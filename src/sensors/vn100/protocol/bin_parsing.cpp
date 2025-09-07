@@ -13,8 +13,6 @@
  */
 
 #include "bin_parsing.hpp"
-#include <stdio.h>
-
 namespace vn
 {
 

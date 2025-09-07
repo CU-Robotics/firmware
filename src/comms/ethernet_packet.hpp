@@ -1,6 +1,7 @@
 #pragma once
 
 #include "packet_header.hpp"    // for PacketHeader
+#include <string.h>             // for memset
 
 namespace Comms {
 
