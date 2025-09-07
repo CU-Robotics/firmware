@@ -70,7 +70,7 @@ void Profiler::print(const char* name) {
 		if(sections[i].started && j == sections[i].count)
 		    continue;
 
-		uint32_t delta = sections[i].end_times[j] - sections[i].end_times[j];
+		uint32_t delta = sections[i].end_times[j] - sections[i].start_times[j];
 		sum += delta;
 		if(delta < min)
 		    min = delta;
