@@ -13,7 +13,6 @@ EstimatorManager::~EstimatorManager() {
 }
 
 void EstimatorManager::init(CANManager* _can, const Config* _config_data, SensorManager* _sensor_manager) {
-
     // set can and config data pointers
     can = _can;
     config_data = _config_data;
