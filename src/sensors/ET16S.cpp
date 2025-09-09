@@ -110,7 +110,7 @@ void ET16S::print_format_bin(int channel_num) {
 }
 
 void ET16S::format_raw(uint8_t m_inputRaw[ET16S_PACKET_SIZE]) {
-	uint16_t c[22] = { 0 };
+	uint16_t c[23] = { 0 };
 
 	//Channel 1
 	c[0] = m_inputRaw[1];

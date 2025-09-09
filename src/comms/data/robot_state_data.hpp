@@ -5,9 +5,6 @@
 #elif defined(HIVE)
 #include "modules/comms/data/comms_data.hpp"    // for CommsData
 #endif
-
-#include <stdint.h>                             // uintN_t
-
 // TODO: replace with kyle3's new state struct
 /// @brief Structure for the full robot state including time
 struct TempRobotState : Comms::CommsData {
