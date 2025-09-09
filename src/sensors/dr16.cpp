@@ -209,7 +209,7 @@ float DR16::bounded_map(int value, int in_low, int in_high, int out_low, int out
 	// this is derived from sthe arduino map() function
 	value = max(min(value, in_high), in_low);
 
-	return (value - in_low) * (out_high - out_low) / (in_high - in_low) + out_low;
+	return (float)(value - in_low) * (out_high - out_low) / (float)(in_high - in_low) + out_low;
 }
 
 bool DR16::is_data_valid() {
