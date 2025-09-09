@@ -1,0 +1,4 @@
+<map id="ConfigSection" name="ConfigSection">
+<area shape="rect" id="node1" title="Section of a config packet." alt="" coords="27,80,129,107"/>
+<area shape="rect" id="node2" href="$structComms_1_1CommsData.html" title="base class for all data structs that want to be sent over comms." alt="" coords="5,5,151,32"/>
+</map>

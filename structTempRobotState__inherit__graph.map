@@ -1,0 +1,4 @@
+<map id="TempRobotState" name="TempRobotState">
+<area shape="rect" id="node1" title="Structure for the full robot state including time." alt="" coords="18,80,138,107"/>
+<area shape="rect" id="node2" href="$structComms_1_1CommsData.html" title="base class for all data structs that want to be sent over comms." alt="" coords="5,5,151,32"/>
+</map>
