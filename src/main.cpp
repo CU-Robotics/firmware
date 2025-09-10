@@ -380,8 +380,10 @@ int main() {
         // can.print_state();
 
         // //////// HACK test refdrawer
-        refdrawer.drawLine(0, 0, 500, 500);
-        refdrawer.drawLine(30, 30, 300, 300);
+        if (loopc % 10000 == 0 || loopc == 0) {
+            refdrawer.drawLine(0, 0, 500, 500);
+            refdrawer.drawLine(30, 30, 300, 300);
+        }
 
         // construct ref data packet
         CommsRefData ref_data = ref->get_data_for_comms();
