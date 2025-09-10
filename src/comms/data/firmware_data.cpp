@@ -6,7 +6,6 @@
 #include <stdexcept>                        // for std::runtime_error
 #include <doctest/doctest.h>                // for doctest
 #elif defined(FIRMWARE)
-#include "comms/comms_layer.hpp"            // for CommsLayer
 #include <cassert>                          // for assert
 #endif
 
