@@ -381,6 +381,7 @@ int main() {
 
         // //////// HACK test refdrawer
         if (loopc % 10000 == 0 || loopc == 0) {
+            Serial.printf("I'm drawing yo");
             refdrawer.drawLine(0, 0, 500, 500);
             refdrawer.drawLine(30, 30, 300, 300);
         }
