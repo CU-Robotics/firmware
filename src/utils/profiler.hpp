@@ -17,18 +17,18 @@ struct Profiler {
 
     // @brief Data structure for a profiling section
     struct profiler_section_t {
-	/// @brief the time lengths of each profiling section
-	uint32_t time_lengths[PROF_MAX_TIMES] = {0};
+        /// @brief the time lengths of each profiling section
+        uint32_t time_lengths[PROF_MAX_TIMES] = {0};
         /// @brief Start time for the current profiling section
-	uint32_t start_time = 0;
-	/// @brief Number of start/end times recorded
-	uint16_t count = 0;
-	/// @brief Label on if count has overflowed
-	uint8_t overflowed = 0;
-	/// @brief Label on if a begin() has been called and the corresponding end() hasn't yet
-	uint8_t started = 0;
-	/// @brief Name for each section
-	char name[PROF_MAX_NAME] = {0};
+        uint32_t start_time = 0;
+        /// @brief Number of start/end times recorded
+        uint16_t count = 0;
+        /// @brief Label on if count has overflowed
+        uint8_t overflowed = 0;
+        /// @brief Label on if a begin() has been called and the corresponding end() hasn't yet
+        uint8_t started = 0;
+        /// @brief Name for each section
+        char name[PROF_MAX_NAME] = {0};
     };
 
     /// @brief clear all profiling sections
