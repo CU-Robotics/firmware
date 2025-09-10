@@ -33,6 +33,8 @@ RefSystem* ref;
 ACS712 current_sensor;
 Comms::CommsLayer comms_layer;
 
+RefDrawer refdrawer;
+
 StereoCamTrigger stereoCamTrigger(60);
 
 ConfigLayer config_layer;
@@ -359,6 +361,10 @@ int main() {
         controller_manager.step(temp_reference, temp_state, temp_micro_state);
 
         // can.print_state();
+
+        // //////// HACK test refdrawer
+        refdrawer.drawLine(0, 0, 500, 500);
+        refdrawer.drawLine(30, 30, 300, 300);
 
         // construct ref data packet
         CommsRefData ref_data = ref->get_data_for_comms();
