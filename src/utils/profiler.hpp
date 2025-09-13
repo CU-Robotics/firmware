@@ -28,7 +28,7 @@ struct Profiler {
         /// @brief Label on if a begin() has been called and the corresponding end() hasn't yet
         uint8_t started = 0;
         /// @brief Name for each section
-        char name[PROF_MAX_NAME] = {0};
+        char name[PROF_MAX_NAME + 1] = {0};// +1 extra space for null terminator
     };
 
     /// @brief clear all profiling sections

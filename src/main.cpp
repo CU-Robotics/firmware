@@ -88,13 +88,6 @@ int main() {
     debug.begin(SerialUSB1);
    
     print_logo();
-    
-    for(uint_32t i = 0; i < 5100; i++) {
-	prof.begin("tester");
-	delayMicroseconds(random(150, 250));
-	prof.end("tester");
-    }
-    prof.print("tester");
 
     // check to see if there is a crash report, and if so, print it repeatedly over Serial
     // in the future, we'll send this directly over comms

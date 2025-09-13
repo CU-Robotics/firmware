@@ -14,13 +14,14 @@ void Profiler::clear() {
 
 void Profiler::begin(const char *name) {
 #ifdef PROFILE
-    //find section by name or first empty slot
+    // find section by name or first empty slot
     for(uint32_t i = 0; i < PROF_MAX_SECTIONS; i++) {
         if(strcmp(sections[i].name, name) == 0 || (sections[i].count == 0 && sections[i].overflowed == 0)) {
-            //start section
-            strncpy(sections[i].name, name, PROF_MAX_NAME-1);
+            // start section
+            strncpy(sections[i].name, name, PROF_MAX_NAME);
+            sections[i].name[PROF_MAX_NAME] = '\0';// ensure null termination
             sections[i].start_time = micros();
-            sections[i].started = 1;//label section as started
+            sections[i].started = 1;// label section as started
             return;
         }
     }
@@ -29,16 +30,16 @@ void Profiler::begin(const char *name) {
 
 void Profiler::end(const char *name) {
 #ifdef PROFILE
-    //find section by name
+    // find section by name
     for(uint32_t i = 0; i < PROF_MAX_SECTIONS; i++) {
         if(strcmp(sections[i].name, name) == 0) {
-            //end section
+            // end section
             if(sections[i].count < PROF_MAX_TIMES) {
                 sections[i].time_lengths[sections[i].count] = micros() - sections[i].start_time;
                 sections[i].count++;
-                sections[i].started = 0;//label section as finished
+                sections[i].started = 0;// label section as finished
                 
-                //if count is now at limit, reset count and label as overflowed
+                // if count is now at limit, reset count and label as overflowed
                 if(sections[i].count == PROF_MAX_TIMES)
                 {
                     sections[i].count = 0;
@@ -61,7 +62,7 @@ void Profiler::print(const char *name) {
     for (uint32_t i = 0; i < PROF_MAX_SECTIONS; i++) {
         if (strcmp(sections[i].name, name) == 0) {
             // calculate values
-            uint32_t trueCount = sections[i].overflowed ? PROF_MAX_SECTIONS : sections[i].count;
+            uint32_t trueCount = sections[i].overflowed ? PROF_MAX_TIMES : sections[i].count;
             for (uint32_t j = 0; j < trueCount; j++) {
                 // if the last run was started and not ended, ignore it
                 if (sections[i].started && j == sections[i].count)
@@ -77,7 +78,7 @@ void Profiler::print(const char *name) {
             
             // print values
             Serial.printf("Profiling for: %s\n Min: %u us\n Max: %u us\n Avg: %u us\n", name, min, max,
-                          sum / trueCount);
+                          (trueCount == 0 ? 0 : sum / trueCount));
             return;
         }
     }
