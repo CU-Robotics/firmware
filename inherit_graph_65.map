@@ -1,0 +1,10 @@
+<map id="Graphical Class Hierarchy" name="Graphical Class Hierarchy">
+<area shape="rect" id="node1" href="$classSensor.html" title="Base class for all sensors." alt="" coords="5,107,68,133"/>
+<area shape="rect" id="node2" href="$classBuffEncoder.html" title="Driver for the Buff&#45;Encoder." alt="" coords="116,5,208,32"/>
+<area shape="rect" id="node3" href="$classD200LD14P.html" title="class for LiDAR driver" alt="" coords="116,56,208,83"/>
+<area shape="rect" id="node4" href="$classIMUSensor.html" title="Abstract parent class for all IMUSensors, which give acceleration and gyroscope data." alt="" coords="118,107,206,133"/>
+<area shape="rect" id="node7" href="$classRevEncoder.html" title="the class for the Rev Through Bore Encoder(www.revrobotics.com/rev&#45;11&#45;1271/)" alt="" coords="116,157,208,184"/>
+<area shape="rect" id="node8" href="$classTOFSensor.html" title="A time of flight sensor to measure distance in millimeters." alt="" coords="117,208,207,235"/>
+<area shape="rect" id="node5" href="$classICM20649.html" title="Sensor access for an ICM20649 IMU Sensor. Child of the abstract IMUSensor class." alt="" coords="263,81,344,108"/>
+<area shape="rect" id="node6" href="$classLSM6DSOX.html" title="Sensor access for an LSM6DSOX IMU Sensor. Child of the abstract IMUSensor class." alt="" coords="256,132,351,159"/>
+</map>

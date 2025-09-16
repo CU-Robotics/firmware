@@ -1,0 +1,52 @@
+<map id="Comms::CommsLayer" name="Comms::CommsLayer">
+<area shape="rect" id="node1" title="The CommsLayer class is the top&#45;level class for the communication layer. Handles HID and Ethernet com..." alt="" coords="1063,1500,1213,1527"/>
+<area shape="rect" id="node2" href="$structComms_1_1HiveData.html" title="Megastruct for receiving data from Hive, filled on firmware." alt="" coords="748,199,875,225"/>
+<area shape="rect" id="node3" href="$structConfigSection.html" title="Section of a config packet." alt="" coords="433,40,535,67"/>
+<area shape="rect" id="node15" href="$structComms_1_1FirmwareData.html" title="Megastruct for receiving data from Firmware, filled on Hive." alt="" coords="734,523,889,549"/>
+<area shape="rect" id="node4" href="$structComms_1_1CommsData.html" title="base class for all data structs that want to be sent over comms." alt="" coords="21,419,166,445"/>
+<area shape="rect" id="node5" href="$structTargetState.html" title="Full robot state, in the form of TargetState." alt="" coords="439,131,529,157"/>
+<area shape="rect" id="node6" href="$structOverrideState.html" title="Full robot state, in the form of OverrideState." alt="" coords="433,199,535,225"/>
+<area shape="rect" id="node7" href="$structTestData.html" title="Data struct for testing purposes." alt="" coords="447,267,521,293"/>
+<area shape="rect" id="node8" href="$structBigTestData.html" title="Data struct for testing purposes." alt="" coords="437,340,531,367"/>
+<area shape="rect" id="node16" href="$structTOFSensorData.html" title="Structure for the TOF (Time&#45;of&#45;Flight) sensor." alt="" coords="426,391,542,417"/>
+<area shape="rect" id="node17" href="$structICMSensorData.html" title="Structure for the ICM sensor." alt="" coords="427,441,541,468"/>
+<area shape="rect" id="node18" href="$structTransmitterData.html" title="Structure for the Transmitter." alt="" coords="427,492,541,519"/>
+<area shape="rect" id="node19" href="$structBuffEncoderData.html" title="Structure for the buff encoder sensor." alt="" coords="425,543,543,569"/>
+<area shape="rect" id="node46" href="$structComms_1_1LoggingData.html" title=" " alt="" coords="411,593,557,620"/>
+<area shape="rect" id="node47" href="$structTempRobotState.html" title="Structure for the full robot state including time." alt="" coords="424,644,544,671"/>
+<area shape="rect" id="node48" href="$structRevSensorData.html" title="Structure for the Rev encoder sensor." alt="" coords="427,699,541,725"/>
+<area shape="rect" id="node49" href="$structEstimatedState.html" title="Full robot state, in the form of EstimatedState." alt="" coords="429,759,539,785"/>
+<area shape="rect" id="node9" href="$classComms_1_1PacketPayload.html" title="Constructs and stores the data part of a packet we want to send over a physical layer." alt="" coords="731,1433,891,1460"/>
+<area shape="rect" id="node10" href="$structComms_1_1HIDPacket.html" title="A complete HID packet, including the header and payload." alt="" coords="415,1561,553,1588"/>
+<area shape="rect" id="node50" href="$classComms_1_1HIDComms.html" title="The communications layer between Hive and Teensy." alt="" coords="741,1561,882,1588"/>
+<area shape="rect" id="node11" href="$structPacketHeader.html" title="Comms packet header struct." alt="" coords="41,1921,146,1948"/>
+<area shape="rect" id="node13" href="$structComms_1_1EthernetPacket.html" title="A complete ethernet packet, including the header and payload." alt="" coords="403,1680,565,1707"/>
+<area shape="rect" id="node12" href="$classComms_1_1EthernetComms.html" title="Ethernet Communications. This handles all comms between the Jetson and the Teensy via Ethernet." alt="" coords="728,1689,895,1716"/>
+<area shape="rect" id="node14" href="$structTimer.html" title="Timer class. Operates based on micros() and provides a simple interface for timing operations." alt="" coords="457,1731,511,1757"/>
+<area shape="rect" id="node20" href="$structRefData.html" title="Encompassing all read&#45;able packet structs of the Ref System." alt="" coords="449,1223,519,1249"/>
+<area shape="rect" id="node21" href="$structSmallMapCommand.html" title="Player client&#39;s small map interaction data." alt="" coords="24,640,163,667"/>
+<area shape="rect" id="node22" href="$structEventData.html" title="Site event data." alt="" coords="52,691,135,717"/>
+<area shape="rect" id="node23" href="$structGameStatus.html" title="Competition status data." alt="" coords="46,741,141,768"/>
+<area shape="rect" id="node24" href="$structProjectileAllowance.html" title="Projectile allowance data." alt="" coords="25,792,161,819"/>
+<area shape="rect" id="node25" href="$structDamageStatus.html" title="Damage status data." alt="" coords="39,843,147,869"/>
+<area shape="rect" id="node26" href="$structRobotPosition.html" title="Robot position data." alt="" coords="42,893,145,920"/>
+<area shape="rect" id="node27" href="$structSmallMapRadarPosition.html" title="Radar data received by player clients&#39; Small Maps." alt="" coords="13,944,174,971"/>
+<area shape="rect" id="node28" href="$structRFIDStatus.html" title="Robot RFID module status." alt="" coords="48,995,139,1021"/>
+<area shape="rect" id="node29" href="$structSentryDecision.html" title="Decision&#45;making data of Sentry Robot." alt="" coords="39,1045,148,1072"/>
+<area shape="rect" id="node30" href="$structGameRobotHP.html" title="Robot health data." alt="" coords="38,1096,149,1123"/>
+<area shape="rect" id="node31" href="$structSmallMapRobotData.html" title="Robot data received by player clients&#39; Small Map." alt="" coords="23,1147,164,1173"/>
+<area shape="rect" id="node32" href="$structCustomControllerRobot.html" title="Data about the interaction between the Custom Controller and robots." alt="" coords="15,1197,171,1224"/>
+<area shape="rect" id="node33" href="$structRobotPowerHeat.html" title="Real&#45;time chassis power and barrel heat data." alt="" coords="33,1248,154,1275"/>
+<area shape="rect" id="node34" href="$structSmallMapSentryCommand.html" title="Sentry data received by player clients&#39; Small Maps." alt="" coords="5,1299,181,1325"/>
+<area shape="rect" id="node35" href="$structRobotInteraction.html" title="Robot interaction data." alt="" coords="35,1349,152,1376"/>
+<area shape="rect" id="node36" href="$structRadarProgress.html" title="Radar&#45;marked progress data." alt="" coords="39,1400,147,1427"/>
+<area shape="rect" id="node37" href="$structRadarDecision.html" title="Decision&#45;making data of Radar." alt="" coords="40,1451,147,1477"/>
+<area shape="rect" id="node38" href="$structLaunchingStatus.html" title="Real&#45;time launching data." alt="" coords="33,1501,153,1528"/>
+<area shape="rect" id="node39" href="$structRobotPerformance.html" title="Robot performance system data." alt="" coords="28,1552,159,1579"/>
+<area shape="rect" id="node40" href="$structGameResult.html" title="Competition result data." alt="" coords="46,1603,141,1629"/>
+<area shape="rect" id="node41" href="$structDartStatus.html" title="Dart launching data." alt="" coords="51,1653,135,1680"/>
+<area shape="rect" id="node42" href="$structCustomControllerClient.html" title="Data about the interaction between the Custom Controller and player clients." alt="" coords="16,1704,171,1731"/>
+<area shape="rect" id="node43" href="$structAirSupportStatus.html" title="Air support time data." alt="" coords="33,1755,154,1781"/>
+<area shape="rect" id="node44" href="$structGroundRobotPositions.html" title="Ground Robot position data." alt="" coords="17,1805,169,1832"/>
+<area shape="rect" id="node45" href="$structDartCommand.html" title="Dart player&#39;s client command data." alt="" coords="41,1856,146,1883"/>
+</map>

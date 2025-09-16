@@ -1,0 +1,5 @@
+<map id="DR16" name="DR16">
+<area shape="rect" id="node1" title="Wrapper for reading and mapping input from the DR16&#45;Receiver and associated controller." alt="" coords="39,171,94,197"/>
+<area shape="rect" id="node2" href="$classTransmitter.html" title="A unifying interface for all transmitters." alt="" coords="23,95,111,121"/>
+<area shape="rect" id="node3" href="$structTransmitter_1_1Keys.html" title="Various keys that can be pressed on the transmitter." alt="" coords="5,5,128,32"/>
+</map>

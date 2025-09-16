@@ -1,0 +1,6 @@
+<map id="FlyWheelEstimator" name="FlyWheelEstimator">
+<area shape="rect" id="node1" title="Estimate the state of the flywheels as meters/second of balls exiting the barrel." alt="" coords="63,184,193,211"/>
+<area shape="rect" id="node2" href="$structEstimator.html" title="Parent estimator struct. All estimators should inherit from this." alt="" coords="5,95,83,121"/>
+<area shape="rect" id="node3" href="$structTimer.html" title="Timer class. Operates based on micros() and provides a simple interface for timing operations." alt="" coords="17,5,71,32"/>
+<area shape="rect" id="node4" href="$classCANManager.html" title="The overall manager for the CAN busses and motors." alt="" coords="106,95,206,121"/>
+</map>
