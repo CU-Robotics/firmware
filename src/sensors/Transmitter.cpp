@@ -30,7 +30,7 @@ TransmitterType Transmitter::who_am_i() {
 			Serial8.read();
 		}
 		// Fill raw input array
-		for (int i = 0; i < ET16S_PACKET_SIZE+1;i++) {
+		for (int i = 0; i < ET16S_PACKET_SIZE; i++) {
 			raw_input[i] = Serial8.read();
 		}
 
