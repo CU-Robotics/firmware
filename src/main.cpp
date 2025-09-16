@@ -3,6 +3,13 @@
 #include "comms/comms_layer.hpp"
 #include "git_info.h"
 
+#include "sensors/buff_encoder.hpp"
+#include "utils/profiler.hpp"
+
+#include "sensors/ET16S.hpp"
+#include "sensors/Transmitter.hpp"
+#include "sensors/d200.hpp"
+
 #include "controls/controller_manager.hpp"
 #include "controls/estimator_manager.hpp"
 #include "sensors/ACS712.hpp"
@@ -25,10 +32,12 @@
 extern "C" void reset_teensy(void);
 
 // Declare global objects
-DR16 dr16;
+
 CANManager can;
 RefSystem *ref;
 ACS712 current_sensor;
+Transmitter *transmitter = nullptr;
+
 Comms::CommsLayer comms_layer;
 
 StereoCamTrigger stereoCamTrigger(60);
@@ -103,11 +112,20 @@ int main() {
 
     // Execute setup functions
     pinMode(LED_BUILTIN, OUTPUT);
+    // Determine which transmitter is in use and instantiate its respective object.
+    // This allows for 'transmitter' to be used everywhere dr16 would be used
+    TransmitterType transmitter_type = transmitter->who_am_i();
+    if (transmitter_type == TransmitterType::DR16) {
+        transmitter = new DR16;
+    } else if (transmitter_type == TransmitterType::ET16S) {
+        transmitter = new ET16S;
+    }
 
     // initialize objects
     can.init();
-    dr16.init();
+    transmitter->init();
     comms_layer.init();
+
     ref = sensor_manager.get_ref();
 
     // Config config
@@ -147,8 +165,8 @@ int main() {
     // manual controls variables
     float vtm_pos_x = 0;
     float vtm_pos_y = 0;
-    float dr16_pos_x = 0;
-    float dr16_pos_y = 0;
+    float transmitter_pos_x = 0;
+    float transmitter_pos_y = 0;
     float pos_offset_x = 0;
     float pos_offset_y = 0;
     float feed = 0;
@@ -196,10 +214,9 @@ int main() {
         // read sensors
         sensor_manager.read();
 
-        // read CAN and DR16 -- These are kept out of sensor manager for safety
-        // reasons
+        // read CAN and Transmitter -- These are kept out of sensor manager for safety reasons
         can.read();
-        dr16.read();
+        transmitter->read();
 
         sensor_manager.send_sensor_data_to_comms();
 
@@ -217,46 +234,69 @@ int main() {
         }
 
         // manual controls on firmware
+        std::optional<Transmitter::Keys> transmitter_keys = transmitter->get_keys();
+        std::optional<int> mouse_x = transmitter->get_mouse_x();
+        std::optional<int> mouse_y = transmitter->get_mouse_y();
+        std::optional<bool> l_mouse_button = transmitter->get_l_mouse_button();
+        // std::optional<bool> r_mouse_button = transmitter->get_r_mouse_button();
+
         float delta = control_input_timer.delta();
-        dr16_pos_x += dr16.get_mouse_x() * 0.05 * delta;
-        dr16_pos_y += dr16.get_mouse_y() * 0.05 * delta;
+        if (mouse_x.has_value() && mouse_y.has_value()) {
+            transmitter_pos_x += mouse_x.value() * 0.05 * delta;
+            transmitter_pos_y += mouse_y.value() * 0.05 * delta;
+        }
 
         vtm_pos_x += ref->ref_data.kbm_interaction.mouse_speed_x * 0.05 * delta;
         vtm_pos_y += ref->ref_data.kbm_interaction.mouse_speed_y * 0.05 * delta;
 
         // clamp to pitch limits
-        if (dr16_pos_y < pitch_min) {
-            dr16_pos_y = pitch_min;
+        if (transmitter_pos_y < pitch_min) {
+            transmitter_pos_y = pitch_min;
         }
-        if (dr16_pos_y > pitch_max) {
-            dr16_pos_y = pitch_max;
+        if (transmitter_pos_y > pitch_max) {
+            transmitter_pos_y = pitch_max;
         }
 
         float chassis_vel_x = 0;
         float chassis_vel_y = 0;
         float chassis_pos_x = 0;
         float chassis_pos_y = 0;
+
         if (config->governor_types[0] == 2) { // if we should be controlling velocity
-            chassis_vel_x = dr16.get_l_stick_y() * 5.4 +
-                            (-ref->ref_data.kbm_interaction.key_w + ref->ref_data.kbm_interaction.key_s) * 2.5 +
-                            (-dr16.keys.w + dr16.keys.s) * 2.5;
-            chassis_vel_y = -dr16.get_l_stick_x() * 5.4 +
-                            (ref->ref_data.kbm_interaction.key_d - ref->ref_data.kbm_interaction.key_a) * 2.5 +
-                            (dr16.keys.d - dr16.keys.a) * 2.5;
+
+            chassis_vel_x = transmitter->get_l_stick_y() * 5.4 +
+                            (-ref->ref_data.kbm_interaction.key_w + ref->ref_data.kbm_interaction.key_s) * 2.5;
+
+            if (transmitter_keys.has_value()) {
+                chassis_vel_x += (-transmitter_keys.value().w + transmitter_keys.value().s) * 2.5;
+            }
+
+            chassis_vel_y = -transmitter->get_l_stick_x() * 5.4 +
+                            (ref->ref_data.kbm_interaction.key_d - ref->ref_data.kbm_interaction.key_a) * 2.5;
+
+            if (transmitter_keys.has_value()) {
+                chassis_vel_y += (transmitter_keys.value().d - transmitter_keys.value().a) * 2.5;
+            }
         } else if (config->governor_types[0] == 1) { // if we should be controlling position
-            chassis_pos_x = dr16.get_l_stick_x() * 2 + pos_offset_x;
-            chassis_pos_y = dr16.get_l_stick_y() * 2 + pos_offset_y;
+            chassis_pos_x = transmitter->get_l_stick_x() * 2 + pos_offset_x;
+            chassis_pos_y = transmitter->get_l_stick_y() * 2 + pos_offset_y;
         }
 
-        float chassis_spin = dr16.get_wheel() * 25;
-        float pitch_target = 1.57 + -dr16.get_r_stick_y() * 0.3 + dr16_pos_y + vtm_pos_y;
-        float yaw_target = -dr16.get_r_stick_x() * 1.5 - dr16_pos_x - vtm_pos_x;
-        float fly_wheel_target = (dr16.get_r_switch() == 1 || dr16.get_r_switch() == 3) ? 18 : 0; // m/s
-        float feeder_target =
-            (((dr16.get_l_mouse_button() || ref->ref_data.kbm_interaction.button_left) && dr16.get_r_switch() != 2) ||
-             dr16.get_r_switch() == 1)
-                ? 10
-                : 0;
+        float chassis_spin = transmitter->get_wheel() * 25;
+        float pitch_target = 1.57 + -transmitter->get_r_stick_y() * 0.3 + transmitter_pos_y + vtm_pos_y;
+        float yaw_target = -transmitter->get_r_stick_x() * 1.5 - transmitter_pos_x - vtm_pos_x;
+
+        float fly_wheel_target =
+            (transmitter->get_r_switch() == SwitchPos::FORWARD || transmitter->get_r_switch() == SwitchPos::MIDDLE)
+                ? 18
+                : 0; // m/s
+        // if the right switch is forward, and either the left mouse button is pressed or the right switch is not
+        // backward, set the feeder to something. Otherwise, set it to 0
+        float feeder_target = (((l_mouse_button.has_value() || ref->ref_data.kbm_interaction.button_left) &&
+                                transmitter->get_r_switch() != SwitchPos::BACKWARD) ||
+                               transmitter->get_r_switch() == SwitchPos::FORWARD)
+                                  ? 10
+                                  : 0;
         if (config->governor_types[6] == 1) {
             float dt2 = timer.delta();
             if (dt2 > 0.1)
@@ -268,10 +308,10 @@ int main() {
         } else {
             target_state[6][1] = feeder_target;
         }
-        // if (dr16.get_r_switch() == 1 && last_switch != 1) {
+        // if (transmitter->get_r_switch() == 1 && last_switch != 1) {
         //     feed++;
         // }
-        // last_switch = dr16.get_r_switch();
+        // last_switch = transmitter->get_r_switch();
         // set manual controls
         target_state[0][0] = chassis_pos_x;
         target_state[0][1] = chassis_vel_x;
@@ -286,7 +326,8 @@ int main() {
         target_state[7][0] = 1;
 
         // if the left switch is all the way down use Hive controls
-        if (dr16.get_l_switch() == 2) {
+
+        if (transmitter->get_l_switch() == SwitchPos::BACKWARD) {
             // hid_incoming.get_target_state(target_state);
             memcpy(target_state, comms_layer.get_hive_data().target_state.state, sizeof(target_state));
             last_feed = target_state[6][0];
@@ -299,7 +340,7 @@ int main() {
         }
 
         // when in teensy control mode reset hive toggle
-        if (dr16.get_l_switch() == 3) {
+        if (transmitter->get_l_switch() == SwitchPos::MIDDLE) {
             if (!hive_toggle || !safety_toggle) {
                 pos_offset_x = temp_state[0][0];
                 pos_offset_y = temp_state[1][0];
@@ -310,9 +351,10 @@ int main() {
             safety_toggle = true;
         }
 
-        // print dr16
-        // Serial.printf("DR16:\n\t");
-        // dr16.print();
+        // print transmitter
+
+        // Serial.printf("transmitter:\n\t");
+        // transmitter->print();
 
         // Serial.printf("Target state:\n");
         // for (int i = 0; i < 8; i++) {
@@ -320,14 +362,14 @@ int main() {
         //     target_state[i][1], target_state[i][2]);
         // }
 
-        // override temp state if needed. Dont override in teensy mode so the
-        // sentry doesnt move during inspection
-        if (comms_layer.get_hive_data().override_state.active && !(dr16.get_l_switch() == 3)) {
+        // override temp state if needed. Dont override in teensy mode so the sentry doesnt move during inspection
+        if (comms_layer.get_hive_data().override_state.active && !(transmitter->get_l_switch() == SwitchPos::MIDDLE)) {
             // clear the request
             comms_layer.get_hive_data().override_state.active = false;
 
             Serial.printf("Overriding state with hive state\n");
             memcpy(hive_state_offset, comms_layer.get_hive_data().override_state.state, sizeof(hive_state_offset));
+
             memcpy(temp_state, hive_state_offset, sizeof(hive_state_offset));
             override_request = true;
         }
@@ -336,10 +378,10 @@ int main() {
         estimator_manager.step(temp_state, temp_micro_state, override_request);
         override_request = false;
 
-        if ((feed - temp_state[6][0] > 2 && dr16.get_l_switch() == 3) ||
-            (comms_layer.get_hive_data().target_state.state[6][0] - temp_state[6][0] > 2 && dr16.get_l_switch() == 2)) {
-            Serial.printf("Feeder is lowkey jammed. current ball count: %f, "
-                          "feed: %f, hive target: %f\n",
+        if ((feed - temp_state[6][0] > 2 && transmitter->get_l_switch() == SwitchPos::MIDDLE) ||
+            (comms_layer.get_hive_data().target_state.state[6][0] - temp_state[6][0] > 2 &&
+             transmitter->get_l_switch() == SwitchPos::BACKWARD)) {
+            Serial.printf("Feeder is lowkey jammed. current ball count: %f, feed: %f, hive target: %f\n",
                           temp_state[6][0], feed, comms_layer.get_hive_data().target_state.state[6][0]);
             feed = temp_state[6][0] + 1;
             governor.set_reference_at_index(feed, 6, 0);
@@ -390,26 +432,15 @@ int main() {
         estimated_state.data.time = millis() / 1000.0;
         estimated_state.send_to_comms();
 
-        Comms::Sendable<DR16Data> dr16_sendable;
-        dr16_sendable.data.l_mouse_button = dr16.get_l_mouse_button();
-        dr16_sendable.data.r_mouse_button = dr16.get_r_mouse_button();
-        dr16_sendable.data.l_switch = dr16.get_l_switch();
-        dr16_sendable.data.r_switch = dr16.get_r_switch();
-        dr16_sendable.data.l_stick_x = dr16.get_l_stick_x();
-        dr16_sendable.data.l_stick_y = dr16.get_l_stick_y();
-        dr16_sendable.data.r_stick_x = dr16.get_r_stick_x();
-        dr16_sendable.data.r_stick_y = dr16.get_r_stick_y();
-        dr16_sendable.data.wheel = dr16.get_wheel();
-        dr16_sendable.data.mouse_x = dr16.get_mouse_x();
-        dr16_sendable.data.mouse_y = dr16.get_mouse_y();
-        dr16_sendable.data.keys.raw = *(uint16_t *)(dr16.get_raw() + 14);
-        dr16_sendable.send_to_comms();
+        Comms::Sendable<TransmitterData> transmitter_sendable = transmitter->get_transmitter_data();
+        transmitter_sendable.send_to_comms();
 
         comms_layer.run();
 
         bool is_slow_loop = false;
 
         // check whether this was a slow loop or not
+
         float dt = stall_timer.delta();
         if (dt > 0.002) {
             // zero the can bus just in case
@@ -436,9 +467,11 @@ int main() {
         last_gimbal_power = ref->ref_data.robot_performance.gimbol_power_active;
         bool gimbal_power_recently_turned_on = gimbal_power_timer.get_elapsed_micros_no_restart() < 3000000;
 
-        not_safety_mode = (dr16.is_connected() && (dr16.get_l_switch() == 2 || dr16.get_l_switch() == 3) &&
-                           config_layer.is_configured() && !is_slow_loop &&
-                           ref->ref_data.robot_performance.gimbol_power_active && !gimbal_power_recently_turned_on);
+        not_safety_mode =
+            (transmitter->is_connected() &&
+             (transmitter->get_l_switch() == SwitchPos::BACKWARD || transmitter->get_l_switch() == SwitchPos::MIDDLE) &&
+             config_layer.is_configured() && !is_slow_loop && ref->ref_data.robot_performance.gimbol_power_active &&
+             !gimbal_power_recently_turned_on);
         //  SAFETY MODE
         if (not_safety_mode) {
             // SAFETY OFF
@@ -471,6 +504,5 @@ int main() {
         // Keep the loop running at the desired rate
         loop_timer.delay_micros((int)(1E6 / (float)(LOOP_FREQ)));
     }
-
     return 0;
 }
