@@ -15,7 +15,7 @@ struct Profiler {
     /// @brief Constructor for the profiler.
     Profiler() { clear(); }
 
-    // @brief Data structure for a profiling section
+    /// @brief Data structure for a profiling section
     struct profiler_section_t {
         /// @brief the time lengths of each profiling section
         uint32_t time_lengths[PROF_MAX_TIMES] = {0};

@@ -96,7 +96,7 @@ int main() {
     Serial.begin(115200); // the serial monitor is actually always active (for
                           // debug use Serial.println & tycmd)
     debug.begin(SerialUSB1);
-   
+
     print_logo();
 
     // check to see if there is a crash report, and if so, print it repeatedly
