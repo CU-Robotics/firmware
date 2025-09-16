@@ -93,7 +93,7 @@ public:
 
 private:
     /// @brief Array to store the estimated state of the robot, used by sensors that adjust from the estimated state
-    float estimated_state[STATE_LEN][3] = { 0 };
+    float estimated_state[STATE_LEN][3] = { {0} };
 
     /// @brief Number of buff sensors
     int buff_sensor_count;
