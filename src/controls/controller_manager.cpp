@@ -64,6 +64,7 @@ void ControllerManager::step(float macro_reference[STATE_LEN][3], float macro_es
             if (config_data->controller_info[i][j + 1] < 0) break;
             // logger.printf(LogDestination::Serial, "\tMotor %d: %f\n", config_data->controller_info[i][j + 1], outputs[j]);
             actuator_write(config_data->controller_info[i][j + 1], outputs[j]);
+
         }
     }
 }

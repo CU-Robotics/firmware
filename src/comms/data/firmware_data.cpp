@@ -6,7 +6,6 @@
 #include <stdexcept>                        // for std::runtime_error
 #include <doctest/doctest.h>                // for doctest
 #elif defined(FIRMWARE)
-#include "comms/comms_layer.hpp"            // for CommsLayer
 #include <cassert>                          // for assert
 #endif
 
@@ -50,9 +49,9 @@ void FirmwareData::set_data(CommsData* data) {
 
         break;
     }
-    case TypeLabel::DR16Data: {
+    case TypeLabel::TransmitterData: {
         // place the data in the mega struct
-        dr16_data = *static_cast<DR16Data*>(data);
+        transmitter_data = *static_cast<TransmitterData*>(data);
         break;
     }
     case TypeLabel::BuffEncoderData: {
@@ -125,7 +124,7 @@ void FirmwareData::set_data(CommsData* data) {
 }
 
 }   // namespace Comms
-    
+
 #if defined(HIVE) 
 
 TEST_CASE("setting firmware data structs") {
@@ -196,10 +195,10 @@ TEST_CASE("setting firmware data structs") {
     firmware_data.set_data(&lidar_sensor_data);
     CHECK(firmware_data.lidars[1].back().lidar_speed == 55);
 
-    DR16Data dr16_data;
-    dr16_data.mouse_x = 55;
-    firmware_data.set_data(&dr16_data);
-    CHECK(firmware_data.dr16_data.mouse_x == 55);
+    TransmitterData transmitter_data;
+    transmitter_data.mouse_x = 55;
+    firmware_data.set_data(&transmitter_data);
+    CHECK(firmware_data.transmitter_data.mouse_x == 55);
 
     ConfigSection config_section;
     config_section.section_id = 55;

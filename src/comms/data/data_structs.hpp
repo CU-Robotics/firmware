@@ -7,7 +7,7 @@
 #include "modules/comms/data/comms_data.hpp"    // for CommsData
 #endif
 
-#include <stdint.h>                             // uintN_t
+#include <stdint.h>     // uintN_t
 
 #include "test_data.hpp"
 
@@ -21,7 +21,7 @@
 
 #include "lidar_data_packet_si.hpp"
 
-#include "dr16_data.hpp"
+#include "transmitter_data.hpp"
 
 #include "robot_state_data.hpp"
 
