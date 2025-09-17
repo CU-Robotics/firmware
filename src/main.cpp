@@ -107,7 +107,7 @@ int main() {
         while (1) {
             logger.println(LogDestination::Serial, CrashReport);
             logger.println(LogDestination::Serial, "\nReflash to clear CrashReport (and also please "
-                           "fix why it crashed)");
+                                                   "fix why it crashed)");
             delay(1000);
         }
     }
@@ -235,7 +235,7 @@ int main() {
         // print loopc every second to verify it is still alive
         if (loopc % 1000 == 0) {
             logger.println(LogDestination::Serial, loopc);
-            logger.printf("[loopc log: %d (Default)]\n", loopc); // HACK
+            logger.printf("[loopc log: %d (Default)]\n", loopc);                      // HACK
             logger.printf(LogDestination::Comms, "[loopc log: %d (Comms)]\n", loopc); // HACK
         }
 
@@ -387,7 +387,8 @@ int main() {
         if ((feed - temp_state[6][0] > 2 && transmitter->get_l_switch() == SwitchPos::MIDDLE) ||
             (comms_layer.get_hive_data().target_state.state[6][0] - temp_state[6][0] > 2 &&
              transmitter->get_l_switch() == SwitchPos::BACKWARD)) {
-            logger.printf(LogDestination::Serial, "Feeder is lowkey jammed. current ball count: %f, feed: %f, hive target: %f\n",
+            logger.printf(LogDestination::Serial,
+                          "Feeder is lowkey jammed. current ball count: %f, feed: %f, hive target: %f\n",
                           temp_state[6][0], feed, comms_layer.get_hive_data().target_state.state[6][0]);
             feed = temp_state[6][0] + 1;
             governor.set_reference_at_index(feed, 6, 0);
@@ -399,7 +400,8 @@ int main() {
             governor.set_reference(temp_state);
             // print temp state
             for (int i = 0; i < 8; i++) {
-                logger.printf(LogDestination::Serial, "\t%d: %f %f %f\n", i, temp_state[i][0], temp_state[i][1], temp_state[i][2]);
+                logger.printf(LogDestination::Serial, "\t%d: %f %f %f\n", i, temp_state[i][0], temp_state[i][1],
+                              temp_state[i][2]);
             }
             count_one++;
         }
@@ -420,7 +422,8 @@ int main() {
 
         // logger.printf(LogDestination::Serial, "Reference state:\n");
         // for (int i = 0; i < 8; i++) {
-        //     logger.printf(LogDestination::Serial, "\t%d: %f %f %f\n", i, temp_reference[i][0], temp_reference[i][1], temp_reference[i][2]);
+        //     logger.printf(LogDestination::Serial, "\t%d: %f %f %f\n", i, temp_reference[i][0], temp_reference[i][1],
+        //     temp_reference[i][2]);
         // }
 
         // generate motor outputs from controls
@@ -448,7 +451,7 @@ int main() {
 
         // send logging to hive
         char temp_log_buffer[LOGGER_BUFFER_SIZE] = {0};
-        size_t bytes_copied = logger.grab_log_data(LOGGER_BUFFER_SIZE, (uint8_t*)temp_log_buffer);
+        size_t bytes_copied = logger.grab_log_data(LOGGER_BUFFER_SIZE, (uint8_t *)temp_log_buffer);
         if (bytes_copied > 0) {
             Comms::Sendable<Comms::LoggingData> logging_sendable;
             logger.printf(LogDestination::Serial, "logger bytes copied: %d\n", bytes_copied);
@@ -523,7 +526,6 @@ int main() {
 
         // Keep the loop running at the desired rate
         loop_timer.delay_micros((int)(1E6 / (float)(LOOP_FREQ)));
-
     }
     return 0;
 }
