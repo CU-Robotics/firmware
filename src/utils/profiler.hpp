@@ -2,13 +2,13 @@
 #define PROFILER_H
 
 // Use this flag to toggle profiling globally.
-#define PROFILE
+// #define PROFILER
 
 #include <Arduino.h>
 
-#define PROF_MAX_SECTIONS 8   // max number of active profiling sections
+#define PROF_MAX_SECTIONS 4   // max number of active profiling sections
 #define PROF_MAX_NAME 16      // max length of section name
-#define PROF_MAX_TIMES (5000) // max number of start/end times per section
+#define PROF_MAX_TIMES (1000) // max number of start/end times per section
 
 /// @brief Object for profiling sections of code.
 struct Profiler {
@@ -28,7 +28,7 @@ struct Profiler {
         /// @brief Label on if a begin() has been called and the corresponding end() hasn't yet
         uint8_t started = 0;
         /// @brief Name for each section
-        char name[PROF_MAX_NAME + 1] = {0};// +1 extra space for null terminator
+        char name[PROF_MAX_NAME + 1] = {0}; // +1 extra space for null terminator
     };
 
     /// @brief clear all profiling sections
