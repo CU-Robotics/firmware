@@ -94,11 +94,11 @@ public:
 	
 	/// @brief used for spin wheel
 	/// @return wheel value
-	virtual float get_wheel();
+	virtual float get_wheel() { return 0; }
 	
 	/// @brief used to get input
 	/// @return pointer to input array
-	virtual float* get_input();
+	virtual float* get_input() { return 0; }
 	
 	/// @brief used to get raw input
 	/// @return pointer to raw input array
