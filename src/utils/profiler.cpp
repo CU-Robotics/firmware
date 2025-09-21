@@ -52,7 +52,7 @@ void Profiler::end(const char *name) {
 }
 
 void Profiler::print(const char *name) {
-#ifdef PROFILE
+#ifdef PROFILER
     uint32_t sum = 0;
     uint32_t min = UINT32_MAX;
     uint32_t max = 0;
