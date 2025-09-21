@@ -1,27 +1,27 @@
 #include "profiler.hpp"
 #include <cstring>
 
-#ifdef PROFILE
+#ifdef PROFILER
 static DMAMEM Profiler::profiler_section_t sections[PROF_MAX_SECTIONS] = {0};
 #endif
 
 void Profiler::clear() {
-#ifdef PROFILE
+#ifdef PROFILER
     for (auto &sec : sections)
         sec = profiler_section_t();
 #endif
 }
 
 void Profiler::begin(const char *name) {
-#ifdef PROFILE
+#ifdef PROFILER
     // find section by name or first empty slot
-    for(uint32_t i = 0; i < PROF_MAX_SECTIONS; i++) {
-        if(strcmp(sections[i].name, name) == 0 || (sections[i].count == 0 && sections[i].overflowed == 0)) {
+    for (uint32_t i = 0; i < PROF_MAX_SECTIONS; i++) {
+        if (strcmp(sections[i].name, name) == 0 || (sections[i].count == 0 && sections[i].overflowed == 0)) {
             // start section
             strncpy(sections[i].name, name, PROF_MAX_NAME);
-            sections[i].name[PROF_MAX_NAME] = '\0';// ensure null termination
+            sections[i].name[PROF_MAX_NAME] = '\0'; // ensure null termination
             sections[i].start_time = micros();
-            sections[i].started = 1;// label section as started
+            sections[i].started = 1; // label section as started
             return;
         }
     }
@@ -29,19 +29,18 @@ void Profiler::begin(const char *name) {
 }
 
 void Profiler::end(const char *name) {
-#ifdef PROFILE
+#ifdef PROFILER
     // find section by name
-    for(uint32_t i = 0; i < PROF_MAX_SECTIONS; i++) {
-        if(strcmp(sections[i].name, name) == 0) {
+    for (uint32_t i = 0; i < PROF_MAX_SECTIONS; i++) {
+        if (strcmp(sections[i].name, name) == 0) {
             // end section
-            if(sections[i].count < PROF_MAX_TIMES) {
+            if (sections[i].count < PROF_MAX_TIMES) {
                 sections[i].time_lengths[sections[i].count] = micros() - sections[i].start_time;
                 sections[i].count++;
-                sections[i].started = 0;// label section as finished
-                
+                sections[i].started = 0; // label section as finished
+
                 // if count is now at limit, reset count and label as overflowed
-                if(sections[i].count == PROF_MAX_TIMES)
-                {
+                if (sections[i].count == PROF_MAX_TIMES) {
                     sections[i].count = 0;
                     sections[i].overflowed = 1;
                 }
@@ -57,7 +56,7 @@ void Profiler::print(const char *name) {
     uint32_t sum = 0;
     uint32_t min = UINT32_MAX;
     uint32_t max = 0;
-    
+
     // find section by name
     for (uint32_t i = 0; i < PROF_MAX_SECTIONS; i++) {
         if (strcmp(sections[i].name, name) == 0) {
@@ -67,15 +66,15 @@ void Profiler::print(const char *name) {
                 // if the last run was started and not ended, ignore it
                 if (sections[i].started && j == sections[i].count)
                     continue;
-                
+
                 uint32_t delta = sections[i].time_lengths[j];
                 sum += delta;
-                if(delta < min)
+                if (delta < min)
                     min = delta;
-                if(delta > max)
+                if (delta > max)
                     max = delta;
             }
-            
+
             // print values
             Serial.printf("Profiling for: %s\n Min: %u us\n Max: %u us\n Avg: %u us\n", name, min, max,
                           (trueCount == 0 ? 0 : sum / trueCount));
