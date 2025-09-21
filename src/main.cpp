@@ -44,7 +44,9 @@ StereoCamTrigger stereoCamTrigger(60);
 
 ConfigLayer config_layer;
 
+#ifdef PROFILER
 Profiler prof;
+#endif
 
 SensorManager sensor_manager;
 EstimatorManager estimator_manager;
