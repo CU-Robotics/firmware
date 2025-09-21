@@ -121,6 +121,8 @@ int main() {
         transmitter = new ET16S;
     }
 
+    transmitter->init();
+
     //preflight checks for the transmitter, to make sure we aren't going to crash out 
     bool good_to_go = false;
     while (!good_to_go) { 
@@ -155,7 +157,6 @@ int main() {
 
     // initialize objects
     can.init();
-    transmitter->init();
     comms_layer.init();
 
     ref = sensor_manager.get_ref();
