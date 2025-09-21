@@ -148,10 +148,9 @@ int main() {
             continue;
         }
 
+        //if we made it here, everything is good
+        good_to_go = true;
     }
-
-    
-
 
 
     // initialize objects
