@@ -10,6 +10,8 @@
 #include <optional>                             // std::optional
 
 /// @brief Switch Position Enum
+//forward is the switch being pushed away from you
+//backward is the switch being pulled towards you
 enum class SwitchPos{
 	INVALID = 0,
 	FORWARD,

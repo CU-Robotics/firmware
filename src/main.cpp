@@ -121,6 +121,39 @@ int main() {
         transmitter = new ET16S;
     }
 
+    //preflight checks for the transmitter, to make sure we aren't going to crash out 
+    bool good_to_go = false;
+    while (!good_to_go) { 
+        transmitter->read();
+
+        //make sure there is no spin
+        if(transmitter->get_wheel() != 0) {
+            Serial.println("Preflight fail: Wheel must be 0");
+            delay(1000);
+            continue;
+        }
+
+        
+        //make sure flywheels and the feeder are off 
+        if(transmitter->get_r_switch() != SwitchPos::BACKWARD) {
+            Serial.println("Preflight fail: Right switch must be in backward position (shooter off)");
+            delay(1000);
+            continue;
+        }
+
+        //must be in safety mode at start
+        if(transmitter->get_safety_switch() != SwitchPos::FORWARD) {
+            Serial.println("Preflight fail: Safety switch must be in forward position (safety on)");
+            delay(1000);
+            continue;
+        }
+
+    }
+
+    
+
+
+
     // initialize objects
     can.init();
     transmitter->init();
@@ -217,6 +250,7 @@ int main() {
         // read CAN and Transmitter -- These are kept out of sensor manager for safety reasons
         can.read();
         transmitter->read();
+        
 
         sensor_manager.send_sensor_data_to_comms();
 
