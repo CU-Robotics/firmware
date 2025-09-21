@@ -1,0 +1,26 @@
+var searchData=
+[
+  ['b_1710',['b',['../structTransmitter_1_1Keys.html#a62852bb1821eed87cae178c6cf1c78bb',1,'Transmitter::Keys']]],
+  ['ball_5fcount_1711',['ball_count',['../structNewFeederEstimator.html#a8dfea401df2f65b066220d74d9f6128c',1,'NewFeederEstimator']]],
+  ['balls_5fper_5fsecond_5fcan_1712',['balls_per_second_can',['../structFeederEstimator.html#a64671ccb4f9e1f0e1676d164ca48ea57',1,'FeederEstimator']]],
+  ['balls_5fper_5fsecond_5fref_1713',['balls_per_second_ref',['../structFeederEstimator.html#a712c28d2da3bab2d27c08a64121d605b',1,'FeederEstimator']]],
+  ['barrel_5fcooling_5frate_1714',['barrel_cooling_rate',['../structRobotPerformance.html#a0244ac5efb0949a3ec28a28e4ecf990c',1,'RobotPerformance']]],
+  ['barrel_5fheat_5f1_5f17mm_1715',['barrel_heat_1_17mm',['../structRobotPowerHeat.html#a3a846ceb3a93eedd498f65452a73c739',1,'RobotPowerHeat']]],
+  ['barrel_5fheat_5f2_5f17mm_1716',['barrel_heat_2_17mm',['../structRobotPowerHeat.html#ac1a7eeb4d3fcc6d96f4b240c567d80ba',1,'RobotPowerHeat']]],
+  ['barrel_5fheat_5f42mm_1717',['barrel_heat_42mm',['../structRobotPowerHeat.html#acfda58a080b87a06e6d3b351ed937a7d',1,'RobotPowerHeat']]],
+  ['barrel_5fheat_5flimit_1718',['barrel_heat_limit',['../structRobotPerformance.html#ae0f97064bd470b30d0b2457ee2430214',1,'RobotPerformance']]],
+  ['big_5ftest_5fdata_1719',['big_test_data',['../structComms_1_1FirmwareData.html#a9e35b6bc9ea6fc2df3d68d3824331707',1,'Comms::FirmwareData::big_test_data()'],['../structComms_1_1HiveData.html#a51acfe14d9c53498d9bc7febb6811ccb',1,'Comms::HiveData::big_test_data()']]],
+  ['blah_1720',['blah',['../structBigTestData.html#afab1f49e7ecad9f8461f4ec3a65d71ef',1,'BigTestData']]],
+  ['blue_5fteam_5fhp_1721',['blue_team_HP',['../structGameRobotHP.html#a25b9334c3270f3aa4f4da853e87abb6c',1,'GameRobotHP']]],
+  ['buff_5fenc_5fpitch_1722',['buff_enc_pitch',['../structGimbalEstimator.html#afe9fe6a942de8f55daf08c36577322f7',1,'GimbalEstimator::buff_enc_pitch()'],['../structGimbalEstimatorNoOdom.html#a7db96045e20ceb1aaaa7da0432ecd990',1,'GimbalEstimatorNoOdom::buff_enc_pitch()']]],
+  ['buff_5fenc_5fyaw_1723',['buff_enc_yaw',['../structGimbalEstimator.html#a40f545e85f41cf5475bf636cd2a072f5',1,'GimbalEstimator::buff_enc_yaw()'],['../structGimbalEstimatorNoOdom.html#a3b8259b1a996cf0d86a905fa8bb76039',1,'GimbalEstimatorNoOdom::buff_enc_yaw()']]],
+  ['buff_5fencoder_5fsendables_1724',['buff_encoder_sendables',['../classSensorManager.html#a75e8eea96798bc74031ac2f18dfbcd66',1,'SensorManager']]],
+  ['buff_5fencoders_1725',['buff_encoders',['../classSensorManager.html#a81bcfb16e806dec680b264462b5b3f31',1,'SensorManager']]],
+  ['buff_5fsensor_5fcount_1726',['buff_sensor_count',['../classSensorManager.html#aace7b575514232c02a8c3c486754c24c',1,'SensorManager']]],
+  ['buff_5fsensor_5fdata_1727',['buff_sensor_data',['../classBuffEncoder.html#afc56134c1de109c269e40bca89971dfd',1,'BuffEncoder']]],
+  ['buffer_5fenergy_1728',['buffer_energy',['../structRobotPowerHeat.html#a4af2d0ac2c01ba55770c4bb5e0f1cc39',1,'RobotPowerHeat']]],
+  ['buffer_5findex_1729',['buffer_index',['../structRefSystem_1_1RefInternalData.html#a9cc97c33f37de8ddb3e6f1c9b0ebc920',1,'RefSystem::RefInternalData']]],
+  ['button_5fleft_1730',['button_left',['../structKBMInteraction.html#a2fff5d7839227f046dbe09197408cfda',1,'KBMInteraction']]],
+  ['button_5fright_1731',['button_right',['../structKBMInteraction.html#a394732f71739284fc4b22abf614446c7',1,'KBMInteraction']]],
+  ['bytes_5fsent_1732',['bytes_sent',['../classRefSystem.html#ad92325c3c559892f3a0d5835e91ee468',1,'RefSystem']]]
+];

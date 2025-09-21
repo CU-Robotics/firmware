@@ -1,0 +1,4 @@
+<map id="IMUSensor" name="IMUSensor">
+<area shape="rect" id="node1" title="Abstract parent class for all IMUSensors, which give acceleration and gyroscope data." alt="" coords="5,80,93,107"/>
+<area shape="rect" id="node2" href="$classSensor.html" title="Base class for all sensors." alt="" coords="18,5,81,32"/>
+</map>

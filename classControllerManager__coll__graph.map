@@ -1,0 +1,7 @@
+<map id="ControllerManager" name="ControllerManager">
+<area shape="rect" id="node1" title="Manage all controllers." alt="" coords="71,184,198,211"/>
+<area shape="rect" id="node2" href="$structConfig.html" title="struct to hold configuration data" alt="" coords="5,95,64,121"/>
+<area shape="rect" id="node3" href="$structController.html" title="Parent controller struct, all controllers should be based off of this." alt="" coords="92,95,169,121"/>
+<area shape="rect" id="node4" href="$structTimer.html" title="Timer class. Operates based on micros() and provides a simple interface for timing operations." alt="" coords="103,5,158,32"/>
+<area shape="rect" id="node5" href="$classCANManager.html" title="The overall manager for the CAN busses and motors." alt="" coords="193,95,293,121"/>
+</map>

@@ -1,0 +1,4 @@
+<map id="LidarDataPacketSI" name="LidarDataPacketSI">
+<area shape="rect" id="node1" title="data for a singular LiDAR packet (SI units)" alt="" coords="12,80,144,107"/>
+<area shape="rect" id="node2" href="$structComms_1_1CommsData.html" title="base class for all data structs that want to be sent over comms." alt="" coords="5,5,151,32"/>
+</map>

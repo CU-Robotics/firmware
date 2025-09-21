@@ -1,0 +1,9 @@
+<map id="Comms::HiveData" name="Comms::HiveData">
+<area shape="rect" id="node1" title="Megastruct for receiving data from Hive, filled on firmware." alt="" coords="233,171,360,197"/>
+<area shape="rect" id="node2" href="$structConfigSection.html" title="Section of a config packet." alt="" coords="5,81,108,108"/>
+<area shape="rect" id="node3" href="$structComms_1_1CommsData.html" title="base class for all data structs that want to be sent over comms." alt="" coords="227,5,372,32"/>
+<area shape="rect" id="node4" href="$structTargetState.html" title="Full robot state, in the form of TargetState." alt="" coords="133,81,223,108"/>
+<area shape="rect" id="node5" href="$structOverrideState.html" title="Full robot state, in the form of OverrideState." alt="" coords="248,81,351,108"/>
+<area shape="rect" id="node6" href="$structTestData.html" title="Data struct for testing purposes." alt="" coords="375,81,450,108"/>
+<area shape="rect" id="node7" href="$structBigTestData.html" title="Data struct for testing purposes." alt="" coords="475,81,569,108"/>
+</map>

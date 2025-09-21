@@ -1,0 +1,4 @@
+<map id="RevSensorData" name="RevSensorData">
+<area shape="rect" id="node1" title="Structure for the Rev encoder sensor." alt="" coords="21,80,135,107"/>
+<area shape="rect" id="node2" href="$structComms_1_1CommsData.html" title="base class for all data structs that want to be sent over comms." alt="" coords="5,5,151,32"/>
+</map>

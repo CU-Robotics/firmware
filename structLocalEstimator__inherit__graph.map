@@ -1,0 +1,4 @@
+<map id="LocalEstimator" name="LocalEstimator">
+<area shape="rect" id="node1" title="This estimator estimates our &quot;micro&quot; state which is stores all the motor velocities(in rad/s),..." alt="" coords="5,80,115,107"/>
+<area shape="rect" id="node2" href="$structEstimator.html" title="Parent estimator struct. All estimators should inherit from this." alt="" coords="21,5,99,32"/>
+</map>

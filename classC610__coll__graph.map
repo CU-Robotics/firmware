@@ -1,0 +1,5 @@
+<map id="C610" name="C610">
+<area shape="rect" id="node1" title="C610 controller driver. This manages generating CAN output messages and processing incomming CAN mess..." alt="" coords="23,171,75,197"/>
+<area shape="rect" id="node2" href="$classMotor.html" title="An abstract class holding common information for individual CAN&#45;capable motors." alt="" coords="21,95,76,121"/>
+<area shape="rect" id="node3" href="$structMotorState.html" title="Unified motor state." alt="" coords="5,5,92,32"/>
+</map>

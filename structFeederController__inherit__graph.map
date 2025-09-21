@@ -1,0 +1,4 @@
+<map id="FeederController" name="FeederController">
+<area shape="rect" id="node1" title="Controls the feeder." alt="" coords="5,80,123,107"/>
+<area shape="rect" id="node2" href="$structController.html" title="Parent controller struct, all controllers should be based off of this." alt="" coords="25,5,103,32"/>
+</map>

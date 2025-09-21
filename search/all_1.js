@@ -1,0 +1,27 @@
+var searchData=
+[
+  ['a_4',['a',['../structTransmitter_1_1Keys.html#ae7eb633ce3b6542aa4a0df9e5cec1ad5',1,'Transmitter::Keys']]],
+  ['accel_5',['accel',['../classIMUSensor.html#a24ab586cfaada528975cd5605bc36be4',1,'IMUSensor']]],
+  ['accel_5frate_6',['accel_rate',['../classICM20649.html#ac54d962dffbe03e34d7e02756458e293',1,'ICM20649']]],
+  ['accel_5fx_7',['accel_X',['../structICMSensorData.html#a46f0bea6fcfe26a7f152af5f02c656f8',1,'ICMSensorData::accel_X()'],['../classIMUSensor.html#a06f98b557655958f0d93b9eee3b02585',1,'IMUSensor::accel_X()']]],
+  ['accel_5fy_8',['accel_Y',['../structICMSensorData.html#a75dcb590a6280a70019e7c59371a266b',1,'ICMSensorData::accel_Y()'],['../classIMUSensor.html#a3deaeb7c25b4f14f20590238e039a77a',1,'IMUSensor::accel_Y()']]],
+  ['accel_5fz_9',['accel_Z',['../structICMSensorData.html#a4ab60086d4ccc188c2824360da85a25f',1,'ICMSensorData::accel_Z()'],['../classIMUSensor.html#a32a5166969c147826b7b661882c54f99',1,'IMUSensor::accel_Z()']]],
+  ['acs712_10',['ACS712',['../classACS712.html',1,'ACS712'],['../classACS712.html#a46c6065e01b10a7beeca8211fe2db67c',1,'ACS712::ACS712(int pin)'],['../classACS712.html#a4bee982a526c82166fd2a28e87381481',1,'ACS712::ACS712()']]],
+  ['active_11',['active',['../structOverrideState.html#a559cba03ecb820f4d25a730c21f7fecc',1,'OverrideState']]],
+  ['actuator_5fwrite_12',['actuator_write',['../classControllerManager.html#ad5fa05656f8b5bd7e3be677bc4f5adb7',1,'ControllerManager']]],
+  ['add_13',['add',['../classComms_1_1PacketPayload.html#a082e22a5be7598e5c0e318323563928b',1,'Comms::PacketPayload']]],
+  ['air_5fsupport_5fstatus_14',['air_support_status',['../structRefData.html#a508a25b75930694e9261bde09a3c156b',1,'RefData']]],
+  ['airsupportstatus_15',['AirSupportStatus',['../structAirSupportStatus.html',1,'']]],
+  ['all_5fdata_5fhas_5fbeen_5fserialized_16',['all_data_has_been_serialized',['../structComms_1_1LoggingData.html#af2a9dc783bab343707ef36a7be393761',1,'Comms::LoggingData']]],
+  ['angle_17',['angle',['../structRobotPosition.html#a235b5f2d8028856e7c9718d88fb53dcd',1,'RobotPosition']]],
+  ['angle_5fdiff_18',['angle_diff',['../structLidarDataPacketSI.html#a845e1aef6133e5ddd60f169dd8d06c2a',1,'LidarDataPacketSI']]],
+  ['append_5fdata_5ffrom_5fqueue_19',['append_data_from_queue',['../classComms_1_1PacketPayload.html#a8f479a570820d3900ad8292b0968c5a3',1,'Comms::PacketPayload']]],
+  ['armor_5fplate_5fid_20',['armor_plate_ID',['../structDamageStatus.html#af0607253de57780ddff6295a0c26826e',1,'DamageStatus']]],
+  ['assign_5fstates_21',['assign_states',['../classEstimatorManager.html#a68faa5ffab564471985a7d389db726e7',1,'EstimatorManager']]],
+  ['attack_22',['attack',['../structRobotBuff.html#acce7b7a47e837116c9ec42aafa5f0a94',1,'RobotBuff']]],
+  ['average_5fchannel_23',['average_channel',['../classET16S.html#a04665f857b3ff72841234dc1d3772165',1,'ET16S']]],
+  ['average_5fsample_5fcount_24',['AVERAGE_SAMPLE_COUNT',['../classET16S.html#a439b15af401435c488ebb31ae91020cd',1,'ET16S']]],
+  ['axis_5ferror_25',['axis_error',['../classSDC104.html#a71dd065c231d3c4d4c9c787f2204c1a3',1,'SDC104']]],
+  ['axis_5fstate_26',['axis_state',['../classSDC104.html#a54cad6e1387ab556533fe6f99ced0e2d',1,'SDC104']]],
+  ['axisstate_27',['AxisState',['../classSDC104.html#a00cb7e1d3ce14fb3089472ca8abea02a',1,'SDC104']]]
+];

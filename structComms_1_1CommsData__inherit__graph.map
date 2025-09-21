@@ -1,0 +1,18 @@
+<map id="Comms::CommsData" name="Comms::CommsData">
+<area shape="rect" id="node1" title="base class for all data structs that want to be sent over comms." alt="" coords="5,360,151,387"/>
+<area shape="rect" id="node2" href="$structBigTestData.html" title="Data struct for testing purposes." alt="" coords="225,5,319,32"/>
+<area shape="rect" id="node3" href="$structBuffEncoderData.html" title="Structure for the buff encoder sensor." alt="" coords="213,56,331,83"/>
+<area shape="rect" id="node4" href="$structComms_1_1LoggingData.html" title=" " alt="" coords="199,107,345,133"/>
+<area shape="rect" id="node5" href="$structCommsRefData.html" title="Ref data." alt="" coords="215,157,329,184"/>
+<area shape="rect" id="node6" href="$structConfigSection.html" title="Section of a config packet." alt="" coords="221,208,323,235"/>
+<area shape="rect" id="node7" href="$structEstimatedState.html" title="Full robot state, in the form of EstimatedState." alt="" coords="217,259,327,285"/>
+<area shape="rect" id="node8" href="$structICMSensorData.html" title="Structure for the ICM sensor." alt="" coords="215,309,329,336"/>
+<area shape="rect" id="node9" href="$structLidarDataPacketSI.html" title="data for a singular LiDAR packet (SI units)" alt="" coords="206,360,338,387"/>
+<area shape="rect" id="node10" href="$structOverrideState.html" title="Full robot state, in the form of OverrideState." alt="" coords="221,411,323,437"/>
+<area shape="rect" id="node11" href="$structRevSensorData.html" title="Structure for the Rev encoder sensor." alt="" coords="215,461,329,488"/>
+<area shape="rect" id="node12" href="$structTOFSensorData.html" title="Structure for the TOF (Time&#45;of&#45;Flight) sensor." alt="" coords="214,512,330,539"/>
+<area shape="rect" id="node13" href="$structTargetState.html" title="Full robot state, in the form of TargetState." alt="" coords="227,563,317,589"/>
+<area shape="rect" id="node14" href="$structTempRobotState.html" title="Structure for the full robot state including time." alt="" coords="212,613,332,640"/>
+<area shape="rect" id="node15" href="$structTestData.html" title="Data struct for testing purposes." alt="" coords="235,664,309,691"/>
+<area shape="rect" id="node16" href="$structTransmitterData.html" title="Structure for the Transmitter." alt="" coords="215,715,329,741"/>
+</map>

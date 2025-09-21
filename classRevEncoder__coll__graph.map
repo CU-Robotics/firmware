@@ -1,0 +1,6 @@
+<map id="RevEncoder" name="RevEncoder">
+<area shape="rect" id="node1" title="the class for the Rev Through Bore Encoder(www.revrobotics.com/rev&#45;11&#45;1271/)" alt="" coords="29,171,121,197"/>
+<area shape="rect" id="node2" href="$classSensor.html" title="Base class for all sensors." alt="" coords="5,81,68,108"/>
+<area shape="rect" id="node3" href="$structRevSensorData.html" title="Structure for the Rev encoder sensor." alt="" coords="92,81,205,108"/>
+<area shape="rect" id="node4" href="$structComms_1_1CommsData.html" title="base class for all data structs that want to be sent over comms." alt="" coords="76,5,221,32"/>
+</map>

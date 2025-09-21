@@ -1,0 +1,6 @@
+<map id="SwitcherController" name="SwitcherController">
+<area shape="rect" id="node1" title="Controller for the switcher, which is a fullstate controller with feedforward." alt="" coords="29,199,157,225"/>
+<area shape="rect" id="node2" href="$structController.html" title="Parent controller struct, all controllers should be based off of this." alt="" coords="5,95,83,121"/>
+<area shape="rect" id="node3" href="$structTimer.html" title="Timer class. Operates based on micros() and provides a simple interface for timing operations." alt="" coords="17,5,71,32"/>
+<area shape="rect" id="node4" href="$structPIDFilter.html" title="PIDF filter used in controls. Gains are configurable via K." alt="" coords="107,95,181,121"/>
+</map>

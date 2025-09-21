@@ -1,0 +1,4 @@
+<map id="Transmitter" name="Transmitter">
+<area shape="rect" id="node1" title="A unifying interface for all transmitters." alt="" coords="23,95,111,121"/>
+<area shape="rect" id="node2" href="$structTransmitter_1_1Keys.html" title="Various keys that can be pressed on the transmitter." alt="" coords="5,5,128,32"/>
+</map>
