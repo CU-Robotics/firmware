@@ -183,6 +183,22 @@ void PacketPayload::append_data_from_queue(std::queue<CommsData*>& queue) {
     while (!queue.empty() && remaining_data_size > 0) {
         CommsData* next_data = queue.front();
 
+        if (next_data->type_label == TypeLabel::LoggingData) {
+            auto *logging_data = static_cast<LoggingData *>(next_data);
+            bool finished_append = try_append_splittable_logging_data(logging_data);
+
+            if (finished_append) {
+                place_outgoing_data_in_mega_struct(next_data);
+                delete next_data;
+                queue.pop();
+            } else {
+                // could not append entire log this pass; try again next time
+                break;
+            }
+
+            continue;
+        }
+
         bool successful_append = try_append_data(next_data);
 
         if (successful_append) {
