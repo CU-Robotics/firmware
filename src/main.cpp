@@ -91,6 +91,12 @@ void print_logo() {
     }
 }
 
+#define DART
+#ifdef DART
+
+int main() {}
+
+#else
 // Master loop
 int main() {
     uint32_t loopc = 0; // Loop counter for heartbeat
@@ -508,3 +514,4 @@ int main() {
     }
     return 0;
 }
+#endif
