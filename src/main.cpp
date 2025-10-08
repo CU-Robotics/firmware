@@ -25,6 +25,8 @@
 #include "utils/timing.hpp"
 #include "utils/watchdog.hpp"
 
+#include <core_cm7.h>
+
 // Loop constants
 #define LOOP_FREQ 1000
 #define HEARTBEAT_FREQ 2
@@ -492,6 +494,11 @@ int main() {
             last_feed = feed;                          // reset last feed to the current state
             // Serial.printf("Can zero\n");
             safety_toggle = false; // reset hive toggle
+
+            //reset only during safety mode:
+            if (transmitter->get_trim_five) { //any value means on, none means off. (T5)
+                __NVIC_SystemReset(void); //reset the Teensy
+            }
         }
 
         // LED heartbeat -- linked to loop count to reveal slowdowns and
