@@ -14,7 +14,6 @@ int main() {
 
     can.init();
 
-    // id, bus ,
     float motor_info[CAN_MAX_MOTORS][4] = {};
     motor_info[0][0] = 1; // controller type c610
     motor_info[0][1] = 2; // physical id 2
@@ -22,11 +21,18 @@ int main() {
     motor_info[0][3] = 0; // motor type not used
     can.configure(motor_info);
 
+    float max_torque = 0;
     while (true) {
-        can.write_motor_torque(1, 2, 0.3f);
+        can.write_motor_torque(1, 2, 1.0f);
         can.write();
         can.read();
-        delay(300);
+
+        MotorState state = can.get_motor_state(1, 2);
+        if (state.torque > max_torque) {
+            max_torque = state.torque;
+        }
+        Serial.printf("Max Torque: %f\n", max_torque);
+        delay(5);
     }
 
     return 0;
