@@ -25,8 +25,6 @@
 #include "utils/timing.hpp"
 #include "utils/watchdog.hpp"
 
-#include <core_cm7.h>
-
 // Loop constants
 #define LOOP_FREQ 1000
 #define HEARTBEAT_FREQ 2
@@ -496,8 +494,8 @@ int main() {
             safety_toggle = false; // reset hive toggle
 
             //reset only during safety mode:
-            if (transmitter->get_trim_five) { //any value means on, none means off. (T5)
-                __NVIC_SystemReset(void); //reset the Teensy
+            if (transmitter->get_trim_five()) { //any value means on, none means off. (T5)
+                reset_teensy(); //reset the Teensy
             }
         }
 
