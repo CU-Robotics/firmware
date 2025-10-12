@@ -3,6 +3,7 @@
 #include "comms/comms_layer.hpp"
 #include "git_info.h"
 
+#include "motor.hpp"
 #include "sensors/buff_encoder.hpp"
 #include "utils/profiler.hpp"
 
@@ -24,6 +25,8 @@
 #include "comms/data/sendable.hpp"
 #include "utils/timing.hpp"
 #include "utils/watchdog.hpp"
+
+#include "sensors/Magnet.hpp"
 
 // Loop constants
 #define LOOP_FREQ 1000
@@ -92,9 +95,9 @@ void print_logo() {
 }
 
 // Uncomment one of these to select a main()
-#define DART
+// #define DART
 // #define DART_TEST
-// #define LAUNCHER
+#define LAUNCHER
 // #define CAMERA_TEST
 
 #ifdef DART
@@ -109,7 +112,7 @@ int main() {
     imu.init();
     dartcam.init();
 
-    // TODO find a better way to controll states?
+    // TODO find a better way to control states?
     bool rail = true;
     bool level = false;
     bool guided = false;
@@ -226,7 +229,49 @@ int main() {
 }
 
 #elif defined(LAUNCHER)
-// launcher main
+int main() {
+    can.init();
+    Magnet mag;
+    int loop_counter = 0;
+
+    float motor_info[CAN_MAX_MOTORS][4] = {};
+    int motor_id = 2;
+    int bus_id = 1;
+
+    motor_info[0][0] = (float)MotorControllerType::C620; // controller type c620
+    motor_info[0][1] = motor_id; // check flashes on motor before test
+    motor_info[0][2] = bus_id; // bus 1, only one bus so probably this one
+    motor_info[0][3] = 0; // motor type not used
+
+    //set up config
+    can.configure(motor_info);
+
+    while (true) {
+        loop_counter++;
+        mag.on();
+        can.write_motor_torque(bus_id, motor_id, 0.3f);
+        can.write();
+
+        can.read();
+        MotorState state = can.get_motor_state(bus_id, motor_id);
+        float speed_state = state.speed;
+        float torque_state = state.torque;
+
+        Serial.printf("Speed is: %f\n", speed_state);
+        Serial.printf("Torque is: %f\n", torque_state);
+
+        delay(5);
+        
+        if (loop_counter < 200) {
+            if (speed_state < 5) {
+            break;
+        }
+        }
+    }
+
+    mag.off();
+    can.write_motor_torque(bus_id, motor_id, 0.0f);
+}
 
 #elif defined(CAMERA_TEST)
 // Prints a frame to serial.
