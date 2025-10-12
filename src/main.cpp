@@ -27,6 +27,10 @@
 #include "utils/watchdog.hpp"
 
 #include "sensors/Magnet.hpp"
+#include "FlightController.hpp"
+#include "IMUSensor.hpp"
+#include "IMU_filter.hpp"
+#include "ServoController.hpp"
 
 // Loop constants
 #define LOOP_FREQ 1000
@@ -58,6 +62,15 @@ ControllerManager controller_manager;
 Governor governor;
 
 Watchdog watchdog;
+
+ServoController servoCont;
+// IMU imu;
+ICM20649 imu;
+IMU_filter imuF;
+IMU_data imuData;
+Dartcam dartcam;
+
+FlightController flightController(servoCont, imu, imuF, dartcam);
 
 // DONT put anything else in this function. It is not a setup function
 void print_logo() {
@@ -109,7 +122,7 @@ int main() {
 
     Serial.println("Starting systems...");
     servoCont.init();
-    imu.init();
+    imu.init(imu.SPI);
     dartcam.init();
 
     // TODO find a better way to control states?
