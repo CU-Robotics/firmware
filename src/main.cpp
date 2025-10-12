@@ -260,7 +260,6 @@ int main() {
     can.configure(motor_info);
 
     while (true) {
-        loop_counter++;
         mag.on();
         can.write_motor_torque(bus_id, motor_id, 0.3f);
         can.write();
@@ -274,8 +273,9 @@ int main() {
         Serial.printf("Torque is: %f\n", torque_state);
 
         delay(5);
+        loop_counter++;
         
-        if (loop_counter < 200) {
+        if (loop_counter > 200) {
             if (speed_state < 5) {
             break;
         }
