@@ -48,3 +48,7 @@ src/git_info.h
 
 #ignore bear files
 .bearwrap
+
+#python env
+tools/.venv
+tools/image.hex

@@ -5,7 +5,7 @@
 #include "OV5640.h"
 
 // tuning
-#define POSITION_HISTORY_SIZE 10
+#define POSITION_HISTORY_SIZE 3
 
 // define buffer width, height, size
 #define DARTCAM_BUFFER_WIDTH 320

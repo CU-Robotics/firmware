@@ -61,7 +61,7 @@ ControllerManager controller_manager;
 
 Governor governor;
 
-Watchdog watchdog;
+//Watchdog watchdog;
 
 ServoController servoCont;
 // IMU imu;
@@ -109,9 +109,9 @@ void print_logo() {
 
 // Uncomment one of these to select a main()
 // #define DART
-// #define DART_TEST
-#define LAUNCHER
-// #define CAMERA_TEST
+#define DART_TEST
+//#define LAUNCHER
+//#define CAMERA_TEST
 
 #ifdef DART
 // dart main
@@ -172,20 +172,20 @@ int main() {
     }
 
     SPI.begin();
-    imu.init(imu.SPI);
-    imu.set_gyro_range(4000);
-    imu.calibration_all();
-    imuF.init_EKF_6axis(imu.get_data());
+    //imu.init(imu.SPI);
+    //imu.set_gyro_range(4000);
+    //imu.calibration_all();
+    //imuF.init_EKF_6axis(imu.get_data());
 
-    servoCont.init();
-    imuF.init_EKF_6axis(imuData);
+    //servoCont.init();
+    //imuF.init_EKF_6axis(imuData);
     // dartcam.init();
-    flightController.init();
+    //flightController.init();
 
     // flightController.set_control_mode(TEST_FIN);
 
-    Serial.println("Entering flight control mode: TEST_GYRO_LEVEL");
-    flightController.set_control_mode(TEST_GYRO_LEVEL);
+    //Serial.println("Entering flight control mode: TEST_GYRO_LEVEL");
+    //flightController.set_control_mode(TEST_GYRO_LEVEL);
 
     // main loop
     Serial.println("Entering main loop");
@@ -208,7 +208,7 @@ int main() {
         //  Serial.println("in loop");
         //  imuData = *imuF.get_filter_data();
         //  Serial.print(imuData.pitch);
-        flightController.update();
+        //flightController.update();
         //    dartcam.send_frame_serial();
         //     servoCont.set_all_servos(180, 180, 180, 180);
         //     delay(1000);
@@ -222,8 +222,8 @@ int main() {
         // fin.write(0);
         // delay(2000);
 
-        // uint32_t start_time = micros();
-        // Position obj_pos;
+        //uint32_t start_time = micros();
+        Position obj_pos;
 
         // update framebuffers
         dartcam.read();
@@ -234,10 +234,10 @@ int main() {
         obj_pos = dartcam.get_average_position();
         Serial.printf("\n\nPosition: %d, %d\n", obj_pos.x, obj_pos.y);
 
-        dartcam.print_position_history();
+        //dartcam.print_position_history();
 
         // print fps using elapsed time
-        Serial.printf("FPS: %f\n", 1000000.0 / (micros() - start_time));
+        //Serial.printf("FPS: %f\n", 1000000.0 / (micros() - start_time));
     }
 }
 
