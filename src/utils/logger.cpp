@@ -17,11 +17,11 @@ Logger::Logger() : cursor(0), write_error(0) {
 
 size_t Logger::write(const uint8_t *buffer, size_t size, LogDestination destination) {
     if (destination == LogDestination::Serial) {
-        // for now, lets EITHER write to comms or write to serial
-        // (to avoid maxing out log buffer during config serial prints)
+        // LogDestination::Serial writes to Serial AND Comms
         Serial.write(buffer, size);
-        return 0;
-    } else {
+    }
+
+    if (destination == LogDestination::Comms || destination == LogDestination::Serial) {
         // guard against cursor exceeding buffer size
         if (cursor + size >= sizeof(log_buffer)) {
             return 0;
@@ -31,6 +31,8 @@ size_t Logger::write(const uint8_t *buffer, size_t size, LogDestination destinat
         cursor += size;
         return size;
     }
+
+    return 0;
 }
 
 size_t Logger::grab_log_data(size_t size, uint8_t *dest) {
