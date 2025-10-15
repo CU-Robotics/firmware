@@ -236,9 +236,8 @@ int main() {
 
         // print loopc every second to verify it is still alive
         if (loopc % 1000 == 0) {
-            logger.println(LogDestination::Serial, loopc);
-            logger.printf("[loopc log: %d (Default)]\n", loopc);                      // HACK
-            logger.printf(LogDestination::Comms, "[loopc log: %d (Comms)]\n", loopc); // HACK
+            logger.printf(LogDestination::Serial, "[loopc log: %d (LogDestination::Serial)\n]", loopc);
+            logger.printf(LogDestination::Comms, "[loopc log: %d (LogDestination::Comms)]\n", loopc); // HACK
         }
 
         // manual controls on firmware
