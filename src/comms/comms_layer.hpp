@@ -6,6 +6,7 @@
 #include "comms/data/packet_payload.hpp"    // for PacketPayload
 #include "comms/data/hive_data.hpp"         // for HiveData
 #include "comms/data/firmware_data.hpp"     // for FirmwareData
+#include "comms/config_data/robot_config.hpp" // for RobotConfig
 
 namespace Comms {
 

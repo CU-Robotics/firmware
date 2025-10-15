@@ -491,7 +491,7 @@ private:
     CANManager* can;
 
     /// @brief TOF sensor pointer from EstimatorManager
-    TOFSensor* time_of_flight;
+    // TOFSensor* time_of_flight;
 
     /// @brief time of flight sensor offset
     float tof_sensor_offset = 0;
@@ -514,8 +514,7 @@ public:
     /// @brief make new barrel switcher estimator and set can_data pointer and num_states
     /// @param config config data from yaml
     /// @param can can pointer from EstimatorManager
-    /// @param tof time of flight sensor object
-    SwitcherEstimator(Config config, CANManager* can, TOFSensor* tof);
+    SwitcherEstimator(Config config, CANManager* can);
 
     /// @brief calculate state updates
     /// @param output updated balls per second of feeder

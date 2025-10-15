@@ -130,7 +130,7 @@ int main() {
 
     // Config config
     Serial.println("Configuring...");
-    const Config *config = config_layer.configure(&comms_layer);
+    const Config *config = config_layer.configure(&comms_layer, false);
     Serial.println("Configured!");
 
     // configure motors
@@ -287,16 +287,11 @@ int main() {
         float yaw_target = -transmitter->get_r_stick_x() * 1.5 - transmitter_pos_x - vtm_pos_x;
 
         float fly_wheel_target =
-            (transmitter->get_r_switch() == SwitchPos::FORWARD || transmitter->get_r_switch() == SwitchPos::MIDDLE)
-                ? 18
-                : 0; // m/s
+            (transmitter->get_r_switch() == SwitchPos::FORWARD || transmitter->get_r_switch() == SwitchPos::MIDDLE) ? 18 : 0; // m/s
         // if the right switch is forward, and either the left mouse button is pressed or the right switch is not
         // backward, set the feeder to something. Otherwise, set it to 0
         float feeder_target = (((l_mouse_button.has_value() || ref->ref_data.kbm_interaction.button_left) &&
-                                transmitter->get_r_switch() != SwitchPos::BACKWARD) ||
-                               transmitter->get_r_switch() == SwitchPos::FORWARD)
-                                  ? 10
-                                  : 0;
+                                transmitter->get_r_switch() != SwitchPos::BACKWARD) || transmitter->get_r_switch() == SwitchPos::FORWARD) ? 10 : 0;
         if (config->governor_types[6] == 1) {
             float dt2 = timer.delta();
             if (dt2 > 0.1)
@@ -382,7 +377,7 @@ int main() {
             (comms_layer.get_hive_data().target_state.state[6][0] - temp_state[6][0] > 2 &&
              transmitter->get_l_switch() == SwitchPos::BACKWARD)) {
             Serial.printf("Feeder is lowkey jammed. current ball count: %f, feed: %f, hive target: %f\n",
-                          temp_state[6][0], feed, comms_layer.get_hive_data().target_state.state[6][0]);
+                            temp_state[6][0], feed, comms_layer.get_hive_data().target_state.state[6][0]);
             feed = temp_state[6][0] + 1;
             governor.set_reference_at_index(feed, 6, 0);
         }
@@ -494,8 +489,7 @@ int main() {
 
         // LED heartbeat -- linked to loop count to reveal slowdowns and
         // freezes.
-        loopc % (int)(1E3 / float(HEARTBEAT_FREQ)) < (int)(1E3 / float(5 * HEARTBEAT_FREQ)) ? digitalWrite(13, HIGH)
-                                                                                            : digitalWrite(13, LOW);
+        loopc % (int)(1E3 / float(HEARTBEAT_FREQ)) < (int)(1E3 / float(5 * HEARTBEAT_FREQ)) ? digitalWrite(13, HIGH) : digitalWrite(13, LOW);
         loopc++;
 
         // feed the watchdog to keep the loop running

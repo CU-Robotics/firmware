@@ -14,5 +14,5 @@ struct CommsRefData : Comms::CommsData {
     CommsRefData() : CommsData(Comms::TypeLabel::CommsRefData, Comms::PhysicalMedium::Ethernet, Comms::Priority::High, sizeof(CommsRefData)) { }
 
     /// @brief Raw data
-    uint8_t raw[180] = { 0 };
+    uint8_t raw[256] = { 0 };
 };

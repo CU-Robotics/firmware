@@ -21,10 +21,10 @@ int CommsLayer::init() {
     }
 
     // ethernet init failing is not a fatal error
-    bool ethernet_init = initialize_ethernet();
-    if (!ethernet_init) {
-        Serial.printf("CommsLayer: EthernetComms init failed\n");
-    }
+    // bool ethernet_init = initialize_ethernet();
+    // if (!ethernet_init) {
+    //     Serial.printf("CommsLayer: EthernetComms init failed\n");
+    // }
 
     Serial.printf("CommsLayer: initialized\n");
 
@@ -76,9 +76,9 @@ void CommsLayer::send_packets() {
     m_hid.send_packet(m_hid_outgoing);
     
     // prepare and send an ethernet packet
-    m_ethernet_payload.construct_data();
-    memcpy(m_ethernet_outgoing.payload(), m_ethernet_payload.data(), m_ethernet_payload.get_max_size());
-    m_ethernet.send_packet(m_ethernet_outgoing);
+    // m_ethernet_payload.construct_data();
+    // memcpy(m_ethernet_outgoing.payload(), m_ethernet_payload.data(), m_ethernet_payload.get_max_size());
+    // m_ethernet.send_packet(m_ethernet_outgoing);
 };
 
 void CommsLayer::receive_packets() {

@@ -6,6 +6,7 @@
 #elif defined(FIRMWARE)
 #include "comms/data/comms_data.hpp"            // for CommsData
 #include "comms/data/data_structs.hpp"          // for shared data structs
+#include "comms/config_data/robot_config.hpp"   // for RobotConfig
 #endif
 
 namespace Comms {
@@ -30,6 +31,8 @@ struct HiveData {
 
     /// @brief Config section
     ConfigSection config_section;
+
+    NewConfig::RobotConfig config;
 };
 
 } // namespace Comms

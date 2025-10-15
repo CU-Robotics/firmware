@@ -496,9 +496,8 @@ void FeederEstimator::step_states(float output[STATE_LEN][3], float curr_state[S
 }
 
 
-SwitcherEstimator::SwitcherEstimator(Config config, CANManager* _can, TOFSensor* tof) {
+SwitcherEstimator::SwitcherEstimator(Config config, CANManager* _can) {
     can = _can;
-    time_of_flight = tof;
     tof_sensor_offset = config.sensor_info[6][1];
     tof_scale = config.sensor_info[6][2];
 }
@@ -506,7 +505,8 @@ SwitcherEstimator::SwitcherEstimator(Config config, CANManager* _can, TOFSensor*
 void SwitcherEstimator::step_states(float output[STATE_LEN][3], float curr_state[STATE_LEN][3], int override) {
     dt = time.delta();
     //read tof sensor (millimeters)
-    float tof_distance = ((float)(time_of_flight->read()) - tof_sensor_offset) / tof_scale;
+    // float tof_distance = ((float)(time_of_flight->read()) - tof_sensor_offset) / tof_scale;
+    float tof_distance = 0;
     float angular_velocity_motor = -(((can->get_motor_state(CAN_2, 6).speed) / 36.0) * (5.1)) / tof_scale;
     total_motor_angle += (can->get_motor_state(CAN_2, 6).speed) * dt;
     // float rad_per_switch = 315;

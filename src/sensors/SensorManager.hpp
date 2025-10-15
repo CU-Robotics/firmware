@@ -55,7 +55,7 @@ public:
     /// @brief Get the specified TOF sensor from the array
     /// @param index index of the sensor object to get
     /// @return pointer to the TOF sensor
-    TOFSensor* get_tof_sensor(int index);
+    // TOFSensor* get_tof_sensor(int index);
 
     /// @brief Get the specified LiDAR sensor
     /// @param index index of the sensor object to get, 0 or 1
@@ -137,10 +137,10 @@ private:
     Comms::Sendable<RevSensorData> rev_sensor_sendables[NUM_SENSOR_TYPE];
 
     /// @brief Array to store TOF sensors
-    TOFSensor* tof_sensors[NUM_SENSOR_TYPE];
+    // TOFSensor* tof_sensors[NUM_SENSOR_TYPE];
 
     /// @brief Array to store TOF sensor sendables to be used with comms
-    Comms::Sendable<TOFSensorData> tof_sensor_sendables[NUM_SENSOR_TYPE];
+    // Comms::Sendable<TOFSensorData> tof_sensor_sendables[NUM_SENSOR_TYPE];
 
     /// @brief First LiDAR sensor
     D200LD14P* lidar1;

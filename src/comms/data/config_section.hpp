@@ -28,5 +28,5 @@ struct ConfigSection : Comms::CommsData {
     uint16_t subsection_size = 0;
 
     /// @brief Raw config data
-    uint8_t raw[1000] = { 0 };
+    uint8_t raw[512] = { 0 };
 };

@@ -1,6 +1,9 @@
 #include "config_layer.hpp"
+#include "comms_layer.hpp"
+#include "config_data/robot_config.hpp"
 #include "sensors/RefSystem.hpp"
 #include "comms/data/sendable.hpp"  // for Sendable<>
+#include "utils/timing.hpp"      // for Timer
 
 /// @brief This resets the whole processor and kicks it back to program entry (teensy4/startup.c)
 /// @param void specify no arguments (needed in C)
@@ -26,6 +29,7 @@ const Config* const ConfigLayer::configure(Comms::CommsLayer* comms, bool config
     uint32_t prev_time = millis();
     uint32_t delta_time = 0;
     //Comms::HIDPacket outgoing;
+    Timer loop_timer;
     while (!is_configured()) {
     #ifdef CONFIG_LAYER_DEBUG
         if (delta_time >= 2000) {
@@ -36,6 +40,15 @@ const Config* const ConfigLayer::configure(Comms::CommsLayer* comms, bool config
     #endif
         process();
         comms->run();
+        NewConfig::RobotConfig& config = comms_layer.get_hive_data().config;
+        Serial.printf("Config: received %d of %d sections\n", config.num_sections_received, config.config_start.num_config_sections);
+        if(config.is_configured()) {
+            configured = true;
+        }
+        if(config.num_sections_received == 0) {
+            
+        }
+        loop_timer.delay_micros((int)(1E6 / (float)(10)));
     }
 
     // put the data from the packets into the config object
@@ -78,12 +91,14 @@ const Config* const ConfigLayer::configure(Comms::CommsLayer* comms, bool config
     // Hive then sends a packet back with request_bit == 0 as well, so ping until we get a non-config back
     // TODO: this timeout is a hack, but it seems to work very well. Hive ends up seeing the 0 info bit before firmware does, causing this loop to never end
     uint32_t start = micros();
+    
     while (comms_layer.get_hive_data().config_section.request_bit == 1 && micros() - start < 500000) {
         Serial.printf("Waiting for config to finish...\n");
         Comms::Sendable<ConfigSection> sendable;
         sendable.data.request_bit = 0;
         sendable.send_to_comms();
         comms->run();
+        loop_timer.delay_micros((int)(1E6 / (float)(10)));
     }
 
     // update the num_of_(sensor) variables in the config struct
@@ -149,7 +164,7 @@ void ConfigLayer::process() {
     in.payload()[3] = in_section.request_bit;
     *reinterpret_cast<uint16_t*>(in.payload() + 4) = in_section.section_size;
     *reinterpret_cast<uint16_t*>(in.payload() + 6) = in_section.subsection_size;
-    memcpy(in.payload() + 8, in_section.raw, 1000);
+    memcpy(in.payload() + 8, in_section.raw, 512);
 
     // if this is the packet we want
     if (in_section.section_id == seek_sec && in_section.subsection_id == seek_subsec && in_section.request_bit == 1) {
@@ -207,7 +222,6 @@ void ConfigLayer::process() {
     out_section.section_id = seek_sec;
     out_section.subsection_id = seek_subsec;
     out_section.request_bit = 1;
-
     // if configuration isn't complete, request the next packet
     if (!configured) {
         Comms::Sendable<ConfigSection> sendable = out_section;

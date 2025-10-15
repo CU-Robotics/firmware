@@ -64,28 +64,16 @@ void FirmwareData::set_data(CommsData* data) {
         }
         break;
     }
-    case TypeLabel::RevEncoderData: {
-        //determine which rev encoder the data is for
-        RevSensorData* rev_encoder_data = static_cast<RevSensorData*>(data);
-        if (rev_encoder_data->id == 0) {
-            rev_sensor_0 = *rev_encoder_data;
-        } else if (rev_encoder_data->id == 1) {
-            rev_sensor_1 = *rev_encoder_data;
-        } else if (rev_encoder_data->id == 2) {
-            rev_sensor_2 = *rev_encoder_data;
-        }
-        break;
-    }
     case TypeLabel::ICMSensorData: {
         // place the data in the mega struct
         icm_sensor = *static_cast<ICMSensorData*>(data);
         break;
     }
-    case TypeLabel::TOFSensorData: {
-        // place the data in the mega struct
-        tof_sensor = *static_cast<TOFSensorData*>(data);
-        break;
-    }
+    // case TypeLabel::TOFSensorData: {
+    //     // place the data in the mega struct
+    //     tof_sensor = *static_cast<TOFSensorData*>(data);
+    //     break;
+    // }
     case TypeLabel::LidarDataPacketSI: {
         //determine which lidar sensor the data is for
     #if defined(HIVE)

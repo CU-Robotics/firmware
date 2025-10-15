@@ -14,7 +14,6 @@ enum class TypeLabel : uint8_t {
     BuffEncoderData,
     ICMSensorData,
     RevEncoderData,
-    TOFSensorData,
     LidarDataPacketSI,
     TransmitterData,
     TempRobotState,
@@ -23,6 +22,16 @@ enum class TypeLabel : uint8_t {
     OverrideState,
     ConfigSection,
     CommsRefData,
+    ConfigStart,
+    ControllerConfig,
+    HighLevelEstimatorConfig,
+    LowLevelEstimatorConfig,
+    MotorConfig,
+    BuffEncoderConfig,
+    IcmImuConfig,
+    D200LidarConfig,
+    RealsenseCameraConfig,
+    StateConfig,
 };
 
 /// @brief Converts a TypeLabel to a string.
@@ -44,8 +53,6 @@ inline std::string to_string(TypeLabel type_label) {
         return "ICMSensorData";
     case TypeLabel::RevEncoderData:
         return "RevEncoderData";
-    case TypeLabel::TOFSensorData:
-        return "TOFSensorData";
     case TypeLabel::LidarDataPacketSI:
         return "LidarDataPacketSI";
     case TypeLabel::TransmitterData:
@@ -62,6 +69,26 @@ inline std::string to_string(TypeLabel type_label) {
         return "ConfigSection";
     case TypeLabel::CommsRefData:
         return "CommsRefData";
+    case TypeLabel::ConfigStart:
+        return "ConfigStart";
+    case TypeLabel::ControllerConfig:
+        return "ControllerConfig";
+    case TypeLabel::HighLevelEstimatorConfig:
+        return "HighLevelEstimatorConfig";
+    case TypeLabel::LowLevelEstimatorConfig:
+        return "LowLevelEstimatorConfig";
+    case TypeLabel::MotorConfig:
+        return "MotorConfig";
+    case TypeLabel::BuffEncoderConfig:
+        return "BuffEncoderConfig";
+    case TypeLabel::IcmImuConfig:
+        return "IcmImuConfig";
+    case TypeLabel::D200LidarConfig:
+        return "D200LidarConfig";
+    case TypeLabel::RealsenseCameraConfig:
+        return "RealsenseCameraConfig";
+    case TypeLabel::StateConfig:
+        return "StateConfig";
     // no default case, so the compiler will warn us if we forget a case
     }
 
@@ -102,9 +129,9 @@ public:
     /// @brief type of data
     TypeLabel type_label : 8 = TypeLabel::NONE;
     /// @brief medium over which the data is sent
-    PhysicalMedium physical_medium : 4 = PhysicalMedium::Ethernet;
+    PhysicalMedium physical_medium : 8 = PhysicalMedium::Ethernet;
     /// @brief priority of the data
-    Priority priority : 4 = Priority::Medium;
+    Priority priority : 8 = Priority::Medium;
 };
 
 } // namespace Comms

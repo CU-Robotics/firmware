@@ -47,7 +47,7 @@ void EstimatorManager::init_estimator(int estimator_id) {
         estimators[num_estimators++] = new LocalEstimator(can);
         break;
     case 5:
-        estimators[num_estimators++] = new SwitcherEstimator(*config_data, can, sensor_manager->get_tof_sensor(0));
+        estimators[num_estimators++] = new SwitcherEstimator(*config_data, can);
         break;
     case 6:
         estimators[num_estimators++] = new GimbalEstimatorNoOdom(*config_data, sensor_manager, can);        

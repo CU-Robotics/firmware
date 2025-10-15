@@ -58,7 +58,7 @@ struct FirmwareData {
     
     //one tof
     /// @brief tof_sensor
-    TOFSensorData tof_sensor;
+    // TOFSensorData tof_sensor;
     
     //two liadars
     /// @brief lidar vector

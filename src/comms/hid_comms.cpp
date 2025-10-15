@@ -13,6 +13,11 @@ bool HIDComms::recv_packet(HIDPacket& incoming_packet) {
     // attempt to read a full packet
     // this has no timeout
     int bytes_read = usb_rawhid_recv(incoming_packet.data_start(), 0);
+    // Serial.printf("HIDComms: first %d bytes as u8: ", bytes_read);
+    // for (int i = 0; i < bytes_read; i++) {
+    //     Serial.printf("%d ", incoming_packet.data_start()[i]);
+    // }
+    // Serial.println();
     if (bytes_read == HID_PACKET_MAX_SIZE) {
         // increment total number of packets read and return success
         m_packetsRead++;
@@ -40,7 +45,13 @@ bool HIDComms::send_packet(HIDPacket& outgoing_packet) {
 
     // attempt to write a full packet
     // this has no timeout
+    Serial.printf("HIDComms: sending packet\n");
+    for (unsigned int i = 0; i < HID_PACKET_MAX_SIZE; i++){
+        Serial.printf("%d ", outgoing_packet.data_start()[i]);
+    }
+    Serial.println();
     int bytes_sent = usb_rawhid_send(outgoing_packet.data_start(), 0);
+    Serial.printf("HIDComms: sent %d bytes\n", bytes_sent);
     if (bytes_sent == HID_PACKET_MAX_SIZE) {
         // increment total number of packets sent and return success
         m_packetsSent++;
@@ -50,6 +61,7 @@ bool HIDComms::send_packet(HIDPacket& outgoing_packet) {
         m_packetsFailed++;
         return false;
     }
+    return true;
 }
 
 bool HIDComms::is_connected() const {

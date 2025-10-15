@@ -66,13 +66,13 @@ void SensorManager::init(const Config* config_data) {
     }
 
     // initialize TOFs
-    for (int i = 0; i < tof_sensor_count; i++) {
-        tof_sensors[i] = new TOFSensor();
-        tof_sensors[i]->init();
+    // for (int i = 0; i < tof_sensor_count; i++) {
+    //     tof_sensors[i] = new TOFSensor();
+    //     tof_sensors[i]->init();
 
-        //assign id for comms
-        tof_sensors[i]->setId(i);
-    }
+    //     //assign id for comms
+    //     tof_sensors[i]->setId(i);
+    // }
 
     // initialize LiDARs
     if (lidar_sensor_count > 0) {
@@ -126,9 +126,9 @@ RevEncoder* SensorManager::get_rev_sensor(int index) {
     return &rev_sensors[index];
 }
 
-TOFSensor* SensorManager::get_tof_sensor(int index) {
-    return tof_sensors[index];
-}
+// TOFSensor* SensorManager::get_tof_sensor(int index) {
+//     return tof_sensors[index];
+// }
 
 LimitSwitch* SensorManager::get_limit_switch(int index) {
     return limit_switches[index];
@@ -195,11 +195,11 @@ void SensorManager::send_sensor_data_to_comms()
     }
 
     //send TOFs
-    for(int i = 0; i < tof_sensor_count; i++) {
-        tof_sensor_sendables[i].data.latest_distance = tof_sensors[i]->get_latest_distance();
-        tof_sensor_sendables[i].data.id = tof_sensors[i]->getId();
-        tof_sensor_sendables[i].send_to_comms();
-    }
+    // for(int i = 0; i < tof_sensor_count; i++) {
+    //     tof_sensor_sendables[i].data.latest_distance = tof_sensors[i]->get_latest_distance();
+    //     tof_sensor_sendables[i].data.id = tof_sensors[i]->getId();
+    //     tof_sensor_sendables[i].send_to_comms();
+    // }
 
     //send LiDARs
     //NOTE it seems like lidar is broken right now
