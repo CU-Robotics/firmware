@@ -236,7 +236,7 @@ int main() {
 
         // print loopc every second to verify it is still alive
         if (loopc % 1000 == 0) {
-            logger.printf(LogDestination::Serial, "[loopc log: %d (LogDestination::Serial)\n]", loopc);
+            logger.printf(LogDestination::Serial, "[loopc log: %d (LogDestination::Serial)]\n", loopc);
             logger.printf(LogDestination::Comms, "[loopc log: %d (LogDestination::Comms)]\n", loopc); // HACK
         }
 
@@ -455,7 +455,7 @@ int main() {
         size_t bytes_copied = logger.grab_log_data(LOGGER_BUFFER_SIZE, (uint8_t *)temp_log_buffer);
         if (bytes_copied > 0) {
             Comms::Sendable<Comms::LoggingData> logging_sendable;
-            logger.printf(LogDestination::Serial, "logger bytes copied: %d\n", bytes_copied);
+            // logger.printf(LogDestination::Serial, "logger bytes copied: %d\n", bytes_copied);
             logging_sendable.data.deserialize(temp_log_buffer, bytes_copied);
             logging_sendable.send_to_comms();
         }
