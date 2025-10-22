@@ -14,13 +14,13 @@ class Magnet {
     public:
         Magnet();
 
-        // Turns magnet on
+        /// @brief Turns the dart launcher's magnet on.
         void on();
 
-        // Turns magnet off
+        /// @brief Turns the dart launcher's magnet off.
         void off();
 
-        // Returns current state of magnet
+        /// @brief Gets the current state of the magnet
         bool get_state();
 };
 

@@ -26,7 +26,7 @@
 #include "utils/timing.hpp"
 #include "utils/watchdog.hpp"
 
-#include "sensors/Magnet.hpp"
+#include "dart/Magnet.hpp"
 #include "FlightController.hpp"
 #include "IMUSensor.hpp"
 #include "IMU_filter.hpp"
