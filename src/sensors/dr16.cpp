@@ -285,5 +285,21 @@ TransmitterData DR16::get_transmitter_data(){
 	transmitter_data.r_stick_y = get_r_stick_y();
 	transmitter_data.wheel = get_wheel();
 	transmitter_data.safety_switch = get_safety_switch();
+	transmitter_data.keys.key.w = keys.w;
+	transmitter_data.keys.key.s = keys.s;
+	transmitter_data.keys.key.a = keys.a;
+	transmitter_data.keys.key.d = keys.d;
+	transmitter_data.keys.key.shift = keys.shift;
+	transmitter_data.keys.key.ctrl = keys.ctrl;
+	transmitter_data.keys.key.q = keys.q;
+	transmitter_data.keys.key.e = keys.e;
+	transmitter_data.keys.key.r = keys.r;
+	transmitter_data.keys.key.f = keys.f;
+	transmitter_data.keys.key.g = keys.g;
+	transmitter_data.keys.key.z = keys.z;
+	transmitter_data.keys.key.x = keys.x;
+	transmitter_data.keys.key.c = keys.c;
+	transmitter_data.keys.key.v = keys.v;
+	transmitter_data.keys.key.b = keys.b;
 	return transmitter_data;
 }
