@@ -618,21 +618,5 @@ TransmitterData ET16S::get_transmitter_data(){
 	transmitter_data.trim_four = get_trim_four();
 	transmitter_data.trim_five = get_trim_five();
 	transmitter_data.trim_six = get_trim_six();
-	transmitter_data.keys.key.w = keys.w;
-	transmitter_data.keys.key.s = keys.s;
-	transmitter_data.keys.key.a = keys.a;
-	transmitter_data.keys.key.d = keys.d;
-	transmitter_data.keys.key.shift = keys.shift;
-	transmitter_data.keys.key.ctrl = keys.ctrl;
-	transmitter_data.keys.key.q = keys.q;
-	transmitter_data.keys.key.e = keys.e;
-	transmitter_data.keys.key.r = keys.r;
-	transmitter_data.keys.key.f = keys.f;
-	transmitter_data.keys.key.g = keys.g;
-	transmitter_data.keys.key.z = keys.z;
-	transmitter_data.keys.key.x = keys.x;
-	transmitter_data.keys.key.c = keys.c;
-	transmitter_data.keys.key.v = keys.v;
-	transmitter_data.keys.key.b = keys.b;
 	return transmitter_data;
 }
