@@ -44,4 +44,4 @@ Need Arduino CLI support? Run `./tools/install_arduino.sh` (idempotent, installs
 - Run `make` (and `make upload` if the change affects hardware behaviour) before requesting review.
 - Capture serial logs or bench notes when relevant and attach them to the PR.
 - Keep documentation changes factual and scoped to what you validated.
-- Coordinate structural or hardware-impacting changes with the firmware leads (Rocco and the controls subgroup) before merging.
+- Coordinate structural or hardware-impacting changes with the firmware leads before merging.
