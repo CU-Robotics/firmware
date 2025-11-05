@@ -24,8 +24,7 @@ void DR16::init() {
 void DR16::read() {
 	// each channel is 11 bits, minus the switches and keyboard inputs
 	uint16_t c0{ 0 }, c1{ 0 }, c2{ 0 }, c3{ 0 }, wh{ 0 };
-	uint8_t s1{ 0 }, s2{ 0 }, k1{ 0 };
-	// uint8_t k2{ 0 };
+	uint8_t s1{ 0 }, s2{ 0 }, k1{ 0 }, k2{ 0 };
 
 	// if read is not called regularly enough, it may miss a packet and start reading halfway through another packet
 	// since the dr16 data structure does not include a start of transmission byte, we need to time our reads based on
@@ -113,7 +112,7 @@ void DR16::read() {
 	c3 = ((m_inputRaw[5] & 0x0f) << 7) | ((m_inputRaw[4] & 0xfe) >> 1);
 	wh = ((m_inputRaw[17] & 0x7) << 8) | m_inputRaw[16];
 	k1 = m_inputRaw[14];
-	// k2 = m_inputRaw[15];
+	k2 = m_inputRaw[15];
   
 	mouse_x = (m_inputRaw[7] << 8) | m_inputRaw[6]; 
 	mouse_y = (m_inputRaw[9] << 8) | m_inputRaw[8]; 
@@ -161,14 +160,14 @@ void DR16::read() {
 		keys.q = (k1 >> 6) & 0x01;
 		keys.e = (k1 >> 7) & 0x01;
 		// second byte
-		keys.r = (k1 >> 0) & 0x01;
-		keys.f = (k1 >> 1) & 0x01;
-		keys.g = (k1 >> 2) & 0x01;
-		keys.z = (k1 >> 3) & 0x01;
-		keys.x = (k1 >> 4) & 0x01;
-		keys.c = (k1 >> 5) & 0x01;
-		keys.v = (k1 >> 6) & 0x01;
-		keys.b = (k1 >> 7) & 0x01;
+		keys.r = (k2 >> 0) & 0x01;
+		keys.f = (k2 >> 1) & 0x01;
+		keys.g = (k2 >> 2) & 0x01;
+		keys.z = (k2 >> 3) & 0x01;
+		keys.x = (k2 >> 4) & 0x01;
+		keys.c = (k2 >> 5) & 0x01;
+		keys.v = (k2 >> 6) & 0x01;
+		keys.b = (k2 >> 7) & 0x01;
 	} else {
 		uint32_t dt = micros() - m_prevTime;
 		m_failTime += dt;
@@ -286,5 +285,21 @@ TransmitterData DR16::get_transmitter_data(){
 	transmitter_data.r_stick_y = get_r_stick_y();
 	transmitter_data.wheel = get_wheel();
 	transmitter_data.safety_switch = get_safety_switch();
+	transmitter_data.keys.key.w = keys.w;
+	transmitter_data.keys.key.s = keys.s;
+	transmitter_data.keys.key.a = keys.a;
+	transmitter_data.keys.key.d = keys.d;
+	transmitter_data.keys.key.shift = keys.shift;
+	transmitter_data.keys.key.ctrl = keys.ctrl;
+	transmitter_data.keys.key.q = keys.q;
+	transmitter_data.keys.key.e = keys.e;
+	transmitter_data.keys.key.r = keys.r;
+	transmitter_data.keys.key.f = keys.f;
+	transmitter_data.keys.key.g = keys.g;
+	transmitter_data.keys.key.z = keys.z;
+	transmitter_data.keys.key.x = keys.x;
+	transmitter_data.keys.key.c = keys.c;
+	transmitter_data.keys.key.v = keys.v;
+	transmitter_data.keys.key.b = keys.b;
 	return transmitter_data;
 }
