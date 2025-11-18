@@ -1510,9 +1510,8 @@ struct SmallMapRobotData {
     }
 };
 
-/// @brief Graphic data sent by RefDrawer, for drawing shapes and text
-/// @note This struct is used in DrawOneGraphic, DrawTwoGraphics, etc.
-struct GraphicData {
+/// @brief 15 byte graphic data sent by RefDrawer, for drawing shapes and text
+struct __attribute__((packed)) GraphicData {
     /// @brief Index for graphic deletion, revision, etc.
     uint8_t figure_name[3];
 
@@ -1546,6 +1545,7 @@ struct GraphicData {
     /// @brief Meaning differs based on drawn graphics. Table 2-26 of the ref system manual.
     uint32_t details_e : 11;
 };
+static_assert(sizeof(GraphicData) == 15, "GraphicData must be 15 bytes.");
 
 /// @brief Layer data sent by RefDrawer to delete one/all layers.
 /// @note sub-content-id 0x0100
