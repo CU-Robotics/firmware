@@ -1515,7 +1515,7 @@ struct __attribute__((packed)) GraphicData {
     /// @brief Index for graphic deletion, revision, etc.
     uint8_t figure_name[3];
 
-    // GRAPHICS CONFIGURATION 1 (first uint32_t)
+    // Graphics Config 1
     /// @brief Bits 0-2: graphic operation (1: add, 2: modify, 3: delete)
     uint32_t operate_type : 3;
     /// @brief Bits 3-5: graphic type (i.e. 0: straight line, 1: rectangle, etc.)
@@ -1529,7 +1529,7 @@ struct __attribute__((packed)) GraphicData {
     /// @brief Second half of Bits 14-31: details differ based on drawn graphics. Described in table 2-26 of the Ref system manual.
     uint32_t details_b : 9;
 
-    // GRAPHICS CONFIGURATION 2 (second uint32_t)
+    // Graphics Config 2
     /// @brief Bits 0-9: line width. Recommended ratio between font size and line width is 10:1
     uint32_t width : 10;
     /// @brief Bits 10-20: the start point/origin's x coordinate
@@ -1537,7 +1537,7 @@ struct __attribute__((packed)) GraphicData {
     /// @brief Bits 21-31: the start point/origin's y coordinate
     uint32_t start_y : 11;
 
-    // GRAPHICS CONFIGURATION 3 (third uint32_t)
+    // Graphics Config 3
     /// @brief Meaning differs based on drawn graphics. Table 2-26 of the ref system manual.
     uint32_t details_c : 10;
     /// @brief Meaning differs based on drawn graphics. Table 2-26 of the ref system manual.
@@ -1554,6 +1554,14 @@ struct LayerData {
     uint8_t delete_type;
     /// @brief layer to delete (0-9)
     uint8_t layer;
+};
+
+/// @brief Character data for drawCharacter, sub-content ID 0x0110
+struct CharacterData {
+    /// @brief Configuration for the character drawing
+    GraphicData graphic_data;
+    /// @brief Character buffer (up to 30 chars)
+    uint8_t data[30];
 };
 
 /// @brief Encompassing all read-able packet structs of the Ref System

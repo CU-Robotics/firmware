@@ -4,12 +4,19 @@
 #include <cstdint>
 #include <cstring>
 
+#define DEFAULT_LINE_WIDTH 10
+#define DEFAULT_FONT_SIZE 12
+
+// (0,0) is the lower left corner of the screen. (1920,1080) is the upper right corner
+#define SCREEN_WIDTH 1920
+#define SCREEN_HEIGHT 1080
+
 #include "RefSystem.hpp"
 #include "RefSystemPacketDefs.hpp"
 
 /// @brief Class for drawing graphics to the desktop client
 class RefDrawer {
-   public:
+  public:
     /// @brief Available colors for drawing graphics
     enum Color {
         /// @brief Red or blue, depending on the robot's side (0)
@@ -85,7 +92,8 @@ class RefDrawer {
     /// @param color color of the arc (default SIDE_COLOR)
     /// @param layer layer to draw the circle on (default 0)
     /// NOT DONE YET, HAVE TO FIGURE OUT WHAT DATA SHEET IS SAYING
-    void drawArc(uint32_t x, uint32_t y, uint32_t x1, uint32_t y1, uint32_t start_angle, uint32_t end_angle, uint8_t color = 0, uint8_t layer = 0);
+    void drawArc(uint32_t x, uint32_t y, uint32_t x1, uint32_t y1, uint32_t start_angle, uint32_t end_angle,
+                 uint8_t color = 0, uint8_t layer = 0);
 
     /// @brief Draw an integer
     /// @param x x coordinate of start point for textbox
@@ -103,27 +111,33 @@ class RefDrawer {
     /// @param charLength width of the printed character
     /// @param color color of the text (default SIDE_COLOR)
     /// @param layer layer to draw the string on (default 0)
-    void drawChar(uint32_t x, uint32_t y, uint32_t fontSize, uint32_t charLength, uint8_t color = 0, uint8_t layer = 0);
+    void drawChar(uint32_t x, uint32_t y, uint32_t fontSize, const char *text, uint8_t color = 0, uint8_t layer = 0);
 
-   private:
+  private:
     /// @brief Available drawing commands
     enum DrawType {
         /// @brief Delete layers command
         DELETE_LAYERS = 0x0100,
         /// @brief Draw one graphic command
         DRAW_ONE_GRAPHIC = 0x0101,
+        DRAW_TWO_GRAPHICS = 0x0102,
+        DRAW_FIVE_GRAPHICS = 0x0103,
+        DRAW_SEVEN_GRAPHICS = 0x0104,
+        DRAW_CHARACTER = 0x0110
     };
 
     /// @brief Sends a drawing command through ref
-    /// @tparam T Type of the drawing data (either GraphicData or LayerData)
+    /// @param T Type of the drawing data (either GraphicData or LayerData)
     /// @param type Type of drawing command
-    /// @param data GraphicData or LayerData to send
-    template <typename T>
-    void sendPacket(DrawType type, const T& data) {
+    /// @param data GraphicData, LayerData, or CharacterData to send
+    template <typename T> void sendPacket(DrawType type, const T &data) {
+        static_assert(std::is_same_v<T, GraphicData> || std::is_same_v<T, LayerData> ||
+                          std::is_same_v<T, CharacterData>,
+                      "RefDrawer sendPacket only supports GraphicData, LayerData, or CharacterData");
         RobotInteraction ri = {};
         ri.content_id = static_cast<uint16_t>(type);
         ri.sender_id = ref->ref_data.robot_performance.robot_ID;
-        ri.receiver_id = 0x100 + ri.sender_id;  // 0x100 + robot ID for desktop client
+        ri.receiver_id = 0x100 + ri.sender_id; // 0x100 + robot ID for desktop client
         ri.size = sizeof(data);
         memcpy(ri.data, &data, ri.size);
 
@@ -142,4 +156,4 @@ class RefDrawer {
     }
 };
 
-#endif  // REF_DRAWER_HPP
+#endif // REF_DRAWER_HPP
