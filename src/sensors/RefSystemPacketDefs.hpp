@@ -73,7 +73,7 @@ enum class FrameType : uint16_t {
 };
 
 /// @brief Struct for the Frame header portion
-struct FrameHeader {
+struct __attribute__((packed)) FrameHeader {
     /// @brief size of packet sent by Ref System in bytes
     static const uint8_t packet_size = 5;
 
@@ -95,6 +95,7 @@ struct FrameHeader {
         Serial.printf("\tCRC: %x\n", CRC);
     }
 };
+static_assert(sizeof(FrameHeader) == FrameHeader::packet_size, "FrameHeader must be 5 bytes.");
 
 /// @brief Struct for the Frame data portion
 struct FrameData {
