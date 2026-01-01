@@ -24,6 +24,7 @@ size_t Logger::write(const uint8_t *buffer, size_t size, LogDestination destinat
     if (destination == LogDestination::Comms || destination == LogDestination::Serial) {
         // guard against cursor exceeding buffer size
         if (cursor + size >= sizeof(log_buffer)) {
+            Serial.println("!!! LOGGER BUFFER OVERFLOW !!!");
             return 0;
         }
         // writes incoming buffer to cursor position

@@ -115,6 +115,9 @@ void PacketPayload::add(CommsData* data) {
         if (logging_send_queue.size() < MAX_QUEUE_SIZE) {
             logging_send_queue.push(logging);
         } else {
+#if defined(FIRMWARE)
+            Serial.println("!!! LOGGING QUEUE OVERFLOW !!!");
+#endif
             delete data;
         }
         break;
