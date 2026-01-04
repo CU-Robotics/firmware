@@ -1550,20 +1550,13 @@ static_assert(sizeof(GraphicData) == 15, "GraphicData must be 15 bytes.");
 
 /// @brief Layer data sent by RefDrawer to delete one/all layers.
 /// @note sub-content-id 0x0100
-struct LayerData {
+struct __attribute__((packed)) LayerData {
     /// @brief 1: delete a graphic layer. 2: delete all graphics layers
     uint8_t delete_type;
     /// @brief layer to delete (0-9)
     uint8_t layer;
 };
-
-/// @brief Character data for drawCharacter, sub-content ID 0x0110
-struct CharacterData {
-    /// @brief Configuration for the character drawing
-    GraphicData graphic_data;
-    /// @brief Character buffer (up to 30 chars)
-    uint8_t data[30];
-};
+static_assert(sizeof(LayerData) == 2, "LayerData must be 2 bytes.");
 
 /// @brief Encompassing all read-able packet structs of the Ref System
 struct RefData {

@@ -104,15 +104,6 @@ class RefDrawer {
     /// @param layer layer to draw the string on (default 0)
     void drawInt(uint32_t x, uint32_t y, uint32_t fontSize, uint32_t integer, uint8_t color = 0, uint8_t layer = 0);
 
-    /// @brief Draw a character
-    /// @param x x coordinate of start point for textbox
-    /// @param y y coordinate of start point for tetbox
-    /// @param fontSize size of the printed text
-    /// @param charLength width of the printed character
-    /// @param color color of the text (default SIDE_COLOR)
-    /// @param layer layer to draw the string on (default 0)
-    void drawChar(uint32_t x, uint32_t y, uint32_t fontSize, const char *text, uint8_t color = 0, uint8_t layer = 0);
-
   private:
     /// @brief Available drawing commands
     enum DrawType {
@@ -129,11 +120,10 @@ class RefDrawer {
     /// @brief Sends a drawing command through ref
     /// @param T Type of the drawing data (either GraphicData or LayerData)
     /// @param type Type of drawing command
-    /// @param data GraphicData, LayerData, or CharacterData to send
+    /// @param data GraphicData or LayerData to send
     template <typename T> void sendPacket(DrawType type, const T &data) {
-        static_assert(std::is_same_v<T, GraphicData> || std::is_same_v<T, LayerData> ||
-                          std::is_same_v<T, CharacterData>,
-                      "RefDrawer sendPacket only supports GraphicData, LayerData, or CharacterData");
+        static_assert(std::is_same_v<T, GraphicData> || std::is_same_v<T, LayerData>,
+                      "RefDrawer sendPacket only supports GraphicData and LayerData");
         RobotInteraction ri = {};
         ri.content_id = static_cast<uint16_t>(type);
         ri.sender_id = ref->ref_data.robot_performance.robot_ID;
