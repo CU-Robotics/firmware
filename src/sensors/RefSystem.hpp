@@ -85,9 +85,9 @@ public:
     /// @brief Send a pre-constructed packet to Ref
     /// @param commandID The type of frame to send, i.e. FrameType::ROBOT_INTERACTION
     /// @param frameData Pointer to the FrameData structure containing the packet to be sent
-    /// @param length The size of the data to be sent, not including the header and tail
+    /// @param data_length The size of the data to be sent, not including the header and tail
     /// @note Re-computes the CRC, so no need to do it yourself
-    void write(FrameType commandID, FrameData* frameData, uint8_t length);
+    void write(FrameType commandID, FrameData* frameData, uint8_t data_length);
 
     /// @brief Generate a byte array for all ref data to be sent over comms
     /// @return The data struct
@@ -183,8 +183,11 @@ public:
     /// @brief Number of failed tail reads
     uint32_t failed_tail_reads = 0;
 
+    /// @brief Last time the byte counter was reset in millis.
+    uint32_t bytes_last_reset = 0;
+
     /// @brief Current count of bytes sent since last reset
-    uint16_t bytes_sent = 0;
+    uint32_t bytes_sent_this_second = 0;
 
     /// @brief struct to store all ref data
     RefData ref_data {};

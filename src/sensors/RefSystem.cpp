@@ -1,7 +1,7 @@
 #include "RefSystem.hpp"
 #include "RefSystemPacketDefs.hpp"
 
-uint8_t generateCRC8(uint8_t* data, uint32_t len) {
+uint8_t generateCRC8(const uint8_t *data, uint32_t len) {
     uint8_t CRC8 = 0xFF;
     while (len-- > 0) {
         uint8_t curr = CRC8 ^ (*data++);
@@ -10,7 +10,7 @@ uint8_t generateCRC8(uint8_t* data, uint32_t len) {
     return CRC8;
 }
 
-uint16_t generateCRC16(uint8_t* data, uint32_t len) {
+uint16_t generateCRC16(const uint8_t *data, uint32_t len) {
     uint16_t CRC16 = 0xFFFF;
     while (len-- > 0) {
         uint8_t curr = *data++;
@@ -19,7 +19,7 @@ uint16_t generateCRC16(uint8_t* data, uint32_t len) {
     return CRC16;
 }
 
-RefSystem::RefSystem() { }
+RefSystem::RefSystem() {}
 
 void RefSystem::init() {
     // clear and start the MCM serial
@@ -34,6 +34,9 @@ void RefSystem::init() {
     VTM_SERIAL.begin(115200);
     VTM_SERIAL.flush();
     VTM_SERIAL.clear();
+
+    bytes_last_reset = millis();
+    bytes_sent_this_second = 0;
 }
 
 void RefSystem::read() {
@@ -41,24 +44,26 @@ void RefSystem::read() {
     read_mcm();
 }
 
-void RefSystem::write(FrameType commandID, FrameData* frameData, uint8_t length) {
-    if (bytes_sent >= REF_MAX_BAUD_RATE) {
-        Serial.println("RefSystem::write exceeds max baud rate");
-        return;
+void RefSystem::write(FrameType commandID, FrameData *frameData, uint8_t data_length) {
+    uint32_t now = millis();
+    if (now - bytes_last_reset >= 1000) {
+        bytes_sent_this_second = 0;
+        bytes_last_reset = now;
     }
 
-    if (length + 9 > REF_MAX_PACKET_SIZE) {
-        // note, the +9 is for the header (5 bytes) and footer (2 bytes) and command ID (2 bytes)
+    // overhead is header (5 bytes) + footer (2 bytes) + command ID (2 bytes)
+    constexpr size_t overhead = sizeof(FrameHeader) + sizeof(uint16_t) + sizeof(uint16_t);
+    if (data_length + overhead > REF_MAX_PACKET_SIZE) {
         Serial.println("RefSystem::write exceeds max packet size");
         return;
     }
 
     // make a frame header
-    FrameHeader header{};
+    FrameHeader header = {0};
     header.SOF = 0xA5;
-    header.data_length = length;
+    header.data_length = data_length;
     header.sequence = get_seq();
-    header.CRC = generateCRC8(reinterpret_cast<uint8_t*>(&header), 4);
+    header.CRC = generateCRC8(reinterpret_cast<uint8_t *>(&header), 4);
 
     // put header, commandID, and framedata together (same format as struct Frame)
     uint8_t raw_packet[REF_MAX_PACKET_SIZE] = {0};
@@ -68,17 +73,28 @@ void RefSystem::write(FrameType commandID, FrameData* frameData, uint8_t length)
     uint16_t command_id = static_cast<uint16_t>(commandID);
     memcpy(raw_packet + idx, &command_id, sizeof(command_id));
     idx += sizeof(command_id);
-    memcpy(raw_packet + idx, frameData->data, length);
-    idx += length;
+    memcpy(raw_packet + idx, frameData->data, data_length);
+    idx += data_length;
 
     // genereate the CRC for the footer
     uint16_t footerCRC = generateCRC16(raw_packet, idx);
     memcpy(raw_packet + idx, &footerCRC, sizeof(uint16_t));
     idx += sizeof(uint16_t);
 
-    if (Serial2.write(raw_packet, idx) == idx) {
+    // The total length of a robot interaction data packet cannot exceed 127 bytes
+    if (commandID == FrameType::ROBOT_INTERACTION && idx > 127) {
+        Serial.println("RefSystem::write Robot Interaction exceeds 127 bytes");
+        return;
+    }
+
+    if (bytes_sent_this_second + idx > REF_MAX_BAUD_RATE) {
+        Serial.println("RefSystem::write exceeds max baud rate");
+        return;
+    }
+
+    if (MCM_SERIAL.write(raw_packet, idx) == idx) {
         packets_sent++;
-        bytes_sent += length;
+        bytes_sent_this_second += idx;
     } else {
         Serial.println("Failed to write");
     }
@@ -86,35 +102,46 @@ void RefSystem::write(FrameType commandID, FrameData* frameData, uint8_t length)
 
 CommsRefData RefSystem::get_data_for_comms() {
     CommsRefData output_array;
-    
+
     // copys select packets into the output array
     memcpy(output_array.raw + REF_COMMS_GAME_STATUS_OFFSET, ref_data.game_status.raw, ref_data.game_status.packet_size);
     memcpy(output_array.raw + REF_COMMS_GAME_RESULT_OFFSET, ref_data.game_result.raw, ref_data.game_result.packet_size);
-    memcpy(output_array.raw + REF_COMMS_GAME_ROBOT_HP_OFFSET, ref_data.game_robot_hp.raw, ref_data.game_robot_hp.packet_size);
+    memcpy(output_array.raw + REF_COMMS_GAME_ROBOT_HP_OFFSET, ref_data.game_robot_hp.raw,
+           ref_data.game_robot_hp.packet_size);
     memcpy(output_array.raw + REF_COMMS_EVENT_DATE_OFFSET, ref_data.event_data.raw, ref_data.event_data.packet_size);
-    memcpy(output_array.raw + REF_COMMS_PROJECTILE_SUPPLIER_STATUS_OFFSET, ref_data.projectile_supplier_status.raw, ref_data.projectile_supplier_status.packet_size);
-    memcpy(output_array.raw + REF_COMMS_REFEREE_WARNING_OFFSET, ref_data.referee_warning.raw, ref_data.referee_warning.packet_size);
-    memcpy(output_array.raw + REF_COMMS_ROBOT_PERFORMANCE_OFFSET, ref_data.robot_performance.raw, ref_data.robot_performance.packet_size);
-    memcpy(output_array.raw + REF_COMMS_ROBOT_POWER_HEAT_OFFSET, ref_data.robot_power_heat.raw, ref_data.robot_power_heat.packet_size);
-    memcpy(output_array.raw + REF_COMMS_ROBOT_POSITION_OFFSET, ref_data.robot_position.raw, ref_data.robot_position.packet_size);
+    memcpy(output_array.raw + REF_COMMS_PROJECTILE_SUPPLIER_STATUS_OFFSET, ref_data.projectile_supplier_status.raw,
+           ref_data.projectile_supplier_status.packet_size);
+    memcpy(output_array.raw + REF_COMMS_REFEREE_WARNING_OFFSET, ref_data.referee_warning.raw,
+           ref_data.referee_warning.packet_size);
+    memcpy(output_array.raw + REF_COMMS_ROBOT_PERFORMANCE_OFFSET, ref_data.robot_performance.raw,
+           ref_data.robot_performance.packet_size);
+    memcpy(output_array.raw + REF_COMMS_ROBOT_POWER_HEAT_OFFSET, ref_data.robot_power_heat.raw,
+           ref_data.robot_power_heat.packet_size);
+    memcpy(output_array.raw + REF_COMMS_ROBOT_POSITION_OFFSET, ref_data.robot_position.raw,
+           ref_data.robot_position.packet_size);
     memcpy(output_array.raw + REF_COMMS_ROBOT_BUFF_OFFSET, ref_data.robot_buff.raw, ref_data.robot_buff.packet_size);
 
-    if(damage_status_changed) {
-        memcpy(output_array.raw + REF_COMMS_DAMAGE_STATUS_OFFSET, ref_data.damage_status.raw, ref_data.damage_status.packet_size);
+    if (damage_status_changed) {
+        memcpy(output_array.raw + REF_COMMS_DAMAGE_STATUS_OFFSET, ref_data.damage_status.raw,
+               ref_data.damage_status.packet_size);
         damage_status_changed = false; // reset the flag
     } else {
-        //if the damage status has not changed, send (15, 15) which means invalid
+        // if the damage status has not changed, send (15, 15) which means invalid
         memset(output_array.raw + REF_COMMS_DAMAGE_STATUS_OFFSET, 255, ref_data.damage_status.packet_size);
     }
 
-    memcpy(output_array.raw + REF_COMMS_LAUNCHING_STATUS_OFFSET, ref_data.launching_status.raw, ref_data.launching_status.packet_size);
-    memcpy(output_array.raw + REF_COMMS_PROJECTILE_ALLOWANCE_OFFSET, ref_data.projectile_allowance.raw, ref_data.projectile_allowance.packet_size);
+    memcpy(output_array.raw + REF_COMMS_LAUNCHING_STATUS_OFFSET, ref_data.launching_status.raw,
+           ref_data.launching_status.packet_size);
+    memcpy(output_array.raw + REF_COMMS_PROJECTILE_ALLOWANCE_OFFSET, ref_data.projectile_allowance.raw,
+           ref_data.projectile_allowance.packet_size);
     memcpy(output_array.raw + REF_COMMS_RFID_STATUS_OFFSET, ref_data.rfid_status.raw, ref_data.rfid_status.packet_size);
-    memcpy(output_array.raw + REF_COMMS_KBM_INTERACTION_OFFSET, ref_data.kbm_interaction.raw, ref_data.kbm_interaction.packet_size);
+    memcpy(output_array.raw + REF_COMMS_KBM_INTERACTION_OFFSET, ref_data.kbm_interaction.raw,
+           ref_data.kbm_interaction.packet_size);
     return output_array;
 }
 
-bool RefSystem::read_frame_header(HardwareSerial* serial, uint8_t raw_buffer[REF_MAX_PACKET_SIZE * 2], uint16_t& buffer_index, Frame& frame) {
+bool RefSystem::read_frame_header(HardwareSerial *serial, uint8_t raw_buffer[REF_MAX_PACKET_SIZE * 2],
+                                  uint16_t &buffer_index, Frame &frame) {
     // early return if serial is empty or not full enough
     if (serial->available() < FrameHeader::packet_size)
         return false;
@@ -160,7 +187,8 @@ bool RefSystem::read_frame_header(HardwareSerial* serial, uint8_t raw_buffer[REF
     return true;
 }
 
-bool RefSystem::read_frame_command_ID(HardwareSerial* serial, uint8_t raw_buffer[REF_MAX_PACKET_SIZE * 2], uint16_t& buffer_index, Frame& frame) {
+bool RefSystem::read_frame_command_ID(HardwareSerial *serial, uint8_t raw_buffer[REF_MAX_PACKET_SIZE * 2],
+                                      uint16_t &buffer_index, Frame &frame) {
     // early return if serial is empty or not full enough
     if (serial->available() < 2)
         return false;
@@ -189,7 +217,8 @@ bool RefSystem::read_frame_command_ID(HardwareSerial* serial, uint8_t raw_buffer
     return true;
 }
 
-bool RefSystem::read_frame_data(HardwareSerial* serial, uint8_t raw_buffer[REF_MAX_PACKET_SIZE * 2], uint16_t& buffer_index, Frame& frame) {
+bool RefSystem::read_frame_data(HardwareSerial *serial, uint8_t raw_buffer[REF_MAX_PACKET_SIZE * 2],
+                                uint16_t &buffer_index, Frame &frame) {
     // early return if serial is empty or not full enough
     if (serial->available() < frame.header.data_length)
         return false;
@@ -211,7 +240,8 @@ bool RefSystem::read_frame_data(HardwareSerial* serial, uint8_t raw_buffer[REF_M
     return true;
 }
 
-int RefSystem::read_frame_tail(HardwareSerial* serial, uint8_t raw_buffer[REF_MAX_PACKET_SIZE * 2], uint16_t& buffer_index, Frame& frame) {
+int RefSystem::read_frame_tail(HardwareSerial *serial, uint8_t raw_buffer[REF_MAX_PACKET_SIZE * 2],
+                               uint16_t &buffer_index, Frame &frame) {
     // early return if serial is empty or not full enough
     if (serial->available() < 2)
         return 0;
@@ -233,14 +263,13 @@ int RefSystem::read_frame_tail(HardwareSerial* serial, uint8_t raw_buffer[REF_MA
         return -1;
     }
 
-
     // increment buffer index
     buffer_index = bytes_read;
 
     return 1;
 }
 
-void RefSystem::set_ref_data(Frame& frame, uint8_t raw_buffer[REF_MAX_PACKET_SIZE * 2]) {
+void RefSystem::set_ref_data(Frame &frame, uint8_t raw_buffer[REF_MAX_PACKET_SIZE * 2]) {
     // Copy the header
     frame.header.SOF = raw_buffer[0];
     frame.header.data_length = (raw_buffer[2] << 8) | raw_buffer[1];
