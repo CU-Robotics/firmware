@@ -4,7 +4,7 @@
 #include <Arduino.h>
 
 /// @brief Maximum size of a Ref System packet in bytes
-constexpr uint16_t REF_MAX_PACKET_SIZE = 128;
+constexpr uint16_t REF_MAX_PACKET_SIZE = 127;
 /// @brief Maximum valid command ID for Ref System packets
 constexpr uint16_t REF_MAX_COMMAND_ID = 0x0308;
 
@@ -1083,9 +1083,6 @@ struct RadarDecision {
 /// @note transmitted at a maximum frequency of 10 Hz when triggered by the sender
 /// @note ID: 0x0301
 struct RobotInteraction {
-    /// @brief Size of the RobotInteraction packet in bytes
-    static const uint8_t packet_size = 128;
-
     /// @brief The raw byte array of data received from ref
     /// @note this is only the FrameData data rather than the whole ref packet
     uint8_t raw[REF_MAX_PACKET_SIZE] = { 0 };

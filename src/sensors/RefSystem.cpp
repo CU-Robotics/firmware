@@ -45,21 +45,27 @@ void RefSystem::read() {
 }
 
 void RefSystem::write(FrameType commandID, FrameData *frameData, uint8_t data_length) {
-    uint32_t now = millis();
+    const uint32_t now = millis();
     if (now - bytes_last_reset >= 1000) {
         bytes_sent_this_second = 0;
         bytes_last_reset = now;
     }
 
-    // overhead is header (5 bytes) + footer (2 bytes) + command ID (2 bytes)
+    if (frameData == nullptr) {
+        Serial.println("RefSystem::write called with null FrameData");
+        return;
+    }
+
+    // overhead is header (5 bytes) + command ID (2 bytes) + CRC16 tail (2 bytes)
     constexpr size_t overhead = sizeof(FrameHeader) + sizeof(uint16_t) + sizeof(uint16_t);
-    if (data_length + overhead > REF_MAX_PACKET_SIZE) {
+    const size_t total_size = static_cast<size_t>(data_length) + overhead;
+    if (total_size > REF_MAX_PACKET_SIZE) {
         Serial.println("RefSystem::write exceeds max packet size");
         return;
     }
 
     // make a frame header
-    FrameHeader header = {0};
+    FrameHeader header = {};
     header.SOF = 0xA5;
     header.data_length = data_length;
     header.sequence = get_seq();
@@ -70,31 +76,26 @@ void RefSystem::write(FrameType commandID, FrameData *frameData, uint8_t data_le
     size_t idx = 0;
     memcpy(raw_packet + idx, &header, sizeof(FrameHeader));
     idx += sizeof(FrameHeader);
-    uint16_t command_id = static_cast<uint16_t>(commandID);
+    const uint16_t command_id = static_cast<uint16_t>(commandID);
     memcpy(raw_packet + idx, &command_id, sizeof(command_id));
     idx += sizeof(command_id);
     memcpy(raw_packet + idx, frameData->data, data_length);
     idx += data_length;
 
-    // genereate the CRC for the footer
-    uint16_t footerCRC = generateCRC16(raw_packet, idx);
-    memcpy(raw_packet + idx, &footerCRC, sizeof(uint16_t));
+    // generate the CRC for the footer
+    const uint16_t footer_crc = generateCRC16(raw_packet, idx);
+    memcpy(raw_packet + idx, &footer_crc, sizeof(footer_crc));
     idx += sizeof(uint16_t);
-
-    // The total length of a robot interaction data packet cannot exceed 127 bytes
-    if (commandID == FrameType::ROBOT_INTERACTION && idx > 127) {
-        Serial.println("RefSystem::write Robot Interaction exceeds 127 bytes");
-        return;
-    }
 
     if (bytes_sent_this_second + idx > REF_MAX_BAUD_RATE) {
         Serial.println("RefSystem::write exceeds max baud rate");
         return;
     }
 
-    if (MCM_SERIAL.write(raw_packet, idx) == idx) {
+    const size_t packet_size = idx;
+    if (MCM_SERIAL.write(raw_packet, packet_size) == packet_size) {
         packets_sent++;
-        bytes_sent_this_second += idx;
+        bytes_sent_this_second += packet_size;
     } else {
         Serial.println("Failed to write");
     }
