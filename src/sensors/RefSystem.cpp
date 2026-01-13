@@ -44,61 +44,78 @@ void RefSystem::read() {
     read_mcm();
 }
 
-void RefSystem::write(FrameType commandID, FrameData *frameData, uint8_t data_length) {
+bool RefSystem::write(FrameType commandID, const void *data, size_t dataLength) {
+    // Reset byte count every second
     const uint32_t now = millis();
     if (now - bytes_last_reset >= 1000) {
         bytes_sent_this_second = 0;
         bytes_last_reset = now;
     }
 
-    if (frameData == nullptr) {
-        Serial.println("RefSystem::write called with null FrameData");
-        return;
+    // Validate input
+    if (data == nullptr && dataLength > 0) {
+        Serial.println("RefSystem::write called with null data but non-zero length");
+        return false;
     }
 
-    // overhead is header (5 bytes) + command ID (2 bytes) + CRC16 tail (2 bytes)
-    constexpr size_t overhead = sizeof(FrameHeader) + sizeof(uint16_t) + sizeof(uint16_t);
-    const size_t total_size = static_cast<size_t>(data_length) + overhead;
-    if (total_size > REF_MAX_PACKET_SIZE) {
+    // Calculate total packet size
+    // Overhead: header (5 bytes) + command ID (2 bytes) + CRC16 tail (2 bytes)
+    constexpr size_t FRAME_OVERHEAD = sizeof(FrameHeader) + sizeof(uint16_t) + sizeof(uint16_t);
+    const size_t packetSize = dataLength + FRAME_OVERHEAD;
+
+    if (packetSize > REF_MAX_PACKET_SIZE) {
         Serial.println("RefSystem::write exceeds max packet size");
-        return;
+        return false;
     }
 
-    // make a frame header
-    FrameHeader header = {};
-    header.SOF = 0xA5;
-    header.data_length = data_length;
-    header.sequence = get_seq();
+    // Build packet
+    uint8_t packet[REF_MAX_PACKET_SIZE];
+    size_t idx = 0;
+
+    // Frame header
+    FrameHeader header = {
+        .SOF = 0xA5,
+        .data_length = static_cast<uint16_t>(dataLength),
+        .sequence = get_seq(),
+        .CRC = 0 // Calculated below
+    };
     header.CRC = generateCRC8(reinterpret_cast<uint8_t *>(&header), 4);
 
-    // put header, commandID, and framedata together (same format as struct Frame)
-    uint8_t raw_packet[REF_MAX_PACKET_SIZE] = {0};
-    size_t idx = 0;
-    memcpy(raw_packet + idx, &header, sizeof(FrameHeader));
+    memcpy(packet + idx, &header, sizeof(FrameHeader));
     idx += sizeof(FrameHeader);
-    const uint16_t command_id = static_cast<uint16_t>(commandID);
-    memcpy(raw_packet + idx, &command_id, sizeof(command_id));
-    idx += sizeof(command_id);
-    memcpy(raw_packet + idx, frameData->data, data_length);
-    idx += data_length;
 
-    // generate the CRC for the footer
-    const uint16_t footer_crc = generateCRC16(raw_packet, idx);
-    memcpy(raw_packet + idx, &footer_crc, sizeof(footer_crc));
-    idx += sizeof(uint16_t);
+    // Command ID
+    const uint16_t cmdId = static_cast<uint16_t>(commandID);
+    memcpy(packet + idx, &cmdId, sizeof(cmdId));
+    idx += sizeof(cmdId);
 
-    if (bytes_sent_this_second + idx > REF_MAX_BAUD_RATE) {
-        Serial.println("RefSystem::write exceeds max baud rate");
-        return;
+    // Data payload
+    if (dataLength > 0) {
+        memcpy(packet + idx, data, dataLength);
+        idx += dataLength;
     }
 
-    const size_t packet_size = idx;
-    if (MCM_SERIAL.write(raw_packet, packet_size) == packet_size) {
-        packets_sent++;
-        bytes_sent_this_second += packet_size;
-    } else {
-        Serial.println("Failed to write");
+    // CRC16 footer
+    const uint16_t crc16 = generateCRC16(packet, idx);
+    memcpy(packet + idx, &crc16, sizeof(crc16));
+    idx += sizeof(crc16);
+
+    // Check bandwidth limit
+    if (bytes_sent_this_second + idx > REF_MAX_BYTES_PER_SECOND) {
+        Serial.println("RefSystem::write exceeds bandwidth limit");
+        return false;
     }
+
+    // Transmit
+    // note: MCM_SERIAL is fine for RobotInteraction, but we'll need VTM_SERIAL for other packets
+    if (MCM_SERIAL.write(packet, idx) != idx) {
+        Serial.println("RefSystem::write UART transmission failed");
+        return false;
+    }
+
+    packets_sent++;
+    bytes_sent_this_second += idx;
+    return true;
 }
 
 CommsRefData RefSystem::get_data_for_comms() {

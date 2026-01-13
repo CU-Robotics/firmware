@@ -4,7 +4,7 @@
 #include <Arduino.h>
 
 /// @brief Maximum size of a Ref System packet in bytes
-constexpr uint16_t REF_MAX_PACKET_SIZE = 127;
+constexpr uint16_t REF_MAX_PACKET_SIZE = 128;
 /// @brief Maximum valid command ID for Ref System packets
 constexpr uint16_t REF_MAX_COMMAND_ID = 0x0308;
 

@@ -1,8 +1,10 @@
 #ifndef REF_DRAWER_HPP
 #define REF_DRAWER_HPP
 
+#include <Arduino.h>
 #include <cstdint>
 #include <cstring>
+#include <type_traits>
 
 #define DEFAULT_LINE_WIDTH 10
 #define DEFAULT_FONT_SIZE 12
@@ -124,25 +126,59 @@ class RefDrawer {
     template <typename T> void sendPacket(DrawType type, const T &data) {
         static_assert(std::is_same_v<T, GraphicData> || std::is_same_v<T, LayerData>,
                       "RefDrawer sendPacket only supports GraphicData and LayerData");
-        RobotInteraction ri = {};
-        ri.content_id = static_cast<uint16_t>(type);
-        ri.sender_id = ref->ref_data.robot_performance.robot_ID;
-        ri.receiver_id = 0x100 + ri.sender_id; // 0x100 + robot ID for desktop client
-        ri.size = sizeof(data);
-        memcpy(ri.data, &data, ri.size);
 
-        FrameData fd = {};
+        // Check that ref is initialized and robot ID is set
+        if (ref == nullptr) {
+            Serial.println("RefDrawer::sendPacket: ref is null");
+            return;
+        }
+
+        // Check that robot ID is set
+        static bool warned_no_id = false;
+        if (ref->ref_data.robot_performance.robot_ID == 0) {
+            if (!warned_no_id) {
+                Serial.println("RefDrawer::sendPacket: Robot ID is 0, cannot send packet yet");
+                warned_no_id = true;
+            }
+            return;
+        }
+        warned_no_id = false;
+
+        // Check rate limit
+        static uint32_t last_send_ms = 0;
+        const uint32_t now = millis();
+        if (now - last_send_ms < 100) {
+            return; // 10Hz rate limit for 0x0301
+        }
+        last_send_ms = now;
+
+        // Build the interaction header + data
+        constexpr size_t HEADER_SIZE = sizeof(uint16_t) * 3; // content_id + sender_id + receiver_id
+        uint8_t buffer[HEADER_SIZE + sizeof(T)];
         size_t idx = 0;
-        memcpy(fd.data + idx, &ri.content_id, sizeof(ri.content_id));
-        idx += sizeof(ri.content_id);
-        memcpy(fd.data + idx, &ri.sender_id, sizeof(ri.sender_id));
-        idx += sizeof(ri.sender_id);
-        memcpy(fd.data + idx, &ri.receiver_id, sizeof(ri.receiver_id));
-        idx += sizeof(ri.receiver_id);
-        memcpy(fd.data + idx, ri.data, ri.size);
-        idx += ri.size;
 
-        ref->write(FrameType::ROBOT_INTERACTION, &fd, idx);
+        // Content ID (sub-command)
+        const uint16_t contentId = static_cast<uint16_t>(type);
+        memcpy(buffer + idx, &contentId, sizeof(contentId));
+        idx += sizeof(contentId);
+
+        // Sender ID (this robot)
+        const uint16_t senderId = ref->ref_data.robot_performance.robot_ID;
+        memcpy(buffer + idx, &senderId, sizeof(senderId));
+        idx += sizeof(senderId);
+
+        // Receiver ID (player client = 0x100 + robot ID)
+        const uint16_t receiverId = 0x100 + senderId;
+        memcpy(buffer + idx, &receiverId, sizeof(receiverId));
+        idx += sizeof(receiverId);
+
+        // Payload
+        memcpy(buffer + idx, &data, sizeof(T));
+        idx += sizeof(T);
+
+        if (!ref->write(FrameType::ROBOT_INTERACTION, buffer, idx)) {
+            Serial.println("RefDrawer::sendPacket: ref->write failed");
+        }
     }
 };
 

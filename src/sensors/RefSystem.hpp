@@ -7,7 +7,7 @@
 /// @brief Time (in us) between packet writes
 constexpr uint32_t REF_MAX_PACKET_DELAY = 40000;
 /// @brief Maximum number of bytes that is allowed to be sent within a second. Includes Ref header/tail
-constexpr uint32_t REF_MAX_BAUD_RATE = 3720;
+constexpr uint32_t REF_MAX_BYTES_PER_SECOND = 3720;
 /// @brief Maximum number of inter robot packets should be able to be stored.
 constexpr uint32_t REF_MAX_COMM_BUFFER_SIZE = 5;
 
@@ -82,12 +82,12 @@ public:
     /// @brief Reads the incoming data from the Referee System and sets the data into ref_data
     void read();
 
-    /// @brief Send a pre-constructed packet to Ref
-    /// @param commandID The type of frame to send, i.e. FrameType::ROBOT_INTERACTION
-    /// @param frameData Pointer to the FrameData structure containing the packet to be sent
-    /// @param data_length The size of the data to be sent, not including the header and tail
-    /// @note Re-computes the CRC, so no need to do it yourself
-    void write(FrameType commandID, FrameData* frameData, uint8_t data_length);
+    /// @brief Write a frame to the referee system
+    /// @param commandID The command ID to send
+    /// @param data Pointer to the data payload (can be nullptr if dataLength is 0)
+    /// @param dataLength Length of the data payload in bytes
+    /// @return true if the packet was sent successfully, false otherwise
+    bool write(FrameType commandID, const void* data, size_t dataLength);
 
     /// @brief Generate a byte array for all ref data to be sent over comms
     /// @return The data struct
