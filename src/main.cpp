@@ -123,9 +123,38 @@ int main() {
         transmitter = new ET16S;
     }
 
+    bool transmitter_safe = false;
+    while (!transmitter_safe) {
+        transmitter->read();
+        
+        //make sure there is no spin
+        if(transmitter->get_wheel() != 0) {
+            Serial.println("Preflight fail: Wheel must be 0");
+            delay(1000);
+            continue;
+        }
+
+        //make sure flywheels and the feeder are off 
+        if(transmitter->get_r_switch() == SwitchPos::MIDDLE || transmitter->get_r_switch() == SwitchPos::FORWARD) {
+            Serial.println("Preflight fail: Right switch must be in backward position (shooter off)");
+            delay(1000);
+            continue;
+        }
+
+        //must be in safety mode at start
+        if(transmitter->get_safety_switch() == SwitchPos::BACKWARD || transmitter->get_safety_switch() == SwitchPos::MIDDLE) {
+            Serial.println("Preflight fail: Safety switch must be in forward position (safety on)");
+            delay(1000);
+            continue;
+        }
+
+        transmitter_safe = true;
+    }
+    transmitter->init();
+
+
     // initialize objects
     can.init();
-    transmitter->init();
     comms_layer.init();
 
     ref = sensor_manager.get_ref();
@@ -469,11 +498,26 @@ int main() {
         last_gimbal_power = ref->ref_data.robot_performance.gimbol_power_active;
         bool gimbal_power_recently_turned_on = gimbal_power_timer.get_elapsed_micros_no_restart() < 3000000;
 
-        not_safety_mode =
-            (transmitter->is_connected() &&
-             (transmitter->get_l_switch() == SwitchPos::BACKWARD || transmitter->get_l_switch() == SwitchPos::MIDDLE) &&
-             config_layer.is_configured() && !is_slow_loop && ref->ref_data.robot_performance.gimbol_power_active &&
-             !gimbal_power_recently_turned_on);
+        bool attempting_non_safety_mode = (transmitter->is_connected() &&
+                (transmitter->get_safety_switch() == SwitchPos::BACKWARD || transmitter->get_safety_switch() == SwitchPos::MIDDLE) &&
+                config_layer.is_configured() && !is_slow_loop && ref->ref_data.robot_performance.gimbol_power_active &&
+                !gimbal_power_recently_turned_on);
+        // Attempting to exit safety mode
+        if (!not_safety_mode && attempting_non_safety_mode) {
+            //make sure there is no spin
+            if(transmitter->get_wheel() != 0) {
+                Serial.println("Preflight fail: Wheel must be 0 before disabling safety");
+            }
+            //make sure flywheels and the feeder are off 
+            else if(transmitter->get_r_switch() != SwitchPos::BACKWARD) {
+                Serial.println("Preflight fail: Right switch must be in backward position (shooter off) before disabling safety");
+            }
+            else {
+                not_safety_mode = true;
+            }
+        } else {
+            not_safety_mode = attempting_non_safety_mode;
+        }
         //  SAFETY MODE
         if (not_safety_mode) {
             // SAFETY OFF
