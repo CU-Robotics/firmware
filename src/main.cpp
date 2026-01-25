@@ -214,9 +214,8 @@ int main() {
     int count_one = 0;
 
     // whether we are in hive mode or not
-    bool hive_toggle = false;
-    bool safety_toggle = false;
-    bool not_safety_mode = false;
+    enum Mode { SAFETY, TEENSY, HIVE} mode = SAFETY;
+    bool mode_changed = false;
     bool last_gimbal_power = false; // used to detect gimbal power changes
     bool last_loop_slow = false;    // used to detect multiple slow loops in a row
     int slow_loop_counter = 0;      // used to count slow loops in a row
@@ -333,7 +332,7 @@ int main() {
             if (dt2 > 0.1)
                 dt2 = 0;
             // check if the shooter is active
-            if (not_safety_mode && ref->ref_data.robot_performance.shooter_power_active)
+            if (mode != SAFETY && ref->ref_data.robot_performance.shooter_power_active)
                 feed += feeder_target * dt2;
             target_state[6][0] = (int)feed;
         } else {
@@ -358,28 +357,23 @@ int main() {
 
         // if the left switch is all the way down use Hive controls
 
-        if (transmitter->get_l_switch() == SwitchPos::BACKWARD) {
+        if (mode == HIVE) {
             // hid_incoming.get_target_state(target_state);
             memcpy(target_state, comms_layer.get_hive_data().target_state.state, sizeof(target_state));
             last_feed = target_state[6][0];
             // if you just switched to hive controls, set the reference to the
             // current state'
-            if (hive_toggle) {
+            if (mode_changed) {
                 governor.set_reference(temp_state);
-                hive_toggle = false;
             }
         }
 
         // when in teensy control mode reset hive toggle
-        if (transmitter->get_l_switch() == SwitchPos::MIDDLE) {
-            if (!hive_toggle || !safety_toggle) {
-                pos_offset_x = temp_state[0][0];
-                pos_offset_y = temp_state[1][0];
-                feed = last_feed;
-                governor.set_reference(temp_state);
-            }
-            hive_toggle = true;
-            safety_toggle = true;
+        if (mode == TEENSY && mode_changed) {
+            pos_offset_x = temp_state[0][0];
+            pos_offset_y = temp_state[1][0];
+            feed = last_feed;
+            governor.set_reference(temp_state);
         }
 
         // print transmitter
@@ -394,7 +388,7 @@ int main() {
         // }
 
         // override temp state if needed. Dont override in teensy mode so the sentry doesnt move during inspection
-        if (comms_layer.get_hive_data().override_state.active && !(transmitter->get_l_switch() == SwitchPos::MIDDLE)) {
+        if (comms_layer.get_hive_data().override_state.active && mode != TEENSY) {
             // clear the request
             comms_layer.get_hive_data().override_state.active = false;
 
@@ -409,9 +403,8 @@ int main() {
         estimator_manager.step(temp_state, temp_micro_state, override_request);
         override_request = false;
 
-        if ((feed - temp_state[6][0] > 2 && transmitter->get_l_switch() == SwitchPos::MIDDLE) ||
-            (comms_layer.get_hive_data().target_state.state[6][0] - temp_state[6][0] > 2 &&
-             transmitter->get_l_switch() == SwitchPos::BACKWARD)) {
+        if ((feed - temp_state[6][0] > 2 && mode == TEENSY) ||
+            (comms_layer.get_hive_data().target_state.state[6][0] - temp_state[6][0] > 2 &&  mode == HIVE)) {
             Serial.printf("Feeder is lowkey jammed. current ball count: %f, feed: %f, hive target: %f\n",
                           temp_state[6][0], feed, comms_layer.get_hive_data().target_state.state[6][0]);
             feed = temp_state[6][0] + 1;
@@ -498,33 +491,38 @@ int main() {
         last_gimbal_power = ref->ref_data.robot_performance.gimbol_power_active;
         bool gimbal_power_recently_turned_on = gimbal_power_timer.get_elapsed_micros_no_restart() < 3000000;
 
-        bool attempting_non_safety_mode = (transmitter->is_connected() &&
-                (transmitter->get_safety_switch() == SwitchPos::BACKWARD || transmitter->get_safety_switch() == SwitchPos::MIDDLE) &&
-                config_layer.is_configured() && !is_slow_loop && ref->ref_data.robot_performance.gimbol_power_active &&
-                !gimbal_power_recently_turned_on);
-        // Attempting to exit safety mode
-        if (!not_safety_mode && attempting_non_safety_mode) {
+        mode_changed = false;
+        enum Mode requested_mode = SAFETY;
+        if (transmitter->get_l_switch() == SwitchPos::FORWARD) {
+            requested_mode = SAFETY;
+        } else if (transmitter->get_l_switch() == SwitchPos::MIDDLE) {
+            requested_mode = TEENSY;
+        } else if (transmitter->get_l_switch() == SwitchPos::BACKWARD) {
+            requested_mode = HIVE;
+        }
+        if (requested_mode != mode && mode == SAFETY) {
+            if (!transmitter->is_connected() || !config_layer.is_configured() || is_slow_loop ||
+                !ref->ref_data.robot_performance.gimbol_power_active || gimbal_power_recently_turned_on) {
+                Serial.println("Failed to disengage safety mode. Robot not ready.");
+                    requested_mode = SAFETY;
+            }
             //make sure there is no spin
-            if(transmitter->get_wheel() != 0) {
-                Serial.println("Preflight fail: Wheel must be 0 before disabling safety");
+            else if(transmitter->get_wheel() != 0) {
+                Serial.println("Failed to disengage safety mode. Wheel must be set to 0.");
+                requested_mode = SAFETY;
             }
             //make sure flywheels and the feeder are off 
             else if(transmitter->get_r_switch() != SwitchPos::BACKWARD) {
-                Serial.println("Preflight fail: Right switch must be in backward position (shooter off) before disabling safety");
+                Serial.println("Failed to disengage safety mode. Right switch must be in backward position (shooter off).");
+                requested_mode = SAFETY;
             }
-            else {
-                not_safety_mode = true;
-            }
-        } else {
-            not_safety_mode = attempting_non_safety_mode;
         }
-        //  SAFETY MODE
-        if (not_safety_mode) {
-            // SAFETY OFF
-            can.write();
-            // Serial.printf("Can write\n");
-            // Serial.printf("Can write\n");
-        } else {
+        if (requested_mode != mode) {
+            Serial.printf("Switching mode from %d to %d\n", mode, requested_mode);
+            mode = requested_mode;
+            mode_changed = true;
+        }
+        if (mode == SAFETY) {
             // SAFETY ON
             // TODO: Reset all controller integrators here
             can.issue_safety_mode();
@@ -535,7 +533,11 @@ int main() {
                        : (int)floor(temp_state[6][0]); // reset feed to the current state
             last_feed = feed;                          // reset last feed to the current state
             // Serial.printf("Can zero\n");
-            safety_toggle = false; // reset hive toggle
+        } else {
+            // SAFETY OFF
+            can.write();
+            // Serial.printf("Can write\n");
+            // Serial.printf("Can write\n");
         }
 
         // LED heartbeat -- linked to loop count to reveal slowdowns and
