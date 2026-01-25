@@ -98,9 +98,25 @@ function Bind-Device {
     }
 }
 
+function Is-Device-Attached {
+    param([string]$BusId)
+    if (-not $BusId) {
+        return $false
+    }
+    $line = usbipd list 2>$null | Select-String ("^" + [regex]::Escape($BusId) + "\s+")
+    if ($line -and $line.ToString() -match "Attached") {
+        return $true
+    }
+    return $false
+}
+
 function Attach-Device {
     param([string]$BusId, [string]$Name)
     if (-not $BusId) {
+        return
+    }
+    if (Is-Device-Attached -BusId $BusId) {
+        Write-Host "  $Name already attached to WSL" -ForegroundColor DarkGray
         return
     }
     try {
@@ -131,6 +147,8 @@ if ($bootloaderBusId) {
     Attach-Device -BusId $serialInfo.BusId -Name "Serial Mode"
     Attach-Device -BusId $bootloaderBusId -Name "Bootloader"
     Write-Host "`nSetup complete! Auto-attach requested." -ForegroundColor Cyan
+    Write-Host "`nThis window will close in 5 seconds..." -ForegroundColor DarkGray
+    Start-Sleep -Seconds 5
     exit 0
 }
 
@@ -140,6 +158,8 @@ $serialInfo = Wait-For-Device -PrimaryVID $SerialVID -PrimaryPID $SerialPID -Alt
 
 if (-not $serialInfo) {
     Write-Host "Teensy not found. Ensure it's plugged in and visible in 'usbipd list'." -ForegroundColor Red
+    Write-Host "`nThis window will close in 10 seconds..." -ForegroundColor DarkGray
+    Start-Sleep -Seconds 10
     exit 1
 }
 
@@ -166,6 +186,8 @@ while ($timeout -gt 0) {
 
 if ($timeout -eq 0) {
     Write-Host "`nTimeout waiting for bootloader. Did you press the button?" -ForegroundColor Red
+    Write-Host "`nThis window will close in 10 seconds..." -ForegroundColor DarkGray
+    Start-Sleep -Seconds 10
     exit 1
 }
 
@@ -183,3 +205,5 @@ if ($bootloaderBusId) {
     Write-Host "  Bootloader Mode: $bootloaderBusId" -ForegroundColor White
 }
 Write-Host "$('=' * 50)" -ForegroundColor Cyan
+Write-Host "`nThis window will close in 5 seconds..." -ForegroundColor DarkGray
+Start-Sleep -Seconds 5

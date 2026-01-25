@@ -209,9 +209,6 @@ git_scraper:
 
 # Upload the firmware to the Teensy device
 upload: build
-ifdef IS_WSL
-	@$(MAKE) wsl
-endif
 	@echo [Uploading] - If this fails, press the button on the teensy and re-run 'make upload'
 	@tycmd upload $(TARGET_EXEC).hex
     # Teensy serial isn't immediately available after upload, so we wait a bit
@@ -231,7 +228,11 @@ wsl:
 ifdef IS_WSL
 	@echo [Detected WSL environment!]
 	@echo [Setting up Teensy for WSL...]
-	@powershell.exe -Command "Start-Process -FilePath powershell -Verb RunAs -Wait -ArgumentList '-ExecutionPolicy Bypass -File \"$$(wslpath -w $(TOOLS_DIR)/Setup-Teensy.ps1)\"'"
+	@echo
+	@echo ">>> An elevated PowerShell window will open. Please follow the prompts there."
+	@echo ">>> You may need to press the Teensy button when asked."
+	@echo
+	@powershell.exe -Command "Start-Process -FilePath powershell -Verb RunAs -ArgumentList '-ExecutionPolicy Bypass -File \"$$(wslpath -w $(TOOLS_DIR)/Setup-Teensy.ps1)\"'"
 else
 	@echo [Not running under WSL]
 endif
