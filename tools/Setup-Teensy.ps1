@@ -67,7 +67,7 @@ function Wait-For-Device {
                     $found.Pid = $ids.Pid
                 }
             }
-            Write-Host "`r  $Label detected (${found.Vid}:${found.Pid}) on Bus ID: ${found.BusId}                     " -ForegroundColor Green
+            Write-Host "`r  $Label detected ($($found.Vid):$($found.Pid)) on Bus ID: $($found.BusId)                     " -ForegroundColor Green
             return $found
         }
         Write-Host -NoNewline "`r  Waiting for $Label $($spinner[$i % 4]) ($TimeoutSec`s) "
@@ -141,8 +141,8 @@ if ($bootloaderBusId) {
                 $serialInfo.Pid = $ids.Pid
             }
         }
-        Write-Host "Found Teensy (Serial Mode ${serialInfo.Vid}:${serialInfo.Pid}) on Bus ID: $($serialInfo.BusId)" -ForegroundColor Green
-        Bind-Device -HardwareId "${serialInfo.Vid}:${serialInfo.Pid}" -BusId $serialInfo.BusId -Name "Serial Mode"
+        Write-Host "Found Teensy (Serial Mode $($serialInfo.Vid):$($serialInfo.Pid)) on Bus ID: $($serialInfo.BusId)" -ForegroundColor Green
+        Bind-Device -HardwareId "$($serialInfo.Vid):$($serialInfo.Pid)" -BusId $serialInfo.BusId -Name "Serial Mode"
     }
     Attach-Device -BusId $serialInfo.BusId -Name "Serial Mode"
     Attach-Device -BusId $bootloaderBusId -Name "Bootloader"
@@ -163,8 +163,8 @@ if (-not $serialInfo) {
     exit 1
 }
 
-Write-Host "Found Teensy (Serial Mode ${serialInfo.Vid}:${serialInfo.Pid}) on Bus ID: $($serialInfo.BusId)" -ForegroundColor Green
-Bind-Device -HardwareId "${serialInfo.Vid}:${serialInfo.Pid}" -BusId $serialInfo.BusId -Name "Serial Mode"
+Write-Host "Found Teensy (Serial Mode $($serialInfo.Vid):$($serialInfo.Pid)) on Bus ID: $($serialInfo.BusId)" -ForegroundColor Green
+Bind-Device -HardwareId "$($serialInfo.Vid):$($serialInfo.Pid)" -BusId $serialInfo.BusId -Name "Serial Mode"
 
 # Wait for bootloader
 Write-Host "`nPress the Teensy button to enter Bootloader Mode..." -ForegroundColor Yellow
