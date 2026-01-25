@@ -210,20 +210,10 @@ git_scraper:
 # Upload the firmware to the Teensy device
 upload: build
 ifdef IS_WSL
-	@echo [Detected WSL environment!]
-	@echo [Setting up Teensy for WSL...]
-	@powershell.exe -Command "Start-Process -FilePath powershell -Verb RunAs -Wait -ArgumentList '-ExecutionPolicy Bypass -File \"$$(wslpath -w $(TOOLS_DIR)/Setup-Teensy.ps1)\"'"
+	@$(MAKE) wsl
 endif
 	@echo [Uploading] - If this fails, press the button on the teensy and re-run 'make upload'
-ifdef IS_WSL
-	@for i in 1 2 3 4 5; do \
-		tycmd upload $(TARGET_EXEC).hex && break; \
-		echo "[Retry $$i/5] Board not available, waiting for USB re-attach..."; \
-		sleep 2; \
-	done
-else
 	@tycmd upload $(TARGET_EXEC).hex
-endif
     # Teensy serial isn't immediately available after upload, so we wait a bit
     # The Teensy waits for 20 + 280 + 20 ms after power up/boot
 	@sleep 0.4s
@@ -234,6 +224,17 @@ endif
 install:
 	@bash $(TOOLS_DIR)/install_tytools.sh
 	@bash $(TOOLS_DIR)/install_compiler.sh
+
+
+# Sets up USB passthrough for Teensy on WSL
+wsl:
+ifdef IS_WSL
+	@echo [Detected WSL environment!]
+	@echo [Setting up Teensy for WSL...]
+	@powershell.exe -Command "Start-Process -FilePath powershell -Verb RunAs -Wait -ArgumentList '-ExecutionPolicy Bypass -File \"$$(wslpath -w $(TOOLS_DIR)/Setup-Teensy.ps1)\"'"
+else
+	@echo [Not running under WSL]
+endif
 
 
 # starts GDB and attaches to the firmware running on a connected Teensy
