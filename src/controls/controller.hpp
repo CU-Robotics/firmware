@@ -66,6 +66,8 @@ private:
     PIDFilter pidp[3];
     /// @brief filter for calculating pid velocity controller outputs. 3 for x, y, and chassis angle
     PIDFilter pidv[3];
+    /// @brief filter for low-level motor velocity control. 4 motors for X-drive
+    PIDFilter pid_motors[4];
     /// @brief outputs of the pid position controller
     float outputp[4];
     /// @brief outputs of the pid velocity controller
@@ -92,6 +94,12 @@ public:
             pidp[i].sumError = 0.0;
             pidv[i].sumError = 0.0;
         }
+
+        for (int i = 0; i < 4; i++) { // Reseting Existing object
+            pid_motors[i].sumError = 0.0;
+            pid_motors[i].prevError = 0.0;
+            pid_motors[i].K[3] = 0.0;
+        }
     }
 };
 
@@ -102,6 +110,8 @@ private:
     PIDFilter pidp[3];
     /// @brief filter for calculating pid velocity controller outputs. 3 for x, y, and chassis angle
     PIDFilter pidv[3];
+    /// @brief filter for low-level motor velocity control. 4 motors for X-drive
+    PIDFilter pid_motors[4];
     /// @brief outputs of the pid position controller
     float outputp[4];
     /// @brief outputs of the pid velocity controller
@@ -127,6 +137,12 @@ public:
         for (int i = 0; i < 3; i++) {
             pidp[i].sumError = 0.0;
             pidv[i].sumError = 0.0;
+        }
+
+        for (int i = 0; i < 4; i++) {
+            pid_motors[i].sumError = 0.0;
+            pid_motors[i].prevError = 0.0;
+            pid_motors[i].K[3] = 0.0;
         }
     }
 };
@@ -188,8 +204,8 @@ struct FlywheelController : public Controller {
 private:
     /// @brief filter for controlling meters/second
     PIDFilter pid_high;
-    /// @brief filter for controlling motor velocity
-    PIDFilter pid_low;
+    /// @brief filter for controlling motor velocity (one per flywheel motor)
+    PIDFilter pid_low_motors[2];  // pid_low TO pid_low_motors[2]
 public:
     /// @brief default constructor
     FlywheelController() = default;
@@ -205,7 +221,11 @@ public:
     inline void reset() {
         Controller::reset();
         pid_high.sumError = 0.0;
-        pid_low.sumError = 0.0;
+
+        for (int i = 0; i < 2; i++) { 
+            pid_low_motors[i].sumError = 0.0;
+            pid_low_motors[i].prevError = 0.0;
+        }
     }
 };
 
