@@ -149,25 +149,33 @@ void XDriveVelocityController::step(float reference[STATE_LEN][3], float estimat
 }
 
 void YawController::step(float reference[STATE_LEN][3], float estimate[STATE_LEN][3], float micro_estimate[CAN_MAX_MOTORS][MICRO_STATE_LEN], float outputs[CAN_MAX_MOTORS]) {
-    float dt = timer.delta();
-    float output = 0.0;
+    // Write some enums for this (Do ts later)
+    float dt = timer.delta(); // Time passed since the prev loop
+    float output = 0.0; // Final motor command
 
+    // 0, 1, and 2 are the P, I, and D gains for position
     pidp.K[0] = gains[0];
     pidp.K[1] = gains[1];
     pidp.K[2] = gains[2];
+
+    // Same thing but for velocity
     pidv.K[0] = gains[3];
     pidv.K[1] = gains[4];
     pidv.K[2] = gains[5];
 
-    pidp.setpoint = reference[3][0];
-    pidp.measurement = estimate[3][0];
+    // Row 3 = yaw Colum 0 = position
+    pidp.setpoint = reference[3][0]; // Curr yaw position(angle)
+    pidp.measurement = estimate[3][0]; // Goal yaw position
 
-    pidv.setpoint = reference[3][1];
-    pidv.measurement = estimate[3][1];
+    // Colum 1 = velocity
+    pidv.setpoint = reference[3][1]; // Curr yaw velocity
+    pidv.measurement = estimate[3][1]; // Goal yaw velocity
 
-    output += pidp.filter(dt, true, true); // position wraps
-    output += pidv.filter(dt, true, false); // no wrap for velocity
-    output = constrain(output, -1.0, 1.0);
+    output += pidp.filter(dt, true, true); // Position wraps
+    output += pidv.filter(dt, true, false); // No wrap for velocity
+    output = constrain(output, -1.0, 1.0); // Makes sure the combined output of both PIDs doesn't exceed the motor's range (Saftey Check)
+
+    // Sends the command to both YAW motors, Neg bc of the way the motors are mounted (I think)
     outputs[0] = -output;
     outputs[1] = -output;
 
