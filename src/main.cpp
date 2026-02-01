@@ -267,18 +267,17 @@ int main() {
         if (config->governor_types[0] == 2) { // if we should be controlling velocity
 
             chassis_vel_x = transmitter->get_l_stick_y() * 5.4 +
-                            (-ref->ref_data.kbm_interaction.key_w + ref->ref_data.kbm_interaction.key_s) * 2.5;
-
+				(-ref->ref_data.kbm_interaction.key_w + ref->ref_data.kbm_interaction.key_s) * 2.5;
+			
+			chassis_vel_y = -transmitter->get_l_stick_x() * 5.4 +
+				(ref->ref_data.kbm_interaction.key_d - ref->ref_data.kbm_interaction.key_a) * 2.5;
+			
             if (transmitter_keys.has_value()) {
                 chassis_vel_x += (-transmitter_keys.value().w + transmitter_keys.value().s) * 2.5;
+				chassis_vel_y += (transmitter_keys.value().d - transmitter_keys.value().a) * 2.5;
             }
 
-            chassis_vel_y = -transmitter->get_l_stick_x() * 5.4 +
-                            (ref->ref_data.kbm_interaction.key_d - ref->ref_data.kbm_interaction.key_a) * 2.5;
 
-            if (transmitter_keys.has_value()) {
-                chassis_vel_y += (transmitter_keys.value().d - transmitter_keys.value().a) * 2.5;
-            }
         } else if (config->governor_types[0] == 1) { // if we should be controlling position
             chassis_pos_x = transmitter->get_l_stick_x() * 2 + pos_offset_x;
             chassis_pos_y = transmitter->get_l_stick_y() * 2 + pos_offset_y;
