@@ -6,36 +6,23 @@
 #include "sensors/can/can_manager.hpp"
 #include "state.hpp"
 
+#include "comms/config_data/controller.hpp"
+
 #define NUM_GAINS 24
 #define NUM_ROBOT_CONTROLLERS 12
 
 /// @brief Parent controller struct, all controllers should be based off of this.
 struct Controller {
 protected:
-    /// @brief Gains for this specific controller. Each controller has a unique set of gains that mean different things. Refer to the config yaml for more in depth gains info.
-    float gains[NUM_GAINS];
-    /// @brief list of numbers to help relate motors to joints so we can take in an error in joint space and output motor current. Refer to config yaml for more info.
-    float gear_ratios[CAN_MAX_MOTORS];
+    /// @brief config data for this specific controller
+    const NewConfig::Controller& controller_config;
+
     /// @brief Timer object so we can use dt in controllers
     Timer timer;
 
 public:
     /// @brief default constructor
-    Controller() { };
-
-    /// @brief set the gains for this specific controller
-    /// @param _gains gains array of length NUM_GAINS
-    inline void set_gains(const float _gains[NUM_GAINS]) {
-        for (int i = 0; i < NUM_GAINS; i++) {
-            gains[i] = _gains[i];
-        }
-    }
-
-    /// @brief set the gear ratios for this specific controller
-    /// @param _gear_ratios gains array of length NUM_MOTORS
-    inline void set_gear_ratios(const float _gear_ratios[CAN_MAX_MOTORS]) {
-        for (size_t i = 0; i < CAN_MAX_MOTORS; i++) gear_ratios[i] = _gear_ratios[i];
-    }
+    Controller(const NewConfig::Controller& _controller_config) : controller_config(_controller_config) { };
 
     /// @brief Generates an output from a state reference and estimation
     /// @param reference reference (target state)
@@ -62,6 +49,14 @@ public:
 /// @brief Position controller for the chassis
 struct XDrivePositionController : public Controller {
 private:
+
+    NewConfig::SubController xy_position_controller;
+    NewConfig::SubController xy_velocity_controller;
+    NewConfig::SubController chassis_angle_controller;
+    NewConfig::SubController chassis_angular_velocity_controller;
+    NewConfig::SubController low_level_velocity_controller;
+    NewConfig::SubController power_buffer_controller;
+
     /// @brief filter for calculating pid position controller outputs. 3 for x, y, and chassis angle
     PIDFilter pidp[3];
     /// @brief filter for calculating pid velocity controller outputs. 3 for x, y, and chassis angle
@@ -76,7 +71,14 @@ private:
     float motor_velocity[4];
 public:
     /// @brief default
-    XDrivePositionController() = default;
+    XDrivePositionController() {
+        xy_position_controller = controller_config.get_sub_controller_by_type(NewConfig::XYPositionController);
+        xy_velocity_controller = controller_config.get_sub_controller_by_type(NewConfig::XYVelocityController);
+        chassis_angle_controller = controller_config.get_sub_controller_by_type(NewConfig::ChassisAngleController);
+        chassis_angular_velocity_controller = controller_config.get_sub_controller_by_type(NewConfig::ChassisAngularVelocityController);
+        low_level_velocity_controller = controller_config.get_sub_controller_by_type(NewConfig::LowLevelVelocityController);
+        power_buffer_controller = controller_config.get_sub_controller_by_type(NewConfig::PowerBufferController);
+    }
 
     /// @brief calculate motor outputs based on reference and estimate
     /// @param reference current target robot state
@@ -98,6 +100,12 @@ public:
 /// @brief Controller for all chassis movement, which includes power limiting
 struct XDriveVelocityController : public Controller {
 private:
+    NewConfig::SubController xy_velocity_controller;
+    NewConfig::SubController chassis_angle_controller;
+    NewConfig::SubController chassis_angular_velocity_controller;
+    NewConfig::SubController low_level_velocity_controller;
+    NewConfig::SubController power_buffer_controller;
+
     /// @brief filter for calculating pid position controller outputs. 3 for x, y, and chassis angle
     PIDFilter pidp[3];
     /// @brief filter for calculating pid velocity controller outputs. 3 for x, y, and chassis angle
@@ -112,7 +120,13 @@ private:
     float motor_velocity[4];
 public:
     /// @brief default
-    XDriveVelocityController() = default;
+    XDriveVelocityController() {
+        xy_velocity_controller = controller_config.get_sub_controller_by_type(NewConfig::XYVelocityController);
+        chassis_angle_controller = controller_config.get_sub_controller_by_type(NewConfig::ChassisAngleController);
+        chassis_angular_velocity_controller = controller_config.get_sub_controller_by_type(NewConfig::ChassisAngularVelocityController);
+        low_level_velocity_controller = controller_config.get_sub_controller_by_type(NewConfig::LowLevelVelocityController);
+        power_buffer_controller = controller_config.get_sub_controller_by_type(NewConfig::PowerBufferController);
+    }
 
     /// @brief take s in a micro_reference of wheel velocity
     /// @param reference current target robot state
@@ -134,6 +148,9 @@ public:
 /// @brief Controller for the yaw
 struct YawController : public Controller {
 private:
+    NewConfig::SubController full_state_position_controller;
+    NewConfig::SubController full_state_velocity_controller;
+
     /// @brief filter for calculating pid position controller outputs
     PIDFilter pidp;
     /// @brief filter for calculating pid velocity controller outputs
@@ -141,7 +158,10 @@ private:
 
 public:
     /// @brief default constructor
-    YawController() = default;
+    YawController() {
+        full_state_position_controller = controller_config.get_sub_controller_by_type(NewConfig::FullStatePositionController);
+        full_state_velocity_controller = controller_config.get_sub_controller_by_type(NewConfig::FullStateVelocityController);
+    }
 
     /// @brief calculate motor outputs based on reference and estimate
     /// @param reference current target robot state
@@ -161,13 +181,19 @@ public:
 struct PitchController : public Controller {
 
 private:
+    NewConfig::SubController full_state_position_controller;
+    NewConfig::SubController full_state_velocity_controller;
+
     /// @brief filter for calculating pid position controller outputs
     PIDFilter pidp;
     /// @brief filter for calculating pid velocity controller outputs
     PIDFilter pidv;
 
 public:
-    PitchController() = default;
+    PitchController() {
+        full_state_position_controller = controller_config.get_sub_controller_by_type(NewConfig::FullStatePositionController);
+        full_state_velocity_controller = controller_config.get_sub_controller_by_type(NewConfig::FullStateVelocityController);
+    }
     /// @brief calculate motor outputs based on reference and estimate
     /// @param reference current target robot state
     /// @param estimate current estimate robot state
@@ -186,13 +212,19 @@ public:
 /// @brief Controller for the flywheels
 struct FlywheelController : public Controller {
 private:
+    NewConfig::SubController high_level_velocity_controller;
+    NewConfig::SubController low_level_velocity_controller;
+
     /// @brief filter for controlling meters/second
     PIDFilter pid_high;
     /// @brief filter for controlling motor velocity
     PIDFilter pid_low;
 public:
     /// @brief default constructor
-    FlywheelController() = default;
+    FlywheelController() {
+        high_level_velocity_controller = controller_config.get_sub_controller_by_type(NewConfig::HighLevelVelocityController);
+        low_level_velocity_controller = controller_config.get_sub_controller_by_type(NewConfig::LowLevelVelocityController);
+    }
 
     /// @brief calculate motor outputs based on reference and estimate
     /// @param reference current target robot state
@@ -209,68 +241,53 @@ public:
     }
 };
 
-/// @brief Controls the feeder
+// /// @brief Controls the feeder
+// struct FeederController : public Controller {
+// private:
+//     NewConfig::SubController full_state_position_controller;
+//     NewConfig::SubController full_state_velocity_controller;
+//     /// @brief filter for controlling balls/sec
+//     PIDFilter pid_high;
+//     /// @brief filter for controlling motor velocity
+//     PIDFilter pid_low;
+
+// public:
+//     /// @brief default constructor
+//     FeederController() {
+//         full_state_position_controller = controller_config.get_sub_controller_by_type(NewConfig::FullStatePositionController);
+//         full_state_velocity_controller = controller_config.get_sub_controller_by_type(NewConfig::FullStateVelocityController);
+//     }
+
+//     /// @brief calculate motor outputs based on reference and estimate
+//     /// @param reference current target robot state
+//     /// @param estimate current estimate robot state
+//     /// @param micro_estimate current micro estimate robot state (state of motors, not joints)
+//     /// @param outputs motor outputs
+//     void step(float reference[STATE_LEN][3], float estimate[STATE_LEN][3], float micro_estimate[CAN_MAX_MOTORS][MICRO_STATE_LEN], float outputs[CAN_MAX_MOTORS]);
+
+//     /// @brief reset the controller
+//     inline void reset() {
+//         Controller::reset();
+//         pid_high.sumError = 0.0;
+//         pid_low.sumError = 0.0;
+//     }
+// };
+
+/// @brief Controller for the ball feeder
 struct FeederController : public Controller {
-private:
-    /// @brief filter for controlling balls/sec
-    PIDFilter pid_high;
-    /// @brief filter for controlling motor velocity
-    PIDFilter pid_low;
-
-public:
-    /// @brief default constructor
-    FeederController() = default;
-
-    /// @brief calculate motor outputs based on reference and estimate
-    /// @param reference current target robot state
-    /// @param estimate current estimate robot state
-    /// @param micro_estimate current micro estimate robot state (state of motors, not joints)
-    /// @param outputs motor outputs
-    void step(float reference[STATE_LEN][3], float estimate[STATE_LEN][3], float micro_estimate[CAN_MAX_MOTORS][MICRO_STATE_LEN], float outputs[CAN_MAX_MOTORS]);
-
-    /// @brief reset the controller
-    inline void reset() {
-        Controller::reset();
-        pid_high.sumError = 0.0;
-        pid_low.sumError = 0.0;
-    }
-};
-
-/// @brief Controller for the switcher, which is a fullstate controller with feedforward
-struct SwitcherController : public Controller {
-private:
-    /// @brief filter for calculating pid position controller outputs
-    PIDFilter pidp;
-    /// @brief filter for calculating pid velocity controller outputs
-    PIDFilter pidv;
-public:
-    /// @brief default
-    SwitcherController() { }
-    /// @brief calculate motor outputs based on reference and estimate
-    /// @param reference current target robot state
-    /// @param estimate current estimate robot state
-    /// @param micro_estimate current micro estimate robot state (state of motors, not joints)
-    /// @param outputs motor outputs
-    void step(float reference[STATE_LEN][3], float estimate[STATE_LEN][3], float micro_estimate[CAN_MAX_MOTORS][MICRO_STATE_LEN], float outputs[CAN_MAX_MOTORS]);
-
-    /// @brief reset the controller
-    inline void reset() {
-        Controller::reset();
-        pidp.sumError = 0.0;
-        pidv.sumError = 0.0;
-    }
-};
-
-/// @brief Controller for the switcher, which is a fullstate controller with feedforward
-struct NewFeederController : public Controller {
     private:
+        NewConfig::SubController full_state_position_controller;
+        NewConfig::SubController full_state_velocity_controller;
         /// @brief filter for calculating pid position controller outputs
         PIDFilter pidp;
         /// @brief filter for calculating pid velocity controller outputs
         PIDFilter pidv;
     public:
-        /// @brief default
-        NewFeederController() { }
+        /// @brief assign sub controllers
+        FeederController() {
+            full_state_position_controller = controller_config.get_sub_controller_by_type(NewConfig::FullStatePositionController);
+            full_state_velocity_controller = controller_config.get_sub_controller_by_type(NewConfig::FullStateVelocityController);
+        }
         /// @brief calculate motor outputs based on reference and estimate
         /// @param reference current target robot state
         /// @param estimate current estimate robot state

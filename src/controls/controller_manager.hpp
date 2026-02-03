@@ -13,7 +13,9 @@
 class ControllerManager {
 private:
     /// @brief Array storing every controller
-    Controller* controllers[NUM_ROBOT_CONTROLLERS];
+    // Controller* controllers[NUM_ROBOT_CONTROLLERS];
+
+    std::vector<Controller> controllers;
     
     /// @brief number of controllers configured for this robot
     int num_controllers = 0;
@@ -35,7 +37,7 @@ public:
     /// @brief Initializes controllers with data from the config yaml
     /// @param _can pointer to the can data struct
     /// @param _config_data read-only config reference storing all config data
-    void init(CANManager* _can, const Config* _config_data);
+    void init(CANManager* _can, const std::vector<NewConfig::Controller>& controller_configs);
 
     /// @brief Populates the corresponding index of the "controllers" array attribute with a controller object
     /// @param controller_type denotes what kind of controller to initialize (see contoller.hpp)

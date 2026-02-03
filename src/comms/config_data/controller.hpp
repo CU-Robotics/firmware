@@ -9,8 +9,8 @@
 
 namespace NewConfig {
 
-enum ControllerName : uint8_t {
-    UnsetControllerName,
+enum ControllerType : uint8_t {
+    UnsetControllerType,
     XDrivePositionController,
     XDriveVelocityController,
     YawController,
@@ -19,13 +19,13 @@ enum ControllerName : uint8_t {
     FeederController,
 };
 
-enum SubControllerName : uint8_t {
-    UnsetSubControllerName,
+enum SubControllerType : uint8_t {
+    UnsetSubControllerType,
     
     XYPositionController,
     XYVelocityController,
     ChassisAngleController,
-    HeadingVelocityController,
+    ChassisAngularVelocityController,
     PowerBufferController,
     
     LowLevelVelocityController,
@@ -61,19 +61,30 @@ struct SubController {
 
 struct Controller : Comms::CommsData {
     uint32_t motors[CONTROLLER_MOTORS_SIZE];  // list of motor ids that this controller controls
-    SubController sub_controllers[CONTROLLER_SUB_CONTROLLERS_SIZE]; 
+    SubController sub_controllers[CONTROLLER_SUB_CONTROLLERS_SIZE];
     GearRatios gear_ratios;
-    uint32_t controller_type; 
+    ControllerType controller_type;
 
     Controller() : Comms::CommsData(Comms::TypeLabel::ControllerConfig, Comms::PhysicalMedium::HID, Comms::Priority::High, sizeof(Controller)) {
         for (int i = 0; i < CONTROLLER_MOTORS_SIZE; i++) {
             motors[i] = UnsetMotorName;
         }
         for (int i = 0; i < CONTROLLER_SUB_CONTROLLERS_SIZE; i++) {
-            sub_controllers[i].sub_controller_type = UnsetSubControllerName;
+            sub_controllers[i].sub_controller_type = UnsetSubControllerType;
         }
-        controller_type = UnsetControllerName;
+        controller_type = UnsetControllerType;
+    }
+
+    SubController get_sub_controller_by_type(uint32_t type) const {
+        for (int i = 0; i < CONTROLLER_SUB_CONTROLLERS_SIZE; i++) {
+            if (sub_controllers[i].sub_controller_type == type) {
+                return sub_controllers[i];
+            }
+        }
+        // return empty subcontroller if not found
+        SubController empty;
+        empty.sub_controller_type = UnsetSubControllerType;
+        return empty;
     }
 };
-
 }

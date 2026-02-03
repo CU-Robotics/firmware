@@ -1,8 +1,12 @@
 #include "controller_manager.hpp"
 
-void ControllerManager::init(CANManager* _can, const Config* config) {
+void ControllerManager::init(CANManager* _can, const std::vector<NewConfig::Controller>& controller_configs) {
     can = _can;
-    config_data = config;
+
+    for(NewConfig::Controller controller_config : controller_configs) {
+        init_controller(controller_config.controller_type, controller_config.gains, controller_config.gear_ratios);
+    }
+
     // intializes all controllers given the controller_types matrix from the config
     for (int i = 0; i < NUM_ROBOT_CONTROLLERS; i++) {
         init_controller(config_data->controller_info[i][0], config_data->gains[i], config_data->gear_ratios[i]);
@@ -10,43 +14,34 @@ void ControllerManager::init(CANManager* _can, const Config* config) {
     Serial.printf("num controllers: %d\n", num_controllers);
 }
 
-void ControllerManager::init_controller(int controller_type, const float gains[NUM_GAINS], const float gear_ratios[CAN_MAX_MOTORS]) {
-    // intializes controller based on type defined in config yaml
-    switch (controller_type) {
-    case 0:
-        if (controllers[num_controllers] == nullptr) controllers[num_controllers] = new NullController();
-        break;
-    case 1:
-        controllers[num_controllers] = new XDrivePositionController();
-        break;
-    case 2:
-        controllers[num_controllers] = new XDriveVelocityController();
-        break;
-    case 3:
-        controllers[num_controllers] = new YawController();
-        break;
-    case 4:
-        controllers[num_controllers] = new PitchController();
-        break;
-    case 5:
-        controllers[num_controllers] = new FlywheelController();
-        break;
-    case 6:
-        controllers[num_controllers] = new FeederController();
-        break;
-    case 7:
-        controllers[num_controllers] = new SwitcherController();
-        break;
-    case 8:
-        controllers[num_controllers] = new NewFeederController();
-        break;
-    default:
-        if (controllers[num_controllers] == nullptr) controllers[num_controllers] = new NullController();
-        break;
+void ControllerManager::init_controller(NewConfig::Controller controller_config) {
+
+    switch (controller_config.controller_type) {
+        case NewConfig::UnsetControllerType:
+            controllers.push_back(NullController(controller_config));
+            break;
+        case NewConfig::XDrivePositionController:
+            controllers.push_back(XDrivePositionController(controller_config));
+            break;
+        case NewConfig::XDriveVelocityController:
+            controllers.push_back(XDriveVelocityController(controller_config));
+            break;
+        case NewConfig::YawController:
+            controllers.push_back(YawController(controller_config));
+            break;
+        case NewConfig::PitchController:
+            controllers.push_back(PitchController(controller_config));
+            break;
+        case NewConfig::FlywheelController:
+            controllers.push_back(FlywheelController(controller_config));
+            break;
+        case NewConfig::FeederController:
+            controllers.push_back(FeederController(controller_config));
+            break;
+        default:
+            Serial.printf("ControllerManager::init_controller: Unrecognized controller type %d\n", controller_config.controller_type);
+            break;
     }
-    controllers[num_controllers]->set_gains(gains);
-    controllers[num_controllers]->set_gear_ratios(gear_ratios);
-    if (controller_type != 0) num_controllers++;
 }
 
 void ControllerManager::step(float macro_reference[STATE_LEN][3], float macro_estimate[STATE_LEN][3], float micro_estimate[CAN_MAX_MOTORS][MICRO_STATE_LEN]) {
