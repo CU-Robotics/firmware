@@ -215,6 +215,8 @@ int main() {
 
         // read sensors
         sensor_manager.read();
+		// read ref system
+		ref->read();
 
         // read CAN and Transmitter -- These are kept out of sensor manager for safety reasons
         can.read();
