@@ -6,6 +6,7 @@
 #include "sensors/can/MG8016EI6.hpp"
 #include "sensors/can/GIM.hpp"
 #include "sensors/can/SDC104.hpp"
+#include <cstdint>
 
 // FlexCAN_T4 moment
 CANManager::CANManager() { }
@@ -37,64 +38,104 @@ void CANManager::init() {
     m_motor_map.clear();
 }
 
-void CANManager::configure(const float motor_info[CAN_MAX_MOTORS][4]) {
+void CANManager::configure(const std::vector<NewConfig::Motor>& motors) {
     // using the motor_info array, create the motors following the config
     
-    // loop through all CAN_MAX_MOTORS
-    for (uint32_t motor_id = 0; motor_id < CAN_MAX_MOTORS; motor_id++) {
-        // grab the information for this specific motor
-        int controller_type = (int)motor_info[motor_id][0];
-        int physical_id = (int)motor_info[motor_id][1];
-        int bus_id = (int)motor_info[motor_id][2];
-        MotorType motor_type = (MotorType)motor_info[motor_id][3];
-
-        // if the controller type is 0, then this motor is unused and we should process the next one
-        if (static_cast<MotorControllerType>(controller_type) == MotorControllerType::NULL_MOTOR_CONTROLLER_TYPE) {
-            continue;
-        }
-        // else this motor is valid
-
-        // create the motor based on the controller type
+    uint32_t motor_global_id = 0;
+    for(const NewConfig::Motor& motor : motors) {
         Motor* new_motor = nullptr;
 
-        switch (static_cast<MotorControllerType>(controller_type)) {
-        case MotorControllerType::C610: {
-            new_motor = new C610(motor_id, physical_id, bus_id, motor_type);
-            Serial.printf("Creating C610 Motor: %d on bus %d\n", new_motor->get_id(), new_motor->get_bus_id(), new_motor->get_motor_type());
-            break;
+        switch(motor.motor_controller_type) {
+            case NewConfig::MotorControllerType::C610: {
+                new_motor = new C610(motor.physical_id, motor.physical_id, motor.physical_bus, static_cast<MotorType>(motor.motor_type));
+                Serial.printf("Creating C610 Motor: %d on bus %d\n", new_motor->get_id(), new_motor->get_bus_id(), new_motor->get_motor_type());
+                break;
+            }
+            case NewConfig::MotorControllerType::C620: {
+                new_motor = new C620(motor.physical_id, motor.physical_id, motor.physical_bus, static_cast<MotorType>(motor.motor_type));
+                Serial.printf("Creating C620 Motor: %d on bus %d\n", new_motor->get_id(), new_motor->get_bus_id(), new_motor->get_motor_type());
+                break;
+            }
+            case NewConfig::MotorControllerType::MG: {
+                new_motor = new MG8016EI6(motor.physical_id, motor.physical_id, motor.physical_bus, static_cast<MotorType>(motor.motor_type));
+                Serial.printf("Creating MG Motor: %d on bus %d\n", new_motor->get_id(), new_motor->get_bus_id(), new_motor->get_motor_type());
+                break;
+            }
+            case NewConfig::MotorControllerType::GIM: {
+                new_motor = new GIM(motor.physical_id, motor.physical_id, motor.physical_bus, static_cast<MotorType>(motor.motor_type));
+                Serial.printf("Creating GIM Motor: %d on bus %d\n", new_motor->get_id(), new_motor->get_bus_id(), new_motor->get_motor_type());
+                break;
+            }
+            case NewConfig::MotorControllerType::SDC104: {
+                new_motor = new SDC104(motor.physical_id, motor.physical_id, motor.physical_bus, static_cast<MotorType>(motor.motor_type));
+                Serial.printf("Creating SDC104 Motor: %d on bus %d\n", new_motor->get_id(), new_motor->get_bus_id(), new_motor->get_motor_type());
+                break;
+            }
+            default: {
+                Serial.printf("CANManager tried to create a motor of invalid type: %d\n", motor.motor_controller_type);
+                continue;   // continue in order to not call the later map insert since new_motor would be null
+            }
         }
-        case MotorControllerType::C620: {
-            new_motor = new C620(motor_id, physical_id, bus_id, motor_type);
-            Serial.printf("Creating C620 Motor: %d on bus %d\n", new_motor->get_id(), new_motor->get_bus_id(), new_motor->get_motor_type());
-            break;
-        }
-        case MotorControllerType::MG8016: {
-            new_motor = new MG8016EI6(motor_id, physical_id, bus_id, motor_type);
-            Serial.printf("Creating MG Motor: %d on bus %d\n", new_motor->get_id(), new_motor->get_bus_id(), new_motor->get_motor_type());
-            break;
-        }
-        case MotorControllerType::GIM: {
-            new_motor = new GIM(motor_id, physical_id, bus_id, motor_type);
-            Serial.printf("Creating GIM Motor: %d on bus %d\n", new_motor->get_id(), new_motor->get_bus_id(), new_motor->get_motor_type());
-            break;
-        }
-        case MotorControllerType::SDC104: {
-            new_motor = new SDC104(motor_id, physical_id, bus_id, motor_type);
-            Serial.printf("Creating SDC104 Motor: %d on bus %d\n", new_motor->get_id(), new_motor->get_bus_id(), new_motor->get_motor_type());
-            break;
-        }
-        default: {
-            Serial.printf("CANManager tried to create a motor of invalid type: %d\n", controller_type);
-            continue;   // continue in order to not call the later map insert since new_motor would be null
-        }
-        }
-
-        // place the new motor in the map
-        m_motor_map.insert({ motor_id, new_motor });
+        m_motor_map.insert({ motor_global_id++, new_motor });
     }
 
-    // verify all motors are online and ready
     init_motors();
+
+    // // loop through all CAN_MAX_MOTORS
+    // for (uint32_t motor_id = 0; motor_id < CAN_MAX_MOTORS; motor_id++) {
+    //     // grab the information for this specific motor
+    //     int controller_type = (int)motor_info[motor_id][0];
+    //     int physical_id = (int)motor_info[motor_id][1];
+    //     int bus_id = (int)motor_info[motor_id][2];
+    //     MotorType motor_type = (MotorType)motor_info[motor_id][3];
+
+    //     // if the controller type is 0, then this motor is unused and we should process the next one
+    //     if (static_cast<MotorControllerType>(controller_type) == MotorControllerType::NULL_MOTOR_CONTROLLER_TYPE) {
+    //         continue;
+    //     }
+    //     // else this motor is valid
+
+    //     // create the motor based on the controller type
+    //     Motor* new_motor = nullptr;
+
+    //     switch (static_cast<MotorControllerType>(controller_type)) {
+    //     case MotorControllerType::C610: {
+    //         new_motor = new C610(motor_id, physical_id, bus_id, motor_type);
+    //         Serial.printf("Creating C610 Motor: %d on bus %d\n", new_motor->get_id(), new_motor->get_bus_id(), new_motor->get_motor_type());
+    //         break;
+    //     }
+    //     case MotorControllerType::C620: {
+    //         new_motor = new C620(motor_id, physical_id, bus_id, motor_type);
+    //         Serial.printf("Creating C620 Motor: %d on bus %d\n", new_motor->get_id(), new_motor->get_bus_id(), new_motor->get_motor_type());
+    //         break;
+    //     }
+    //     case MotorControllerType::MG8016: {
+    //         new_motor = new MG8016EI6(motor_id, physical_id, bus_id, motor_type);
+    //         Serial.printf("Creating MG Motor: %d on bus %d\n", new_motor->get_id(), new_motor->get_bus_id(), new_motor->get_motor_type());
+    //         break;
+    //     }
+    //     case MotorControllerType::GIM: {
+    //         new_motor = new GIM(motor_id, physical_id, bus_id, motor_type);
+    //         Serial.printf("Creating GIM Motor: %d on bus %d\n", new_motor->get_id(), new_motor->get_bus_id(), new_motor->get_motor_type());
+    //         break;
+    //     }
+    //     case MotorControllerType::SDC104: {
+    //         new_motor = new SDC104(motor_id, physical_id, bus_id, motor_type);
+    //         Serial.printf("Creating SDC104 Motor: %d on bus %d\n", new_motor->get_id(), new_motor->get_bus_id(), new_motor->get_motor_type());
+    //         break;
+    //     }
+    //     default: {
+    //         Serial.printf("CANManager tried to create a motor of invalid type: %d\n", controller_type);
+    //         continue;   // continue in order to not call the later map insert since new_motor would be null
+    //     }
+    //     }
+
+    //     // place the new motor in the map
+    //     m_motor_map.insert({ motor_id, new_motor });
+    // }
+
+    // verify all motors are online and ready
+    // init_motors();
 }
 
 void CANManager::read() {

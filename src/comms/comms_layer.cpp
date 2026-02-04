@@ -148,6 +148,14 @@ void CommsLayer::set_firmware_data(FirmwareData& data) {
     m_firmware_data = data;
 };
 
+NewConfig::RobotConfig CommsLayer::configure() {
+    while(!m_hive_data.config.is_configured()) {
+        run();
+    }
+
+    return m_hive_data.config;
+}
+
 bool CommsLayer::initialize_hid() {
     // Initialize the HID physical layer
     m_hid.init();

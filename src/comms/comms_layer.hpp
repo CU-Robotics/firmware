@@ -7,6 +7,7 @@
 #include "comms/data/hive_data.hpp"         // for HiveData
 #include "comms/data/firmware_data.hpp"     // for FirmwareData
 #include "comms/config_data/robot_config.hpp" // for RobotConfig
+#include "config_data/robot_config.hpp"
 
 namespace Comms {
 
@@ -82,6 +83,8 @@ public:
     /// @brief Set the hive data
     /// @param data The hive data to set
     void set_hive_data(HiveData& data);
+
+    NewConfig::RobotConfig configure();
 
 private:
     /// @brief Initializes HID and starts its thread

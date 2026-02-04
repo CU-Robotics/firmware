@@ -6,10 +6,9 @@ SensorManager::SensorManager() {
     ref->init();
 };
 
-SensorManager::~SensorManager() {
-}
+SensorManager::~SensorManager() {}
 
-void SensorManager::init(const Config* config_data) {
+void SensorManager::init(const NewConfig::RobotConfig* config_data) {
     buff_sensor_count = config_data->num_of_buffEnc;
     icm_sensor_count = config_data->num_of_icm;
     rev_sensor_count = config_data->num_of_revEnc;
@@ -22,6 +21,9 @@ void SensorManager::init(const Config* config_data) {
         if (type != -1) {
             num_sensors[type]++;
         }
+    }
+    for(const auto& buff_encoder_config : config_data->buff_encoders) {
+        buff_encoders.push_back(BuffEncoder(buff_encoder_config));
     }
 
     // initilize the sensors

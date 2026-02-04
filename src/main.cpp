@@ -126,20 +126,24 @@ int main() {
     transmitter->init();
     comms_layer.init();
 
+    comms_layer.configure
+
     ref = sensor_manager.get_ref();
 
     // Config config
     Serial.println("Configuring...");
-    const Config *config = config_layer.configure(&comms_layer, false);
+    // const Config *config = comms_layer.get_hive_data()
+    NewConfig::RobotConfig& config = comms_layer.get_hive_data().robot_config;
+
     Serial.println("Configured!");
 
     // configure motors
-    can.configure(config->motor_info);
+    can.configure(config->motors);
 
     // initialize sensors
     sensor_manager.init(config);
 
-    // estimate micro and macro state
+    // estimate micro and rmacro state
     estimator_manager.init(&can, config, &sensor_manager);
 
     // generate controller outputs based on governed references and estimated
@@ -154,7 +158,7 @@ int main() {
 
     // variables for use in main
     float temp_state[STATE_LEN][3] = {{0}};                          // Temp state array
-    float temp_micro_state[CAN_MAX_MOTORS][MICRO_STATE_LEN] = {{0}}; // Temp micro state array
+    float temp_micro_state[CAN_MAX_MOTORS][MICRO_STATE_LEN] = {{0}};         // Temp micro state array
     float temp_reference[STATE_LEN][3] = {{0}};                      // Temp governed state
     float target_state[STATE_LEN][3] = {{0}};                        // Temp ungoverned state
     float hive_state_offset[STATE_LEN][3] = {{0}};                   // Hive offset state

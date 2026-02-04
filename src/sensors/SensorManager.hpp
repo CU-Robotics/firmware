@@ -122,8 +122,10 @@ private:
     /// @brief Array to store robot ICM IMU sendables to be used with comms
     Comms::Sendable<ICMSensorData> icm_sendables[NUM_SENSOR_TYPE];
 
-    /// @brief Array to store robot buff encoders
-    BuffEncoder* buff_encoders[NUM_SENSOR_TYPE];
+    // /// @brief Array to store robot buff encoders
+    // BuffEncoder* buff_encoders[NUM_SENSOR_TYPE];
+
+    std::vector<BuffEncoder> buff_encoders;
 
     /// @brief Array to store robot buff encoder sendables to be used with comms
     Comms::Sendable<BuffEncoderData> buff_encoder_sendables[NUM_SENSOR_TYPE];

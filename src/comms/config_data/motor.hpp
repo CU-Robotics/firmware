@@ -30,7 +30,7 @@ enum MotorControllerType {
 };
 
 enum MotorType {
-    UnusedMotorType,
+    UnsetMotorType,
     M3508,
     M2006,
     GIM3505,
@@ -50,7 +50,7 @@ struct Motor : Comms::CommsData {
         motor_controller_type = UnsetMotorControllerType;
         physical_bus = 0;
         physical_id = 0;
-        motor_type = UnusedMotorType;
+        motor_type = UnsetMotorType;
         motor_name = UnsetMotorName;
     }
 };
