@@ -204,8 +204,8 @@ struct FlywheelController : public Controller {
 private:
     /// @brief filter for controlling meters/second
     PIDFilter pid_high;
-    /// @brief filter for controlling motor velocity (one per flywheel motor)
-    PIDFilter pid_low_motors[2];  // pid_low TO pid_low_motors[2]
+    /// @brief filter for controlling motor velocity 
+    PIDFilter pid_low_motors;  // pid_low TO pid_low_motors[2] (changed back to individual motors do it for high if I have to seperate motors again)
 public:
     /// @brief default constructor
     FlywheelController() = default;

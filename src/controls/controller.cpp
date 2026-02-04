@@ -225,16 +225,16 @@ void FlywheelController::step(float reference[STATE_LEN][3], float estimate[STAT
     float target_motor_velocity = pid_high.filter(dt, false, false) * gear_ratios[0];
     // NOTE: pid_motors[] are member variables to preserve PID state between calls
     for (int i = 0; i < 2; i++) {
-        pid_low_motors[i].K[0] = gains[4];
-        pid_low_motors[i].K[1] = gains[5];
-        pid_low_motors[i].K[2] = gains[6];
-        pid_low_motors[i].K[3] = 0;
+        pid_low_motors.K[0] = gains[4];
+        pid_low_motors.K[1] = gains[5];
+        pid_low_motors.K[2] = gains[6];
+        pid_low_motors.K[3] = 0;
 
-        pid_low_motors[i].setpoint = -target_motor_velocity;
-        if (i == 1) pid_low_motors[i].setpoint = target_motor_velocity;
+        pid_low_motors.setpoint = -target_motor_velocity;
+        if (i == 1) pid_low_motors.setpoint = target_motor_velocity;
 
-        pid_low_motors[i].measurement = micro_estimate[i + 10][1];
-        outputs[i] = pid_low_motors[i].filter(dt, true, false);
+        pid_low_motors.measurement = micro_estimate[i + 10][1];
+        outputs[i] = pid_low_motors.filter(dt, true, false);
     }
 }
 
