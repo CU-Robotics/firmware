@@ -217,7 +217,7 @@ int main() {
         sensor_manager.read();
 		// read ref system
 		ref->read();
-
+		ref->ref_data.kbm_interaction.print(); // FOR DEBUGGIN VTM COMMS 
         // read CAN and Transmitter -- These are kept out of sensor manager for safety reasons
         can.read();
         transmitter->read();
@@ -242,7 +242,7 @@ int main() {
         std::optional<int> mouse_x = transmitter->get_mouse_x();
         std::optional<int> mouse_y = transmitter->get_mouse_y();
         std::optional<bool> l_mouse_button = transmitter->get_l_mouse_button();
-        // std::optional<bool> r_mouse_button = transmitter->get_r_mouse_button();
+        std::optional<bool> r_mouse_button = transmitter->get_r_mouse_button();
 
         float delta = control_input_timer.delta();
         if (mouse_x.has_value() && mouse_y.has_value()) {
