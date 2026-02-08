@@ -41,32 +41,18 @@ constexpr uint32_t MT6835_REG_NLC_BASE = 0x013;
 constexpr uint32_t MT6835_REG_CAL_STATUS = 0x113;
 constexpr uint32_t MT6835_BITORDER = MSBFIRST;
 
-// Chip Select pins for the two encoders
-constexpr int YAW_BUFF_CS = 37;
-constexpr int PITCH_BUFF_CS = 36;
-
 /// @brief Driver for the Buff-Encoder
 class BuffEncoder : public Sensor {
 public:
-    /// @brief 
-    /// @param 
-    BuffEncoder() : Sensor(SensorType::BUFFENC) { };
+    /// @brief Constructor for the BuffEncoder class
+    /// @param encoder_config configuration data for the encoder
+    BuffEncoder(NewConfig::BuffEncoder encoder_config) : Sensor(SensorType::BUFFENC), config_data(encoder_config) {};
 
-    /// @brief Initialize the encoder object with the specific Chip Select pin
-    /// @param cs The Chip Select pin
-    BuffEncoder(int cs) : Sensor(SensorType::BUFFENC), m_CS(cs) { };
-
-    BuffEncoder(NewConfig::BuffEncoder encoder_config) : Sensor(SensorType::BUFFENC) {
-        m_CS = encoder_config.chip_select_pin;
-        encoder_offset = encoder_config.encoder_offset;
-        feeder_direction = encoder_config.feeder_direction;
-        feeder_ratio = encoder_config.feeder_ratio;
-        encoder_name = encoder_config.encoder_name;
+    /// @brief initialize sensor with new config data
+    /// @param encoder_config input configuration data
+    void init(NewConfig::BuffEncoder encoder_config) {
+        config_data = encoder_config;
     };
-
-    /// @brief initialize sensor with new cs(if needed)
-    /// @param cs input Chip Select pin
-    void init(int cs) { m_CS = cs; };
 
     /// @brief Read via SPI the current angle of the encoder
     /// @note Returns and sets m_angle when it reads
@@ -81,24 +67,15 @@ public:
     void print();
 
 private:
-    /// @brief Stored Chip Select pin
-    uint32_t m_CS = 0;
 
     /// @brief Read angle from the encoder
     float m_angle = 0.f;
 
-    /// @brief Offset to be added to the encoder reading
-    float encoder_offset = 0.f;
-    /// @brief Ratio to multiply the encoder reading by
-    float feeder_ratio = 1.f;
-    /// @brief Direction multiplier for the feeder encoder
-    int feeder_direction = 1;
-    /// @brief Name of the encoder
-    uint32_t encoder_name = 0;
+    /// @brief Configuration data for the encoder
+    NewConfig::BuffEncoder config_data;
 
     /// @brief The SPI settings of the buff encoders
     static const SPISettings m_settings;
-    
 
     ///buff sensor data struct.
     BuffEncoderData buff_sensor_data;

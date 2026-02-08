@@ -242,4 +242,3 @@ int SensorManager::get_num_sensors(SensorType sensor_type) {
         return 0;
     }
 }
-
