@@ -24,7 +24,6 @@ build/
 compile_commands.json
 .cache/
 .clangd
-.clang-format
 
 # Ignore any tools/ directory artifacts
 tools/*.txt
@@ -40,9 +39,12 @@ src/git_info.h
 # Ignore MacOS files
 *.DS_Store
 
-# Ignore .vscode config
+# Ignore IDE configs
 .vscode
-
+.zed
 
 # Ignore Rust tool's build directory
 /tools/waggle-interceptor/target
+
+#ignore bear files
+.bearwrap

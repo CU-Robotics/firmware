@@ -2,6 +2,8 @@
 
 #include "packet_header.hpp"    // for PacketHeader
 
+#include <string.h>         // for memset
+
 namespace Comms {
 
 /// @brief The max packet size
