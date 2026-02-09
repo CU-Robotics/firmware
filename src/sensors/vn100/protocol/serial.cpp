@@ -34,6 +34,7 @@ bool Serial::open() {
     }
 
     _uart->begin(static_cast<uint32_t>(_baudrate));
+    _uart->setTimeout(1);
     delayMicroseconds(_baudrate_change_delay);
 
     return true;
@@ -65,7 +66,14 @@ ssize_t Serial::read(size_t size) {
         return -1;
     }
 
-    size_t bytes_read = _uart->readBytes(_read_buffer, size);
+    size_t available = _uart->available();
+
+    if (available == 0) {
+        return 0;
+    }
+
+    size_t to_read = available < size ? available : size;
+    size_t bytes_read = _uart->readBytes(_read_buffer, to_read);
     _read_buffer[sizeof(_read_buffer) - 1] = '\0';
 
     if (bytes_read > sizeof(_read_buffer)) {
@@ -167,8 +175,10 @@ void Serial::process_read_buffer(ssize_t bytes_read)
 		_curr_msg_buffer[_curr_msg_pos++] = c;
 
 		if (_curr_msg_pos >= (signed)sizeof(_curr_msg_buffer)) {
-			::Serial.println("Current message buffer overflow, resetting position. Likely wrong baudrate.");
+			::Serial.println("Current message buffer overflow, resetting parser state.");
 			_curr_msg_pos = 0; // reset the current message position
+			_curr_binary_message = bin::BinaryMessage{};
+			transition_to(ProcessingState::SEARCH_SOF);
 			continue; // skip processing this byte
 		}
 

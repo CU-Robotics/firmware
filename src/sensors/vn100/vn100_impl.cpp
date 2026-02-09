@@ -30,8 +30,7 @@ void VN100::loop()
 void VN100::binary_message_callback(vn::bin::const_bin_buf_ref_t buf, vn::msg::len_t length,
 		vn::bin::BinaryMessage &msg)
 {
-	// FIX: figure out how to make this not need an instance, or just make the vn100 driver a global/singleton
-	VN100 *instance = vn100_instance;
+	VN100 *instance = &vn100;
 
 	// FIX: the following parsing logic is an example. you will need to adjust it depending on what messages you want to parse and publish.
 
@@ -64,6 +63,14 @@ void VN100::binary_message_callback(vn::bin::const_bin_buf_ref_t buf, vn::msg::l
 			Serial.println("Failed to parse sensor saturation from binary message");
 			return;
 		}
+
+		// static uint32_t last_angular_rate_print_time_us = 0;
+		// const uint32_t now_us = micros();
+		//
+		// if (now_us - last_angular_rate_print_time_us >= 100000) {
+		// 	last_angular_rate_print_time_us = now_us;
+		// 	Serial.printf("VN100 gyro [rad/s]: x=%.3f y=%.3f z=%.3f\n", angular_rate.gyro[0], angular_rate.gyro[1], angular_rate.gyro[2]);
+		// }
 
 		// publish this data here
 
@@ -100,6 +107,13 @@ void VN100::binary_message_callback(vn::bin::const_bin_buf_ref_t buf, vn::msg::l
 			return;
 		}
 
+		vn::bin::Ypr ypr;
+
+		if (vn::bin::parse_ypr(buf, msg, ypr) != vn::ErrorCode::OK) {
+			Serial.println("Failed to parse ypr from binary message");
+			return;
+		}
+
 		vn::bin::Quaternion quaternion;
 
 		if (vn::bin::parse_quaternion(buf, msg, quaternion) != vn::ErrorCode::OK) {
@@ -114,7 +128,14 @@ void VN100::binary_message_callback(vn::bin::const_bin_buf_ref_t buf, vn::msg::l
 			return;
 		}
 
-		// publish this data here
+		static uint32_t last_ypr_print_time_us = 0;
+		const uint32_t now_us = micros();
+
+		if (now_us - last_ypr_print_time_us >= 100000) {
+			last_ypr_print_time_us = now_us;
+			Serial.printf("YPR [deg] | yaw: %+8.2f | pitch: %+8.2f | roll: %+8.2f\n",
+				      ypr.yaw, ypr.pitch, ypr.roll);
+		}
 
 		return;
 	}
@@ -124,4 +145,3 @@ void VN100::binary_message_callback(vn::bin::const_bin_buf_ref_t buf, vn::msg::l
 		return;
 	}
 }
-

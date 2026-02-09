@@ -266,8 +266,8 @@ static inline len_t add_string(buf_ref_t msg_buf, len_t msg_buf_size, len_t msg_
 static inline len_t end_message(buf_ref_t msg_buf, len_t msg_buf_size, len_t msg_len, bool ignore_checksum = false);
 static inline len_t end_message(buf_ref_t msg_buf, len_t msg_buf_size, len_t msg_len, bool ignore_checksum)
 {
-	// '*' + 2 char checksum + '\n'
-	constexpr len_t checksum_field_size = 1 + 1 + 2 + 1 + 1;
+	// '*' + 2-char checksum + '\r' + '\n' + '\0'
+	constexpr len_t checksum_field_size = 1 + 2 + 1 + 1 + 1;
 
 	// ensure enough space is available
 	if (msg_buf_size - msg_len < checksum_field_size) {
@@ -275,7 +275,7 @@ static inline len_t end_message(buf_ref_t msg_buf, len_t msg_buf_size, len_t msg
 	}
 
 	// calculate checksum
-	char checksum[2];
+	char checksum[2] = {'X', 'X'};
 
 	if (ignore_checksum) {
 		checksum[0] = CHECKSUM_IGNORE[0];
@@ -285,7 +285,7 @@ static inline len_t end_message(buf_ref_t msg_buf, len_t msg_buf_size, len_t msg
 		calculate_checksum(checksum, (uint8_t *)msg_buf, msg_len);
 	}
 
-	return snprintf(msg_buf + msg_len, checksum_field_size, "*%s\n", checksum);
+	return snprintf(msg_buf + msg_len, checksum_field_size, "*%c%c\r\n", checksum[0], checksum[1]);
 }
 
 ErrorCode create_read_register(const uint8_t reg_id, buf_ref_t msg_buf, len_t &msg_len)
@@ -490,9 +490,54 @@ ErrorCode create_legacy_compatibility_settings(const LegacyCompatibilitySettings
 	return ErrorCode::OK;
 }
 
+static inline uint8_t get_active_binary_group_count(uint8_t binary_group)
+{
+	uint8_t count = 0;
+
+	for (uint8_t bit = 0; bit <= 4; bit++) {
+		if ((binary_group & (1u << bit)) != 0u) {
+			count++;
+		}
+	}
+
+	return count;
+}
+
+static inline ErrorCode append_binary_output_group_types(const bin::BinaryMessage &config, buf_ref_t msg_buf, len_t &msg_len)
+{
+	// Mask out invalid group bits.
+	if ((config.binary_group & ~0x1Fu) != 0u) {
+		return ErrorCode::InvalidParameter;
+	}
+
+	const uint8_t num_groups = get_active_binary_group_count(config.binary_group);
+
+	if (num_groups > 4) {
+		return ErrorCode::InvalidParameter;
+	}
+
+	for (uint8_t i = 0; i < num_groups; i++) {
+		if (config.group_types[i] == 0u) {
+			return ErrorCode::InvalidParameter;
+		}
+
+		len_t written = add_uint16_hex(msg_buf, MAX_MESSAGE_SIZE, msg_len, config.group_types[i]);
+
+		if (written < 0) {
+			return ErrorCode::InvalidParameter;
+		}
+
+		msg_len += written;
+	}
+
+	return ErrorCode::OK;
+}
+
 ErrorCode create_binary_output_message_config_1(const BinaryOutputMessageConfig1 &binary_output_msg_config_1,
 		buf_ref_t msg_buf, len_t &msg_len)
 {
+	ErrorCode err = ErrorCode::OK;
+
 	msg_len = start_message(msg_buf, MAX_MESSAGE_SIZE, VNWRG);
 	msg_len += add_register_id(msg_buf, MAX_MESSAGE_SIZE, msg_len, BinaryOutputMessageConfig1::ID);
 	msg_len += add_uint16(msg_buf, MAX_MESSAGE_SIZE, msg_len,
@@ -501,11 +546,8 @@ ErrorCode create_binary_output_message_config_1(const BinaryOutputMessageConfig1
 			      static_cast<uint16_t>(binary_output_msg_config_1.rate_divisor));
 	msg_len += add_uint8_hex(msg_buf, MAX_MESSAGE_SIZE, msg_len, binary_output_msg_config_1.config.binary_group);
 
-	for (int i = 0; i < 4; i++) {
-		if (binary_output_msg_config_1.config.group_types[i] > 0) {
-			msg_len += add_uint16_hex(msg_buf, MAX_MESSAGE_SIZE, msg_len,
-						  binary_output_msg_config_1.config.group_types[i]);
-		}
+	if ((err = append_binary_output_group_types(binary_output_msg_config_1.config, msg_buf, msg_len)) != ErrorCode::OK) {
+		return err;
 	}
 
 	msg_len += end_message(msg_buf, MAX_MESSAGE_SIZE, msg_len);
@@ -516,6 +558,8 @@ ErrorCode create_binary_output_message_config_1(const BinaryOutputMessageConfig1
 ErrorCode create_binary_output_message_config_2(const BinaryOutputMessageConfig2 &binary_output_msg_config_2,
 		buf_ref_t msg_buf, len_t &msg_len)
 {
+	ErrorCode err = ErrorCode::OK;
+
 	msg_len = start_message(msg_buf, MAX_MESSAGE_SIZE, VNWRG);
 	msg_len += add_register_id(msg_buf, MAX_MESSAGE_SIZE, msg_len, BinaryOutputMessageConfig2::ID);
 
@@ -525,11 +569,8 @@ ErrorCode create_binary_output_message_config_2(const BinaryOutputMessageConfig2
 			      static_cast<uint16_t>(binary_output_msg_config_2.rate_divisor));
 	msg_len += add_uint8_hex(msg_buf, MAX_MESSAGE_SIZE, msg_len, binary_output_msg_config_2.config.binary_group);
 
-	for (int i = 0; i < 4; i++) {
-		if (binary_output_msg_config_2.config.group_types[i] > 0) {
-			msg_len += add_uint16_hex(msg_buf, MAX_MESSAGE_SIZE, msg_len,
-						  binary_output_msg_config_2.config.group_types[i]);
-		}
+	if ((err = append_binary_output_group_types(binary_output_msg_config_2.config, msg_buf, msg_len)) != ErrorCode::OK) {
+		return err;
 	}
 
 	msg_len += end_message(msg_buf, MAX_MESSAGE_SIZE, msg_len);
@@ -540,6 +581,8 @@ ErrorCode create_binary_output_message_config_2(const BinaryOutputMessageConfig2
 ErrorCode create_binary_output_message_config_3(const BinaryOutputMessageConfig3 &binary_output_msg_config_3,
 		buf_ref_t msg_buf, len_t &msg_len)
 {
+	ErrorCode err = ErrorCode::OK;
+
 	msg_len = start_message(msg_buf, MAX_MESSAGE_SIZE, VNWRG);
 	msg_len += add_register_id(msg_buf, MAX_MESSAGE_SIZE, msg_len, BinaryOutputMessageConfig3::ID);
 
@@ -549,11 +592,8 @@ ErrorCode create_binary_output_message_config_3(const BinaryOutputMessageConfig3
 			      static_cast<uint16_t>(binary_output_msg_config_3.rate_divisor));
 	msg_len += add_uint8_hex(msg_buf, MAX_MESSAGE_SIZE, msg_len, binary_output_msg_config_3.config.binary_group);
 
-	for (int i = 0; i < 4; i++) {
-		if (binary_output_msg_config_3.config.group_types[i] > 0) {
-			msg_len += add_uint16_hex(msg_buf, MAX_MESSAGE_SIZE, msg_len,
-						  binary_output_msg_config_3.config.group_types[i]);
-		}
+	if ((err = append_binary_output_group_types(binary_output_msg_config_3.config, msg_buf, msg_len)) != ErrorCode::OK) {
+		return err;
 	}
 
 	msg_len += end_message(msg_buf, MAX_MESSAGE_SIZE, msg_len);

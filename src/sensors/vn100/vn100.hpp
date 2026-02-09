@@ -45,12 +45,11 @@ private:
 	vn::bin::BinaryMessage bin_msg_3; // binary message 3 config
 
 	// config parameters
-	static constexpr int _params_vn100_port = 1; // default port for binary output messages
+	static constexpr int _params_vn100_port = 2; // output on VN serial port 2 (RX2/TX2 wiring)
 	static constexpr int _params_vn100_mode = 0; // default mode of the VN100 (0: external INS, 1: full INS)
 	static constexpr int _params_vn100_msg1_rate = 2; // default rate divisor for binary output message 1
 	static constexpr int _params_vn100_msg2_rate = 8; // default rate divisor for binary output message 2
 
 };
 
-// FIX: make this cleaner
-extern VN100* vn100_instance; // global instance of the VN100 driver
+extern VN100 vn100; // global VN100 driver instance (defined in main.cpp)

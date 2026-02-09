@@ -14,8 +14,7 @@
 
 VN100::VN100()
 {
-	// FIX: make set_port take a HardwareSerial pointer instead of a string
-	// _uart.set_port();
+	_uart.set_port(&Serial3);
 }
 
 VN100::~VN100()
@@ -27,7 +26,8 @@ VN100::~VN100()
 
 bool VN100::init()
 {
-	// initialize the uart line
+	_uart.set_port(&Serial3);
+
 	if (!_uart.open()) {
 		Serial.println("Failed to open UART port");
 		return false;
@@ -45,6 +45,23 @@ bool VN100::init()
 
 	if (_uart.write_register(async_output_enable) != vn::ErrorCode::OK) {
 		Serial.println("Failed to write async output enable to VN100");
+		return false;
+	}
+
+	// Disable legacy ASCII async stream (Register 6/7) so VNASY only drives our configured binary outputs.
+	vn::AsyncDataOutputType async_data_output_type;
+	async_data_output_type.ador = vn::Ador::OFF;
+
+	if (_uart.write_register(async_data_output_type) != vn::ErrorCode::OK) {
+		Serial.println("Failed to set async data output type to OFF on VN100");
+		return false;
+	}
+
+	vn::AsyncDataOutputFreq async_data_output_freq;
+	async_data_output_freq.adof = vn::Adof::HZ_0;
+
+	if (_uart.write_register(async_data_output_freq) != vn::ErrorCode::OK) {
+		Serial.println("Failed to set async data output frequency to 0 on VN100");
 		return false;
 	}
 
@@ -102,20 +119,29 @@ bool VN100::init()
 	       serial_number.serial_number, firmware_version.firmware_version,
 	       user_tag.tag);
 
-	Serial.printf("VN100 initialized\n");
+	// Configure binary async output messages.
+	auto finalize_binary_message = [](vn::bin::BinaryMessage &msg) {
+		msg.num_groups = 0;
 
-	// FIX: here is where you declare what messages the vn100 should send
+		for (uint8_t bit = 0; bit <= 4 && msg.num_groups < 4; bit++) {
+			if ((msg.binary_group & (1u << bit)) != 0u) {
+				msg.group_indices[msg.num_groups++] = bit;
+			}
+		}
+	};
 
 	vn::BinaryOutputMessageConfig1 binary_output_msg_1;
 	binary_output_msg_1.async_mode = static_cast<vn::AsyncMode>(_params_vn100_port);
 	binary_output_msg_1.rate_divisor = static_cast<uint16_t>(_params_vn100_msg1_rate);
 
+	bin_msg_1 = vn::bin::BinaryMessage{};
 	bin_msg_1.binary_group = vn::bin::BinaryGroup::TimeGroup |
 				 vn::bin::BinaryGroup::ImuGroup;
 	bin_msg_1.group_types[0] = static_cast<uint16_t>(vn::bin::TimeTypes::TimeStartup);
 	bin_msg_1.group_types[1] = static_cast<uint16_t>(vn::bin::ImuTypes::Accel) |
 				   static_cast<uint16_t>(vn::bin::ImuTypes::AngularRate) |
 				   static_cast<uint16_t>(vn::bin::ImuTypes::SensSat);
+	finalize_binary_message(bin_msg_1);
 
 	binary_output_msg_1.config = bin_msg_1;
 
@@ -128,6 +154,7 @@ bool VN100::init()
 	binary_output_msg_2.async_mode = static_cast<vn::AsyncMode>(_params_vn100_port);
 	binary_output_msg_2.rate_divisor = static_cast<uint16_t>(_params_vn100_msg2_rate);
 
+	bin_msg_2 = vn::bin::BinaryMessage{};
 	bin_msg_2.binary_group = vn::bin::BinaryGroup::TimeGroup |
 				 vn::bin::BinaryGroup::ImuGroup |
 				 vn::bin::BinaryGroup::AttitudeGroup;
@@ -135,8 +162,10 @@ bool VN100::init()
 	bin_msg_2.group_types[1] = static_cast<uint16_t>(vn::bin::ImuTypes::Temperature) |
 				   static_cast<uint16_t>(vn::bin::ImuTypes::Pressure) |
 				   static_cast<uint16_t>(vn::bin::ImuTypes::Mag);
-	bin_msg_2.group_types[2] = static_cast<uint16_t>(vn::bin::AttitudeTypes::Quaternion) |
+	bin_msg_2.group_types[2] = static_cast<uint16_t>(vn::bin::AttitudeTypes::Ypr) |
+				   static_cast<uint16_t>(vn::bin::AttitudeTypes::Quaternion) |
 				   static_cast<uint16_t>(vn::bin::AttitudeTypes::LinAccelNed);
+	finalize_binary_message(bin_msg_2);
 
 	binary_output_msg_2.config = bin_msg_2;
 
@@ -145,7 +174,8 @@ bool VN100::init()
 		return false;
 	}
 
-	// TODO: message 3. this is not used but required (why) for hitl according to justin p
+	bin_msg_3 = vn::bin::BinaryMessage{};
+	finalize_binary_message(bin_msg_3);
 
 	_uart.set_binary_callback(binary_message_callback);
 
@@ -156,6 +186,8 @@ bool VN100::init()
 		Serial.println("Failed to enable async output on VN100");
 		return false;
 	}
+
+	Serial.printf("VN100 initialized\n");
 
 	_initialized = true; // mark as initialized
 	return true;
@@ -172,6 +204,16 @@ bool VN100::ramp_up_baudrate()
 
 	constexpr vn::BaudrateSetting default_baudrate = vn::BaudrateSetting::BAUD_115200;
 	constexpr vn::BaudrateSetting target_baudrate = vn::BaudrateSetting::BAUD_921600;
+	constexpr vn::BaudrateSetting probe_baudrates[] = {
+		vn::BaudrateSetting::BAUD_115200,
+		vn::BaudrateSetting::BAUD_230400,
+		vn::BaudrateSetting::BAUD_460800,
+		vn::BaudrateSetting::BAUD_128000,
+		vn::BaudrateSetting::BAUD_57600,
+		vn::BaudrateSetting::BAUD_38400,
+		vn::BaudrateSetting::BAUD_19200,
+		vn::BaudrateSetting::BAUD_9600,
+	};
 
 	// see whether we're already at the target baudrate
 	_uart.set_baud(target_baudrate);
@@ -185,14 +227,27 @@ bool VN100::ramp_up_baudrate()
 			 static_cast<uint32_t>(target_baudrate));
 	}
 
-	// if not, try the default baudrate. If this fails, all is lost
-	_uart.set_baud(default_baudrate);
+	// Try common baudrates in case this unit was configured away from defaults.
+	vn::BaudrateSetting detected_baudrate = default_baudrate;
+	bool found_baudrate = false;
 
-	if (_uart.read_register(model) != vn::ErrorCode::OK) {
+	for (vn::BaudrateSetting probe_baudrate : probe_baudrates) {
+		_uart.set_baud(probe_baudrate);
+
+		if (_uart.read_register(model) == vn::ErrorCode::OK) {
+			detected_baudrate = probe_baudrate;
+			found_baudrate = true;
+			break;
+		}
+	}
+
+	if (!found_baudrate) {
 		Serial.printf("Failed to read model at default baudrate: %lu, cannot proceed with ramp up\n",
-			static_cast<uint32_t>(default_baudrate));
+			      static_cast<uint32_t>(default_baudrate));
 		return false;
 	}
+
+	_uart.set_baud(detected_baudrate);
 
 	// now we can set the target baudrate
 	configured_baudrate.baudrate = target_baudrate;
@@ -208,11 +263,10 @@ bool VN100::ramp_up_baudrate()
 	if (_uart.read_register(model) == vn::ErrorCode::OK) {
 		Serial.printf("VN100 baudrate successfully set to: %lu\n", static_cast<uint32_t>(target_baudrate));
 		return true;
-
-	} else {
-		Serial.printf("VN100 baudrate not set to 921600, currently at: %lu\n",
-			static_cast<uint32_t>(configured_baudrate.baudrate));
 	}
+
+	Serial.printf("VN100 baudrate not set to 921600, currently at: %lu\n",
+		      static_cast<uint32_t>(configured_baudrate.baudrate));
 
 	return false;
 }

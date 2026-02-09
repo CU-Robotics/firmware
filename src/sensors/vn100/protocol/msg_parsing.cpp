@@ -15,6 +15,7 @@
 #include "msg_parsing.hpp"
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 namespace vn
@@ -560,100 +561,170 @@ ErrorCode parse_legacy_compatibility_settings(const_buf_ref_t msg_buf, len_t msg
 	return ErrorCode::OK;
 }
 
-ErrorCode parse_binary_output_message_config_1(const_buf_ref_t msg_buf, len_t msg_len,
-		BinaryOutputMessageConfig1 &binary_output_msg_config)
+static inline bool parse_u16_token(const char *token, int base, uint16_t &value)
 {
-	ErrorCode err = verify_message(msg_buf, msg_len, BinaryOutputMessageConfig1::ID);
+	if (token == nullptr || *token == '\0') {
+		return false;
+	}
+
+	char *end = nullptr;
+	unsigned long parsed = strtoul(token, &end, base);
+
+	if (end == token || *end != '\0' || parsed > 0xFFFFu) {
+		return false;
+	}
+
+	value = static_cast<uint16_t>(parsed);
+	return true;
+}
+
+static inline bool parse_u8_token(const char *token, int base, uint8_t &value)
+{
+	uint16_t parsed = 0;
+
+	if (!parse_u16_token(token, base, parsed) || parsed > 0x00FFu) {
+		return false;
+	}
+
+	value = static_cast<uint8_t>(parsed);
+	return true;
+}
+
+static inline uint8_t get_active_group_count(uint8_t binary_group, uint8_t group_indices[4])
+{
+	uint8_t count = 0;
+
+	for (uint8_t bit = 0; bit <= 4; bit++) {
+		if ((binary_group & (1u << bit)) == 0u) {
+			continue;
+		}
+
+		if (count < 4) {
+			group_indices[count] = bit;
+		}
+
+		count++;
+	}
+
+	return count;
+}
+
+static ErrorCode parse_binary_output_message_config_common(const_buf_ref_t msg_buf, len_t msg_len, uint8_t reg_id,
+		AsyncMode &async_mode, uint16_t &rate_divisor, bin::BinaryMessage &config)
+{
+	ErrorCode err = verify_message(msg_buf, msg_len, reg_id);
 
 	if (err != ErrorCode::OK) {
 		return err;
 	}
 
-	// get the data after the register delim
-	char *data_start = strchr(msg_buf + HEADER_SIZE, DELIM);
+	msg::MessageType command = msg::MessageType::Unknown;
+	uint8_t parsed_reg_id = 255;
 
-	if (!data_start || data_start - msg_buf + 1 >= msg_len) {
+	if (extract_header(msg_buf, msg_len, &command, &parsed_reg_id) != ErrorCode::OK || parsed_reg_id != reg_id) {
 		return ErrorCode::InvalidParameter;
 	}
 
-	// try to parse all parts. we might not get all of the OutputTypes, but we should at least get the async mode, rate divisor, binary group, and one group type
-	if (sscanf(data_start + 1, BinaryOutputMessageConfig1::FORMAT,
-		   reinterpret_cast<uint16_t *>(&binary_output_msg_config.async_mode),
-		   &binary_output_msg_config.rate_divisor,
-		   reinterpret_cast<uint8_t *>(&binary_output_msg_config.config.binary_group),
-		   &binary_output_msg_config.config.group_types[0],
-		   &binary_output_msg_config.config.group_types[1],
-		   &binary_output_msg_config.config.group_types[2],
-		   &binary_output_msg_config.config.group_types[3]
-		  ) < 4) {
-		return ErrorCode::InvalidParameter; // failed to parse all required fields
+	// payload begins after the comma following the register ID
+	const char *data_start = strchr(msg_buf + HEADER_SIZE, DELIM);
+
+	if (!data_start || data_start - msg_buf + 1 >= msg_len) {
+		return command == msg::MessageType::WriteRegister ? ErrorCode::OK : ErrorCode::InvalidParameter;
 	}
 
+	const char *payload_start = data_start + 1;
+
+	if (*payload_start == END_DATA || *payload_start == '\r' || *payload_start == '\n' || *payload_start == '\0') {
+		return command == msg::MessageType::WriteRegister ? ErrorCode::OK : ErrorCode::InvalidParameter;
+	}
+
+	const char *payload_end = strchr(payload_start, END_DATA);
+
+	if (!payload_end || payload_end <= payload_start) {
+		return ErrorCode::InvalidParameter;
+	}
+
+	len_t payload_len = payload_end - payload_start;
+
+	if (payload_len <= 0 || payload_len >= static_cast<len_t>(MAX_MESSAGE_SIZE)) {
+		return ErrorCode::InvalidParameter;
+	}
+
+	char payload[MAX_MESSAGE_SIZE] = {0};
+	memcpy(payload, payload_start, payload_len);
+	payload[payload_len] = '\0';
+
+	char *save_ptr = nullptr;
+	char *token = strtok_r(payload, ",", &save_ptr);
+	uint16_t async_mode_raw = 0;
+
+	if (!parse_u16_token(token, 10, async_mode_raw)) {
+		return ErrorCode::InvalidParameter;
+	}
+
+	token = strtok_r(nullptr, ",", &save_ptr);
+
+	if (!parse_u16_token(token, 10, rate_divisor)) {
+		return ErrorCode::InvalidParameter;
+	}
+
+	token = strtok_r(nullptr, ",", &save_ptr);
+	uint8_t binary_group = 0;
+
+	if (!parse_u8_token(token, 16, binary_group)) {
+		return ErrorCode::InvalidParameter;
+	}
+
+	// VN100 supports binary group bits 0..4 in this protocol implementation.
+	if ((binary_group & ~0x1Fu) != 0u) {
+		return ErrorCode::InvalidParameter;
+	}
+
+	config = bin::BinaryMessage{};
+	config.binary_group = binary_group;
+	config.num_groups = get_active_group_count(binary_group, config.group_indices);
+
+	if (config.num_groups > 4) {
+		return ErrorCode::InvalidParameter;
+	}
+
+	for (uint8_t i = 0; i < config.num_groups; i++) {
+		token = strtok_r(nullptr, ",", &save_ptr);
+
+		if (!parse_u16_token(token, 16, config.group_types[i]) || config.group_types[i] == 0) {
+			return ErrorCode::InvalidParameter;
+		}
+	}
+
+	// no extra OutputTypes are allowed
+	if (strtok_r(nullptr, ",", &save_ptr) != nullptr) {
+		return ErrorCode::InvalidParameter;
+	}
+
+	async_mode = static_cast<AsyncMode>(async_mode_raw);
+
 	return ErrorCode::OK;
+}
+
+ErrorCode parse_binary_output_message_config_1(const_buf_ref_t msg_buf, len_t msg_len,
+		BinaryOutputMessageConfig1 &binary_output_msg_config)
+{
+	return parse_binary_output_message_config_common(msg_buf, msg_len, BinaryOutputMessageConfig1::ID,
+			binary_output_msg_config.async_mode, binary_output_msg_config.rate_divisor, binary_output_msg_config.config);
 }
 
 ErrorCode parse_binary_output_message_config_2(const_buf_ref_t msg_buf, len_t msg_len,
 		BinaryOutputMessageConfig2 &binary_output_msg_config)
 {
-	ErrorCode err = verify_message(msg_buf, msg_len, BinaryOutputMessageConfig2::ID);
-
-	if (err != ErrorCode::OK) {
-		return err;
-	}
-
-	// get the data after the register delim
-	char *data_start = strchr(msg_buf + HEADER_SIZE, DELIM);
-
-	if (!data_start || data_start - msg_buf + 1 >= msg_len) {
-		return ErrorCode::InvalidParameter;
-	}
-
-	// try to parse all parts. we might not get all of the OutputTypes, but we should at least get the async mode, rate divisor, binary group, and one group type
-	if (sscanf(data_start + 1, BinaryOutputMessageConfig2::FORMAT,
-		   reinterpret_cast<uint16_t *>(&binary_output_msg_config.async_mode),
-		   &binary_output_msg_config.rate_divisor,
-		   reinterpret_cast<uint8_t *>(&binary_output_msg_config.config.binary_group),
-		   &binary_output_msg_config.config.group_types[0],
-		   &binary_output_msg_config.config.group_types[1],
-		   &binary_output_msg_config.config.group_types[2],
-		   &binary_output_msg_config.config.group_types[3]
-		  ) < 4) {
-		return ErrorCode::InvalidParameter; // failed to parse all required fields
-	}
-
-	return ErrorCode::OK;
+	return parse_binary_output_message_config_common(msg_buf, msg_len, BinaryOutputMessageConfig2::ID,
+			binary_output_msg_config.async_mode, binary_output_msg_config.rate_divisor, binary_output_msg_config.config);
 }
 
 ErrorCode parse_binary_output_message_config_3(const_buf_ref_t msg_buf, len_t msg_len,
 		BinaryOutputMessageConfig3 &binary_output_msg_config)
 {
-	ErrorCode err = verify_message(msg_buf, msg_len, BinaryOutputMessageConfig3::ID);
-
-	if (err != ErrorCode::OK) {
-		return err;
-	}
-
-	// get the data after the register delim
-	char *data_start = strchr(msg_buf + HEADER_SIZE, DELIM);
-
-	if (!data_start || data_start - msg_buf + 1 >= msg_len) {
-		return ErrorCode::InvalidParameter;
-	}
-
-	// try to parse all parts. we might not get all of the OutputTypes, but we should at least get the async mode, rate divisor, binary group, and one group type
-	if (sscanf(data_start + 1, BinaryOutputMessageConfig3::FORMAT,
-		   reinterpret_cast<uint16_t *>(&binary_output_msg_config.async_mode),
-		   &binary_output_msg_config.rate_divisor,
-		   reinterpret_cast<uint8_t *>(&binary_output_msg_config.config.binary_group),
-		   &binary_output_msg_config.config.group_types[0],
-		   &binary_output_msg_config.config.group_types[1],
-		   &binary_output_msg_config.config.group_types[2],
-		   &binary_output_msg_config.config.group_types[3]
-		  ) < 4) {
-		return ErrorCode::InvalidParameter; // failed to parse all required fields
-	}
-
-	return ErrorCode::OK;
+	return parse_binary_output_message_config_common(msg_buf, msg_len, BinaryOutputMessageConfig3::ID,
+			binary_output_msg_config.async_mode, binary_output_msg_config.rate_divisor, binary_output_msg_config.config);
 }
 
 ErrorCode parse_magnetic_gravity_reference(const_buf_ref_t msg_buf, len_t msg_len,

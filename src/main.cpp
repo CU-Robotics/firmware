@@ -15,6 +15,7 @@
 #include "sensors/ACS712.hpp"
 #include "sensors/StereoCamTrigger.hpp"
 #include "sensors/dr16.hpp"
+#include "sensors/vn100/vn100.hpp"
 #include "utils/profiler.hpp"
 
 #include "SensorManager.hpp"
@@ -55,6 +56,7 @@ ControllerManager controller_manager;
 Governor governor;
 
 Watchdog watchdog;
+VN100 vn100;
 
 // DONT put anything else in this function. It is not a setup function
 void print_logo() {
@@ -100,6 +102,15 @@ int main() {
     debug.begin(SerialUSB1);
 
     print_logo();
+
+#define VN100_TEST
+#ifdef VN100_TEST
+    Serial.println("Starting VN100 test bench...");
+    while (true) {
+        vn100.loop();
+        delayMicroseconds(1000);
+    }
+#endif
 
     // check to see if there is a crash report, and if so, print it repeatedly
     // over Serial in the future, we'll send this directly over comms
