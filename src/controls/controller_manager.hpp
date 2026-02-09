@@ -12,20 +12,11 @@
 /// @brief Manage all controllers
 class ControllerManager {
 private:
-    /// @brief Array storing every controller
-    // Controller* controllers[NUM_ROBOT_CONTROLLERS];
 
     std::vector<Controller> controllers;
-    
-    /// @brief number of controllers configured for this robot
-    int num_controllers = 0;
 
     /// @brief array of motor outputs
     float outputs[CAN_MAX_MOTORS] = { 0 };
-
-    /// @brief config struct to store all config data
-    /// @note this is read only
-    const Config* config_data = nullptr;
 
     /// @brief can data pointer used to write to the can bus
     CANManager* can;
@@ -50,10 +41,6 @@ public:
     /// @param macro_estimate estimated current joint states
     /// @param micro_estimate estimated current motor states
     void step(float macro_reference[STATE_LEN][3], float macro_estimate[STATE_LEN][3], float micro_estimate[CAN_MAX_MOTORS][MICRO_STATE_LEN]);
-
-    /// @brief get the ratio (between 0 and 1) of power limit. 1 when 60 to 20 and x/20 under 20.
-    /// @return ratio to scale the chassis control based on current power buffer
-    float powerlimit_ratio();
 
     /// @brief An abstracted method to write to a specific motor by ID
     /// @param motor_id The ID of a motor, these IDs are defined in the config

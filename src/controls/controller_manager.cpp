@@ -4,7 +4,7 @@ void ControllerManager::init(CANManager* _can, const std::vector<NewConfig::Cont
     can = _can;
 
     for(NewConfig::Controller controller_config : controller_configs) {
-        init_controller(controller_config.controller_type, controller_config.gains, controller_config.gear_ratios);
+        init_controller(controller_config);
     }
 
     // intializes all controllers given the controller_types matrix from the config
@@ -58,6 +58,13 @@ void ControllerManager::step(float macro_reference[STATE_LEN][3], float macro_es
 
         }
     }
+
+    for(NewConfig::Controller controller_config : controllers) {
+        float outputs[CONTROLLER_MOTORS_SIZE];
+        controller_config.step(macro_reference, macro_estimate, micro_estimate, outputs);
+        
+    }
+
 }
 
 // motor_info[Global ID][type, Physical ID, Physical Bus]

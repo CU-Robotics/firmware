@@ -5,7 +5,7 @@
 
 namespace NewConfig {
 
-enum MotorName {
+enum class MotorName : uint32_t{
     UnsetMotorName,
     Chassis1,
     Chassis2,
@@ -20,7 +20,7 @@ enum MotorName {
     Feeder,
 };
 
-enum MotorControllerType {
+enum class MotorControllerType : uint32_t {
     UnsetMotorControllerType,
     C620,
     C610,
@@ -29,7 +29,7 @@ enum MotorControllerType {
     SDC104,
 };
 
-enum MotorType {
+enum class MotorType : uint32_t {
     UnsetMotorType,
     M3508,
     M2006,
@@ -40,11 +40,11 @@ enum MotorType {
 };
 
 struct Motor : Comms::CommsData {
-    uint32_t motor_controller_type;
+    MotorControllerType motor_controller_type;
     uint32_t physical_bus;
     uint32_t physical_id;
-    uint32_t motor_type;
-    uint32_t motor_name;
+    MotorType motor_type;
+    MotorName motor_name;
 
     Motor() : Comms::CommsData(Comms::TypeLabel::MotorConfig, Comms::PhysicalMedium::HID, Comms::Priority::High, sizeof(Motor)) {
         motor_controller_type = UnsetMotorControllerType;
