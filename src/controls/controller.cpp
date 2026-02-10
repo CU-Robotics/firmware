@@ -49,7 +49,7 @@ void XDrivePositionController::step(float reference[STATE_LEN][3], float estimat
     }
     outputp[2] = pidp[2].filter(dt, false, false);
     outputv[2] = pidv[2].filter(dt, false, false);
-    output[2] = (outputp[2] + outputv[2]) * controller_config.gear_ratios.chassis_anngle_to_motor_rad;
+    output[2] = (outputp[2] + outputv[2]) * controller_config.gear_ratios.chassis_angle_to_motor_rad;
     float chassis_heading = estimate[2][0];
 
     // Convert to motor velocities

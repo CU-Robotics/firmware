@@ -75,6 +75,9 @@ public:
     /// @note This immediately issues a CAN command over the bus
     void issue_safety_mode();
 
+    /// @brief Write a torque command to a specific motor by name
+    /// @param motor_name The name of the motor to write to
+    /// @param torque The torque command to write to the motor
     void write_motor_torque_by_name(NewConfig::MotorName motor_name, float torque);
 
     /// @brief Print the state of all motors

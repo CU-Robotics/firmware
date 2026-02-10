@@ -33,6 +33,8 @@ public:
 
     /// @brief Resets integrators/timers
     virtual void reset() { timer.start(); }
+
+    const NewConfig::Controller& config() const { return controller_config; }
 };
 
 /// @brief Default controller

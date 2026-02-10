@@ -10,7 +10,7 @@ constexpr uint32_t CONTROLLER_SUB_CONTROLLERS_SIZE = 8;
 
 namespace NewConfig {
 
-enum ControllerType : uint8_t {
+enum class ControllerType : uint32_t {
     UnsetControllerType,
     XDrivePositionController,
     XDriveVelocityController,
@@ -20,7 +20,7 @@ enum ControllerType : uint8_t {
     FeederController,
 };
 
-enum SubControllerType : uint8_t {
+enum class SubControllerType : uint32_t {
     UnsetSubControllerType,
     
     XYPositionController,

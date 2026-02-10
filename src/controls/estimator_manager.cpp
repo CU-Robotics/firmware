@@ -4,20 +4,12 @@ EstimatorManager::~EstimatorManager() {
     Serial.println("Ending SPI");
     SPI.end();
     Serial.println("SPI Ended");
-
-    for (int i = 0; i < STATE_LEN; i++) {
-        if (estimators[i] == nullptr)
-            continue;
-        delete estimators[i];
-    }
 }
 
-void EstimatorManager::init(CANManager* _can, const Config* _config_data, SensorManager* _sensor_manager) {
-    // set can and config data pointers
-    can = _can;
-    config_data = _config_data;
-    sensor_manager = _sensor_manager;
-    if (!config_data) Serial.println("CONFIG DATA IS NULL!!!!!");
+void EstimatorManager::init(const std::vector<NewConfig::Estimator>& estimator_configurations) {
+    for(NewConfig::Estimator estimator_config : estimator_configurations) {
+        init_estimator(estimator_config.estimator_name);
+    }
 
     // create and initialize the estimators
     for (int i = 0; i < NUM_ESTIMATORS; i++) {
@@ -30,11 +22,10 @@ void EstimatorManager::init(CANManager* _can, const Config* _config_data, Sensor
     }
 }
 
-void EstimatorManager::init_estimator(int estimator_id) {
-    if (!config_data) Serial.println("CONFIG DATA IS NULL!!!!!");
+void EstimatorManager::init_estimator(NewConfig::Estimator estimator_config) {
 
-    switch (estimator_id) {
-    case 1:
+    switch (estimator_name) {
+    case NewConfig::GimbalEstimator:
         estimators[num_estimators++] = new GimbalEstimator(*config_data, sensor_manager, can);
         break;
     case 2:
