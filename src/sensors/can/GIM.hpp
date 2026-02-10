@@ -1,6 +1,21 @@
 #include "motor.hpp"
+//GIM3505
+constexpr float GIM3505_TORQUE_CONSTANT = 0.52f; // Nm/A
+constexpr float GIM3505_GEAR_RATIO = 8.0f; // 8:1
+constexpr float GIM3505_MAX_TORQUE = 1.27f; // Nm
+constexpr float GIM3505_MAX_SPEED = 225.0f; // RPM
 
+//GIM4310
+constexpr float GIM4310_TORQUE_CONSTANT = 3.46f; // Nm/A
+constexpr float GIM4310_GEAR_RATIO = 36.0f; // 36:1
+constexpr float GIM4310_MAX_TORQUE = 20.16f; // Nm
+constexpr float GIM4310_MAX_SPEED = 63.0f; // RPM
 
+//GIM8108
+constexpr float GIM8108_TORQUE_CONSTANT = 1.83f; // NmA
+constexpr float GIM8108_GEAR_RATIO = 9.0f; // 9:1
+constexpr float GIM8108_MAX_TORQUE = 27.38f; // Nm
+constexpr float GIM8108_MAX_SPEED = 242.0f; // RPM
 
 /// @brief Motor driver for the GIM motor
 /// @note GIM8108 docs (SDC103): https://steadywin.cn/en/pd.jsp?id=15&fromColId=0#_pp=0_752_3
@@ -22,24 +37,24 @@ public:
 
         switch (motor_type) {
         case MotorType::GIM3505: {
-            m_torque_constant = 0.52f;
-            m_gear_ratio = 8.0f; // 8:1
-            m_max_torque = 1.27f; // Nm
-            m_max_speed = 225.0f; // RPM
+            m_torque_constant = GIM3505_TORQUE_CONSTANT;
+            m_gear_ratio = GIM3505_GEAR_RATIO;
+            m_max_torque = GIM3505_MAX_TORQUE;
+            m_max_speed = GIM3505_MAX_SPEED;
             break;
         }
         case MotorType::GIM4310: {
-            m_torque_constant = 3.46f;
-            m_gear_ratio = 36.0f; // 36:1
-            m_max_torque = 20.16f; // Nm
-            m_max_speed = 63.0f; // RPM
+            m_torque_constant = GIM4310_TORQUE_CONSTANT;
+            m_gear_ratio = GIM4310_GEAR_RATIO;
+            m_max_torque = GIM4310_MAX_TORQUE;
+            m_max_speed = GIM4310_MAX_SPEED;
             break;
         }
         case MotorType::GIM8108: {
-            m_torque_constant = 1.83f;
-            m_gear_ratio = 9.0f; // 9:1
-            m_max_torque = 27.38; // Nm
-            m_max_speed = 242.0f; // RPM
+            m_torque_constant = GIM8108_TORQUE_CONSTANT;
+            m_gear_ratio = GIM8108_GEAR_RATIO;
+            m_max_torque = GIM8108_MAX_TORQUE;
+            m_max_speed = GIM8108_MAX_SPEED;
             break;
         }
         default: {

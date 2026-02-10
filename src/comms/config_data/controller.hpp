@@ -1,15 +1,16 @@
 #pragma once
 
+#include <cstdint>
 #include <stdint.h>     // for uintN_t
 #include "comms/data/comms_data.hpp" // for CommsData, TypeLabel, to_string
 #include "comms/config_data/motor.hpp" // for Motor
 
-#define CONTROLLER_MOTORS_SIZE 8
-#define CONTROLLER_SUB_CONTROLLERS_SIZE 8
+constexpr uint32_t CONTROLLER_MOTORS_SIZE = 8;
+constexpr uint32_t CONTROLLER_SUB_CONTROLLERS_SIZE = 8;
 
 namespace NewConfig {
 
-enum ControllerType : uint8_t {
+enum class ControllerType : uint32_t {
     UnsetControllerType,
     XDrivePositionController,
     XDriveVelocityController,
@@ -19,7 +20,7 @@ enum ControllerType : uint8_t {
     FeederController,
 };
 
-enum SubControllerType : uint8_t {
+enum class SubControllerType : uint32_t {
     UnsetSubControllerType,
     
     XYPositionController,
@@ -60,14 +61,14 @@ struct SubController {
 };
 
 struct Controller : Comms::CommsData {
-    uint32_t motors[CONTROLLER_MOTORS_SIZE];  // list of motor ids that this controller controls
+    uint32_t motor_indices[CONTROLLER_MOTORS_SIZE];  // list of motor ids that this controller controls
     SubController sub_controllers[CONTROLLER_SUB_CONTROLLERS_SIZE];
     GearRatios gear_ratios;
-    ControllerType controller_type;
+    uint32_t controller_type;
 
     Controller() : Comms::CommsData(Comms::TypeLabel::ControllerConfig, Comms::PhysicalMedium::HID, Comms::Priority::High, sizeof(Controller)) {
         for (int i = 0; i < CONTROLLER_MOTORS_SIZE; i++) {
-            motors[i] = UnsetMotorName;
+            motor_indices[i] = UnsetMotorName;
         }
         for (int i = 0; i < CONTROLLER_SUB_CONTROLLERS_SIZE; i++) {
             sub_controllers[i].sub_controller_type = UnsetSubControllerType;
@@ -75,6 +76,10 @@ struct Controller : Comms::CommsData {
         controller_type = UnsetControllerType;
     }
 
+    /// @brief Get the subcontroller of this controller with the given type
+    /// @param type The type of the subcontroller, as defined by the SubControllerType enum
+    /// @return The subcontroller with the given type, or an empty subcontroller if it was not found
+    /// @note Since this function is NOT virtual, struct size stays the same and reinterpret_cast works correctly.
     SubController get_sub_controller_by_type(uint32_t type) const {
         for (int i = 0; i < CONTROLLER_SUB_CONTROLLERS_SIZE; i++) {
             if (sub_controllers[i].sub_controller_type == type) {

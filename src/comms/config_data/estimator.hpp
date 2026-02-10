@@ -5,7 +5,7 @@
 
 namespace NewConfig {
 
-enum EstimatorName : uint8_t {
+enum class EstimatorName : uint8_t {
     UnsetEstimatorName,
     GimbalAndChassis,
     FlywheelVelocity,

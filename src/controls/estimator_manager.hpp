@@ -17,24 +17,17 @@ class EstimatorManager {
 private:
 
     /// @brief array of robot estimators to estimate full robot state
-    Estimator* estimators[STATE_LEN] = { nullptr };
+    std::vector<Estimator> estimators;
 
     /// @brief can pointer to pass to each estimator so they can use can to estimate state when needed (usually used for micro state).
-    CANManager* can = nullptr;
+    CANManager& can;
 
     /// @brief pointer to the sensor manager to read sensor data
-    SensorManager* sensor_manager;
-
-    /// @brief config struct to store all config data
-    /// @note this is read only
-    const Config* config_data = nullptr;
-
-    /// @brief current number of estimators
-    int num_estimators = 0;
+    SensorManager& sensor_manager;
 
 public:
-    /// @brief Default constructor, does nothing
-    EstimatorManager() = default;
+    /// @brief Assign references to the can manager and sensor manager
+    EstimatorManager(CANManager& _can, SensorManager& _sensor_manager) : can(_can), sensor_manager(_sensor_manager) {}
 
     /// @brief Free all dynamically allocated memory and end SPI
     ~EstimatorManager();
@@ -43,7 +36,7 @@ public:
     /// @param can CAN manager pointer to get access to motor state
     /// @param config_data read only reference struct storing all the config data
     /// @param sensor_manager pointer to the sensor manager to read sensor data
-    void init(CANManager* can, const Config* config_data, SensorManager* sensor_manager);
+    void init(CANManager& can, const Config* config_data, SensorManager* sensor_manager);
 
     /// @brief Steps through every estimator and constructs a state array based on current sensor values.
     /// @param state macro state array pointer to be updated.
