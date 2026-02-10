@@ -1,6 +1,7 @@
 #include <Arduino.h>
 #include <math.h>
 #include <stdlib.h>
+#include "filters/pid_filter.cpp"
 
 #include "sensors/can/can_manager.hpp"
 
@@ -19,11 +20,21 @@ int main() {
     motor_info[0][1] = 2; // physical id 2
     motor_info[0][2] = 1; // can bus 1
     motor_info[0][3] = 0; // motor type not used
+    motor_info[1][0] = 1; // controller type c610
+    motor_info[1][1] = 1; // physical id 1
+    motor_info[1][2] = 1; // can bus 1
+    motor_info[1][3] = 0; // motor type not used
     can.configure(motor_info);
 
     float max_torque = 0;
+
+    // PIDFilter feeder_pid;
+    // float gains[4] = { 0.1, 0, 0, 0 };
+
     while (true) {
-        can.write_motor_torque(1, 2, 1.0f);
+        can.write_motor_torque(1, 1, 1.0f);
+        can.write_motor_torque(1, 2, -0.1f);
+
         can.write();
         can.read();
 
