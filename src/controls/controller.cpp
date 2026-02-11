@@ -2,41 +2,69 @@
 #include "sensors/RefSystem.hpp"
 
 void XDrivePositionController::step(float reference[STATE_LEN][3], float estimate[STATE_LEN][3], float micro_estimate[CAN_MAX_MOTORS][MICRO_STATE_LEN], float outputs[CAN_MAX_MOTORS]) {
-    float dt = timer.delta();
-    // High level position controller
-    for (int i = 0; i < 2; i++) {
-        pidp[i].setpoint = reference[i][0];
-        pidp[i].measurement = estimate[i][0];
+    float dt = timer.delta(); // Time since prev loop
 
-        pidp[i].K[0] = gains[0];
-        pidp[i].K[1] = gains[1];
-        pidp[i].K[2] = gains[2];
+    // High-level controller - X and Y position/velocity (i=0 is X, i=1 is Y)
+    // i = 0 (X-axis)
+    // Position PID - Corrects pos error by outputting velocity command
+    pidp[0].setpoint = reference[0][0];  
+    pidp[0].measurement = estimate[0][0]; 
+    pidp[0].K[0] = gains[0];
+    pidp[0].K[1] = gains[1];
+    pidp[0].K[2] = gains[2];
 
-        pidv[i].setpoint = reference[i][1];
-        pidv[i].measurement = estimate[i][1];
+    // Velocity PID - Fine-tunes vel tracking
+    pidv[0].setpoint = reference[0][1];
+    pidv[0].measurement = estimate[0][1];
+    pidv[0].K[0] = gains[3];
+    pidv[0].K[1] = gains[4];
+    pidv[0].K[2] = gains[5];
+    pidv[0].K[3] = reference[0][1]; 
 
-        pidv[i].K[0] = gains[3];
-        pidv[i].K[1] = gains[4];
-        pidv[i].K[2] = gains[5];
-        pidv[i].K[3] = reference[i][1]; 
+    // Compute and combine both controllers
+    outputp[0] = pidp[0].filter(dt, false, false);
+    outputv[0] = pidv[0].filter(dt, false, false);
+    output[0] = (outputp[0] + outputv[0]) * gear_ratios[0];
 
-        outputp[i] = pidp[i].filter(dt, false, false);
-        outputv[i] = pidv[i].filter(dt, false, false);
-        output[i] = (outputp[i] + outputv[i]) * gear_ratios[i];
-    }
-    pidp[2].setpoint = reference[2][0];
+    // i = 1 (Y-axis)
+    // Position PID - Corrects pos error by outputting velocity command
+    pidp[1].setpoint = reference[1][0];  
+    pidp[1].measurement = estimate[1][0]; 
+    pidp[1].K[0] = gains[0];
+    pidp[1].K[1] = gains[1];
+    pidp[1].K[2] = gains[2];
+
+    // Velocity PID - Fine-tunes vel tracking
+    pidv[1].setpoint = reference[1][1];
+    pidv[1].measurement = estimate[1][1];
+    pidv[1].K[0] = gains[3];
+    pidv[1].K[1] = gains[4];
+    pidv[1].K[2] = gains[5];
+    pidv[1].K[3] = reference[1][1]; 
+
+    // Compute and combine both controllers
+    outputp[1] = pidp[1].filter(dt, false, false);
+    outputv[1] = pidv[1].filter(dt, false, false);
+    output[1] = (outputp[1] + outputv[1]) * gear_ratios[1];
+
+    // Heading control - Two modes controlled by reference[2][2] flag
+    pidp[2].setpoint = reference[2][0]; 
     pidp[2].measurement = estimate[2][0];
     pidv[2].setpoint = reference[2][1];
     pidv[2].measurement = estimate[2][1];
-    if (reference[2][2] == 1) { // if state 10 is 1 then chassis heading is position controlled 
-        pidp[2].K[0] = gains[6];
-        pidp[2].K[1] = gains[7];
-        pidp[2].K[2] = gains[8];
-        pidv[2].K[0] = gains[9];
-        pidv[2].K[1] = gains[10];
-        pidv[2].K[2] = gains[11];
-        pidv[2].K[3] = 0;
+
+    
+    if (reference[2][2] == 1) {
+        // Autonomous when you need precise orientation - the robot locks to a specific oriantation
+        pidp[2].K[0] = gains[6];   // Heading position Kp
+        pidp[2].K[1] = gains[7];   // Heading position Ki
+        pidp[2].K[2] = gains[8];   // Heading position Kd
+        pidv[2].K[0] = gains[9];   // Heading velocity Kp
+        pidv[2].K[1] = gains[10];  // Heading velocity Ki
+        pidv[2].K[2] = gains[11];  // Heading velocity Kd
+        pidv[2].K[3] = 0;          // No feedforward in position mode
     } else {
+        // When Teleop when driver wants manual rotation control - disable all position control and disable velocity PID
         pidp[2].K[0] = 0;
         pidp[2].K[1] = 0;
         pidp[2].K[2] = 0;
@@ -45,10 +73,14 @@ void XDrivePositionController::step(float reference[STATE_LEN][3], float estimat
         pidv[2].K[2] = 0;
         pidv[2].K[3] = reference[2][1];
     }
+
+    // Run heading controllers
     outputp[2] = pidp[2].filter(dt, false, false);
     outputv[2] = pidv[2].filter(dt, false, false);
     output[2] = (outputp[2] + outputv[2]) * gear_ratios[2];
-    float chassis_heading = estimate[2][0];
+
+    // Current robot angle
+    float chassis_heading = estimate[2][0]; 
 
     // Convert to motor velocities
     motor_velocity[1] = output[0] * cos(chassis_heading) + output[1] * sin(chassis_heading) + output[2];
@@ -68,7 +100,7 @@ void XDrivePositionController::step(float reference[STATE_LEN][3], float estimat
     }
     // Serial.printf("current_hp: %f", ref);
 
-    // Low level velocity controller
+    // Low level velocity controller - Individual velocity PIDs for each motor
     // NOTE: pid_motors[] are member variables to preserve PID state between calls
     for (int i = 0; i < 4; i++) {
         pid_motors[i].setpoint = motor_velocity[i];
@@ -163,13 +195,13 @@ void YawController::step(float reference[STATE_LEN][3], float estimate[STATE_LEN
     pidv.K[1] = gains[4];
     pidv.K[2] = gains[5];
 
-    // Row 3 = yaw Colum 0 = position
-    pidp.setpoint = reference[3][0]; // Curr yaw position(angle)
-    pidp.measurement = estimate[3][0]; // Goal yaw position
+    // Row 3 = yaw Colum 0 = position - Curr yaw position(angle) and Goal yaw position
+    pidp.setpoint = reference[3][0]; 
+    pidp.measurement = estimate[3][0]; 
 
-    // Colum 1 = velocity
-    pidv.setpoint = reference[3][1]; // Curr yaw velocity
-    pidv.measurement = estimate[3][1]; // Goal yaw velocity
+    // Colum 1 = velocity - Curr yaw velocity and Goal yaw velocity
+    pidv.setpoint = reference[3][1]; 
+    pidv.measurement = estimate[3][1];
 
     output += pidp.filter(dt, true, true); // Position wraps
     output += pidv.filter(dt, true, false); // No wrap for velocity
