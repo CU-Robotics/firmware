@@ -220,7 +220,7 @@ int main() {
 		ref->ref_data.kbm_interaction.print(); // FOR DEBUGGIN VTM COMMS 
         // read CAN and Transmitter -- These are kept out of sensor manager for safety reasons
         can.read();
-        transmitter->read();
+z        transmitter->read();
 
         sensor_manager.send_sensor_data_to_comms();
 
@@ -296,11 +296,23 @@ int main() {
                 : 0; // m/s
         // if the right switch is forward, and either the left mouse button is pressed or the right switch is not
         // backward, set the feeder to something. Otherwise, set it to 0
-        float feeder_target = (((l_mouse_button.has_value() || ref->ref_data.kbm_interaction.button_left) &&
-                                transmitter->get_r_switch() != SwitchPos::BACKWARD) ||
-                               transmitter->get_r_switch() == SwitchPos::FORWARD)
-                                  ? 10
-                                  : 0;
+		float feeder_target = 0;
+		if (l_mouse_button.has_value()){
+				feeder_target = (((l_mouse_button.value() || ref->ref_data.kbm_interaction.button_left) &&
+					transmitter->get_r_switch() != SwitchPos::BACKWARD) ||
+				   transmitter->get_r_switch() == SwitchPos::FORWARD)
+					? 10
+					: 0;
+			}
+		else{
+			feeder_target = (((ref->ref_data.kbm_interaction.button_left) &&
+							  transmitter->get_r_switch() != SwitchPos::BACKWARD) ||
+							 transmitter->get_r_switch() == SwitchPos::FORWARD)
+				? 10
+				: 0;
+
+
+		}
         if (config->governor_types[6] == 1) {
             float dt2 = timer.delta();
             if (dt2 > 0.1)
