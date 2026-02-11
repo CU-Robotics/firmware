@@ -127,11 +127,11 @@ public:
 
 	/// @brief Get mouse velocity x
 	/// @return Amount of points since last read
-	std::optional<int> get_mouse_x();
+    int get_mouse_x();
 
 	/// @brief Get mouse velocity y
 	/// @return Amount of points since last read
-	std::optional<int> get_mouse_y();
+	int get_mouse_y();
 
 	/// @brief Get mouse velocity z (scroll wheel)
 	/// @return Amount of points since last read
@@ -139,17 +139,17 @@ public:
 
 	/// @brief status of left mouse button
 	/// @return Is left mouse button pressed
-	std::optional<bool> get_l_mouse_button();
+	bool get_l_mouse_button();
 
 	/// @brief status of right mouse button
 	/// @return Is right mouse button pressed
-	std::optional<bool> get_r_mouse_button();
+	bool get_r_mouse_button();
 
 	/// @brief Get raw 18-byte packet
 	/// @return 18-byte packet
 	uint8_t* get_raw() override { return m_inputRaw; }
 
-	std::optional<Keys> get_keys() override {
+	Keys get_keys() override {
 		return keys;
 	}
 	/// @brief getter for transmitter data
