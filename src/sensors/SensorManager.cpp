@@ -8,13 +8,7 @@ SensorManager::SensorManager() {
 
 SensorManager::~SensorManager() {}
 
-void SensorManager::init(const NewConfig::RobotConfig* config_data) {
-    buff_sensor_count = config_data->num_of_buffEnc;
-    icm_sensor_count = config_data->num_of_icm;
-    rev_sensor_count = config_data->num_of_revEnc;
-    tof_sensor_count = config_data->num_of_tof;
-    lidar_sensor_count = config_data->num_of_lidar;
-    limit_switch_count = config_data->num_of_limit_switch;
+void SensorManager::init() {
 
     for (int i = 0; i < NUM_SENSORS; i++) {
         int type = config_data->sensor_info[i][0];
@@ -82,11 +76,23 @@ void SensorManager::init(const NewConfig::RobotConfig* config_data) {
         lidar2 = new D200LD14P(&Serial5, 1);
     }
 
-    // initialize limit switches
+    // initialize limit switchesestimated_state
     int limit_switch_index = 0;
     for (int i = 0; i < NUM_SENSORS; i++) {
         if (config_data->sensor_info[i][0] != 6) continue;
         limit_switches[limit_switch_index++] = new LimitSwitch(config_data->sensor_info[i][1]);
+    }
+}
+
+void SensorManager::configure(const NewConfig::RobotConfig& config_data) {
+    for(const auto& buff_encoder_config : config_data.buff_encoders) {
+        buff_encoders.emplace_back(buff_encoder_config);
+        buff_encoder_sendables.emplace_back();
+    }
+
+    for(const auto& icm_config : config_data.icms) {
+        icm_sensors.emplace_back(new ICM20649());
+        icm_sendables.emplace_back();
     }
 }
 

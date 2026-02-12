@@ -4,17 +4,6 @@
 #define SENSOR_HPP
 
 #include <stdint.h>
-
-enum SensorType : uint8_t {
-    BUFFENC = 0,
-    ICM = 1,
-    REVENC = 2,
-    TOF = 3,
-    LIDAR = 4,
-
-    // Add other sensor types here
-};
-
 /// @brief Base class for all sensors.
 class Sensor {
 public:

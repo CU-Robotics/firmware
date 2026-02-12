@@ -31,8 +31,9 @@ public:
     ~SensorManager();
 
 /// @brief Initialize the sensor manager with configuration data
-/// @param config_data pointer to configuration data
-    void init(const Config* config_data);
+    void init();
+
+    void configure(const NewConfig::RobotConfig& config_data);
 
     /// @brief Read all sensor data
     void read();
@@ -72,7 +73,6 @@ public:
     /// @return number of sensors of that type
     int get_num_sensors(SensorType sensor_type);
 
-
     /// @brief Get the referee system
     /// @return pointer to the referee system
     RefSystem* get_ref() {
@@ -95,66 +95,17 @@ private:
     /// @brief Array to store the estimated state of the robot, used by sensors that adjust from the estimated state
     float estimated_state[STATE_LEN][3] = { {0} };
 
-    /// @brief Number of buff sensors
-    int buff_sensor_count;
-
-    /// @brief Number of ICM sensors
-    int icm_sensor_count;
-
-    /// @brief Number of Rev sensors
-    int rev_sensor_count;
-
-    /// @brief Number of TOF sensors
-    int tof_sensor_count;
-
-    /// @brief Number of LiDAR sensors
-    int lidar_sensor_count;
-
-    /// @brief Number of limit switches
-    int limit_switch_count;
-
-    /// @brief Array to store the number of sensors for each sensor type (Indexes for each sensor type are defined in the config.yaml file)
-    int num_sensors[NUM_SENSORS];
-
-    /// @brief Array to store robot ICM IMUs
-    ICM20649* icm_sensors[NUM_SENSOR_TYPE];
-
-    /// @brief Array to store robot ICM IMU sendables to be used with comms
-    Comms::Sendable<ICMSensorData> icm_sendables[NUM_SENSOR_TYPE];
-
-    // /// @brief Array to store robot buff encoders
-    // BuffEncoder* buff_encoders[NUM_SENSOR_TYPE];
-
     std::vector<BuffEncoder> buff_encoders;
+    std::vector<Comms::Sendable<BuffEncoderData>> buff_encoder_sendables;
 
-    /// @brief Array to store robot buff encoder sendables to be used with comms
-    Comms::Sendable<BuffEncoderData> buff_encoder_sendables[NUM_SENSOR_TYPE];
+    std::vector<RevEncoder> rev_encoders;
+    std::vector<Comms::Sendable<RevSensorData>> rev_encoder_sendables;
 
-    /// @brief Array to store robot rev encoders
-    /// @note The rev encoder fails to finish reading if it is a pointer/new object
-    // TODO: Fix this
-    RevEncoder rev_sensors[NUM_SENSOR_TYPE];
+    std::vector<ICM20649> icm_sensors;
+    std::vector<Comms::Sendable<ICMSensorData>> icm_sensor_sendables;
 
-    /// @brief Array to store robot rev encoder sendables to be used with comms
-    Comms::Sendable<RevSensorData> rev_sensor_sendables[NUM_SENSOR_TYPE];
-
-    /// @brief Array to store TOF sensors
-    // TOFSensor* tof_sensors[NUM_SENSOR_TYPE];
-
-    /// @brief Array to store TOF sensor sendables to be used with comms
-    // Comms::Sendable<TOFSensorData> tof_sensor_sendables[NUM_SENSOR_TYPE];
-
-    /// @brief First LiDAR sensor
-    D200LD14P* lidar1;
-
-    /// @brief Second LiDAR sensor
-    D200LD14P* lidar2;
-
-    /// @brief Array of limit switches
-    LimitSwitch* limit_switches[NUM_SENSOR_TYPE];
-
-    /// @brief Array of LiDAR sensor sendables to be used with comms
-    Comms::Sendable<LidarDataPacketSI> lidar_sensor_sendables[2];
+    std::vector<D200LD14P> lidars;
+    std::vector<Comms::Sendable<LidarDataPacketSI>> lidar_sensor_sendables;
 
     /// @brief Referee system
     RefSystem* ref;

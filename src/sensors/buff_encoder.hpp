@@ -46,22 +46,25 @@ class BuffEncoder : public Sensor {
 public:
     /// @brief Constructor for the BuffEncoder class
     /// @param encoder_config configuration data for the encoder
-    BuffEncoder(NewConfig::BuffEncoder encoder_config) : Sensor(SensorType::BUFFENC), config_data(encoder_config) {};
+    BuffEncoder(const NewConfig::BuffEncoder& encoder_config) : Sensor(SensorType::BUFFENC), config_data(encoder_config) {};
 
-    /// @brief initialize sensor with new config data
-    /// @param encoder_config input configuration data
-    void init(NewConfig::BuffEncoder encoder_config) {
-        config_data = encoder_config;
-    };
+    /// @brief initialize sensor
+    void init() {};
 
     /// @brief Read via SPI the current angle of the encoder
     /// @note Returns and sets m_angle when it reads
     /// @return true if successful, false if no data available
     bool read() override;
 
-    /// @brief Get the angle of the last read function
+    /// @brief Get the angle of the last read function adjusted by the offset
     /// @return Read angle (radians)
-    inline float get_angle() const { return m_angle; }
+    inline float get_angle() const { return m_angle + config_data.encoder_offset; }
+
+    /// @brief Get the raw angle of the last read function without offset
+    /// @return Raw angle (radians)
+    inline float get_angle_raw() const { return m_angle; }
+
+    inline NewConfig::EncoderName get_name() const { return config_data.name; }
 
     /// @brief Print the data for debugging
     void print();
@@ -72,14 +75,13 @@ private:
     float m_angle = 0.f;
 
     /// @brief Configuration data for the encoder
-    NewConfig::BuffEncoder config_data;
+    const NewConfig::BuffEncoder& config_data;
 
     /// @brief The SPI settings of the buff encoders
     static const SPISettings m_settings;
 
     ///buff sensor data struct.
     BuffEncoderData buff_sensor_data;
-
 };
 
 

@@ -38,11 +38,11 @@ void CANManager::init() {
     clear_motor_map();
 }
 
-void CANManager::configure(const std::vector<NewConfig::Motor>& motor_configurations) {
+void CANManager::configure(const NewConfig::RobotConfig& config) {
     // using the motor_info array, create the motors following the config
     
     uint32_t motor_global_id = 0;
-    for(const NewConfig::Motor& motor_config : motor_configurations) {
+    for(const NewConfig::Motor& motor_config : config.motors) {
 
         switch(motor_config.motor_controller_type) {
             case NewConfig::MotorControllerType::C610: {

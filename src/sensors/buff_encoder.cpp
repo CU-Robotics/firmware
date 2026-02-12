@@ -12,9 +12,9 @@ bool BuffEncoder::read() {
 
     // do the SPI transfer
     SPI.beginTransaction(m_settings);
-    digitalWrite(m_CS, LOW);
+    digitalWrite(config_data.chip_select_pin, LOW);
     SPI.transfer(data, 6);
-    digitalWrite(m_CS, HIGH);
+    digitalWrite(config_data.chip_select_pin, HIGH);
     SPI.endTransaction();
 
 
@@ -25,12 +25,11 @@ bool BuffEncoder::read() {
     // assign angle
     m_angle = radians;
     //add angle to the data struct
-    buff_sensor_data.m_angle = m_angle;
+    buff_sensor_data.m_angle = get_angle();
     return true;
 }
 
-
 void BuffEncoder::print() {
     Serial.printf("Buff Encoder:\n\t");
-    Serial.println(m_angle);
+    Serial.println(get_angle());
 }
