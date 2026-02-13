@@ -95,17 +95,10 @@ private:
     /// @brief Array to store the estimated state of the robot, used by sensors that adjust from the estimated state
     float estimated_state[STATE_LEN][3] = { {0} };
 
-    std::vector<BuffEncoder> buff_encoders;
-    std::vector<Comms::Sendable<BuffEncoderData>> buff_encoder_sendables;
-
-    std::vector<RevEncoder> rev_encoders;
-    std::vector<Comms::Sendable<RevSensorData>> rev_encoder_sendables;
-
-    std::vector<ICM20649> icm_sensors;
-    std::vector<Comms::Sendable<ICMSensorData>> icm_sensor_sendables;
-
-    std::vector<D200LD14P> lidars;
-    std::vector<Comms::Sendable<LidarDataPacketSI>> lidar_sensor_sendables;
+    std::map<BuffEncoder, Comms::Sendable<BuffEncoderData>> buff_encoders;
+    std::map<RevEncoder, Comms::Sendable<RevSensorData>> rev_encoders;
+    std::map<ICM20649, Comms::Sendable<ICMSensorData>> icm_sensors;
+    std::map<D200LD14P, Comms::Sendable<LidarDataPacketSI>> lidars;
 
     /// @brief Referee system
     RefSystem* ref;

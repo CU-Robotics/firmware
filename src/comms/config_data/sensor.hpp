@@ -6,7 +6,36 @@
 
 namespace NewConfig {
 
-enum EncoderName {
+enum class CommunicationProtocol : uint32_t {
+    UnsetCommunicationProtocol,
+    SPI,
+    I2C,
+    HARDWARE_SERIAL,
+    DIGITAL_PIN,
+};
+
+enum class HardwareSerialPorts : uint32_t{
+    UnsetHardwareSerialPort,
+    Serial1,
+    Serial2,
+    Serial3,
+    Serial4,
+    Serial5,
+    Serial6,
+    Serial7,
+    Serial8,
+}
+
+struct Pins {
+    uint32_t spi_cs;
+    uint32_t spi_sck;
+    uint32_t spi_miso;
+    uint32_t spi_mosi;
+    HardwareSerialPorts hardware_serial_port;
+    uint32_t digital_pin;
+}
+
+enum class EncoderName : uint32_t {
     UnsetEncoderName,
     YawEncoder,
     PitchEncoder,
@@ -19,6 +48,9 @@ struct BuffEncoder : Comms::CommsData {
     int feeder_direction;
     float feeder_ratio;
     uint32_t encoder_name;
+
+    CommunicationProtocol communication_protocol;
+    Pins pins;
 
     BuffEncoder() : Comms::CommsData(Comms::TypeLabel::BuffEncoderConfig, Comms::PhysicalMedium::HID, Comms::Priority::High, sizeof(BuffEncoder)) {
         chip_select_pin = 0;
@@ -43,6 +75,9 @@ struct IcmImu : Comms::CommsData {
     float pitch_axis_vector[3];
     uint32_t imu_name;
 
+    CommunicationProtocol communication_protocol;
+    Pins pins;
+
     IcmImu() : Comms::CommsData(Comms::TypeLabel::IcmImuConfig, Comms::PhysicalMedium::HID, Comms::Priority::High, sizeof(IcmImu)) {
         pitch_angle_at_yaw_calibration = 0;
         yaw_start_angle = 0;
@@ -53,10 +88,13 @@ struct IcmImu : Comms::CommsData {
             yaw_axis_vector[i] = 0;
             pitch_axis_vector[i] = 0;
         }
+
+        communication_protocol = UnsetCommunicationProtocol;
+        pins = {};
     }
 };
 
-enum D200LidarName {
+enum class D200LidarName : uint32_t {
     UnsetLidarName,
     LeftLidar,
     RightLidar,
@@ -73,6 +111,9 @@ struct D200Lidar : Comms::CommsData {
     float dead_zone_check_range;
     uint32_t lidar_name;
 
+    CommunicationProtocol communication_protocol;
+    Pins pins;
+
     D200Lidar() : Comms::CommsData(Comms::TypeLabel::D200LidarConfig, Comms::PhysicalMedium::HID, Comms::Priority::High, sizeof(D200Lidar)) {
         x_offset = 0;
         y_offset = 0;
@@ -83,26 +124,9 @@ struct D200Lidar : Comms::CommsData {
         dead_zone_end = 0;
         dead_zone_check_range = 0;
         lidar_name = UnsetLidarName;
+
+        CommunicationProtocol communication_protocol = UnsetCommunicationProtocol;
+        Pins pins = {};
     }
 };
-
-enum RealsenseCameraName {
-    UnsetRealsenseName,
-    Realsense,
-};
-
-struct RealsenseCamera : Comms::CommsData {
-    float length_of_barrel_from_pitch_axis;
-    float height_of_camera_above_barrel;
-    float height_of_pitch_axis_above_ground;
-    uint32_t camera_name;
-
-    RealsenseCamera() : Comms::CommsData(Comms::TypeLabel::RealsenseCameraConfig, Comms::PhysicalMedium::HID, Comms::Priority::High, sizeof(RealsenseCamera)) {
-        length_of_barrel_from_pitch_axis = 0;
-        height_of_camera_above_barrel = 0;
-        height_of_pitch_axis_above_ground = 0;
-        camera_name = UnsetRealsenseName;
-    }
-};
-
 }

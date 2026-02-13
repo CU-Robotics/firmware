@@ -12,7 +12,7 @@
 struct ICMSensorData : Comms::CommsData {
     ICMSensorData() : CommsData(Comms::TypeLabel::ICMSensorData, Comms::PhysicalMedium::Ethernet, Comms::Priority::Medium, sizeof(ICMSensorData)) { }
     /// Sensor ID.
-    uint8_t id;
+    NewConfig::ImuName id;
     /// Acceleration in X-axis.
     float accel_X;
     /// Acceleration in Y-axis.

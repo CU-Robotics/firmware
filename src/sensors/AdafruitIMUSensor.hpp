@@ -7,11 +7,11 @@
 #include <Adafruit_Sensor.h>
 #include "Sensor.hpp"
 
-/// @brief Abstract parent class for all IMUSensors, which give acceleration and gyroscope data. 
-class IMUSensor : public Sensor {
+/// @brief Abstract parent class for all AdafruitIMUSensors, which give acceleration and gyroscope data. 
+class AdafruitIMUSensor : public Sensor {
 public:
     /// @brief Constructor that takes a SensorType and passes it to the Sensor constructor.
-    IMUSensor() : Sensor(SensorType::ICM) {}
+    AdafruitIMUSensor() : Sensor(SensorType::ICM) {}
 
 
     /// @brief read values from the sensor. Call this to update sensor data before accessing them from the getters.

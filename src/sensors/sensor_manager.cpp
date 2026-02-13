@@ -91,8 +91,13 @@ void SensorManager::configure(const NewConfig::RobotConfig& config_data) {
     }
 
     for(const auto& icm_config : config_data.icms) {
-        icm_sensors.emplace_back(new ICM20649());
+        icm_sensors.emplace_back(icm_config);
         icm_sendables.emplace_back();
+    }
+
+    for(const auto& d200_lidar_config : config_data.d200_lidar_config) {
+        lidars.emplace_back(d200_lidar_config);
+        lidar_sendables.emplace_back();
     }
 }
 

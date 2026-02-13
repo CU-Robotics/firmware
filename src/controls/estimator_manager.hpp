@@ -36,7 +36,7 @@ public:
     /// @param can CAN manager pointer to get access to motor state
     /// @param config_data read only reference struct storing all the config data
     /// @param sensor_manager pointer to the sensor manager to read sensor data
-    void init(CANManager& can, const Config* config_data, SensorManager* sensor_manager);
+    void init(std::vector<NewConfig::Estimator> estimator_configurations);
 
     /// @brief Steps through every estimator and constructs a state array based on current sensor values.
     /// @param state macro state array pointer to be updated.
