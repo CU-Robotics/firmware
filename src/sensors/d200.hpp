@@ -111,6 +111,8 @@ struct D200Calibration {
 class D200LD14P : Sensor {
 private:
 
+  const NewRobot::D200Lidar& config;
+
   /// @brief default scanning speed (deg/s) (used internally)
   const uint16_t DEFAULT_SPEED = 6 * 360;
 
@@ -127,7 +129,7 @@ private:
   int current_packet = 0;
 
   /// @brief serial object to read from
-  HardwareSerial* port = nullptr;
+  HardwareSerial& port;
 
   /// @brief assigned ID of this specific module
   uint8_t id;
@@ -152,14 +154,13 @@ private:
   /// @return CRC8 checksum for buffer
   uint8_t calc_checksum(uint8_t* buf, int len);
 
+  static HardwareSerial& validate_port(std::optional<HardwareSerial*> port_opt);
+
 public:
   /// @brief constructor and initialization
   /// @param _port pointer to HardwareSerial object to read/write from
   /// @param _id ID of this specific module
-  D200LD14P(HardwareSerial* _port, uint8_t _id);
-
-  //default constructor
-  D200LD14P() : Sensor(SensorType::LIDAR) { };
+  D200LD14P(const NewConfig::D200Lidar& config);
 
   /// @brief set rotation the speed of the LiDAR
   /// @param speed desired rotation speed of LiDAR (rad/s)

@@ -1,7 +1,9 @@
 #ifndef SENSOR_MANAGER_HPP
 #define SENSOR_MANAGER_HPP
 
+#include "ACS712.hpp"
 #include "Sensor.hpp"
+#include "StereoCamTrigger.hpp"
 #include "config_layer.hpp"
 #include "d200.hpp"
 #include "ICM20649.hpp"
@@ -97,8 +99,12 @@ private:
 
     std::map<BuffEncoder, Comms::Sendable<BuffEncoderData>> buff_encoders;
     std::map<RevEncoder, Comms::Sendable<RevSensorData>> rev_encoders;
-    std::map<ICM20649, Comms::Sendable<ICMSensorData>> icm_sensors;
-    std::map<D200LD14P, Comms::Sendable<LidarDataPacketSI>> lidars;
+    std::map<ICM20649, Comms::Sendable<ICMSensorData>> icm_imus;
+    std::map<D200LD14P, Comms::Sendable<LidarDataPacketSI>> d200_lidars;
+    std::map<LimitSwitch, Comms::Sendable<LimitSwitchData>> limit_switches;
+    std::map<ACS712, Comms::Sendable<ACS712Data>> acs712_current_sensors;
+    std::map<TOFSensor, Comms::Sendable<TOFSensorData>> tof_sensors;
+    std::map<StereoCamTrigger, Comms::Sendable<StereoCamTriggerData>> stereo_cam_triggers;
 
     /// @brief Referee system
     RefSystem* ref;

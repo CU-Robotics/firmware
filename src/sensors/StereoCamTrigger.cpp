@@ -5,9 +5,9 @@ void StereoCamTrigger::track_exposures() {
   cli();
 
   // generate HIGH pulse with given width to create square wave
-  digitalWrite(TRIG_PIN, HIGH);
-  delayMicroseconds(TRIG_PULSE_WIDTH);
-  digitalWrite(TRIG_PIN, LOW);
+  digitalWrite(config.pins.digital_pin, HIGH);
+  delayMicroseconds(config.trigger_pulse_width);
+  digitalWrite(config.pins.digital_pin, LOW);
   
   // update timestamp
 #ifdef LOG_STEREO_FPS
@@ -45,10 +45,10 @@ void StereoCamTrigger::stop() {
 
 void StereoCamTrigger::init() {
   // configure GPIO pin for sending output signal
-  pinMode(TRIG_PIN, OUTPUT);
+  pinMode(config.pins.digital_pin, OUTPUT);
 
   // determine timer resolution from FPS
-  float spf = 1.0 / float(fps); // seconds per frame
+  float spf = 1.0 / float(config.fps); // seconds per frame
   int mpf = 1.0e+6 * spf; // micros per frame
   
   // start the timer with the calculated resolution

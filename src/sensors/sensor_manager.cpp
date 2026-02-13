@@ -1,4 +1,5 @@
 #include "SensorManager.hpp"
+#include "buff_encoder.hpp"
 
 SensorManager::SensorManager() {
      // initialize refereree system
@@ -85,20 +86,35 @@ void SensorManager::init() {
 }
 
 void SensorManager::configure(const NewConfig::RobotConfig& config_data) {
-    for(const auto& buff_encoder_config : config_data.buff_encoders) {
-        buff_encoders.emplace_back(buff_encoder_config);
-        buff_encoder_sendables.emplace_back();
+    for (const auto& buff_encoder_config : config_data.buff_encoders) {
+        buff_encoders.insert(BuffEncoder(buff_encoder_config), Comms::Sendable<BuffEncoderData>());
     }
 
-    for(const auto& icm_config : config_data.icms) {
-        icm_sensors.emplace_back(icm_config);
-        icm_sendables.emplace_back();
+    for (const auto& rev_encoder_config : config_data.rev_encoders) {
+        rev_sensors.insert(RevEncoder(rev_encoder_config), Comms::Sendable<RevEncoderData>());
     }
 
-    for(const auto& d200_lidar_config : config_data.d200_lidar_config) {
-        lidars.emplace_back(d200_lidar_config);
-        lidar_sendables.emplace_back();
+    for (const auto& icm_config : config_data.icms) {
+        icm_imus.insert(ICM20649(icm_config), Comms::Sendable<ICMData>());
     }
+
+    for (const auto& d200_lidar_config : config_data.d200_lidars) {
+        d200_lidars.insert(D200LD14P(d200_lidar_config), Comms::Sendable<LidarDataPacketSI>());
+    }
+
+    for (const auto& limit_switch_config : config_data.limit_switches) {
+        limit_switches.insert(LimitSwitch(limit_switch_config), Comms::Sendable<LimitSwitchData>());
+    }
+
+    for (const auto& current_sensor_config : config_data.acs712_current_sensors) {
+        acs712_current_sensors.insert(ACS712(current_sensor_config), Comms::Sendable<ACS712Data>());
+    }
+
+    for (const auto& tof_config : config_data.tof_sensors) {
+        tof_sensors.insert(TOFSensor(tof_config), Comms::Sendable<TOFData>());
+    }
+
+    
 }
 
 void SensorManager::read() {

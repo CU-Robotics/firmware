@@ -1,9 +1,21 @@
 #include "d200.hpp"
+#include <stdexcept>
 
-D200LD14P::D200LD14P(HardwareSerial *_port, uint8_t _id) : Sensor(SensorType::LIDAR, _id) {
-  port = _port;
+D200LD14P::D200LD14P(const NewConfig::D200Lidar& config) 
+  : Sensor(SensorType::LIDAR, config.id),
+    config(config), 
+    port(validate_port(NewConfig::resolve_hardware_serial_port(config.pins.hardware_serial_port)))
+{
   current_packet = 0;
-  port->begin(D200_BAUD);
+  port.begin(D200_BAUD);
+}
+
+HardwareSerial& D200LD14P::validate_port(std::optional<HardwareSerial*> port_opt) {
+  if (!port_opt.has_value()) {
+    Serial.println("Invalid hardware serial port for D200 lidar");
+    throw std::invalid_argument("Invalid hardware serial port for D200 lidar");
+  }
+  return *port_opt;
 }
 
 uint8_t D200LD14P::calc_checksum(uint8_t *buf, int len) {
@@ -13,6 +25,7 @@ uint8_t D200LD14P::calc_checksum(uint8_t *buf, int len) {
   }
   return crc8;
 }
+
 
 void D200LD14P::set_speed(float speed) {
   // convert to deg/s
@@ -24,27 +37,27 @@ void D200LD14P::set_speed(float speed) {
   uint8_t cmd[D200_CMD_PACKET_LEN] = { 0x54, 0xa2, 0x04, lsb, msb, 0, 0, 0 };
   cmd[D200_CMD_PACKET_LEN - 1] = calc_checksum(cmd, D200_CMD_PACKET_LEN - 1);
 
-  port->write(cmd, D200_CMD_PACKET_LEN);
+  port.write(cmd, D200_CMD_PACKET_LEN);
 }
 
 void D200LD14P::start_motor() {
-  port->write(D200_START_CMD, D200_CMD_PACKET_LEN);
+  port.write(D200_START_CMD, D200_CMD_PACKET_LEN);
 }
 
 void D200LD14P::stop_motor() {
-  port->write(D200_STOP_CMD, D200_CMD_PACKET_LEN);
+  port.write(D200_STOP_CMD, D200_CMD_PACKET_LEN);
 }
 
 bool D200LD14P::read() {
   // consume bytes until we reach a start character (only relevant for startup)
-  while (port->available() && port->peek() != D200_START_CHAR) {
-    port->read();
+  while (port.available() && port.peek() != D200_START_CHAR) {
+    port.read();
   }
 
   // read packet by packet
-  while (port->available() >= D200_DATA_PACKET_LEN) {
-    uint8_t start_char = port->read();
-    uint8_t frame_char = port->read();
+  while (port.available() >= D200_DATA_PACKET_LEN) {
+    uint8_t start_char = port.read();
+    uint8_t frame_char = port.read();
     
     // we either get a data packet or a command packet,
     // determined by the frame character
@@ -58,7 +71,7 @@ bool D200LD14P::read() {
     buf[1] = frame_char;
     
     // read remainder of packet into buffer
-    port->readBytes(&buf[2], packet_len - 2);
+    port.readBytes(&buf[2], packet_len - 2);
 
     // we don't care about command packets as long as
     // they are removed from the buffer

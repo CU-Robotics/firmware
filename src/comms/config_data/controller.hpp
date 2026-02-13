@@ -71,7 +71,7 @@ struct Controller : Comms::CommsData {
             motor_indices[i] = UnsetMotorName;
         }
         for (int i = 0; i < CONTROLLER_SUB_CONTROLLERS_SIZE; i++) {
-            sub_controllers[i].sub_controller_type = UnsetSubControllerType;
+            sub_controllers[i].sub_controller_type = SubControllerType::UnsetSubControllerType;
         }
         controller_type = UnsetControllerType;
     }
@@ -80,7 +80,7 @@ struct Controller : Comms::CommsData {
     /// @param type The type of the subcontroller, as defined by the SubControllerType enum
     /// @return The subcontroller with the given type, or an empty subcontroller if it was not found
     /// @note Since this function is NOT virtual, struct size stays the same and reinterpret_cast works correctly.
-    SubController get_sub_controller_by_type(uint32_t type) const {
+    SubController get_sub_controller_by_type(SubControllerType type) const {
         for (int i = 0; i < CONTROLLER_SUB_CONTROLLERS_SIZE; i++) {
             if (sub_controllers[i].sub_controller_type == type) {
                 return sub_controllers[i];
@@ -88,7 +88,7 @@ struct Controller : Comms::CommsData {
         }
         // return empty subcontroller if not found
         SubController empty;
-        empty.sub_controller_type = UnsetSubControllerType;
+        empty.sub_controller_type = SubControllerType::UnsetSubControllerType;
         return empty;
     }
 };

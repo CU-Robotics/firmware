@@ -16,8 +16,7 @@
 /// @brief the class for the Rev Through Bore Encoder(www.revrobotics.com/rev-11-1271/)
 class RevEncoder : public Sensor {
 private:
-	/// @brief the pin number that the encoder's signal pin is plugged into
-	uint8_t in_pin;
+	const NewConfig::RevEncoder& config;
 	/// @brief Used to read rise time of the encoder
 	FreqMeasureMulti freq;
 	/// @brief measure of current angle in ticks [0, 1023]
@@ -34,7 +33,9 @@ public:
 
 	/// @brief Construct a new rev_encoder object
 	/// @param encoder_pin the pin number that the encoders signal pin is plugged into
-	RevEncoder(uint8_t encoder_pin);
+	RevEncoder(const NewConfig::RevEncoder& config) : Sensor(SensorType::REVENC), config_data(config) {
+		init(config_data.pins.digital_pin, config_data.feeder_direction == 1);
+	};
 
 	/// @brief initialize the encoder with the correct pin
 	/// @param encoder_pin the pin number that the encoders signal pin is plugged into

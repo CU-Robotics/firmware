@@ -14,7 +14,7 @@ enum class CommunicationProtocol : uint32_t {
     DIGITAL_PIN,
 };
 
-enum class HardwareSerialPorts : uint32_t{
+enum class HardwareSerialPort : uint32_t{
     UnsetHardwareSerialPort,
     Serial1,
     Serial2,
@@ -31,9 +31,9 @@ struct Pins {
     uint32_t spi_sck;
     uint32_t spi_miso;
     uint32_t spi_mosi;
-    HardwareSerialPorts hardware_serial_port;
+    HardwareSerialPort hardware_serial_port;
     uint32_t digital_pin;
-}
+};
 
 enum class EncoderName : uint32_t {
     UnsetEncoderName,
@@ -43,23 +43,26 @@ enum class EncoderName : uint32_t {
 };
 
 struct BuffEncoder : Comms::CommsData {
-    uint32_t chip_select_pin;
+    CommunicationProtocol communication_protocol;
+    Pins pins;
+
     float encoder_offset;
     int feeder_direction;
     float feeder_ratio;
     uint32_t encoder_name;
 
-    CommunicationProtocol communication_protocol;
-    Pins pins;
 
     BuffEncoder() : Comms::CommsData(Comms::TypeLabel::BuffEncoderConfig, Comms::PhysicalMedium::HID, Comms::Priority::High, sizeof(BuffEncoder)) {
-        chip_select_pin = 0;
         encoder_offset = 0;
         feeder_direction = 1;
         feeder_ratio = 1;
-        encoder_name = UnsetEncoderName;
+        encoder_name = EncoderName::UnsetEncoderName;
     }
 };
+
+struct RevEncoder : Comms::CommsData {
+
+}
 
 enum ImuName {
     UnsetImuName,
@@ -67,6 +70,9 @@ enum ImuName {
 };
 
 struct IcmImu : Comms::CommsData {
+    CommunicationProtocol communication_protocol;
+    Pins pins;
+    
     float pitch_angle_at_yaw_calibration;
     float yaw_start_angle;
     float pitch_start_angle;
@@ -74,9 +80,6 @@ struct IcmImu : Comms::CommsData {
     float yaw_axis_vector[3];
     float pitch_axis_vector[3];
     uint32_t imu_name;
-
-    CommunicationProtocol communication_protocol;
-    Pins pins;
 
     IcmImu() : Comms::CommsData(Comms::TypeLabel::IcmImuConfig, Comms::PhysicalMedium::HID, Comms::Priority::High, sizeof(IcmImu)) {
         pitch_angle_at_yaw_calibration = 0;
@@ -89,7 +92,7 @@ struct IcmImu : Comms::CommsData {
             pitch_axis_vector[i] = 0;
         }
 
-        communication_protocol = UnsetCommunicationProtocol;
+        communication_protocol = CommunicationProtocol::UnsetCommunicationProtocol;
         pins = {};
     }
 };
@@ -109,7 +112,7 @@ struct D200Lidar : Comms::CommsData {
     float dead_zone_start;
     float dead_zone_end;
     float dead_zone_check_range;
-    uint32_t lidar_name;
+    D200LidarName lidar_name;
 
     CommunicationProtocol communication_protocol;
     Pins pins;
@@ -123,10 +126,33 @@ struct D200Lidar : Comms::CommsData {
         dead_zone_start = 0;
         dead_zone_end = 0;
         dead_zone_check_range = 0;
-        lidar_name = UnsetLidarName;
+        lidar_name = D200LidarName::UnsetLidarName;
 
-        CommunicationProtocol communication_protocol = UnsetCommunicationProtocol;
-        Pins pins = {};
+        communication_protocol = CommunicationProtocol::UnsetCommunicationProtocol;
+        pins = {};
+    }
+};
+
+enum class StereoCameraTriggerName : uint32_t {
+    UnsetStereoCameraTriggerName,
+    LeftStereoCameraTrigger,
+    RightStereoCameraTrigger,
+};
+
+struct StereoCamTrigger : Comms::CommsData{
+    CommunicationProtocol communication_protocol;
+    Pins pins;
+
+    uint32_t fps;
+    uint32_t trigger_pulse_width;
+    StereoCameraTriggerName trigger_name;
+
+    StereoCamTrigger() : Comms::CommsData(Comms::TypeLabel::StereoCameraTriggerConfig, Comms::PhysicalMedium::HID, Comms::Priority::High, sizeof(StereoCamTrigger)) {
+        communication_protocol = CommunicationProtocol::UnsetCommunicationProtocol;
+        pins = {};
+        fps = 0;
+        trigger_pulse_width = 0;
+        trigger_name = StereoCameraTriggerName::UnsetStereoCameraTriggerName;
     }
 };
 }
