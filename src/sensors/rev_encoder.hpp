@@ -1,20 +1,11 @@
+#pragma once
+
 #include <cmath>
 #include <FreqMeasureMulti.h>
-#include "Sensor.hpp"
 #include "comms/data/rev_sensor_data.hpp"
 
-
-#ifndef REV_ENCODER_H
-#define REV_ENCODER_H
-
-// Rev encoder pins
-#define REV_ENC_PIN1 2
-#define REV_ENC_PIN2 3
-#define REV_ENC_PIN3 4
-
-
 /// @brief the class for the Rev Through Bore Encoder(www.revrobotics.com/rev-11-1271/)
-class RevEncoder : public Sensor {
+class RevEncoder {
 private:
 	const NewConfig::RevEncoder& config;
 	/// @brief Used to read rise time of the encoder
@@ -28,23 +19,19 @@ private:
 	/// @brief the data structure for the encoder
 	RevSensorData rev_sensor_data;
 public:
-	/// @brief Construct a new rev_encoder object without initializing the encoder
-	RevEncoder() : Sensor(SensorType::REVENC) { };
-
 	/// @brief Construct a new rev_encoder object
 	/// @param encoder_pin the pin number that the encoders signal pin is plugged into
-	RevEncoder(const NewConfig::RevEncoder& config) : Sensor(SensorType::REVENC), config_data(config) {
-		init(config_data.pins.digital_pin, config_data.feeder_direction == 1);
-	};
+	RevEncoder(const NewConfig::RevEncoder& config);
 
 	/// @brief initialize the encoder with the correct pin
 	/// @param encoder_pin the pin number that the encoders signal pin is plugged into
 	/// @param is_relative if the encoder is relative or absolute
-	void init(uint8_t encoder_pin, bool is_relative);
+	void init();
 
 	/// @brief updates ticks and radians to the current angle 
 	/// @return true if successful, false if no data available
-	bool read() override;
+	bool read();
+	
 	/// @brief get the last angle of the encoder in ticks
 	/// @return the last angle of the encoder in ticks [0, 1023]
 	float get_angle_ticks();

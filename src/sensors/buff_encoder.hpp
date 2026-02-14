@@ -60,10 +60,6 @@ public:
     /// @return Read angle (radians)
     inline float get_angle() const { return m_angle + config_data.encoder_offset; }
 
-    /// @brief Get the raw angle of the last read function without offset
-    /// @return Raw angle (radians)
-    inline float get_angle_raw() const { return m_angle; }
-
     inline NewConfig::EncoderName get_name() const { return config_data.name; }
 
     /// @brief Print the data for debugging

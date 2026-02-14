@@ -35,36 +35,56 @@ struct Pins {
     uint32_t digital_pin;
 };
 
-enum class EncoderName : uint32_t {
-    UnsetEncoderName,
+enum class BuffEncoderName : uint32_t {
+    UnsetBncoderName,
     YawEncoder,
     PitchEncoder,
     FeederEncoder,
 };
 
 struct BuffEncoder : Comms::CommsData {
-    CommunicationProtocol communication_protocol;
     Pins pins;
 
-    float encoder_offset;
+    float angle_offset;
     int feeder_direction;
     float feeder_ratio;
-    uint32_t encoder_name;
-
+    BuffEncoderName encoder_name;
 
     BuffEncoder() : Comms::CommsData(Comms::TypeLabel::BuffEncoderConfig, Comms::PhysicalMedium::HID, Comms::Priority::High, sizeof(BuffEncoder)) {
-        encoder_offset = 0;
+        pins = {};
+        angle_offset = 0;
         feeder_direction = 1;
         feeder_ratio = 1;
-        encoder_name = EncoderName::UnsetEncoderName;
+        encoder_name = BuffEncoderName::UnsetEncoderName;
     }
 };
 
+enum class RevEncoderName : uint32_t {
+    UnsetRevEncoderName,
+};
+
 struct RevEncoder : Comms::CommsData {
+    Pins pins;
 
-}
+    float angle_offset;
+    RevEncoderName encoder_name;
 
-enum ImuName {
+    RevEncoder() : Comms::CommsData(Comms::TypeLabel::RevEncoderConfig, Comms::PhysicalMedium::HID, Comms::Priority::High, sizeof(RevEncoder)) {
+        pins = {};
+        angle_offset = 0;
+        encoder_name = RevEncoderName::UnsetRevEncoderName;
+    }
+};
+
+enum class ICMImuGyroRange : uint32_t {
+    UnsetGyroRange,
+    DPS500,
+    DPS1000,
+    DPS2000,
+    DPS4000,
+};
+
+enum class ICMImuName : uint32_t{
     UnsetImuName,
     YawImu,
 };
@@ -79,20 +99,36 @@ struct IcmImu : Comms::CommsData {
     float roll_start_angle;
     float yaw_axis_vector[3];
     float pitch_axis_vector[3];
-    uint32_t imu_name;
+    ICMImuGyroRange gyro_range;
+    ICMImuName imu_name;
 
     IcmImu() : Comms::CommsData(Comms::TypeLabel::IcmImuConfig, Comms::PhysicalMedium::HID, Comms::Priority::High, sizeof(IcmImu)) {
         pitch_angle_at_yaw_calibration = 0;
         yaw_start_angle = 0;
         pitch_start_angle = 0;
         roll_start_angle = 0;
-        imu_name = UnsetImuName;
+        imu_name = ICMImuName::UnsetImuName;
         for (int i = 0; i < 3; i++) {
             yaw_axis_vector[i] = 0;
             pitch_axis_vector[i] = 0;
         }
 
+        gyro_range = ICMImuGyroRange::UnsetGyroRange;
         communication_protocol = CommunicationProtocol::UnsetCommunicationProtocol;
+        pins = {};
+    }
+};
+
+enum class LSMImuName : uint32_t{
+    UnsetLSMImuName,
+};
+
+struct LSMImu : Comms::CommsData {
+    Pins pins;
+    LSMImuName imu_name;
+
+    LSMImu() : Comms::CommsData(Comms::TypeLabel::LSMImuConfig, Comms::PhysicalMedium::HID, Comms::Priority::High, sizeof(LSMImu)) {
+        imu_name = LSMImuName::UnsetLSMImuName;
         pins = {};
     }
 };
@@ -114,7 +150,6 @@ struct D200Lidar : Comms::CommsData {
     float dead_zone_check_range;
     D200LidarName lidar_name;
 
-    CommunicationProtocol communication_protocol;
     Pins pins;
 
     D200Lidar() : Comms::CommsData(Comms::TypeLabel::D200LidarConfig, Comms::PhysicalMedium::HID, Comms::Priority::High, sizeof(D200Lidar)) {
@@ -128,7 +163,6 @@ struct D200Lidar : Comms::CommsData {
         dead_zone_check_range = 0;
         lidar_name = D200LidarName::UnsetLidarName;
 
-        communication_protocol = CommunicationProtocol::UnsetCommunicationProtocol;
         pins = {};
     }
 };
@@ -140,7 +174,6 @@ enum class StereoCameraTriggerName : uint32_t {
 };
 
 struct StereoCamTrigger : Comms::CommsData{
-    CommunicationProtocol communication_protocol;
     Pins pins;
 
     uint32_t fps;
@@ -148,7 +181,6 @@ struct StereoCamTrigger : Comms::CommsData{
     StereoCameraTriggerName trigger_name;
 
     StereoCamTrigger() : Comms::CommsData(Comms::TypeLabel::StereoCameraTriggerConfig, Comms::PhysicalMedium::HID, Comms::Priority::High, sizeof(StereoCamTrigger)) {
-        communication_protocol = CommunicationProtocol::UnsetCommunicationProtocol;
         pins = {};
         fps = 0;
         trigger_pulse_width = 0;

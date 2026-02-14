@@ -9,80 +9,8 @@ SensorManager::SensorManager() {
 
 SensorManager::~SensorManager() {}
 
-void SensorManager::init() {
-
-    for (int i = 0; i < NUM_SENSORS; i++) {
-        int type = config_data->sensor_info[i][0];
-        if (type != -1) {
-            num_sensors[type]++;
-        }
-    }
-    for(const auto& buff_encoder_config : config_data->buff_encoders) {
-        buff_encoders.push_back(BuffEncoder(buff_encoder_config));
-    }
-
-    // initilize the sensors
-    // configure pins for the encoders
-    int buff_enc_index = 0;
-    for (int i = 0; i < NUM_SENSORS; i++) {
-        if (config_data->sensor_info[i][0] != 0) continue;
-        pinMode(config_data->sensor_info[i][1], OUTPUT);
-        digitalWrite(config_data->sensor_info[i][1], HIGH);
-        buff_encoders[buff_enc_index] = new BuffEncoder(config_data->sensor_info[i][1]);
-
-        //assign id for comms
-        buff_encoders[buff_enc_index]->setId(buff_enc_index);
-        buff_enc_index++;
-    }
-
-    // configure pins for the ICM
-    pinMode(ICM_CS, OUTPUT);
-    digitalWrite(ICM_CS, HIGH);
-
-    // start SPI
-    Serial.println("Starting SPI");
-    SPI.begin();
-
-    // initialize ICMs
-    for (int i = 0; i < icm_sensor_count; i++) {
-        icm_sensors[i] = new ICM20649();
-        icm_sensors[i]->init(icm_sensors[i]->CommunicationProtocol::SPI);
-        icm_sensors[i]->set_gyro_range(4000);
-
-        //assign id for comms
-        icm_sensors[i]->setId(i);
-    }
-    if(icm_sensor_count > 0) calibrate_imus();
-
-    // initialize rev encoders
-    for (int i = 0; i < rev_sensor_count; i++) {
-        rev_sensors[i].init(REV_ENC_PIN1 + i, true);
-
-        //assign id for comms
-        rev_sensors[i].setId(i);
-    }
-
-    // initialize TOFs
-    // for (int i = 0; i < tof_sensor_count; i++) {
-    //     tof_sensors[i] = new TOFSensor();
-    //     tof_sensors[i]->init();
-
-    //     //assign id for comms
-    //     tof_sensors[i]->setId(i);
-    // }
-
-    // initialize LiDARs
-    if (lidar_sensor_count > 0) {
-        lidar1 = new D200LD14P(&Serial4, 0);
-        lidar2 = new D200LD14P(&Serial5, 1);
-    }
-
-    // initialize limit switchesestimated_state
-    int limit_switch_index = 0;
-    for (int i = 0; i < NUM_SENSORS; i++) {
-        if (config_data->sensor_info[i][0] != 6) continue;
-        limit_switches[limit_switch_index++] = new LimitSwitch(config_data->sensor_info[i][1]);
-    }
+void SensorManager::init(const NewConfig::RobotConfig& conig_data) {
+    configure(conig_data);
 }
 
 void SensorManager::configure(const NewConfig::RobotConfig& config_data) {
@@ -113,8 +41,6 @@ void SensorManager::configure(const NewConfig::RobotConfig& config_data) {
     for (const auto& tof_config : config_data.tof_sensors) {
         tof_sensors.insert(TOFSensor(tof_config), Comms::Sendable<TOFData>());
     }
-
-    
 }
 
 void SensorManager::read() {
@@ -143,6 +69,7 @@ void SensorManager::read() {
         // tof_sensors[i]->print();
     }
 }
+
 BuffEncoder* SensorManager::get_buff_encoder(int index) {
     return buff_encoders[index];
 }

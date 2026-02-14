@@ -1,13 +1,15 @@
 #include "ICM20649.hpp"
 #include <cassert>
 
+ICM20649::ICM20649(const NewConfig::IcmImu& config) : config(config) {}
+
+
 // initialize ICM
-void ICM20649::init(CommunicationProtocol protocol) {
-    // assign protocol to object.
-    this->protocol = protocol;
+void ICM20649::init() {
+    
     // begin sensor depending on selected protocol
-    switch (protocol) {
-    case I2C:
+    switch (config.communication_protocol) {
+    case NewConfig::CommunicationProtocol:
     {
         // start I2C communication
         if (!sensor.begin_I2C()) {
@@ -15,10 +17,10 @@ void ICM20649::init(CommunicationProtocol protocol) {
         }
         break;
     }
-    case SPI:
+    case NewConfig::CommunicationProtocol::SPI:
     {
         // start SPI communication
-        if (!sensor.begin_SPI(ICM_CS, ICM_SCK, ICM_MISO, ICM_MOSI))
+        if (!sensor.begin_SPI(config.pins.spi_cs, config.pins.spi_sck, config.pins.spi_miso, config.pins.spi_mosi))
         {
             Serial.println("ICM: Failed to begin SPI");
         }
@@ -32,17 +34,7 @@ void ICM20649::init(CommunicationProtocol protocol) {
     }
     }
 
-    // set data ranges
-    // sensor.setAccelRange(ICM20649_ACCEL_RANGE_30_G);
-    // sensor.setGyroRange(ICM20649_GYRO_RANGE_4000_DPS);
-
-    // // set bit period (via divisor setting). 12-bit, Max (slowest) is 4095, min (fastest) is 0.
-    // sensor.setAccelRateDivisor(0);
-    // accel_rate = get_accel_data_rate();
-
-    // // set bit period (via divisor setting). 8-bit, Max (slowest) is 255, min (fastest) is 0.
-    // sensor.setGyroRateDivisor(0);
-    // gyro_rate = get_gyro_data_rate();
+    set_gyro_range(config.gyro_range);
 }
 
 bool ICM20649::read() {
@@ -85,21 +77,21 @@ float ICM20649::get_gyro_data_rate() {
     return gyro_rate = 1100 / (1.0 + sensor.getGyroRateDivisor());
 }
 
-void ICM20649::set_gyro_range(int gyro_rate_range) {
+void ICM20649::set_gyro_range(NewConfig::ICMImuGyroRange gyro_rate_range) {
     switch (gyro_rate_range) {
     default:
         sensor.setGyroRange(ICM20649_GYRO_RANGE_500_DPS);
         break;
-    case (500):
+    case NewConfig::ICMImuGyroRange::DPS500:
         sensor.setGyroRange(ICM20649_GYRO_RANGE_500_DPS);
         break;
-    case (1000):
+    case NewConfig::ICMImuGyroRange::DPS1000:
         sensor.setGyroRange(ICM20649_GYRO_RANGE_1000_DPS);
         break;
-    case (2000):
+    case NewConfig::ICMImuGyroRange::DPS2000:
         sensor.setGyroRange(ICM20649_GYRO_RANGE_2000_DPS);
         break;
-    case (4000):
+    case NewConfig::ICMImuGyroRange::DPS4000:
         sensor.setGyroRange(ICM20649_GYRO_RANGE_4000_DPS);
         break;
     }

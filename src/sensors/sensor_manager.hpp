@@ -32,7 +32,7 @@ public:
 /// @brief Destructor for the SensorManager class
     ~SensorManager();
 
-/// @brief Initialize the sensor manager with configuration data
+    /// @brief Initialize the sensor manager with configuration data
     void init();
 
     void configure(const NewConfig::RobotConfig& config_data);
@@ -97,9 +97,13 @@ private:
     /// @brief Array to store the estimated state of the robot, used by sensors that adjust from the estimated state
     float estimated_state[STATE_LEN][3] = { {0} };
 
+    // Unfortunately, sensors and their configurations are too different to group into a shared parent with a shared config, 
+    // so we separately store sensors of each type in a map with their corresponding sendable objects for comms.
+    
     std::map<BuffEncoder, Comms::Sendable<BuffEncoderData>> buff_encoders;
     std::map<RevEncoder, Comms::Sendable<RevSensorData>> rev_encoders;
     std::map<ICM20649, Comms::Sendable<ICMSensorData>> icm_imus;
+    std::map<LSM6DSOX, Comms::Sendable<LSMSensorData>> lsm_imus;
     std::map<D200LD14P, Comms::Sendable<LidarDataPacketSI>> d200_lidars;
     std::map<LimitSwitch, Comms::Sendable<LimitSwitchData>> limit_switches;
     std::map<ACS712, Comms::Sendable<ACS712Data>> acs712_current_sensors;
@@ -109,5 +113,3 @@ private:
     /// @brief Referee system
     RefSystem* ref;
 };
-
-#endif // SENSOR_MANAGER_HPP
