@@ -220,7 +220,7 @@ int main() {
 		ref->ref_data.kbm_interaction.print(); // FOR DEBUGGIN VTM COMMS 
         // read CAN and Transmitter -- These are kept out of sensor manager for safety reasons
         can.read();
-z        transmitter->read();
+        transmitter->read();
 
         sensor_manager.send_sensor_data_to_comms();
 
