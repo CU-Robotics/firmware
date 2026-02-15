@@ -222,10 +222,8 @@ public:
         Controller::reset();
         pid_high.sumError = 0.0;
 
-        for (int i = 0; i < 2; i++) { 
-            pid_low_motors[i].sumError = 0.0;
-            pid_low_motors[i].prevError = 0.0;
-        }
+            pid_low_motors.sumError = 0.0;
+            pid_low_motors.prevError = 0.0;
     }
 };
 
