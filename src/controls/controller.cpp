@@ -72,9 +72,6 @@ void XDrivePositionController::step(float reference[STATE_LEN][3], float estimat
     outputv[2] = pidv[2].filter(dt, false, false);
     output[2] = (outputp[2] + outputv[2]) * gear_ratios[2];
 
-    // Current robot angle
-    float chassis_heading = estimate[2][0]; 
-
     // Current robot angle - cache trig functions
     float chassis_heading = estimate[2][0];
     float cos_heading = cos(chassis_heading);
@@ -156,9 +153,6 @@ void XDriveVelocityController::step(float reference[STATE_LEN][3], float estimat
     outputv[2] = pidv[2].filter(dt, false, false);
     output[2] = (outputp[2] + outputv[2]) * gear_ratios[2];
     // Serial.printf("chassis heading output: %f, chassis x output: %f, chassis y output: %f chassis angle:%f\n", output[2], output[0], output[1], estimate[2][0]);
-    
-    // Adjust for chassis heading so control is field relative
-    float chassis_heading = estimate[2][0];
 
     // Current robot angle - cache trig functions
     float chassis_heading = estimate[2][0];
