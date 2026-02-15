@@ -75,11 +75,16 @@ void XDrivePositionController::step(float reference[STATE_LEN][3], float estimat
     // Current robot angle
     float chassis_heading = estimate[2][0]; 
 
-    // Convert to motor velocities
-    motor_velocity[1] = output[0] * cos(chassis_heading) + output[1] * sin(chassis_heading) + output[2];
-    motor_velocity[2] = output[0] * sin(chassis_heading) - output[1] * cos(chassis_heading) + output[2];
-    motor_velocity[3] = -output[0] * cos(chassis_heading) - output[1] * sin(chassis_heading) + output[2];
-    motor_velocity[0] = -output[0] * sin(chassis_heading) + output[1] * cos(chassis_heading) + output[2];
+    // Current robot angle - cache trig functions
+    float chassis_heading = estimate[2][0];
+    float cos_heading = cos(chassis_heading);
+    float sin_heading = sin(chassis_heading);
+
+    // Convert to motor velocities using cached trig values
+    motor_velocity[1] = output[0] * cos_heading + output[1] * sin_heading + output[2];
+    motor_velocity[2] = output[0] * sin_heading - output[1] * cos_heading + output[2];
+    motor_velocity[3] = -output[0] * cos_heading - output[1] * sin_heading + output[2];
+    motor_velocity[0] = -output[0] * sin_heading + output[1] * cos_heading + output[2];
 
     // Serial.printf("1: %f, 2: %f, 3: %f, 4: %f\n", motor_velocity[0], motor_velocity[1], motor_velocity[2], motor_velocity[3]);
 
@@ -155,11 +160,16 @@ void XDriveVelocityController::step(float reference[STATE_LEN][3], float estimat
     // Adjust for chassis heading so control is field relative
     float chassis_heading = estimate[2][0];
 
-    // Convert to motor velocities
-    motor_velocity[0] = output[0] * cos(chassis_heading) + output[1] * sin(chassis_heading) + output[2];
-    motor_velocity[1] = output[0] * sin(chassis_heading) - output[1] * cos(chassis_heading) + output[2];
-    motor_velocity[2] = -output[0] * cos(chassis_heading) - output[1] * sin(chassis_heading) + output[2];
-    motor_velocity[3] = -output[0] * sin(chassis_heading) + output[1] * cos(chassis_heading) + output[2];
+    // Current robot angle - cache trig functions
+    float chassis_heading = estimate[2][0];
+    float cos_heading = cos(chassis_heading);
+    float sin_heading = sin(chassis_heading);
+
+    // Convert to motor velocities using cached trig values
+    motor_velocity[1] = output[0] * cos_heading + output[1] * sin_heading + output[2];
+    motor_velocity[2] = output[0] * sin_heading - output[1] * cos_heading + output[2];
+    motor_velocity[3] = -output[0] * cos_heading - output[1] * sin_heading + output[2];
+    motor_velocity[0] = -output[0] * sin_heading + output[1] * cos_heading + output[2];
     // Serial.printf("motor 0: %f, motor 1: %f, motor 2: %f, motor 3: %f\n", motor_velocity[0], motor_velocity[1], motor_velocity[2], motor_velocity[3]);
 
     // Power limiting
@@ -222,10 +232,13 @@ void PitchController::step(float reference[STATE_LEN][3], float estimate[STATE_L
     float dt = timer.delta();
     float output = 0.0;
 
+    // Position PID with gravity
     pidp.K[0] = gains[0];
     pidp.K[1] = gains[1];
     pidp.K[2] = gains[2];
     pidp.K[3] = gains[3] * sin(reference[4][0]);
+
+    // Velocity PID
     pidv.K[0] = gains[4];
     pidv.K[1] = gains[5];
     pidv.K[2] = gains[6];
@@ -236,10 +249,12 @@ void PitchController::step(float reference[STATE_LEN][3], float estimate[STATE_L
     pidv.setpoint = reference[4][1];
     pidv.measurement = estimate[4][1];
 
+    // Compute controllers 
     output += pidp.filter(dt, true, true); // position wraps
     output += pidv.filter(dt, true, false); // no wrap for velocity
     output = constrain(output, -1.0, 1.0);
 
+    // Both motors get same command
     outputs[0] = output * gear_ratios[0];
     outputs[1] = output * gear_ratios[1];
 
@@ -249,23 +264,26 @@ void PitchController::step(float reference[STATE_LEN][3], float estimate[STATE_L
 void FlywheelController::step(float reference[STATE_LEN][3], float estimate[STATE_LEN][3], float micro_estimate[CAN_MAX_MOTORS][MICRO_STATE_LEN], float outputs[CAN_MAX_MOTORS]) {
     float dt = timer.delta();
 
+    // High-level flywheel speed PID
     pid_high.K[0] = gains[0];
     pid_high.K[1] = gains[1];
     pid_high.K[2] = gains[2];
     pid_high.K[3] = reference[5][1];
-
     pid_high.setpoint = reference[5][1];
     pid_high.measurement = estimate[5][1];
     // Serial.printf("waggle graph flywheel %f\n", estimate[5][1]);
 
+    // Convert flywheel velocity to motor velocity
     float target_motor_velocity = pid_high.filter(dt, false, false) * gear_ratios[0];
-    // NOTE: pid_motors[] are member variables to preserve PID state between calls
+
+    // Low-level motor velocity PIDs
     for (int i = 0; i < 2; i++) {
         pid_low_motors.K[0] = gains[4];
         pid_low_motors.K[1] = gains[5];
         pid_low_motors.K[2] = gains[6];
         pid_low_motors.K[3] = 0;
 
+        // Motor 0: negative direction, Motor 1: positive direction
         pid_low_motors.setpoint = -target_motor_velocity;
         if (i == 1) pid_low_motors.setpoint = target_motor_velocity;
 
@@ -276,15 +294,18 @@ void FlywheelController::step(float reference[STATE_LEN][3], float estimate[STAT
 
 void FeederController::step(float reference[STATE_LEN][3], float estimate[STATE_LEN][3], float micro_estimate[CAN_MAX_MOTORS][MICRO_STATE_LEN], float outputs[CAN_MAX_MOTORS]) {
     float dt = timer.delta();
-    
+
+    // High-level velocity PID
     pid_high.K[0] = gains[0];
     pid_high.K[1] = gains[1];
     pid_high.K[2] = gains[2];
     pid_high.K[3] = reference[6][1];
-
     pid_high.setpoint = reference[6][1];
     pid_high.measurement = estimate[6][1];
+
     float output = pid_high.filter(dt, false, false)*gear_ratios[0];
+
+    // Low-level motor velocity PID
     pid_low.K[0] = gains[3];
     pid_low.K[1] = gains[4];
     pid_low.K[2] = gains[5];
@@ -300,11 +321,11 @@ void FeederController::step(float reference[STATE_LEN][3], float estimate[STATE_
 void SwitcherController::step(float reference[STATE_LEN][3], float estimate[STATE_LEN][3], float micro_estimate[CAN_MAX_MOTORS][MICRO_STATE_LEN], float outputs[CAN_MAX_MOTORS]) {
     float dt = timer.delta();
 
+    // Position and velocity PIDs
     pidp.K[0] = gains[0];
     pidp.K[1] = gains[1];
     pidp.K[2] = gains[2];
     pidp.K[3] = 0;
-
     pidv.K[0] = gains[4];
     pidv.K[1] = gains[5];
     pidv.K[2] = gains[6];
@@ -332,10 +353,10 @@ void SwitcherController::step(float reference[STATE_LEN][3], float estimate[STAT
 
     pidp.setpoint = reference[7][0]; // 1st index = position
     pidp.measurement = estimate[7][0];
-
     pidv.setpoint = reference[7][1];
     pidv.measurement = estimate[7][1];
 
+    // Compute and combine controllers
     float outputp = pidp.filter(dt, true, false);
     float outputv = pidv.filter(dt, true, false);
     float output = outputp + outputv;
@@ -346,11 +367,13 @@ void SwitcherController::step(float reference[STATE_LEN][3], float estimate[STAT
 void NewFeederController::step(float reference[STATE_LEN][3], float estimate[STATE_LEN][3], float micro_estimate[CAN_MAX_MOTORS][MICRO_STATE_LEN], float outputs[CAN_MAX_MOTORS]) {
     float dt = timer.delta();
 
+    // Position PID
     pidp.K[0] = gains[0];
     pidp.K[1] = gains[1];
     pidp.K[2] = gains[2];
     pidp.K[3] = 0;
 
+    // Velocity PID gains defined but not used
     pidv.K[0] = gains[4];
     pidv.K[1] = gains[5];
     pidv.K[2] = gains[6];
@@ -362,6 +385,7 @@ void NewFeederController::step(float reference[STATE_LEN][3], float estimate[STA
     // pidv.setpoint = reference[7][1];
     // pidv.measurement = estimate[7][1];
 
+    // Only position control
     float outputp = pidp.filter(dt, true, true);
     // Serial.printf("waggle graph outputp: %f\n", outputp);
     // float outputv = pidv.filter(dt, true, false);
