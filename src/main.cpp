@@ -217,7 +217,10 @@ int main() {
         sensor_manager.read();
 		// read ref system
 		ref->read();
-		ref->ref_data.kbm_interaction.print(); // FOR DEBUGGIN VTM COMMS 
+		ref->ref_data.kbm_interaction.print(); // FOR DEBUGGIN VTM COMMS
+		ref->ref_data.custom_controller_robot.print();
+
+		
         // read CAN and Transmitter -- These are kept out of sensor manager for safety reasons
         can.read();
         transmitter->read();
