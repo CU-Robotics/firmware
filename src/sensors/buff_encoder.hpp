@@ -60,11 +60,9 @@ public:
     /// @return Read angle (radians)
     inline float get_angle() const { return m_angle + config_data.encoder_offset; }
 
-    /// @brief Get the raw angle of the last read function without offset
-    /// @return Raw angle (radians)
-    inline float get_angle_raw() const { return m_angle; }
-
     inline NewConfig::EncoderName get_name() const { return config_data.name; }
+
+    inline BuffEndoderData get_data_for_comms();
 
     /// @brief Print the data for debugging
     void print();
@@ -79,9 +77,6 @@ private:
 
     /// @brief The SPI settings of the buff encoders
     static const SPISettings m_settings;
-
-    ///buff sensor data struct.
-    BuffEncoderData buff_sensor_data;
 };
 
 

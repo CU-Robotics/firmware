@@ -35,7 +35,7 @@ struct Pins {
     uint32_t digital_pin;
 };
 
-enum class EncoderName : uint32_t {
+enum class BuffEncoderName : uint32_t {
     UnsetEncoderName,
     YawEncoder,
     PitchEncoder,
@@ -49,15 +49,19 @@ struct BuffEncoder : Comms::CommsData {
     float encoder_offset;
     int feeder_direction;
     float feeder_ratio;
-    uint32_t encoder_name;
+    BuffEncoderName encoder_name;
 
 
     BuffEncoder() : Comms::CommsData(Comms::TypeLabel::BuffEncoderConfig, Comms::PhysicalMedium::HID, Comms::Priority::High, sizeof(BuffEncoder)) {
         encoder_offset = 0;
         feeder_direction = 1;
         feeder_ratio = 1;
-        encoder_name = EncoderName::UnsetEncoderName;
+        encoder_name = BuffEncoderName::UnsetEncoderName;
     }
+};
+
+enum class RevEncoderName : uint32_t {
+    UnsetRevEncoderName,
 };
 
 struct RevEncoder : Comms::CommsData {

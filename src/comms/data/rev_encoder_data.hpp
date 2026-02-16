@@ -11,8 +11,8 @@
 /// @brief Structure for the Rev encoder sensor.
 struct RevSensorData : Comms::CommsData {
     RevSensorData() : CommsData(Comms::TypeLabel::RevEncoderData, Comms::PhysicalMedium::Ethernet, Comms::Priority::Medium, sizeof(RevSensorData)) { }
-	/// Sensor ID.
-	uint8_t id;
+	
+	NewConfig::RevEncoderName encoder_name;
 	/// Encoder ticks.
 	int ticks;
 	/// Angle in radians.

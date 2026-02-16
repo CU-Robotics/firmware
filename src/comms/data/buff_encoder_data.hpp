@@ -12,7 +12,7 @@
 struct BuffEncoderData : Comms::CommsData {
     BuffEncoderData() : CommsData(Comms::TypeLabel::BuffEncoderData, Comms::PhysicalMedium::Ethernet, Comms::Priority::Medium, sizeof(BuffEncoderData)) { }
     /// Sensor ID.
-    NewConfig::EncoderName id;
+    NewConfig::EncoderName encoder_name;
     /// Measured angle.
     float m_angle;
 };

@@ -25,8 +25,6 @@ private:
 	float radians;
 	/// @brief the starting value of the encoder in radians
 	float starting_value = 0;
-	/// @brief the data structure for the encoder
-	RevSensorData rev_sensor_data;
 public:
 	/// @brief Construct a new rev_encoder object without initializing the encoder
 	RevEncoder() : Sensor(SensorType::REVENC) { };
@@ -51,6 +49,8 @@ public:
 	/// @brief get the last angle of the encoder in radians
 	/// @return the last angle of the encoder in radians [0, 2pi)
 	float get_angle_radians();
+
+	RevEncoderData get_data_for_comms();
 
 	/// @brief print the encoder details
 	void print();

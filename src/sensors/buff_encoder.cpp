@@ -29,6 +29,13 @@ bool BuffEncoder::read() {
     return true;
 }
 
+BuffEncoderData BuffEncoder::get_data_for_comms() {
+    return BuffEncoderData{
+        .encoder_name = config_data.name,
+        .m_angle = get_angle(),
+    };
+}
+
 void BuffEncoder::print() {
     Serial.printf("Buff Encoder:\n\t");
     Serial.println(get_angle());
