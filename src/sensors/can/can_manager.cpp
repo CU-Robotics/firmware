@@ -46,33 +46,28 @@ void CANManager::configure(const NewConfig::RobotConfig& config) {
 
         switch(motor_config.motor_controller_type) {
             case NewConfig::MotorControllerType::C610: {
-                C610 motor(motor_config);
-                m_motor_name_map.insert({ motor_config.motor_name, motor });
+                m_motor_name_map.insert({ motor_config.motor_name, std::make_unique<C610>(motor_config) });
                 Serial.printf("Creating C610 motor %u on bus %u with ID %u\n", static_cast<uint32_t>(motor_config.motor_name), motor_config.physical_bus, motor_config.physical_id);
                 
                 break;
             }
             case NewConfig::MotorControllerType::C620: {
-                C620 motor(motor_config);
-                m_motor_name_map.insert({ motor_config.motor_name, motor });
+                m_motor_name_map.insert({ motor_config.motor_name, std::make_unique<C620>(motor_config) });
                 Serial.printf("Creating C620 Motor %u on bus %u with ID %u\n", static_cast<uint32_t>(motor_config.motor_name), motor_config.physical_bus, motor_config.physical_id);
                 break;
             }
             case NewConfig::MotorControllerType::MG: {
-                MG8016EI6 motor(motor_config);
-                m_motor_name_map.insert({ motor_config.motor_name, motor });
+                m_motor_name_map.insert({ motor_config.motor_name, std::make_unique<MG8016EI6>(motor_config) });
                 Serial.printf("Creating MG Motor %u on bus %u with ID %u\n", static_cast<uint32_t>(motor_config.motor_name), motor_config.physical_bus, motor_config.physical_id);
                 break;
             }
             case NewConfig::MotorControllerType::GIM: {
-                GIM motor(motor_config);
-                m_motor_name_map.insert({ motor_config.motor_name, motor });
+                m_motor_name_map.insert({ motor_config.motor_name, std::make_unique<GIM>(motor_config) });
                 Serial.printf("Creating GIM Motor %u on bus %u with ID %u\n", static_cast<uint32_t>(motor_config.motor_name), motor_config.physical_bus, motor_config.physical_id);
                 break;
             }
             case NewConfig::MotorControllerType::SDC104: {
-                SDC104 motor(motor_config);
-                m_motor_name_map.insert({ motor_config.motor_name, motor });
+                m_motor_name_map.insert({ motor_config.motor_name, std::make_unique<SDC104>(motor_config) });
                 Serial.printf("Creating SDC104 Motor %u on bus %u with ID %u\n", static_cast<uint32_t>(motor_config.motor_name), motor_config.physical_bus, motor_config.physical_id);
                 break;
             }
@@ -119,20 +114,20 @@ void CANManager::write() {
         // for each motor, can be const
         for (const auto& [name, motor] : m_motor_name_map) {
             // if the motor is not on this bus, skip it
-            if (motor.get_bus_id() != bus) {
+            if (motor->get_bus_id() != bus) {
                 continue;
             }
             
             // based on the motor type, figure out how to write the message
-            switch (motor.get_controller_type()) {
+            switch (motor->get_controller_type()) {
             case NewConfig::MotorControllerType::C610:   // fallthrough
             case NewConfig::MotorControllerType::C620: {
                 // depending on the motor ID, write the message to the correct msg in the array
                 // - 1 to get the id into 0-indexed form, then divide by 4 to get the upper or lower half as an index (0, 1)
-                if ((motor.get_id() - 1) / 4) {
-                    motor.write(rm_motor_msgs[1]);   // last 4 motors
+                if ((motor->get_id() - 1) / 4) {
+                    motor->write(rm_motor_msgs[1]);   // last 4 motors
                 } else {
-                    motor.write(rm_motor_msgs[0]);   // first 4 motors
+                    motor->write(rm_motor_msgs[0]);   // first 4 motors
                 }
 
                 // this combined message will be written to the bus after the motor loop
@@ -149,7 +144,7 @@ void CANManager::write() {
                 CAN_message_t msg;
 
                 // get its message data
-                motor.write(msg);
+                motor->write(msg);
                 
                 // write the message to the correct bus
                 m_busses[bus]->write(msg);
@@ -197,8 +192,7 @@ void CANManager::write_motor_torque_by_name(NewConfig::MotorName motor_name, flo
         return;
     }
 
-    Motor& motor = m_motor_name_map[motor_name];
-    motor.write_motor_torque(torque);
+    m_motor_name_map[motor_name]->write_motor_torque(torque);
 
     #ifdef CAN_MANAGER_DEBUG
     Serial.printf("CANManager wrote to motor with name %u\n", static_cast<uint32_t>(motor_name));
@@ -209,7 +203,7 @@ void CANManager::print_state() {
     // for each motor, print it's state
     for (const auto& [name, motor] : m_motor_name_map) {
         // print the motor state
-        motor.print_state();
+        motor->print_state();
     }
 }
 
@@ -275,7 +269,7 @@ void CANManager::init_motors() {
     // for each motor, call it's init function, cant be const
     for (auto& [name, motor] : m_motor_name_map) {
         // call the motor's init function
-        motor.init();
+        motor->init();
     }
 
     // issue a write command to the bus to push the init commands
@@ -313,7 +307,7 @@ void CANManager::init_motors() {
     for (const auto& [name, motor] : m_motor_name_map) {
         if (!initialized_motors.contains(name)) {
             Serial.printf("Warning: A motor failed to initialize! Motor info: ");
-            motor.print_state();
+            motor->print_state();
         }
     }
 }
@@ -326,7 +320,7 @@ NewConfig::MotorName CANManager::distribute_msg(CAN_message_t& msg) {
     // for each motor, cant be const
     for (auto& [name, motor] : m_motor_name_map) {
         // if the motor can handle the message, give it to the motor
-        if (motor.read(msg)) {
+        if (motor->read(msg)) {
             return name;
         }
     }

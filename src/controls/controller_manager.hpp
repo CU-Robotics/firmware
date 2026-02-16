@@ -5,15 +5,11 @@
 #include "sensors/can/can_manager.hpp"
 #include "comms/config_layer.hpp"
 
-#define MOTOR_INFO_TYPE 0
-#define MOTOR_INFO_ID 1
-#define MOTOR_INFO_BUS 2
-
 /// @brief Manage all controllers
 class ControllerManager {
 private:
 
-    std::vector<Controller> controllers;
+    std::vector<std::unique_ptr<Controller>> controllers;
 
     /// @brief array of motor outputs
     float outputs[CAN_MAX_MOTORS] = { 0 };
@@ -32,7 +28,7 @@ public:
 
     /// @brief Initializes and adds a new controller to the controller manager
     /// @param controller_config the controller configuration data to use to initialize the controller
-    void init_controller(NewConfig::Controller controller_config);
+    void init_controller(const NewConfig::Controller& controller_config);
 
     /// @brief Steps through controllers and sets the new motor inputs (ie. motor current, torque)
     /// @param macro_reference Governor reference (governed target state)

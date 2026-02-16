@@ -16,7 +16,7 @@ class ICM20649 : public IMUSensor {
 public:
 
     /// @brief Constructor. Currently does nothing, use @ref init(CommunicationProtocol) instead for initialization.
-    ICM20649(NewConfig::IcmImu config) : sensor() { };
+    ICM20649(const NewConfig::IcmImu& config);
 
     /// @brief Initialize the sensor with the assigned communication protocol.
     /// @param protocol Which communication protocol to use for this sensor.
@@ -30,6 +30,7 @@ public:
     void set_gyro_range(int gyro_rate_range);
 
 private:
+    const NewConfig::IcmImu& config;
     /// @brief sensor object from adafruit libraries.
     Adafruit_ICM20649 sensor;
 
@@ -45,9 +46,6 @@ private:
 
     /// @brief approximate gyroscope data rate (Hz) calculated from divisor.
     float gyro_rate;
-
-    /// @brief The selected communication protocol
-    CommunicationProtocol protocol;
 
     ///ICM sensor data.
     ICMSensorData icm_sensor_data;

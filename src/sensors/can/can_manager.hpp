@@ -121,7 +121,7 @@ private:
     FlexCAN_T4_Base* m_busses[CAN_NUM_BUSSES] = { &m_can1, &m_can2, &m_can3 };
 
     /// @brief Map of motor name to allocated motor object pointer
-    std::map<NewConfig::MotorName, Motor> m_motor_name_map;
+    std::map<NewConfig::MotorName, std::unique_ptr<Motor>> m_motor_name_map;
 
     /// @brief The timeout for motor initialization in milliseconds. Most motors respond within 1-2 ms
     uint32_t m_motor_init_timeout = 250u;
