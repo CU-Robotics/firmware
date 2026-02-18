@@ -232,4 +232,9 @@ public:
 	/// @return Filled Transmitter data struct
 	virtual TransmitterData get_transmitter_data(){return TransmitterData();}
 
+	void send_to_comms() {
+		Comms::Sendable<TransmitterData> transmitter_data_sendable = get_transmitter_data();
+		transmitter_data_sendable.send_to_comms();
+	}
+
 };

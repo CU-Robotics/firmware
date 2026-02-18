@@ -39,9 +39,6 @@ void CANManager::init() {
 }
 
 void CANManager::configure(const NewConfig::RobotConfig& config) {
-    // using the motor_info array, create the motors following the config
-    
-    uint32_t motor_global_id = 0;
     for(const NewConfig::Motor& motor_config : config.motors) {
 
         switch(motor_config.motor_controller_type) {
@@ -163,6 +160,20 @@ void CANManager::write() {
             m_busses[bus]->write(rm_motor_msgs[0]);
             m_busses[bus]->write(rm_motor_msgs[1]);
         }
+    }
+}
+
+void CANManager::send_to_comms(){
+    for(const auto& [name, motor] : m_motor_name_map) {
+        Comms::Sendable<MotorStateData> motor_state_sendable;
+        MotorState state = motor->get_state();
+        motor_state_sendable.data.motor_name = name;
+        motor_state_sendable.data.torque = state.torque;
+        motor_state_sendable.data.speed = state.speed;
+        motor_state_sendable.data.position = state.position;
+        motor_state_sendable.data.temperature = state.temperature;
+        
+        motor_state_sendable.send_to_comms();
     }
 }
 

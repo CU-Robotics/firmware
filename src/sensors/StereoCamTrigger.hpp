@@ -7,17 +7,10 @@
 /// @brief define to enable FPS logging in the timer interrupt callback (debugging)
 // #define LOG_STEREO_FPS
 
-/// @brief GPIO pin number to send trigger signal to USB cameras. Can change as needed
-const int TRIG_PIN = 32;
-
-/// @brief desired pulse width of trigger signal in micros (minimum pulse width is 10 micros - check See3CAM datasheet)
-const int TRIG_PULSE_WIDTH = 10;
-
 /// @brief class to manage triggering synchronized exposures for dual USB cameras
 class StereoCamTrigger {
   private:
     const NewConfig::StereoCameraTrigger& config;
-    
     
     /// @brief Teensyduino timer instance used to maintain signal
     IntervalTimer timer;

@@ -34,13 +34,10 @@ extern "C" void reset_teensy(void);
 // Declare global objects
 
 CANManager can;
-RefSystem *ref;
-ACS712 current_sensor;
+RefSystem ref;
 Transmitter *transmitter = nullptr;
 
 Comms::CommsLayer comms_layer;
-
-StereoCamTrigger stereoCamTrigger(60);
 
 ConfigLayer config_layer;
 
@@ -123,12 +120,12 @@ int main() {
 
     // initialize objects
     can.init();
+    ref.init();
     transmitter->init();
     comms_layer.init();
 
-    comms_layer.configure
-
-    ref = sensor_manager.get_ref();
+    comms_layer.configure(config);
+    
 
     // Config config
     Serial.println("Configuring...");
@@ -209,21 +206,25 @@ int main() {
 
     // Main loop
     while (true) {
-        // LimitSwitch* limit_switch = sensor_manager.get_limit_switch(0);
-        // Serial.printf("Limit Switch: %d\n", limit_switch->isPressed());
-
         // start main loop time timer
         stall_timer.start();
 
-        // read sensors
-        sensor_manager.read();
-
-        // read CAN and Transmitter -- These are kept out of sensor manager for safety reasons
+        // read CAN and send motor states to comms
         can.read();
+        can.send_to_comms();
+
+        // read ref and send to comms
+        ref.read();
+        ref.send_to_comms();
+
+        // read transmitter and send to comms
         transmitter->read();
+        transmitter->send_to_comms();
 
-        sensor_manager.send_sensor_data_to_comms();
-
+        // read sensors and send to comms
+        // this happens in one function because sensors are stored alongside their sendables
+        sensor_manager.read_and_send_to_comms();
+        
         // check whether this packet is a config packet
         if (comms_layer.get_hive_data().config_section.request_bit == 1) {
             Serial.println("\n\nConfig request received, reconfiguring from comms!\n\n");
@@ -250,8 +251,8 @@ int main() {
             transmitter_pos_y += mouse_y.value() * 0.05 * delta;
         }
 
-        vtm_pos_x += ref->ref_data.kbm_interaction.mouse_speed_x * 0.05 * delta;
-        vtm_pos_y += ref->ref_data.kbm_interaction.mouse_speed_y * 0.05 * delta;
+        vtm_pos_x += ref.ref_data.kbm_interaction.mouse_speed_x * 0.05 * delta;
+        vtm_pos_y += ref.ref_data.kbm_interaction.mouse_speed_y * 0.05 * delta;
 
         // clamp to pitch limits
         if (transmitter_pos_y < pitch_min) {
@@ -269,14 +270,14 @@ int main() {
         if (config->governor_types[0] == 2) { // if we should be controlling velocity
 
             chassis_vel_x = transmitter->get_l_stick_y() * 5.4 +
-                            (-ref->ref_data.kbm_interaction.key_w + ref->ref_data.kbm_interaction.key_s) * 2.5;
+                            (-ref.ref_data.kbm_interaction.key_w + ref.ref_data.kbm_interaction.key_s) * 2.5;
 
             if (transmitter_keys.has_value()) {
                 chassis_vel_x += (-transmitter_keys.value().w + transmitter_keys.value().s) * 2.5;
             }
 
             chassis_vel_y = -transmitter->get_l_stick_x() * 5.4 +
-                            (ref->ref_data.kbm_interaction.key_d - ref->ref_data.kbm_interaction.key_a) * 2.5;
+                            (ref.ref_data.kbm_interaction.key_d - ref.ref_data.kbm_interaction.key_a) * 2.5;
 
             if (transmitter_keys.has_value()) {
                 chassis_vel_y += (transmitter_keys.value().d - transmitter_keys.value().a) * 2.5;
@@ -294,14 +295,14 @@ int main() {
             (transmitter->get_r_switch() == SwitchPos::FORWARD || transmitter->get_r_switch() == SwitchPos::MIDDLE) ? 18 : 0; // m/s
         // if the right switch is forward, and either the left mouse button is pressed or the right switch is not
         // backward, set the feeder to something. Otherwise, set it to 0
-        float feeder_target = (((l_mouse_button.has_value() || ref->ref_data.kbm_interaction.button_left) &&
+        float feeder_target = (((l_mouse_button.has_value() || ref.ref_data.kbm_interaction.button_left) &&
                                 transmitter->get_r_switch() != SwitchPos::BACKWARD) || transmitter->get_r_switch() == SwitchPos::FORWARD) ? 10 : 0;
         if (config->governor_types[6] == 1) {
             float dt2 = timer.delta();
             if (dt2 > 0.1)
                 dt2 = 0;
             // check if the shooter is active
-            if (not_safety_mode && ref->ref_data.robot_performance.shooter_power_active)
+            if (not_safety_mode && ref.ref_data.robot_performance.shooter_power_active)
                 feed += feeder_target * dt2;
             target_state[6][0] = (int)feed;
         } else {
@@ -403,9 +404,6 @@ int main() {
         //     temp_state[i][1], temp_state[i][2]);
         // }
 
-        // give the sensors the current estimated state
-        sensor_manager.set_estimated_state(temp_state);
-
         // reference govern
         governor.set_estimate(temp_state);
         governor.step_reference(target_state, config->governor_types);
@@ -416,23 +414,17 @@ int main() {
 
         // can.print_state();
 
-        // construct ref data packet
-        CommsRefData ref_data = ref->get_data_for_comms();
-        Comms::Sendable<CommsRefData> ref_data_sendable = ref_data;
-        ref_data_sendable.send_to_comms();
-
+        
         Comms::Sendable<TargetState> target_state_sendable;
         memcpy(target_state_sendable.data.state, temp_reference, sizeof(temp_reference));
         target_state_sendable.data.time = millis() / 1000.0;
         target_state_sendable.send_to_comms();
-
+        
         Comms::Sendable<EstimatedState> estimated_state;
         memcpy(estimated_state.data.state, temp_state, sizeof(temp_state));
         estimated_state.data.time = millis() / 1000.0;
         estimated_state.send_to_comms();
-
-        Comms::Sendable<TransmitterData> transmitter_sendable = transmitter->get_transmitter_data();
-        transmitter_sendable.send_to_comms();
+        
 
         comms_layer.run();
 
@@ -460,16 +452,16 @@ int main() {
         }
         last_loop_slow = is_slow_loop;
 
-        if (!last_gimbal_power && ref->ref_data.robot_performance.gimbol_power_active) {
+        if (!last_gimbal_power && ref.ref_data.robot_performance.gimbol_power_active) {
             gimbal_power_timer.start();
         }
-        last_gimbal_power = ref->ref_data.robot_performance.gimbol_power_active;
+        last_gimbal_power = ref.ref_data.robot_performance.gimbol_power_active;
         bool gimbal_power_recently_turned_on = gimbal_power_timer.get_elapsed_micros_no_restart() < 3000000;
 
         not_safety_mode =
             (transmitter->is_connected() &&
              (transmitter->get_l_switch() == SwitchPos::BACKWARD || transmitter->get_l_switch() == SwitchPos::MIDDLE) &&
-             config_layer.is_configured() && !is_slow_loop && ref->ref_data.robot_performance.gimbol_power_active &&
+             config_layer.is_configured() && !is_slow_loop && ref.ref_data.robot_performance.gimbol_power_active &&
              !gimbal_power_recently_turned_on);
         //  SAFETY MODE
         if (not_safety_mode) {

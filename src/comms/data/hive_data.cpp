@@ -38,12 +38,6 @@ void HiveData::set_data(CommsData* data) {
         // override_state = *static_cast<OverrideState*>(data);
         break;
     }
-    case TypeLabel::ConfigSection: {
-        ConfigSection* config = static_cast<ConfigSection*>(data);
-        memcpy(&config_section, config, sizeof(ConfigSection));
-        // config_section = *static_cast<ConfigSection*>(data);
-        break;
-    }
     case TypeLabel::ConfigStart: {
         NewConfig::ConfigStart* config_start = static_cast<NewConfig::ConfigStart*>(data);
         Serial.printf("Received config start for robot %d with %d sections\n", config_start->robot, config_start->num_config_sections);

@@ -71,6 +71,8 @@ public:
     /// @note This issues a CAN command over the bus
     void write();
 
+    void send_to_comms();
+
     /// @brief Issue zero torque commands to all motors
     /// @note This immediately issues a CAN command over the bus
     void issue_safety_mode();

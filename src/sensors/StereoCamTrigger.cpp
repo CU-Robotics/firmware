@@ -1,9 +1,6 @@
 #include "StereoCamTrigger.hpp"
 
 void StereoCamTrigger::track_exposures() {
-  // disable interrupts to protect volatile access
-  cli();
-
   // generate HIGH pulse with given width to create square wave
   digitalWrite(config.pins.digital_pin, HIGH);
   delayMicroseconds(config.trigger_pulse_width);
@@ -22,9 +19,6 @@ void StereoCamTrigger::track_exposures() {
   // print FPS estimate
   Serial.printf("fps: %f\n", 1/(float(delta) * 1.0e-6));
 #endif
-
-  // reenable interrupts
-  sei();
 }
 
 void StereoCamTrigger::start(int res) {

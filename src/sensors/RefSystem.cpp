@@ -77,7 +77,7 @@ void RefSystem::write(uint8_t* packet, uint8_t length) {
         Serial.println("Failed to write");
 }
 
-CommsRefData RefSystem::get_data_for_comms() {
+void RefSystem::send_to_comms() {
     CommsRefData output_array;
     
     // copys select packets into the output array
@@ -104,7 +104,8 @@ CommsRefData RefSystem::get_data_for_comms() {
     memcpy(output_array.raw + REF_COMMS_PROJECTILE_ALLOWANCE_OFFSET, ref_data.projectile_allowance.raw, ref_data.projectile_allowance.packet_size);
     memcpy(output_array.raw + REF_COMMS_RFID_STATUS_OFFSET, ref_data.rfid_status.raw, ref_data.rfid_status.packet_size);
     memcpy(output_array.raw + REF_COMMS_KBM_INTERACTION_OFFSET, ref_data.kbm_interaction.raw, ref_data.kbm_interaction.packet_size);
-    return output_array;
+    Comms::Sendable<CommsRefData> ref_data_sendable = output_array;
+    ref_data_sendable.send_to_comms();
 }
 
 bool RefSystem::read_frame_header(HardwareSerial* serial, uint8_t raw_buffer[REF_MAX_PACKET_SIZE * 2], uint16_t& buffer_index, Frame& frame) {

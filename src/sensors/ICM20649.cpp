@@ -13,16 +13,16 @@ void ICM20649::init() {
     {
         // start I2C communication
         if (!sensor.begin_I2C()) {
-            Serial.println("ICM: Failed to begin I2C");
+            assert(false && "ICM: Failed to begin I2C");
         }
         break;
     }
     case NewConfig::CommunicationProtocol::SPI:
     {
-        // start SPI communication
+        // start SPI communication. Adafruit library will handle setting the SCK, MISO, MOSI pins as outputs/inputs as needed.
         if (!sensor.begin_SPI(config.pins.spi_cs, config.pins.spi_sck, config.pins.spi_miso, config.pins.spi_mosi))
         {
-            Serial.println("ICM: Failed to begin SPI");
+            assert(false && "ICM: Failed to begin SPI");
         }
         break;
     }

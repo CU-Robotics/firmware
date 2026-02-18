@@ -91,7 +91,7 @@ public:
     /// @brief Generate a byte array for all ref data to be sent over comms
     /// @return The data struct
     /// @note Only sends some packets, not all
-    CommsRefData get_data_for_comms();
+    void send_to_comms();
 
 private:
     /// @brief Helper function: Reads and stores frame header

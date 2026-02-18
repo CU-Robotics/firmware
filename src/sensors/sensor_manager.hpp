@@ -37,55 +37,25 @@ public:
 
     void configure(const NewConfig::RobotConfig& config_data);
 
-    /// @brief Read all sensor data
-    void read();
+    /// @brief Read all sensor data and send to comms
+    void read_and_send_to_comms();
 
-    /// @brief Get the specified buff encoder sensor from the array
-    /// @param index index of the sensor object to get
-    /// @return pointer to the buff encoder sensor
-    BuffEncoder* get_buff_encoder(int index);
+    std::optional<BuffEncoder*> get_buff_encoder_by_name(NewConfig::BuffEncoderName name);
+    std::optional<RevEncoder*> get_rev_encoder_by_name(NewConfig::RevEncoderName name);
+    std::optional<ICM20649*> get_icm_sensor_by_name(NewConfig::ImuName name);
+    std::optional<LSM6DSOX*> get_lsm_sensor_by_name(NewConfig::ImuName name);
+    std::optional<D200LD14P*> get_lidar_sensor_by_name(NewConfig::D200LidarName name);
+    std::optional<LimitSwitch*> get_limit_switch_by_name(NewConfig::LimitSwitchName name);
+    std::optional<ACS712*> get_current_sensor_by_name(NewConfig::CurrentSensorName name);
+    std::optional<TOFSensor*> get_tof_sensor_by_name(NewConfig::TOFSensorName name);
+    std::optional<StereoCamTrigger*> get_stereo_cam_trigger_by_name(NewConfig::StereoCameraTriggerName name);
 
-    /// @brief Get the specified ICM sensor from the array
-    /// @param index index of the sensor object to get
-    /// @return pointer to the ICM sensor
-    ICM20649* get_icm_sensor(int index);
-
-    /// @brief Get the specified REV sensor from the array
-    /// @param index index of the sensor object to get
-    /// @return pointer to the REV sensor
-    RevEncoder* get_rev_sensor(int index);
-
-    /// @brief Get the specified TOF sensor from the array
-    /// @param index index of the sensor object to get
-    /// @return pointer to the TOF sensor
-    // TOFSensor* get_tof_sensor(int index);
-
-    /// @brief Get the specified LiDAR sensor
-    /// @param index index of the sensor object to get, 0 or 1
-    /// @return pointer to the LiDAR sensor
-    D200LD14P* get_lidar_sensor(int index);
-
-    /// @brief Get the specified limit switch
-    /// @param index index of the sensor object to get
-    /// @return pointer to the limit switch
-    LimitSwitch* get_limit_switch(int index);
-
-    /// @brief Get the number of sensors of the specified type
-    /// @param sensor_type the type of sensor
-    /// @return number of sensors of that type
-    int get_num_sensors(SensorType sensor_type);
 
     /// @brief Get the referee system
     /// @return pointer to the referee system
     RefSystem* get_ref() {
         return ref;
     }
-
-    /// @brief Calibrate the IMUs
-    void calibrate_imus();
-
-    /// @brief Send sensor data to comms
-    void send_sensor_data_to_comms();
 
     /// @brief Set the estimated state of the robot
     /// @param estimated_state array of the estimated state
@@ -109,7 +79,4 @@ private:
     std::map<ACS712, Comms::Sendable<ACS712Data>> acs712_current_sensors;
     std::map<TOFSensor, Comms::Sendable<TOFSensorData>> tof_sensors;
     std::map<StereoCamTrigger, Comms::Sendable<StereoCamTriggerData>> stereo_cam_triggers;
-
-    /// @brief Referee system
-    RefSystem* ref;
 };
