@@ -13,10 +13,11 @@
 CANManager::CANManager() { }
 
 CANManager::~CANManager() {
-    clear_motor_map();
+    //clean up motors since they are allocated.
+    m_motor_name_map.clear();
 }
 
-void CANManager::init() {
+void CANManager::init(const std::vector<NewConfig::Motor>& motor_configs) {
     // initialize CAN 1
     m_can1.begin();
     m_can1.setBaudRate(1000000u);   // 1Mbit baud
@@ -35,47 +36,49 @@ void CANManager::init() {
     m_can3.enableFIFO(true);
 
     // destroy any motors in existance and initialize to nullptr
-    clear_motor_map();
-}
-
-void CANManager::configure(const NewConfig::RobotConfig& config) {
-    for(const NewConfig::Motor& motor_config : config.motors) {
-
-        switch(motor_config.motor_controller_type) {
-            case NewConfig::MotorControllerType::C610: {
-                m_motor_name_map.insert({ motor_config.motor_name, std::make_unique<C610>(motor_config) });
-                Serial.printf("Creating C610 motor %u on bus %u with ID %u\n", static_cast<uint32_t>(motor_config.motor_name), motor_config.physical_bus, motor_config.physical_id);
-                
-                break;
-            }
-            case NewConfig::MotorControllerType::C620: {
-                m_motor_name_map.insert({ motor_config.motor_name, std::make_unique<C620>(motor_config) });
-                Serial.printf("Creating C620 Motor %u on bus %u with ID %u\n", static_cast<uint32_t>(motor_config.motor_name), motor_config.physical_bus, motor_config.physical_id);
-                break;
-            }
-            case NewConfig::MotorControllerType::MG: {
-                m_motor_name_map.insert({ motor_config.motor_name, std::make_unique<MG8016EI6>(motor_config) });
-                Serial.printf("Creating MG Motor %u on bus %u with ID %u\n", static_cast<uint32_t>(motor_config.motor_name), motor_config.physical_bus, motor_config.physical_id);
-                break;
-            }
-            case NewConfig::MotorControllerType::GIM: {
-                m_motor_name_map.insert({ motor_config.motor_name, std::make_unique<GIM>(motor_config) });
-                Serial.printf("Creating GIM Motor %u on bus %u with ID %u\n", static_cast<uint32_t>(motor_config.motor_name), motor_config.physical_bus, motor_config.physical_id);
-                break;
-            }
-            case NewConfig::MotorControllerType::SDC104: {
-                m_motor_name_map.insert({ motor_config.motor_name, std::make_unique<SDC104>(motor_config) });
-                Serial.printf("Creating SDC104 Motor %u on bus %u with ID %u\n", static_cast<uint32_t>(motor_config.motor_name), motor_config.physical_bus, motor_config.physical_id);
-                break;
-            }
-            default: {
-                Serial.printf("CANManager tried to create a motor of invalid type: %u\n", motor_config.motor_controller_type);
-                continue;   // continue in order to not call the later map insert since new_motor would be null
-            }
-        }
+    m_motor_name_map.clear();
+    
+    for(const NewConfig::Motor& motor_config : motor_configs) {
+        configure_motor(motor_config);
     }
 
     init_motors();
+}
+
+void CANManager::configure_motor(const NewConfig::Motor& motor_config){
+
+    switch(motor_config.motor_controller_type) {
+        case NewConfig::MotorControllerType::C610: {
+            m_motor_name_map.insert({ motor_config.motor_name, std::make_unique<C610>(motor_config) });
+            Serial.printf("Creating C610 motor %u on bus %u with ID %u\n", static_cast<uint32_t>(motor_config.motor_name), motor_config.physical_bus, motor_config.physical_id);
+            
+            break;
+        }
+        case NewConfig::MotorControllerType::C620: {
+            m_motor_name_map.insert({ motor_config.motor_name, std::make_unique<C620>(motor_config) });
+            Serial.printf("Creating C620 Motor %u on bus %u with ID %u\n", static_cast<uint32_t>(motor_config.motor_name), motor_config.physical_bus, motor_config.physical_id);
+            break;
+        }
+        case NewConfig::MotorControllerType::MG: {
+            m_motor_name_map.insert({ motor_config.motor_name, std::make_unique<MG8016EI6>(motor_config) });
+            Serial.printf("Creating MG Motor %u on bus %u with ID %u\n", static_cast<uint32_t>(motor_config.motor_name), motor_config.physical_bus, motor_config.physical_id);
+            break;
+        }
+        case NewConfig::MotorControllerType::GIM: {
+            m_motor_name_map.insert({ motor_config.motor_name, std::make_unique<GIM>(motor_config) });
+            Serial.printf("Creating GIM Motor %u on bus %u with ID %u\n", static_cast<uint32_t>(motor_config.motor_name), motor_config.physical_bus, motor_config.physical_id);
+            break;
+        }
+        case NewConfig::MotorControllerType::SDC104: {
+            m_motor_name_map.insert({ motor_config.motor_name, std::make_unique<SDC104>(motor_config) });
+            Serial.printf("Creating SDC104 Motor %u on bus %u with ID %u\n", static_cast<uint32_t>(motor_config.motor_name), motor_config.physical_bus, motor_config.physical_id);
+            break;
+        }
+        default: {
+            Serial.printf("CANManager tried to create a motor of invalid type: %u\n", motor_config.motor_controller_type);
+            continue;   // continue in order to not call the later map insert since new_motor would be null
+        }
+    }
 }
 
 void CANManager::read() {
@@ -321,10 +324,6 @@ void CANManager::init_motors() {
             motor->print_state();
         }
     }
-}
-
-void clear_motor_map() {
-    m_motor_name_map.clear();
 }
 
 NewConfig::MotorName CANManager::distribute_msg(CAN_message_t& msg) {

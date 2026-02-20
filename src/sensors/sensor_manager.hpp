@@ -29,16 +29,20 @@ public:
     /// @brief Constructor for the SensorManager class
     SensorManager();
 
-/// @brief Destructor for the SensorManager class
+    /// @brief Destructor for the SensorManager class
     ~SensorManager();
 
     /// @brief Initialize the sensor manager with configuration data
-    void init();
+    void init(const NewConfig::RobotConfig& config_data);
 
-    void configure(const NewConfig::RobotConfig& config_data);
+    void configure_sensors(const NewConfig::RobotConfig& config_data);
+
+    void initialize_sensors();
 
     /// @brief Read all sensor data and send to comms
-    void read_and_send_to_comms();
+    void read();
+
+    void send_to_comms();
 
     std::optional<BuffEncoder*> get_buff_encoder_by_name(NewConfig::BuffEncoderName name);
     std::optional<RevEncoder*> get_rev_encoder_by_name(NewConfig::RevEncoderName name);
@@ -68,15 +72,15 @@ private:
     float estimated_state[STATE_LEN][3] = { {0} };
 
     // Unfortunately, sensors and their configurations are too different to group into a shared parent with a shared config, 
-    // so we separately store sensors of each type in a map with their corresponding sendable objects for comms.
-    
-    std::map<BuffEncoder, Comms::Sendable<BuffEncoderData>> buff_encoders;
-    std::map<RevEncoder, Comms::Sendable<RevSensorData>> rev_encoders;
-    std::map<ICM20649, Comms::Sendable<ICMSensorData>> icm_imus;
-    std::map<LSM6DSOX, Comms::Sendable<LSMSensorData>> lsm_imus;
-    std::map<D200LD14P, Comms::Sendable<LidarDataPacketSI>> d200_lidars;
-    std::map<LimitSwitch, Comms::Sendable<LimitSwitchData>> limit_switches;
-    std::map<ACS712, Comms::Sendable<ACS712Data>> acs712_current_sensors;
-    std::map<TOFSensor, Comms::Sendable<TOFSensorData>> tof_sensors;
-    std::map<StereoCamTrigger, Comms::Sendable<StereoCamTriggerData>> stereo_cam_triggers;
+    // so we separately store sensors of each type in their own map, keyed by their name as specified in the config.
+
+    std::map<NewConfig::BuffEncoderName, BuffEncoder> buff_encoders;
+    std::map<NewConfig::RevEncoderName, RevEncoder> rev_encoders;
+    std::map<NewConfig::IcmImuName, ICM20649> icm_imus;
+    std::map<NewConfig::LsmImuName, LSM6DSOX> lsm_imus;
+    std::map<NewConfig::D200LidarName, D200LD14P> d200_lidars;
+    std::map<NewConfig::LimitSwitchName, LimitSwitch> limit_switches;
+    std::map<NewConfig::CurrentSensorName, ACS712> acs712_current_sensors;
+    std::map<NewConfig::TOFSensorName, TOFSensor> tof_sensors;
+    std::map<NewConfig::StereoCameraTriggerName, StereoCamTrigger> stereo_cam_triggers;
 };

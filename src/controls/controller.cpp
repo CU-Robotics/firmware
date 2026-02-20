@@ -28,6 +28,7 @@ void XDrivePositionController::step(float reference[STATE_LEN][3], float estimat
     }
     pidp[2].setpoint = reference[2][0];
     pidp[2].measurement = estimate[2][0];
+
     pidv[2].setpoint = reference[2][1];
     pidv[2].measurement = estimate[2][1];
     if (reference[2][2] == 1) { // if state 10 is 1 then chassis heading is position controlled 
@@ -57,6 +58,8 @@ void XDrivePositionController::step(float reference[STATE_LEN][3], float estimat
     motor_velocity[2] = output[0] * sin(chassis_heading) - output[1] * cos(chassis_heading) + output[2];
     motor_velocity[3] = -output[0] * cos(chassis_heading) - output[1] * sin(chassis_heading) + output[2];
     motor_velocity[0] = -output[0] * sin(chassis_heading) + output[1] * cos(chassis_heading) + output[2];
+
+    estimate[]
 
     // Serial.printf("1: %f, 2: %f, 3: %f, 4: %f\n", motor_velocity[0], motor_velocity[1], motor_velocity[2], motor_velocity[3]);
 

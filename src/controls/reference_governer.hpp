@@ -11,6 +11,8 @@
 
 #define NUM_ESTIMATORS 16
 
+// MAKE ARRAY WRAPPER FOR STATE THAT HAS FUNCTION THAT CONVERTS ENUM TO INDEX
+
 /// @brief Use state estimate and ungoverned reference to generated governed references to be sent to controllers.
 class Governor {
 private:
@@ -74,6 +76,7 @@ public:
     /// @brief Sets the reference limits matrix which is used by the reference governor
     /// @param reference_limits Reference limits, in the form of a 3D tensor; Must be of shape [STATE_LEN][3][2]
     void set_reference_limits(const float reference_limits[STATE_LEN][3][2]);
+
 };
 
 #endif

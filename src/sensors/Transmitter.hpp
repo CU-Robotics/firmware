@@ -11,8 +11,6 @@ enum class TransmitterType {
 	ET16S
 };
 
-
-
 /// @brief A unifying interface for all transmitters
 class Transmitter {
 public:

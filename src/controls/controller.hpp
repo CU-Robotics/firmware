@@ -71,6 +71,12 @@ private:
     float output[4];
     /// @brief target motor velocity
     float motor_velocity[4];
+    
+    const C620& chassis_motor_1;
+    const C620& chassis_motor_2;
+    const C620& chassis_motor_3;
+    const C620& chassis_motor_4;  
+
 public:
     /// @brief default
     XDrivePositionController() {

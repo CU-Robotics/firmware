@@ -1,33 +1,29 @@
 #include "estimator_manager.hpp"
 
+EstimatorManager::EstimatorManager() { }
+
 EstimatorManager::~EstimatorManager() {
-    Serial.println("Ending SPI");
-    SPI.end();
-    Serial.println("SPI Ended");
+    estimators.clear();
 }
 
-void EstimatorManager::init(const std::vector<NewConfig::Estimator>& estimator_configurations) {
-    for(NewConfig::Estimator estimator_config : estimator_configurations) {
-        init_estimator(estimator_config.estimator_name);
+void EstimatorManager::init(
+        const std::vector<NewConfig::HighLevelEstimator>& high_level_estimator_configurations,
+        std::vector<NewConfig::LowLevelEstimator> low_level_estimator_configurations, 
+        const CANManager& can, const SensorManager& sensor_manager) 
+{
+    for (const NewConfig::HighLevelEstimator& estimator_config : high_level_estimator_configurations) {
+        init_estimator(estimator_config, can, sensor_manager);
     }
 
-    // create and initialize the estimators
-    for (int i = 0; i < NUM_ESTIMATORS; i++) {
-        int id = config_data->estimator_info[i][0];
-        // Serial.printf("Init Estimator %d\n", id);
-
-        if (id != -1) {
-            init_estimator(id);
-        }
-    }
+    for(const NewConfig::LowLevelEstimator& estimator_config : low_level_estimator_configurations) {
+        init_estimator(estimator_config, can, sensor_manager);
+    }   
 }
 
-void EstimatorManager::init_estimator(NewConfig::Estimator estimator_config) {
-
-    switch (estimator_name) {
-    case NewConfig::GimbalEstimator:
-        estimators[num_estimators++] = new GimbalEstimator(*config_data, sensor_manager, can);
-        break;
+void EstimatorManager::init_estimator(NewConfig::HighLevelEstimator estimator_config, const CANManager& can, const SensorManager& sensor_manager) {
+    switch (estimator_config.estimator_name) {
+    case NewConfig::EstimatorName::GimbalAndChassis:
+        high_level_estimators.push_back(std::make_unique
     case 2:
         estimators[num_estimators++] = new FlyWheelEstimator(can);
         break;

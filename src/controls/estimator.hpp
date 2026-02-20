@@ -148,152 +148,8 @@ protected:
 };
 
 /// @brief Estimate the yaw, pitch, and chassis heading
-struct GimbalEstimator : public Estimator {
+struct GimbalAndChassisEstimator : public Estimator {
 private:
-    /// @brief yaw encoder offset for 0 radians
-    float YAW_ENCODER_OFFSET; // input variables
-    /// @brief yaw encoder offset for 0 radians
-    float PITCH_ENCODER_OFFSET;
-    /// @brief calculated pitch angle
-    float pitch_angle;
-    /// @brief calculated yaw angle
-    float yaw_angle;
-    /// @brief calculated roll angle
-    float roll_angle;
-    /// @brief calculated chassis angle
-    float chassis_angle;
-
-    /// @brief yaw imu vector
-    float imu_yaw_axis_vector[3];
-
-    /// @brief pitch imu vector
-    float imu_pitch_axis_vector[3];
-
-    /// @brief gravity pitch angle
-    float starting_pitch_angle;
-    /// @brief yaw axis in spherical coords
-    float yaw_axis_spherical[3];
-
-    /// @brief pitch axis in spherical coords
-    float pitch_axis_spherical[3];
-
-    /// @brief roll axis in spherical coords
-    float roll_axis_spherical[3];
-
-    /// @brief yaw axis unit vector
-    float yaw_axis_unitvector[3];
-
-    /// @brief pitch axis unit vector
-    float pitch_axis_unitvector[3];
-
-    /// @brief roll axis unit vector
-    float roll_axis_unitvector[3];
-
-    /// @brief global relative yaw
-    float yaw_axis_global[3];
-
-    /// @brief global relative pitch
-    float pitch_axis_global[3];
-
-    /// @brief global relative roll
-    float roll_axis_global[3];
-    /// @brief current calculated yaw velocity
-    float current_yaw_velocity = 0;
-    /// @brief previous calculated yaw velocity
-    float previous_yaw_velocity = 0;
-    /// @brief current calculated pitch velocity
-    float current_pitch_velocity = 0;
-    /// @brief previous calculated pitch velocity
-    float previous_pitch_velocity = 0;
-    /// @brief current calculated roll velocity
-    float current_roll_velocity = 0;
-    /// @brief previous calculated roll velocity
-    float previous_roll_velocity = 0;
-    /// @brief global relative yaw velocity
-    float global_yaw_velocity = 0;
-    /// @brief global relative roll velocity
-    float global_roll_velocity = 0;
-    /// @brief global relative pitch velocity
-    float global_pitch_velocity = 0;
-    /// @brief global pitch angle
-    float global_pitch_angle = 1.92;
-    /// @brief global yaw angle
-    float global_yaw_angle = 0;
-    /// @brief global roll angle
-    float global_roll_angle = 0;
-    /// @brief current rev encoder raw value
-    float curr_rev_raw[3] = { 0 };
-    
-    /// @brief previous angle of the yaw 
-    float prev_yaw = 0;
-
-    /// @brief previous rev encoder raw value
-    float prev_rev_raw[3] = { 0 };
-
-    /// @brief total meters travelled by each odom wheel
-    float total_odom_pos[3] = { 0 };
-
-    /// @brief rev encoder difference
-    float rev_diff[3] = { 0 };
-
-    /// @brief odom pos difference
-    float odom_pos_diff[3] = { 0 };
-    /// @brief previous chassis angle
-    float prev_chassis_angle = 0;
-    /// @brief odom pod offset from the center of the robot
-    float odom_axis_offset_x;
-    /// @brief odom pod offset from the center of the robot
-    float odom_axis_offset_y;
-    /// @brief odom pod angle offset radians
-    float odom_angle_offset = 0.1745; // 10 degrees
-    // float odom_angle_offset = 0;
-    /// @brief odom wheel radius
-    float odom_wheel_radius;
-    /// @brief initial chassis angle
-    float initial_chassis_angle = 0;
-    /// @brief counts one time to set the starting chassis angle
-    int count1 = 0;
-    /// @brief delta time
-    float dt = 0;
-
-    /// @brief buff encoder on the yaw
-    BuffEncoder* buff_enc_yaw;
-    /// @brief buff encoder on the pitch
-    BuffEncoder* buff_enc_pitch;
-    /// @brief Odom encoder values
-    RevEncoder* rev_enc[3];
-    /// @brief can pointer from EstimatorManager
-    CANManager* can;
-    /// @brief icm imu
-    ICM20649* icm_imu;
-
-    /// @brief position estimate to store position after integrating used for chassis odometry
-    float pos_estimate[3] = { 0,0,0 };
-
-    /// @brief previous pose to store the previous pose for chassis odometry
-    float previous_pos[3] = { 0,0,0 };
-
-public:
-    /// @brief estimate the state of the gimbal
-    /// @param config_data inputted sensor values from Hive yaml
-    /// @param sensor_manager sensor manager object 
-    /// @param can can data from Estimator Manager
-    GimbalEstimator(Config config_data, SensorManager* sensor_manager, CANManager* can);
-  
-    /// @brief calculate estimated states and add to output array
-    /// @param output output array to add estimated states to
-    /// @param curr_state current state array to update with new state
-    /// @param override true if we want to override the current state with the new state
-    void step_states(float output[STATE_LEN][3], float curr_state[STATE_LEN][3], int override) override;
-};
-
-/// @brief Estimate the yaw, pitch, and chassis heading
-struct GimbalEstimatorNoOdom : public Estimator {
-private:
-    /// @brief yaw encoder offset for 0 radians
-    float YAW_ENCODER_OFFSET; // input variables
-    /// @brief yaw encoder offset for 0 radians
-    float PITCH_ENCODER_OFFSET;
     /// @brief calculated pitch angle
     float pitch_angle;
     /// @brief calculated yaw angle
@@ -393,15 +249,14 @@ private:
     /// @brief delta time
     float dt = 0;
 
-    /// @brief buff encoder on the yaw
-    BuffEncoder* buff_enc_yaw;
-    /// @brief buff encoder on the pitch
-    BuffEncoder* buff_enc_pitch;
+    const BuffEncoder& buff_enc_yaw;
+    const BuffEncoder& buff_enc_pitch;
+    const ICM20649& icm_imu;
 
-    /// @brief can pointer from EstimatorManager
-    CANManager* can;
-    /// @brief icm imu
-    ICM20649* icm_imu;
+    const C620& chassis_1;
+    const C620& chassis_2;
+    const C620& chassis_3;
+    const C620& chassis_4;
 
     /// @brief position estimate to store position after integrating used for chassis odometry
     float pos_estimate[3] = { 0,0,0 };
@@ -411,9 +266,7 @@ public:
     /// @param config_data inputted sensor values from Hive yaml
     /// @param sensor_manager sensor manager object 
     /// @param can can from Estimator Manager
-    GimbalEstimatorNoOdom(Config config_data, SensorManager* sensor_manager, CANManager* can);
-
-    GimbalEstimatorNoOdom() { };
+    GimbalAndChassisEstimator(NewConfig::Estimator, SensorManager& sensor_manager, CANManager& can);
 
     /// @brief calculate estimated states and add to output array
     /// @param output output array to add estimated states to
@@ -484,44 +337,6 @@ public:
     void step_states(float output[STATE_LEN][3], float curr_state[STATE_LEN][3], int override) override;
 };
 
-/// @brief Estimate the state of the switcher in millimeters
-struct SwitcherEstimator : public Estimator {
-private:
-    /// @brief can pointer from EstimatorManager
-    CANManager* can;
-
-    /// @brief TOF sensor pointer from EstimatorManager
-    // TOFSensor* time_of_flight;
-
-    /// @brief time of flight sensor offset
-    float tof_sensor_offset = 0;
-
-    /// @brief used to scale the tof sensor data to -1 to 1
-    float tof_scale = 0;
-
-    /// @brief last motor angle
-    float last_motor_angle = 0;
-
-    /// @brief total motor angle
-    float total_motor_angle = 0;
-
-    /// @brief delta time
-    float dt = 0;
-
-    /// @brief count to check if dt is valid
-    int count = 0;
-public:
-    /// @brief make new barrel switcher estimator and set can_data pointer and num_states
-    /// @param config config data from yaml
-    /// @param can can pointer from EstimatorManager
-    SwitcherEstimator(Config config, CANManager* can);
-
-    /// @brief calculate state updates
-    /// @param output updated balls per second of feeder
-    /// @param curr_state current state of the barrel switcher
-    /// @param override override flag
-    void step_states(float output[STATE_LEN][3], float curr_state[STATE_LEN][3], int override);
-};
 
 /// @brief This estimator estimates our "micro" state which is stores all the motor velocities(in rad/s), whereas the other estimators estimate "macro" state which stores robot joints
 struct LocalEstimator : public Estimator {

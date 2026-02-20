@@ -56,13 +56,13 @@ public:
     ~CANManager();
 
 public:
-    /// @brief Initialize the CAN buses and motor array
+    /// @brief Initialize the CAN buses and motor map
     /// @note This can be called multiple times in the event of hot reloading
-    void init();
+    void init(const std::vector<NewConfig::Motor>& motor_configs);
 
-    /// @brief Dynamically create the motor objects based on config data
-    /// @param motor_info Motor info array from the config yaml. 2D array holding information in the form: CAN_MAX_MOTORS * [motor_controller_type, per_bus_motor_id, bus_id, motor_type]
-    void configure(const NewConfig::RobotConfig& config);
+    /// @brief Configure a motor and add it to the motor map
+    /// @param motor_info motor configuration data
+    void configure_motor(const NewConfig::Motor& motor_config);
 
     /// @brief Read data from all busses and distribute them to the correct motors
     void read();
@@ -93,18 +93,16 @@ public:
     /// @param motor_name The name of the motor to get
     /// @return The motor object if it exists, std::nullopt if it does not
     /// @note You can use the motor's get_type to determine the type of motor and dynamic_cast to the correct motor type
-    std::optional<Motor*> get_motor_by_name(NewConfig::MotorName motor_name);
+    std::optional<Motor*> get_motor_by_name(NewConfig::MotorName motor_name) const;
 
     /// @brief Get the state of a specific motor by name
     /// @param motor_name The name of the motor to get the state of
-    /// @return The state of the motor
-    std::optional<MotorState> get_motor_state_by_name(NewConfig::MotorName motor_name);
+    /// @return The state of the motor if the motor exists, std::nullopt if it does not
+    std::optional<MotorState> get_motor_state_by_name(NewConfig::MotorName motor_name) const ;
 
 private:
     /// @brief Verify that all motors are online and ready
     void init_motors();
-    /// @brief Clear the motor map and delete any allocated motors.
-    void clear_motor_map();
 
     /// @brief Iterates through all the motors and tries to give the message to the correct one
     /// @param msg The message to distribute

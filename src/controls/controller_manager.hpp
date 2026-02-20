@@ -11,10 +11,7 @@ private:
 
     std::vector<std::unique_ptr<Controller>> controllers;
 
-    /// @brief array of motor outputs
-    float outputs[CAN_MAX_MOTORS] = { 0 };
-
-    /// @brief can data pointer used to write to the can bus
+    /// @brief can data reference used to write to the can bus
     CANManager& can;
 
 public:

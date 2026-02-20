@@ -44,8 +44,8 @@ ConfigLayer config_layer;
 Profiler prof;
 
 SensorManager sensor_manager;
-EstimatorManager estimator_manager;
-ControllerManager controller_manager;
+EstimatorManager estimator_manager(can);
+ControllerManager controller_manager(can);
 
 Governor governor;
 
@@ -118,40 +118,33 @@ int main() {
         transmitter = new ET16S;
     }
 
-    // initialize objects
-    can.init();
-    ref.init();
-    transmitter->init();
     comms_layer.init();
-
-    comms_layer.configure(config);
     
-
     // Config config
     Serial.println("Configuring...");
     // const Config *config = comms_layer.get_hive_data()
-    NewConfig::RobotConfig& config = comms_layer.get_hive_data().robot_config;
-
+    const NewConfig::RobotConfig& config = comms_layer.get_hive_data().robot_config;
+    
     Serial.println("Configured!");
-
-    // configure motors
-    can.configure(config->motors);
+    
+    // initialize objects
+    ref.init();
+    transmitter->init();
+    
+    can.init(config.motors);
 
     // initialize sensors
     sensor_manager.init(config);
 
     // estimate micro and rmacro state
-    estimator_manager.init(&can, config, &sensor_manager);
+    estimator_manager.init(config.high_level_estimators, config.low_level_estimators, sensor_manager);
 
     // generate controller outputs based on governed references and estimated
     // state
-    controller_manager.init(&can, config);
+    controller_manager.init(config.controllers);
 
     // set reference limits in the reference governor
-    governor.set_reference_limits(config->set_reference_limits);
-
-    // print all of config
-    config->print();
+    governor.set_reference_limits(config.set_reference_limits);
 
     // variables for use in main
     float temp_state[STATE_LEN][3] = {{0}};                          // Temp state array
@@ -222,8 +215,9 @@ int main() {
         transmitter->send_to_comms();
 
         // read sensors and send to comms
-        // this happens in one function because sensors are stored alongside their sendables
-        sensor_manager.read_and_send_to_comms();
+        // this happens in one function call 
+        sensor_manager.read();
+        sensor_manager.send_to_comms();
         
         // check whether this packet is a config packet
         if (comms_layer.get_hive_data().config_section.request_bit == 1) {

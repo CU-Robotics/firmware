@@ -42,7 +42,7 @@ constexpr uint32_t MT6835_REG_CAL_STATUS = 0x113;
 constexpr uint32_t MT6835_BITORDER = MSBFIRST;
 
 /// @brief Driver for the Buff-Encoder
-class BuffEncoder : public Sensor {
+class BuffEncoder {
 public:
     /// @brief Constructor for the BuffEncoder class
     /// @param encoder_config configuration data for the encoder
@@ -60,7 +60,7 @@ public:
     /// @return Read angle (radians)
     inline float get_angle() const { return m_angle + config_data.encoder_offset; }
 
-    inline NewConfig::EncoderName get_name() const { return config_data.name; }
+    inline NewConfig::BuffEncoderName get_name() const { return config_data.name; }
 
     inline BuffEndoderData get_data_for_comms();
 
