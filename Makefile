@@ -4,9 +4,6 @@
 # Detect the current operating system using uname
 UNAME := $(shell uname -s)
 
-# Detect if running under WSL
-IS_WSL := $(shell grep -qi microsoft /proc/version 2>/dev/null && echo 1)
-
 # The name of the target executable
 TARGET_EXEC := firmware
 
@@ -221,21 +218,6 @@ upload: build
 install:
 	@bash $(TOOLS_DIR)/install_tytools.sh
 	@bash $(TOOLS_DIR)/install_compiler.sh
-
-
-# Sets up USB passthrough for Teensy on WSL
-wsl:
-ifdef IS_WSL
-	@echo [Detected WSL environment!]
-	@echo [Setting up Teensy for WSL...]
-	@echo
-	@echo ">>> An elevated PowerShell window will open. Please follow the prompts there."
-	@echo ">>> You may need to press the Teensy button when asked."
-	@echo
-	@powershell.exe -Command "Start-Process -FilePath powershell -Verb RunAs -ArgumentList '-ExecutionPolicy Bypass -File \"$$(wslpath -w $(TOOLS_DIR)/Setup-Teensy.ps1)\"'"
-else
-	@echo [Not running under WSL]
-endif
 
 
 # starts GDB and attaches to the firmware running on a connected Teensy
