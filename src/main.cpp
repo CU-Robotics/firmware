@@ -476,6 +476,10 @@ int main() {
             requested_mode = HIVE;
         }
         if (requested_mode != mode && mode == SAFETY) {
+            if (!safety_initialized) {
+                Serial.println("Failed to disengage safety mode. Safety has not been initialized since boot.");
+                requested_mode = SAFETY;
+            }
             if (!transmitter->is_connected() || !config_layer.is_configured() || is_slow_loop ||
                 !ref->ref_data.robot_performance.gimbol_power_active || gimbal_power_recently_turned_on) {
                 Serial.println("Failed to disengage safety mode. Robot not ready.");
@@ -492,7 +496,7 @@ int main() {
                 requested_mode = SAFETY;
             }
         }
-        if (requested_mode != mode && safety_initialized) {
+        if (requested_mode != mode) {
             Serial.printf("Switching mode from %d to %d\n", mode, requested_mode);
             mode = requested_mode;
             mode_changed = true;
