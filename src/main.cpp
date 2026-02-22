@@ -142,8 +142,10 @@ int main() {
         }
 
         //must be in safety mode at start
-        if(transmitter->get_safety_switch() == SwitchPos::BACKWARD || transmitter->get_safety_switch() == SwitchPos::MIDDLE) {
-            Serial.println("Preflight fail: Safety switch must be in forward position (safety on)");
+        if(transmitter->get_safety_switch() != SwitchPos::FORWARD) {
+            if (transmitter->get_safety_switch() != SwitchPos::INVALID) {
+                Serial.println("Preflight fail: Safety switch must be in forward position (safety on)");
+            }
             delay(1000);
             continue;
         }
