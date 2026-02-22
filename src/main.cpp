@@ -123,35 +123,6 @@ int main() {
         transmitter = new ET16S;
     }
 
-    bool transmitter_safe = false;
-    while (!transmitter_safe) {
-        transmitter->read();
-        
-        //make sure there is no spin
-        if(transmitter->get_wheel() != 0) {
-            Serial.println("Preflight fail: Wheel must be 0");
-            delay(1000);
-            continue;
-        }
-
-        //make sure flywheels and the feeder are off 
-        if(transmitter->get_r_switch() == SwitchPos::MIDDLE || transmitter->get_r_switch() == SwitchPos::FORWARD) {
-            Serial.println("Preflight fail: Right switch must be in backward position (shooter off)");
-            delay(1000);
-            continue;
-        }
-
-        //must be in safety mode at start
-        if(transmitter->get_safety_switch() != SwitchPos::FORWARD) {
-            if (transmitter->get_safety_switch() != SwitchPos::INVALID) {
-                Serial.println("Preflight fail: Safety switch must be in forward position (safety on)");
-            }
-            delay(1000);
-            continue;
-        }
-
-        transmitter_safe = true;
-    }
     transmitter->init();
 
 
@@ -218,6 +189,7 @@ int main() {
     // whether we are in hive mode or not
     enum Mode { SAFETY, TEENSY, HIVE} mode = SAFETY;
     bool mode_changed = false;
+    bool safety_initialized = false; // whether the transmitter has been in safety mode since boot, used to prevent the teensy from starting in a non-safety mode
     bool last_gimbal_power = false; // used to detect gimbal power changes
     bool last_loop_slow = false;    // used to detect multiple slow loops in a row
     int slow_loop_counter = 0;      // used to count slow loops in a row
@@ -497,6 +469,7 @@ int main() {
         enum Mode requested_mode = SAFETY;
         if (transmitter->get_l_switch() == SwitchPos::FORWARD) {
             requested_mode = SAFETY;
+            safety_initialized = true;
         } else if (transmitter->get_l_switch() == SwitchPos::MIDDLE) {
             requested_mode = TEENSY;
         } else if (transmitter->get_l_switch() == SwitchPos::BACKWARD) {
@@ -519,7 +492,7 @@ int main() {
                 requested_mode = SAFETY;
             }
         }
-        if (requested_mode != mode) {
+        if (requested_mode != mode && safety_initialized) {
             Serial.printf("Switching mode from %d to %d\n", mode, requested_mode);
             mode = requested_mode;
             mode_changed = true;
