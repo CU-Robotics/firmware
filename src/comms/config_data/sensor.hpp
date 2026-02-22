@@ -68,7 +68,7 @@ struct RevEncoder : Comms::CommsData {
 
 }
 
-enum ImuName {
+enum class ImuName : uint32_t {
     UnsetImuName,
     YawImu,
 };
