@@ -231,19 +231,6 @@ FeederEstimator::FeederEstimator(CANManager* _can) {
 }
 
 
-void FeederEstimator::step_states(float output[STATE_LEN][3], float curr_state[STATE_LEN][3], int override) {
-    //can
-    float angular_velocity_motor = can->get_motor_state(CAN_2, 5).speed / (2 * PI) / 60;
-    float angular_velocity_feeder = angular_velocity_motor / 36;
-    balls_per_second_can = angular_velocity_feeder * 8;
-
-    //ref
-    balls_per_second_ref = ref->ref_data.launching_status.launching_frequency;
-
-    output[0][1] = (balls_per_second_ref * ref_weight) + (balls_per_second_can * can_weight);
-
-}
-
 ActuatorEstimator::ActuatorEstimator(CANManager* _can) {
     micro_estimator = true;
     can = _can;

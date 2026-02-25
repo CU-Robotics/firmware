@@ -58,12 +58,12 @@ public:
 
     /// @brief Get the angle of the last read function adjusted by the offset
     /// @return Read angle (radians)
-    inline float get_angle() const { return m_angle + config_data.encoder_offset; }
+    inline float get_angle() const { return m_angle; }
 
     inline NewConfig::BuffEncoderName get_name() const { return config_data.name; }
 
-    inline BuffEndoderData get_data_for_comms();
-
+    inline BuffEncoderData get_data_for_comms();
+ 
     /// @brief Print the data for debugging
     void print();
 

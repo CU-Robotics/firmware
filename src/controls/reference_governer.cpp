@@ -1,25 +1,28 @@
 #include "state.hpp"
 
-void Governor::set_reference(float reference[STATE_LEN][3]) {
-    memcpy(this->reference, reference, sizeof(this->reference));
-    Serial.println("Don't use this, bitch 'one time is ok :)'");
+void Governor::set_raw_reference(const RobotState::RawState& new_reference) {
+    reference_state.set_raw_state(new_reference);
 }
 
-void Governor::set_reference_at_index(float value, int state_val, int state_type){
-    this->reference[state_val][state_type] = value;
+const RobotState& Governor::get_reference() const {
+    return reference_state;
 }
 
-void Governor::get_reference(float reference[STATE_LEN][3]) {
-    memcpy(reference, this->reference, sizeof(this->reference));
-}
-
-void Governor::step_reference(float ungoverned_reference[STATE_LEN][3], const float governor_type[STATE_LEN]) {
+const RobotState& Governor::step_reference(const RobotState& ungoverned_reference) {
     float threshold = 0.0005;
     float dt = governor_timer.delta();
-    if (count == 0){
+
+    if (count == 0) {
         dt = 0; // first dt loop generates huge time so check for that
         count++;    
     }
+
+    for(const auto& [state_name, state_config] : reference_state.get_state_configurations()) {
+        if(state_config.is_wrapping) {
+            
+        }
+    }
+
     for (int n = 0; n < STATE_LEN; n++) {
         bool is_wrap = (((int)(reference_limits[n][0][1] * 100) == 314) && ((int)(reference_limits[n][0][0] * 100) == -314));
         // Keep new target values within absolute limits

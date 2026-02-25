@@ -1,36 +1,17 @@
 #include "../utils/timing.hpp"
+#include "robot_state.hpp"
 
 #ifndef STATE_H
 #define STATE_H
 
-// Maximum state length. Do not change unless you know what you're doing.
-// (the Teensy and Hive must agree on this value)
-#define STATE_LEN 24
-
-#define MICRO_STATE_LEN 3
-
-#define NUM_ESTIMATORS 16
-
-// MAKE ARRAY WRAPPER FOR STATE THAT HAS FUNCTION THAT CONVERTS ENUM TO INDEX
-
-/// @brief Use state estimate and ungoverned reference to generated governed references to be sent to controllers.
+/// @brief Use reference limits from config to convert ungoverned reference states to generated governed reference states to be sent to controllers.
 class Governor {
 private:
     // This is a sample state (it does not represent every robot):
     // {x, y, psi (chassis angle), theta (yaw angle), phi (pitch angle), feed, flywheel}
     // In this example case, as with all other cases, the unused state rows are kept blank.
 
-    /// @brief state reference, also known as desired state. Stored as a concatenated 2D matrix that
-    /// @brief can be split into position [0], velocity [1], and acceleration [2] vectors.
-    float reference[STATE_LEN][3];
-
-    /// @brief state estimation (from sensors), stored as a concatenated 2D matrix with the same
-    /// @brief shape as the state reference.
-    float estimate[STATE_LEN][3];
-
-    /// @brief Reference limits. Used to keep the reference physically obtainable,
-    /// @brief where [n][m][0] is the low bound and [n][m][1] is the high bound.
-    float reference_limits[STATE_LEN][3][2];
+    RobotState reference_state;
 
     /// @brief Timer for the reference governor
     Timer governor_timer;

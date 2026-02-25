@@ -44,7 +44,7 @@ struct RobotConfig {
     std::vector<RealsenseCamera> realsense_cameras;
     std::vector<LowLevelEstimator> low_level_estimators;
     std::vector<HighLevelEstimator> high_level_estimators;
-    StateInfo state_config;
+    std::vector<State> states;
     std::vector<Motor> motors;
     uint32_t num_sections_received = 0;
 
