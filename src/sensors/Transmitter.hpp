@@ -70,19 +70,19 @@ public:
 	
 	/// @brief Get mouse velocity x
 	/// @return Amount of points since last read
-	virtual std::optional<int> get_mouse_x() { return {}; }
+	virtual int get_mouse_x() { return {}; }
 	
 	/// @brief Get mouse velocity y
 	/// @return Amount of points since last read
-	virtual std::optional<int> get_mouse_y() { return {}; }
+	virtual int get_mouse_y() { return {}; }
 	
 	/// @brief status of left mouse button
 	/// @return Is left mouse button pressed
-	virtual std::optional<bool> get_l_mouse_button() { return {}; }
+	virtual bool get_l_mouse_button() { return {}; }
 	
 	/// @brief status of right mouse button
 	/// @return Is right mouse button pressed
-	virtual std::optional<bool> get_r_mouse_button() { return {};}
+	virtual bool get_r_mouse_button() { return {};}
 	
 	/// @brief used for safety switch
 	/// @return left most front face switch value
@@ -225,7 +225,7 @@ public:
 
 	/// @brief get keys
 	/// @return keys pressed
-	virtual std::optional<Keys> get_keys() { return {}; }
+	virtual Keys get_keys() { return {}; }
 
 	
 	/// @brief getter for transmitter data

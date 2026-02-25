@@ -22,15 +22,15 @@ struct TransmitterData : Comms::CommsData {
     TransmitterData() : CommsData(Comms::TypeLabel::TransmitterData, Comms::PhysicalMedium::Ethernet, Comms::Priority::High, sizeof(TransmitterData)) { }
 
     /// mouse x velocity
-	std::optional<float> mouse_x = {};
+	float mouse_x = 0;
     /// mouse y velocity
-	std::optional<float> mouse_y = {};
+	float mouse_y = 0;
     /// mouse z velocity
-	std::optional<float> mouse_z = {};
+	float mouse_z = 0;
     /// left mouse button status
-	std::optional<bool> l_mouse_button = {};
+	bool l_mouse_button = 0;
     /// right mouse button status
-	std::optional<bool> r_mouse_button = {};
+	bool r_mouse_button = 0;
     /// left switch status
 	SwitchPos l_switch = SwitchPos::INVALID;
     /// right switch status
