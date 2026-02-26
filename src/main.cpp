@@ -188,6 +188,7 @@ int main() {
 
     // whether we are in hive mode or not
     enum Mode { SAFETY, TEENSY, HIVE} mode = SAFETY;
+    std::string mode_strs[3] = {"SAFETY", "TEENSY", "HIVE"};
     bool mode_changed = false;
     bool safety_initialized = false; // whether the transmitter has been in safety mode since boot, used to prevent the teensy from starting in a non-safety mode
     bool last_gimbal_power = false; // used to detect gimbal power changes
@@ -497,7 +498,7 @@ int main() {
             }
         }
         if (requested_mode != mode) {
-            Serial.printf("Switching mode from %d to %d\n", mode, requested_mode);
+            Serial.printf("Switching mode from %s to %s\n", mode_strs[mode].c_str(), mode_strs[requested_mode].c_str());
             mode = requested_mode;
             mode_changed = true;
         }
