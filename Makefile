@@ -110,15 +110,31 @@ SIZE			= $(COMPILER_TOOLS_PATH)/arm-none-eabi-size
 # Path to the Git scraper tool source file
 GIT_SCRAPER = $(TOOLS_DIR)/git_scraper.cpp
 
+# Host compiler used by git scraper and host-side tests
+HOST_CXX ?= g++
+
+# Host-side unit test settings
+HOST_TEST_EXEC := $(BUILD_DIR)/host_test/$(TARGET_EXEC)_test
+HOST_TEST_SRCS := src/test_main.cpp src/utils/wrapping.cpp src/utils/vector_math.cpp
+HOST_TEST_FLAGS := -std=c++23 -Wall -Werror -DUNIT_TEST -I./src -I./libraries
+
 # Utilize all available CPU cores for parallel build
 MAKEFLAGS += -j$(nproc)
 
 # Phony target to force a build every time
-.PHONY: build
+.PHONY: build test
 
 
 # Main build target; depends on the target executable and git scraper
 build: $(BUILD_DIR)/$(TARGET_EXEC)
+
+# Unit testing target, runs on host machine
+test:
+	@mkdir -p $(dir $(HOST_TEST_EXEC))
+	@echo [Building host tests]
+	@$(HOST_CXX) $(HOST_TEST_FLAGS) $(HOST_TEST_SRCS) -o $(HOST_TEST_EXEC)
+	@echo [Running host tests]
+	@$(HOST_TEST_EXEC)
 
 # Final linking step to create the executable.
 # This rule links all the object files to produce the final ELF executable.
@@ -199,7 +215,7 @@ clean_teensy4:
 
 # Build, run, and clean up the git scraper tool to store current Git info in a header file
 git_scraper:
-	@g++ -std=gnu++17 $(GIT_SCRAPER) -o $(TOOLS_DIR)/git_scraper
+	@$(HOST_CXX) -std=gnu++17 $(GIT_SCRAPER) -o $(TOOLS_DIR)/git_scraper
 	@$(TOOLS_DIR)/git_scraper
 	@rm $(TOOLS_DIR)/git_scraper
 
@@ -252,6 +268,7 @@ help:
 	@echo "Targets:"
 	@echo "  install:      installs all required dependencies"
 	@echo "  build:        compiles the source code and links with libraries"
+	@echo "  test:         builds and runs unit tests on the host machine"
 	@echo "  upload:       builds the source and uploads it to the Teensy"
 	@echo "  gdb:          starts GDB and attaches to the firmware running on a connected Teensy"
 	@echo "  monitor:      monitors any actively running firmware and displays serial output"

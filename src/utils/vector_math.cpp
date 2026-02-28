@@ -28,3 +28,16 @@ void nWeightedVectorAddition(float* a, float* b, float* k1, float* k2, int n, fl
 		output[i] = (k1[i] * a[i]) + (k2[i] * b[i]);
 	}
 }
+
+#ifdef UNIT_TEST
+#include <doctest/doctest.h>
+
+TEST_CASE("rotate2D rotates a unit x vector by 90 degrees") {
+	float input[2] = {1.0f, 0.0f};
+	float output[2] = {0.0f, 0.0f};
+
+	rotate2D(input, output, static_cast<float>(M_PI_2));
+	CHECK(output[0] == doctest::Approx(0.0f));
+	CHECK(output[1] == doctest::Approx(1.0f));
+}
+#endif
