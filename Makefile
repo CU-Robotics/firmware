@@ -110,13 +110,11 @@ SIZE			= $(COMPILER_TOOLS_PATH)/arm-none-eabi-size
 # Path to the Git scraper tool source file
 GIT_SCRAPER = $(TOOLS_DIR)/git_scraper.cpp
 
-# Host compiler used by git scraper and host-side tests
+# Host compiler used by git scraper
 HOST_CXX ?= g++
 
-# Host-side unit test settings
-HOST_TEST_EXEC := $(BUILD_DIR)/host_test/$(TARGET_EXEC)_test
-HOST_TEST_SRCS := src/test_main.cpp src/utils/wrapping.cpp src/utils/vector_math.cpp
-HOST_TEST_FLAGS := -std=c++23 -Wall -Werror -DUNIT_TEST -I./src -I./libraries
+# PlatformIO unit test settings
+PIO_TEST_ENV ?= teensy41_test
 
 # Utilize all available CPU cores for parallel build
 MAKEFLAGS += -j$(nproc)
@@ -128,13 +126,11 @@ MAKEFLAGS += -j$(nproc)
 # Main build target; depends on the target executable and git scraper
 build: $(BUILD_DIR)/$(TARGET_EXEC)
 
-# Unit testing target, runs on host machine
+# Unit testing target, runs on Teensy via PlatformIO and Unity
 test:
-	@mkdir -p $(dir $(HOST_TEST_EXEC))
-	@echo [Building host tests]
-	@$(HOST_CXX) $(HOST_TEST_FLAGS) $(HOST_TEST_SRCS) -o $(HOST_TEST_EXEC)
-	@echo [Running host tests]
-	@$(HOST_TEST_EXEC)
+	@echo "[Running PlatformIO Unity tests on Teensy 4.1]"
+	@command -v pio >/dev/null || { echo "PlatformIO not found."; exit 1; }
+	pio test -e teensy41_test; \
 
 # Final linking step to create the executable.
 # This rule links all the object files to produce the final ELF executable.
@@ -268,7 +264,7 @@ help:
 	@echo "Targets:"
 	@echo "  install:      installs all required dependencies"
 	@echo "  build:        compiles the source code and links with libraries"
-	@echo "  test:         builds and runs unit tests on the host machine"
+	@echo "  test:         runs PlatformIO Unity tests on Teensy 4.1"
 	@echo "  upload:       builds the source and uploads it to the Teensy"
 	@echo "  gdb:          starts GDB and attaches to the firmware running on a connected Teensy"
 	@echo "  monitor:      monitors any actively running firmware and displays serial output"
