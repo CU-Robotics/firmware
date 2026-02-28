@@ -130,7 +130,7 @@ build: $(BUILD_DIR)/$(TARGET_EXEC)
 test:
 	@echo "[Running PlatformIO Unity tests on Teensy 4.1]"
 	@command -v pio >/dev/null || { echo "PlatformIO not found."; exit 1; }
-	pio test -e teensy41_test; \
+	@pio test -e teensy41_test
 
 # Final linking step to create the executable.
 # This rule links all the object files to produce the final ELF executable.
