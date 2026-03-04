@@ -282,7 +282,7 @@ int main() {
 							  && ((ref->ref_data.kbm_interaction.key_d - ref->ref_data.kbm_interaction.key_a) != (transmitter_keys.d - transmitter_keys.a)))
 				? (transmitter_keys.d-transmitter_keys.s) * 2.5
 				: (ref->ref_data.kbm_interaction.key_d - ref->ref_data.kbm_interaction.key_a) * 2.5;
-
+		}
 		else if (config->governor_types[0] == 1) { // if we should be controlling position
             chassis_pos_x = transmitter->get_l_stick_x() * 2 + pos_offset_x;
             chassis_pos_y = transmitter->get_l_stick_y() * 2 + pos_offset_y;
