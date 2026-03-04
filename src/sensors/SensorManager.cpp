@@ -105,6 +105,9 @@ void SensorManager::read() {
         lidar2->set_yaw(estimated_state[3][0], estimated_state[3][1]);
         lidar2->read();
     }
+	// read ref system
+	ref->read();
+	
     // read tof sensors
     for (int i = 0; i < tof_sensor_count; i++) {
         // tof_sensors[i]->read();
