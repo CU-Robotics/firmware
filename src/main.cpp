@@ -215,7 +215,7 @@ int main() {
 
         // read sensors
         sensor_manager.read();
-
+	
         // read CAN and Transmitter -- These are kept out of sensor manager for safety reasons
         can.read();
         transmitter->read();
@@ -236,17 +236,15 @@ int main() {
         }
 
         // manual controls on firmware
-        std::optional<Transmitter::Keys> transmitter_keys = transmitter->get_keys();
-        std::optional<int> mouse_x = transmitter->get_mouse_x();
-        std::optional<int> mouse_y = transmitter->get_mouse_y();
-        std::optional<bool> l_mouse_button = transmitter->get_l_mouse_button();
-        // std::optional<bool> r_mouse_button = transmitter->get_r_mouse_button();
+        Transmitter::Keys transmitter_keys = transmitter->get_keys();
+        int mouse_x = transmitter->get_mouse_x();
+        int mouse_y = transmitter->get_mouse_y();
+        bool l_mouse_button = transmitter->get_l_mouse_button();
+		//  bool r_mouse_button = transmitter->get_r_mouse_button(); //UNUSED
 
         float delta = control_input_timer.delta();
-        if (mouse_x.has_value() && mouse_y.has_value()) {
-            transmitter_pos_x += mouse_x.value() * 0.05 * delta;
-            transmitter_pos_y += mouse_y.value() * 0.05 * delta;
-        }
+		transmitter_pos_x += mouse_x * 0.05 * delta;
+		transmitter_pos_y += mouse_y * 0.05 * delta;
 
         vtm_pos_x += ref->ref_data.kbm_interaction.mouse_speed_x * 0.05 * delta;
         vtm_pos_y += ref->ref_data.kbm_interaction.mouse_speed_y * 0.05 * delta;
@@ -267,19 +265,16 @@ int main() {
         if (config->governor_types[0] == 2) { // if we should be controlling velocity
 
             chassis_vel_x = transmitter->get_l_stick_y() * 5.4 +
-                            (-ref->ref_data.kbm_interaction.key_w + ref->ref_data.kbm_interaction.key_s) * 2.5;
+				(-ref->ref_data.kbm_interaction.key_w + ref->ref_data.kbm_interaction.key_s) * 2.5;
 
-            if (transmitter_keys.has_value()) {
-                chassis_vel_x += (-transmitter_keys.value().w + transmitter_keys.value().s) * 2.5;
-            }
-
+			chassis_vel_x += (-transmitter_keys.w + transmitter_keys.s) * 2.5;
+				
             chassis_vel_y = -transmitter->get_l_stick_x() * 5.4 +
-                            (ref->ref_data.kbm_interaction.key_d - ref->ref_data.kbm_interaction.key_a) * 2.5;
+				(ref->ref_data.kbm_interaction.key_d - ref->ref_data.kbm_interaction.key_a) * 2.5;
 
-            if (transmitter_keys.has_value()) {
-                chassis_vel_y += (transmitter_keys.value().d - transmitter_keys.value().a) * 2.5;
-            }
-        } else if (config->governor_types[0] == 1) { // if we should be controlling position
+			chassis_vel_y += (transmitter_keys.d - transmitter_keys.a) * 2.5; // Will need changed prior to vtm integration to avoid double counting
+		}
+		else if (config->governor_types[0] == 1) { // if we should be controlling position
             chassis_pos_x = transmitter->get_l_stick_x() * 2 + pos_offset_x;
             chassis_pos_y = transmitter->get_l_stick_y() * 2 + pos_offset_y;
         }
@@ -290,15 +285,15 @@ int main() {
 
         float fly_wheel_target =
             (transmitter->get_r_switch() == SwitchPos::FORWARD || transmitter->get_r_switch() == SwitchPos::MIDDLE)
-                ? 18
-                : 0; // m/s
+			? 18
+			: 0; // m/s
         // if the right switch is forward, and either the left mouse button is pressed or the right switch is not
         // backward, set the feeder to something. Otherwise, set it to 0
-        float feeder_target = (((l_mouse_button.has_value() || ref->ref_data.kbm_interaction.button_left) &&
-                                transmitter->get_r_switch() != SwitchPos::BACKWARD) ||
-                               transmitter->get_r_switch() == SwitchPos::FORWARD)
-                                  ? 10
-                                  : 0;
+		float feeder_target = (((l_mouse_button || ref->ref_data.kbm_interaction.button_left) &&
+								transmitter->get_r_switch() != SwitchPos::BACKWARD) ||
+							   transmitter->get_r_switch() == SwitchPos::FORWARD)
+			? 10
+			: 0;
         if (config->governor_types[6] == 1) {
             float dt2 = timer.delta();
             if (dt2 > 0.1)
