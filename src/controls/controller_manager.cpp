@@ -34,7 +34,7 @@ void ControllerManager::init_controller(const NewConfig::Controller& controller_
             break;
     }
 }
- 
+
 void ControllerManager::step(float macro_reference[STATE_LEN][3], float macro_estimate[STATE_LEN][3], float micro_estimate[CAN_MAX_MOTORS][MICRO_STATE_LEN]) {
     for(std::unique_ptr<Controller>& controller : controllers) {
 

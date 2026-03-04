@@ -5,6 +5,7 @@
 #include "utils/timing.hpp"
 #include "sensors/can/can_manager.hpp"
 #include "state.hpp"
+#include "robot_state_map.hpp"
 
 #include "comms/config_data/controller.hpp"
 
@@ -37,17 +38,6 @@ public:
     const NewConfig::Controller& config() const { return controller_config; }
 };
 
-/// @brief Default controller
-struct NullController : public Controller {
-public:
-    /// @brief calculate motor outputs based on reference and estimate
-    /// @param reference current target robot state
-    /// @param estimate current estimate robot state
-    /// @param micro_estimate current micro estimate robot state (state of motors, not joints)
-    /// @param outputs motor outputs
-    void step(float reference[STATE_LEN][3], float estimate[STATE_LEN][3], float micro_estimate[CAN_MAX_MOTORS][MICRO_STATE_LEN], float outputs[CAN_MAX_MOTORS]) { }
-};
-
 /// @brief Position controller for the chassis
 struct XDrivePositionController : public Controller {
 private:
@@ -75,7 +65,7 @@ private:
     const C620& chassis_motor_1;
     const C620& chassis_motor_2;
     const C620& chassis_motor_3;
-    const C620& chassis_motor_4;  
+    const C620& chassis_motor_4;
 
 public:
     /// @brief default
@@ -94,6 +84,8 @@ public:
     /// @param micro_estimate current micro estimate robot state (state of motors, not joints)
     /// @param outputs motor outputs
     void step(float reference[STATE_LEN][3], float estimate[STATE_LEN][3], float micro_estimate[CAN_MAX_MOTORS][MICRO_STATE_LEN], float outputs[CAN_MAX_MOTORS]);
+    // New overload using RobotStateMap
+    void step(RobotStateMap reference_map, RobotStateMap estimate_map, float outputs[CAN_MAX_MOTORS]);
 
     /// @brief reset the controller
     inline void reset() {
@@ -142,6 +134,8 @@ public:
     /// @param micro_estimate current micro estimate robot state (state of motors, not joints)
     /// @param outputs current outputs
     void step(float reference[STATE_LEN][3], float estimate[STATE_LEN][3], float micro_estimate[CAN_MAX_MOTORS][MICRO_STATE_LEN], float outputs[CAN_MAX_MOTORS]);
+    // New overload using RobotStateMap
+    void step(RobotStateMap reference_map, RobotStateMap estimate_map, float outputs[CAN_MAX_MOTORS]);
 
     /// @brief reset the controller
     inline void reset() {
@@ -177,6 +171,8 @@ public:
     /// @param micro_estimate current micro estimate robot state (state of motors, not joints)
     /// @param outputs motor outputs
     void step(float reference[STATE_LEN][3], float estimate[STATE_LEN][3], float micro_estimate[CAN_MAX_MOTORS][MICRO_STATE_LEN], float outputs[CAN_MAX_MOTORS]);
+    // New overload using RobotStateMap
+    void step(RobotStateMap reference_map, RobotStateMap estimate_map, float outputs[CAN_MAX_MOTORS]);
 
     /// @brief reset the controller
     inline void reset() {
@@ -208,6 +204,8 @@ public:
     /// @param micro_estimate current micro estimate robot state (state of motors, not joints)
     /// @param outputs motor outputs
     void step(float reference[STATE_LEN][3], float estimate[STATE_LEN][3], float micro_estimate[CAN_MAX_MOTORS][MICRO_STATE_LEN], float outputs[CAN_MAX_MOTORS]);
+    // New overload using RobotStateMap
+    void step(RobotStateMap reference_map, RobotStateMap estimate_map, float outputs[CAN_MAX_MOTORS]);
 
     /// @brief reset the controller
     inline void reset() {
@@ -302,6 +300,8 @@ struct FeederController : public Controller {
         /// @param micro_estimate current micro estimate robot state (state of motors, not joints)
         /// @param outputs motor outputs
         void step(float reference[STATE_LEN][3], float estimate[STATE_LEN][3], float micro_estimate[CAN_MAX_MOTORS][MICRO_STATE_LEN], float outputs[CAN_MAX_MOTORS]);
+        // New overload using RobotStateMap
+        void step(RobotStateMap reference_map, RobotStateMap estimate_map, float outputs[CAN_MAX_MOTORS]);
     
         /// @brief reset the controller
         inline void reset() {

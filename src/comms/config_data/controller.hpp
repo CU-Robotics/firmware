@@ -61,7 +61,7 @@ struct SubController {
 };
 
 struct Controller : Comms::CommsData {
-    uint32_t motor_indices[CONTROLLER_MOTORS_SIZE];  // list of motor ids that this controller controls
+    MotorName motor_names[CONTROLLER_MOTORS_SIZE]; // list of motor names that this controller controls
     SubController sub_controllers[CONTROLLER_SUB_CONTROLLERS_SIZE];
     GearRatios gear_ratios;
     uint32_t controller_type;

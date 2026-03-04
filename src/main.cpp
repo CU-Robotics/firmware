@@ -1,6 +1,8 @@
 #include <Arduino.h>
 
 #include "comms/comms_layer.hpp"
+#include "controls/robot_state.hpp"
+#include "controls/state.hpp"
 #include "git_info.h"
 
 #include "sensors/buff_encoder.hpp"
@@ -147,11 +149,10 @@ int main() {
     governor.set_reference_limits(config.set_reference_limits);
 
     // variables for use in main
-    float temp_state[STATE_LEN][3] = {{0}};                          // Temp state array
-    float temp_micro_state[CAN_MAX_MOTORS][MICRO_STATE_LEN] = {{0}};         // Temp micro state array
-    float temp_reference[STATE_LEN][3] = {{0}};                      // Temp governed state
-    float target_state[STATE_LEN][3] = {{0}};                        // Temp ungoverned state
-    float hive_state_offset[STATE_LEN][3] = {{0}};                   // Hive offset state
+    RobotStateMap temp_state_map;                       
+    RobotStateMap temp_reference_map;                     
+    RobotStateMap target_state_map;                        // Temp ungoverned state
+    RobotStateMap hive_state_map_offset;                   // Hive offset state
     bool override_request = false;
     // float motor_inputs[CAN_MAX_MOTORS] = { 0 }; //Array for storing
     // controller outputs to send to CAN
@@ -298,37 +299,36 @@ int main() {
             // check if the shooter is active
             if (not_safety_mode && ref.ref_data.robot_performance.shooter_power_active)
                 feed += feeder_target * dt2;
-            target_state[6][0] = (int)feed;
-        } else {
-            target_state[6][1] = feeder_target;
+            target_state_map[StateName::Feeder).set_position((int)feed);
+        } else { 
+            target_state_map[StateName::Feeder).set_velocity(feeder_target);
         }
         // if (transmitter->get_r_switch() == 1 && last_switch != 1) {
         //     feed++;
         // }
         // last_switch = transmitter->get_r_switch();
         // set manual controls
-        target_state[0][0] = chassis_pos_x;
-        target_state[0][1] = chassis_vel_x;
-        target_state[1][0] = chassis_pos_y;
-        target_state[1][1] = chassis_vel_y;
-        target_state[2][1] = chassis_spin;
-        target_state[3][0] = yaw_target;
-        target_state[3][1] = 0;
-        target_state[4][0] = pitch_target;
-        target_state[4][1] = 0;
-        target_state[5][1] = fly_wheel_target;
-        target_state[7][0] = 1;
+        target_state_map[StateName::ChassisX).set_position(chassis_pos_x);
+        target_state_map[StateName::ChassisX).set_velocity(chassis_vel_x);
+        target_state_map[StateName::ChassisY).set_position(chassis_pos_y);
+        target_state_map[StateName::ChassisY).set_velocity(chassis_vel_y);
+        target_state_map[StateName::ChassisHeading).set_velocity(chassis_spin);
+        target_state_map[StateName::Yaw).set_position(yaw_target);
+        target_state_map[StateName::Yaw).set_velocity(0);
+        target_state_map[StateName::Pitch).set_position(pitch_target);
+        target_state_map[StateName::Pitch).set_velocity(0);
+        target_state_map[StateName::Flywheels).set_velocity(fly_wheel_target);
 
         // if the left switch is all the way down use Hive controls
 
         if (transmitter->get_l_switch() == SwitchPos::BACKWARD) {
-            // hid_incoming.get_target_state(target_state);
-            memcpy(target_state, comms_layer.get_hive_data().target_state.state, sizeof(target_state));
-            last_feed = target_state[6][0];
+            // hid_incoming.get_target_state_map(target_state_map);
+            memcpy(target_state_map, comms_layer.get_hive_data().target_state_map.state, sizeof(target_state_map));
+            last_feed = target_state_map[StateName::Feeder).get_position();
             // if you just switched to hive controls, set the reference to the
             // current state'
             if (hive_toggle) {
-                governor.set_reference(temp_state);
+                governor.set_reference(temp_state_map);
                 hive_toggle = false;
             }
         }
@@ -336,10 +336,10 @@ int main() {
         // when in teensy control mode reset hive toggle
         if (transmitter->get_l_switch() == SwitchPos::MIDDLE) {
             if (!hive_toggle || !safety_toggle) {
-                pos_offset_x = temp_state[0][0];
-                pos_offset_y = temp_state[1][0];
+                pos_offset_x = temp_state_map[0][0];
+                pos_offset_y = temp_state_map[1][0];
                 feed = last_feed;
-                governor.set_reference(temp_state);
+                governor.set_reference(temp_state_map);
             }
             hive_toggle = true;
             safety_toggle = true;
@@ -352,8 +352,8 @@ int main() {
 
         // Serial.printf("Target state:\n");
         // for (int i = 0; i < 8; i++) {
-        //     Serial.printf("\t%d: %f %f %f\n", i, target_state[i][0],
-        //     target_state[i][1], target_state[i][2]);
+        //     Serial.printf("\t%d: %f %f %f\n", i, target_state_map[i][0],
+        //     target_state_map[i][1], target_state_map[i][2]);
         // }
 
         // override temp state if needed. Dont override in teensy mode so the sentry doesnt move during inspection
@@ -362,60 +362,60 @@ int main() {
             comms_layer.get_hive_data().override_state.active = false;
 
             Serial.printf("Overriding state with hive state\n");
-            memcpy(hive_state_offset, comms_layer.get_hive_data().override_state.state, sizeof(hive_state_offset));
+            memcpy(hive_state_map_offset, comms_layer.get_hive_data().override_state.state, sizeof(hive_state_map_offset));
 
-            memcpy(temp_state, hive_state_offset, sizeof(hive_state_offset));
+            memcpy(temp_state_map, hive_state_map_offset, sizeof(hive_state_map_offset));
             override_request = true;
         }
 
         // step estimates and construct estimated state
-        estimator_manager.step(temp_state, temp_micro_state, override_request);
+        estimator_manager.step(temp_state_map, override_request);
         override_request = false;
 
-        if ((feed - temp_state[6][0] > 2 && transmitter->get_l_switch() == SwitchPos::MIDDLE) ||
-            (comms_layer.get_hive_data().target_state.state[6][0] - temp_state[6][0] > 2 &&
+        if ((feed - temp_state_map[6][0] > 2 && transmitter->get_l_switch() == SwitchPos::MIDDLE) ||
+            (comms_layer.get_hive_data().target_state_map.state[6][0] - temp_state_map[6][0] > 2 &&
              transmitter->get_l_switch() == SwitchPos::BACKWARD)) {
             Serial.printf("Feeder is lowkey jammed. current ball count: %f, feed: %f, hive target: %f\n",
-                            temp_state[6][0], feed, comms_layer.get_hive_data().target_state.state[6][0]);
-            feed = temp_state[6][0] + 1;
+                            temp_state_map[6][0], feed, comms_layer.get_hive_data().target_state_map.state[6][0]);
+            feed = temp_state_map[6][0] + 1;
             governor.set_reference_at_index(feed, 6, 0);
         }
 
         // if first loop set target state to estimated state
         if (count_one == 0) {
-            temp_state[7][0] = 0;
-            governor.set_reference(temp_state);
+            temp_state_map[7][0] = 0;
+            governor.set_reference(temp_state_map);
             // print temp state
             for (int i = 0; i < 8; i++) {
-                Serial.printf("\t%d: %f %f %f\n", i, temp_state[i][0], temp_state[i][1], temp_state[i][2]);
+                Serial.printf("\t%d: %f %f %f\n", i, temp_state_map[i][0], temp_state_map[i][1], temp_state_map[i][2]);
             }
             count_one++;
         }
 
         // Serial.printf("Estimated state:\n");
         // for (int i = 0; i < 8; i++) {
-        //     Serial.printf("\t%d: %f %f %f\n", i, temp_state[i][0],
-        //     temp_state[i][1], temp_state[i][2]);
+        //     Serial.printf("\t%d: %f %f %f\n", i, temp_state_map[i][0],
+        //     temp_state_map[i][1], temp_state_map[i][2]);
         // }
 
         // reference govern
-        governor.set_estimate(temp_state);
-        governor.step_reference(target_state, config->governor_types);
-        governor.get_reference(temp_reference);
+        governor.set_estimate(temp_state_map);
+        governor.step_reference(target_state_map, config->governor_types);
+        governor.get_reference(temp_reference_map);
 
         // generate motor outputs from controls
-        controller_manager.step(temp_reference, temp_state, temp_micro_state);
+        controller_manager.step(temp_reference_map, temp_state_map);
 
         // can.print_state();
 
         
         Comms::Sendable<TargetState> target_state_sendable;
-        memcpy(target_state_sendable.data.state, temp_reference, sizeof(temp_reference));
+        memcpy(target_state_sendable.data.state, temp_reference_map, sizeof(temp_reference_map));
         target_state_sendable.data.time = millis() / 1000.0;
         target_state_sendable.send_to_comms();
         
         Comms::Sendable<EstimatedState> estimated_state;
-        memcpy(estimated_state.data.state, temp_state, sizeof(temp_state));
+        memcpy(estimated_state.data.state, temp_state_map, sizeof(temp_state_map));
         estimated_state.data.time = millis() / 1000.0;
         estimated_state.send_to_comms();
         
@@ -467,11 +467,11 @@ int main() {
             // SAFETY ON
             // TODO: Reset all controller integrators here
             can.issue_safety_mode();
-            governor.set_reference_at_index(temp_state[6][0], 6, 0);
+            governor.set_reference_at_index(temp_state_map[6][0], 6, 0);
 
-            feed = (fmod(fmod(temp_state[6][0], 1) + 1, 1) > 0.2)
-                       ? (int)floor(temp_state[6][0]) + 1
-                       : (int)floor(temp_state[6][0]); // reset feed to the current state
+            feed = (fmod(fmod(temp_state_map[6][0], 1) + 1, 1) > 0.2)
+                       ? (int)floor(temp_state_map[6][0]) + 1
+                       : (int)floor(temp_state_map[6][0]); // reset feed to the current state
             last_feed = feed;                          // reset last feed to the current state
             // Serial.printf("Can zero\n");
             safety_toggle = false; // reset hive toggle

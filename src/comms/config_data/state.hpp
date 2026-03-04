@@ -3,6 +3,7 @@
 namespace NewConfig {
 
 enum class StateName : uint32_t {
+    Unset,
     ChassisX,
     ChassisY,
     ChassisHeading,
@@ -18,23 +19,21 @@ enum class StateOrder : uint32_t {
     Acceleration,
 };
 
+struct ReferenceLimits {
+    ReferenceLimit position;
+    ReferenceLimit velocity;
+    ReferenceLimit acceleration;
+};
+
 struct ReferenceLimit {
     float min;
     float max;
 };
 
-enum class GovernorType : uint32_t {
-    None,
-    Position,
-    Velocity,
-    Acceleration,
-};
-
 struct State : Comms::CommsData {
-    ReferenceLimit reference_limit;
-    GovernorType governor_type;
+    ReferenceLimits reference_limits;
+    StateOrder governor_type;
     StateName name;
-    uint32_t array_index;
     uint32_t is_wrapping;
 };
 

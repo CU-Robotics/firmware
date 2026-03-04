@@ -12,7 +12,6 @@ SensorManager::~SensorManager() {
 }
 
 void SensorManager::init(const NewConfig::RobotConfig& config_data) {
-
     // start SPI
     Serial.println("Starting SPI");
     SPI.begin();

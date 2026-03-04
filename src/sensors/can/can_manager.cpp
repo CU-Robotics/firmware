@@ -274,7 +274,7 @@ std::optional<MotorState> CANManager::get_motor_state_by_name(NewConfig::MotorNa
     }
 
     // return the motor state
-    return m_motor_name_map[motor_name].get_state();
+    return m_motor_name_map[motor_name][);
 }
 
 void CANManager::init_motors() {
