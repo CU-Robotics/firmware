@@ -21,7 +21,7 @@ void test_wrap_around() {
 void test_derivative() {
     PIDFilter pid;
 
-    float gains[4] = {0.0f, 0.0f, 1.0f, 0.0f}
+    float gains[4] = {0.0f, 0.0f, 1.0f, 0.0f};
     pid.set_K(gains);
 
     pid.setpoint = 0.5f;
