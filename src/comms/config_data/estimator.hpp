@@ -5,29 +5,20 @@
 
 namespace NewConfig {
 
-enum class EstimatorName : uint32_t {
-    UnsetEstimatorName,
+enum class EstimatorType : uint32_t {
+    UnsetEstimatorType,
     GimbalAndChassis,
     FlywheelVelocity,
     FeederPosition,
     Actuators,
 };
 
-struct LowLevelEstimator : Comms::CommsData {
-    LowLevelEstimatedState estimated_states;
-    EstimatorName estimator_name;
-
-    LowLevelEstimator() : Comms::CommsData(Comms::TypeLabel::LowLevelEstimatorConfig, Comms::PhysicalMedium::HID, Comms::Priority::High, sizeof(LowLevelEstimator)) {
-        estimator_name = EstimatorName::UnsetEstimatorName;
-    }
-};
-
 struct HighLevelEstimator : Comms::CommsData {
-    HighLevelEstimatedState estimated_states;
-    EstimatorName estimator_name;
+    EstimatorType estimator_type;
+    StateName state_name[STATE_LEN];
 
     HighLevelEstimator() : Comms::CommsData(Comms::TypeLabel::HighLevelEstimatorConfig, Comms::PhysicalMedium::HID, Comms::Priority::High, sizeof(HighLevelEstimator)) {
-        estimator_name = EstimatorName::UnsetEstimatorName;
+        estimator_type = EstimatorType::UnsetEstimatorType;
     }
 };
 

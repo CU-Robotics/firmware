@@ -93,7 +93,7 @@ public:
     /// @param motor_name The name of the motor to get
     /// @return The motor object if it exists, std::nullopt if it does not
     /// @note You can use the motor's get_type to determine the type of motor and dynamic_cast to the correct motor type
-    std::optional<Motor*> get_motor_by_name(NewConfig::MotorName motor_name) const;
+    Motor* get_motor_by_name(NewConfig::MotorName motor_name) const;
 
     /// @brief Get the state of a specific motor by name
     /// @param motor_name The name of the motor to get the state of

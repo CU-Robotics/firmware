@@ -23,24 +23,13 @@ void EstimatorManager::init(
 void EstimatorManager::init_estimator(NewConfig::HighLevelEstimator estimator_config, const CANManager& can, const SensorManager& sensor_manager) {
     switch (estimator_config.estimator_name) {
     case NewConfig::EstimatorName::GimbalAndChassis:
-        high_level_estimators.push_back(std::make_unique
-    case 2:
-        estimators[num_estimators++] = new FlyWheelEstimator(can);
+        high_level_estimators.push_back(std::make_unique(GimbalAndChassisEstimator(estimator_config, can, sensor_manager)));
         break;
-    case 3:
-        estimators[num_estimators++] = new FeederEstimator(can);
+    case NewConfig::EstimatorName::FlywheelVelocity:
+        high_level_estimators.push_back(std::make_unique(FlyWheelEstimator(estimator_config, can, sensor_manager)));
         break;
-    case 4:
-        estimators[num_estimators++] = new LocalEstimator(can);
-        break;
-    case 5:
-        estimators[num_estimators++] = new SwitcherEstimator(*config_data, can);
-        break;
-    case 6:
-        estimators[num_estimators++] = new GimbalEstimatorNoOdom(*config_data, sensor_manager, can);        
-        break;
-    case 7:
-        estimators[num_estimators++] = new NewFeederEstimator(can, sensor_manager, *config_data);
+    case NewConfig::EstimatorName::FeederPosition:
+        high_level_estimators.push_back(std::make_unique(FeederEstimator(estimator_config, can, sensor_manager)));
         break;
     default:
         break;

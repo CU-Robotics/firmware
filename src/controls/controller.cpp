@@ -2,11 +2,11 @@
 #include "robot_state.hpp"
 #include "sensors/RefSystem.hpp"
 
-void XDriveController::step(RobotStateMap reference_map, RobotStateMap estimate_map, float outputs[CAN_MAX_MOTORS]) {
+void XDriveController::step(RobotStateMap reference_map, RobotStateMap estimate_map) {
     float dt = timer.delta();
 
     StateName drive_states[3]  = { StateName::ChassisX, StateName::ChassisY, StateName::ChassisHeading };
-    C620& drive_motors[4] = { drive_motor_1, drive_motor_2, drive_motor_3, drive_motor_4 };
+    Motor* drive_motors[4] = { drive_motor_1, drive_motor_2, drive_motor_3, drive_motor_4 };
 
     if (reference_map[StateName::ChassisX].config().governor_type == StateOrder::Position) {
 
@@ -85,6 +85,7 @@ void XDriveController::step(RobotStateMap reference_map, RobotStateMap estimate_
             pid.K[1] = low_level_velocity_controller.gains.i;
             pid.K[2] = low_level_velocity_controller.gains.d;
             outputs[i] = pid.filter(dt, true, false) * power_limit_ratio;
+            drive_motors[i].write_motor_torque(outputs[i]);
         }
 
     } else {
@@ -153,6 +154,7 @@ void XDriveController::step(RobotStateMap reference_map, RobotStateMap estimate_
             pid.K[2] = low_level_velocity_controller.gains.d;
             pid.K[3] = low_level_velocity_controller.gains.f;
             outputs[i] = pid.filter(dt, true, false) * power_limit_ratio;
+            drive_motors[i].write_motor_torque(outputs[i]);
             // Serial.printf("motor %d error: %f output: %f\n", i, -micro_estimate[i][1] + motor_velocity[i], outputs[i]);
         }
     }

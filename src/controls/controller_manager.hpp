@@ -8,29 +8,19 @@
 /// @brief Manage all controllers
 class ControllerManager {
 private:
-
     std::vector<std::unique_ptr<Controller>> controllers;
-
-    /// @brief can data reference used to write to the can bus
-    CANManager& can;
 
 public:
     /// @brief assign reference to the can manager
-    ControllerManager(CANManager& _can) : can(_can) {}
+    ControllerManager() {}
 
     /// @brief Initializes controllers with data from the config yaml
     /// @param _can reference to the can data struct
     /// @param _config_data read-only config reference storing all config data
-    void init(const std::vector<NewConfig::Controller>& controller_configurations);
+    void init(const std::vector<NewConfig::Controller>& controller_configurations, CANManager& _can);
 
     /// @brief Initializes and adds a new controller to the controller manager
     /// @param controller_config the controller configuration data to use to initialize the controller
-    void init_controller(const NewConfig::Controller& controller_config);
-
-    /// @brief Steps through controllers and sets the new motor inputs (ie. motor current, torque)
-    /// @param macro_reference Governor reference (governed target state)
-    /// @param macro_estimate estimated current joint states
-    /// @param micro_estimate estimated current motor states
-    void step(float macro_reference[STATE_LEN][3], float macro_estimate[STATE_LEN][3], float micro_estimate[CAN_MAX_MOTORS][MICRO_STATE_LEN]);
+    void init_controller(const NewConfig::Controller& controller_config, CANManager& _can);
 };
 #endif // CONTROLLER_MANAGER_H

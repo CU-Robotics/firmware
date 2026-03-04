@@ -240,11 +240,12 @@ void CANManager::print_motor_state_by_name(NewConfig::MotorName motor_name) {
     m_motor_name_map[motor_name].print_state();
 }
 
-std::optional<Motor*> CANManager::get_motor_by_name(NewConfig::MotorName motor_name) {
+Motor* CANManager::get_motor_by_name(NewConfig::MotorName motor_name) {
     if(motor_name == NewConfig::MotorName::UnsetMotorName) {
         #ifdef CAN_MANAGER_DEBUG
         Serial.printf("CANManager: Requested get of an unset motor name\n");
         #endif
+        
         return std::nullopt;
     }
 
@@ -274,7 +275,7 @@ std::optional<MotorState> CANManager::get_motor_state_by_name(NewConfig::MotorNa
     }
 
     // return the motor state
-    return m_motor_name_map[motor_name][);
+    return m_motor_name_map[motor_name];
 }
 
 void CANManager::init_motors() {

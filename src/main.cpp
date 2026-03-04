@@ -46,8 +46,8 @@ ConfigLayer config_layer;
 Profiler prof;
 
 SensorManager sensor_manager;
-EstimatorManager estimator_manager(can);
-ControllerManager controller_manager(can);
+EstimatorManager estimator_manager;
+ControllerManager controller_manager;
 
 Governor governor;
 

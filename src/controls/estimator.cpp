@@ -1,7 +1,7 @@
 #include "estimator.hpp"
 
 GimbalAndChassisEstimator::GimbalAndChassisEstimator(Config config_data, SensorManager* sensor_manager, CANManager* _can) {
-    buff_enc_yaw = sensor_manager->get_buff_encoder(0); // sensor object definitions
+    buff_enc_yaw = sensor_manager.get_buff_encoder_by_name(config_data); // sensor object definitions
     buff_enc_pitch = sensor_manager->get_buff_encoder(1);
     can = _can;
     icm_imu = sensor_manager->get_icm_sensor(0);
