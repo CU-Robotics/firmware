@@ -165,14 +165,12 @@ int main() {
     // controller outputs to send to CAN
 
     // manual controls variables
-    float vtm_pos_x = 0;
-    float vtm_pos_y = 0;
-    float transmitter_pos_x = 0;
-    float transmitter_pos_y = 0;
     float pos_offset_x = 0;
     float pos_offset_y = 0;
     float feed = 0;
     float last_feed = 0;
+	float pos_x = 0;
+	float pos_y = 0;
 
     // get the pitch min and max, and shift them to be centered around 0
     float pitch_min = config->set_reference_limits[4][0][0];
@@ -217,10 +215,6 @@ int main() {
         sensor_manager.read();
 		// read ref system
 		ref->read();
-		//ref->ref_data.kbm_interaction.print(); // FOR DEBUGGIN VTM COMMS
-		//ref->ref_data.custom_controller_robot.print();
-		ref->ref_data.robot_interaction.print();
-
 		
         // read CAN and Transmitter -- These are kept out of sensor manager for safety reasons
         can.read();
@@ -244,24 +238,31 @@ int main() {
         // manual controls on firmware
 
         Transmitter::Keys transmitter_keys = transmitter->get_keys();
-        int mouse_x = transmitter->get_mouse_x();
-        int mouse_y = transmitter->get_mouse_y();
-        bool l_mouse_button = transmitter->get_l_mouse_button();
-		//  bool r_mouse_button = transmitter->get_r_mouse_button(); //UNUSED
+		// Determine wether we are reading from vtm or usb to dr16
+        int mouse_x = ((ref->ref_data.kbm_interaction.mouse_speed_x == 0.f) && (ref->ref_data.kbm_interaction.mouse_speed_x != transmitter->get_mouse_x()))
+			? transmitter->get_mouse_x()
+			: ref->ref_data.kbm_interaction.mouse_speed_x;
+		int mouse_y = ((ref->ref_data.kbm_interaction.mouse_speed_y == 0.f) && (ref->ref_data.kbm_interaction.mouse_speed_y != transmitter->get_mouse_y()))
+			? transmitter->get_mouse_y()
+			: ref->ref_data.kbm_interaction.mouse_speed_y;
+		bool l_mouse_button = ((ref->ref_data.kbm_interaction.button_left == 0) && (ref->ref_data.kbm_interaction.button_left != transmitter->get_l_mouse_button()))
+			? transmitter->get_l_mouse_button()
+			: ref->ref_data.kbm_interaction.button_left;
+		//bool r_mouse_button = ((ref->ref_data.kbm_interaction.button_right == 0) && (ref->ref_data.kbm_interaction.button_right != transmitter->get_r_mouse_button()))
+		//	? transmitter->get_r_mouse_button()
+		//	: ref->ref_data.kbm_interaction.button_right; //UNUSED
 
         float delta = control_input_timer.delta();
-		transmitter_pos_x += mouse_x * 0.05 * delta;
-		transmitter_pos_y += mouse_y * 0.05 * delta;
 
-        vtm_pos_x += ref->ref_data.kbm_interaction.mouse_speed_x * 0.05 * delta;
-        vtm_pos_y += ref->ref_data.kbm_interaction.mouse_speed_y * 0.05 * delta;
+		pos_x = mouse_x * 0.05 * delta;
+		pos_y = mouse_y * 0.05 * delta;
 
         // clamp to pitch limits
-        if (transmitter_pos_y < pitch_min) {
-            transmitter_pos_y = pitch_min;
+        if (pos_y < pitch_min) {
+            pos_y = pitch_min;
         }
-        if (transmitter_pos_y > pitch_max) {
-            transmitter_pos_y = pitch_max;
+        if (pos_y > pitch_max) {
+            pos_y = pitch_max;
         }
 
         float chassis_vel_x = 0;
@@ -270,25 +271,26 @@ int main() {
         float chassis_pos_y = 0;
 
         if (config->governor_types[0] == 2) { // if we should be controlling velocity
+			chassis_vel_x = transmitter->get_l_stick_y() * 5.4;
+			chassis_vel_x += (((-ref->ref_data.kbm_interaction.key_w + ref->ref_data.kbm_interaction.key_s) == 0.f)
+							  && ((-ref->ref_data.kbm_interaction.key_w + ref->ref_data.kbm_interaction.key_s) != (-transmitter_keys.w + transmitter_keys.s)))
+				? (-transmitter_keys.w + transmitter_keys.s) * 2.5
+				: (-ref->ref_data.kbm_interaction.key_w + ref->ref_data.kbm_interaction.key_s) * 2.5;
 
-            chassis_vel_x = transmitter->get_l_stick_y() * 5.4 +
-				(-ref->ref_data.kbm_interaction.key_w + ref->ref_data.kbm_interaction.key_s) * 2.5;
+			chassis_vel_y = -transmitter->get_l_stick_x() * 5.4;
+			chassis_vel_y += (((ref->ref_data.kbm_interaction.key_d - ref->ref_data.kbm_interaction.key_a) == 0.f)
+							  && ((ref->ref_data.kbm_interaction.key_d - ref->ref_data.kbm_interaction.key_a) != (transmitter_keys.d - transmitter_keys.a)))
+				? (transmitter_keys.d-transmitter_keys.s) * 2.5
+				: (ref->ref_data.kbm_interaction.key_d - ref->ref_data.kbm_interaction.key_a) * 2.5;
 
-			chassis_vel_x += (-transmitter_keys.w + transmitter_keys.s) * 2.5;
-				
-            chassis_vel_y = -transmitter->get_l_stick_x() * 5.4 +
-				(ref->ref_data.kbm_interaction.key_d - ref->ref_data.kbm_interaction.key_a) * 2.5;
-
-			chassis_vel_y += (transmitter_keys.d - transmitter_keys.a) * 2.5; // Will need changed prior to vtm integration to avoid double counting
-		}
 		else if (config->governor_types[0] == 1) { // if we should be controlling position
             chassis_pos_x = transmitter->get_l_stick_x() * 2 + pos_offset_x;
             chassis_pos_y = transmitter->get_l_stick_y() * 2 + pos_offset_y;
         }
 
         float chassis_spin = transmitter->get_wheel() * 25;
-        float pitch_target = 1.57 + -transmitter->get_r_stick_y() * 0.3 + transmitter_pos_y + vtm_pos_y;
-        float yaw_target = -transmitter->get_r_stick_x() * 1.5 - transmitter_pos_x - vtm_pos_x;
+        float pitch_target = 1.57 + -transmitter->get_r_stick_y() * 0.3 + pos_y;
+        float yaw_target = -transmitter->get_r_stick_x() * 1.5 - pos_x;
 
         float fly_wheel_target =
             (transmitter->get_r_switch() == SwitchPos::FORWARD || transmitter->get_r_switch() == SwitchPos::MIDDLE)
