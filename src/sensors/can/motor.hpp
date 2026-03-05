@@ -34,7 +34,7 @@ public:
     /// @param id The per-bus motor ID. This is 1-indexed 
     /// @param bus The CAN bus index/ID
     /// @param motor_type The motor type, defaults to NULL_MOTOR_TYPE if not specified.
-    Motor(NewConfig::Motor motor_config)
+    Motor(Cfg::Motor motor_config)
          : motor_config(motor_config) { }
 
 /// @brief Virtual destructor
@@ -72,11 +72,11 @@ public:
 public:
     /// @brief Get the motor controller type
     /// @return The motor controller type
-    inline NewConfig::MotorControllerType get_controller_type() const { return motor_config.motor_controller_type; }
+    inline Cfg::MotorControllerType get_controller_type() const { return motor_config.motor_controller_type; }
 
     /// @brief Get the motor type
     /// @return The motor type
-    inline NewConfig::MotorType get_motor_type() const { return motor_config.motor_type; }
+    inline Cfg::MotorType get_motor_type() const { return motor_config.motor_type; }
 
     /// @brief Get the per-bus motor ID
     /// @return The CAN motor ID
@@ -110,7 +110,7 @@ protected:
 
 protected:
     /// @brief motor configuration info, storing motor type, controller type, bus, ID, and name
-    NewConfig::Motor motor_config;
+    Cfg::Motor motor_config;
 
     /// @brief The base ID for the motor
     uint32_t m_base_id = 0;

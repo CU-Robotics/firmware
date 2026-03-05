@@ -58,11 +58,11 @@ public:
 public:
     /// @brief Initialize the CAN buses and motor map
     /// @note This can be called multiple times in the event of hot reloading
-    void init(const std::vector<NewConfig::Motor>& motor_configs);
+    void init(const std::vector<Cfg::Motor>& motor_configs);
 
     /// @brief Configure a motor and add it to the motor map
     /// @param motor_info motor configuration data
-    void configure_motor(const NewConfig::Motor& motor_config);
+    void configure_motor(const Cfg::Motor& motor_config);
 
     /// @brief Read data from all busses and distribute them to the correct motors
     void read();
@@ -80,25 +80,25 @@ public:
     /// @brief Write a torque command to a specific motor by name
     /// @param motor_name The name of the motor to write to
     /// @param torque The torque command to write to the motor
-    void write_motor_torque_by_name(NewConfig::MotorName motor_name, float torque);
+    void write_motor_torque_by_name(Cfg::MotorName motor_name, float torque);
 
     /// @brief Print the state of all motors
     void print_state();
 
     /// @brief Print the state of a specific motor
     /// @param motor_name The name of the motor to print the state of
-    void print_motor_state_by_name(NewConfig::MotorName motor_name);
+    void print_motor_state_by_name(Cfg::MotorName motor_name);
 
     /// @brief Get the underlying motor object by name
     /// @param motor_name The name of the motor to get
     /// @return The motor object if it exists, std::nullopt if it does not
     /// @note You can use the motor's get_type to determine the type of motor and dynamic_cast to the correct motor type
-    Motor* get_motor_by_name(NewConfig::MotorName motor_name) const;
+    Motor* get_motor_by_name(Cfg::MotorName motor_name) const;
 
     /// @brief Get the state of a specific motor by name
     /// @param motor_name The name of the motor to get the state of
     /// @return The state of the motor if the motor exists, std::nullopt if it does not
-    std::optional<MotorState> get_motor_state_by_name(NewConfig::MotorName motor_name) const ;
+    std::optional<MotorState> get_motor_state_by_name(Cfg::MotorName motor_name) const ;
 
 private:
     /// @brief Verify that all motors are online and ready
@@ -106,8 +106,8 @@ private:
 
     /// @brief Iterates through all the motors and tries to give the message to the correct one
     /// @param msg The message to distribute
-    /// @return The motor that successfully read the message or NewConfig::MotorName::UnsetMotorName if no motor read the message
-    NewConfig::MotorName distribute_msg(CAN_message_t& msg);
+    /// @return The motor that successfully read the message or Cfg::MotorName::UnsetMotorName if no motor read the message
+    Cfg::MotorName distribute_msg(CAN_message_t& msg);
 
 private:
     /// @brief CAN bus 1
@@ -121,7 +121,7 @@ private:
     FlexCAN_T4_Base* m_busses[CAN_NUM_BUSSES] = { &m_can1, &m_can2, &m_can3 };
 
     /// @brief Map of motor name to allocated motor object pointer
-    std::map<NewConfig::MotorName, std::unique_ptr<Motor>> m_motor_name_map;
+    std::map<Cfg::MotorName, std::unique_ptr<Motor>> m_motor_name_map;
 
     /// @brief The timeout for motor initialization in milliseconds. Most motors respond within 1-2 ms
     uint32_t m_motor_init_timeout = 250u;

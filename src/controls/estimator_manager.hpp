@@ -15,9 +15,9 @@
 /// @brief Manage all estimators for macro and micro state
 class EstimatorManager {
 private:
-    std::vector<std::unique_ptr<Estimator>> high_level_estimators;
-    std::vector<std::unique_ptr<Estimator>> low_level_estimators;
+    std::vector<std::unique_ptr<Estimator>> estimators;
 
+    std::vector<Cfg::StateName> available_states
 public:
     /// @brief Assign references to the can manager and sensor manager
     EstimatorManager();
@@ -29,7 +29,7 @@ public:
     /// @param can CAN manager pointer to get access to motor state
     /// @param config_data read only reference struct storing all the config data
     /// @param sensor_manager pointer to the sensor manager to read sensor data
-    void init(const std::vector<NewConfig::Estimator>& estimator_configurations);
+    void init(const std::vector<Cfg::Estimator>& estimator_configurations);
 
     /// @brief Steps through every estimator and constructs a state array based on current sensor values.
     /// @param state macro state array pointer to be updated.
@@ -44,9 +44,9 @@ public:
 
 
 private:
-    void init_estimator(const NewConfig::HighLevelEstimator& estimator_config, const CANManager& can, const SensorManager& sensor_manager);
+    void init_estimator(const Cfg::HighLevelEstimator& estimator_config, const CANManager& can, const SensorManager& sensor_manager);
 
-    void init_estimator(const NewConfig::LowLevelEstimator& estimator_config, const CANManager& can, const SensorManager& sensor_manager);
+    void init_estimator(const Cfg::LowLevelEstimator& estimator_config, const CANManager& can, const SensorManager& sensor_manager);
 
     /// @brief sets the assigned states array use for telling which estimators estimate which states
     /// @param as assigned array

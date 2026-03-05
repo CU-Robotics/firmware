@@ -12,7 +12,7 @@
 struct RevSensorData : Comms::CommsData {
     RevSensorData() : CommsData(Comms::TypeLabel::RevEncoderData, Comms::PhysicalMedium::Ethernet, Comms::Priority::Medium, sizeof(RevSensorData)) { }
 	
-	NewConfig::RevEncoderName encoder_name;
+	Cfg::RevEncoderName encoder_name;
 	/// Encoder ticks.
 	int ticks;
 	/// Angle in radians.

@@ -10,7 +10,7 @@
 class LSM6DSOX : public AdafruitIMUSensor {
 public:
     /// @brief Constructor. Currently does nothing, use @ref init() instead for initialization.
-    LSM6DSOX(const NewConfig::LSMImu& config);
+    LSM6DSOX(const Cfg::LSMImu& config);
 
     /// @brief Initialize the sensor
     void init();
@@ -19,7 +19,7 @@ public:
     bool read() override;
 
 private:
-    const NewConfig::LSMImu& config;
+    const Cfg::LSMImu& config;
 
     /// @brief sensor object from adafruit libraries.
     Adafruit_LSM6DSOX sensor;

@@ -16,7 +16,7 @@ struct LidarDataPacketSI : Comms::CommsData {
     static constexpr uint32_t D200_POINTS_PER_PACKET = 12;
 
     /// @brief the id of the lidar module
-    NewConfig::D200LidarName id;
+    Cfg::D200LidarName id;
 
     /// @brief speed of lidar module (rad/s)
     float lidar_speed = 0;

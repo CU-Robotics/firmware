@@ -37,13 +37,13 @@ struct PIDFilter {
     /// @param bound bound from -1 to 1
     /// @param wrap wrap at 2*pi
     /// @return pidf output
-    float filter(float dt, bool bound) {
+    float filter(float dt, bool bound, bool wrap) {
         float error = setpoint - measurement;
         if (error > PI && wrap) error -= 2 * PI;
         if (error < -PI && wrap) error += 2 * PI;
         // if(wrap) Serial.println(error);
         sumError += error * dt;
-        float output = (K[0] * error) + (K[2] * ((error - prevError) / dt)) + K[3];
+        float output = (kp * error) + (kd * ((error - prevError) / dt)) + kf;
         // + (K[1] * sumError)
         // + (K[2] * ((error - prevError) / dt));
         // + (K[3] * feedForward);
@@ -51,13 +51,12 @@ struct PIDFilter {
         if (fabs(output) > 1.0 && bound) output /= fabs(output);
         return output;
     }
-    
-    /// @brief set gains
-    /// @param gains new gains
-    void set_K(float gains[4]) {
-        for (int i = 0;i < 4; i++) {
-            K[i] = gains[i];
-        }
+
+    void set_gains(float kp, float ki, float kd, float kf) {
+        this->kp = kp;
+        this->ki = ki;
+        this->kd = kd;
+        this->kf = kf;
     }
 };
 

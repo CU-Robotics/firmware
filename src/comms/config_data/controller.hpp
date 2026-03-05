@@ -4,11 +4,38 @@
 #include <stdint.h>     // for uintN_t
 #include "comms/data/comms_data.hpp" // for CommsData, TypeLabel, to_string
 #include "comms/config_data/motor.hpp" // for Motor
+#include "state.hpp" // for StateName
+#include "safety.hpp" // for assert_or_safety_mode
 
-constexpr uint32_t CONTROLLER_MOTORS_SIZE = 8;
-constexpr uint32_t CONTROLLER_SUB_CONTROLLERS_SIZE = 8;
+constexpr uint32_t MAX_GENERIC_MOTOR_USES_PER_CONTROLLER = 16;
+constexpr uint32_t MAX_GENERIC_STATE_USES_PER_CONTROLLER = 16;
+constexpr uint32_t MAX_SUB_CONTROLLERS_PER_CONTROLLER = 8;
 
-namespace NewConfig {
+namespace Cfg {
+
+enum class GenericControllerMotorUse : uint32_t {
+    ChassisFrontRight,
+    ChassisBackRight,
+    ChassisBackLeft,
+    ChassisFrontLeft,
+    Yaw1,
+    Yaw2,
+    PitchLeft,
+    PitchRight,
+    FlywheelLeft,
+    FlywheelRight,
+    Feeder,
+};
+
+enum class GenericControllerStateUse : uint32_t {
+    ChassisX,
+    ChassisY,
+    ChassisHeading,
+    GimbalYaw,
+    GimbalPitch,
+    ShooterBallVelocity,
+    FeederBallPosition,
+};
 
 enum class ControllerType : uint32_t {
     UnsetControllerType,
@@ -57,39 +84,48 @@ struct GearRatios {
 
 struct SubController {
     Gains gains;
-    uint32_t sub_controller_type; 
+    SubControllerType sub_controller_type; 
 };
 
 struct Controller : Comms::CommsData {
-    MotorName motor_names[CONTROLLER_MOTORS_SIZE]; // list of motor names that this controller controls
-    SubController sub_controllers[CONTROLLER_SUB_CONTROLLERS_SIZE];
+    MotorName generic_motor_use_to_names[MAX_GENERIC_MOTOR_USES_PER_CONTROLLER]; // list of motor names that this controller controls
+    StateName generic_state_use_to_names[MAX_GENERIC_STATE_USES_PER_CONTROLLER]; // list of state names that this controller uses
+    SubController type_to_sub_controller[MAX_SUB_CONTROLLERS_PER_CONTROLLER]; // list of subcontrollers that this controller contains
     GearRatios gear_ratios;
-    uint32_t controller_type;
-
-    Controller() : Comms::CommsData(Comms::TypeLabel::ControllerConfig, Comms::PhysicalMedium::HID, Comms::Priority::High, sizeof(Controller)) {
-        for (int i = 0; i < CONTROLLER_MOTORS_SIZE; i++) {
-            motor_indices[i] = UnsetMotorName;
-        }
-        for (int i = 0; i < CONTROLLER_SUB_CONTROLLERS_SIZE; i++) {
-            sub_controllers[i].sub_controller_type = SubControllerType::UnsetSubControllerType;
-        }
-        controller_type = UnsetControllerType;
-    }
+    ControllerType controller_type;
 
     /// @brief Get the subcontroller of this controller with the given type
     /// @param type The type of the subcontroller, as defined by the SubControllerType enum
     /// @return The subcontroller with the given type, or an empty subcontroller if it was not found
     /// @note Since this function is NOT virtual, struct size stays the same and reinterpret_cast works correctly.
     SubController get_sub_controller_by_type(SubControllerType type) const {
-        for (int i = 0; i < CONTROLLER_SUB_CONTROLLERS_SIZE; i++) {
-            if (sub_controllers[i].sub_controller_type == type) {
-                return sub_controllers[i];
+        for (int i = 0; i < MAX_SUB_CONTROLLERS_PER_CONTROLLER; i++) {
+            if (type_to_sub_controller[i].sub_controller_type == type) {
+                return type_to_sub_controller[i];
             }
         }
         // return empty subcontroller if not found
         SubController empty;
         empty.sub_controller_type = SubControllerType::UnsetSubControllerType;
         return empty;
+    }
+
+    /// @brief Get the motor name of this controller with the given generic use
+    /// @param motor_use The generic use of the motor, as defined by the GenericControllerMotorUse enum
+    /// @return The motor name with the given generic use, or an empty motor name if it was not found
+    const MotorName& get_motor_name_by_generic_use(GenericControllerMotorUse motor_use) const {
+        int motor_index = static_cast<int>(motor_use);
+        safety::assert_or_safety_procedure(motor_index > MAX_GENERIC_MOTOR_USES_PER_CONTROLLER || motor_index < 0, "Generic motor use index out of bounds");
+        return generic_motor_use_to_names[motor_index];
+    }
+
+    /// @brief Get the state name of this controller with the given generic use
+    /// @param state_use The generic use of the state, as defined by the GenericControllerStateUse enum
+    /// @return The state name with the given generic use, or an empty state name if it was not found
+    const StateName& get_state_name_by_generic_use(GenericControllerStateUse state_use) const {
+        int state_index = static_cast<int>(state_use);
+        safety::assert_or_safety_procedure(state_index > MAX_GENERIC_STATE_USES_PER_CONTROLLER || state_index < 0, "Generic state use index out of bounds");
+        return generic_state_use_to_names[state_index];
     }
 };
 }

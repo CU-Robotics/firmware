@@ -1,4 +1,6 @@
 #include "buff_encoder.hpp"
+#include "comms/data/sendable.hpp"
+#include "comms/data/buff_encoder_data.hpp"
 
 const SPISettings BuffEncoder::m_settings = SPISettings(1000000, MT6835_BITORDER, SPI_MODE3);
 
@@ -12,30 +14,29 @@ bool BuffEncoder::read() {
 
     // do the SPI transfer
     SPI.beginTransaction(m_settings);
-    digitalWrite(config_data.chip_select_pin, LOW);
+    digitalWrite(config_data.spi_cs, LOW);
     SPI.transfer(data, 6);
-    digitalWrite(config_data.chip_select_pin, HIGH);
+    digitalWrite(config_data.spi_cs, HIGH);
     SPI.endTransaction();
-
 
     // convert received angle into radians
     int raw_angle = (data[2] << 13) | (data[3] << 5) | (data[4] >> 3);
     float radians = raw_angle / (float)MT6835_CPR * (3.14159265 * 2.0);
 
     // assign angle
-    m_angle = radians;
+    m_angle = radians + config_data.encoder_offset;
 
     return true;
 }
 
-BuffEncoderData BuffEncoder::get_data_for_comms() {
-    return BuffEncoderData{
-        .encoder_name = config_data.name,
-        .m_angle = get_angle(),
-    };
+void BuffEncoder::send_to_comms() const{
+    Comms::Sendable<BuffEncoderData> sendable;
+    sendable.data.encoder_name = config_data.encoder_name;
+    sendable.data.m_angle = m_angle;
+    sendable.send_to_comms();
 }
 
-void BuffEncoder::print() {
+void BuffEncoder::print() const{
     Serial.printf("Buff Encoder:\n\t");
     Serial.println(get_angle());
 }

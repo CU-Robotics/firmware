@@ -7,28 +7,27 @@ EstimatorManager::~EstimatorManager() {
 }
 
 void EstimatorManager::init(
-        const std::vector<NewConfig::HighLevelEstimator>& high_level_estimator_configurations,
-        std::vector<NewConfig::LowLevelEstimator> low_level_estimator_configurations, 
+        const std::vector<Cfg::Estimator>& high_level_estimator_configurations, 
         const CANManager& can, const SensorManager& sensor_manager) 
 {
-    for (const NewConfig::HighLevelEstimator& estimator_config : high_level_estimator_configurations) {
+    for (const Cfg::HighLevelEstimator& estimator_config : high_level_estimator_configurations) {
         init_estimator(estimator_config, can, sensor_manager);
     }
 
-    for(const NewConfig::LowLevelEstimator& estimator_config : low_level_estimator_configurations) {
+    for(const Cfg::LowLevelEstimator& estimator_config : low_level_estimator_configurations) {
         init_estimator(estimator_config, can, sensor_manager);
     }   
 }
 
-void EstimatorManager::init_estimator(NewConfig::HighLevelEstimator estimator_config, const CANManager& can, const SensorManager& sensor_manager) {
+void EstimatorManager::init_estimator(Cfg::HighLevelEstimator estimator_config, const CANManager& can, const SensorManager& sensor_manager) {
     switch (estimator_config.estimator_name) {
-    case NewConfig::EstimatorName::GimbalAndChassis:
+    case Cfg::EstimatorName::GimbalAndChassis:
         high_level_estimators.push_back(std::make_unique(GimbalAndChassisEstimator(estimator_config, can, sensor_manager)));
         break;
-    case NewConfig::EstimatorName::FlywheelVelocity:
+    case Cfg::EstimatorName::FlywheelVelocity:
         high_level_estimators.push_back(std::make_unique(FlyWheelEstimator(estimator_config, can, sensor_manager)));
         break;
-    case NewConfig::EstimatorName::FeederPosition:
+    case Cfg::EstimatorName::FeederPosition:
         high_level_estimators.push_back(std::make_unique(FeederEstimator(estimator_config, can, sensor_manager)));
         break;
     default:

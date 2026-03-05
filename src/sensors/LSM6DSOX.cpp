@@ -1,6 +1,6 @@
 #include "LSM6DSOX.hpp"
 
-LSM6DSOX::LSM6DSOX(const NewConfig::LSMImu& config) : config(config) {}
+LSM6DSOX::LSM6DSOX(const Cfg::LSMImu& config) : config(config) {}
 
 // initialize LSM
 void LSM6DSOX::init() {

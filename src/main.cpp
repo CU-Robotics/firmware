@@ -125,7 +125,7 @@ int main() {
     // Config config
     Serial.println("Configuring...");
     // const Config *config = comms_layer.get_hive_data()
-    const NewConfig::RobotConfig& config = comms_layer.get_hive_data().robot_config;
+    const Cfg::RobotConfig& config = comms_layer.get_hive_data().robot_config;
     
     Serial.println("Configured!");
     

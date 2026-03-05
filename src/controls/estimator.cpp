@@ -1,42 +1,54 @@
 #include "estimator.hpp"
+#include "ICM20649.hpp"
+#include "utils/vector_math.hpp"
 
-GimbalAndChassisEstimator::GimbalAndChassisEstimator(Config config_data, SensorManager* sensor_manager, CANManager* _can) {
-    buff_enc_yaw = sensor_manager.get_buff_encoder_by_name(config_data); // sensor object definitions
-    buff_enc_pitch = sensor_manager->get_buff_encoder(1);
-    can = _can;
-    icm_imu = sensor_manager->get_icm_sensor(0);
-    YAW_ENCODER_OFFSET = config_data.sensor_info[0][2];
-    PITCH_ENCODER_OFFSET = config_data.sensor_info[1][2];
+GimbalAndChassisEstimator::GimbalAndChassisEstimator(Cfg::Estimator estimator_config, SensorManager& sensor_manager, CANManager& can, std::vector<Cfg::StateName> available_states) : 
+    buff_enc_yaw(sensor_manager.get_sensor_by_name<BuffEncoder>(estimator_config.get_sensor_name_by_generic_use(Cfg::GenericSensorUse::YawBuffEncoder))), 
+    buff_enc_pitch(sensor_manager.get_sensor_by_name<BuffEncoder>(estimator_config.get_sensor_name_by_generic_use(Cfg::GenericSensorUse::PitchBuffEncoder))),
+    icm_imu(sensor_manager.get_sensor_by_name<ICM20649>(estimator_config.get_sensor_name_by_generic_use(Cfg::GenericSensorUse::YawIcmImu))),
+    chassis_x_state(get_state_name_by_generic_use(Cfg::GenericEstimatorStateUse::ChassisX, estimator_config, available_states)),
+    chassis_y_state(get_state_name_by_generic_use(Cfg::GenericEstimatorStateUse::ChassisY, estimator_config, available_states)),
+    chassis_heading_state(get_state_name_by_generic_use(Cfg::GenericEstimatorStateUse::ChassisHeading, estimator_config, available_states)),
+    yaw_state(get_state_name_by_generic_use(Cfg::GenericEstimatorStateUse::GimbalYaw, estimator_config, available_states)),
+    pitch_state(get_state_name_by_generic_use(Cfg::GenericEstimatorStateUse::GimbalPitch, estimator_config, available_states)) {
 
-    yaw_angle = config_data.sensor_info[2][2];
-    pitch_angle = config_data.sensor_info[2][3];
-    roll_angle = config_data.sensor_info[2][4];
+    chassis_1 = can.get_motor_by_name(estimator_config.get_motor_name_by_generic_use(Cfg::GenericEstimatorMotorUse::ChassisFrontRight));
+    chassis_2 = can.get_motor_by_name(estimator_config.get_motor_name_by_generic_use(Cfg::GenericEstimatorMotorUse::ChassisBackRight));
+    chassis_3 = can.get_motor_by_name(estimator_config.get_motor_name_by_generic_use(Cfg::GenericEstimatorMotorUse::ChassisBackLeft));
+    chassis_4 = can.get_motor_by_name(estimator_config.get_motor_name_by_generic_use(Cfg::GenericEstimatorMotorUse::ChassisFrontLeft));
+    
+    yaw_encoder_offset = buff_enc_yaw.
+    pitch_encoder_offset = estimator_config.sensor_info.pitch_encoder_offset;
+
+    yaw_angle = estimator_config.sensor_info.yaw_start_angle;
+    pitch_angle = estimator_config.sensor_info.pitch_start_angle;
+    roll_angle = estimator_config.sensor_info.roll_start_angle;
     chassis_angle = 0;
-    imu_yaw_axis_vector[0] = config_data.sensor_info[2][5];
-    imu_yaw_axis_vector[1] = config_data.sensor_info[2][6];
-    imu_yaw_axis_vector[2] = config_data.sensor_info[2][7];
-    imu_pitch_axis_vector[0] = config_data.sensor_info[2][8];
-    imu_pitch_axis_vector[1] = config_data.sensor_info[2][9];
-    imu_pitch_axis_vector[2] = config_data.sensor_info[2][10];
-    starting_pitch_angle = config_data.sensor_info[2][1];
+    imu_yaw_axis_vector[0] = estimator_config.sensor_info.imu_yaw_axis_vector[0];
+    imu_yaw_axis_vector[1] = estimator_config.sensor_info.imu_yaw_axis_vector[1];
+    imu_yaw_axis_vector[2] = estimator_config.sensor_info.imu_yaw_axis_vector[2];
+    imu_pitch_axis_vector[0] = estimator_config.sensor_info.imu_pitch_axis_vector[0];
+    imu_pitch_axis_vector[1] = estimator_config.sensor_info.imu_pitch_axis_vector[1];
+    imu_pitch_axis_vector[2] = estimator_config.sensor_info.imu_pitch_axis_vector[2];
+    starting_pitch_angle = estimator_config.sensor_info.pitch_angle_at_imu_calibration;
 
-    odom_wheel_radius = config_data.sensor_info[3][2];
-    odom_axis_offset_x = config_data.sensor_info[3][1];
-    odom_axis_offset_y = config_data.sensor_info[4][1];
+    // odom_wheel_radius = estimator_config.sensor_info.odom_wheel_radius;
+    // odom_axis_offset_x = estimator_config.sensor_info.odom_axis_offset_x;
+    // odom_axis_offset_y = estimator_config.sensor_info.odom_axis_offset_y;
     // definitions for spherical coordinates of new axis in the imu refrence frame
     yaw_axis_spherical[0] = 1;   // rho (1 for a spherical)
     pitch_axis_spherical[0] = 1; // rho (1 for a spherical)
     roll_axis_spherical[0] = 1;  // rho (1 for a spherical)
 }
 
-void GimbalEstimatorNoOdom::step_states(float output[STATE_LEN][3], float curr_state[STATE_LEN][3], int override) {
-    float pitch_enc_angle = (-buff_enc_pitch->get_angle()) - PITCH_ENCODER_OFFSET;
+void GimbalAndChassisEstimator::step_states(RobotStateMap updated_state_map, RobotStateMap previous_state_map, int override) {
+    float pitch_enc_angle = (-buff_enc_pitch->get_angle()) - pitch_encoder_offset;
     while (pitch_enc_angle >= PI)
         pitch_enc_angle -= 2 * PI;
     while (pitch_enc_angle <= -PI)
         pitch_enc_angle += 2 * PI;
 
-    float yaw_enc_angle = (buff_enc_yaw->get_angle()) - YAW_ENCODER_OFFSET;
+    float yaw_enc_angle = (buff_enc_yaw->get_angle()) - yaw_encoder_offset;
     while (yaw_enc_angle >= PI)
         yaw_enc_angle -= 2 * PI;
     while (yaw_enc_angle <= -PI)
@@ -54,7 +66,7 @@ void GimbalEstimatorNoOdom::step_states(float output[STATE_LEN][3], float curr_s
     } else {
         yaw_axis_spherical[1] = atan(imu_yaw_axis_vector[1] / imu_yaw_axis_vector[0]); // theta
     }
-    yaw_axis_spherical[2] = acos(imu_yaw_axis_vector[2] / __magnitude(imu_yaw_axis_vector, 3)) - pitch_diff; // phi
+    yaw_axis_spherical[2] = acos(imu_yaw_axis_vector[2] / magnitude(imu_yaw_axis_vector, 3)) - pitch_diff; // phi
 
     // roll_axis_spherical[1] = yaw_axis_spherical[1]; // theta
     // roll_axis_spherical[2] = yaw_axis_spherical[2]-(PI*0.5); // phi
@@ -79,20 +91,20 @@ void GimbalEstimatorNoOdom::step_states(float output[STATE_LEN][3], float curr_s
     pitch_axis_unitvector[1] = imu_pitch_axis_vector[1] / mag;
     pitch_axis_unitvector[2] = imu_pitch_axis_vector[2] / mag;
 
-    __crossProduct(pitch_axis_unitvector, yaw_axis_unitvector, roll_axis_unitvector);
+    crossProduct(pitch_axis_unitvector, yaw_axis_unitvector, roll_axis_unitvector);
 
     float magicNum = 0; // left yaw increases with 0.8
-    __rotateVector3D(roll_axis_unitvector, yaw_axis_unitvector, magicNum, yaw_axis_unitvector);
-    __rotateVector3D(roll_axis_unitvector, pitch_axis_unitvector, magicNum, pitch_axis_unitvector);
+    rotateVector3D(roll_axis_unitvector, yaw_axis_unitvector, magicNum, yaw_axis_unitvector);
+    rotateVector3D(roll_axis_unitvector, pitch_axis_unitvector, magicNum, pitch_axis_unitvector);
 
-    // __rotateVector3D(yaw_axis_unitvector,roll_axis_unitvector,(PI*0.5),pitch_axis_unitvector);
+    // rotateVector3D(yaw_axis_unitvector,roll_axis_unitvector,(PI*0.5),pitch_axis_unitvector);
 
     // offset the axis' based on the pitch yaw and roll data, These vectors give global pitch yaw and roll
-    // __rotateVector3D(roll_axis_unitvector, yaw_axis_unitvector, global_roll_angle, yaw_axis_global);
-    // __rotateVector3D(roll_axis_unitvector, pitch_axis_unitvector, global_roll_angle, pitch_axis_global);
+    // rotateVector3D(roll_axis_unitvector, yaw_axis_unitvector, global_roll_angle, yaw_axis_global);
+    // rotateVector3D(roll_axis_unitvector, pitch_axis_unitvector, global_roll_angle, pitch_axis_global);
 
-    // __rotateVector3D(pitch_axis_unitvector, yaw_axis_unitvector, (global_pitch_angle - pitch_enc_angle), yaw_axis_global);
-    // __rotateVector3D(pitch_axis_unitvector, roll_axis_unitvector, (global_pitch_angle - pitch_enc_angle), roll_axis_global);
+    // rotateVector3D(pitch_axis_unitvector, yaw_axis_unitvector, (global_pitch_angle - pitch_enc_angle), yaw_axis_global);
+    // rotateVector3D(pitch_axis_unitvector, roll_axis_unitvector, (global_pitch_angle - pitch_enc_angle), roll_axis_global);
 
     // gets the velocity data from the imu and uses the gravity vector to calculate the yaw velocity
     float raw_omega_vector[3] = { icm_imu->get_gyro_X(), icm_imu->get_gyro_Y(), icm_imu->get_gyro_Z() };
@@ -103,9 +115,9 @@ void GimbalEstimatorNoOdom::step_states(float output[STATE_LEN][3], float curr_s
     float temp1[3];
     float temp2[3];
     float temp3[3];
-    __crossProduct(yaw_axis_unitvector, pitch_axis_unitvector, temp1);
-    __crossProduct(yaw_axis_unitvector, roll_axis_unitvector, temp2);
-    __crossProduct(roll_axis_unitvector, pitch_axis_unitvector, temp3);
+    crossProduct(yaw_axis_unitvector, pitch_axis_unitvector, temp1);
+    crossProduct(yaw_axis_unitvector, roll_axis_unitvector, temp2);
+    crossProduct(roll_axis_unitvector, pitch_axis_unitvector, temp3);
 
     // update previous to the current value before current is updated
     previous_pitch_velocity = current_pitch_velocity;
@@ -114,14 +126,14 @@ void GimbalEstimatorNoOdom::step_states(float output[STATE_LEN][3], float curr_s
 
     float imu_vel_offset = 1;
     // calculate the pitch yaw and roll velocities (Gimbal Relative)
-    current_pitch_velocity = __vectorProduct(pitch_axis_unitvector, raw_omega_vector, 3) / imu_vel_offset;
-    current_yaw_velocity = __vectorProduct(yaw_axis_unitvector, raw_omega_vector, 3) / imu_vel_offset;
-    current_roll_velocity = -__vectorProduct(roll_axis_unitvector, raw_omega_vector, 3) / imu_vel_offset;
+    current_pitch_velocity = vectorProduct(pitch_axis_unitvector, raw_omega_vector, 3) / imu_vel_offset;
+    current_yaw_velocity = vectorProduct(yaw_axis_unitvector, raw_omega_vector, 3) / imu_vel_offset;
+    current_roll_velocity = -vectorProduct(roll_axis_unitvector, raw_omega_vector, 3) / imu_vel_offset;
 
     // calculate the pitch yaw and roll velocities (Global Reference)
-    global_pitch_velocity = __vectorProduct(pitch_axis_global, raw_omega_vector, 3);
-    global_yaw_velocity = __vectorProduct(yaw_axis_global, raw_omega_vector, 3);
-    global_roll_velocity = __vectorProduct(roll_axis_global, raw_omega_vector, 3);
+    global_pitch_velocity = vectorProduct(pitch_axis_global, raw_omega_vector, 3);
+    global_yaw_velocity = vectorProduct(yaw_axis_global, raw_omega_vector, 3);
+    global_roll_velocity = vectorProduct(roll_axis_global, raw_omega_vector, 3);
     // position integration
     dt = time.delta();
     if (dt > .1)
@@ -155,12 +167,12 @@ void GimbalEstimatorNoOdom::step_states(float output[STATE_LEN][3], float curr_s
     // output[2][0] = chassis_angle;
     // output[2][1] = 0;
     // output[2][2] = 0;
-    output[3][0] = yaw_angle;
-    output[3][1] = current_yaw_velocity;
-    output[3][2] = roll_angle;
-    output[4][0] = pitch_enc_angle;
-    output[4][1] = current_pitch_velocity;
-    output[4][2] = pitch_enc_angle;
+    updated_state_map[yaw_state].set_position(yaw_angle);
+    updated_state_map[yaw_state].set_velocity(current_yaw_velocity);
+    updated_state_map[yaw_state].set_acceleration(roll_angle);
+    updated_state_map[pitch_state].set_position(pitch_enc_angle);
+    updated_state_map[pitch_state].set_velocity(current_pitch_velocity);
+    updated_state_map[pitch_state].set_acceleration(pitch_enc_angle);
 
 
     // // chassis estimation

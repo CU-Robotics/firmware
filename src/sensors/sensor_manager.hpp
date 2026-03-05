@@ -1,25 +1,13 @@
 #ifndef SENSOR_MANAGER_HPP
 #define SENSOR_MANAGER_HPP
 
-#include "ACS712.hpp"
-#include "Sensor.hpp"
-#include "StereoCamTrigger.hpp"
-#include "config_layer.hpp"
-#include "d200.hpp"
-#include "ICM20649.hpp"
-#include <SPI.h>
-#include "buff_encoder.hpp"
-#include "TOFSensor.hpp"
-#include "rev_encoder.hpp"
-#include "sensors/d200.hpp"
-#include <Arduino.h>
-#include "RefSystem.hpp"
-#include "comms/data/sendable.hpp"
-#include "sensors/limit_switch.hpp"
+#include <concepts>
+#include <map>
+#include <memory>
+#include <string>
 
-
-#define NUM_SENSOR_TYPE 16
-#define NUM_IMU_CALIBRATION 50000
+#include "sensors/sensor.hpp"
+#include "comms/config_data/robot_config.hpp"
 
 /// @class SensorManager
 /// @brief Class to manage sensors on the robot
@@ -33,9 +21,9 @@ public:
     ~SensorManager();
 
     /// @brief Initialize the sensor manager with configuration data
-    void init(const NewConfig::RobotConfig& config_data);
+    void init(const Cfg::RobotConfig& config_data);
 
-    void configure_sensors(const NewConfig::RobotConfig& config_data);
+    void configure_sensors(const Cfg::RobotConfig& config_data);
 
     void initialize_sensors();
 
@@ -43,44 +31,23 @@ public:
     void read();
 
     void send_to_comms();
-
-    std::optional<BuffEncoder*> get_buff_encoder_by_name(NewConfig::BuffEncoderName name);
-    std::optional<RevEncoder*> get_rev_encoder_by_name(NewConfig::RevEncoderName name);
-    std::optional<ICM20649*> get_icm_sensor_by_name(NewConfig::ImuName name);
-    std::optional<LSM6DSOX*> get_lsm_sensor_by_name(NewConfig::ImuName name);
-    std::optional<D200LD14P*> get_lidar_sensor_by_name(NewConfig::D200LidarName name);
-    std::optional<LimitSwitch*> get_limit_switch_by_name(NewConfig::LimitSwitchName name);
-    std::optional<ACS712*> get_current_sensor_by_name(NewConfig::CurrentSensorName name);
-    std::optional<TOFSensor*> get_tof_sensor_by_name(NewConfig::TOFSensorName name);
-    std::optional<StereoCamTrigger*> get_stereo_cam_trigger_by_name(NewConfig::StereoCameraTriggerName name);
-
-
-    /// @brief Get the referee system
-    /// @return pointer to the referee system
-    RefSystem* get_ref() {
-        return ref;
+    
+    template<typename SensorType>
+    requires std::derived_from<SensorType, Sensor>
+    std::shared_ptr<SensorType> SensorManager::get_sensor_by_name(Cfg::SensorName name) {
+        auto it = sensors.find(name);
+        if (it != sensors.end()) {
+            std::shared_ptr<SensorType> sensor_ptr = std::dynamic_pointer_cast<SensorType>(it->second);
+            if (sensor_ptr) {
+                return sensor_ptr;
+            } else {
+                safety_procedure("SensorManager: Sensor with name " + std::to_string(static_cast<uint32_t>(name)) + " found but is not of the requested type");
+            }
+        } else {
+            safety_procedure("SensorManager: Get sensor by name failed, no sensor with the given name found");
+        }
     }
-
-    /// @brief Set the estimated state of the robot
-    /// @param estimated_state array of the estimated state
-    void set_estimated_state(float estimated_state[STATE_LEN][3]) {
-        memcpy(this->estimated_state, estimated_state, sizeof(this->estimated_state));
-    }
-
 private:
-    /// @brief Array to store the estimated state of the robot, used by sensors that adjust from the estimated state
-    float estimated_state[STATE_LEN][3] = { {0} };
 
-    // Unfortunately, sensors and their configurations are too different to group into a shared parent with a shared config, 
-    // so we separately store sensors of each type in their own map, keyed by their name as specified in the config.
-
-    std::map<NewConfig::BuffEncoderName, BuffEncoder> buff_encoders;
-    std::map<NewConfig::RevEncoderName, RevEncoder> rev_encoders;
-    std::map<NewConfig::IcmImuName, ICM20649> icm_imus;
-    std::map<NewConfig::LsmImuName, LSM6DSOX> lsm_imus;
-    std::map<NewConfig::D200LidarName, D200LD14P> d200_lidars;
-    std::map<NewConfig::LimitSwitchName, LimitSwitch> limit_switches;
-    std::map<NewConfig::CurrentSensorName, ACS712> acs712_current_sensors;
-    std::map<NewConfig::TOFSensorName, TOFSensor> tof_sensors;
-    std::map<NewConfig::StereoCameraTriggerName, StereoCamTrigger> stereo_cam_triggers;
+    std::map<Cfg::SensorName, std::shared_ptr<Sensor>> sensors;
 };

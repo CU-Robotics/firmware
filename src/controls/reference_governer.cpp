@@ -6,15 +6,15 @@ void Governor::set_raw_reference(const RobotState::RawState& new_reference) {
     reference_state_map.set_raw_state(new_reference);
 }
 
-void Governor::set_position_reference(NewConfig::StateName state_name, float value) {
+void Governor::set_position_reference(Cfg::StateName state_name, float value) {
     reference_state_map.get_state(state_name).set_position(value);
 }
 
-void Governor::set_velocity_reference(NewConfig::StateName state_name, float value) {
+void Governor::set_velocity_reference(Cfg::StateName state_name, float value) {
     reference_state_map.get_state(state_name).set_velocity(value);
 }
 
-void Governor::set_acceleration_reference(NewConfig::StateName state_name, float value) {
+void Governor::set_acceleration_reference(Cfg::StateName state_name, float value) {
     reference_state_map.get_state(state_name).set_acceleration(value);
 }
 
@@ -36,7 +36,7 @@ const RobotState& Governor::step_reference(const RobotState& ungoverned_referenc
     for(const auto& [reference_name, reference] : reference_state_map.get_state_map()) {
         State ungoverned_reference = ungoverned_reference_map.get_state(reference_name);
 
-        if (reference.config.governor_type == NewConfig::StateOrder::Position) { // position based governor
+        if (reference.config.governor_type == Cfg::StateOrder::Position) { // position based governor
             State error = ungoverned_reference - reference;
             
             // Set the accel refrence to the max or min based on which direction it needs to go
@@ -75,7 +75,7 @@ const RobotState& Governor::step_reference(const RobotState& ungoverned_referenc
             reference.set_velocity(reference.get_velocity() + reference.get_acceleration() * dt);
             reference.set_position(reference.get_position() + reference.get_velocity() * dt);
 
-        } else if (reference.config.governor_type == NewConfig::StateOrder::Velocity) { // velocity based governor
+        } else if (reference.config.governor_type == Cfg::StateOrder::Velocity) { // velocity based governor
             State error = ungoverned_reference - reference;
 
             // check which direction the target is and set acceleration if the velocity error is less the max acceleration 

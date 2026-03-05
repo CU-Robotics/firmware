@@ -8,7 +8,7 @@
 #include "comms/config_data/sensor.hpp"     // for BuffEncoder, IcmImu, D200Lidar, RealsenseCamera
 #include "comms/config_data/state.hpp"      // for StateConfig
 
-namespace NewConfig {
+namespace Cfg {
 
 enum RobotId {
     UnsetRobotId,
@@ -41,8 +41,6 @@ struct RobotConfig {
     std::vector<BuffEncoder> buff_encoders;
     std::vector<IcmImu> icm_imus;
     std::vector<D200Lidar> d200_lidars;
-    std::vector<RealsenseCamera> realsense_cameras;
-    std::vector<LowLevelEstimator> low_level_estimators;
     std::vector<HighLevelEstimator> high_level_estimators;
     std::vector<State> states;
     std::vector<Motor> motors;

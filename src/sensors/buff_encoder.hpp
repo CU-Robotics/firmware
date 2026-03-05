@@ -4,8 +4,9 @@
 #include <Arduino.h>
 #include <SPI.h>
 #include <cstdint>
-#include "Sensor.hpp"
-#include "comms/data/buff_encoder_data.hpp"
+#include "sensors/sensor.hpp"
+#include "comms/config_data/sensor.hpp"
+
 
 // Encoder Registers and Config
 constexpr uint32_t MT6835_OP_READ = 0b0011;
@@ -42,30 +43,30 @@ constexpr uint32_t MT6835_REG_CAL_STATUS = 0x113;
 constexpr uint32_t MT6835_BITORDER = MSBFIRST;
 
 /// @brief Driver for the Buff-Encoder
-class BuffEncoder {
+class BuffEncoder : public Sensor {
 public:
     /// @brief Constructor for the BuffEncoder class
     /// @param encoder_config configuration data for the encoder
-    BuffEncoder(const NewConfig::BuffEncoder& encoder_config) : Sensor(SensorType::BUFFENC), config_data(encoder_config) {};
+    BuffEncoder(const Cfg::BuffEncoder& encoder_config) : Sensor(), config_data(encoder_config) {};
 
     /// @brief initialize sensor
-    void init() {};
+    void init() override {};
 
     /// @brief Read via SPI the current angle of the encoder
     /// @note Returns and sets m_angle when it reads
     /// @return true if successful, false if no data available
     bool read() override;
 
+    void send_to_comms() const override;
+
     /// @brief Get the angle of the last read function adjusted by the offset
     /// @return Read angle (radians)
     inline float get_angle() const { return m_angle; }
 
-    inline NewConfig::BuffEncoderName get_name() const { return config_data.name; }
-
-    inline BuffEncoderData get_data_for_comms();
+    inline Cfg::SensorName get_name() const { return config_data.encoder_name; }
  
     /// @brief Print the data for debugging
-    void print();
+    void print() const;
 
 private:
 
@@ -73,7 +74,7 @@ private:
     float m_angle = 0.f;
 
     /// @brief Configuration data for the encoder
-    const NewConfig::BuffEncoder& config_data;
+    const Cfg::BuffEncoder& config_data;
 
     /// @brief The SPI settings of the buff encoders
     static const SPISettings m_settings;

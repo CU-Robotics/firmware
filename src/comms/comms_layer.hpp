@@ -84,7 +84,7 @@ public:
     /// @param data The hive data to set
     void set_hive_data(HiveData& data);
 
-    NewConfig::RobotConfig configure();
+    Cfg::RobotConfig configure();
 
 private:
     /// @brief Initializes HID and starts its thread

@@ -7,7 +7,7 @@
 /// @brief the class for the Rev Through Bore Encoder(www.revrobotics.com/rev-11-1271/)
 class RevEncoder {
 private:
-	const NewConfig::RevEncoder& config;
+	const Cfg::RevEncoder& config;
 	/// @brief Used to read rise time of the encoder
 	FreqMeasureMulti freq;
 	/// @brief measure of current angle in ticks [0, 1023]
@@ -19,7 +19,7 @@ private:
 public:
 	/// @brief Construct a new rev_encoder object
 	/// @param encoder_pin the pin number that the encoders signal pin is plugged into
-	RevEncoder(const NewConfig::RevEncoder& config);
+	RevEncoder(const Cfg::RevEncoder& config);
 
 	/// @brief initialize the encoder with the correct pin
 	/// @param encoder_pin the pin number that the encoders signal pin is plugged into

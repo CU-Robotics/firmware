@@ -1,7 +1,10 @@
 #ifndef CONTROLLER_H
 #define CONTROLLER_H
 
+#include "estimator.hpp"
 #include "filters/pid_filter.hpp"
+#include "motor.hpp"
+#include "safety.hpp"
 #include "utils/timing.hpp"
 #include "sensors/can/can_manager.hpp"
 #include "state.hpp"
@@ -16,14 +19,14 @@
 struct Controller {
 protected:
     /// @brief config data for this specific controller
-    const NewConfig::Controller& controller_config;
+    const Cfg::Controller& controller_config;
 
     /// @brief Timer object so we can use dt in controllers
     Timer timer;
     
 public:
     /// @brief default constructor
-    Controller(const NewConfig::Controller& _controller_config) : controller_config(_controller_config) { };
+    Controller(const Cfg::Controller& _controller_config) : controller_config(_controller_config) { };
 
     /// @brief sends motor commands based on a reference and estimated state
     /// @param reference_map current target robot state map
@@ -33,18 +36,29 @@ public:
     /// @brief Resets integrators/timers
     virtual void reset() { timer.start(); }
 
-    const NewConfig::Controller& config() const { return controller_config; }
+    const Cfg::Controller& config() const { return controller_config; }
+
+    Motor* get_motor_by_generic_use(Cfg::GenericControllerMotorUse use, CANManager& can, std::vector<Cfg::MotorName>& available_motors) const {
+        Cfg::MotorName requested_motor_name = controller_config.get_motor_name_by_generic_use(use);
+        for (const auto& motor_name : available_motors) {
+            if (motor_name == requested_motor_name) { 
+                return can.get_motor_by_name(requested_motor_name);
+            }        
+        }
+        safety::safety_procedure("Controller requires motor that is not available. (multiple controllers may be trying to use the same motor)");
+        
+    }
 };
 
 /// @brief Position controller for the chassis
 struct XDriveController : public Controller {
 private:
-    NewConfig::SubController xy_position_controller;
-    NewConfig::SubController xy_velocity_controller;
-    NewConfig::SubController chassis_angle_controller;
-    NewConfig::SubController chassis_angular_velocity_controller;
-    NewConfig::SubController low_level_velocity_controller;
-    NewConfig::SubController power_buffer_controller;
+    Cfg::SubController xy_position_controller;
+    Cfg::SubController xy_velocity_controller;
+    Cfg::SubController chassis_angle_controller;
+    Cfg::SubController chassis_angular_velocity_controller;
+    Cfg::SubController low_level_velocity_controller;
+    Cfg::SubController power_buffer_controller;
 
     /// @brief filter for calculating pid position controller outputs. 3 for x, y, and chassis angle
     PIDFilter pidp[3];
@@ -64,27 +78,28 @@ private:
     Motor* chassis_motor_3; // back right
     Motor* chassis_motor_4; // back left
 
-    const StateName& chassis_x_state;
-    const StateName& chassis_y_state;
-    const StateName& chassis_heading_state;
+    const Cfg::StateName& chassis_x_state;
+    const Cfg::StateName& chassis_y_state;
+    const Cfg::StateName& chassis_heading_state;
 
 public:
     /// @brief default
-    XDrivePositionController(const NewConfig::Controller& controller_config, CANManager& can) : 
-        chassis_x_state(controller_config.chassis_x_state), chassis_y_state(controller_config.chassis_y_state), 
-        chassis_heading_state(controller_config.chassis_heading_state), Controller(controller_config) {
+    XDriveController(const Cfg::Controller& controller_config, CANManager& can, std::vector<Cfg::MotorName>& available_motors) : 
+        Controller(controller_config), chassis_x_state{controller_config.get_state_name_by_generic_use(Cfg::GenericControllerStateUse::ChassisX)}, 
+        chassis_y_state(controller_config.get_state_name_by_generic_use(Cfg::GenericControllerStateUse::ChassisY)), 
+        chassis_heading_state(controller_config.get_state_name_by_generic_use(Cfg::GenericControllerStateUse::ChassisHeading)) {
 
-        xy_position_controller = controller_config.get_sub_controller_by_type(NewConfig::XYPositionController);
-        xy_velocity_controller = controller_config.get_sub_controller_by_type(NewConfig::XYVelocityController);
-        chassis_angle_controller = controller_config.get_sub_controller_by_type(NewConfig::ChassisAngleController);
-        chassis_angular_velocity_controller = controller_config.get_sub_controller_by_type(NewConfig::ChassisAngularVelocityController);
-        low_level_velocity_controller = controller_config.get_sub_controller_by_type(NewConfig::LowLevelVelocityController);
-        power_buffer_controller = controller_config.get_sub_controller_by_type(NewConfig::PowerBufferController);
+        xy_position_controller = controller_config.get_sub_controller_by_type(Cfg::SubControllerType::XYPositionController);
+        xy_velocity_controller = controller_config.get_sub_controller_by_type(Cfg::SubControllerType::XYVelocityController);
+        chassis_angle_controller = controller_config.get_sub_controller_by_type(Cfg::SubControllerType::ChassisAngleController);
+        chassis_angular_velocity_controller = controller_config.get_sub_controller_by_type(Cfg::SubControllerType::ChassisAngularVelocityController);
+        low_level_velocity_controller = controller_config.get_sub_controller_by_type(Cfg::SubControllerType::LowLevelVelocityController);
+        power_buffer_controller = controller_config.get_sub_controller_by_type(Cfg::SubControllerType::PowerBufferController);
 
-        chassis_motor_1 = can.get_motor_by_name(controller_config.motors.chassis_motor_1);
-        chassis_motor_2 = can.get_motor_by_name(controller_config.motors.chassis_motor_2);
-        chassis_motor_3 = can.get_motor_by_name(controller_config.motors.chassis_motor_3);
-        chassis_motor_4 = can.get_motor_by_name(controller_config.motors.chassis_motor_4);
+        chassis_motor_1 = get_motor_name_by_generic_use(Cfg::GenericControllerMotorUse::ChassisFrontLeft, can, available_motors);
+        chassis_motor_2 = get_motor_name_by_generic_use(Cfg::GenericControllerMotorUse::ChassisBackRight, can, available_motors);
+        chassis_motor_3 = get_motor_name_by_generic_use(Cfg::GenericControllerMotorUse::ChassisBackLeft, can, available_motors);
+        chassis_motor_4 = get_motor_name_by_generic_use(Cfg::GenericControllerMotorUse::ChassisFrontRight, can, available_motors);
     }
 
     /// @brief sends motor commands based on a reference and estimated state
@@ -105,8 +120,8 @@ public:
 /// @brief Controller for the yaw
 struct YawController : public Controller {
 private:
-    NewConfig::SubController full_state_position_controller;
-    NewConfig::SubController full_state_velocity_controller;
+    Cfg::SubController full_state_position_controller;
+    Cfg::SubController full_state_velocity_controller;
 
     /// @brief filter for calculating pid position controller outputs
     PIDFilter pidp;
@@ -116,16 +131,17 @@ private:
     Motor* yaw_motor_1;
     Motor* yaw_motor_2;
 
-    const StateName& yaw_angle_state;
+    const Cfg::StateName& yaw_angle_state;
 
 public:
     /// @brief default constructor
-    YawController(const NewConfig::Controller& controller_config, CANManager& can) : yaw_angle_state(controller_config.yaw_angle_state), Controller(controller_config) {
-        full_state_position_controller = controller_config.get_sub_controller_by_type(NewConfig::FullStatePositionController);
-        full_state_velocity_controller = controller_config.get_sub_controller_by_type(NewConfig::FullStateVelocityController);
+    YawController(const Cfg::Controller& controller_config, CANManager& can, std::vector<Cfg::MotorName>& available_motors) : Controller(controller_config),
+        yaw_angle_state(controller_config.get_state_name_by_generic_use(Cfg::GenericControllerStateUse::GimbalYaw)) {
+        full_state_position_controller = controller_config.get_sub_controller_by_type(Cfg::SubControllerType::FullStatePositionController);
+        full_state_velocity_controller = controller_config.get_sub_controller_by_type(Cfg::SubControllerType::FullStateVelocityController);
 
-        yaw_motor_1 = can.get_motor_by_name(controller_config.motors.yaw_motor_1);
-        yaw_motor_2 = can.get_motor_by_name(controller_config.motors.yaw_motor_2);
+        yaw_motor_1 = get_motor_name_by_generic_use(Cfg::GenericControllerMotorUse::Yaw1, can, available_motors);
+        yaw_motor_2 = get_motor_name_by_generic_use(Cfg::GenericControllerMotorUse::Yaw2, can, available_motors);
     }
 
     /// @brief sends motor commands based on a reference and estimated state
@@ -144,8 +160,8 @@ public:
 struct PitchController : public Controller {
 
 private:
-    NewConfig::SubController full_state_position_controller;
-    NewConfig::SubController full_state_velocity_controller;
+    Cfg::SubController full_state_position_controller;
+    Cfg::SubController full_state_velocity_controller;
 
     /// @brief filter for calculating pid position controller outputs
     PIDFilter pidp;
@@ -155,14 +171,15 @@ private:
     Motor* pitch_motor_1;
     Motor* pitch_motor_2;
 
-    const StateName& pitch_angle_state;
+    const Cfg::StateName& pitch_angle_state;
 public:
-    PitchController(const NewConfig::Controller& controller_config, CANManager& can) : Controller(controller_config), pitch_angle_state(controller_config.pitch_angle_state) {
-        full_state_position_controller = controller_config.get_sub_controller_by_type(NewConfig::FullStatePositionController);
-        full_state_velocity_controller = controller_config.get_sub_controller_by_type(NewConfig::FullStateVelocityController);
+    PitchController(const Cfg::Controller& controller_config, CANManager& can, std::vector<Cfg::MotorName>& available_motors) : Controller(controller_config),
+        pitch_angle_state(controller_config.get_state_name_by_generic_use(Cfg::GenericControllerStateUse::GimbalPitch)) {
+        full_state_position_controller = controller_config.get_sub_controller_by_type(Cfg::SubControllerType::FullStatePositionController);
+        full_state_velocity_controller = controller_config.get_sub_controller_by_type(Cfg::SubControllerType::FullStateVelocityController);
 
-        pitch_motor_1 = can.get_motor_by_name(controller_config.motors.pitch_motor_1);
-        pitch_motor_2 = can.get_motor_by_name(controller_config.motors.pitch_motor_2);
+        pitch_motor_1 = get_motor_name_by_generic_use(Cfg::GenericControllerMotorUse::PitchLeft, can, available_motors);
+        pitch_motor_2 = get_motor_name_by_generic_use(Cfg::GenericControllerMotorUse::PitchRight, can, available_motors);
     }
 
     /// @brief sends motor commands based on a reference and estimated state
@@ -181,8 +198,8 @@ public:
 /// @brief Controller for the flywheels
 struct FlywheelController : public Controller {
 private:
-    NewConfig::SubController high_level_velocity_controller;
-    NewConfig::SubController low_level_velocity_controller;
+    Cfg::SubController high_level_velocity_controller;
+    Cfg::SubController low_level_velocity_controller;
 
     /// @brief filter for controlling meters/second
     PIDFilter pid_high;
@@ -192,15 +209,15 @@ private:
     Motor* flywheel_motor_1;
     Motor* flywheel_motor_2;
 
-    const StateName& flywheel_velocity_state;
+    const Cfg::StateName& flywheel_velocity_state;
 public:
     /// @brief default constructor
-    FlywheelController(const NewConfig::Controller& controller_config, CANManager& can) : Controller(controller_config), flywheel_velocity_state(controller_config.flywheel_velocity_state) {
-        high_level_velocity_controller = controller_config.get_sub_controller_by_type(NewConfig::HighLevelVelocityController);
-        low_level_velocity_controller = controller_config.get_sub_controller_by_type(NewConfig::LowLevelVelocityController);
+    FlywheelController(const Cfg::Controller& controller_config, CANManager& can, std::vector<Cfg::MotorName>& available_motors) : Controller(controller_config), flywheel_velocity_state(controller_config.get_state_name_by_generic_use(Cfg::GenericControllerStateUse::ShooterBallVelocity)) {
+        high_level_velocity_controller = controller_config.get_sub_controller_by_type(Cfg::SubControllerType::HighLevelVelocityController);
+        low_level_velocity_controller = controller_config.get_sub_controller_by_type(Cfg::SubControllerType::LowLevelVelocityController);
 
-        flywheel_motor_1 = can.get_motor_by_name(controller_config.motors.flywheel_motor_1);
-        flywheel_motor_2 = can.get_motor_by_name(controller_config.motors.flywheel_motor_2);
+        flywheel_motor_1 = get_motor_name_by_generic_use(Cfg::GenericControllerMotorUse::FlywheelLeft, can, available_motors);
+        flywheel_motor_2 = get_motor_name_by_generic_use(Cfg::GenericControllerMotorUse::FlywheelRight, can, available_motors);
     }
 
     /// @brief sends motor commands based on a reference and estimated state
@@ -219,8 +236,8 @@ public:
 // /// @brief Controls the feeder
 // struct FeederController : public Controller {
 // private:
-//     NewConfig::SubController full_state_position_controller;
-//     NewConfig::SubController full_state_velocity_controller;
+//     Cfg::SubController full_state_position_controller;
+//     Cfg::SubController full_state_velocity_controller;
 //     /// @brief filter for controlling balls/sec
 //     PIDFilter pid_high;
 //     /// @brief filter for controlling motor velocity
@@ -229,8 +246,8 @@ public:
 // public:
 //     /// @brief default constructor
 //     FeederController() {
-//         full_state_position_controller = controller_config.get_sub_controller_by_type(NewConfig::FullStatePositionController);
-//         full_state_velocity_controller = controller_config.get_sub_controller_by_type(NewConfig::FullStateVelocityController);
+//         full_state_position_controller = controller_config.get_sub_controller_by_type(Cfg::FullStatePositionController);
+//         full_state_velocity_controller = controller_config.get_sub_controller_by_type(Cfg::FullStateVelocityController);
 //     }
 
 //     /// @brief calculate motor outputs based on reference and estimate
@@ -251,8 +268,8 @@ public:
 /// @brief Controller for the ball feeder
 struct FeederController : public Controller {
     private:
-        NewConfig::SubController full_state_position_controller;
-        NewConfig::SubController full_state_velocity_controller;
+        Cfg::SubController full_state_position_controller;
+        Cfg::SubController full_state_velocity_controller;
         /// @brief filter for calculating pid position controller outputs
         PIDFilter pidp;
         /// @brief filter for calculating pid velocity controller outputs
@@ -260,14 +277,15 @@ struct FeederController : public Controller {
 
         Motor* feeder_motor;
 
-        const StateName& feeder_velocity_state;
+        const Cfg::StateName& feeder_position_state;
     public:
         /// @brief assign sub controllers
-        FeederController() : Controller(controller_config), feeder_velocity_state(controller_config.feeder_velocity_state) {
-            full_state_position_controller = controller_config.get_sub_controller_by_type(NewConfig::FullStatePositionController);
-            full_state_velocity_controller = controller_config.get_sub_controller_by_type(NewConfig::FullStateVelocityController);
+        FeederController(const Cfg::Controller& controller_config, CANManager& can, std::vector<Cfg::MotorName>& available_motors) : Controller(controller_config),
+            feeder_position_state(controller_config.get_state_name_by_generic_use(Cfg::GenericControllerStateUse::FeederBallPosition)) {
+            full_state_position_controller = controller_config.get_sub_controller_by_type(Cfg::SubControllerType::FullStatePositionController);
+            full_state_velocity_controller = controller_config.get_sub_controller_by_type(Cfg::SubControllerType::FullStateVelocityController);
 
-            feeder_motor = can.get_motor_by_name(controller_config.motors.feeder_motor);
+            feeder_motor = get_motor_name_by_generic_use(Cfg::GenericControllerMotorUse::Feeder, can, available_motors);
         }
 
         /// @brief sends motor commands based on a reference and estimated state

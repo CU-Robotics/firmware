@@ -17,7 +17,7 @@ CANManager::~CANManager() {
     m_motor_name_map.clear();
 }
 
-void CANManager::init(const std::vector<NewConfig::Motor>& motor_configs) {
+void CANManager::init(const std::vector<Cfg::Motor>& motor_configs) {
     // initialize CAN 1
     m_can1.begin();
     m_can1.setBaudRate(1000000u);   // 1Mbit baud
@@ -38,38 +38,38 @@ void CANManager::init(const std::vector<NewConfig::Motor>& motor_configs) {
     // destroy any motors in existance and initialize to nullptr
     m_motor_name_map.clear();
     
-    for(const NewConfig::Motor& motor_config : motor_configs) {
+    for(const Cfg::Motor& motor_config : motor_configs) {
         configure_motor(motor_config);
     }
 
     init_motors();
 }
 
-void CANManager::configure_motor(const NewConfig::Motor& motor_config){
+void CANManager::configure_motor(const Cfg::Motor& motor_config){
 
     switch(motor_config.motor_controller_type) {
-        case NewConfig::MotorControllerType::C610: {
+        case Cfg::MotorControllerType::C610: {
             m_motor_name_map.insert({ motor_config.motor_name, std::make_unique<C610>(motor_config) });
             Serial.printf("Creating C610 motor %u on bus %u with ID %u\n", static_cast<uint32_t>(motor_config.motor_name), motor_config.physical_bus, motor_config.physical_id);
             
             break;
         }
-        case NewConfig::MotorControllerType::C620: {
+        case Cfg::MotorControllerType::C620: {
             m_motor_name_map.insert({ motor_config.motor_name, std::make_unique<C620>(motor_config) });
             Serial.printf("Creating C620 Motor %u on bus %u with ID %u\n", static_cast<uint32_t>(motor_config.motor_name), motor_config.physical_bus, motor_config.physical_id);
             break;
         }
-        case NewConfig::MotorControllerType::MG: {
+        case Cfg::MotorControllerType::MG: {
             m_motor_name_map.insert({ motor_config.motor_name, std::make_unique<MG8016EI6>(motor_config) });
             Serial.printf("Creating MG Motor %u on bus %u with ID %u\n", static_cast<uint32_t>(motor_config.motor_name), motor_config.physical_bus, motor_config.physical_id);
             break;
         }
-        case NewConfig::MotorControllerType::GIM: {
+        case Cfg::MotorControllerType::GIM: {
             m_motor_name_map.insert({ motor_config.motor_name, std::make_unique<GIM>(motor_config) });
             Serial.printf("Creating GIM Motor %u on bus %u with ID %u\n", static_cast<uint32_t>(motor_config.motor_name), motor_config.physical_bus, motor_config.physical_id);
             break;
         }
-        case NewConfig::MotorControllerType::SDC104: {
+        case Cfg::MotorControllerType::SDC104: {
             m_motor_name_map.insert({ motor_config.motor_name, std::make_unique<SDC104>(motor_config) });
             Serial.printf("Creating SDC104 Motor %u on bus %u with ID %u\n", static_cast<uint32_t>(motor_config.motor_name), motor_config.physical_bus, motor_config.physical_id);
             break;
@@ -120,8 +120,8 @@ void CANManager::write() {
             
             // based on the motor type, figure out how to write the message
             switch (motor->get_controller_type()) {
-            case NewConfig::MotorControllerType::C610:   // fallthrough
-            case NewConfig::MotorControllerType::C620: {
+            case Cfg::MotorControllerType::C610:   // fallthrough
+            case Cfg::MotorControllerType::C620: {
                 // depending on the motor ID, write the message to the correct msg in the array
                 // - 1 to get the id into 0-indexed form, then divide by 4 to get the upper or lower half as an index (0, 1)
                 if ((motor->get_id() - 1) / 4) {
@@ -137,9 +137,9 @@ void CANManager::write() {
 
                 break;
             }
-            case NewConfig::MotorControllerType::MG8016:
-            case NewConfig::MotorControllerType::GIM:
-            case NewConfig::MotorControllerType::SDC104: {
+            case Cfg::MotorControllerType::MG8016:
+            case Cfg::MotorControllerType::GIM:
+            case Cfg::MotorControllerType::SDC104: {
                 // these motors dont require msg merging so just write it to the bus
                 CAN_message_t msg;
 
@@ -190,9 +190,9 @@ void CANManager::issue_safety_mode() {
     write();
 }
 
-void CANManager::write_motor_torque_by_name(NewConfig::MotorName motor_name, float torque) {
+void CANManager::write_motor_torque_by_name(Cfg::MotorName motor_name, float torque) {
 
-    if(motor_name == NewConfig::MotorName::UnsetMotorName) {
+    if(motor_name == Cfg::MotorName::UnsetMotorName) {
         #ifdef CAN_MANAGER_DEBUG
         Serial.printf("CANManager: Requested write to an unset motor name\n");
         #endif
@@ -221,8 +221,8 @@ void CANManager::print_state() {
     }
 }
 
-void CANManager::print_motor_state_by_name(NewConfig::MotorName motor_name) {
-    if(motor_name == NewConfig::MotorName::UnsetMotorName) {
+void CANManager::print_motor_state_by_name(Cfg::MotorName motor_name) {
+    if(motor_name == Cfg::MotorName::UnsetMotorName) {
         #ifdef CAN_MANAGER_DEBUG
         Serial.printf("CANManager: Requested print of an unset motor name\n");
         #endif
@@ -240,8 +240,8 @@ void CANManager::print_motor_state_by_name(NewConfig::MotorName motor_name) {
     m_motor_name_map[motor_name].print_state();
 }
 
-Motor* CANManager::get_motor_by_name(NewConfig::MotorName motor_name) {
-    if(motor_name == NewConfig::MotorName::UnsetMotorName) {
+Motor* CANManager::get_motor_by_name(Cfg::MotorName motor_name) {
+    if(motor_name == Cfg::MotorName::UnsetMotorName) {
         #ifdef CAN_MANAGER_DEBUG
         Serial.printf("CANManager: Requested get of an unset motor name\n");
         #endif
@@ -259,8 +259,8 @@ Motor* CANManager::get_motor_by_name(NewConfig::MotorName motor_name) {
     return &m_motor_name_map[motor_name];
 }
 
-std::optional<MotorState> CANManager::get_motor_state_by_name(NewConfig::MotorName motor_name) {
-    if(motor_name == NewConfig::MotorName::UnsetMotorName) {
+std::optional<MotorState> CANManager::get_motor_state_by_name(Cfg::MotorName motor_name) {
+    if(motor_name == Cfg::MotorName::UnsetMotorName) {
         #ifdef CAN_MANAGER_DEBUG
         Serial.printf("CANManager: Requested get motor state with an unset motor name\n");
         #endif
@@ -294,7 +294,7 @@ void CANManager::init_motors() {
     // wait for the motors to initialize or timeout
 
     // maintain a list of motors that have been initialized, indexed by motor name
-    std::set<NewConfig::MotorName> initialized_motors;
+    std::set<Cfg::MotorName> initialized_motors;
 
     // only run the initialization for the timeout time
     uint32_t start_time = millis();
@@ -307,10 +307,10 @@ void CANManager::init_motors() {
             // we want to read all the messages from this bus as there might be many queued up
             while (m_busses[bus]->read(msg)) {
                 // try to distribute the message to the correct motor
-                NewConfig::MotorName recieving_motor_name = distribute_msg(msg);
+                Cfg::MotorName recieving_motor_name = distribute_msg(msg);
 
                 // no motor could handle the message so move on
-                if (recieving_motor_name == NewConfig::MotorName::UnsetMotorName) continue;
+                if (recieving_motor_name == Cfg::MotorName::UnsetMotorName) continue;
                 // mark this motor as initialzied
                 initialized_motors.insert(recieving_motor_name);
             }
@@ -327,7 +327,7 @@ void CANManager::init_motors() {
     }
 }
 
-NewConfig::MotorName CANManager::distribute_msg(CAN_message_t& msg) {
+Cfg::MotorName CANManager::distribute_msg(CAN_message_t& msg) {
     // for each motor, cant be const
     for (auto& [name, motor] : m_motor_name_map) {
         // if the motor can handle the message, give it to the motor
@@ -337,5 +337,5 @@ NewConfig::MotorName CANManager::distribute_msg(CAN_message_t& msg) {
     }
     
     // no motors could handle the message
-    return NewConfig::MotorName::UnsetMotorName;
+    return Cfg::MotorName::UnsetMotorName;
 }

@@ -28,19 +28,19 @@ public:
     /// @param value The value to set
     /// @param state_name The name of the state to set the reference for  
     /// @note This function should be used sparingly, as setting the reference defeats its purpose.
-    void set_position_reference(float value, NewConfig::StateName state_name);
+    void set_position_reference(float value, Cfg::StateName state_name);
 
     /// @brief Sets the velocity reference for a given state
     /// @param value The value to set
     /// @param state_name The name of the state to set the reference for
     /// @note This function should be used sparingly, as setting the reference defeats its purpose.
-    void set_velocity_reference(float value, NewConfig::StateName state_name);
+    void set_velocity_reference(float value, Cfg::StateName state_name);
 
     /// @brief Sets the acceleration reference for a given state
     /// @param value the value to set
     /// @param state_name The name of the state to get the reference for
     /// @note This function should be used sparingly, as setting the reference defeats its purpose.
-    float set_acceleration_reference(float value, NewConfig::StateName state_name);
+    float set_acceleration_reference(float value, Cfg::StateName state_name);
 
     /// @brief Gives the instantaneous governed state reference matrix (also known as desired state)
     /// @param reference The array to override with the reference matrix; Must be of shape [STATE_LEN][3]

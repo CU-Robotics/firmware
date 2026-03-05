@@ -32,7 +32,7 @@ struct HiveData {
     /// @brief Config section
     ConfigSection config_section;
 
-    NewConfig::RobotConfig config;
+    Cfg::RobotConfig config;
 };
 
 } // namespace Comms

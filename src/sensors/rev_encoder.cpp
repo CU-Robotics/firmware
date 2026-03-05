@@ -1,6 +1,6 @@
 #include "rev_encoder.hpp"
 
- RevEncoder::RevEncoder(const NewConfig::RevEncoder& config) : Sensor(SensorType::REVENC), config(config) {
+ RevEncoder::RevEncoder(const Cfg::RevEncoder& config) : Sensor(SensorType::REVENC), config(config) {
     init();
 };
 
@@ -31,7 +31,6 @@ bool RevEncoder::read() {
     rev_sensor_data.ticks = ticks;
     rev_sensor_data.radians = radians;
     return true;
-    
 }
 
 float RevEncoder::get_angle_ticks() {

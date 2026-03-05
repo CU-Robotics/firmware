@@ -1,51 +1,24 @@
-#include "d200.hpp"
-#include <stdexcept>
+#include "sensors/d200.hpp"
+#include "comms/config_data/hardware_serial_resolve.hpp"
+#include "utils/safety.hpp"
+#include "comms/data/sendable.hpp"
 
-D200LD14P::D200LD14P(const NewConfig::D200Lidar& config) 
-  : Sensor(SensorType::LIDAR, config.id),
-    config(config), 
-    port(validate_port(NewConfig::resolve_hardware_serial_port(config.pins.hardware_serial_port)))
-{
-  current_packet = 0;
-  port.begin(D200_BAUD);
-}
+D200LD14P::D200LD14P(const Cfg::D200Lidar& config_) 
+  : Sensor(),
+    config(config_),
+    port(grab_hw_serial_port(config.hardware_serial_port)) 
+{}
 
-HardwareSerial& D200LD14P::validate_port(std::optional<HardwareSerial*> port_opt) {
+HardwareSerial& D200LD14P::grab_hw_serial_port(Cfg::HardwareSerialPort port) {
+  auto port_opt = Cfg::resolve_hardware_serial_port(port);
   if (!port_opt.has_value()) {
-    Serial.println("Invalid hardware serial port for D200 lidar");
-    throw std::invalid_argument("Invalid hardware serial port for D200 lidar");
+    safety::safety_procedure("D200LD14P: failed to resolve hardware serial port " + std::to_string(static_cast<uint32_t>(port)));
   }
-  return *port_opt;
+  return *port_opt.value();
 }
 
-uint8_t D200LD14P::calc_checksum(uint8_t *buf, int len) {
-  uint8_t crc8 = 0;
-  for (int i = 0; i < len; i++) {
-    crc8 = CRC_TABLE[(crc8 ^ *buf++) & 0xff];
-  }
-  return crc8;
-}
-
-
-void D200LD14P::set_speed(float speed) {
-  // convert to deg/s
-  uint16_t speed_deg = constrain((uint16_t) (speed * 180.0 / M_PI), MIN_SPEED, MAX_SPEED);
-
-  uint8_t lsb = speed_deg & 0xff;
-  uint8_t msb = (speed_deg >> 8) & 0xff;
-
-  uint8_t cmd[D200_CMD_PACKET_LEN] = { 0x54, 0xa2, 0x04, lsb, msb, 0, 0, 0 };
-  cmd[D200_CMD_PACKET_LEN - 1] = calc_checksum(cmd, D200_CMD_PACKET_LEN - 1);
-
-  port.write(cmd, D200_CMD_PACKET_LEN);
-}
-
-void D200LD14P::start_motor() {
-  port.write(D200_START_CMD, D200_CMD_PACKET_LEN);
-}
-
-void D200LD14P::stop_motor() {
-  port.write(D200_STOP_CMD, D200_CMD_PACKET_LEN);
+void D200LD14P::init() {
+  port.begin(D200_BAUD);
 }
 
 bool D200LD14P::read() {
@@ -66,7 +39,7 @@ bool D200LD14P::read() {
       : D200_CMD_PACKET_LEN;
     
     uint8_t buf[packet_len];
-
+    
     buf[0] = start_char;
     buf[1] = frame_char;
     
@@ -125,7 +98,7 @@ bool D200LD14P::read() {
         // points start at byte 6, each point is 3 bytes
         int base = 6 + i * 3;
         uint16_t distance = (buf[base + 1] << 8) | buf[base];
-
+        
         // convert measurements to SI
         p->distances[i] = (float) distance / 1000.0; // mm -> m
         p->intensities[i] = buf[base + 2]; // units are ambiguous (not documented)
@@ -136,9 +109,47 @@ bool D200LD14P::read() {
   return true;
 }
 
+void D200LD14P::send_to_comms() const {
+  for (size_t pkt_index = 0; pkt_index < D200_NUM_PACKETS_CACHED; pkt_index++) {
+    Comms::Sendable<LidarDataPacketSI> sendable_packet;
+    sendable_packet.data = packets[pkt_index];
+    sendable_packet.send_to_comms();
+  }
+}
+
+uint8_t D200LD14P::calc_checksum(uint8_t *buf, int len) {
+  uint8_t crc8 = 0;
+  for (int i = 0; i < len; i++) {
+    crc8 = CRC_TABLE[(crc8 ^ *buf++) & 0xff];
+  }
+  return crc8;
+}
+
+void D200LD14P::set_speed(float speed) {
+  // convert to deg/s
+  uint16_t speed_deg = constrain((uint16_t) (speed * 180.0 / M_PI), MIN_SPEED, MAX_SPEED);
+
+  uint8_t lsb = speed_deg & 0xff;
+  uint8_t msb = (speed_deg >> 8) & 0xff;
+
+  uint8_t cmd[D200_CMD_PACKET_LEN] = { 0x54, 0xa2, 0x04, lsb, msb, 0, 0, 0 };
+  cmd[D200_CMD_PACKET_LEN - 1] = calc_checksum(cmd, D200_CMD_PACKET_LEN - 1);
+
+  port.write(cmd, D200_CMD_PACKET_LEN);
+}
+
+void D200LD14P::start_motor() {
+  port.write(D200_START_CMD, D200_CMD_PACKET_LEN);
+}
+
+void D200LD14P::stop_motor() {
+  port.write(D200_STOP_CMD, D200_CMD_PACKET_LEN);
+}
+
 void D200LD14P::get_data(LidarDataPacketSI data[D200_NUM_PACKETS_CACHED]) {
   memcpy(data, packets, sizeof(packets));
 }
+
 
 void D200LD14P::flush_packet_buffer() {
   LidarDataPacketSI zero_packet = {};

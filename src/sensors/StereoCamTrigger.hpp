@@ -10,7 +10,7 @@
 /// @brief class to manage triggering synchronized exposures for dual USB cameras
 class StereoCamTrigger {
   private:
-    const NewConfig::StereoCameraTrigger& config;
+    const Cfg::StereoCameraTrigger& config;
     
     /// @brief Teensyduino timer instance used to maintain signal
     IntervalTimer timer;
@@ -29,7 +29,7 @@ class StereoCamTrigger {
   public:
     /// @brief constructor for StereoCamTrigger
     /// @param _fps desired FPS (frames per second) of the trigger signal
-    StereoCamTrigger(const NewConfig::StereoCamTriggerConfig& config): config(config) {}
+    StereoCamTrigger(const Cfg::StereoCamTriggerConfig& config): config(config) {}
     
     /// @brief initialize trigger manager by starting the interval timer
     void init();

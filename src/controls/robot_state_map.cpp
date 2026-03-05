@@ -2,13 +2,13 @@
 #include <cstddef>
 #include <cstring>
 
-RobotStateMap::RobotStateMap(const std::vector<NewConfig::State>& _state_configurations) {
+RobotStateMap::RobotStateMap(const std::vector<Cfg::State>& _state_configurations) {
     for (const auto& state : _state_configurations) {
         robot_state.emplace(state.name, State(state));
     }
 }
 
-State& RobotStateMap::operator[](NewConfig::StateName state_name) {
+State& RobotStateMap::operator[](Cfg::StateName state_name) {
 
     auto it = robot_state.find(state_name);
     assert(it != robot_state.end());
@@ -16,7 +16,7 @@ State& RobotStateMap::operator[](NewConfig::StateName state_name) {
     return it->second;
 }
 
-const State& RobotStateMap::operator[](NewConfig::StateName state_name) const {
+const State& RobotStateMap::operator[](Cfg::StateName state_name) const {
     return robot_state.at(state_name);
 }
 

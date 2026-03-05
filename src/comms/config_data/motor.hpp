@@ -3,7 +3,7 @@
 #include <stdint.h>     // for uint8_t, uint32_t
 #include "comms/data/comms_data.hpp" // for CommsData, TypeLabel, to_string
 
-namespace NewConfig {
+namespace Cfg {
 
 enum class MotorName : uint32_t{
     UnsetMotorName,
@@ -18,6 +18,8 @@ enum class MotorName : uint32_t{
     Flywheel1,
     Flywheel2,
     Feeder,
+
+    MotorNameCount
 };
 
 enum class MotorControllerType : uint32_t {
@@ -47,11 +49,11 @@ struct Motor : Comms::CommsData {
     MotorName motor_name;
 
     Motor() : Comms::CommsData(Comms::TypeLabel::MotorConfig, Comms::PhysicalMedium::HID, Comms::Priority::High, sizeof(Motor)) {
-        motor_controller_type = UnsetMotorControllerType;
+        motor_controller_type = MotorControllerType::UnsetMotorControllerType;
         physical_bus = 0;
         physical_id = 0;
-        motor_type = UnsetMotorType;
-        motor_name = UnsetMotorName;
+        motor_type = MotorType::UnsetMotorType;
+        motor_name = MotorName::UnsetMotorName;
     }
 };
     

@@ -40,7 +40,7 @@ const Config* const ConfigLayer::configure(Comms::CommsLayer* comms, bool config
     #endif
         process();
         comms->run();
-        NewConfig::RobotConfig& config = comms_layer.get_hive_data().config;
+        Cfg::RobotConfig& config = comms_layer.get_hive_data().config;
         Serial.printf("Config: received %d of %d sections\n", config.num_sections_received, config.config_start.num_config_sections);
         if(config.is_configured()) {
             configured = true;

@@ -6,5 +6,5 @@ struct MotorStateData : Comms::CommsData {
     uint16_t position;
     int16_t temperature;
 
-    NewConfig::MotorName motor_name;
+    Cfg::MotorName motor_name;
 };

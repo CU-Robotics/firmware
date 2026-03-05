@@ -31,6 +31,7 @@ enum class TypeLabel : uint8_t {
     IcmImuConfig,
     D200LidarConfig,
     RealsenseCameraConfig,
+    StereoCameraTriggerConfig,
     StateConfig,
 };
 
@@ -123,6 +124,8 @@ public:
         this->priority = priority;
         this->size = size;
     }
+
+    CommsData() = default;
 
     /// @brief size of the data in bytes
     uint16_t size : 16 = 0;

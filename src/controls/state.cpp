@@ -1,12 +1,12 @@
 #include "state.hpp"
 
-State::State(const NewConfig::State& state_config) : config(state_config) {
+State::State(const Cfg::State& state_config) : config(state_config) {
     position = 0;
     velocity = 0;
     acceleration = 0;
 }
 
-const NewConfig::State& State::config() const {
+const Cfg::State& State::config() const {
     return config;
 }
 

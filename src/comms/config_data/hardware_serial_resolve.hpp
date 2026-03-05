@@ -2,8 +2,7 @@
 #include <HardwareSerial.h>
 
 
-namespace NewConfig {
-
+namespace Cfg {
     std::optional<HardwareSerial*> resolve_hardware_serial_port(HardwareSerialPort port) {
         switch(port) {
             case HardwareSerialPort::Serial1:
