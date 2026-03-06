@@ -11,17 +11,21 @@ RobotStateMap::RobotStateMap(const std::vector<Cfg::State>& _state_configuration
 
 State& RobotStateMap::operator[](Cfg::StateName state_name) {
     auto it = robot_state.find(state_name);
-    safety::assert_or_safety_procedure(it != robot_state.end(), "RobotStateMap: Requested state name " + std::to_string(static_cast<uint32_t>(state_name)) + " not found in robot state map.");
+    safety::assert_or_safety_procedure(it != robot_state.end(), "RobotStateMap: Requested state name %u not found in robot state map.", static_cast<uint32_t>(state_name));
     return it->second;
 }
 
 const State& RobotStateMap::operator[](Cfg::StateName state_name) const {
     auto it = robot_state.find(state_name);
-    safety::assert_or_safety_procedure(it != robot_state.end(), "RobotStateMap: Requested state name " + std::to_string(static_cast<uint32_t>(state_name)) + " not found in robot state map.");
+    safety::assert_or_safety_procedure(it != robot_state.end(), "RobotStateMap: Requested state name %u not found in robot state map.", static_cast<uint32_t>(state_name));
     return it->second;
 }
 
 const std::map<Cfg::StateName, State>& RobotStateMap::get_state_map() const {
+    return robot_state;
+}
+
+std::map<Cfg::StateName, State>& RobotStateMap::get_state_map() {
     return robot_state;
 }
 
@@ -36,4 +40,3 @@ void RobotStateMap::from_comms_packet(State::Raw robot_state_array[NUM_STATES]) 
         }
     }
 }
-

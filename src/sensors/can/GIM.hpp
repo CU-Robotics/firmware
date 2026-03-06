@@ -32,25 +32,25 @@ public:
     /// @param id The per-bus motor ID. This is 1-indexed
     /// @param bus_id The CAN bus index/ID
     /// @param motor_type The motor type, used for GIM to determine gear ratio, max torque, max speed, and torque constant
-    GIM(uint32_t gid, uint32_t id, uint8_t bus_id, MotorType motor_type)
-        : Motor(MotorControllerType::MG8016, gid, id, bus_id, motor_type) {
+    GIM(const Cfg::Motor& motor_config)
+        : Motor(motor_config) {
 
-        switch (motor_type) {
-        case MotorType::GIM3505: {
+        switch (motor_config.motor_type) {
+        case Cfg::MotorType::GIM3505: {
             m_torque_constant = GIM3505_TORQUE_CONSTANT;
             m_gear_ratio = GIM3505_GEAR_RATIO;
             m_max_torque = GIM3505_MAX_TORQUE;
             m_max_speed = GIM3505_MAX_SPEED;
             break;
         }
-        case MotorType::GIM4310: {
+        case Cfg::MotorType::GIM4310: {
             m_torque_constant = GIM4310_TORQUE_CONSTANT;
             m_gear_ratio = GIM4310_GEAR_RATIO;
             m_max_torque = GIM4310_MAX_TORQUE;
             m_max_speed = GIM4310_MAX_SPEED;
             break;
         }
-        case MotorType::GIM8108: {
+        case Cfg::MotorType::GIM8108: {
             m_torque_constant = GIM8108_TORQUE_CONSTANT;
             m_gear_ratio = GIM8108_GEAR_RATIO;
             m_max_torque = GIM8108_MAX_TORQUE;
@@ -58,7 +58,7 @@ public:
             break;
         }
         default: {
-            Serial.printf("GIM motor type not recognized: %d\n", motor_type);
+            Serial.printf("GIM motor type not recognized: %d\n", motor_config.motor_type);
             break;
         }
         }

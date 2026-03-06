@@ -106,7 +106,7 @@ struct D200Calibration {
 };
 
 /// @brief class for LiDAR driver
-class D200LD14P : Sensor {
+class D200LD14P : public Sensor {
 private:
 
   const Cfg::D200Lidar& config;

@@ -16,8 +16,8 @@ public:
     /// @param id The per-bus motor ID. This is 1-indexed
     /// @param bus_id The CAN bus index/ID
     /// @param motor_type The motor type (not used for C620)
-    C620(uint32_t gid, uint32_t id, uint8_t bus_id, MotorType motor_type)
-        : Motor(MotorControllerType::C620, gid, id, bus_id, motor_type) {
+    C620(const Cfg::Motor& motor_config)
+        : Motor(motor_config) {
         m_base_id = 0x200;
     }
 

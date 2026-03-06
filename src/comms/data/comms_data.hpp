@@ -18,7 +18,7 @@ enum class TypeLabel : uint8_t {
     LidarDataPacketSI,
     LimitSwitchData,
     TransmitterData,
-    TempRobotState,
+    MotorStateData,
     TargetState,
     EstimatedState,
     OverrideState,
@@ -26,8 +26,7 @@ enum class TypeLabel : uint8_t {
     CommsRefData,
     ConfigStart,
     ControllerConfig,
-    HighLevelEstimatorConfig,
-    LowLevelEstimatorConfig,
+    EstimatorConfig,
     MotorConfig,
     BuffEncoderConfig,
     IcmImuConfig,
@@ -65,8 +64,8 @@ inline std::string to_string(TypeLabel type_label) {
         return "LimitSwitchData";
     case TypeLabel::TransmitterData:
         return "TransmitterData";
-    case TypeLabel::TempRobotState:
-        return "TempRobotState"; 
+    case TypeLabel::MotorStateData:
+        return "MotorStateData";
     case TypeLabel::TargetState:
         return "TargetState";
     case TypeLabel::EstimatedState:
@@ -81,10 +80,8 @@ inline std::string to_string(TypeLabel type_label) {
         return "ConfigStart";
     case TypeLabel::ControllerConfig:
         return "ControllerConfig";
-    case TypeLabel::HighLevelEstimatorConfig:
-        return "HighLevelEstimatorConfig";
-    case TypeLabel::LowLevelEstimatorConfig:
-        return "LowLevelEstimatorConfig";
+    case TypeLabel::EstimatorConfig:
+        return "EstimatorConfig";
     case TypeLabel::MotorConfig:
         return "MotorConfig";
     case TypeLabel::BuffEncoderConfig:

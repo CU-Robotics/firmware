@@ -3,6 +3,7 @@
 #include <Arduino.h>
 #include <optional>
 #include "../comms/data/data_structs.hpp"
+#include "../comms/data/sendable.hpp"
 
 /// @brief The enum of what type of transmitter is being used
 enum class TransmitterType {
@@ -231,7 +232,8 @@ public:
 	virtual TransmitterData get_transmitter_data(){return TransmitterData();}
 
 	void send_to_comms() {
-		Comms::Sendable<TransmitterData> transmitter_data_sendable = get_transmitter_data();
+		Comms::Sendable<TransmitterData> transmitter_data_sendable;
+		transmitter_data_sendable.data = get_transmitter_data();
 		transmitter_data_sendable.send_to_comms();
 	}
 

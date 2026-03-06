@@ -28,20 +28,14 @@ void HiveData::set_data(CommsData* data) {
     }
     case TypeLabel::TargetState: {
         TargetState* target = static_cast<TargetState*>(data);
-        memcpy(&target_state, target, sizeof(TargetState));
+        memcpy(&target_state_data, target, sizeof(TargetState));
         // target_state = *static_cast<TargetState*>(data);
         break;
     }
     case TypeLabel::OverrideState: {
         OverrideState* o_state = static_cast<OverrideState*>(data);
-        memcpy(&override_state, o_state, sizeof(OverrideState));
+        memcpy(&override_state_data, o_state, sizeof(OverrideState));
         // override_state = *static_cast<OverrideState*>(data);
-        break;
-    }
-    case TypeLabel::ConfigStart: {
-        Cfg::ConfigStart* config_start = static_cast<Cfg::ConfigStart*>(data);
-        Serial.printf("Received config start for robot %d with %d sections\n", config_start->robot, config_start->num_config_sections);
-        memcpy(&config.config_start, config_start, sizeof(Cfg::ConfigStart));
         break;
     }
     case TypeLabel::ControllerConfig: {
@@ -57,8 +51,8 @@ void HiveData::set_data(CommsData* data) {
         break;
     }
     case TypeLabel::StateConfig: {
-        Cfg::StateInfo* state_info = static_cast<Cfg::StateInfo*>(data);
-        memcpy(&config.state_config, state_info, sizeof(Cfg::StateInfo));
+        Cfg::State* state_info = static_cast<Cfg::State*>(data);
+        config.states.push_back(*state_info);
         config.num_sections_received++;
         break;
     }
@@ -80,9 +74,9 @@ void HiveData::set_data(CommsData* data) {
         config.num_sections_received++;
         break;
     }
-    case TypeLabel::HighLevelEstimatorConfig: {
-        Cfg::HighLevelEstimator* high_level_estimator = static_cast<Cfg::HighLevelEstimator*>(data);
-        config.high_level_estimators.push_back(*high_level_estimator);
+    case TypeLabel::EstimatorConfig: {
+        Cfg::Estimator* estimator = static_cast<Cfg::Estimator*>(data);
+        config.estimators.push_back(*estimator);
         config.num_sections_received++;
         break;
     }

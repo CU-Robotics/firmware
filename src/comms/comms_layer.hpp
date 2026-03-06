@@ -30,6 +30,9 @@ public:
     /// @note Should never return
     int run();
 
+    void configure();
+
+    void reconfigure();
 public:
     /// @brief Send a CommsData packet to the appropriate packet payload
     /// @param data The CommsData packet to send
@@ -53,6 +56,8 @@ public:
 
     /// @brief Clear all physical layer outgoing buffers
     void clear_outgoing_buffers();
+
+    bool is_configured() const { return configured; }
 
 public:
     /// @brief Get the outgoing ethernet packet
@@ -83,8 +88,6 @@ public:
     /// @brief Set the hive data
     /// @param data The hive data to set
     void set_hive_data(HiveData& data);
-
-    Cfg::RobotConfig configure();
 
 private:
     /// @brief Initializes HID and starts its thread
@@ -121,6 +124,10 @@ private:
     /// @brief Firmware data
     FirmwareData m_firmware_data;
 
+    /// @brief Flag to indicate if the CommsLayer has been configured
+    bool configured = false;
+
+    Timer config_loop_timer;
 };
 
 }   // namespace Comms

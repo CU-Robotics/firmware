@@ -71,7 +71,7 @@ CFLAGS := $(CPU_CFLAGS)
 
 # Compiler flags for C++ files
 CXXFLAGS := $(CPU_CFLAGS) -std=gnu++23 \
-            -felide-constructors -fno-exceptions -fpermissive -fno-rtti \
+            -felide-constructors -fno-exceptions -fpermissive \
             -Wno-error=narrowing -Wno-trigraphs -Wno-comment -Wall -Werror \
 			-Wno-volatile
 

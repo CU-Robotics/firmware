@@ -4,13 +4,14 @@
 #include "controller.hpp"
 #include "robot_state_map.hpp"
 #include "sensors/can/can_manager.hpp"
+#include <memory>
 #include "comms/config_layer.hpp"
 
 /// @brief Manage all controllers
 class ControllerManager {
 private:
     /// @brief List of all controllers that are currently active
-    std::vector<std::unique_ptr<Cfg::Controller>> controllers;
+    std::vector<std::unique_ptr<Controller>> controllers;
 
     /// @brief List of motors that are available to be used by controllers. 
     //  This is used to make sure that two controllers cant write to the same motor

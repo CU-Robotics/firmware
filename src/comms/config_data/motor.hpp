@@ -47,14 +47,6 @@ struct Motor : Comms::CommsData {
     uint32_t physical_id;
     MotorType motor_type;
     MotorName motor_name;
-
-    Motor() : Comms::CommsData(Comms::TypeLabel::MotorConfig, Comms::PhysicalMedium::HID, Comms::Priority::High, sizeof(Motor)) {
-        motor_controller_type = MotorControllerType::UnsetMotorControllerType;
-        physical_bus = 0;
-        physical_id = 0;
-        motor_type = MotorType::UnsetMotorType;
-        motor_name = MotorName::UnsetMotorName;
-    }
 };
     
 }

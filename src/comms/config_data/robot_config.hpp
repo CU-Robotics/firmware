@@ -39,8 +39,12 @@ struct RobotConfig {
     ConfigStart config_start;
     std::vector<Controller> controllers;
     std::vector<BuffEncoder> buff_encoders;
+    std::vector<RevEncoder> rev_encoders;
     std::vector<IcmImu> icm_imus;
+    std::vector<LsmImu> lsm_imus;
     std::vector<D200Lidar> d200_lidars;
+    std::vector<LimitSwitch> limit_switches;
+    std::vector<StereoCamTrigger> stereo_cam_triggers;
     std::vector<Estimator> estimators;
     std::vector<State> states;
     std::vector<Motor> motors;

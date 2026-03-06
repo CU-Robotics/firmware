@@ -6,7 +6,7 @@
 void RevEncoder::init() {
     pinMode(this->config.digital_pin, INPUT);  // Set the pin used to measure the encoder to be an input
     freq.begin(this->config.digital_pin, FREQMEASUREMULTI_MARK_ONLY);
-    Serial.println("Rev Encoder %u init: calculating starting value...", this->config.encoder_name);
+    Serial.printf("Rev Encoder %u init: calculating starting value...\n", static_cast<unsigned int>(this->config.encoder_name));
     if(this->config.is_relative){
         for(int i=0;i<500;i++){
             this->read();

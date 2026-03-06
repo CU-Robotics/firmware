@@ -13,7 +13,6 @@ TEST_CASE("To string does stuff") {
     CHECK(Comms::to_string(Comms::TypeLabel::RevEncoderData) == "RevEncoderData");
     CHECK(Comms::to_string(Comms::TypeLabel::LidarDataPacketSI) == "LidarDataPacketSI");
     CHECK(Comms::to_string(Comms::TypeLabel::DR16Data) == "DR16Data");
-    CHECK(Comms::to_string(Comms::TypeLabel::TempRobotState) == "TempRobotState");
     CHECK(Comms::to_string(Comms::TypeLabel::TargetState) == "TargetState");
     CHECK(Comms::to_string(Comms::TypeLabel::EstimatedState) == "EstimatedState");
     CHECK(Comms::to_string(Comms::TypeLabel::OverrideState) == "OverrideState");

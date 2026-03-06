@@ -10,7 +10,7 @@
 // #define LOG_STEREO_FPS
 
 /// @brief class to manage triggering synchronized exposures for dual USB cameras
-class StereoCamTrigger : Sensor{
+class StereoCamTrigger : public Sensor{
   private:
     const Cfg::StereoCamTrigger& config;
 

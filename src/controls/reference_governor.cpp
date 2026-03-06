@@ -29,47 +29,45 @@ const RobotStateMap& Governor::step_reference_map(const RobotStateMap& ungoverne
     float threshold = 0.0005;
     float dt = governor_timer.delta();
     
-    const std::set<size_t> state_order_array_indices = reference_state_map.get_state_order_array_indices();
-
     if (count == 0) {
         dt = 0; // first dt loop generates huge time so check for that
         count++;
     }
 
-    for(const auto& [reference_name, reference] : reference_state_map.get_state_map()) {
+    for(auto& [reference_name, reference] : reference_state_map.get_state_map()) {
         State ungoverned_reference = ungoverned_reference_map[reference_name];
 
-        if (reference.config.governor_type == Cfg::StateOrder::Position) { // position based governor
+        if (reference.config().governor_type == Cfg::StateOrder::Position) { // position based governor
             State error = ungoverned_reference - reference;
             
             // Set the accel refrence to the max or min based on which direction it needs to go
-            if (error.get_position() > threshold) reference.set_acceleration(reference.reference_limits.acceleration.max);
-            else if (error.get_position() < -threshold) reference.set_acceleration(reference.reference_limits.acceleration.min);
+            if (error.get_position() > threshold) reference.set_acceleration(reference.config().reference_limits.acceleration.max);
+            else if (error.get_position() < -threshold) reference.set_acceleration(reference.config().reference_limits.acceleration.min);
             else {
-                reference.set_acceleration(0);
+                reference.set_acceleration(0.0);
                 reference.set_velocity(ungoverned_reference.get_velocity());
             }
 
-            if (reference.get_accleration() != 0) {
+            if (reference.get_acceleration() != 0) {
                 if (error.get_position() > 0) {
                     // check how far it will travel when braking
                     float dist_to_deccel = (pow(ungoverned_reference.get_velocity(), 2) - pow(reference.get_velocity(), 2)) 
-                        / (2 * (reference.reference_limits.acceleration.min));
+                        / (2 * (reference.config().reference_limits.acceleration.min));
 
                     // if the minimum stopping distance is greater than the remaining distance start braking
                     if (dist_to_deccel > error.get_position()) {
-                        if (error.get_velocity() > 0) reference.set_acceleration(reference.reference_limits.acceleration.max);
-                        else reference.set_acceleration(reference.reference_limits.acceleration.min);
+                        if (error.get_velocity() > 0) reference.set_acceleration(reference.config().reference_limits.acceleration.max);
+                        else reference.set_acceleration(reference.config().reference_limits.acceleration.min);
                     }
                 } else {
                     // check how far it will travel when braking
                     float dist_to_deccel = (pow(ungoverned_reference.get_velocity(), 2) - pow(reference.get_velocity(), 2))
-                         / (2 * (reference.reference_limits.acceleration.max));
+                         / (2 * (reference.config().reference_limits.acceleration.max));
 
                     // if the minimum stopping distance is greater than the remaining distance start braking
                     if (dist_to_deccel < error.get_position()) {
-                        if (error.get_velocity() > 0) reference.set_acceleration(reference.reference_limits.acceleration.max);
-                        else reference.set_acceleration(reference.reference_limits.acceleration.min);
+                        if (error.get_velocity() > 0) reference.set_acceleration(reference.config().reference_limits.acceleration.max);
+                        else reference.set_acceleration(reference.config().reference_limits.acceleration.min);
                     }
                 }
             }
@@ -78,14 +76,14 @@ const RobotStateMap& Governor::step_reference_map(const RobotStateMap& ungoverne
             reference.set_velocity(reference.get_velocity() + reference.get_acceleration() * dt);
             reference.set_position(reference.get_position() + reference.get_velocity() * dt);
 
-        } else if (reference.config.governor_type == Cfg::StateOrder::Velocity) { // velocity based governor
+        } else if (reference.config().governor_type == Cfg::StateOrder::Velocity) { // velocity based governor
             State error = ungoverned_reference - reference;
 
             // check which direction the target is and set acceleration if the velocity error is less the max acceleration 
-            if (error.get_velocity() > (reference.reference_limits.acceleration.max * dt)) {
-                reference.set_acceleration(reference.reference_limits.acceleration.max);
-            } else if (error.get_velocity() < (reference.reference_limits.acceleration.min * dt)) {
-                reference.set_acceleration(reference.reference_limits.acceleration.min);
+            if (error.get_velocity() > (reference.config().reference_limits.acceleration.max * dt)) {
+                reference.set_acceleration(reference.config().reference_limits.acceleration.max);
+            } else if (error.get_velocity() < (reference.config().reference_limits.acceleration.min * dt)) {
+                reference.set_acceleration(reference.config().reference_limits.acceleration.min);
             } else {
                 reference.set_velocity(ungoverned_reference.get_velocity());
                 reference.set_acceleration(0);

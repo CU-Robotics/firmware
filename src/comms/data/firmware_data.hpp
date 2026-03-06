@@ -1,5 +1,6 @@
 #pragma once
 
+#include "buff_encoder_data.hpp"
 #if defined(HIVE)
 #include "modules/comms/data/logging_data.hpp"      // for LoggingData
 #include "modules/comms/data/data_structs.hpp"      // for shared data structs
@@ -27,8 +28,7 @@ struct FirmwareData {
     TestData test_data;
     /// @brief Big test data
     BigTestData big_test_data;
-    /// @brief TempRobotState data
-    TempRobotState temp_robot_state;
+    
     /// @brief TargetState data
     TargetState temp_reference;
 
@@ -38,23 +38,11 @@ struct FirmwareData {
     /// @brief Logging data
     Comms::LoggingData logging_data;
     
-    //two buff encoders
-    /// @brief yaw_buff_encoder will have id 0
-    BuffEncoderData yaw_buff_encoder;
-    /// @brief pitch_buff_encoder will have id 1
-    BuffEncoderData pitch_buff_encoder;
-    
-    //three rev encoders
-    /// @brief rev_sensor_0
-    RevSensorData rev_sensor_0;
-    /// @brief rev_sensor_1
-    RevSensorData rev_sensor_1;
-    /// @brief rev_sensor_2
-    RevSensorData rev_sensor_2;
+    std::vector<BuffEncoderData> buff_encoder_data;
     
     //one icm
     /// @brief icm_sensor
-    ICMSensorData icm_sensor;
+    std::vector<ICMSensorData> icm_sensor_data;
     
     //one tof
     /// @brief tof_sensor
@@ -62,7 +50,7 @@ struct FirmwareData {
     
     //two liadars
     /// @brief lidar vector
-    std::vector<LidarDataPacketSI> lidars[2];
+    std::vector<LidarDataPacketSI> lidar_data;
 
     /// @brief Transmitter data
     TransmitterData transmitter_data;

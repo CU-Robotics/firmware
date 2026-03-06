@@ -1,5 +1,18 @@
 #include "comms_layer.hpp"
 
+
+/// @brief This resets the whole processor and kicks it back to program entry (teensy4/startup.c)
+/// @param void specify no arguments (needed in C)
+/// @note Dont abuse this function, it is not to be used lightly
+extern "C" void reset_teensy(void) {
+    // Register information found in the NXP IM.XRT 1060 reference manual
+    SRC_GPR5 = 0x0BAD00F1;
+    // Register information found in the Arm-v7-m reference manual
+    SCB_AIRCR = 0x05FA0004;
+    // loop to catch execution while the reset occurs
+    while (1);
+}
+
 namespace Comms {
 
 CommsLayer::CommsLayer() {
@@ -148,12 +161,35 @@ void CommsLayer::set_firmware_data(FirmwareData& data) {
     m_firmware_data = data;
 };
 
-Cfg::RobotConfig CommsLayer::configure() {
+void CommsLayer::configure() {
     while(!m_hive_data.config.is_configured()) {
         run();
+        Cfg::RobotConfig& config = comms_layer.get_hive_data().config;
+        Serial.printf("Config: received %d of %d sections\n", config.num_sections_received, config.config_start.num_config_sections);
+        if(config.is_configured()) {
+            configured = true;
+        }
+        if(config.num_sections_received == 0) {
+            
+        }
+        config_loop_timer.delay_micros(1000);
     }
+}
 
-    return m_hive_data.config;
+void CommsLayer::reconfigure() {
+    // force it to reconfigure
+    configured = false;
+
+    // perform a normal config, but dont try to load from the config, just process and store
+    configure();
+
+    Serial.printf("Config: Rebooting Teensy...\n");
+    delay(10);  // delay to allow the print to finish before the reboot
+    // issue the reboot call
+    reset_teensy();
+
+    // reset_teensy() never returns
+    __builtin_unreachable();
 }
 
 bool CommsLayer::initialize_hid() {

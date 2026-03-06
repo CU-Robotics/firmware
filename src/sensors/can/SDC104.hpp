@@ -14,8 +14,8 @@ public:
     /// @param id The per-bus motor ID. This is 1-indexed
     /// @param bus_id The CAN bus index/ID
     /// @param motor_type The motor type (not used for SDC104, do not specify)
-    SDC104(uint32_t gid, uint32_t id, uint8_t bus_id, MotorType motor_type)
-        : Motor(MotorControllerType::SDC104, gid, id, bus_id, motor_type) {
+    SDC104(Cfg::Motor motor_config)
+        : Motor(motor_config) {
     }
 
     /// @brief Destructor, does nothing

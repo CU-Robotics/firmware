@@ -242,7 +242,7 @@ bool SDC104::check_msg_id(const CAN_message_t& msg) const {
     uint8_t id = (msg.id >> 5) & 0x3F;
 
     // check if the ID is correct
-    if (id != m_base_id + m_id) {
+    if (id != m_base_id + m_physical_id) {
         return false;
     }
 
@@ -255,12 +255,12 @@ bool SDC104::check_msg_id(const CAN_message_t& msg) const {
 }
 
 void SDC104::create_cmd_estop(CAN_message_t& msg) {
-    msg.id = ((m_base_id + m_id) << 5) | CMD_ESTOP;
+    msg.id = ((m_base_id + m_physical_id) << 5) | CMD_ESTOP;
     memset(msg.buf, 0, 8);
 }
 
 void SDC104::create_cmd_get_error(CAN_message_t& msg, uint8_t error_type) {
-    msg.id = ((m_base_id + m_id) << 5) | CMD_GET_ERROR;
+    msg.id = ((m_base_id + m_physical_id) << 5) | CMD_GET_ERROR;
     memset(msg.buf, 0, 8);
 
     msg.buf[0] = error_type;
@@ -270,7 +270,7 @@ void SDC104::create_cmd_get_error(CAN_message_t& msg, uint8_t error_type) {
 }
 
 void SDC104::create_cmd_set_axis_node_id(CAN_message_t& msg, uint32_t node_id) {
-    msg.id = ((m_base_id + m_id) << 5) | CMD_SET_AXIS_NODE_ID;
+    msg.id = ((m_base_id + m_physical_id) << 5) | CMD_SET_AXIS_NODE_ID;
     memset(msg.buf, 0, 8);
 
     msg.buf[0] = *((uint8_t*)&node_id + 0);
@@ -280,24 +280,24 @@ void SDC104::create_cmd_set_axis_node_id(CAN_message_t& msg, uint32_t node_id) {
 }
 
 void SDC104::create_cmd_set_axis_state(CAN_message_t& msg, AxisState axis_state) {
-    msg.id = ((m_base_id + m_id) << 5) | CMD_SET_AXIS_STATE;
+    msg.id = ((m_base_id + m_physical_id) << 5) | CMD_SET_AXIS_STATE;
     memset(msg.buf, 0, 8);
 
     msg.buf[0] = static_cast<uint8_t>(axis_state);
 }
 
 void SDC104::create_cmd_get_encoder_estimates(CAN_message_t& msg) {
-    msg.id = ((m_base_id + m_id) << 5) | CMD_GET_ENCODER_ESTIMATES;
+    msg.id = ((m_base_id + m_physical_id) << 5) | CMD_GET_ENCODER_ESTIMATES;
     memset(msg.buf, 0, 8);
 }
 
 void SDC104::create_cmd_get_encoder_count(CAN_message_t& msg) {
-    msg.id = ((m_base_id + m_id) << 5) | CMD_GET_ENCODER_COUNT;
+    msg.id = ((m_base_id + m_physical_id) << 5) | CMD_GET_ENCODER_COUNT;
     memset(msg.buf, 0, 8);
 }
 
 void SDC104::create_cmd_set_controller_mode(CAN_message_t& msg, uint32_t control_mode, uint32_t input_mode) {
-    msg.id = ((m_base_id + m_id) << 5) | CMD_SET_CONTROLLER_MODE;
+    msg.id = ((m_base_id + m_physical_id) << 5) | CMD_SET_CONTROLLER_MODE;
     memset(msg.buf, 0, 8);
 
     msg.buf[0] = *((uint8_t*)&control_mode + 0);
@@ -312,7 +312,7 @@ void SDC104::create_cmd_set_controller_mode(CAN_message_t& msg, uint32_t control
 }
 
 void SDC104::create_cmd_set_input_position(CAN_message_t& msg, float input_position, int16_t velocity_ff, int16_t torque_ff) {
-    msg.id = ((m_base_id + m_id) << 5) | CMD_SET_INPUT_POSITION;
+    msg.id = ((m_base_id + m_physical_id) << 5) | CMD_SET_INPUT_POSITION;
     memset(msg.buf, 0, 8);
 
     msg.buf[0] = *((uint8_t*)&input_position + 0);
@@ -328,7 +328,7 @@ void SDC104::create_cmd_set_input_position(CAN_message_t& msg, float input_posit
 }
 
 void SDC104::create_cmd_set_input_velocity(CAN_message_t& msg, float input_velocity, int16_t torque_ff) {
-    msg.id = ((m_base_id + m_id) << 5) | CMD_SET_INPUT_VELOCITY;
+    msg.id = ((m_base_id + m_physical_id) << 5) | CMD_SET_INPUT_VELOCITY;
     memset(msg.buf, 0, 8);
 
     msg.buf[0] = *((uint8_t*)&input_velocity + 0);
@@ -341,7 +341,7 @@ void SDC104::create_cmd_set_input_velocity(CAN_message_t& msg, float input_veloc
 }
 
 void SDC104::create_cmd_set_input_torque(CAN_message_t& msg, float input_torque) {
-    msg.id = ((m_base_id + m_id) << 5) | CMD_SET_INPUT_TORQUE;
+    msg.id = ((m_base_id + m_physical_id) << 5) | CMD_SET_INPUT_TORQUE;
     memset(msg.buf, 0, 8);
 
     msg.buf[0] = *((uint8_t*)&input_torque + 0);
@@ -351,7 +351,7 @@ void SDC104::create_cmd_set_input_torque(CAN_message_t& msg, float input_torque)
 }
 
 void SDC104::create_cmd_set_limits(CAN_message_t& msg, float velocity_limit, float current_limit) {
-    msg.id = ((m_base_id + m_id) << 5) | CMD_SET_LIMITS;
+    msg.id = ((m_base_id + m_physical_id) << 5) | CMD_SET_LIMITS;
     memset(msg.buf, 0, 8);
 
     msg.buf[0] = *((uint8_t*)&velocity_limit + 0);
@@ -366,12 +366,12 @@ void SDC104::create_cmd_set_limits(CAN_message_t& msg, float velocity_limit, flo
 }
 
 void SDC104::create_cmd_start_anticogging(CAN_message_t& msg) {
-    msg.id = ((m_base_id + m_id) << 5) | CMD_START_ANTICOGGING;
+    msg.id = ((m_base_id + m_physical_id) << 5) | CMD_START_ANTICOGGING;
     memset(msg.buf, 0, 8);
 }
 
 void SDC104::create_cmd_set_traj_velocity_limit(CAN_message_t& msg, float traj_velocity_limit) {
-    msg.id = ((m_base_id + m_id) << 5) | CMD_SET_TRAJ_VELOCITY_LIMIT;
+    msg.id = ((m_base_id + m_physical_id) << 5) | CMD_SET_TRAJ_VELOCITY_LIMIT;
     memset(msg.buf, 0, 8);
 
     msg.buf[0] = *((uint8_t*)&traj_velocity_limit + 0);
@@ -381,7 +381,7 @@ void SDC104::create_cmd_set_traj_velocity_limit(CAN_message_t& msg, float traj_v
 }
 
 void SDC104::create_cmd_set_traj_acceleration_limit(CAN_message_t& msg, float traj_acceleration_limit, float traj_deceleration_limit) {
-    msg.id = ((m_base_id + m_id) << 5) | CMD_SET_TRAJ_ACCELERATION_LIMIT;
+    msg.id = ((m_base_id + m_physical_id) << 5) | CMD_SET_TRAJ_ACCELERATION_LIMIT;
     memset(msg.buf, 0, 8);
 
     msg.buf[0] = *((uint8_t*)&traj_acceleration_limit + 0);
@@ -396,7 +396,7 @@ void SDC104::create_cmd_set_traj_acceleration_limit(CAN_message_t& msg, float tr
 }
 
 void SDC104::create_cmd_set_traj_inertia(CAN_message_t& msg, float traj_inertia) {
-    msg.id = ((m_base_id + m_id) << 5) | CMD_SET_TRAJ_INERTIA;
+    msg.id = ((m_base_id + m_physical_id) << 5) | CMD_SET_TRAJ_INERTIA;
     memset(msg.buf, 0, 8);
 
     msg.buf[0] = *((uint8_t*)&traj_inertia + 0);
@@ -406,27 +406,27 @@ void SDC104::create_cmd_set_traj_inertia(CAN_message_t& msg, float traj_inertia)
 }
 
 void SDC104::create_cmd_get_iq(CAN_message_t& msg) {
-    msg.id = ((m_base_id + m_id) << 5) | CMD_GET_IQ;
+    msg.id = ((m_base_id + m_physical_id) << 5) | CMD_GET_IQ;
     memset(msg.buf, 0, 8);
 }
 
 void SDC104::create_cmd_reboot(CAN_message_t& msg) {
-    msg.id = ((m_base_id + m_id) << 5) | CMD_REBOOT;
+    msg.id = ((m_base_id + m_physical_id) << 5) | CMD_REBOOT;
     memset(msg.buf, 0, 8);
 }
 
 void SDC104::create_cmd_get_bus_voltage_current(CAN_message_t& msg) {
-    msg.id = ((m_base_id + m_id) << 5) | CMD_GET_BUS_VOLTAGE_CURRENT;
+    msg.id = ((m_base_id + m_physical_id) << 5) | CMD_GET_BUS_VOLTAGE_CURRENT;
     memset(msg.buf, 0, 8);
 }
 
 void SDC104::create_cmd_clear_errors(CAN_message_t& msg) {
-    msg.id = ((m_base_id + m_id) << 5) | CMD_CLEAR_ERRORS;
+    msg.id = ((m_base_id + m_physical_id) << 5) | CMD_CLEAR_ERRORS;
     memset(msg.buf, 0, 8);
 }
 
 void SDC104::create_cmd_set_linear_count(CAN_message_t& msg, int32_t linear_count) {
-    msg.id = ((m_base_id + m_id) << 5) | CMD_SET_LINEAR_COUNT;
+    msg.id = ((m_base_id + m_physical_id) << 5) | CMD_SET_LINEAR_COUNT;
     memset(msg.buf, 0, 8);
 
     msg.buf[0] = *((uint8_t*)&linear_count + 0);
@@ -436,7 +436,7 @@ void SDC104::create_cmd_set_linear_count(CAN_message_t& msg, int32_t linear_coun
 }
 
 void SDC104::create_cmd_set_position_gains(CAN_message_t& msg, float pos_gain) {
-    msg.id = ((m_base_id + m_id) << 5) | CMD_SET_POSITION_GAINS;
+    msg.id = ((m_base_id + m_physical_id) << 5) | CMD_SET_POSITION_GAINS;
     memset(msg.buf, 0, 8);
 
     msg.buf[0] = *((uint8_t*)&pos_gain + 0);
@@ -446,7 +446,7 @@ void SDC104::create_cmd_set_position_gains(CAN_message_t& msg, float pos_gain) {
 }
 
 void SDC104::create_cmd_set_velocity_gains(CAN_message_t& msg, float vel_gain, float vel_integrator_gain) {
-    msg.id = ((m_base_id + m_id) << 5) | CMD_SET_VELOCITY_GAINS;
+    msg.id = ((m_base_id + m_physical_id) << 5) | CMD_SET_VELOCITY_GAINS;
     memset(msg.buf, 0, 8);
 
     msg.buf[0] = *((uint8_t*)&vel_gain + 0);
@@ -461,16 +461,16 @@ void SDC104::create_cmd_set_velocity_gains(CAN_message_t& msg, float vel_gain, f
 }
 
 void SDC104::create_cmd_get_torques(CAN_message_t& msg) {
-    msg.id = ((m_base_id + m_id) << 5) | CMD_GET_TORQUES;
+    msg.id = ((m_base_id + m_physical_id) << 5) | CMD_GET_TORQUES;
     memset(msg.buf, 0, 8);
 }
 
 void SDC104::create_cmd_get_powers(CAN_message_t& msg) {
-    msg.id = ((m_base_id + m_id) << 5) | CMD_GET_POWERS;
+    msg.id = ((m_base_id + m_physical_id) << 5) | CMD_GET_POWERS;
     memset(msg.buf, 0, 8);
 }
 
 void SDC104::create_cmd_save_configuration(CAN_message_t& msg) {
-    msg.id = ((m_base_id + m_id) << 5) | CMD_SAVE_CONFIGURATION;
+    msg.id = ((m_base_id + m_physical_id) << 5) | CMD_SAVE_CONFIGURATION;
     memset(msg.buf, 0, 8);
 }

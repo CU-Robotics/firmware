@@ -35,7 +35,7 @@ public:
     /// @param bus The CAN bus index/ID
     /// @param motor_type The motor type, defaults to NULL_MOTOR_TYPE if not specified.
     Motor(Cfg::Motor motor_config)
-         : motor_config(motor_config) { }
+         : motor_config(motor_config), m_physical_id(motor_config.physical_id), m_bus_id(motor_config.physical_bus) { }
 
 /// @brief Virtual destructor
     virtual ~Motor() { }
@@ -95,7 +95,7 @@ protected:
     /// @return True if the message is for this motor, false otherwise
     inline virtual bool check_msg_id(const CAN_message_t& msg) const {
         // early return if msg ID does not match
-        if (msg.id != m_base_id + m_id) {
+        if (msg.id != m_base_id + m_physical_id) {
             return false;
         }
 
@@ -114,6 +114,10 @@ protected:
 
     /// @brief The base ID for the motor
     uint32_t m_base_id = 0;
+
+    uint32_t m_physical_id = 0;
+
+    uint32_t m_bus_id = 0;
 
     /// @brief The output CAN frame. To be sent to the motor
     CAN_message_t m_output;

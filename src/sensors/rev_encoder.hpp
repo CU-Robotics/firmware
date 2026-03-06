@@ -5,7 +5,7 @@
 #include "comms/data/rev_encoder_data.hpp"
 
 /// @brief the class for the Rev Through Bore Encoder(www.revrobotics.com/rev-11-1271/)
-class RevEncoder : Sensor{
+class RevEncoder : public Sensor{
 private:
 	const Cfg::RevEncoder& config;
 	/// @brief Used to read rise time of the encoder

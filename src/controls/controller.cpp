@@ -1,13 +1,12 @@
 #include "controller.hpp"
 #include "motor.hpp"
-#include "robot_state.hpp"
 #include "sensors/RefSystem.hpp"
 
-void XDriveController::step(RobotStateMap reference_map, RobotStateMap estimate_map) {
+void XDriveController::step(RobotStateMap& reference_map, RobotStateMap& estimate_map) {
     float dt = timer.delta();
 
     Cfg::StateName drive_states[3]  = { chassis_x_state, chassis_y_state, chassis_heading_state };
-    Motor* drive_motors[4] = { chassis_motor_1, chassis_motor_2, chassis_motor_3, chassis_motor_4 };
+    std::shared_ptr<Motor> drive_motors[4] = { chassis_motor_1, chassis_motor_2, chassis_motor_3, chassis_motor_4 };
 
     if (reference_map[Cfg::StateName::ChassisX].config().governor_type == Cfg::StateOrder::Position) {
 
@@ -165,7 +164,7 @@ void XDriveController::step(RobotStateMap reference_map, RobotStateMap estimate_
     }
 }
 
-void YawController::step(RobotStateMap reference_map, RobotStateMap estimate_map) {
+void YawController::step(RobotStateMap& reference_map, RobotStateMap& estimate_map) {
     float dt = timer.delta();
     float output = 0.0;
 
@@ -199,7 +198,7 @@ void YawController::step(RobotStateMap reference_map, RobotStateMap estimate_map
     // Serial.printf("Yaw est: %f, yaw ref: %f, yaw output: %f\n", estimate[3][0], reference[3][0], output);
 }
 
-void PitchController::step(RobotStateMap reference_map, RobotStateMap estimate_map) {
+void PitchController::step(RobotStateMap& reference_map, RobotStateMap& estimate_map) {
     float dt = timer.delta();
     float output = 0.0;
 
@@ -234,7 +233,7 @@ void PitchController::step(RobotStateMap reference_map, RobotStateMap estimate_m
     // Serial.printf("Pitch est: %f, pitch ref: %f, pitch output: %f\n", estimate[4][0], reference[4][0], output);
 }
 
-void FlywheelController::step(RobotStateMap reference_map, RobotStateMap estimate_map) {
+void FlywheelController::step(RobotStateMap& reference_map, RobotStateMap& estimate_map) {
     float dt = timer.delta();
 
     pid_high.kp = high_level_velocity_controller.gains.p;
@@ -248,7 +247,7 @@ void FlywheelController::step(RobotStateMap reference_map, RobotStateMap estimat
 
     float target_motor_velocity = pid_high.filter(dt, false, false) * controller_config.gear_ratios.ball_to_flywheel_rad;
     
-    Motor* flywheel_motors[2] = { flywheel_motor_1, flywheel_motor_2 };
+    std::shared_ptr<Motor> flywheel_motors[2] = { flywheel_motor_1, flywheel_motor_2 };
     float motor_outputs[2];
 
     for (int i = 0; i < 2; i++) {
@@ -295,7 +294,7 @@ void FlywheelController::step(RobotStateMap reference_map, RobotStateMap estimat
 // }
 
 
-void FeederController::step(RobotStateMap reference_map, RobotStateMap estimate_map) {
+void FeederController::step(RobotStateMap& reference_map, RobotStateMap& estimate_map) {
     float dt = timer.delta();
 
     pidp.kp = full_state_position_controller.gains.p;

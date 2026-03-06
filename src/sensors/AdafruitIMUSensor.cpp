@@ -1,7 +1,7 @@
 #include "AdafruitIMUSensor.hpp"
 
 // default implementation for printing data
-void IMUSensor::print() {
+void AdafruitIMUSensor::print() {
 	// Display the temperature data, measured in Celcius
 	Serial.print("\t\tTemperature ");
 	Serial.print(get_temperature());

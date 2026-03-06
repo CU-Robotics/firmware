@@ -9,6 +9,8 @@
 #include "sensors/sensor.hpp"
 #include "comms/config_data/robot_config.hpp"
 
+#include "utils/safety.hpp"
+
 /// @class SensorManager
 /// @brief Class to manage sensors on the robot
 class SensorManager {
@@ -34,19 +36,21 @@ public:
     
     template<typename SensorType>
     requires std::derived_from<SensorType, Sensor>
-    std::shared_ptr<SensorType> SensorManager::get_sensor_by_name(Cfg::SensorName name) {
+    std::shared_ptr<SensorType> get_sensor_by_name(const Cfg::SensorName& name) {
         auto it = sensors.find(name);
         if (it != sensors.end()) {
             std::shared_ptr<SensorType> sensor_ptr = std::dynamic_pointer_cast<SensorType>(it->second);
             if (sensor_ptr) {
                 return sensor_ptr;
             } else {
-                safety_procedure("SensorManager: Sensor with name " + std::to_string(static_cast<uint32_t>(name)) + " found but is not of the requested type");
+                safety::safety_procedure("SensorManager: Sensor with name %u found but is not of the requested type", static_cast<uint32_t>(name));
             }
         } else {
-            safety_procedure("SensorManager: Get sensor by name failed, no sensor with the given name found");
+            safety::safety_procedure("SensorManager: Failed to get sensor with name %u, sensor not found", static_cast<uint32_t>(name));
         }
     }
 private:
     std::map<Cfg::SensorName, std::shared_ptr<Sensor>> sensors;
 };
+
+#endif // SENSOR_MANAGER_HPP

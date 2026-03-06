@@ -12,6 +12,7 @@
 #include "sensors/rev_encoder.hpp"
 #include "sensors/ICM20649.hpp"
 #include "sensors/sensor_manager.hpp"
+#include <memory>
 
 
 /// @brief Parent estimator struct. All estimators should inherit from this.
@@ -25,7 +26,7 @@ public:
     /// @param outputs estimated state array to update with certain estimated states
     /// @param curr_state current state array to update with new state
     /// @param override true if we want to override the current state with the new state
-    virtual void step_states(RobotStateMap updated_state_map, RobotStateMap previous_state_map, int override) = 0;
+    virtual void step_states(RobotStateMap& updated_state_map, const RobotStateMap& previous_state_map, int override) = 0;
     
     const Cfg::StateName& get_state_name_by_generic_use(Cfg::GenericEstimatorStateUse use, Cfg::Estimator estimator_config, std::vector<Cfg::StateName> available_states) {
         const Cfg::StateName& requested_state_name = estimator_config.get_state_name_by_generic_use(use);
@@ -152,14 +153,14 @@ private:
     float chassis_y_to_motor_rad;
     float chassis_rad_to_motor_rad;
 
-    std::shared_pointer<BuffEncoder> buff_enc_yaw;
-    std::shared_pointer<BuffEncoder> buff_enc_pitch;
-    std::shared_pointer<ICM20649> icm_imu;
+    std::shared_ptr<BuffEncoder> buff_enc_yaw;
+    std::shared_ptr<BuffEncoder> buff_enc_pitch;
+    std::shared_ptr<ICM20649> icm_imu;
 
-    Motor* chassis_1;
-    Motor* chassis_2;
-    Motor* chassis_3;
-    Motor* chassis_4;
+    std::shared_ptr<Motor> chassis_1;
+    std::shared_ptr<Motor> chassis_2;
+    std::shared_ptr<Motor> chassis_3;
+    std::shared_ptr<Motor> chassis_4;
 
     const Cfg::StateName& chassis_x_state;
     const Cfg::StateName& chassis_y_state;
@@ -184,7 +185,7 @@ public:
     /// @param output output array to add estimated states to
     /// @param curr_state current state of the system
     /// @param override override the current state
-    void step_states(RobotStateMap& updated_state_map, RobotStateMap& previous_state_map, int override) override;
+    void step_states(RobotStateMap& updated_state_map, const RobotStateMap& previous_state_map, int override) override;
 };
 
 /// @brief Estimate the state of the flywheels as meters/second of balls exiting the barrel.
@@ -203,8 +204,10 @@ private:
     /// @brief ref weight for weighted average
     float ref_estimate_weight = 0;
 
-    Motor* flywheel_motor_left;
-    Motor* flywheel_motor_right;
+    float flywheel_radius = 0;
+
+    std::shared_ptr<Motor> flywheel_motor_left;
+    std::shared_ptr<Motor> flywheel_motor_right;
 
     const Cfg::StateName& ball_exit_velocity;
 
@@ -217,7 +220,7 @@ public:
     /// @param output array to be updated with the calculated states
     /// @param curr_state current state of the flywheel
     /// @param override override flag
-    void step_states(RobotStateMap& updated_state_map, RobotStateMap& previous_state_map, int override);
+    void step_states(RobotStateMap& updated_state_map, const RobotStateMap& previous_state_map, int override);
 };
 
 /// @brief This estimator estimates our "micro" state which is stores all the motor velocities(in rad/s), whereas the other estimators estimate "macro" state which stores robot joints
@@ -245,7 +248,7 @@ struct NewFeederEstimator : public Estimator {
 
         const Cfg::StateName& feeder_ball_state;
 
-        std::shared_pointer<BuffEncoder> feeder_encoder;
+        std::shared_ptr<BuffEncoder> feeder_encoder;
     public:
         /// @brief Make new local estimator and set can data pointer and num states
         /// @param can can pointer from EstimatorManager
@@ -257,7 +260,7 @@ struct NewFeederEstimator : public Estimator {
         /// @param output entire micro state 
         /// @param curr_state current micro state
         /// @param override override flag
-        void step_states(RobotStateMap& updated_state_map, RobotStateMap& previous_state_map, int override) override;
+        void step_states(RobotStateMap& updated_state_map, const RobotStateMap& previous_state_map, int override) override;
     };
 
 #endif

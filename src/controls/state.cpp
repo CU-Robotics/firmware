@@ -1,6 +1,6 @@
 #include "state.hpp"
 #include "utils/wrapping.hpp"
-#include <arduino.h>
+#include <Arduino.h>
 
 State::State(const Cfg::State& state_config) : m_config(state_config) {
     m_state = {0, 0, 0};

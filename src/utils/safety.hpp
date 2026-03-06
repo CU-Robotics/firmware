@@ -1,6 +1,7 @@
 #pragma once
 #include <cassert>
 #include <functional>
+#include <Arduino.h>
 
 namespace safety {
     
@@ -15,19 +16,23 @@ namespace safety {
         safety_function_handle() = std::move(func);
     }
 
-    [[noreturn]] inline void safety_procedure(const char* message) {
+    template<typename... Args>
+    [[noreturn]] inline void safety_procedure(const char* message, Args... args) {
         SafetyFunction func = safety_function_handle();
         if (func) {
             func();
         } else{
-            Serial.printf("Safety procedure triggered but no safety function registered! Message: %s\n", message);
+            Serial.printf("Safety procedure triggered but no safety function registered!\n", message);
         }
-        assert(false && message);
+        char buffer[256];
+        snprintf(buffer, sizeof(buffer), message, args...);
+        assert(false && buffer);
     }
 
-    inline void assert_or_safety_procedure(bool condition, const char* message) {
+    template<typename... Args>
+    inline void assert_or_safety_procedure(bool condition, const char* message, Args... args) {
         if (!condition) {
-            safety_procedure(message);
+            safety_procedure(message, args...);
         }
     }
 }

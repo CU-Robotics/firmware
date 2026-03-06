@@ -31,7 +31,7 @@ int C620::write(CAN_message_t& msg) const {
 
     // set only the buffer bytes that correspond to this motor
     // get the per-struct motor ID
-    uint8_t motor_id = (m_id - 1) % 4;
+    uint8_t motor_id = (m_physical_id - 1) % 4;
 
     // fill in the output array
     // message format is specified in the C620 datasheet (Speed Controller Receiving Message Format)
@@ -59,7 +59,7 @@ void C620::write_motor_torque(float torque) {
     int16_t int_torque = (int16_t)mapped_torque;
 
     // map the ID
-    uint8_t message_id = (m_id - 1) / 4;
+    uint8_t message_id = (m_physical_id - 1) / 4;
 
     // set the output ID
     if (message_id == 0)
@@ -68,7 +68,7 @@ void C620::write_motor_torque(float torque) {
         m_output.id = 0x1FF;    // last 4 motors
 
     // get the per-struct motor ID
-    uint8_t motor_id = (m_id - 1) % 4;
+    uint8_t motor_id = (m_physical_id - 1) % 4;
 
     // fill in the output array
     m_output.buf[motor_id * 2] = (int_torque >> 8) & 0xFF;  // upper byte

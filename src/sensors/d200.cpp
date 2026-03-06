@@ -12,7 +12,7 @@ D200LD14P::D200LD14P(const Cfg::D200Lidar& config_)
 HardwareSerial& D200LD14P::grab_hw_serial_port(Cfg::HardwareSerialPort port) {
   auto port_opt = Cfg::resolve_hardware_serial_port(port);
   if (!port_opt.has_value()) {
-    safety::safety_procedure("D200LD14P: failed to resolve hardware serial port " + std::to_string(static_cast<uint32_t>(port)));
+    safety::safety_procedure("D200LD14P: failed to resolve hardware serial port %u", static_cast<uint32_t>(port));
   }
   return *port_opt.value();
 }
@@ -94,7 +94,7 @@ void D200LD14P::read() {
       p->yaw_velocity = robot_yaw_velocity;
       p->lidar_name = config.lidar_name;
       
-      for (int i = 0; i < D200_POINTS_PER_PACKET; i++) {
+      for (int i = 0; i < (int)D200_POINTS_PER_PACKET; i++) {
         // points start at byte 6, each point is 3 bytes
         int base = 6 + i * 3;
         uint16_t distance = (buf[base + 1] << 8) | buf[base];
@@ -105,8 +105,6 @@ void D200LD14P::read() {
       }
     }
   }
-
-  return true;
 }
 
 void D200LD14P::send_to_comms() const {
@@ -154,7 +152,7 @@ void D200LD14P::get_data(LidarDataPacketSI data[D200_NUM_PACKETS_CACHED]) {
 void D200LD14P::flush_packet_buffer() {
   LidarDataPacketSI zero_packet = {};
   
-  for (int i = 0; i < D200_NUM_PACKETS_CACHED; i++) {
+  for (int i = 0; i < (int)D200_NUM_PACKETS_CACHED; i++) {
     packets[i] = zero_packet;
   }
 }
@@ -171,7 +169,7 @@ uint32_t D200LD14P::bitcast_float(float f32) {
 
 void D200LD14P::export_data(uint8_t bytes[D200_NUM_PACKETS_CACHED * D200_PAYLOAD_SIZE]) {
   // write each packet into byte array
-  for (int i = 0; i < D200_NUM_PACKETS_CACHED; i++) {
+  for (int i = 0; i < (int)D200_NUM_PACKETS_CACHED; i++) {
     int offset = i * D200_PAYLOAD_SIZE;
     LidarDataPacketSI packet = packets[i];
 
@@ -192,7 +190,7 @@ void D200LD14P::export_data(uint8_t bytes[D200_NUM_PACKETS_CACHED * D200_PAYLOAD
     bytes[offset + 7] = (start_angle >> 16) & 0xff;
     bytes[offset + 8] = (start_angle >> 24) & 0xff;
 
-    for (int j = 0; j < D200_POINTS_PER_PACKET; j++) {
+    for (int j = 0; j < (int)D200_POINTS_PER_PACKET; j++) {
       int point_offset = offset + 9 + j * 5;
       uint32_t distance = bitcast_float(packet.distances[j]);
 

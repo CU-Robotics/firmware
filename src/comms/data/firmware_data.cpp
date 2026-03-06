@@ -1,4 +1,5 @@
 #include "firmware_data.hpp"
+#include "icm_sensor_data.hpp"
 
 #if defined(HIVE)
 #include "modules/comms/comms_layer.hpp"    // for CommsLayer
@@ -28,11 +29,6 @@ void FirmwareData::set_data(CommsData* data) {
         logging_data = *static_cast<LoggingData*>(data);
         break;
     }
-    case TypeLabel::TempRobotState: {
-        // place the data in the mega struct
-        temp_robot_state = *static_cast<TempRobotState*>(data);
-        break;
-    }
     case TypeLabel::TargetState: {
         // place the data in the mega struct
         temp_reference = *static_cast<TargetState*>(data);
@@ -56,17 +52,14 @@ void FirmwareData::set_data(CommsData* data) {
     }
     case TypeLabel::BuffEncoderData: {
         //determine if the data is for yaw or pitch
-        BuffEncoderData* buff_encoder_data = static_cast<BuffEncoderData*>(data);
-        if (buff_encoder_data->id == 0) {
-            yaw_buff_encoder = *buff_encoder_data;
-        } else if (buff_encoder_data->id == 1) {
-            pitch_buff_encoder = *buff_encoder_data;
-        }
+        BuffEncoderData single_buff_encoder_data = *static_cast<BuffEncoderData*>(data);
+        buff_encoder_data[(int)single_buff_encoder_data.encoder_name] = single_buff_encoder_data;
         break;
     }
     case TypeLabel::ICMSensorData: {
         // place the data in the mega struct
-        icm_sensor = *static_cast<ICMSensorData*>(data);
+        ICMSensorData icm_sensor = *static_cast<ICMSensorData*>(data);
+        icm_sensor_data[(int)icm_sensor.imu_name] = icm_sensor;
         break;
     }
     // case TypeLabel::TOFSensorData: {
@@ -127,11 +120,6 @@ TEST_CASE("setting firmware data structs") {
     big_test_data.blah[1] = 55;
     firmware_data.set_data(&big_test_data);
     CHECK(firmware_data.big_test_data.blah[1] == 55);
-
-    TempRobotState temp_robot_state;
-    temp_robot_state.time = 55;
-    firmware_data.set_data(&temp_robot_state);
-    CHECK(firmware_data.temp_robot_state.time == 55);
 
     EstimatedState estimated_state;
     estimated_state.time = 55;

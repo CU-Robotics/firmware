@@ -11,6 +11,7 @@
 #include "robot_state_map.hpp"
 
 #include "comms/config_data/controller.hpp"
+#include <memory>
 
 #define NUM_GAINS 24
 #define NUM_ROBOT_CONTROLLERS 12
@@ -31,14 +32,14 @@ public:
     /// @brief sends motor commands based on a reference and estimated state
     /// @param reference_map current target robot state map
     /// @param estimate_map current estimate robot state map
-    void step(RobotStateMap reference_map, RobotStateMap estimate_map);
+    virtual void step(RobotStateMap& reference_map, RobotStateMap& estimate_map) = 0;
 
     /// @brief Resets integrators/timers
     virtual void reset() { timer.start(); }
 
     const Cfg::Controller& config() const { return controller_config; }
 
-    Motor* get_motor_by_generic_use(Cfg::GenericControllerMotorUse use, CANManager& can, std::vector<Cfg::MotorName>& available_motors) const {
+    std::shared_ptr<Motor> get_motor_by_generic_use(Cfg::GenericControllerMotorUse use, CANManager& can, std::vector<Cfg::MotorName>& available_motors) const {
         Cfg::MotorName requested_motor_name = controller_config.get_motor_name_by_generic_use(use);
         for (const auto& motor_name : available_motors) {
             if (motor_name == requested_motor_name) { 
@@ -73,10 +74,10 @@ private:
     /// @brief target motor velocity
     float motor_velocity[4];
     
-    Motor* chassis_motor_1; // front left
-    Motor* chassis_motor_2; // front right
-    Motor* chassis_motor_3; // back right
-    Motor* chassis_motor_4; // back left
+    std::shared_ptr<Motor> chassis_motor_1; // front left
+    std::shared_ptr<Motor> chassis_motor_2; // front right
+    std::shared_ptr<Motor> chassis_motor_3; // back right
+    std::shared_ptr<Motor> chassis_motor_4; // back left
 
     const Cfg::StateName& chassis_x_state;
     const Cfg::StateName& chassis_y_state;
@@ -96,16 +97,16 @@ public:
         low_level_velocity_controller = controller_config.get_sub_controller_by_type(Cfg::SubControllerType::LowLevelVelocityController);
         power_buffer_controller = controller_config.get_sub_controller_by_type(Cfg::SubControllerType::PowerBufferController);
 
-        chassis_motor_1 = get_motor_name_by_generic_use(Cfg::GenericControllerMotorUse::ChassisFrontLeft, can, available_motors);
-        chassis_motor_2 = get_motor_name_by_generic_use(Cfg::GenericControllerMotorUse::ChassisBackRight, can, available_motors);
-        chassis_motor_3 = get_motor_name_by_generic_use(Cfg::GenericControllerMotorUse::ChassisBackLeft, can, available_motors);
-        chassis_motor_4 = get_motor_name_by_generic_use(Cfg::GenericControllerMotorUse::ChassisFrontRight, can, available_motors);
+        chassis_motor_1 = get_motor_by_generic_use(Cfg::GenericControllerMotorUse::ChassisFrontLeft, can, available_motors);
+        chassis_motor_2 = get_motor_by_generic_use(Cfg::GenericControllerMotorUse::ChassisBackRight, can, available_motors);
+        chassis_motor_3 = get_motor_by_generic_use(Cfg::GenericControllerMotorUse::ChassisBackLeft, can, available_motors);
+        chassis_motor_4 = get_motor_by_generic_use(Cfg::GenericControllerMotorUse::ChassisFrontRight, can, available_motors);
     }
 
     /// @brief sends motor commands based on a reference and estimated state
     /// @param reference_map current target robot state map
     /// @param estimate_map current estimate robot state map
-    void step(RobotStateMap reference_map, RobotStateMap estimate_map);
+    void step(RobotStateMap& reference_map, RobotStateMap& estimate_map);
 
     /// @brief reset the controller
     inline void reset() {
@@ -128,8 +129,8 @@ private:
     /// @brief filter for calculating pid velocity controller outputs
     PIDFilter pidv;
 
-    Motor* yaw_motor_1;
-    Motor* yaw_motor_2;
+    std::shared_ptr<Motor> yaw_motor_1;
+    std::shared_ptr<Motor> yaw_motor_2;
 
     const Cfg::StateName& yaw_angle_state;
 
@@ -140,14 +141,14 @@ public:
         full_state_position_controller = controller_config.get_sub_controller_by_type(Cfg::SubControllerType::FullStatePositionController);
         full_state_velocity_controller = controller_config.get_sub_controller_by_type(Cfg::SubControllerType::FullStateVelocityController);
 
-        yaw_motor_1 = get_motor_name_by_generic_use(Cfg::GenericControllerMotorUse::Yaw1, can, available_motors);
-        yaw_motor_2 = get_motor_name_by_generic_use(Cfg::GenericControllerMotorUse::Yaw2, can, available_motors);
+        yaw_motor_1 = get_motor_by_generic_use(Cfg::GenericControllerMotorUse::Yaw1, can, available_motors);
+        yaw_motor_2 = get_motor_by_generic_use(Cfg::GenericControllerMotorUse::Yaw2, can, available_motors);
     }
 
     /// @brief sends motor commands based on a reference and estimated state
     /// @param reference_map current target robot state map
     /// @param estimate_map current estimate robot state map
-    void step(RobotStateMap reference_map, RobotStateMap estimate_map);
+    void step(RobotStateMap& reference_map, RobotStateMap& estimate_map);
 
     /// @brief reset the controller
     inline void reset() {
@@ -168,8 +169,8 @@ private:
     /// @brief filter for calculating pid velocity controller outputs
     PIDFilter pidv;
 
-    Motor* pitch_motor_1;
-    Motor* pitch_motor_2;
+    std::shared_ptr<Motor> pitch_motor_1;
+    std::shared_ptr<Motor> pitch_motor_2;
 
     const Cfg::StateName& pitch_angle_state;
 public:
@@ -178,14 +179,14 @@ public:
         full_state_position_controller = controller_config.get_sub_controller_by_type(Cfg::SubControllerType::FullStatePositionController);
         full_state_velocity_controller = controller_config.get_sub_controller_by_type(Cfg::SubControllerType::FullStateVelocityController);
 
-        pitch_motor_1 = get_motor_name_by_generic_use(Cfg::GenericControllerMotorUse::PitchLeft, can, available_motors);
-        pitch_motor_2 = get_motor_name_by_generic_use(Cfg::GenericControllerMotorUse::PitchRight, can, available_motors);
+        pitch_motor_1 = get_motor_by_generic_use(Cfg::GenericControllerMotorUse::PitchLeft, can, available_motors);
+        pitch_motor_2 = get_motor_by_generic_use(Cfg::GenericControllerMotorUse::PitchRight, can, available_motors);
     }
 
     /// @brief sends motor commands based on a reference and estimated state
     /// @param reference_map current target robot state map
     /// @param estimate_map current estimate robot state map
-    void step(RobotStateMap reference_map, RobotStateMap estimate_map);
+    void step(RobotStateMap& reference_map, RobotStateMap& estimate_map);
 
     /// @brief reset the controller
     inline void reset() {
@@ -206,8 +207,8 @@ private:
     /// @brief filter for controlling motor velocity
     PIDFilter pid_low;
 
-    Motor* flywheel_motor_1;
-    Motor* flywheel_motor_2;
+    std::shared_ptr<Motor> flywheel_motor_1;
+    std::shared_ptr<Motor> flywheel_motor_2;
 
     const Cfg::StateName& flywheel_velocity_state;
 public:
@@ -216,14 +217,14 @@ public:
         high_level_velocity_controller = controller_config.get_sub_controller_by_type(Cfg::SubControllerType::HighLevelVelocityController);
         low_level_velocity_controller = controller_config.get_sub_controller_by_type(Cfg::SubControllerType::LowLevelVelocityController);
 
-        flywheel_motor_1 = get_motor_name_by_generic_use(Cfg::GenericControllerMotorUse::FlywheelLeft, can, available_motors);
-        flywheel_motor_2 = get_motor_name_by_generic_use(Cfg::GenericControllerMotorUse::FlywheelRight, can, available_motors);
+        flywheel_motor_1 = get_motor_by_generic_use(Cfg::GenericControllerMotorUse::FlywheelLeft, can, available_motors);
+        flywheel_motor_2 = get_motor_by_generic_use(Cfg::GenericControllerMotorUse::FlywheelRight, can, available_motors);
     }
 
     /// @brief sends motor commands based on a reference and estimated state
     /// @param reference_map current target robot state map
     /// @param estimate_map current estimate robot state map
-    void step(RobotStateMap reference_map, RobotStateMap estimate_map);
+    void step(RobotStateMap& reference_map, RobotStateMap& estimate_map);
 
     /// @brief reset the controller
     inline void reset() {
@@ -275,7 +276,7 @@ struct FeederController : public Controller {
         /// @brief filter for calculating pid velocity controller outputs
         PIDFilter pidv;
 
-        Motor* feeder_motor;
+        std::shared_ptr<Motor> feeder_motor;
 
         const Cfg::StateName& feeder_position_state;
     public:
@@ -284,14 +285,14 @@ struct FeederController : public Controller {
             feeder_position_state(controller_config.get_state_name_by_generic_use(Cfg::GenericControllerStateUse::FeederBallPosition)) {
             full_state_position_controller = controller_config.get_sub_controller_by_type(Cfg::SubControllerType::FullStatePositionController);
             full_state_velocity_controller = controller_config.get_sub_controller_by_type(Cfg::SubControllerType::FullStateVelocityController);
-
-            feeder_motor = get_motor_name_by_generic_use(Cfg::GenericControllerMotorUse::Feeder, can, available_motors);
+                
+            feeder_motor = get_motor_by_generic_use(Cfg::GenericControllerMotorUse::Feeder, can, available_motors);
         }
 
         /// @brief sends motor commands based on a reference and estimated state
         /// @param reference_map current target robot state map
         /// @param estimate_map current estimate robot state map
-        void step(RobotStateMap reference_map, RobotStateMap estimate_map);
+        void step(RobotStateMap& reference_map, RobotStateMap& estimate_map);
     
         /// @brief reset the controller
         inline void reset() {

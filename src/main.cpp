@@ -25,6 +25,7 @@
 
 #include "comms/data/hive_data.hpp"
 #include "comms/data/sendable.hpp"
+#include "comms/data/robot_state_data.hpp"
 #include "utils/timing.hpp"
 #include "utils/watchdog.hpp"
 
@@ -42,15 +43,11 @@ Transmitter *transmitter = nullptr;
 
 Comms::CommsLayer comms_layer;
 
-ConfigLayer config_layer;
-
 Profiler prof;
 
 SensorManager sensor_manager;
 EstimatorManager estimator_manager;
 ControllerManager controller_manager;
-
-Governor governor;
 
 Watchdog watchdog;
 
@@ -122,6 +119,8 @@ int main() {
     }
 
     comms_layer.init();
+
+    comms_layer.configure();
     
     // Config config
     Serial.println("Configuring...");
@@ -129,6 +128,8 @@ int main() {
     
     Serial.println("Configured!");
     
+    Governor governor(config.states);
+
     // initialize objects
     ref.init();
     transmitter->init();
@@ -139,7 +140,7 @@ int main() {
     sensor_manager.init(config);
 
     // estimate micro and rmacro state
-    estimator_manager.init(config.estimators, can, sensor_manager);
+    estimator_manager.init(config.estimators, sensor_manager, can);
 
     // generate controller outputs based on governed references and estimated
     // state
@@ -216,12 +217,12 @@ int main() {
         sensor_manager.send_to_comms();
         
         // check whether this packet is a config packet
-        if (comms_layer.get_hive_data().config_section.request_bit == 1) {
-            Serial.println("\n\nConfig request received, reconfiguring from comms!\n\n");
-            // trigger safety mode
-            can.issue_safety_mode();
-            config_layer.reconfigure(&comms_layer);
-        }
+        // if (comms_layer.get_hive_data().config_section.request_bit == 1) {
+        //     Serial.println("\n\nConfig request received, reconfiguring from comms!\n\n");
+        //     // trigger safety mode
+        //     can.issue_safety_mode();
+        //     config_layer.reconfigure(&comms_layer);
+        // }
 
         // print loopc every second to verify it is still alive
         if (loopc % 1000 == 0) {
@@ -287,7 +288,7 @@ int main() {
             // backward, set the feeder to something. Otherwise, set it to 0
             float feeder_target = (((l_mouse_button.has_value() || ref.ref_data.kbm_interaction.button_left) &&
                                     transmitter->get_r_switch() != SwitchPos::BACKWARD) || transmitter->get_r_switch() == SwitchPos::FORWARD) ? 10 : 0;
-            if (config->governor_types[6] == 1) {
+            if (estimated_state_map[Cfg::StateName::Feeder].config().governor_type == Cfg::StateOrder::Position) {
                 float dt2 = timer.delta();
                 if (dt2 > 0.1)
                     dt2 = 0;
@@ -308,22 +309,22 @@ int main() {
             target_state_map[Cfg::StateName::ChassisY].set_position(chassis_pos_y);
             target_state_map[Cfg::StateName::ChassisY].set_velocity(chassis_vel_y);
             target_state_map[Cfg::StateName::ChassisHeading].set_velocity(chassis_spin);
-            target_state_map[Cfg::StateName::Yaw].set_position(yaw_target);
-            target_state_map[Cfg::StateName::Yaw].set_velocity(0);
-            target_state_map[Cfg::StateName::Pitch].set_position(pitch_target);
-            target_state_map[Cfg::StateName::Pitch].set_velocity(0);
+            target_state_map[Cfg::StateName::GimbalYaw].set_position(yaw_target);
+            target_state_map[Cfg::StateName::GimbalYaw].set_velocity(0);
+            target_state_map[Cfg::StateName::GimbalPitch].set_position(pitch_target);
+            target_state_map[Cfg::StateName::GimbalPitch].set_velocity(0);
             target_state_map[Cfg::StateName::Flywheels].set_velocity(fly_wheel_target);
 
             // if the left switch is all the way down use Hive controls
 
             if (transmitter->get_l_switch() == SwitchPos::BACKWARD) {
                 // hid_incoming.get_target_state_map(target_state_map);
-                target_state_map = comms_layer.get_hive_data().target_state_map.state;
+                target_state_map.from_comms_packet(comms_layer.get_hive_data().target_state_data.state);
                 last_feed = target_state_map[Cfg::StateName::Feeder].get_position();
                 // if you just switched to hive controls, set the reference to the
                 // current state'
                 if (hive_toggle) {
-                    governor.set_reference(estimated_state_map);
+                    governor.set_reference_map(estimated_state_map);
                     hive_toggle = false;
                 }
             }
@@ -334,7 +335,7 @@ int main() {
                     pos_offset_x = estimated_state_map[Cfg::StateName::ChassisX].get_position();
                     pos_offset_y = estimated_state_map[Cfg::StateName::ChassisY].get_position();
                     feed = last_feed;
-                    governor.set_reference(estimated_state_map);
+                    governor.set_reference_map(estimated_state_map);
                 }
                 hive_toggle = true;
                 safety_toggle = true;
@@ -352,12 +353,12 @@ int main() {
         // }
 
         // override temp state if needed. Dont override in teensy mode so the sentry doesnt move during inspection
-        if (comms_layer.get_hive_data().override_state.active && !(transmitter->get_l_switch() == SwitchPos::MIDDLE)) {
+        if (comms_layer.get_hive_data().override_state_data.active && !(transmitter->get_l_switch() == SwitchPos::MIDDLE)) {
             // clear the request
-            comms_layer.get_hive_data().override_state.active = false;
+            comms_layer.get_hive_data().override_state_data.active = false;
 
             Serial.printf("Overriding state with hive state\n");
-            hive_state_map_offset = comms_layer.get_hive_data().override_state.state;
+            hive_state_map_offset.from_comms_packet(comms_layer.get_hive_data().override_state_data.state);
 
             estimated_state_map = hive_state_map_offset;
             override_request = true;
@@ -368,10 +369,10 @@ int main() {
         override_request = false;
 
         if ((feed - estimated_state_map[Cfg::StateName::Feeder].get_position() > 2 && transmitter->get_l_switch() == SwitchPos::MIDDLE) ||
-            (comms_layer.get_hive_data().target_state_map[Cfg::StateName::Feeder].get_position() - estimated_state_map[Cfg::StateName::Feeder].get_position() > 2 &&
+            (target_state_map[Cfg::StateName::Feeder].get_position() - estimated_state_map[Cfg::StateName::Feeder].get_position() > 2 &&
              transmitter->get_l_switch() == SwitchPos::BACKWARD)) {
             Serial.printf("Feeder is lowkey jammed. current ball count: %f, feed: %f, hive target: %f\n",
-                            estimated_state_map[Cfg::StateName::Feeder].get_position(), feed, comms_layer.get_hive_data().target_state_map.state[Cfg::StateName::Feeder].get_position());
+                            estimated_state_map[Cfg::StateName::Feeder].get_position(), feed, target_state_map[Cfg::StateName::Feeder].get_position());
             feed = estimated_state_map[Cfg::StateName::Feeder].get_position() + 1;
             governor.set_position_reference(Cfg::StateName::Feeder, feed);
         }
@@ -432,7 +433,7 @@ int main() {
         not_safety_mode =
             (transmitter->is_connected() &&
              (transmitter->get_l_switch() == SwitchPos::BACKWARD || transmitter->get_l_switch() == SwitchPos::MIDDLE) &&
-             config_layer.is_configured() && !is_slow_loop && ref.ref_data.robot_performance.gimbol_power_active &&
+             comms_layer.is_configured() && !is_slow_loop && ref.ref_data.robot_performance.gimbol_power_active &&
              !gimbal_power_recently_turned_on);
         //  SAFETY MODE
         if (not_safety_mode) {

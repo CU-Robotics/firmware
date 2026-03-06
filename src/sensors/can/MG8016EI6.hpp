@@ -17,8 +17,8 @@ public:
     /// @param id The per-bus motor ID. This is 1-indexed
     /// @param bus_id The CAN bus index/ID
     /// @param motor_type The motor type (not used for MG8016EI6, do not speicify)
-    MG8016EI6(uint32_t gid, uint32_t id, uint8_t bus_id, MotorType motor_type)
-        : Motor(MotorControllerType::MG8016, gid, id, bus_id, motor_type) {
+    MG8016EI6(const Cfg::Motor& motor_config)
+        : Motor(motor_config) {
         m_base_id = 0x140;
     }
 

@@ -7,7 +7,7 @@
 // NC should be untied
 
 /// @brief Class to manage a limit switch
-class LimitSwitch : Sensor {
+class LimitSwitch : public Sensor {
 public:
     /// @brief Constructor for the LimitSwitch class
     /// @param config The configuration data for the limit switch

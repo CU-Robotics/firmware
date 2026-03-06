@@ -1,13 +1,18 @@
 #include "can_manager.hpp"
 
 // driver includes are here not in header since they're only needed in the implementation
-#include "C610.hpp"
+#include "safety.hpp"
 #include "sensors/can/C610.hpp"
 #include "sensors/can/C620.hpp"
 #include "sensors/can/MG8016EI6.hpp"
 #include "sensors/can/GIM.hpp"
 #include "sensors/can/SDC104.hpp"
+#include "comms/data/motor_state_data.hpp"
+#include "comms/data/sendable.hpp"
 #include <cstdint>
+#include <set>
+
+#include "utils/safety.hpp"
 
 // FlexCAN_T4 moment
 CANManager::CANManager() { }
@@ -49,34 +54,34 @@ void CANManager::configure_motor(const Cfg::Motor& motor_config){
 
     switch(motor_config.motor_controller_type) {
         case Cfg::MotorControllerType::C610: {
-            m_motor_name_map.insert({ motor_config.motor_name, std::make_unique<C610>(motor_config) });
+            m_motor_name_map.insert({ motor_config.motor_name, std::make_shared<C610>(motor_config) });
             Serial.printf("Creating C610 motor %u on bus %u with ID %u\n", static_cast<uint32_t>(motor_config.motor_name), motor_config.physical_bus, motor_config.physical_id);
             
             break;
         }
         case Cfg::MotorControllerType::C620: {
-            m_motor_name_map.insert({ motor_config.motor_name, std::make_unique<C620>(motor_config) });
+            m_motor_name_map.insert({ motor_config.motor_name, std::make_shared<C620>(motor_config) });
             Serial.printf("Creating C620 Motor %u on bus %u with ID %u\n", static_cast<uint32_t>(motor_config.motor_name), motor_config.physical_bus, motor_config.physical_id);
             break;
         }
         case Cfg::MotorControllerType::MG: {
-            m_motor_name_map.insert({ motor_config.motor_name, std::make_unique<MG8016EI6>(motor_config) });
+            m_motor_name_map.insert({ motor_config.motor_name, std::make_shared<MG8016EI6>(motor_config) });
             Serial.printf("Creating MG Motor %u on bus %u with ID %u\n", static_cast<uint32_t>(motor_config.motor_name), motor_config.physical_bus, motor_config.physical_id);
             break;
         }
         case Cfg::MotorControllerType::GIM: {
-            m_motor_name_map.insert({ motor_config.motor_name, std::make_unique<GIM>(motor_config) });
+            m_motor_name_map.insert({ motor_config.motor_name, std::make_shared<GIM>(motor_config) });
             Serial.printf("Creating GIM Motor %u on bus %u with ID %u\n", static_cast<uint32_t>(motor_config.motor_name), motor_config.physical_bus, motor_config.physical_id);
             break;
         }
         case Cfg::MotorControllerType::SDC104: {
-            m_motor_name_map.insert({ motor_config.motor_name, std::make_unique<SDC104>(motor_config) });
+            m_motor_name_map.insert({ motor_config.motor_name, std::make_shared<SDC104>(motor_config) });
             Serial.printf("Creating SDC104 Motor %u on bus %u with ID %u\n", static_cast<uint32_t>(motor_config.motor_name), motor_config.physical_bus, motor_config.physical_id);
             break;
         }
         default: {
             Serial.printf("CANManager tried to create a motor of invalid type: %u\n", motor_config.motor_controller_type);
-            continue;   // continue in order to not call the later map insert since new_motor would be null
+            break;   // continue in order to not call the later map insert since new_motor would be null
         }
     }
 }
@@ -90,7 +95,7 @@ void CANManager::read() {
             // distribute the message to the correct motor
             // if this fails, we've received a message that does not match any motor
             // how would this happen?
-            if (!distribute_msg(msg)) {
+            if (distribute_msg(msg) == Cfg::MotorName::UnsetMotorName) {
                 // - 1 on msg.bus to maintain bus IDs being 0-indexed
                 Serial.printf("CANManager failed to distribute message with raw CAN ID: %.4x on bus: %x\n", msg.id, msg.bus - 1);
             }
@@ -137,7 +142,7 @@ void CANManager::write() {
 
                 break;
             }
-            case Cfg::MotorControllerType::MG8016:
+            case Cfg::MotorControllerType::MG:
             case Cfg::MotorControllerType::GIM:
             case Cfg::MotorControllerType::SDC104: {
                 // these motors dont require msg merging so just write it to the bus
@@ -152,7 +157,7 @@ void CANManager::write() {
                 break;
             }
             default: {
-                Serial.printf("CANManager tried to write to a motor of invalid type: %d\n", motor.second.get_controller_type());
+                Serial.printf("CANManager tried to write to a motor of invalid type: %d\n", motor->get_controller_type());
                 break;
             }
             }
@@ -183,7 +188,7 @@ void CANManager::send_to_comms(){
 void CANManager::issue_safety_mode() {
     // for each motor, cant be const
     for (auto& [name, motor] : m_motor_name_map) {
-        motor.zero_motor();
+        motor->zero_motor();
     }
 
     // write the zero torque commands to the bus
@@ -191,20 +196,12 @@ void CANManager::issue_safety_mode() {
 }
 
 void CANManager::write_motor_torque_by_name(Cfg::MotorName motor_name, float torque) {
+    safety::assert_or_safety_procedure(motor_name!= Cfg::MotorName::UnsetMotorName, 
+                                        "CANManager: Requested write to an unset motor name");
 
-    if(motor_name == Cfg::MotorName::UnsetMotorName) {
-        #ifdef CAN_MANAGER_DEBUG
-        Serial.printf("CANManager: Requested write to an unset motor name\n");
-        #endif
-        return;
-    }
+    safety::assert_or_safety_procedure(!m_motor_name_map.count(motor_name) == 0,
+                                        "CANManager: Requested write to an invalid motor name: %u", static_cast<uint32_t>(motor_name));
 
-    if(m_motor_name_map.count(motor_name) == 0) {
-        #ifdef CAN_MANAGER_DEBUG
-        Serial.printf("CANManager tried to write to an invalid motor name: %d\n", motor_name);
-        #endif
-        return;
-    }
 
     m_motor_name_map[motor_name]->write_motor_torque(torque);
 
@@ -222,60 +219,32 @@ void CANManager::print_state() {
 }
 
 void CANManager::print_motor_state_by_name(Cfg::MotorName motor_name) {
-    if(motor_name == Cfg::MotorName::UnsetMotorName) {
-        #ifdef CAN_MANAGER_DEBUG
-        Serial.printf("CANManager: Requested print of an unset motor name\n");
-        #endif
-        return;
-    }
-
-    if (m_motor_name_map.count(motor_name) == 0) {
-        #ifdef CAN_MANAGER_DEBUG
-        Serial.printf("CANManager tried to print an invalid motor name: %u\n", static_cast<uint32_t>(motor_name));
-        #endif
-        return;
-    }
+    safety::assert_or_safety_procedure(motor_name!= Cfg::MotorName::UnsetMotorName, 
+                                        "CANManager: Requested print of an unset motor name");
+    safety::assert_or_safety_procedure(!m_motor_name_map.count(motor_name) == 0,
+                                        "CANManager: Requested print of an invalid motor name: %u", static_cast<uint32_t>(motor_name));
 
     // print the motor state
-    m_motor_name_map[motor_name].print_state();
+    m_motor_name_map[motor_name]->print_state();
 }
 
-Motor* CANManager::get_motor_by_name(Cfg::MotorName motor_name) {
-    if(motor_name == Cfg::MotorName::UnsetMotorName) {
-        #ifdef CAN_MANAGER_DEBUG
-        Serial.printf("CANManager: Requested get of an unset motor name\n");
-        #endif
-        
-        return std::nullopt;
-    }
+std::shared_ptr<Motor> CANManager::get_motor_by_name(Cfg::MotorName motor_name) {
+    safety::assert_or_safety_procedure(motor_name!= Cfg::MotorName::UnsetMotorName, 
+                                        "CANManager: Requested get of an unset motor name");
+    safety::assert_or_safety_procedure(!m_motor_name_map.count(motor_name) == 0,
+                                        "CANManager: Requested get of an invalid motor name: %u", static_cast<uint32_t>(motor_name));
 
-    if (m_motor_name_map.count(motor_name) == 0) {
-        #ifdef CAN_MANAGER_DEBUG
-        Serial.printf("CANManager tried to get an invalid motor name: %u\n", static_cast<uint32_t>(motor_name));
-        #endif
-        return std::nullopt;
-    }
-
-    return &m_motor_name_map[motor_name];
+    return m_motor_name_map[motor_name];
 }
 
-std::optional<MotorState> CANManager::get_motor_state_by_name(Cfg::MotorName motor_name) {
-    if(motor_name == Cfg::MotorName::UnsetMotorName) {
-        #ifdef CAN_MANAGER_DEBUG
-        Serial.printf("CANManager: Requested get motor state with an unset motor name\n");
-        #endif
-        return std::nullopt;
-    }
-
-    if (m_motor_name_map.count(motor_name) == 0) {
-        #ifdef CAN_MANAGER_DEBUG
-        Serial.printf("CANManager tried to get the state of an invalid motor name: %u\n", static_cast<uint32_t>(motor_name));
-        #endif
-        return std::nullopt;
-    }
+MotorState CANManager::get_motor_state_by_name(Cfg::MotorName motor_name) const {
+    safety::assert_or_safety_procedure(motor_name!= Cfg::MotorName::UnsetMotorName, 
+                                        "CANManager: Requested get of an unset motor name");
+    safety::assert_or_safety_procedure(!m_motor_name_map.count(motor_name) == 0,
+                                        "CANManager: Requested get of an invalid motor name: %u", static_cast<uint32_t>(motor_name));
 
     // return the motor state
-    return m_motor_name_map[motor_name];
+    return m_motor_name_map.at(motor_name)->get_state();
 }
 
 void CANManager::init_motors() {

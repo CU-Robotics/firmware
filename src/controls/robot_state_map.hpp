@@ -1,9 +1,14 @@
 #pragma once
-#include "comms_data.hpp"
 #include "controls/state.hpp"
 #include <map>
-#include "comms/data/robot_state_data.hpp"
-#include "comms/data/sendable.hpp"
+#include <vector>
+#include <Arduino.h>
+
+// Forward declaration
+namespace Comms {
+    template<typename T>
+    class Sendable; // Forward declaration of Sendable
+}
 
 constexpr size_t NUM_STATES = 24;
 
@@ -21,8 +26,10 @@ public:
 
     const std::map<Cfg::StateName, State>& get_state_map() const;
 
+    std::map<Cfg::StateName, State>& get_state_map();
+
     template<typename T>
-    void send_state_to_comms() const {
+    void send_to_comms() const {
         Comms::Sendable<T> sendable;
         for (const auto& [state_name, state] : robot_state) {
             sendable.data.state[static_cast<size_t>(state_name)] = state.get_raw();

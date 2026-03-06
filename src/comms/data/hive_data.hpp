@@ -24,13 +24,10 @@ struct HiveData {
     BigTestData big_test_data;
 
     /// @brief Target state
-    TargetState target_state;
+    TargetState target_state_data;
 
     /// @brief Override state
-    OverrideState override_state;
-
-    /// @brief Config section
-    ConfigSection config_section;
+    OverrideState override_state_data;
 
     Cfg::RobotConfig config;
 };
