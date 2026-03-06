@@ -6,7 +6,7 @@
 namespace Comms {
 
 /// @brief TypeLabel is a unique identifier for each type of data that can be sent over comms.
-enum class TypeLabel : uint8_t {
+enum class TypeLabel : uint16_t {
     NONE = 0x00,
     TestData,
     BigTestData,
@@ -106,13 +106,13 @@ inline std::string to_string(TypeLabel type_label) {
 }
 
 /// @brief PhysicalMedium is the medium over which the data is sent.
-enum class PhysicalMedium : uint8_t {
+enum class PhysicalMedium : uint16_t {
     HID = 0x00,
     Ethernet,
 };
 
 /// @brief Priority is the priority of the data being sent.
-enum class Priority : uint8_t {
+enum class Priority : uint16_t {
     High = 0x00,
     Medium,
     Logging,
@@ -138,11 +138,11 @@ public:
     /// @brief size of the data in bytes
     uint16_t size : 16 = 0;
     /// @brief type of data
-    TypeLabel type_label : 8 = TypeLabel::NONE;
+    TypeLabel type_label : 16 = TypeLabel::NONE;
     /// @brief medium over which the data is sent
-    PhysicalMedium physical_medium : 8 = PhysicalMedium::Ethernet;
+    PhysicalMedium physical_medium : 16 = PhysicalMedium::Ethernet;
     /// @brief priority of the data
-    Priority priority : 8 = Priority::Medium;
+    Priority priority : 16 = Priority::Medium;
 };
 
 } // namespace Comms

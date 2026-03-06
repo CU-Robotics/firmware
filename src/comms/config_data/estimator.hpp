@@ -14,7 +14,6 @@ constexpr uint32_t MAX_GENERIC_SENSOR_USES_PER_ESTIMATOR = 16;
 namespace Cfg {
 
 enum class GenericSensorUse: uint32_t {
-    UnsetSensorType,
     YawBuffEncoder,
     PitchBuffEncoder,
     FeederBuffEncoder,
