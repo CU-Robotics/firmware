@@ -1,10 +1,12 @@
 #include <Arduino.h>
 
+#include "can_manager.hpp"
 #include "comms/comms_layer.hpp"
 #include "controls/state.hpp"
 #include "controls/reference_governor.hpp"
 #include "git_info.h"
 
+#include "safety.hpp"
 #include "sensors/buff_encoder.hpp"
 #include "state.hpp"
 #include "utils/profiler.hpp"
@@ -131,21 +133,23 @@ int main() {
     Governor governor(config.states);
 
     // initialize objects
+    can.init(config.motors);
+    
+    safety::register_safety_function([&](){ can.issue_safety_mode(); });
+
     ref.init();
     transmitter->init();
     
-    can.init(config.motors);
-
     // initialize sensors
     sensor_manager.init(config);
-
+    
     // estimate micro and rmacro state
     estimator_manager.init(config.estimators, sensor_manager, can);
-
+    
     // generate controller outputs based on governed references and estimated
     // state
     controller_manager.init(config.controllers, can);
-
+    
     // variables for use in main
     RobotStateMap estimated_state_map(config.states);
     RobotStateMap reference_map(config.states);                   
@@ -163,16 +167,9 @@ int main() {
     float feed = 0;
     float last_feed = 0;
 
-    // get the pitch min and max, and shift them to be centered around 0
-    float pitch_min = estimated_state_map[Cfg::StateName::GimbalPitch].config().reference_limits.position.min;
-    float pitch_max = estimated_state_map[Cfg::StateName::GimbalPitch].config().reference_limits.position.max;
-    float pitch_average = 0.5 * (pitch_min + pitch_max);
-    pitch_min -= pitch_average;
-    pitch_max -= pitch_average;
-
     // param to specify whether this is the first loop
     int count_one = 0;
-
+    
     // whether we are in hive mode or not
     bool hive_toggle = false;
     bool safety_toggle = false;
@@ -180,6 +177,13 @@ int main() {
     bool last_gimbal_power = false; // used to detect gimbal power changes
     bool last_loop_slow = false;    // used to detect multiple slow loops in a row
     int slow_loop_counter = 0;      // used to count slow loops in a row
+
+    // get the pitch min and max, and shift them to be centered around 0
+    float pitch_min = estimated_state_map[Cfg::StateName::GimbalPitch].config().reference_limits.position.min;
+    float pitch_max = estimated_state_map[Cfg::StateName::GimbalPitch].config().reference_limits.position.max;
+    float pitch_average = 0.5 * (pitch_min + pitch_max);
+    pitch_min -= pitch_average;
+    pitch_max -= pitch_average;
     // int last_switch = 0;
 
     // main loop timers
@@ -448,8 +452,8 @@ int main() {
             governor.set_position_reference(Cfg::StateName::Feeder, estimated_state_map[Cfg::StateName::Feeder].get_position());
 
             feed = (fmod(fmod(estimated_state_map[Cfg::StateName::Feeder].get_position(), 1) + 1, 1) > 0.2)
-                       ? (int)floor(estimated_state_map[Cfg::StateName::Feeder].get_position()) + 1
-                       : (int)floor(estimated_state_map[Cfg::StateName::Feeder].get_position()); // reset feed to the current state
+                        ? (int)floor(estimated_state_map[Cfg::StateName::Feeder].get_position()) + 1
+                        : (int)floor(estimated_state_map[Cfg::StateName::Feeder].get_position()); // reset feed to the current state
             last_feed = feed;                          // reset last feed to the current state
             // Serial.printf("Can zero\n");
             safety_toggle = false; // reset hive toggle

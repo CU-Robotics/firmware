@@ -13,11 +13,11 @@ bool HIDComms::recv_packet(HIDPacket& incoming_packet) {
     // attempt to read a full packet
     // this has no timeout
     int bytes_read = usb_rawhid_recv(incoming_packet.data_start(), 0);
-    // Serial.printf("HIDComms: first %d bytes as u8: ", bytes_read);
-    // for (int i = 0; i < bytes_read; i++) {
-    //     Serial.printf("%d ", incoming_packet.data_start()[i]);
-    // }
-    // Serial.println();
+    Serial.printf("HIDComms: first %d bytes as u8: ", bytes_read);
+    for (int i = 0; i < bytes_read; i++) {
+        Serial.printf("%d ", incoming_packet.data_start()[i]);
+    }
+    Serial.println();
     if (bytes_read == HID_PACKET_MAX_SIZE) {
         // increment total number of packets read and return success
         m_packetsRead++;

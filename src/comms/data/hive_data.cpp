@@ -1,4 +1,6 @@
 #include "hive_data.hpp"
+#include "comms_data.hpp"
+#include "config_data/sensor.hpp"
 
 #if defined(HIVE)
 #include "modules/comms/comms_layer.hpp"    // for CommsLayer
@@ -78,6 +80,17 @@ void HiveData::set_data(CommsData* data) {
         Cfg::Estimator* estimator = static_cast<Cfg::Estimator*>(data);
         config.estimators.push_back(*estimator);
         config.num_sections_received++;
+        break;
+    }
+    case TypeLabel::StereoCameraTriggerConfig: {
+        Cfg::StereoCamTrigger* stereo_camera_trigger = static_cast<Cfg::StereoCamTrigger*>(data);
+        config.stereo_cam_triggers.push_back(*stereo_camera_trigger);
+        config.num_sections_received++;
+        break;
+    }
+    case TypeLabel::ConfigStart: {
+        Cfg::ConfigStart* config_start = static_cast<Cfg::ConfigStart*>(data);
+        config.config_start = *config_start;
         break;
     }
     default:

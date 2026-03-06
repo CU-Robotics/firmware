@@ -172,7 +172,7 @@ void CommsLayer::configure() {
         if(config.num_sections_received == 0) {
             
         }
-        config_loop_timer.delay_micros(1000);
+        config_loop_timer.delay_micros(100000);
     }
 }
 
