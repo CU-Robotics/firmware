@@ -8,7 +8,7 @@
 #include "sensors/sensor.hpp"
 
 /// @brief Abstract parent class for all AdafruitIMUSensors, which give acceleration and gyroscope data. 
-class AdafruitIMUSensor : public Sensor {
+class AdafruitIMUSensor : Sensor {
 public:
     /// @brief Constructor that takes a SensorType and passes it to the Sensor constructor.
     AdafruitIMUSensor() : Sensor() {}

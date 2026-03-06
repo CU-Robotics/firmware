@@ -1,9 +1,6 @@
 #include "ICM20649.hpp"
 #include "safety.hpp"
-#include <cassert>
-
-ICM20649::ICM20649(const Cfg::IcmImu& config) : config(config) {}
-
+#include "comms/data/sendable.hpp"
 
 // initialize ICM
 void ICM20649::init() {
@@ -32,10 +29,11 @@ void ICM20649::init() {
     }
     }
 
-    set_gyro_rate_range(config.gyro_rate_range);
+    set_accel_range(config.accel_range);
+    set_gyro_range(config.gyro_range);
 }
 
-bool ICM20649::read() {
+void ICM20649::read() {
     // get the event data from the sensor class
     sensor.getEvent(&accel, &gyro, &temp);
 
@@ -53,14 +51,19 @@ bool ICM20649::read() {
     temperature = temp.temperature;
 
     //copy the values to the data struct
-    icm_sensor_data.accel_X = accel_X;
-    icm_sensor_data.accel_Y = accel_Y;
-    icm_sensor_data.accel_Z = accel_Z;
-    icm_sensor_data.gyro_X = gyro_X;
-    icm_sensor_data.gyro_Y = gyro_Y;
-    icm_sensor_data.gyro_Z = gyro_Z;
-    icm_sensor_data.temperature = temperature;
-    return true;
+    comms_data.accel_X = accel_X;
+    comms_data.accel_Y = accel_Y;
+    comms_data.accel_Z = accel_Z;
+    comms_data.gyro_X = gyro_X;
+    comms_data.gyro_Y = gyro_Y;
+    comms_data.gyro_Z = gyro_Z;
+    comms_data.temperature = temperature;
+}
+
+void ICM20649::send_to_comms() const {
+    Comms::Sendable<ICMSensorData> sendable;
+    sendable.data = comms_data;
+    sendable.send_to_comms();
 }
 
 // calculate the approximate acceleration data rate (Hz) from the divisor.

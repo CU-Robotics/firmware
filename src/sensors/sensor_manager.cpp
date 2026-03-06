@@ -1,8 +1,14 @@
 #include "sensor_manager.hpp"
 
-#include "sensors/ICM20649.hpp"
 #include "sensors/buff_encoder.hpp"
+#include "sensors/rev_encoder.hpp"
 
+#include "sensors/ICM20649.hpp"
+#include "sensors/LSM6DSOX.hpp"
+
+#include "sensors/d200.hpp"
+#include "sensors/limit_switch.hpp"
+#include "sensors/StereoCamTrigger.hpp"
 
 SensorManager::SensorManager() {}
 

@@ -1,11 +1,12 @@
 #include <Arduino.h>
 
 #include "comms/comms_layer.hpp"
-#include "controls/robot_state.hpp"
 #include "controls/state.hpp"
+#include "controls/reference_governor.hpp"
 #include "git_info.h"
 
 #include "sensors/buff_encoder.hpp"
+#include "state.hpp"
 #include "utils/profiler.hpp"
 
 #include "sensors/ET16S.hpp"
@@ -14,12 +15,12 @@
 
 #include "controls/controller_manager.hpp"
 #include "controls/estimator_manager.hpp"
-#include "sensors/ACS712.hpp"
 #include "sensors/StereoCamTrigger.hpp"
 #include "sensors/dr16.hpp"
+#include "sensors/RefSystem.hpp"
 #include "utils/profiler.hpp"
 
-#include "SensorManager.hpp"
+#include "sensor_manager.hpp"
 #include <TeensyDebug.h>
 
 #include "comms/data/hive_data.hpp"
@@ -124,8 +125,7 @@ int main() {
     
     // Config config
     Serial.println("Configuring...");
-    // const Config *config = comms_layer.get_hive_data()
-    const Cfg::RobotConfig& config = comms_layer.get_hive_data().robot_config;
+    const Cfg::RobotConfig& config = comms_layer.get_hive_data().config;
     
     Serial.println("Configured!");
     
@@ -139,23 +139,18 @@ int main() {
     sensor_manager.init(config);
 
     // estimate micro and rmacro state
-    estimator_manager.init(config.high_level_estimators, config.low_level_estimators, sensor_manager);
+    estimator_manager.init(config.estimators, can, sensor_manager);
 
     // generate controller outputs based on governed references and estimated
     // state
-    controller_manager.init(config.controllers);
-
-    // set reference limits in the reference governor
-    governor.set_reference_limits(config.set_reference_limits);
+    controller_manager.init(config.controllers, can);
 
     // variables for use in main
-    RobotStateMap temp_state_map;                       
-    RobotStateMap temp_reference_map;                     
-    RobotStateMap target_state_map;                        // Temp ungoverned state
-    RobotStateMap hive_state_map_offset;                   // Hive offset state
+    RobotStateMap estimated_state_map(config.states);
+    RobotStateMap reference_map(config.states);                   
+    RobotStateMap target_state_map(config.states);// Temp ungoverned state
+    RobotStateMap hive_state_map_offset(config.states);// Hive offset state
     bool override_request = false;
-    // float motor_inputs[CAN_MAX_MOTORS] = { 0 }; //Array for storing
-    // controller outputs to send to CAN
 
     // manual controls variables
     float vtm_pos_x = 0;
@@ -168,8 +163,8 @@ int main() {
     float last_feed = 0;
 
     // get the pitch min and max, and shift them to be centered around 0
-    float pitch_min = config->set_reference_limits[4][0][0];
-    float pitch_max = config->set_reference_limits[4][0][1];
+    float pitch_min = estimated_state_map[Cfg::StateName::GimbalPitch].config().reference_limits.position.min;
+    float pitch_max = estimated_state_map[Cfg::StateName::GimbalPitch].config().reference_limits.position.max;
     float pitch_average = 0.5 * (pitch_min + pitch_max);
     pitch_min -= pitch_average;
     pitch_max -= pitch_average;
@@ -234,116 +229,116 @@ int main() {
         }
 
         // manual controls on firmware
-        std::optional<Transmitter::Keys> transmitter_keys = transmitter->get_keys();
-        std::optional<int> mouse_x = transmitter->get_mouse_x();
-        std::optional<int> mouse_y = transmitter->get_mouse_y();
-        std::optional<bool> l_mouse_button = transmitter->get_l_mouse_button();
-        // std::optional<bool> r_mouse_button = transmitter->get_r_mouse_button();
+            std::optional<Transmitter::Keys> transmitter_keys = transmitter->get_keys();
+            std::optional<int> mouse_x = transmitter->get_mouse_x();
+            std::optional<int> mouse_y = transmitter->get_mouse_y();
+            std::optional<bool> l_mouse_button = transmitter->get_l_mouse_button();
+            // std::optional<bool> r_mouse_button = transmitter->get_r_mouse_button();
 
-        float delta = control_input_timer.delta();
-        if (mouse_x.has_value() && mouse_y.has_value()) {
-            transmitter_pos_x += mouse_x.value() * 0.05 * delta;
-            transmitter_pos_y += mouse_y.value() * 0.05 * delta;
-        }
-
-        vtm_pos_x += ref.ref_data.kbm_interaction.mouse_speed_x * 0.05 * delta;
-        vtm_pos_y += ref.ref_data.kbm_interaction.mouse_speed_y * 0.05 * delta;
-
-        // clamp to pitch limits
-        if (transmitter_pos_y < pitch_min) {
-            transmitter_pos_y = pitch_min;
-        }
-        if (transmitter_pos_y > pitch_max) {
-            transmitter_pos_y = pitch_max;
-        }
-
-        float chassis_vel_x = 0;
-        float chassis_vel_y = 0;
-        float chassis_pos_x = 0;
-        float chassis_pos_y = 0;
-
-        if (config->governor_types[0] == 2) { // if we should be controlling velocity
-
-            chassis_vel_x = transmitter->get_l_stick_y() * 5.4 +
-                            (-ref.ref_data.kbm_interaction.key_w + ref.ref_data.kbm_interaction.key_s) * 2.5;
-
-            if (transmitter_keys.has_value()) {
-                chassis_vel_x += (-transmitter_keys.value().w + transmitter_keys.value().s) * 2.5;
+            float delta = control_input_timer.delta();
+            if (mouse_x.has_value() && mouse_y.has_value()) {
+                transmitter_pos_x += mouse_x.value() * 0.05 * delta;
+                transmitter_pos_y += mouse_y.value() * 0.05 * delta;
             }
 
-            chassis_vel_y = -transmitter->get_l_stick_x() * 5.4 +
-                            (ref.ref_data.kbm_interaction.key_d - ref.ref_data.kbm_interaction.key_a) * 2.5;
+            vtm_pos_x += ref.ref_data.kbm_interaction.mouse_speed_x * 0.05 * delta;
+            vtm_pos_y += ref.ref_data.kbm_interaction.mouse_speed_y * 0.05 * delta;
 
-            if (transmitter_keys.has_value()) {
-                chassis_vel_y += (transmitter_keys.value().d - transmitter_keys.value().a) * 2.5;
+            // clamp to pitch limits
+            if (transmitter_pos_y < pitch_min) {
+                transmitter_pos_y = pitch_min;
             }
-        } else if (config->governor_types[0] == 1) { // if we should be controlling position
-            chassis_pos_x = transmitter->get_l_stick_x() * 2 + pos_offset_x;
-            chassis_pos_y = transmitter->get_l_stick_y() * 2 + pos_offset_y;
-        }
-
-        float chassis_spin = transmitter->get_wheel() * 25;
-        float pitch_target = 1.57 + -transmitter->get_r_stick_y() * 0.3 + transmitter_pos_y + vtm_pos_y;
-        float yaw_target = -transmitter->get_r_stick_x() * 1.5 - transmitter_pos_x - vtm_pos_x;
-
-        float fly_wheel_target =
-            (transmitter->get_r_switch() == SwitchPos::FORWARD || transmitter->get_r_switch() == SwitchPos::MIDDLE) ? 18 : 0; // m/s
-        // if the right switch is forward, and either the left mouse button is pressed or the right switch is not
-        // backward, set the feeder to something. Otherwise, set it to 0
-        float feeder_target = (((l_mouse_button.has_value() || ref.ref_data.kbm_interaction.button_left) &&
-                                transmitter->get_r_switch() != SwitchPos::BACKWARD) || transmitter->get_r_switch() == SwitchPos::FORWARD) ? 10 : 0;
-        if (config->governor_types[6] == 1) {
-            float dt2 = timer.delta();
-            if (dt2 > 0.1)
-                dt2 = 0;
-            // check if the shooter is active
-            if (not_safety_mode && ref.ref_data.robot_performance.shooter_power_active)
-                feed += feeder_target * dt2;
-            target_state_map[StateName::Feeder).set_position((int)feed);
-        } else { 
-            target_state_map[StateName::Feeder).set_velocity(feeder_target);
-        }
-        // if (transmitter->get_r_switch() == 1 && last_switch != 1) {
-        //     feed++;
-        // }
-        // last_switch = transmitter->get_r_switch();
-        // set manual controls
-        target_state_map[StateName::ChassisX).set_position(chassis_pos_x);
-        target_state_map[StateName::ChassisX).set_velocity(chassis_vel_x);
-        target_state_map[StateName::ChassisY).set_position(chassis_pos_y);
-        target_state_map[StateName::ChassisY).set_velocity(chassis_vel_y);
-        target_state_map[StateName::ChassisHeading).set_velocity(chassis_spin);
-        target_state_map[StateName::Yaw).set_position(yaw_target);
-        target_state_map[StateName::Yaw).set_velocity(0);
-        target_state_map[StateName::Pitch).set_position(pitch_target);
-        target_state_map[StateName::Pitch).set_velocity(0);
-        target_state_map[StateName::Flywheels).set_velocity(fly_wheel_target);
-
-        // if the left switch is all the way down use Hive controls
-
-        if (transmitter->get_l_switch() == SwitchPos::BACKWARD) {
-            // hid_incoming.get_target_state_map(target_state_map);
-            memcpy(target_state_map, comms_layer.get_hive_data().target_state_map.state, sizeof(target_state_map));
-            last_feed = target_state_map[StateName::Feeder).get_position();
-            // if you just switched to hive controls, set the reference to the
-            // current state'
-            if (hive_toggle) {
-                governor.set_reference(temp_state_map);
-                hive_toggle = false;
+            if (transmitter_pos_y > pitch_max) {
+                transmitter_pos_y = pitch_max;
             }
-        }
 
-        // when in teensy control mode reset hive toggle
-        if (transmitter->get_l_switch() == SwitchPos::MIDDLE) {
-            if (!hive_toggle || !safety_toggle) {
-                pos_offset_x = temp_state_map[0][0];
-                pos_offset_y = temp_state_map[1][0];
-                feed = last_feed;
-                governor.set_reference(temp_state_map);
+            float chassis_vel_x = 0;
+            float chassis_vel_y = 0;
+            float chassis_pos_x = 0;
+            float chassis_pos_y = 0;
+
+            if (estimated_state_map[Cfg::StateName::ChassisX].config().governor_type == Cfg::StateOrder::Velocity) { // if we should be controlling velocity
+
+                chassis_vel_x = transmitter->get_l_stick_y() * 5.4 +
+                                (-ref.ref_data.kbm_interaction.key_w + ref.ref_data.kbm_interaction.key_s) * 2.5;
+
+                if (transmitter_keys.has_value()) {
+                    chassis_vel_x += (-transmitter_keys.value().w + transmitter_keys.value().s) * 2.5;
+                }
+
+                chassis_vel_y = -transmitter->get_l_stick_x() * 5.4 +
+                                (ref.ref_data.kbm_interaction.key_d - ref.ref_data.kbm_interaction.key_a) * 2.5;
+
+                if (transmitter_keys.has_value()) {
+                    chassis_vel_y += (transmitter_keys.value().d - transmitter_keys.value().a) * 2.5;
+                }
+            } else if (estimated_state_map[Cfg::StateName::ChassisX].config().governor_type == Cfg::StateOrder::Position) { // if we should be controlling position
+                chassis_pos_x = transmitter->get_l_stick_x() * 2 + pos_offset_x;
+                chassis_pos_y = transmitter->get_l_stick_y() * 2 + pos_offset_y;
             }
-            hive_toggle = true;
-            safety_toggle = true;
-        }
+
+            float chassis_spin = transmitter->get_wheel() * 25;
+            float pitch_target = 1.57 + -transmitter->get_r_stick_y() * 0.3 + transmitter_pos_y + vtm_pos_y;
+            float yaw_target = -transmitter->get_r_stick_x() * 1.5 - transmitter_pos_x - vtm_pos_x;
+
+            float fly_wheel_target =
+                (transmitter->get_r_switch() == SwitchPos::FORWARD || transmitter->get_r_switch() == SwitchPos::MIDDLE) ? 18 : 0; // m/s
+            // if the right switch is forward, and either the left mouse button is pressed or the right switch is not
+            // backward, set the feeder to something. Otherwise, set it to 0
+            float feeder_target = (((l_mouse_button.has_value() || ref.ref_data.kbm_interaction.button_left) &&
+                                    transmitter->get_r_switch() != SwitchPos::BACKWARD) || transmitter->get_r_switch() == SwitchPos::FORWARD) ? 10 : 0;
+            if (config->governor_types[6] == 1) {
+                float dt2 = timer.delta();
+                if (dt2 > 0.1)
+                    dt2 = 0;
+                // check if the shooter is active
+                if (not_safety_mode && ref.ref_data.robot_performance.shooter_power_active)
+                    feed += feeder_target * dt2;
+                target_state_map[Cfg::StateName::Feeder].set_position((int)feed);
+            } else { 
+                target_state_map[Cfg::StateName::Feeder].set_velocity(feeder_target);
+            }
+            // if (transmitter->get_r_switch() == 1 && last_switch != 1) {
+            //     feed++;
+            // }
+            // last_switch = transmitter->get_r_switch();
+            // set manual controls
+            target_state_map[Cfg::StateName::ChassisX].set_position(chassis_pos_x);
+            target_state_map[Cfg::StateName::ChassisX].set_velocity(chassis_vel_x);
+            target_state_map[Cfg::StateName::ChassisY].set_position(chassis_pos_y);
+            target_state_map[Cfg::StateName::ChassisY].set_velocity(chassis_vel_y);
+            target_state_map[Cfg::StateName::ChassisHeading].set_velocity(chassis_spin);
+            target_state_map[Cfg::StateName::Yaw].set_position(yaw_target);
+            target_state_map[Cfg::StateName::Yaw].set_velocity(0);
+            target_state_map[Cfg::StateName::Pitch].set_position(pitch_target);
+            target_state_map[Cfg::StateName::Pitch].set_velocity(0);
+            target_state_map[Cfg::StateName::Flywheels].set_velocity(fly_wheel_target);
+
+            // if the left switch is all the way down use Hive controls
+
+            if (transmitter->get_l_switch() == SwitchPos::BACKWARD) {
+                // hid_incoming.get_target_state_map(target_state_map);
+                target_state_map = comms_layer.get_hive_data().target_state_map.state;
+                last_feed = target_state_map[Cfg::StateName::Feeder].get_position();
+                // if you just switched to hive controls, set the reference to the
+                // current state'
+                if (hive_toggle) {
+                    governor.set_reference(estimated_state_map);
+                    hive_toggle = false;
+                }
+            }
+
+            // when in teensy control mode reset hive toggle
+            if (transmitter->get_l_switch() == SwitchPos::MIDDLE) {
+                if (!hive_toggle || !safety_toggle) {
+                    pos_offset_x = estimated_state_map[Cfg::StateName::ChassisX].get_position();
+                    pos_offset_y = estimated_state_map[Cfg::StateName::ChassisY].get_position();
+                    feed = last_feed;
+                    governor.set_reference(estimated_state_map);
+                }
+                hive_toggle = true;
+                safety_toggle = true;
+            }
 
         // print transmitter
 
@@ -362,63 +357,45 @@ int main() {
             comms_layer.get_hive_data().override_state.active = false;
 
             Serial.printf("Overriding state with hive state\n");
-            memcpy(hive_state_map_offset, comms_layer.get_hive_data().override_state.state, sizeof(hive_state_map_offset));
+            hive_state_map_offset = comms_layer.get_hive_data().override_state.state;
 
-            memcpy(temp_state_map, hive_state_map_offset, sizeof(hive_state_map_offset));
+            estimated_state_map = hive_state_map_offset;
             override_request = true;
         }
 
         // step estimates and construct estimated state
-        estimator_manager.step(temp_state_map, override_request);
+        estimator_manager.step(estimated_state_map, override_request);
         override_request = false;
 
-        if ((feed - temp_state_map[6][0] > 2 && transmitter->get_l_switch() == SwitchPos::MIDDLE) ||
-            (comms_layer.get_hive_data().target_state_map.state[6][0] - temp_state_map[6][0] > 2 &&
+        if ((feed - estimated_state_map[Cfg::StateName::Feeder].get_position() > 2 && transmitter->get_l_switch() == SwitchPos::MIDDLE) ||
+            (comms_layer.get_hive_data().target_state_map[Cfg::StateName::Feeder].get_position() - estimated_state_map[Cfg::StateName::Feeder].get_position() > 2 &&
              transmitter->get_l_switch() == SwitchPos::BACKWARD)) {
             Serial.printf("Feeder is lowkey jammed. current ball count: %f, feed: %f, hive target: %f\n",
-                            temp_state_map[6][0], feed, comms_layer.get_hive_data().target_state_map.state[6][0]);
-            feed = temp_state_map[6][0] + 1;
-            governor.set_reference_at_index(feed, 6, 0);
+                            estimated_state_map[Cfg::StateName::Feeder].get_position(), feed, comms_layer.get_hive_data().target_state_map.state[Cfg::StateName::Feeder].get_position());
+            feed = estimated_state_map[Cfg::StateName::Feeder].get_position() + 1;
+            governor.set_position_reference(Cfg::StateName::Feeder, feed);
         }
 
         // if first loop set target state to estimated state
         if (count_one == 0) {
-            temp_state_map[7][0] = 0;
-            governor.set_reference(temp_state_map);
+            governor.set_reference_map(estimated_state_map);
             // print temp state
-            for (int i = 0; i < 8; i++) {
-                Serial.printf("\t%d: %f %f %f\n", i, temp_state_map[i][0], temp_state_map[i][1], temp_state_map[i][2]);
-            }
+            // for (int i = 0; i < 8; i++) {
+            //     Serial.printf("\t%d: %f %f %f\n", i, estimated_state_map[i][0], estimated_state_map[i][1], estimated_state_map[i][2]);
+            // }
             count_one++;
         }
 
-        // Serial.printf("Estimated state:\n");
-        // for (int i = 0; i < 8; i++) {
-        //     Serial.printf("\t%d: %f %f %f\n", i, temp_state_map[i][0],
-        //     temp_state_map[i][1], temp_state_map[i][2]);
-        // }
-
         // reference govern
-        governor.set_estimate(temp_state_map);
-        governor.step_reference(target_state_map, config->governor_types);
-        governor.get_reference(temp_reference_map);
+        reference_map = governor.step_reference_map(target_state_map);
 
         // generate motor outputs from controls
-        controller_manager.step(temp_reference_map, temp_state_map);
+        controller_manager.step(reference_map, estimated_state_map);
 
         // can.print_state();
 
-        
-        Comms::Sendable<TargetState> target_state_sendable;
-        memcpy(target_state_sendable.data.state, temp_reference_map, sizeof(temp_reference_map));
-        target_state_sendable.data.time = millis() / 1000.0;
-        target_state_sendable.send_to_comms();
-        
-        Comms::Sendable<EstimatedState> estimated_state;
-        memcpy(estimated_state.data.state, temp_state_map, sizeof(temp_state_map));
-        estimated_state.data.time = millis() / 1000.0;
-        estimated_state.send_to_comms();
-        
+        target_state_map.send_to_comms<TargetState>();
+        estimated_state_map.send_to_comms<EstimatedState>();
 
         comms_layer.run();
 
@@ -467,11 +444,11 @@ int main() {
             // SAFETY ON
             // TODO: Reset all controller integrators here
             can.issue_safety_mode();
-            governor.set_reference_at_index(temp_state_map[6][0], 6, 0);
+            governor.set_position_reference(Cfg::StateName::Feeder, estimated_state_map[Cfg::StateName::Feeder].get_position());
 
-            feed = (fmod(fmod(temp_state_map[6][0], 1) + 1, 1) > 0.2)
-                       ? (int)floor(temp_state_map[6][0]) + 1
-                       : (int)floor(temp_state_map[6][0]); // reset feed to the current state
+            feed = (fmod(fmod(estimated_state_map[Cfg::StateName::Feeder].get_position(), 1) + 1, 1) > 0.2)
+                       ? (int)floor(estimated_state_map[Cfg::StateName::Feeder].get_position()) + 1
+                       : (int)floor(estimated_state_map[Cfg::StateName::Feeder].get_position()); // reset feed to the current state
             last_feed = feed;                          // reset last feed to the current state
             // Serial.printf("Can zero\n");
             safety_toggle = false; // reset hive toggle

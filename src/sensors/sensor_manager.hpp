@@ -48,6 +48,5 @@ public:
         }
     }
 private:
-
     std::map<Cfg::SensorName, std::shared_ptr<Sensor>> sensors;
 };

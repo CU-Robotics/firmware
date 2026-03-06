@@ -1,4 +1,4 @@
-#include "IMUSensor.hpp"
+#include "AdafruitIMUSensor.hpp"
 
 // default implementation for printing data
 void IMUSensor::print() {

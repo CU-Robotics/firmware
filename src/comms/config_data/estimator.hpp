@@ -49,11 +49,27 @@ enum class EstimatorType : uint32_t {
     Actuators,
 };
 
+struct SensorInfo {
+    float yaw_encoder_offset;
+    float pitch_encoder_offset;
+    float feeder_encoder_offset;
+    float pitch_angle_at_imu_calibration;
+    float yaw_start_angle;
+    float pitch_start_angle;
+    float roll_start_angle;
+    float yaw_axis_vector[3];
+    float pitch_axis_vector[3];
+    float chassis_x_to_motor_rad;
+    float chassis_y_to_motor_rad;
+    float chassis_rad_to_motor_rad;
+};
+
 struct Estimator : Comms::CommsData {
     EstimatorType estimator_type;
     StateName generic_state_uses_to_names[MAX_GENERIC_STATE_USES_PER_ESTIMATOR];
     MotorName generic_motor_uses_to_names[MAX_GENERIC_MOTOR_USES_PER_ESTIMATOR];
     SensorName generic_sensor_uses_to_names[MAX_GENERIC_SENSOR_USES_PER_ESTIMATOR];
+    SensorInfo sensor_info;
 
     /// @brief Get the motor name of this controller with the given generic use
     /// @param motor_use The generic use of the motor, as defined by the GenericControllerMotorUse enum

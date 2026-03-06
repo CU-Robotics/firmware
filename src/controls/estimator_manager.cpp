@@ -1,4 +1,5 @@
 #include "estimator_manager.hpp"
+#include "robot_state_map.hpp"
 
 EstimatorManager::EstimatorManager() { }
 
@@ -7,77 +8,38 @@ EstimatorManager::~EstimatorManager() {
 }
 
 void EstimatorManager::init(
-        const std::vector<Cfg::Estimator>& high_level_estimator_configurations, 
+        const std::vector<Cfg::Estimator>& estimator_configurations, 
         const CANManager& can, const SensorManager& sensor_manager) 
 {
-    for (const Cfg::HighLevelEstimator& estimator_config : high_level_estimator_configurations) {
+    available_states.clear();
+    for (int i = 0; i < (uint32_t)(Cfg::StateName::StateNameCount); i++) {
+        available_states.push_back(static_cast<Cfg::StateName>(i));
+    }
+    for (const Cfg::Estimator& estimator_config : estimator_configurations) {
         init_estimator(estimator_config, can, sensor_manager);
     }
-
-    for(const Cfg::LowLevelEstimator& estimator_config : low_level_estimator_configurations) {
-        init_estimator(estimator_config, can, sensor_manager);
-    }   
 }
 
-void EstimatorManager::init_estimator(Cfg::HighLevelEstimator estimator_config, const CANManager& can, const SensorManager& sensor_manager) {
-    switch (estimator_config.estimator_name) {
-    case Cfg::EstimatorName::GimbalAndChassis:
-        high_level_estimators.push_back(std::make_unique(GimbalAndChassisEstimator(estimator_config, can, sensor_manager)));
+void EstimatorManager::init_estimator(const Cfg::Estimator& estimator_config, const CANManager& can, const SensorManager& sensor_manager) {
+    switch (estimator_config.estimator_type) {
+    case Cfg::EstimatorType::GimbalAndChassis:
+        estimators.push_back(std::make_unique(GimbalAndChassisEstimator(estimator_config, can, sensor_manager, available_states)));
         break;
-    case Cfg::EstimatorName::FlywheelVelocity:
-        high_level_estimators.push_back(std::make_unique(FlyWheelEstimator(estimator_config, can, sensor_manager)));
+    case Cfg::EstimatorType::FlywheelVelocity:
+        estimators.push_back(std::make_unique(FlywheelEstimator(estimator_config, can, sensor_manager, available_states)));
         break;
-    case Cfg::EstimatorName::FeederPosition:
-        high_level_estimators.push_back(std::make_unique(FeederEstimator(estimator_config, can, sensor_manager)));
+    case Cfg::EstimatorType::FeederPosition:
+        estimators.push_back(std::make_unique(FeederEstimator(estimator_config, can, sensor_manager, available_states)));
         break;
     default:
         break;
     }
 }
 
-void EstimatorManager::step(float macro_outputs[STATE_LEN][3], float micro_outputs[CAN_MAX_MOTORS][MICRO_STATE_LEN], int override) {
-    // clear output
-    float curr_state[STATE_LEN][3] = { {0} };
-    memcpy(curr_state, macro_outputs, sizeof(curr_state));
-    clear_outputs(macro_outputs, micro_outputs);
+void EstimatorManager::step(RobotStateMap& current_state_map, int override) {
+    RobotStateMap previous_state_map = current_state_map;
 
-    for (int i = 0; i < num_estimators; i++) {
-        float macro_states[STATE_LEN][3] = { {0} };
-        float micro_states[CAN_MAX_MOTORS][MICRO_STATE_LEN] = { {0} };
-        
-        if (!estimators[i]->micro_estimator) {
-
-            estimators[i]->step_states(macro_states, curr_state, override);
-
-            for (int j = 0; j < STATE_LEN + 1; j++) {
-                int index = config_data->estimator_info[i][j + 1]; // j + 1 because the id is in index 0
-                if(index == -1) break;
-                for (int k = 0; k < 3; k++){
-                    macro_outputs[index][k] = macro_states[j][k];
-                }
-            }
-        } else {
-            estimators[i]->step_states(micro_states, curr_state, override);
-            for (size_t j = 0; j < CAN_MAX_MOTORS + 1; j++) {
-                int index = config_data->estimator_info[i][j + 1]; //0 index is reserved for the id
-                if (index == -1) break;
-                for (int k = 0; k < MICRO_STATE_LEN; k++) {
-                    micro_outputs[index][k] = micro_states[j][k];
-                }
-            }
-        }
-    }
-}
-
-void EstimatorManager::clear_outputs(float macro_outputs[STATE_LEN][3], float micro_outputs[CAN_MAX_MOTORS][MICRO_STATE_LEN]) {
-    for (int i = 0; i < STATE_LEN; i++) {
-        for (int j = 0; j < 3; j++) {
-            macro_outputs[i][j] = 0;
-        }
-    }
-    for (size_t i = 0; i < CAN_MAX_MOTORS; i++) {
-        for (int j = 0; j < MICRO_STATE_LEN; j++) {
-            micro_outputs[i][j] = 0;
-        }
+    for (auto& estimator : estimators) {
+        estimator.step_states(current_state_map, previous_state_map, override);
     }
 }

@@ -1,62 +1,66 @@
 #include "state.hpp"
+#include "utils/wrapping.hpp"
+#include <arduino.h>
 
-State::State(const Cfg::State& state_config) : config(state_config) {
-    position = 0;
-    velocity = 0;
-    acceleration = 0;
+State::State(const Cfg::State& state_config) : m_config(state_config) {
+    m_state = {0, 0, 0};
 }
 
 const Cfg::State& State::config() const {
-    return config;
+    return m_config;
 }
 
 void State::set_position(float _position) {
-    if (config.is_wrapping) {
-        _position = wrap(_position, config.reference_limits.position.min, config.reference_limits.position.max);
+    if (m_config.is_wrapping) {
+        _position = Utils::wrap(_position, m_config.reference_limits.position.min, m_config.reference_limits.position.max);
     } else {
-        _position = constrain(_position, config.reference_limits.position.min, config.reference_limits.position.max);
+        _position = constrain(_position, m_config.reference_limits.position.min, m_config.reference_limits.position.max);
     }
 
-    this->position = _position;
+    m_state.position = _position;
 }
 
 float State::get_position() const {
-    return position;
+    return m_state.position;
 }
 
 void State::set_velocity(float _velocity) {
-    _velocity = constrain(_velocity, config.reference_limits.velocity.min, config.reference_limits.velocity.max);
-    this->velocity = _velocity;
+    _velocity = constrain(_velocity, m_config.reference_limits.velocity.min, m_config.reference_limits.velocity.max);
+    m_state.velocity = _velocity;
 }
 
 float State::get_velocity() const {
-    return velocity;
+    return m_state.velocity;
 }
 
 void State::set_acceleration(float _acceleration) {
-    _acceleration = constrain(_acceleration, config.reference_limits.acceleration.min, config.reference_limits.acceleration.max);
-    this->acceleration = _acceleration;
+    _acceleration = constrain(_acceleration, m_config.reference_limits.acceleration.min, m_config.reference_limits.acceleration.max);
+    m_state.acceleration = _acceleration;
 }
 
 float State::get_acceleration() const {
-    return acceleration;
+    return m_state.acceleration;
+}
+
+State::Raw State::get_raw() const {
+    return m_state;
 }
 
 // Operator Overloads
 
 State State::operator+(const State& other) const {
-    State result(config);
-    result.set_position(this->get_position() + other.get_position());
-    result.set_velocity(this->get_velocity() + other.get_velocity());
-    result.set_acceleration(this->get_acceleration() + other.get_acceleration());
+    State result(m_config);
+    result.set_position(get_position() + other.get_position());
+    result.set_velocity(get_velocity() + other.get_velocity());
+    result.set_acceleration(get_acceleration() + other.get_acceleration());
     return result;
 }
 
 State State::operator-(const State& other) const {
-    State result(config);
-    result.set_position(this->get_position() - other.get_position());
-    result.set_velocity(this->get_velocity() - other.get_velocity());
-    result.set_acceleration(this->get_acceleration() - other.get_acceleration());
+    State result(m_config);
+    result.set_position(get_position() - other.get_position());
+    result.set_velocity(get_velocity() - other.get_velocity());
+    result.set_acceleration(get_acceleration() - other.get_acceleration());
     return result;
 }
 
@@ -64,8 +68,8 @@ State& State::operator=(const State& other) {
     if (&other == this) {
         return *this;
     }
-    this->set_position(other.get_position());
-    this->set_velocity(other.get_velocity());
-    this->set_acceleration(other.get_acceleration());
+    set_position(other.get_position());
+    set_velocity(other.get_velocity());
+    set_acceleration(other.get_acceleration());
     return *this;
 }

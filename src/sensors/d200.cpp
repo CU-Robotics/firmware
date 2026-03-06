@@ -21,7 +21,7 @@ void D200LD14P::init() {
   port.begin(D200_BAUD);
 }
 
-bool D200LD14P::read() {
+void D200LD14P::read() {
   // consume bytes until we reach a start character (only relevant for startup)
   while (port.available() && port.peek() != D200_START_CHAR) {
     port.read();
@@ -92,7 +92,7 @@ bool D200LD14P::read() {
       p->sample_time = (float) millis() / 1000.0; // ms -> s
       p->yaw = robot_yaw;
       p->yaw_velocity = robot_yaw_velocity;
-      p->id = id;
+      p->lidar_name = config.lidar_name;
       
       for (int i = 0; i < D200_POINTS_PER_PACKET; i++) {
         // points start at byte 6, each point is 3 bytes

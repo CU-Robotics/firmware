@@ -7,6 +7,7 @@
 #endif
 
 #include <stdint.h>                             // uintN_t
+#include "comms/config_data/sensor.hpp"
 
 /// @brief data for a singular LiDAR packet (SI units)
 struct LidarDataPacketSI : Comms::CommsData {
@@ -16,7 +17,7 @@ struct LidarDataPacketSI : Comms::CommsData {
     static constexpr uint32_t D200_POINTS_PER_PACKET = 12;
 
     /// @brief the id of the lidar module
-    Cfg::D200LidarName id;
+    Cfg::SensorName lidar_name = Cfg::SensorName::UnsetSensorName;
 
     /// @brief speed of lidar module (rad/s)
     float lidar_speed = 0;

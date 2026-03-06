@@ -2,6 +2,7 @@
 #define CONTROLLER_MANAGER_H
 
 #include "controller.hpp"
+#include "robot_state_map.hpp"
 #include "sensors/can/can_manager.hpp"
 #include "comms/config_layer.hpp"
 
@@ -26,5 +27,10 @@ public:
     /// @brief Initializes and adds a new controller to the controller manager
     /// @param controller_config the controller configuration data to use to initialize the controller
     void init_controller(const Cfg::Controller& controller_config, CANManager& _can);
+
+    /// @brief Steps all controllers in the controller manager. This should be called every control loop iteration
+    /// @param reference_map the map of reference states that controllers should try to achieve
+    /// @param estimate_map the map of estimated states that controllers should use to calculate their outputs
+    void step(RobotStateMap& reference_map, RobotStateMap& estimate_map);
 };
 #endif // CONTROLLER_MANAGER_H

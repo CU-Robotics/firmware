@@ -6,7 +6,6 @@
 #include <HardwareSerial.h>
 
 #include "sensors/sensor.hpp"
-#include "comms/config_data/sensor.hpp"
 #include "comms/data/lidar_data_packet_si.hpp"
 
 // development manual
@@ -165,7 +164,7 @@ public:
 
   /// @brief read latest packet(s) from D200 module
   /// @return true if successful, false if no data available
-  bool read() override;
+  void read() override;
 
   void send_to_comms() const override;
 

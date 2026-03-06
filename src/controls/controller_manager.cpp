@@ -1,5 +1,6 @@
 #include "controller_manager.hpp"
 #include "controller.hpp"
+#include "robot_state_map.hpp"
 
 void ControllerManager::init(const std::vector<Cfg::Controller>& controller_configurations, CANManager& can) {
     available_motors.clear();
@@ -34,5 +35,11 @@ void ControllerManager::init_controller(const Cfg::Controller& controller_config
         default:
             Serial.printf("ControllerManager::init_controller: Unrecognized controller type %d\n", controller_config.controller_type);
             break;
+    }
+}
+
+void ControllerManager::step(RobotStateMap& reference_map, RobotStateMap& estimate_map) {
+    for (const auto& controller : controllers) {
+        controller->step(reference_map, estimate_map);
     }
 }

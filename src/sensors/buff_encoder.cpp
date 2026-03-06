@@ -1,10 +1,9 @@
 #include "buff_encoder.hpp"
 #include "comms/data/sendable.hpp"
-#include "comms/data/buff_encoder_data.hpp"
 
 const SPISettings BuffEncoder::m_settings = SPISettings(1000000, MT6835_BITORDER, SPI_MODE3);
 
-bool BuffEncoder::read() {
+void BuffEncoder::read() {
 
     uint8_t data[6] = { 0 }; // transact 48 bits
 
@@ -24,15 +23,14 @@ bool BuffEncoder::read() {
     float radians = raw_angle / (float)MT6835_CPR * (3.14159265 * 2.0);
 
     // assign angle
-    m_angle = radians + config_data.encoder_offset;
+    m_angle = radians;
 
-    return true;
+    comms_data.m_angle = m_angle;
 }
 
-void BuffEncoder::send_to_comms() const{
+void BuffEncoder::send_to_comms() const {
     Comms::Sendable<BuffEncoderData> sendable;
-    sendable.data.encoder_name = config_data.encoder_name;
-    sendable.data.m_angle = m_angle;
+    sendable.data = comms_data;
     sendable.send_to_comms();
 }
 

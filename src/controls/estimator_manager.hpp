@@ -17,7 +17,7 @@ class EstimatorManager {
 private:
     std::vector<std::unique_ptr<Estimator>> estimators;
 
-    std::vector<Cfg::StateName> available_states
+    std::vector<Cfg::StateName> available_states;
 public:
     /// @brief Assign references to the can manager and sensor manager
     EstimatorManager();
@@ -29,28 +29,16 @@ public:
     /// @param can CAN manager pointer to get access to motor state
     /// @param config_data read only reference struct storing all the config data
     /// @param sensor_manager pointer to the sensor manager to read sensor data
-    void init(const std::vector<Cfg::Estimator>& estimator_configurations);
+    void init(const std::vector<Cfg::Estimator>& estimator_configurations, const CANManager& can, const SensorManager& sensor_manager);
 
     /// @brief Steps through every estimator and constructs a state array based on current sensor values.
     /// @param state macro state array pointer to be updated.
     /// @param micro_state micro state array pointer to be updated.
     /// @param override true if we want to override the current state with the new state.
-    void step(float state[STATE_LEN][3], float micro_state[CAN_MAX_MOTORS][MICRO_STATE_LEN], int override);
-
-    /// @brief sets both input arrays to all 0's
-    /// @param macro_outputs input 1
-    /// @param micro_outputs input 2
-    void clear_outputs(float macro_outputs[STATE_LEN][3], float micro_outputs[CAN_MAX_MOTORS][MICRO_STATE_LEN]);
-
-
+    void step(RobotStateMap updated_state_map, RobotStateMap previous_state_map, int override);
+    
 private:
-    void init_estimator(const Cfg::HighLevelEstimator& estimator_config, const CANManager& can, const SensorManager& sensor_manager);
-
-    void init_estimator(const Cfg::LowLevelEstimator& estimator_config, const CANManager& can, const SensorManager& sensor_manager);
-
-    /// @brief sets the assigned states array use for telling which estimators estimate which states
-    /// @param as assigned array
-    void assign_states(const float as[NUM_ESTIMATORS][STATE_LEN]);
+    void init_estimator(const Cfg::Estimator& estimator_config, const CANManager& can, const SensorManager& sensor_manager);
 };
 
 #endif

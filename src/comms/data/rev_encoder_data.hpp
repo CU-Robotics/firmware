@@ -7,12 +7,13 @@
 #endif
 
 #include <stdint.h>                             // uintN_t
+#include "comms/config_data/sensor.hpp"
 
 /// @brief Structure for the Rev encoder sensor.
 struct RevSensorData : Comms::CommsData {
     RevSensorData() : CommsData(Comms::TypeLabel::RevEncoderData, Comms::PhysicalMedium::Ethernet, Comms::Priority::Medium, sizeof(RevSensorData)) { }
-	
-	Cfg::RevEncoderName encoder_name;
+	RevSensorData(Cfg::SensorName name) : CommsData(Comms::TypeLabel::RevEncoderData, Comms::PhysicalMedium::Ethernet, Comms::Priority::Medium, sizeof(RevSensorData)), encoder_name(name) { }
+	Cfg::SensorName encoder_name;
 	/// Encoder ticks.
 	int ticks;
 	/// Angle in radians.

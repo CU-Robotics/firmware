@@ -24,13 +24,17 @@ GimbalAndChassisEstimator::GimbalAndChassisEstimator(Cfg::Estimator estimator_co
     pitch_angle = estimator_config.sensor_info.pitch_start_angle;
     roll_angle = estimator_config.sensor_info.roll_start_angle;
     chassis_angle = 0;
-    imu_yaw_axis_vector[0] = estimator_config.sensor_info.imu_yaw_axis_vector[0];
-    imu_yaw_axis_vector[1] = estimator_config.sensor_info.imu_yaw_axis_vector[1];
-    imu_yaw_axis_vector[2] = estimator_config.sensor_info.imu_yaw_axis_vector[2];
-    imu_pitch_axis_vector[0] = estimator_config.sensor_info.imu_pitch_axis_vector[0];
-    imu_pitch_axis_vector[1] = estimator_config.sensor_info.imu_pitch_axis_vector[1];
-    imu_pitch_axis_vector[2] = estimator_config.sensor_info.imu_pitch_axis_vector[2];
+    imu_yaw_axis_vector[0] = estimator_config.sensor_info.yaw_axis_vector[0];
+    imu_yaw_axis_vector[1] = estimator_config.sensor_info.yaw_axis_vector[1];
+    imu_yaw_axis_vector[2] = estimator_config.sensor_info.yaw_axis_vector[2];
+    imu_pitch_axis_vector[0] = estimator_config.sensor_info.pitch_axis_vector[0];
+    imu_pitch_axis_vector[1] = estimator_config.sensor_info.pitch_axis_vector[1];
+    imu_pitch_axis_vector[2] = estimator_config.sensor_info.pitch_axis_vector[2];
     starting_pitch_angle = estimator_config.sensor_info.pitch_angle_at_imu_calibration;
+
+    chassis_x_to_motor_rad = estimator_config.sensor_info.chassis_x_to_motor_rad;
+    chassis_y_to_motor_rad = estimator_config.sensor_info.chassis_y_to_motor_rad;
+    chassis_rad_to_motor_rad = estimator_config.sensor_info.chassis_rad_to_motor_rad;
 
     // odom_wheel_radius = estimator_config.sensor_info.odom_wheel_radius;
     // odom_axis_offset_x = estimator_config.sensor_info.odom_axis_offset_x;
@@ -41,7 +45,7 @@ GimbalAndChassisEstimator::GimbalAndChassisEstimator(Cfg::Estimator estimator_co
     roll_axis_spherical[0] = 1;  // rho (1 for a spherical)
 }
 
-void GimbalAndChassisEstimator::step_states(RobotStateMap updated_state_map, RobotStateMap previous_state_map, int override) {
+void GimbalAndChassisEstimator::step_states(RobotStateMap& updated_state_map, RobotStateMap& previous_state_map, int override) {
     float pitch_enc_angle = (-buff_enc_pitch->get_angle()) - pitch_encoder_offset;
     while (pitch_enc_angle >= PI)
         pitch_enc_angle -= 2 * PI;
@@ -66,7 +70,7 @@ void GimbalAndChassisEstimator::step_states(RobotStateMap updated_state_map, Rob
     } else {
         yaw_axis_spherical[1] = atan(imu_yaw_axis_vector[1] / imu_yaw_axis_vector[0]); // theta
     }
-    yaw_axis_spherical[2] = acos(imu_yaw_axis_vector[2] / magnitude(imu_yaw_axis_vector, 3)) - pitch_diff; // phi
+    yaw_axis_spherical[2] = acos(imu_yaw_axis_vector[2] / Utils::magnitude(imu_yaw_axis_vector, 3)) - pitch_diff; // phi
 
     // roll_axis_spherical[1] = yaw_axis_spherical[1]; // theta
     // roll_axis_spherical[2] = yaw_axis_spherical[2]-(PI*0.5); // phi
@@ -91,11 +95,11 @@ void GimbalAndChassisEstimator::step_states(RobotStateMap updated_state_map, Rob
     pitch_axis_unitvector[1] = imu_pitch_axis_vector[1] / mag;
     pitch_axis_unitvector[2] = imu_pitch_axis_vector[2] / mag;
 
-    crossProduct(pitch_axis_unitvector, yaw_axis_unitvector, roll_axis_unitvector);
+    Utils::crossProduct(pitch_axis_unitvector, yaw_axis_unitvector, roll_axis_unitvector);
 
     float magicNum = 0; // left yaw increases with 0.8
-    rotateVector3D(roll_axis_unitvector, yaw_axis_unitvector, magicNum, yaw_axis_unitvector);
-    rotateVector3D(roll_axis_unitvector, pitch_axis_unitvector, magicNum, pitch_axis_unitvector);
+    Utils::rotateVector3D(roll_axis_unitvector, yaw_axis_unitvector, magicNum, yaw_axis_unitvector);
+    Utils::rotateVector3D(roll_axis_unitvector, pitch_axis_unitvector, magicNum, pitch_axis_unitvector);
 
     // rotateVector3D(yaw_axis_unitvector,roll_axis_unitvector,(PI*0.5),pitch_axis_unitvector);
 
@@ -115,9 +119,9 @@ void GimbalAndChassisEstimator::step_states(RobotStateMap updated_state_map, Rob
     float temp1[3];
     float temp2[3];
     float temp3[3];
-    crossProduct(yaw_axis_unitvector, pitch_axis_unitvector, temp1);
-    crossProduct(yaw_axis_unitvector, roll_axis_unitvector, temp2);
-    crossProduct(roll_axis_unitvector, pitch_axis_unitvector, temp3);
+    Utils::crossProduct(yaw_axis_unitvector, pitch_axis_unitvector, temp1);
+    Utils::crossProduct(yaw_axis_unitvector, roll_axis_unitvector, temp2);
+    Utils::crossProduct(roll_axis_unitvector, pitch_axis_unitvector, temp3);
 
     // update previous to the current value before current is updated
     previous_pitch_velocity = current_pitch_velocity;
@@ -126,14 +130,14 @@ void GimbalAndChassisEstimator::step_states(RobotStateMap updated_state_map, Rob
 
     float imu_vel_offset = 1;
     // calculate the pitch yaw and roll velocities (Gimbal Relative)
-    current_pitch_velocity = vectorProduct(pitch_axis_unitvector, raw_omega_vector, 3) / imu_vel_offset;
-    current_yaw_velocity = vectorProduct(yaw_axis_unitvector, raw_omega_vector, 3) / imu_vel_offset;
-    current_roll_velocity = -vectorProduct(roll_axis_unitvector, raw_omega_vector, 3) / imu_vel_offset;
+    current_pitch_velocity = Utils::vectorProduct(pitch_axis_unitvector, raw_omega_vector, 3) / imu_vel_offset;
+    current_yaw_velocity = Utils::vectorProduct(yaw_axis_unitvector, raw_omega_vector, 3) / imu_vel_offset;
+    current_roll_velocity = -Utils::vectorProduct(roll_axis_unitvector, raw_omega_vector, 3) / imu_vel_offset;
 
     // calculate the pitch yaw and roll velocities (Global Reference)
-    global_pitch_velocity = vectorProduct(pitch_axis_global, raw_omega_vector, 3);
-    global_yaw_velocity = vectorProduct(yaw_axis_global, raw_omega_vector, 3);
-    global_roll_velocity = vectorProduct(roll_axis_global, raw_omega_vector, 3);
+    global_pitch_velocity = Utils::vectorProduct(pitch_axis_global, raw_omega_vector, 3);
+    global_yaw_velocity = Utils::vectorProduct(yaw_axis_global, raw_omega_vector, 3);
+    global_roll_velocity = Utils::vectorProduct(roll_axis_global, raw_omega_vector, 3);
     // position integration
     dt = time.delta();
     if (dt > .1)
@@ -174,103 +178,126 @@ void GimbalAndChassisEstimator::step_states(RobotStateMap updated_state_map, Rob
     updated_state_map[pitch_state].set_velocity(current_pitch_velocity);
     updated_state_map[pitch_state].set_acceleration(pitch_enc_angle);
 
+    // 3 odom wheel estimation
+    // for (int i = 0; i < 3; i++) {
+    //     curr_rev_raw[i] = rev_enc[i]->get_angle_radians();
 
-    // // chassis estimation
-    // float front_right = can_data->get_motor_attribute(CAN_1, 1, MotorAttribute::SPEED);
-    // float back_right = can_data->get_motor_attribute(CAN_1, 2, MotorAttribute::SPEED);
-    // float back_left = can_data->get_motor_attribute(CAN_1, 3, MotorAttribute::SPEED);
-    // float front_left = can_data->get_motor_attribute(CAN_1, 4, MotorAttribute::SPEED);
+    //     if ((curr_rev_raw[i] - prev_rev_raw[i]) > PI) rev_diff[i] = ((curr_rev_raw[i] - prev_rev_raw[i]) - (2 * PI));
+    //     else if ((curr_rev_raw[i] - prev_rev_raw[i]) < -PI) rev_diff[i] = ((curr_rev_raw[i] - prev_rev_raw[i]) + (2 * PI));
+    //     else rev_diff[i] = (curr_rev_raw[i] - prev_rev_raw[i]);
+    //     prev_rev_raw[i] = curr_rev_raw[i];
+    //     odom_pos_diff[i] = rev_diff[i] * odom_wheel_radius;
+    //     total_odom_pos[i] = odom_pos_diff[i] + total_odom_pos[i];
+    // }
 
-    // // m/s of chassis to motor rpm
-    // float x_scale = ((1 / (PI * 2 * 0.0516)) * 60) / 0.10897435897;
-    // float y_scale = ((1 / (PI * 2 * 0.0516)) * 60) / 0.10897435897;
-    // // chassis rad/s to motor rpm
-    // float psi_scale = ((.1835 / (PI * 2 * 0.0516)) * 60) / 0.10897435897;
-    // // define coeff matracies for each system we want to solve
-    // float coeff_matrix1[3][4] = { {x_scale,0,psi_scale,front_right},{0,-y_scale,psi_scale,back_right},{-x_scale,0,psi_scale,back_left} };
-    // float coeff_matrix2[3][4] = { {x_scale,0,psi_scale,front_right},{0,-y_scale,psi_scale,back_right},{0,y_scale,psi_scale,front_left} };
-    // float coeff_matrix3[3][4] = { {x_scale,0,psi_scale,front_right},{0,y_scale,psi_scale,front_left},{-x_scale,0,psi_scale,back_left} };
-    // float coeff_matrix4[3][4] = { {0,-y_scale,psi_scale,back_right},{0,y_scale,psi_scale,front_left},{-x_scale,0,psi_scale,back_left} };
+    chassis_angle = yaw_angle - yaw_enc_angle;
+    while (chassis_angle >= PI)
+        chassis_angle -= 2 * PI;
+    while (chassis_angle <= -PI)
+        chassis_angle += 2 * PI;
+    // chassis_angle = -(total_odom_pos[0] + total_odom_pos[2])/(2*odom_axis_offset_x)+initial_chassis_angle;  
+    float d_chassis_heading = (chassis_angle - prev_chassis_angle);
+    if (d_chassis_heading > PI) d_chassis_heading -= 2 * PI;
+    else if (d_chassis_heading < -PI) d_chassis_heading += 2 * PI;
+    prev_chassis_angle = chassis_angle;
+    if (override == 1) {
+        pos_estimate[0] = previous_state_map[chassis_x_state].get_position();
+        pos_estimate[1] = previous_state_map[chassis_y_state].get_position();
+        previous_pos[0] = previous_state_map[chassis_x_state].get_position();
+        previous_pos[1] = previous_state_map[chassis_y_state].get_position();
+    }
+    // chassis estimation
+    float front = chassis_1.get_state().speed;
+    float right = chassis_2.get_state().speed;
+    float back = chassis_3.get_state().speed;
+    float left = chassis_4.get_state().speed;
+    
+    // m/s of chassis to motor rad/s
+    float x_scale = chassis_x_to_motor_rad;
+    float y_scale = chassis_y_to_motor_rad;
+    // chassis rad/s to motor rad/s
+    float psi_scale = chassis_rad_to_motor_rad;
+    // define coeff matracies for each system we want to solve
+    float coeff_matrix1[3][4] = { {0,y_scale,psi_scale,front},{x_scale,0,psi_scale,right},{0,-y_scale,psi_scale,back} };
+    float coeff_matrix2[3][4] = { {0,y_scale,psi_scale,front},{x_scale,0,psi_scale,right},{-x_scale,0,psi_scale,left} };
+    float coeff_matrix3[3][4] = { {0,y_scale,psi_scale,front},{-x_scale,0,psi_scale,left},{0,-y_scale,psi_scale,back} };
+    float coeff_matrix4[3][4] = { {x_scale,0,psi_scale,right},{-x_scale,0,psi_scale,left},{0,-y_scale,psi_scale,back} };
 
-    // // 4 solution sets of x, y, psi
-    // float vel_solutions[4][3];
-    // solveSystem(coeff_matrix1, vel_solutions[0]);
-    // solveSystem(coeff_matrix2, vel_solutions[1]);
-    // solveSystem(coeff_matrix3, vel_solutions[2]);
-    // solveSystem(coeff_matrix4, vel_solutions[3]);
+    // 4 solution sets of x, y, psi
+    float vel_solutions[4][3];
+    solveSystem(coeff_matrix1, vel_solutions[0]);
+    solveSystem(coeff_matrix2, vel_solutions[1]);
+    solveSystem(coeff_matrix3, vel_solutions[2]);
+    solveSystem(coeff_matrix4, vel_solutions[3]);
 
-    // float vel_estimate[3];
+    float vel_estimate[3];
 
-    // vel_estimate[0] = (cos(yaw_enc_angle - yaw_angle) * vel_solutions[0][0] + sin(yaw_enc_angle - yaw_angle) * vel_solutions[0][1]);
-    // vel_estimate[1] = (-sin(yaw_enc_angle - yaw_angle) * vel_solutions[0][0] + cos(yaw_enc_angle - yaw_angle) * vel_solutions[0][1]);
-    // vel_estimate[2] = vel_solutions[0][2];
+    vel_estimate[0] = (cos(yaw_enc_angle - yaw_angle) * vel_solutions[0][0] + sin(yaw_enc_angle - yaw_angle) * vel_solutions[0][1]);
+    vel_estimate[1] = (-sin(yaw_enc_angle - yaw_angle) * vel_solutions[0][0] + cos(yaw_enc_angle - yaw_angle) * vel_solutions[0][1]);
+    vel_estimate[2] = vel_solutions[0][2];
 
     // integrate to find pos
-    // pos_estimate[0] += vel_estimate[0] * dt;
-    // pos_estimate[1] += vel_estimate[1] * dt;
-    // pos_estimate[2] += vel_estimate[2] * dt;
+    pos_estimate[0] += vel_estimate[0] * dt;
+    pos_estimate[1] += vel_estimate[1] * dt;
+    pos_estimate[2] += vel_estimate[2] * dt;
 
-    // output[0][1] = vel_estimate[0];
-    output[0][2] = 0;
-    // output[1][1] = vel_estimate[1];
-    output[1][2] = 0;
-    output[2][0] = chassis_angle; // chassis angle
-    // output[2][1] = vel_estimate[2];
-    output[2][2] = yaw_enc_angle;
+
+
+    updated_state_map[chassis_x_state].set_position(pos_estimate[0]);
+    // output[0][1] = (pos_estimate[0] - previous_pos[0]) / dt;
+    updated_state_map[chassis_x_state].set_velocity(vel_estimate[0]);
+    updated_state_map[chassis_x_state].set_acceleration(0);
+
+    updated_state_map[chassis_y_state].set_position(pos_estimate[1]);
+    // output[1][1] = (pos_estimate[1] - previous_pos[1]) / dt;
+    updated_state_map[chassis_y_state].set_velocity(vel_estimate[1]);
+    updated_state_map[chassis_y_state].set_acceleration(0);
+
+    updated_state_map[chassis_heading_state].set_position(chassis_angle);
+    updated_state_map[chassis_heading_state].set_velocity(d_chassis_heading / dt);
+    updated_state_map[chassis_heading_state].set_acceleration(yaw_enc_angle);
+
+
+
+    previous_pos[0] = pos_estimate[0];
+    previous_pos[1] = pos_estimate[1];
 }
 
-FlyWheelEstimator::FlyWheelEstimator(CANManager* _can) {
-    can = _can;
+FlywheelEstimator::FlywheelEstimator(Cfg::Estimator estimator_config, SensorManager& sensor_manager, CANManager& can, std::vector<Cfg::StateName> available_states) : 
+ball_exit_velocity(get_state_name_by_generic_use(Cfg::GenericEstimatorStateUse::ShooterBallVelocity, estimator_config, available_states)) {
+    flywheel_motor_left = can.get_motor_by_name(estimator_config.get_motor_name_by_generic_use(Cfg::GenericEstimatorMotorUse::FlywheelLeft));
+    flywheel_motor_right = can.get_motor_by_name(estimator_config.get_motor_name_by_generic_use(Cfg::GenericEstimatorMotorUse::FlywheelRight));
+
+    flywheel_radius = estimator_config.sensor_info.flywheel_radius;
+
+    motor_estimate_weight = estimator_config.sensor_info.flywheel_motor_estimate_weight;
+    ref_estimate_weight = 1 - motor_estimate_weight;
 }
 
-void FlyWheelEstimator::step_states(float output[STATE_LEN][3], float curr_state[STATE_LEN][3], int override) {
-    //can
-    float radius = 30 * 0.001; //meters
-    float angular_velocity_l = -can->get_motor_state(CAN_2, 3).speed;
-    float angular_velocity_r = can->get_motor_state(CAN_2, 4).speed;
+void FlyWheelEstimator::step_states(RobotStateMap& updated_state_map, RobotStateMap& previous_state_map, int override) {
+    float angular_velocity_l = -flywheel_motor_left.get_state().speed; //motor speed is in rad/s and negative because of orientation
+    float angular_velocity_r = flywheel_motor_right.get_state().speed; //motor speed is in rad/s
     float angular_velocity_avg = (angular_velocity_l + angular_velocity_r) / 2;
-    linear_velocity = angular_velocity_avg * radius; //m/s
+    linear_velocity = angular_velocity_avg * flywheel_radius; //m/s
 
-    //ref
-    projectile_speed_ref = ref->ref_data.launching_status.initial_speed;
+    // ball speed measured by the speed monitor module
+    projectile_speed_ref = ref.ref_data.launching_status.initial_speed;
 
     //weighted average
-    output[0][1] = (projectile_speed_ref * ref_weight) + (linear_velocity * can_weight);
+    updated_state_map[ball_exit_velocity].set_velocity((projectile_speed_ref * ref_estimate_weight) + (linear_velocity * motor_estimate_weight));
 }
 
-FeederEstimator::FeederEstimator(CANManager* _can) {
-    can = _can;
+NewFeederEstimator::NewFeederEstimator(Cfg::Estimator estimator_config, SensorManager& sensor_manager, CANManager& can, std::vector<Cfg::StateName> available_states) :
+    feeder_ball_state(get_state_name_by_generic_use(Cfg::GenericEstimatorStateUse::FeederBallPosition, estimator_config, available_states)),
+    feeder_encoder(sensor_manager.get_sensor_by_name<BuffEncoder>(estimator_config.get_sensor_name_by_generic_use(Cfg::GenericSensorUse::FeederBuffEncoder))) {
+    feeder_offset = estimator_config.sensor_info.feeder_encoder_offset;
+    feeder_direction = config_data.sensor_info.feeder_direction;
+    feeder_ratio = config_data.sensor_info.feeder_ratio;
 }
 
-
-ActuatorEstimator::ActuatorEstimator(CANManager* _can) {
-    micro_estimator = true;
-    can = _can;
-}
-
-void ActuatorEstimator::step_states(float output[CAN_MAX_MOTORS][MICRO_STATE_LEN], float curr_state[CAN_MAX_MOTORS][MICRO_STATE_LEN], int override) {
-    for (size_t i = 0; i < CAN_NUM_BUSSES; i++) {
-        for (size_t j = 0; j < CAN_MAX_MOTORS_PER_BUS; j++) {
-            // j + 1 for motor ID on get_motor_state since j starts at 0 but it expects a 1-indexed ID
-            if (can->get_motor(i, j + 1)){
-                output[(i * CAN_MAX_MOTORS_PER_BUS) + j][1] = can->get_motor_state(i, j + 1).speed;
-            }
-        }
-    }
-}
-
-NewFeederEstimator::NewFeederEstimator(CANManager* _can, SensorManager* _sensor_manager, Config config_data) {
-    feeder_offset = config_data.sensor_info[10][2];
-    feeder_direction = config_data.sensor_info[10][3];
-    feeder_ratio = config_data.sensor_info[10][4];
-    micro_estimator = false;
-    can = _can;
-    sensor_manager = _sensor_manager;
-}
-
-void NewFeederEstimator::step_states(float output[CAN_MAX_MOTORS][MICRO_STATE_LEN], float curr_state[CAN_MAX_MOTORS][MICRO_STATE_LEN], int override) {
+void NewFeederEstimator::step_states(RobotStateMap& updated_state_map, RobotStateMap& previous_state_map, int override) {
     dt = time.delta();
-    float feeder_angle = sensor_manager->get_buff_encoder(2)->get_angle();
+    float feeder_angle = feeder_encoder->get_angle();
     // Serial.printf("waggle graph feeder_angle %f\n",feeder_angle);
     // Serial.printf("feeder_offset %f\n",feeder_offset);
     float diff;
@@ -290,9 +317,9 @@ void NewFeederEstimator::step_states(float output[CAN_MAX_MOTORS][MICRO_STATE_LE
     float feeder_velocity = (dt > 0) ? (diff/(M_PI/feeder_ratio))/dt : 0;
   
     ball_count += diff/(M_PI/feeder_ratio);
-    output[0][0] = ball_count * feeder_direction; // ball count
-    output[0][1] = feeder_velocity * feeder_direction; // ball velocity
-    output[0][2] = feeder_angle; // this is not the acceleration just the encoder value for debugging
+    updated_state_map[feeder_ball_state].set_position(ball_count * feeder_direction); // ball count
+    updated_state_map[feeder_ball_state].set_velocity(feeder_velocity * feeder_direction); // ball velocity
+    updated_state_map[feeder_ball_state].set_acceleration(feeder_angle); // this is not the acceleration just the encoder value for debugging
 
 }
 

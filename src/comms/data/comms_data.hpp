@@ -12,9 +12,11 @@ enum class TypeLabel : uint8_t {
     BigTestData,
     LoggingData,
     BuffEncoderData,
-    ICMSensorData,
     RevEncoderData,
+    ICMSensorData,
+    LsmSensorData,
     LidarDataPacketSI,
+    LimitSwitchData,
     TransmitterData,
     TempRobotState,
     TargetState,
@@ -29,6 +31,7 @@ enum class TypeLabel : uint8_t {
     MotorConfig,
     BuffEncoderConfig,
     IcmImuConfig,
+    LsmImuConfig,
     D200LidarConfig,
     RealsenseCameraConfig,
     StereoCameraTriggerConfig,
@@ -52,10 +55,14 @@ inline std::string to_string(TypeLabel type_label) {
         return "BuffEncoderData";
     case TypeLabel::ICMSensorData:
         return "ICMSensorData";
+    case TypeLabel::LsmSensorData:
+        return "LsmSensorData";
     case TypeLabel::RevEncoderData:
         return "RevEncoderData";
     case TypeLabel::LidarDataPacketSI:
         return "LidarDataPacketSI";
+    case TypeLabel::LimitSwitchData:
+        return "LimitSwitchData";
     case TypeLabel::TransmitterData:
         return "TransmitterData";
     case TypeLabel::TempRobotState:
@@ -84,10 +91,14 @@ inline std::string to_string(TypeLabel type_label) {
         return "BuffEncoderConfig";
     case TypeLabel::IcmImuConfig:
         return "IcmImuConfig";
+    case TypeLabel::LsmImuConfig:
+        return "LsmImuConfig";
     case TypeLabel::D200LidarConfig:
         return "D200LidarConfig";
     case TypeLabel::RealsenseCameraConfig:
         return "RealsenseCameraConfig";
+    case TypeLabel::StereoCameraTriggerConfig:
+        return "StereoCameraTriggerConfig";
     case TypeLabel::StateConfig:
         return "StateConfig";
     // no default case, so the compiler will warn us if we forget a case

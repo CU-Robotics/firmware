@@ -41,7 +41,7 @@ struct RobotConfig {
     std::vector<BuffEncoder> buff_encoders;
     std::vector<IcmImu> icm_imus;
     std::vector<D200Lidar> d200_lidars;
-    std::vector<HighLevelEstimator> high_level_estimators;
+    std::vector<Estimator> estimators;
     std::vector<State> states;
     std::vector<Motor> motors;
     uint32_t num_sections_received = 0;

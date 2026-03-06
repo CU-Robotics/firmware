@@ -9,7 +9,7 @@
 
 constexpr uint32_t MAX_GENERIC_MOTOR_USES_PER_CONTROLLER = 16;
 constexpr uint32_t MAX_GENERIC_STATE_USES_PER_CONTROLLER = 16;
-constexpr uint32_t MAX_SUB_CONTROLLERS_PER_CONTROLLER = 8;
+constexpr uint32_t MAX_SUB_CONTROLLERS_PER_CONTROLLER = 16;
 
 namespace Cfg {
 
@@ -39,8 +39,7 @@ enum class GenericControllerStateUse : uint32_t {
 
 enum class ControllerType : uint32_t {
     UnsetControllerType,
-    XDrivePositionController,
-    XDriveVelocityController,
+    XDriveController,
     YawController,
     PitchController,
     FlywheelController,

@@ -1,24 +1,17 @@
 #include "StereoCamTrigger.hpp"
+#include "comms/data/sendable.hpp"
 
 void StereoCamTrigger::track_exposures() {
   // generate HIGH pulse with given width to create square wave
-  digitalWrite(config.pins.digital_pin, HIGH);
+  digitalWrite(config.digital_trigger_pin_1, HIGH);
+  digitalWrite(config.digital_trigger_pin_2, HIGH);
+
   delayMicroseconds(config.trigger_pulse_width);
-  digitalWrite(config.pins.digital_pin, LOW);
-  
-  // update timestamp
-#ifdef LOG_STEREO_FPS
-  uint32_t prev_timestamp = latest_exposure_timestamp;
-#endif
 
-  latest_exposure_timestamp = micros();
+  digitalWrite(config.digital_trigger_pin_1, LOW);
+  digitalWrite(config.digital_trigger_pin_2, LOW);
 
-#ifdef LOG_STEREO_FPS
-  uint32_t delta = latest_exposure_timestamp - prev_timestamp;
-
-  // print FPS estimate
-  Serial.printf("fps: %f\n", 1/(float(delta) * 1.0e-6));
-#endif
+  // Do state matching
 }
 
 void StereoCamTrigger::start(int res) {
@@ -39,7 +32,8 @@ void StereoCamTrigger::stop() {
 
 void StereoCamTrigger::init() {
   // configure GPIO pin for sending output signal
-  pinMode(config.pins.digital_pin, OUTPUT);
+  pinMode(config.digital_trigger_pin_1, OUTPUT);
+  pinMode(config.digital_trigger_pin_2, OUTPUT);
 
   // determine timer resolution from FPS
   float spf = 1.0 / float(config.fps); // seconds per frame
@@ -49,12 +43,9 @@ void StereoCamTrigger::init() {
   start(mpf);
 }
 
-uint32_t StereoCamTrigger::get_latest_exposure_timestamp() {
-  uint32_t ret;
+void StereoCamTrigger::send_to_comms() const {
+  Comms::Sendable<StereoCamTriggerData> sendable;
 
-  cli(); // disable interrupts to protect volatile access
-  ret = latest_exposure_timestamp;
-  sei(); // reenable interrupts
-
-  return ret;
+  sendable.data = comms_data;
+  sendable.send_to_comms();
 }

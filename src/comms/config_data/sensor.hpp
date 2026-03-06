@@ -45,32 +45,44 @@ struct BuffEncoder : Comms::CommsData {
     uint32_t spi_mosi;
     uint32_t spi_sck;
 
-    float encoder_offset;
-    int feeder_direction;
-    float feeder_ratio;
     SensorName encoder_name;
-
-    BuffEncoder() : Comms::CommsData(Comms::TypeLabel::BuffEncoderConfig, Comms::PhysicalMedium::HID, Comms::Priority::High, sizeof(BuffEncoder)) {
-        encoder_offset = 0;
-        feeder_direction = 1;
-        feeder_ratio = 1;
-        encoder_name = SensorName::UnsetSensorName;
-    }
 };
 
 struct RevEncoder : Comms::CommsData {
-
+    uint32_t digital_pin;
+    bool is_relative;
+    SensorName encoder_name;
 };
 
-struct ACS712 : Comms::CommsData {
+enum class LsmImuAccelRange : uint32_t {
+    A_2G,
+    A_4G,
+    A_8G,
+    A_16G,
+};
 
+enum class LsmImuGyroRange : uint32_t {
+    DPS125,
+    DPS250,
+    DPS500,
+    DPS1000,
+    DPS2000,
 };
 
 struct LsmImu : Comms::CommsData {
-    
+    SensorName imu_name;
+    LsmImuAccelRange accel_range;
+    LsmImuGyroRange gyro_range;
 };
 
-enum class ICMImuGyroRateRange : uint32_t { 
+enum class ICMImuAccelRange : uint32_t { 
+    A_4G,
+    A_8G,
+    A_16G,
+    A_30G,
+};
+
+enum class ICMImuGyroRange : uint32_t { 
     DPS500,
     DPS1000,
     DPS2000,
@@ -84,7 +96,8 @@ struct IcmImu : Comms::CommsData {
     uint32_t spi_miso;
     uint32_t spi_mosi;
     uint32_t spi_sck;
-    ICMImuGyroRateRange gyro_rate_range;
+    ICMImuAccelRange accel_range;
+    ICMImuGyroRange gyro_range;
 
     SensorName imu_name;
 };
@@ -100,14 +113,18 @@ struct D200Lidar : Comms::CommsData {
     float dead_zone_end;
     float dead_zone_check_range;
     SensorName lidar_name;
+};
 
-    CommunicationProtocol communication_protocol;
+struct LimitSwitch : Comms::CommsData {
+    uint32_t digital_pin;
+    SensorName switch_name;
 };
 
 struct StereoCamTrigger : Comms::CommsData{
-    uint32_t digital_trigger_pin;
+    uint32_t digital_trigger_pin_1;
+    uint32_t digital_trigger_pin_2;
     uint32_t fps;
     uint32_t trigger_pulse_width;
-    SensorName trigger_name;
+    SensorName camera_trigger_name;
 };
 }

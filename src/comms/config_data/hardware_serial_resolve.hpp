@@ -1,6 +1,6 @@
 #include "sensor.hpp"
 #include <HardwareSerial.h>
-
+#include <optional>
 
 namespace Cfg {
     std::optional<HardwareSerial*> resolve_hardware_serial_port(HardwareSerialPort port) {

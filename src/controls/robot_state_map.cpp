@@ -1,4 +1,5 @@
-#include "robot_state.hpp"
+#include "robot_state_map.hpp"
+#include "utils/safety.hpp"
 #include <cstddef>
 #include <cstring>
 
@@ -9,18 +10,30 @@ RobotStateMap::RobotStateMap(const std::vector<Cfg::State>& _state_configuration
 }
 
 State& RobotStateMap::operator[](Cfg::StateName state_name) {
-
     auto it = robot_state.find(state_name);
-    assert(it != robot_state.end());
-
+    safety::assert_or_safety_procedure(it != robot_state.end(), "RobotStateMap: Requested state name " + std::to_string(static_cast<uint32_t>(state_name)) + " not found in robot state map.");
     return it->second;
 }
 
 const State& RobotStateMap::operator[](Cfg::StateName state_name) const {
-    return robot_state.at(state_name);
+    auto it = robot_state.find(state_name);
+    safety::assert_or_safety_procedure(it != robot_state.end(), "RobotStateMap: Requested state name " + std::to_string(static_cast<uint32_t>(state_name)) + " not found in robot state map.");
+    return it->second;
 }
 
-//need some way to specify how many states there are
-void RobotStateMap::get_state_for_comms(State states[NUM_STATES]) const {
-    
+const std::map<Cfg::StateName, State>& RobotStateMap::get_state_map() const {
+    return robot_state;
 }
+
+void RobotStateMap::from_comms_packet(State::Raw robot_state_array[NUM_STATES]) {
+    for (size_t i = 0; i < NUM_STATES; i++) {
+        Cfg::StateName state_name = static_cast<Cfg::StateName>(i);
+        auto it = robot_state.find(state_name);
+        if (it != robot_state.end()) {
+            it->second.set_position(robot_state_array[i].position);
+            it->second.set_velocity(robot_state_array[i].velocity);
+            it->second.set_acceleration(robot_state_array[i].acceleration);
+        }
+    }
+}
+

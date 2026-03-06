@@ -5,10 +5,10 @@
 
 #include <stdint.h>                             // uintN_t
 
-/// @brief Structure for the ICM sensor.
-struct ICMSensorData : Comms::CommsData {
-    ICMSensorData() : CommsData(Comms::TypeLabel::ICMSensorData, Comms::PhysicalMedium::Ethernet, Comms::Priority::Medium, sizeof(ICMSensorData)) { }
-    ICMSensorData(Cfg::SensorName name) : CommsData(Comms::TypeLabel::ICMSensorData, Comms::PhysicalMedium::Ethernet, Comms::Priority::Medium, sizeof(ICMSensorData)), imu_name(name) { }
+/// @brief Structure for the LSM sensor.
+struct LsmSensorData : Comms::CommsData {
+    LsmSensorData() : CommsData(Comms::TypeLabel::LsmSensorData, Comms::PhysicalMedium::Ethernet, Comms::Priority::Medium, sizeof(LsmSensorData)) { }
+    LsmSensorData(Cfg::SensorName name) : CommsData(Comms::TypeLabel::LsmSensorData, Comms::PhysicalMedium::Ethernet, Comms::Priority::Medium, sizeof(LsmSensorData)), imu_name(name) { }
     /// Sensor ID.
     Cfg::SensorName imu_name;
     /// Acceleration in X-axis.

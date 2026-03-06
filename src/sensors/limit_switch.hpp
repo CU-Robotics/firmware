@@ -1,34 +1,29 @@
 #pragma once
 
-#include <Arduino.h>
-
+#include "sensors/sensor.hpp"
+#include "comms/data/limit_switch_data.hpp"
 // tie C pin to 3.3v
 // NO pin is the pin to read, it is set up as input pulldown 
 // NC should be untied
 
 /// @brief Class to manage a limit switch
-class LimitSwitch {
+class LimitSwitch : Sensor {
 public:
     /// @brief Constructor for the LimitSwitch class
-    /// @param pin The pin number to which the limit switch is connected
-    LimitSwitch(int pin) : pin(pin) {
-        pinMode(pin, INPUT_PULLDOWN);
-    }
+    /// @param config The configuration data for the limit switch
+    LimitSwitch(const Cfg::LimitSwitch& config) : Sensor(), config(config), comms_data(config.switch_name) {}
 
-    /// @brief Get the status of the switch
-    /// @return true if the switch is pressed, false otherwise
-    bool isPressed() {
-        return digitalRead(pin);
-    }
+    void init() override;
 
-    /// @brief Set the pin number for the limit switch
-    /// @param newPin The new pin number to which the limit switch is connected
-    void setPin(int newPin) {
-        pin = newPin;
-        pinMode(pin, INPUT);
-    }
+    void read() override;
+
+    void send_to_comms() const override;
+
+    inline bool get_is_pressed() const { return is_pressed; }
     
 private:
-    /// @brief The pin number to which the limit switch is connected
-    int pin;
+    const Cfg::LimitSwitch& config;
+    LimitSwitchData comms_data;
+
+    uint8_t is_pressed = 0;
 };

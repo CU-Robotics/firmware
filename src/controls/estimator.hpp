@@ -11,7 +11,6 @@
 #include "sensors/buff_encoder.hpp"
 #include "sensors/rev_encoder.hpp"
 #include "sensors/ICM20649.hpp"
-#include "sensors/TOFSensor.hpp"
 #include "sensors/sensor_manager.hpp"
 
 
@@ -149,6 +148,10 @@ private:
     /// @brief delta time
     float dt = 0;
 
+    float chassis_x_to_motor_rad;
+    float chassis_y_to_motor_rad;
+    float chassis_rad_to_motor_rad;
+
     std::shared_pointer<BuffEncoder> buff_enc_yaw;
     std::shared_pointer<BuffEncoder> buff_enc_pitch;
     std::shared_pointer<ICM20649> icm_imu;
@@ -167,22 +170,25 @@ private:
     /// @brief position estimate to store position after integrating used for chassis odometry
     float pos_estimate[3] = { 0,0,0 };
 
+    /// @brief previous pose to store the previous pose for chassis odometry
+    float previous_pos[3] = { 0,0,0 };
+
 public:
     /// @brief estimate the state of the gimbal
     /// @param config_data inputted sensor values from Hive yaml
     /// @param sensor_manager sensor manager object 
     /// @param can can from Estimator Manager
-    GimbalAndChassisEstimator(Cfg::Estimator estimator_config, SensorManager& sensor_manager, CANManager& can, std::vector<Cfg::StateName> available_states);
+    GimbalAndChassisEstimator(const Cfg::Estimator& estimator_config, SensorManager& sensor_manager, CANManager& can, std::vector<Cfg::StateName> available_states);
 
     /// @brief calculate estimated states and add to output array
     /// @param output output array to add estimated states to
     /// @param curr_state current state of the system
     /// @param override override the current state
-    void step_states(RobotStateMap updated_state_map, RobotStateMap previous_state_map, int override) override;
+    void step_states(RobotStateMap& updated_state_map, RobotStateMap& previous_state_map, int override) override;
 };
 
 /// @brief Estimate the state of the flywheels as meters/second of balls exiting the barrel.
-struct FlyWheelEstimator : public Estimator {
+struct FlywheelEstimator : public Estimator {
 private:
     /// @brief can pointer from EstimatorManager
     CANManager* can;
@@ -192,55 +198,26 @@ private:
     /// @brief calculated flywheel state from can
     float linear_velocity;
     /// @brief can weight for weighted average
-    float can_weight = 1;
+    float motor_estimate_weight = 1;
 
     /// @brief ref weight for weighted average
-    float ref_weight = 0;
+    float ref_estimate_weight = 0;
+
+    Motor* flywheel_motor_left;
+    Motor* flywheel_motor_right;
+
+    const Cfg::StateName& ball_exit_velocity;
 
 public:
     /// @brief make new flywheel estimator and set can data pointer and num states
     /// @param can can pointer from EstimatorManager
-    FlyWheelEstimator(Cfg::Estimator estimator_config, SensorManager& sensor_manager, CANManager* can);
-
-    ~FlyWheelEstimator() { };
+    FlywheelEstimator(const Cfg::Estimator& estimator_config, SensorManager& sensor_manager, CANManager& can, std::vector<Cfg::StateName> available_states);
 
     /// @brief generate estimated states and replace in output array
     /// @param output array to be updated with the calculated states
     /// @param curr_state current state of the flywheel
     /// @param override override flag
-    void step_states(RobotStateMap updated_state_map, RobotStateMap previous_state_map, int override);
-};
-
-/// @brief Estimate the state of the feeder in balls/s
-struct FeederEstimator : public Estimator {
-private:
-    /// @brief can pointer from EstimatorManager
-    CANManager* can;
-
-    /// @brief balls per second calculated from ref
-    float balls_per_second_ref;
-
-    /// @brief balls per second calculated from can
-    float balls_per_second_can;
-
-    /// @brief can weight for weighted average
-    float can_weight = 1;
-
-    /// @brief ref weight for weighted average
-    float ref_weight = 0;
-
-public:
-    /// @brief make new feeder estimator and set can_data pointer and num_states
-    /// @param can can pointer from EstimatorManager
-    FeederEstimator(Cfg::Estimator estimator_config, SensorManager& sensor_manager, CANManager* can);
-
-    ~FeederEstimator() { };
-
-    /// @brief calculate state updates
-    /// @param output updated balls per second of feeder
-    /// @param curr_state current state of the feeder
-    /// @param override override flag
-    void step_states(RobotStateMap updated_state_map, RobotStateMap previous_state_map, int override) override;
+    void step_states(RobotStateMap& updated_state_map, RobotStateMap& previous_state_map, int override);
 };
 
 /// @brief This estimator estimates our "micro" state which is stores all the motor velocities(in rad/s), whereas the other estimators estimate "macro" state which stores robot joints
@@ -265,18 +242,22 @@ struct NewFeederEstimator : public Estimator {
         float feeder_direction = 1;
         /// @brief gear ratio of the feeder
         float feeder_ratio = 1;
+
+        const Cfg::StateName& feeder_ball_state;
+
+        std::shared_pointer<BuffEncoder> feeder_encoder;
     public:
         /// @brief Make new local estimator and set can data pointer and num states
         /// @param can can pointer from EstimatorManager
         /// @param sensor_manager sensor manager object
         /// @param config_data config data from yaml
-        NewFeederEstimator(CANManager* can, SensorManager* sensor_manager, Config config_data);
+        NewFeederEstimator(const Cfg::Estimator& estimator_config, SensorManager& sensor_manager, CANManager& can, std::vector<Cfg::StateName> available_states);
     
         /// @brief step through each motor and add to micro state
         /// @param output entire micro state 
         /// @param curr_state current micro state
         /// @param override override flag
-        void step_states(RobotStateMap updated_state_map, RobotStateMap previous_state_map, int override) override;
+        void step_states(RobotStateMap& updated_state_map, RobotStateMap& previous_state_map, int override) override;
     };
 
 #endif

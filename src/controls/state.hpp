@@ -2,11 +2,17 @@
 #include "comms/config_data/state.hpp"
 
 class State {
+    public: 
+        struct Raw {
+            float position;
+            float velocity;
+            float acceleration;
+        };
+
     public:
-        State(const Cfg::State& _config) : m_config(_config) {};
+        State(const Cfg::State& _config);
         const Cfg::State& config() const;
         
-
         State operator+(const State& other) const;
         State operator-(const State& other) const;
         State& operator=(const State& other);
@@ -20,19 +26,10 @@ class State {
         void set_acceleration(float acceleration);
         float get_acceleration() const;
 
+        Raw get_raw() const;
+
     private:
-        float position = 0;
-        float velocity = 0;
-        float acceleration = 0;
+        Raw m_state;
 
         const Cfg::State& m_config;
-
-    private:
-        inline float wrap(float value, float min, float max) const {
-            float range = max - min;
-            value = min + fmod(value - min, range);
-            if (value < min) value += range;
-            return value;
-        }
-    
 };

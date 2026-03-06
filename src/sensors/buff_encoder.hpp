@@ -5,7 +5,7 @@
 #include <SPI.h>
 #include <cstdint>
 #include "sensors/sensor.hpp"
-#include "comms/config_data/sensor.hpp"
+#include "comms/data/buff_encoder_data.hpp"
 
 
 // Encoder Registers and Config
@@ -43,19 +43,18 @@ constexpr uint32_t MT6835_REG_CAL_STATUS = 0x113;
 constexpr uint32_t MT6835_BITORDER = MSBFIRST;
 
 /// @brief Driver for the Buff-Encoder
-class BuffEncoder : public Sensor {
+class BuffEncoder : Sensor {
 public:
     /// @brief Constructor for the BuffEncoder class
     /// @param encoder_config configuration data for the encoder
-    BuffEncoder(const Cfg::BuffEncoder& encoder_config) : Sensor(), config_data(encoder_config) {};
+    BuffEncoder(const Cfg::BuffEncoder& encoder_config) : Sensor(), config_data(encoder_config), comms_data(encoder_config.encoder_name, 0.0f) {};
 
     /// @brief initialize sensor
     void init() override {};
 
     /// @brief Read via SPI the current angle of the encoder
     /// @note Returns and sets m_angle when it reads
-    /// @return true if successful, false if no data available
-    bool read() override;
+    void read() override;
 
     void send_to_comms() const override;
 
@@ -76,9 +75,10 @@ private:
     /// @brief Configuration data for the encoder
     const Cfg::BuffEncoder& config_data;
 
+    BuffEncoderData comms_data;
+
     /// @brief The SPI settings of the buff encoders
     static const SPISettings m_settings;
 };
-
 
 #endif
