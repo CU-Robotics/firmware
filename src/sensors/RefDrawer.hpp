@@ -6,7 +6,7 @@
 #include <cstring>
 #include <type_traits>
 
-#define DEFAULT_LINE_WIDTH 10
+#define DEFAULT_LINE_WIDTH 30
 #define DEFAULT_FONT_SIZE 12
 
 // (0,0) is the lower left corner of the screen. (1920,1080) is the upper right corner

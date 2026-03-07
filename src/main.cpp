@@ -426,7 +426,11 @@ int main() {
         // //////// HACK test refdrawer
         if (loopc == 0 || loopc % 1000 == 0) {
             Serial.println("I should be drawing, yo");
-            refdrawer.drawLine(0, 0, 500, 500);
+            constexpr uint32_t center_x = SCREEN_WIDTH / 2;
+            constexpr uint32_t center_y = SCREEN_HEIGHT / 2;
+            constexpr uint32_t half_len = 150;
+            refdrawer.drawLine(center_x - half_len, center_y, center_x + half_len, center_y);
+            refdrawer.drawLine(center_x, center_y - half_len, center_x, center_y + half_len);
         }
 
         // construct ref data packet
