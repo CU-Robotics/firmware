@@ -28,7 +28,7 @@ public:
     /// @param override true if we want to override the current state with the new state
     virtual void step_states(RobotStateMap& updated_state_map, const RobotStateMap& previous_state_map, int override) = 0;
     
-    const Cfg::StateName& get_state_name_by_generic_use(Cfg::GenericEstimatorStateUse use, Cfg::Estimator estimator_config, std::vector<Cfg::StateName> available_states) {
+    const Cfg::StateName& get_state_name_by_generic_use(Cfg::GenericEstimatorStateUse use, const Cfg::Estimator& estimator_config, std::vector<Cfg::StateName> available_states) {
         const Cfg::StateName& requested_state_name = estimator_config.get_state_name_by_generic_use(use);
         for (const auto& state_name : available_states) {
             if (state_name == requested_state_name) {

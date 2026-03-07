@@ -39,6 +39,7 @@ void SensorManager::configure_sensors(const Cfg::RobotConfig& config_data) {
     }
 
     for (const auto& icm_config : config_data.icm_imus) {
+        Serial.printf("Configuring ICM20649 with name %u\n", static_cast<uint32_t>(icm_config.imu_name));
         sensors.emplace(icm_config.imu_name, std::make_shared<ICM20649>(icm_config));
     }
 

@@ -114,7 +114,7 @@ struct Controller : Comms::CommsData {
     /// @return The motor name with the given generic use, or an empty motor name if it was not found
     const MotorName& get_motor_name_by_generic_use(GenericControllerMotorUse motor_use) const {
         int motor_index = static_cast<int>(motor_use);
-        safety::assert_or_safety_procedure(motor_index > (int)MAX_GENERIC_MOTOR_USES_PER_CONTROLLER || motor_index < 0, "Generic motor use index out of bounds");
+        safety::assert_or_safety_procedure(motor_index < (int)MAX_GENERIC_MOTOR_USES_PER_CONTROLLER && motor_index >= 0, "Generic motor use index out of bounds");
         return generic_motor_use_to_names[motor_index];
     }
 
@@ -123,7 +123,7 @@ struct Controller : Comms::CommsData {
     /// @return The state name with the given generic use, or an empty state name if it was not found
     const StateName& get_state_name_by_generic_use(GenericControllerStateUse state_use) const {
         int state_index = static_cast<int>(state_use);
-        safety::assert_or_safety_procedure(state_index > (int)MAX_GENERIC_STATE_USES_PER_CONTROLLER || state_index < 0, "Generic state use index out of bounds");
+        safety::assert_or_safety_procedure(state_index < (int)MAX_GENERIC_STATE_USES_PER_CONTROLLER && state_index >= 0, "Generic state use index out of bounds");
         return generic_state_use_to_names[state_index];
     }
 };

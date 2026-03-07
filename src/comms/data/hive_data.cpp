@@ -44,48 +44,56 @@ void HiveData::set_data(CommsData* data) {
         Cfg::Controller* controller = static_cast<Cfg::Controller*>(data);
         config.controllers.push_back(*controller);
         config.num_sections_received++;
+        Serial.printf("Controller %u received\n", static_cast<uint32_t>(controller->controller_type));
         break;
     }
     case TypeLabel::MotorConfig: {
         Cfg::Motor* motor = static_cast<Cfg::Motor*>(data);
         config.motors.push_back(*motor);
         config.num_sections_received++;
+        Serial.printf("Motor %u received\n", static_cast<uint32_t>(motor->motor_name));
         break;
     }
     case TypeLabel::StateConfig: {
         Cfg::State* state_info = static_cast<Cfg::State*>(data);
         config.states.push_back(*state_info);
         config.num_sections_received++;
+        Serial.printf("State %u received\n", static_cast<uint32_t>(state_info->name));
         break;
     }
     case TypeLabel::BuffEncoderConfig: {
         Cfg::BuffEncoder* buff_encoder = static_cast<Cfg::BuffEncoder*>(data);
         config.buff_encoders.push_back(*buff_encoder);
         config.num_sections_received++;
+        Serial.printf("Buff encoder %u received\n", static_cast<uint32_t>(buff_encoder->encoder_name));
         break;
     }
     case TypeLabel::IcmImuConfig: {
         Cfg::IcmImu* icm_imu = static_cast<Cfg::IcmImu*>(data);
         config.icm_imus.push_back(*icm_imu);
         config.num_sections_received++;
+        Serial.printf("ICM IMU %u received\n", static_cast<uint32_t>(icm_imu->imu_name));
         break;
     }
     case TypeLabel::D200LidarConfig: {
         Cfg::D200Lidar* d200_lidar = static_cast<Cfg::D200Lidar*>(data);
         config.d200_lidars.push_back(*d200_lidar);
         config.num_sections_received++;
+        Serial.printf("D200 Lidar %u received\n", static_cast<uint32_t>(d200_lidar->lidar_name));
         break;
     }
     case TypeLabel::EstimatorConfig: {
         Cfg::Estimator* estimator = static_cast<Cfg::Estimator*>(data);
         config.estimators.push_back(*estimator);
         config.num_sections_received++;
+        Serial.printf("Estimator %u received\n", static_cast<uint32_t>(estimator->estimator_type));
         break;
     }
     case TypeLabel::StereoCameraTriggerConfig: {
         Cfg::StereoCamTrigger* stereo_camera_trigger = static_cast<Cfg::StereoCamTrigger*>(data);
         config.stereo_cam_triggers.push_back(*stereo_camera_trigger);
         config.num_sections_received++;
+        Serial.printf("Stereo camera trigger %u received\n", static_cast<uint32_t>(stereo_camera_trigger->camera_trigger_name));
         break;
     }
     case TypeLabel::ConfigStart: {

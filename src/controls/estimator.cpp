@@ -13,11 +13,16 @@ GimbalAndChassisEstimator::GimbalAndChassisEstimator(const Cfg::Estimator& estim
     yaw_state(get_state_name_by_generic_use(Cfg::GenericEstimatorStateUse::GimbalYaw, estimator_config, available_states)),
     pitch_state(get_state_name_by_generic_use(Cfg::GenericEstimatorStateUse::GimbalPitch, estimator_config, available_states)) {
 
+    printf("State names: chassis x: %lu, chassis y: %lu, chassis heading: %lu, yaw: %lu, pitch: %lu\n", 
+        static_cast<uint32_t>(chassis_x_state), static_cast<uint32_t>(chassis_y_state), static_cast<uint32_t>(chassis_heading_state), 
+        static_cast<uint32_t>(yaw_state), static_cast<uint32_t>(pitch_state));
+    
+    Serial.println("Initializing Gimbal and Chassis Estimator");
     chassis_1 = can.get_motor_by_name(estimator_config.get_motor_name_by_generic_use(Cfg::GenericEstimatorMotorUse::ChassisFrontRight));
     chassis_2 = can.get_motor_by_name(estimator_config.get_motor_name_by_generic_use(Cfg::GenericEstimatorMotorUse::ChassisBackRight));
     chassis_3 = can.get_motor_by_name(estimator_config.get_motor_name_by_generic_use(Cfg::GenericEstimatorMotorUse::ChassisBackLeft));
     chassis_4 = can.get_motor_by_name(estimator_config.get_motor_name_by_generic_use(Cfg::GenericEstimatorMotorUse::ChassisFrontLeft));
-    
+    Serial.println("Gimbal and Chassis Estimator initialized!");
     yaw_encoder_offset = estimator_config.sensor_info.yaw_encoder_offset;
     pitch_encoder_offset = estimator_config.sensor_info.pitch_encoder_offset;
 
@@ -172,6 +177,8 @@ void GimbalAndChassisEstimator::step_states(RobotStateMap& updated_state_map, co
     // output[2][0] = chassis_angle;
     // output[2][1] = 0;
     // output[2][2] = 0;
+
+    printf("setting yaw state with yaw name %lu\n, pitch state with pitch name %lu\n", static_cast<uint32_t>(yaw_state), static_cast<uint32_t>(pitch_state));
     updated_state_map[yaw_state].set_position(yaw_angle);
     updated_state_map[yaw_state].set_velocity(current_yaw_velocity);
     updated_state_map[yaw_state].set_acceleration(roll_angle);
@@ -243,7 +250,7 @@ void GimbalAndChassisEstimator::step_states(RobotStateMap& updated_state_map, co
     pos_estimate[2] += vel_estimate[2] * dt;
 
 
-
+    printf("setting chassis x state with name %lu\n, chassis y state with name %lu\n, chassis heading state with name %lu\n", static_cast<uint32_t>(chassis_x_state), static_cast<uint32_t>(chassis_y_state), static_cast<uint32_t>(chassis_heading_state));
     updated_state_map[chassis_x_state].set_position(pos_estimate[0]);
     // output[0][1] = (pos_estimate[0] - previous_pos[0]) / dt;
     updated_state_map[chassis_x_state].set_velocity(vel_estimate[0]);
@@ -266,6 +273,9 @@ void GimbalAndChassisEstimator::step_states(RobotStateMap& updated_state_map, co
 
 FlywheelEstimator::FlywheelEstimator(const Cfg::Estimator& estimator_config, SensorManager& sensor_manager, CANManager& can, std::vector<Cfg::StateName> available_states) : 
 ball_exit_velocity(get_state_name_by_generic_use(Cfg::GenericEstimatorStateUse::ShooterBallVelocity, estimator_config, available_states)) {
+
+    printf("State name for shooter ball velocity: %lu\n", static_cast<uint32_t>(ball_exit_velocity));
+
     flywheel_motor_left = can.get_motor_by_name(estimator_config.get_motor_name_by_generic_use(Cfg::GenericEstimatorMotorUse::FlywheelLeft));
     flywheel_motor_right = can.get_motor_by_name(estimator_config.get_motor_name_by_generic_use(Cfg::GenericEstimatorMotorUse::FlywheelRight));
 
@@ -284,6 +294,7 @@ void FlywheelEstimator::step_states(RobotStateMap& updated_state_map, const Robo
     // ball speed measured by the speed monitor module
     projectile_speed_ref = ref.ref_data.launching_status.initial_speed;
 
+    printf("setting ball exit velocity with state name %lu\n", static_cast<uint32_t>(ball_exit_velocity));
     //weighted average
     updated_state_map[ball_exit_velocity].set_velocity((projectile_speed_ref * ref_estimate_weight) + (linear_velocity * motor_estimate_weight));
 }
@@ -291,6 +302,7 @@ void FlywheelEstimator::step_states(RobotStateMap& updated_state_map, const Robo
 NewFeederEstimator::NewFeederEstimator(const Cfg::Estimator& estimator_config, SensorManager& sensor_manager, CANManager& can, std::vector<Cfg::StateName> available_states) :
     feeder_ball_state(get_state_name_by_generic_use(Cfg::GenericEstimatorStateUse::FeederBallPosition, estimator_config, available_states)),
     feeder_encoder(sensor_manager.get_sensor_by_name<BuffEncoder>(estimator_config.get_sensor_name_by_generic_use(Cfg::GenericSensorUse::FeederBuffEncoder))) {
+    printf("State name for feeder ball position: %lu\n", static_cast<uint32_t>(feeder_ball_state));
     feeder_offset = estimator_config.sensor_info.feeder_encoder_offset;
     feeder_direction = estimator_config.sensor_info.feeder_direction;
     feeder_ratio = estimator_config.sensor_info.feeder_ratio;
@@ -302,6 +314,7 @@ void NewFeederEstimator::step_states(RobotStateMap& updated_state_map, const Rob
     // Serial.printf("waggle graph feeder_angle %f\n",feeder_angle);
     // Serial.printf("feeder_offset %f\n",feeder_offset);
     float diff;
+    Serial.printf("feeder ball state %lu\n", static_cast<uint32_t>(feeder_ball_state));
     if (count == 0) {
         Serial.printf("prev_feeder_angle %f\n",prev_feeder_angle);
         dt = 0; // first dt loop generates huge time so check for that
@@ -318,6 +331,7 @@ void NewFeederEstimator::step_states(RobotStateMap& updated_state_map, const Rob
     float feeder_velocity = (dt > 0) ? (diff/(M_PI/feeder_ratio))/dt : 0;
   
     ball_count += diff/(M_PI/feeder_ratio);
+    printf("Setting feeder state with ball state name %lu\n", static_cast<uint32_t>(feeder_ball_state));
     updated_state_map[feeder_ball_state].set_position(ball_count * feeder_direction); // ball count
     updated_state_map[feeder_ball_state].set_velocity(feeder_velocity * feeder_direction); // ball velocity
     updated_state_map[feeder_ball_state].set_acceleration(feeder_angle); // this is not the acceleration just the encoder value for debugging

@@ -37,8 +37,8 @@ struct ReferenceLimits {
 struct State : Comms::CommsData {
     ReferenceLimits reference_limits;
     StateOrder governor_type;
-    StateName name;
     uint32_t is_wrapping;
+    StateName name;
 };
 
 };

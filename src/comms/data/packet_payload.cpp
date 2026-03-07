@@ -74,6 +74,8 @@ void PacketPayload::deconstruct_data(uint8_t* data, uint16_t size) {
         // increment the data pointer
         offset += header->size;
 
+        Serial.printf("size: %u, type: %u, offset: %u\n", header->size, static_cast<uint8_t>(header->type_label), offset);
+
         // if the header is a NONE type, we are done
         if (header->type_label == TypeLabel::NONE) {
             break;

@@ -1,18 +1,11 @@
 #include "firmware_data.hpp"
 #include "icm_sensor_data.hpp"
-
-#if defined(HIVE)
-#include "modules/comms/comms_layer.hpp"    // for CommsLayer
-#include "modules/hive/environment.hpp"     // for Hive::env
-#include <stdexcept>                        // for std::runtime_error
-#include <doctest/doctest.h>                // for doctest
-#elif defined(FIRMWARE)
-#include <cassert>                          // for assert
-#endif
+#include "utils/safety.hpp"
 
 namespace Comms {
 
 void FirmwareData::set_data(CommsData* data) {
+    Serial.printf("FirmwareData::set_data received type label %d\n", static_cast<uint8_t>(data->type_label));
     switch (data->type_label) {
     case TypeLabel::TestData: {
         // place the data in the mega struct
@@ -62,11 +55,12 @@ void FirmwareData::set_data(CommsData* data) {
         icm_sensor_data[(int)icm_sensor.imu_name] = icm_sensor;
         break;
     }
-    // case TypeLabel::TOFSensorData: {
-    //     // place the data in the mega struct
-    //     tof_sensor = *static_cast<TOFSensorData*>(data);
-    //     break;
-    // }
+    case TypeLabel::MotorStateData: {
+        // place the data in the mega struct
+        MotorStateData motor_state = *static_cast<MotorStateData*>(data);
+        motor_states[(int)motor_state.motor_name] = motor_state;
+        break;
+    }
     case TypeLabel::LidarDataPacketSI: {
         //determine which lidar sensor the data is for
     #if defined(HIVE)
@@ -98,7 +92,7 @@ void FirmwareData::set_data(CommsData* data) {
     #if defined(HIVE)
         throw std::runtime_error("Invalid type label given to place in mega struct: " + std::to_string(static_cast<uint8_t>(data->type_label)));
     #elif defined(FIRMWARE)
-        assert(false && "Invalid type label given to place in mega struct");
+        safety::safety_procedure("Invalid type label given to place in mega struct: %u", static_cast<uint16_t>(data->type_label));
     #endif
     }
 

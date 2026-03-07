@@ -149,6 +149,8 @@ int main() {
     // generate controller outputs based on governed references and estimated
     // state
     controller_manager.init(config.controllers, can);
+
+    
     
     // variables for use in main
     RobotStateMap estimated_state_map(config.states);
@@ -219,6 +221,8 @@ int main() {
         // this happens in one function call 
         sensor_manager.read();
         sensor_manager.send_to_comms();
+
+        Serial.println("Finished sensor read and send to comms");
         
         // check whether this packet is a config packet
         // if (comms_layer.get_hive_data().config_section.request_bit == 1) {
@@ -308,6 +312,7 @@ int main() {
             // }
             // last_switch = transmitter->get_r_switch();
             // set manual controls
+            Serial.println("Setting manual control target state");
             target_state_map[Cfg::StateName::ChassisX].set_position(chassis_pos_x);
             target_state_map[Cfg::StateName::ChassisX].set_velocity(chassis_vel_x);
             target_state_map[Cfg::StateName::ChassisY].set_position(chassis_pos_y);
@@ -318,6 +323,7 @@ int main() {
             target_state_map[Cfg::StateName::GimbalPitch].set_position(pitch_target);
             target_state_map[Cfg::StateName::GimbalPitch].set_velocity(0);
             target_state_map[Cfg::StateName::Flywheels].set_velocity(fly_wheel_target);
+            Serial.println("Finished manual control processing");
 
             // if the left switch is all the way down use Hive controls
 
@@ -355,6 +361,7 @@ int main() {
         //     Serial.printf("\t%d: %f %f %f\n", i, target_state_map[i][0],
         //     target_state_map[i][1], target_state_map[i][2]);
         // }
+        Serial.println("getting hive data");
 
         // override temp state if needed. Dont override in teensy mode so the sentry doesnt move during inspection
         if (comms_layer.get_hive_data().override_state_data.active && !(transmitter->get_l_switch() == SwitchPos::MIDDLE)) {
@@ -368,8 +375,10 @@ int main() {
             override_request = true;
         }
 
+        Serial.println("Stepping estimator manager");
         // step estimates and construct estimated state
         estimator_manager.step(estimated_state_map, override_request);
+        Serial.println("finished estimator manager step");
         override_request = false;
 
         if ((feed - estimated_state_map[Cfg::StateName::Feeder].get_position() > 2 && transmitter->get_l_switch() == SwitchPos::MIDDLE) ||
@@ -396,6 +405,7 @@ int main() {
 
         // generate motor outputs from controls
         controller_manager.step(reference_map, estimated_state_map);
+        Serial.println("Finished controller step");
 
         // can.print_state();
 
@@ -458,6 +468,8 @@ int main() {
             // Serial.printf("Can zero\n");
             safety_toggle = false; // reset hive toggle
         }
+
+        Serial.println("Finished safety check and can write");
 
         // LED heartbeat -- linked to loop count to reveal slowdowns and
         // freezes.

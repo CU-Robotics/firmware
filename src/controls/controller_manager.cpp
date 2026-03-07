@@ -8,6 +8,8 @@ void ControllerManager::init(const std::vector<Cfg::Controller>& controller_conf
     for(const Cfg::Controller& controller_config : controller_configurations) {
         init_controller(controller_config, can);
     }
+
+    Serial.println("Controller Manager initialized!");
 }
 
 void ControllerManager::init_controller(const Cfg::Controller& controller_config, CANManager& can) {

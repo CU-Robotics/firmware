@@ -11,13 +11,13 @@ RobotStateMap::RobotStateMap(const std::vector<Cfg::State>& _state_configuration
 
 State& RobotStateMap::operator[](Cfg::StateName state_name) {
     auto it = robot_state.find(state_name);
-    safety::assert_or_safety_procedure(it != robot_state.end(), "RobotStateMap: Requested state name %u not found in robot state map.", static_cast<uint32_t>(state_name));
+    safety::assert_or_safety_procedure(it != robot_state.end(), "RobotStateMap: Requested state name %lu not found in robot state map.", static_cast<uint32_t>(state_name));
     return it->second;
 }
 
 const State& RobotStateMap::operator[](Cfg::StateName state_name) const {
     auto it = robot_state.find(state_name);
-    safety::assert_or_safety_procedure(it != robot_state.end(), "RobotStateMap: Requested state name %u not found in robot state map.", static_cast<uint32_t>(state_name));
+    safety::assert_or_safety_procedure(it != robot_state.end(), "RobotStateMap: Requested state name %lu not found in robot state map.", static_cast<uint32_t>(state_name));
     return it->second;
 }
 

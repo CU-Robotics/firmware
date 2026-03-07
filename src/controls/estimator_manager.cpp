@@ -20,6 +20,8 @@ void EstimatorManager::init(
     for (const Cfg::Estimator& estimator_config : estimator_configurations) {
         init_estimator(estimator_config, sensor_manager, can);
     }
+
+    Serial.println("Estimator Manager initialized!");
 }
 
 void EstimatorManager::init_estimator(const Cfg::Estimator& estimator_config, SensorManager& sensor_manager, CANManager& can) {
