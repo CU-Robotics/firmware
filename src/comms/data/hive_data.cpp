@@ -40,6 +40,11 @@ void HiveData::set_data(CommsData* data) {
         // override_state = *static_cast<OverrideState*>(data);
         break;
     }
+    case TypeLabel::ConfigStart: {
+        Cfg::ConfigStart* config_start = static_cast<Cfg::ConfigStart*>(data);
+        config.config_start = *config_start;
+        break;
+    }
     case TypeLabel::ControllerConfig: {
         Cfg::Controller* controller = static_cast<Cfg::Controller*>(data);
         config.controllers.push_back(*controller);
@@ -94,11 +99,6 @@ void HiveData::set_data(CommsData* data) {
         config.stereo_cam_triggers.push_back(*stereo_camera_trigger);
         config.num_sections_received++;
         Serial.printf("Stereo camera trigger %u received\n", static_cast<uint32_t>(stereo_camera_trigger->camera_trigger_name));
-        break;
-    }
-    case TypeLabel::ConfigStart: {
-        Cfg::ConfigStart* config_start = static_cast<Cfg::ConfigStart*>(data);
-        config.config_start = *config_start;
         break;
     }
     default:
