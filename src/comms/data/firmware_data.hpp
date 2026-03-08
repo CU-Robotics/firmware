@@ -1,6 +1,12 @@
 #pragma once
 
 #include "buff_encoder_data.hpp"
+#include "icm_sensor_data.hpp"
+#include "lsm_sensor_data.hpp"
+#include "limit_switch_data.hpp"
+#include "rev_encoder_data.hpp"
+#include "stereo_cam_trigger_data.hpp"
+#include "lidar_data_packet_si.hpp"
 
 #include "comms/data/logging_data.hpp"              // for LoggingData
 #include "comms/data/data_structs.hpp"              // for shared data structs
@@ -9,7 +15,7 @@
 #include "comms/data/motor_state_data.hpp"
 
 
-#include <vector>                                   // for std::vector
+#include <map>                                   // for std::map
 
 namespace Comms {
 
@@ -34,17 +40,22 @@ struct FirmwareData {
     /// @brief Logging data
     Comms::LoggingData logging_data;
     
-    std::vector<BuffEncoderData> buff_encoder_data;
+    std::map<Cfg::SensorName, BuffEncoderData> buff_encoder_data_map;
+
+    std::map<Cfg::SensorName, LsmSensorData> lsm_sensor_data_map;
+
+    std::map<Cfg::SensorName, LimitSwitchData> limit_switch_data_map;
+
+    std::map<Cfg::SensorName, RevSensorData> rev_sensor_data_map;
+
+    std::map<Cfg::SensorName, StereoCamTriggerData> stereo_camera_trigger_data_map;
+    /// @brief lidars
+    std::map<Cfg::SensorName, LidarDataPacketSI> lidar_data_map;
+
+    /// @brief icm_sensors
+    std::map<Cfg::SensorName, ICMSensorData> icm_sensor_data_map;
     
-    //one icm
-    /// @brief icm_sensor
-    std::vector<ICMSensorData> icm_sensor_data;
-    
-    std::vector<MotorStateData> motor_states;
-    
-    //two liadars
-    /// @brief lidar vector
-    std::vector<LidarDataPacketSI> lidar_data;
+    std::map<Cfg::MotorName, MotorStateData> motor_state_data_map;
 
     /// @brief Transmitter data
     TransmitterData transmitter_data;

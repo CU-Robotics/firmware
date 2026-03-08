@@ -17,6 +17,7 @@ enum class TypeLabel : uint16_t {
     LsmSensorData,
     LidarDataPacketSI,
     LimitSwitchData,
+    StereoCamTriggerData,
     TransmitterData,
     MotorStateData,
     TargetState,
@@ -62,6 +63,8 @@ inline std::string to_string(TypeLabel type_label) {
         return "LidarDataPacketSI";
     case TypeLabel::LimitSwitchData:
         return "LimitSwitchData";
+    case TypeLabel::StereoCamTriggerData:
+        return "StereoCamTriggerData";
     case TypeLabel::TransmitterData:
         return "TransmitterData";
     case TypeLabel::MotorStateData:

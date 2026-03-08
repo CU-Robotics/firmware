@@ -469,7 +469,6 @@ int main() {
             safety_toggle = false; // reset hive toggle
         }
 
-        Serial.println("Finished safety check and can write");
 
         // LED heartbeat -- linked to loop count to reveal slowdowns and
         // freezes.
