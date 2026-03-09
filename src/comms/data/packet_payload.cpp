@@ -74,7 +74,7 @@ void PacketPayload::deconstruct_data(uint8_t* data, uint16_t size) {
         // increment the data pointer
         offset += header->size;
 
-        Serial.printf("size: %u, type: %u, offset: %u\n", header->size, static_cast<uint8_t>(header->type_label), offset);
+        Serial.printf("Recieved size: %u, type: %s, offset: %u\n", header->size, to_string(header->type_label).c_str(), offset);
 
         // if the header is a NONE type, we are done
         if (header->type_label == TypeLabel::NONE) {
@@ -216,6 +216,8 @@ bool PacketPayload::try_append_data(CommsData* data) {
 
     // append into raw data buffer.
     memcpy(raw_data + append_offset, data, data->size);
+
+    Serial.printf("Appended data of type %s and size %u at offset %u\n", to_string(data->type_label).c_str(), data->size, append_offset);
 
     remaining_data_size -= data->size;
 

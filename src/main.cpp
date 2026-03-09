@@ -114,17 +114,18 @@ int main() {
 
     comms_layer.init();
 
+    // Configure the robot from comms data, which is filled on Hive.
+    Serial.println("Configuring...");
+
     comms_layer.configure();
     
-    // Config config
-    Serial.println("Configuring...");
     const Cfg::RobotConfig& config = comms_layer.get_hive_data().config;
     
     Serial.println("Configured!");
     
+    // initialize objects
     Governor governor(config.states);
 
-    // initialize objects
     can.init(config.motors);
     
     safety::register_safety_function([&](){ can.issue_safety_mode(); });
@@ -135,7 +136,6 @@ int main() {
     // initialize sensors
     sensor_manager.init(config);
     
-    // estimate micro and rmacro state
     estimator_manager.init(config.estimators, sensor_manager, can);
     
     // generate controller outputs based on governed references and estimated
@@ -213,6 +213,7 @@ int main() {
         // manual controls on firmware
         transmitter_manager.manual_controls(estimated_state_map, target_state_map, governor, not_safety_mode, feed, last_feed, hive_toggle, safety_toggle);
 
+        // check if we want to use hive controls instead
         if (transmitter_manager.is_hive_mode()) {
             // hid_incoming.get_target_state_map(target_state_map);
             target_state_map.from_comms_packet(comms_layer.get_hive_data().target_state_data.state);
@@ -303,7 +304,7 @@ int main() {
         bool gimbal_power_recently_turned_on = gimbal_power_timer.get_elapsed_micros_no_restart() < 3000000;
 
         not_safety_mode =
-            (transmitter_manager.is_safety_mode() &&
+            (!transmitter_manager.is_safety_mode() &&
              comms_layer.is_configured() && !is_slow_loop && ref.ref_data.robot_performance.gimbol_power_active &&
              !gimbal_power_recently_turned_on);
         //  SAFETY MODE

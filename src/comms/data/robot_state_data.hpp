@@ -20,6 +20,6 @@ struct OverrideState : Comms::CommsData {
     OverrideState() : CommsData(Comms::TypeLabel::OverrideState, Comms::PhysicalMedium::Ethernet, Comms::Priority::High, sizeof(OverrideState)) {}
     double time = 0.0;
     State::Raw state[NUM_STATES] = { {0, 0, 0} };
-    bool active = false;
+    uint64_t active = false;
 };
 

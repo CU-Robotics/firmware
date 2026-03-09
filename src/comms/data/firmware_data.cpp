@@ -44,8 +44,8 @@ void FirmwareData::set_data(CommsData* data) {
     case TypeLabel::BuffEncoderData: {
         //determine if the data is for yaw or pitch
         BuffEncoderData single_buff_encoder_data = *static_cast<BuffEncoderData*>(data);
+        single_buff_encoder_data.print();
         buff_encoder_data_map.insert_or_assign(single_buff_encoder_data.encoder_name, single_buff_encoder_data);
-        printf("buff encoder angle: %f\n", single_buff_encoder_data.m_angle);
         break;
     }
     case TypeLabel::ICMSensorData: {
@@ -81,6 +81,7 @@ void FirmwareData::set_data(CommsData* data) {
     case TypeLabel::MotorStateData: {
         // place the data in the mega struct
         MotorStateData motor_state = *static_cast<MotorStateData*>(data);
+        motor_state.print();
         motor_state_data_map.insert_or_assign(motor_state.motor_name, motor_state);
         break;
     }
