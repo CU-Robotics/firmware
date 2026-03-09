@@ -11,14 +11,14 @@
 #include "state.hpp"
 #include "utils/profiler.hpp"
 
-#include "sensors/ET16S.hpp"
-#include "sensors/Transmitter.hpp"
+
+#include "sensors/transmitter/transmitter_utils.hpp"
+#include "sensors/transmitter/transmitter_manager.hpp"
 #include "sensors/d200.hpp"
 
 #include "controls/controller_manager.hpp"
 #include "controls/estimator_manager.hpp"
 #include "sensors/StereoCamTrigger.hpp"
-#include "sensors/dr16.hpp"
 #include "sensors/RefSystem.hpp"
 #include "utils/profiler.hpp"
 
@@ -41,7 +41,7 @@ extern "C" void reset_teensy(void);
 
 CANManager can;
 RefSystem ref;
-Transmitter *transmitter = nullptr;
+TransmitterManager transmitter_manager;
 
 Comms::CommsLayer comms_layer;
 
@@ -111,14 +111,6 @@ int main() {
 
     // Execute setup functions
     pinMode(LED_BUILTIN, OUTPUT);
-    // Determine which transmitter is in use and instantiate its respective object.
-    // This allows for 'transmitter' to be used everywhere dr16 would be used
-    TransmitterType transmitter_type = transmitter->who_am_i();
-    if (transmitter_type == TransmitterType::DR16) {
-        transmitter = new DR16;
-    } else if (transmitter_type == TransmitterType::ET16S) {
-        transmitter = new ET16S;
-    }
 
     comms_layer.init();
 
@@ -138,7 +130,7 @@ int main() {
     safety::register_safety_function([&](){ can.issue_safety_mode(); });
 
     ref.init();
-    transmitter->init();
+    transmitter_manager.init(config.transmitter);
     
     // initialize sensors
     sensor_manager.init(config);
@@ -149,8 +141,6 @@ int main() {
     // generate controller outputs based on governed references and estimated
     // state
     controller_manager.init(config.controllers, can);
-
-    
     
     // variables for use in main
     RobotStateMap estimated_state_map(config.states);
@@ -159,40 +149,23 @@ int main() {
     RobotStateMap hive_state_map_offset(config.states);// Hive offset state
     bool override_request = false;
 
-    // manual controls variables
-    float vtm_pos_x = 0;
-    float vtm_pos_y = 0;
-    float transmitter_pos_x = 0;
-    float transmitter_pos_y = 0;
-    float pos_offset_x = 0;
-    float pos_offset_y = 0;
-    float feed = 0;
-    float last_feed = 0;
-
     // param to specify whether this is the first loop
     int count_one = 0;
     
-    // whether we are in hive mode or not
     bool hive_toggle = false;
     bool safety_toggle = false;
     bool not_safety_mode = false;
     bool last_gimbal_power = false; // used to detect gimbal power changes
     bool last_loop_slow = false;    // used to detect multiple slow loops in a row
     int slow_loop_counter = 0;      // used to count slow loops in a row
-
-    // get the pitch min and max, and shift them to be centered around 0
-    float pitch_min = estimated_state_map[Cfg::StateName::GimbalPitch].config().reference_limits.position.min;
-    float pitch_max = estimated_state_map[Cfg::StateName::GimbalPitch].config().reference_limits.position.max;
-    float pitch_average = 0.5 * (pitch_min + pitch_max);
-    pitch_min -= pitch_average;
-    pitch_max -= pitch_average;
-    // int last_switch = 0;
+    
+    // manual controls variables
+    float feed = 0;
+    float last_feed = 0;
 
     // main loop timers
     Timer loop_timer;
-    Timer timer;
     Timer stall_timer;
-    Timer control_input_timer;
     Timer gimbal_power_timer;
 
     // start the main loop watchdog
@@ -214,8 +187,8 @@ int main() {
         ref.send_to_comms();
 
         // read transmitter and send to comms
-        transmitter->read();
-        transmitter->send_to_comms();
+        transmitter_manager.read();
+        transmitter_manager.send_to_comms();
 
         // read sensors and send to comms
         // this happens in one function call 
@@ -238,133 +211,24 @@ int main() {
         }
 
         // manual controls on firmware
-            std::optional<Transmitter::Keys> transmitter_keys = transmitter->get_keys();
-            std::optional<int> mouse_x = transmitter->get_mouse_x();
-            std::optional<int> mouse_y = transmitter->get_mouse_y();
-            std::optional<bool> l_mouse_button = transmitter->get_l_mouse_button();
-            // std::optional<bool> r_mouse_button = transmitter->get_r_mouse_button();
+        transmitter_manager.manual_controls(estimated_state_map, target_state_map, governor, not_safety_mode, feed, last_feed, hive_toggle, safety_toggle);
 
-            float delta = control_input_timer.delta();
-            if (mouse_x.has_value() && mouse_y.has_value()) {
-                transmitter_pos_x += mouse_x.value() * 0.05 * delta;
-                transmitter_pos_y += mouse_y.value() * 0.05 * delta;
+        if (transmitter_manager.is_hive_mode()) {
+            // hid_incoming.get_target_state_map(target_state_map);
+            target_state_map.from_comms_packet(comms_layer.get_hive_data().target_state_data.state);
+            last_feed = target_state_map[Cfg::StateName::Feeder].get_position();
+            // if you just switched to hive controls, set the reference to the
+            // current state'
+            if (hive_toggle) {
+                governor.set_reference_map(estimated_state_map);
+                hive_toggle = false;
             }
+        }
 
-            vtm_pos_x += ref.ref_data.kbm_interaction.mouse_speed_x * 0.05 * delta;
-            vtm_pos_y += ref.ref_data.kbm_interaction.mouse_speed_y * 0.05 * delta;
-
-            // clamp to pitch limits
-            if (transmitter_pos_y < pitch_min) {
-                transmitter_pos_y = pitch_min;
-            }
-            if (transmitter_pos_y > pitch_max) {
-                transmitter_pos_y = pitch_max;
-            }
-
-            float chassis_vel_x = 0;
-            float chassis_vel_y = 0;
-            float chassis_pos_x = 0;
-            float chassis_pos_y = 0;
-
-            if (estimated_state_map[Cfg::StateName::ChassisX].config().governor_type == Cfg::StateOrder::Velocity) { // if we should be controlling velocity
-
-                chassis_vel_x = transmitter->get_l_stick_y() * 5.4 +
-                                (-ref.ref_data.kbm_interaction.key_w + ref.ref_data.kbm_interaction.key_s) * 2.5;
-
-                if (transmitter_keys.has_value()) {
-                    chassis_vel_x += (-transmitter_keys.value().w + transmitter_keys.value().s) * 2.5;
-                }
-
-                chassis_vel_y = -transmitter->get_l_stick_x() * 5.4 +
-                                (ref.ref_data.kbm_interaction.key_d - ref.ref_data.kbm_interaction.key_a) * 2.5;
-
-                if (transmitter_keys.has_value()) {
-                    chassis_vel_y += (transmitter_keys.value().d - transmitter_keys.value().a) * 2.5;
-                }
-            } else if (estimated_state_map[Cfg::StateName::ChassisX].config().governor_type == Cfg::StateOrder::Position) { // if we should be controlling position
-                chassis_pos_x = transmitter->get_l_stick_x() * 2 + pos_offset_x;
-                chassis_pos_y = transmitter->get_l_stick_y() * 2 + pos_offset_y;
-            }
-
-            float chassis_spin = transmitter->get_wheel() * 25;
-            float pitch_target = 1.57 + -transmitter->get_r_stick_y() * 0.3 + transmitter_pos_y + vtm_pos_y;
-            float yaw_target = -transmitter->get_r_stick_x() * 1.5 - transmitter_pos_x - vtm_pos_x;
-
-            float fly_wheel_target =
-                (transmitter->get_r_switch() == SwitchPos::FORWARD || transmitter->get_r_switch() == SwitchPos::MIDDLE) ? 18 : 0; // m/s
-            // if the right switch is forward, and either the left mouse button is pressed or the right switch is not
-            // backward, set the feeder to something. Otherwise, set it to 0
-            float feeder_target = (((l_mouse_button.has_value() || ref.ref_data.kbm_interaction.button_left) &&
-                                    transmitter->get_r_switch() != SwitchPos::BACKWARD) || transmitter->get_r_switch() == SwitchPos::FORWARD) ? 10 : 0;
-            if (estimated_state_map[Cfg::StateName::Feeder].config().governor_type == Cfg::StateOrder::Position) {
-                float dt2 = timer.delta();
-                if (dt2 > 0.1)
-                    dt2 = 0;
-                // check if the shooter is active
-                if (not_safety_mode && ref.ref_data.robot_performance.shooter_power_active)
-                    feed += feeder_target * dt2;
-                target_state_map[Cfg::StateName::Feeder].set_position((int)feed);
-            } else { 
-                target_state_map[Cfg::StateName::Feeder].set_velocity(feeder_target);
-            }
-            // if (transmitter->get_r_switch() == 1 && last_switch != 1) {
-            //     feed++;
-            // }
-            // last_switch = transmitter->get_r_switch();
-            // set manual controls
-            Serial.println("Setting manual control target state");
-            target_state_map[Cfg::StateName::ChassisX].set_position(chassis_pos_x);
-            target_state_map[Cfg::StateName::ChassisX].set_velocity(chassis_vel_x);
-            target_state_map[Cfg::StateName::ChassisY].set_position(chassis_pos_y);
-            target_state_map[Cfg::StateName::ChassisY].set_velocity(chassis_vel_y);
-            target_state_map[Cfg::StateName::ChassisHeading].set_velocity(chassis_spin);
-            target_state_map[Cfg::StateName::GimbalYaw].set_position(yaw_target);
-            target_state_map[Cfg::StateName::GimbalYaw].set_velocity(0);
-            target_state_map[Cfg::StateName::GimbalPitch].set_position(pitch_target);
-            target_state_map[Cfg::StateName::GimbalPitch].set_velocity(0);
-            target_state_map[Cfg::StateName::Flywheels].set_velocity(fly_wheel_target);
-            Serial.println("Finished manual control processing");
-
-            // if the left switch is all the way down use Hive controls
-
-            if (transmitter->get_l_switch() == SwitchPos::BACKWARD) {
-                // hid_incoming.get_target_state_map(target_state_map);
-                target_state_map.from_comms_packet(comms_layer.get_hive_data().target_state_data.state);
-                last_feed = target_state_map[Cfg::StateName::Feeder].get_position();
-                // if you just switched to hive controls, set the reference to the
-                // current state'
-                if (hive_toggle) {
-                    governor.set_reference_map(estimated_state_map);
-                    hive_toggle = false;
-                }
-            }
-
-            // when in teensy control mode reset hive toggle
-            if (transmitter->get_l_switch() == SwitchPos::MIDDLE) {
-                if (!hive_toggle || !safety_toggle) {
-                    pos_offset_x = estimated_state_map[Cfg::StateName::ChassisX].get_position();
-                    pos_offset_y = estimated_state_map[Cfg::StateName::ChassisY].get_position();
-                    feed = last_feed;
-                    governor.set_reference_map(estimated_state_map);
-                }
-                hive_toggle = true;
-                safety_toggle = true;
-            }
-
-        // print transmitter
-
-        // Serial.printf("transmitter:\n\t");
-        // transmitter->print();
-
-        // Serial.printf("Target state:\n");
-        // for (int i = 0; i < 8; i++) {
-        //     Serial.printf("\t%d: %f %f %f\n", i, target_state_map[i][0],
-        //     target_state_map[i][1], target_state_map[i][2]);
-        // }
         Serial.println("getting hive data");
 
         // override temp state if needed. Dont override in teensy mode so the sentry doesnt move during inspection
-        if (comms_layer.get_hive_data().override_state_data.active && !(transmitter->get_l_switch() == SwitchPos::MIDDLE)) {
+        if (comms_layer.get_hive_data().override_state_data.active && !(transmitter_manager.is_teensy_mode())) {
             // clear the request
             comms_layer.get_hive_data().override_state_data.active = false;
 
@@ -381,9 +245,9 @@ int main() {
         Serial.println("finished estimator manager step");
         override_request = false;
 
-        if ((feed - estimated_state_map[Cfg::StateName::Feeder].get_position() > 2 && transmitter->get_l_switch() == SwitchPos::MIDDLE) ||
+        if ((feed - estimated_state_map[Cfg::StateName::Feeder].get_position() > 2 && transmitter_manager.is_teensy_mode()) ||
             (target_state_map[Cfg::StateName::Feeder].get_position() - estimated_state_map[Cfg::StateName::Feeder].get_position() > 2 &&
-             transmitter->get_l_switch() == SwitchPos::BACKWARD)) {
+             transmitter_manager.is_hive_mode())) {
             Serial.printf("Feeder is lowkey jammed. current ball count: %f, feed: %f, hive target: %f\n",
                             estimated_state_map[Cfg::StateName::Feeder].get_position(), feed, target_state_map[Cfg::StateName::Feeder].get_position());
             feed = estimated_state_map[Cfg::StateName::Feeder].get_position() + 1;
@@ -393,10 +257,6 @@ int main() {
         // if first loop set target state to estimated state
         if (count_one == 0) {
             governor.set_reference_map(estimated_state_map);
-            // print temp state
-            // for (int i = 0; i < 8; i++) {
-            //     Serial.printf("\t%d: %f %f %f\n", i, estimated_state_map[i][0], estimated_state_map[i][1], estimated_state_map[i][2]);
-            // }
             count_one++;
         }
 
@@ -406,8 +266,6 @@ int main() {
         // generate motor outputs from controls
         controller_manager.step(reference_map, estimated_state_map);
         Serial.println("Finished controller step");
-
-        // can.print_state();
 
         target_state_map.send_to_comms<TargetState>();
         estimated_state_map.send_to_comms<EstimatedState>();
@@ -445,8 +303,7 @@ int main() {
         bool gimbal_power_recently_turned_on = gimbal_power_timer.get_elapsed_micros_no_restart() < 3000000;
 
         not_safety_mode =
-            (transmitter->is_connected() &&
-             (transmitter->get_l_switch() == SwitchPos::BACKWARD || transmitter->get_l_switch() == SwitchPos::MIDDLE) &&
+            (transmitter_manager.is_safety_mode() &&
              comms_layer.is_configured() && !is_slow_loop && ref.ref_data.robot_performance.gimbol_power_active &&
              !gimbal_power_recently_turned_on);
         //  SAFETY MODE

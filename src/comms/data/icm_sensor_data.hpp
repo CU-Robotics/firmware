@@ -25,4 +25,9 @@ struct ICMSensorData : Comms::CommsData {
     float gyro_Z;
     /// Temperature reading.
     float temperature;
+
+    void print() const {
+        printf("ICMSensorData - imu_name: %lu, accel_X: %f, accel_Y: %f, accel_Z: %f, gyro_X: %f, gyro_Y: %f, gyro_Z: %f, temperature: %f\n", 
+            static_cast<uint32_t>(imu_name), accel_X, accel_Y, accel_Z, gyro_X, gyro_Y, gyro_Z, temperature);
+    }
 };

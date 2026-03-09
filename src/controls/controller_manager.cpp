@@ -1,4 +1,5 @@
 #include "controller_manager.hpp"
+#include "comms/data/sendable.hpp"
 
 void ControllerManager::init(const std::vector<Cfg::Controller>& controller_configurations, CANManager& can) {
     available_motors.clear();
@@ -39,7 +40,9 @@ void ControllerManager::init_controller(const Cfg::Controller& controller_config
 }
 
 void ControllerManager::step(RobotStateMap& reference_map, RobotStateMap& estimate_map) {
+    Comms::Sendable<ControllerOutputData> controller_output_data;
     for (const auto& controller : controllers) {
-        controller->step(reference_map, estimate_map);
+        controller->step(reference_map, estimate_map, controller_output_data.data);
     }
+    controller_output_data.send_to_comms();
 }

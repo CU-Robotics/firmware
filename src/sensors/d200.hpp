@@ -152,8 +152,6 @@ private:
   /// @return CRC8 checksum for buffer
   uint8_t calc_checksum(uint8_t* buf, int len);
 
-  static HardwareSerial& grab_hw_serial_port(Cfg::HardwareSerialPort port);
-
 public:
   /// @brief constructor and initialization
   /// @param _port pointer to HardwareSerial object to read/write from

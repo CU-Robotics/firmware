@@ -1,8 +1,10 @@
 #pragma once
 
 #include <Arduino.h>
-#include <optional>
-#include "./Transmitter.hpp"
+#include "transmitter.hpp"
+#include "comms/data/ET16S_data.hpp"
+#include "utils/timing.hpp"
+#include "comms/config_data/transmitter.hpp"
 //http://www.wflysz.com/wflyftp/ET16S/ET16SENV1.00.pdf
 
 
@@ -74,22 +76,31 @@ struct InputChannel {
 
 /// @brief Class for W-Fly transmitter and reciever to gather and map control data
 class ET16S : public Transmitter {
-public:
+	public:
 	/// @brief Constructor, left empty
-	ET16S();
+	ET16S(const Cfg::ET16S& config_);
+	~ET16S() {};
 	/// @brief Starts Serial Connection to Reciever, Initilizes immutable transmitter channels, calls set_config function.
-	void init();
+	void init() override;
 	/// @brief reads raw data from buffer, formats it and sets it to its respective input channel
-	void read();
+	void read() override;
 	/// @brief prints integer input value for every channel
-	void print_raw();
+	void print_raw() override;
+	void print() override;
 
+	void send_to_comms() override;
+
+	bool is_safety_mode() override;
+	bool is_hive_mode() override;
+	bool is_teensy_mode() override;
+
+	void manual_controls(const RobotStateMap& estimated_state_map, RobotStateMap& target_state_map, Governor& governor, bool not_safety_mode, float& feed, float& last_feed, bool& hive_toggle, bool& safety_toggle) override;
+	
 	/// @brief prints data in binary for a specific channel
 	/// @param channel_num channel number from 0-16 inclusive
 	void print_format_bin(int channel_num);
 
 	/// @brief prints all mapped channel values
-	void print();
 
 	/// @brief get safety values
 	/// @return safety value(1-3) 1 is safe
@@ -113,76 +124,76 @@ public:
 	
 	/// @brief get switch b value 
 	/// @return switch b value if it exists otherwise return nothing
-	std::optional<SwitchPos> get_switch_b();
+	SwitchPos get_switch_b();
 	
 	/// @brief get switch c value 
 	/// @return switch c value if it exists otherwise return nothing
-	std::optional<SwitchPos> get_switch_c();
+	SwitchPos get_switch_c();
 	
 	/// @brief get switch d value 
 	/// @return switch d value if it exists otherwise return nothing
-	std::optional<SwitchPos> get_switch_d();
+	SwitchPos get_switch_d();
 	
 	/// @brief get switch e value 
 	/// @return switch e value if it exists otherwise return nothing
-	std::optional<SwitchPos> get_switch_e();
+	SwitchPos get_switch_e();
 	
 	/// @brief get switch f value 
 	/// @return switch f value if it exists otherwise return nothing
-	std::optional<SwitchPos> get_switch_f();
+	SwitchPos get_switch_f();
 	
 	/// @brief get switch g value 
 	/// @return switch g value if it exists otherwise return nothing
-	std::optional<SwitchPos> get_switch_g();
+	SwitchPos get_switch_g();
 	
 	/// @brief get switch h value 
 	/// @return switch h value if it exists otherwise return nothing
-	std::optional<SwitchPos> get_switch_h();
+	SwitchPos get_switch_h();
 
 	/// @brief get left slider value
 	/// @return left slider value if it exists otherwise return nothing
-	std::optional<float> get_l_slider();
+	float get_l_slider();
 
 	/// @brief get right slider value
 	/// @return right slider value if it exists otherwise return nothing
-	std::optional<float> get_r_slider();
+	float get_r_slider();
 
 	/// @brief get left dial value
 	/// @return left dial value if it exists otherwise return nothing
-	std::optional<float> get_l_dial();
+	float get_l_dial();
 
 	/// @brief get right dial value
 	/// @return right dial value if it exists otherwise return nothing
-	std::optional<float> get_r_dial();
+	float get_r_dial();
 
 	/// @brief get trim one value
 	/// @return trim one value if it exists otherwise return nothing
-	std::optional<float> get_trim_one();
+	float get_trim_one();
 
 	/// @brief get trim two value
 	/// @return trim two value if it exists otherwise return nothing
-	std::optional<float> get_trim_two();
+	float get_trim_two();
 
 	/// @brief get trim three value
 	/// @return trim three value if it exists otherwise return nothing
-	std::optional<float> get_trim_three();
+	float get_trim_three();
 
 	/// @brief get trim four value
 	/// @return trim four value if it exists otherwise return nothing
-	std::optional<float> get_trim_four();
+	float get_trim_four();
 
 	/// @brief get trim five value
 	/// @return trim five value if it exists otherwise return nothing
-	std::optional<float> get_trim_five();
+	float get_trim_five();
 
 	/// @brief get trim six value
 	/// @return trim six value if it exists otherwise return nothing
-	std::optional<float> get_trim_six();
+	float get_trim_six();
 	
 	/// @brief get channel data
 	/// @param chan_num is the channel number from 0-16
 	/// @return channel data
-	std::optional<float> get_channel_data(int chan_num);
+	float get_channel_data(int chan_num);
 
 	/// @brief getter for connection status
 	/// @return false if disconnected
@@ -206,6 +217,7 @@ public:
 	/// @brief getter for raw data
 	/// @return raw data
 	uint8_t* get_raw() { return m_inputRaw; }
+
 	
 private:
 	/// @brief prints the entire raw binary data packet exactly as it is recieved
@@ -252,47 +264,59 @@ private:
 	// Following index system denotes which channel each input is configured through
 	// if the controls are changed the number below must be changed to  match the number displayed on the ET16S
 	/// @brief r stick x index		
-	std::optional<int> r_stick_x_num = 0;
+	int r_stick_x_num = 0;
 	/// @brief right y stick index
-	std::optional<int> r_stick_y_num = 1;
+	int r_stick_y_num = 1;
 	/// @brief left y stick index
-	std::optional<int> l_stick_y_num = 2;
+	int l_stick_y_num = 2;
 	/// @brief left x stick index
-	std::optional<int> l_stick_x_num = 3;
+	int l_stick_x_num = 3;
 	/// @brief stich b index
-	std::optional<int> switch_b_num = 5;
+	int switch_b_num = 5;
 	/// @brief switch c index	
-	std::optional<int> switch_c_num = 6;
+	int switch_c_num = 6;
 	/// @brief switch d index	
-	std::optional<int> switch_d_num = 7;
+	int switch_d_num = 7;
 	/// @brief switch e index	
-	std::optional<int> switch_e_num = 8;
+	int switch_e_num = 8;
 	/// @brief switch f index	
-	std::optional<int> switch_f_num = 9;
+	int switch_f_num = 9;
 	/// @brief switch g index	
-	std::optional<int> switch_g_num = 10;
+	int switch_g_num = 10;
 	/// @brief switch h index	
-	std::optional<int> switch_h_num = 11;
+	int switch_h_num = 11;
 	/// @brief right slider index	
-	std::optional<int> r_slider_num = 12;
+	int r_slider_num = 12;
 	/// @brief left slider index	
-	std::optional<int> l_slider_num = 14;
+	int l_slider_num = 14;
 	/// @brief right dial index	
-	std::optional<int> r_dial_num = 13;
+	int r_dial_num = 13;
 	/// @brief left dial index	
-	std::optional<int> l_dial_num=15;
+	int l_dial_num=15;
 	/// @brief trim one index	
-	std::optional<int> trim_one_num;
+	int trim_one_num;
 	/// @brief trim two index	
-	std::optional<int> trim_two_num;
+	int trim_two_num;
 	/// @brief trim three index	
-	std::optional<int> trim_three_num;
+	int trim_three_num;
 	/// @brief trim four index	
-	std::optional<int> trim_four_num;
+	int trim_four_num;
 	/// @brief trim five index	
-	std::optional<int> trim_five_num;
+	int trim_five_num;
 	/// @brief trim six index	
-	std::optional<int> trim_six_num;
+	int trim_six_num;
+
+	// manual controls
+	float vtm_pos_x = 0;
+	float vtm_pos_y = 0;
+	float pos_offset_x = 0;
+    float pos_offset_y = 0;
+	
+	bool hive_toggle = false;
+	bool safety_toggle = false;
+
+	Timer control_input_timer;
+	Timer timer;
 
 	/// @brief the number of samples to average
 	const static int AVERAGE_SAMPLE_COUNT = 2;
@@ -304,8 +328,10 @@ private:
 
 	/// @brief raw data packet
 	uint8_t m_inputRaw[ET16S_PACKET_SIZE] = { 0 };
-	
+
+	const Cfg::ET16S& config;
+
 	/// @brief getter for transmitter data
 	/// @return Filled Transmitter data struct
-	TransmitterData get_transmitter_data();
+	ET16SData get_ET16S_data();
 };

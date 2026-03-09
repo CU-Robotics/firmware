@@ -32,7 +32,8 @@ public:
     /// @brief sends motor commands based on a reference and estimated state
     /// @param reference_map current target robot state map
     /// @param estimate_map current estimate robot state map
-    virtual void step(RobotStateMap& reference_map, RobotStateMap& estimate_map) = 0;
+    /// @param output_data data structure to store the controller outputs for sending to comms
+    virtual void step(RobotStateMap& reference_map, RobotStateMap& estimate_map, ControllerOutputData& output_data) = 0;
 
     /// @brief Resets integrators/timers
     virtual void reset() { timer.start(); }
@@ -106,7 +107,7 @@ public:
     /// @brief sends motor commands based on a reference and estimated state
     /// @param reference_map current target robot state map
     /// @param estimate_map current estimate robot state map
-    void step(RobotStateMap& reference_map, RobotStateMap& estimate_map);
+    void step(RobotStateMap& reference_map, RobotStateMap& estimate_map, ControllerOutputData& output_data);
 
     /// @brief reset the controller
     inline void reset() {
@@ -148,7 +149,8 @@ public:
     /// @brief sends motor commands based on a reference and estimated state
     /// @param reference_map current target robot state map
     /// @param estimate_map current estimate robot state map
-    void step(RobotStateMap& reference_map, RobotStateMap& estimate_map);
+    /// @param output_data data structure to store the controller outputs for sending to comms
+    void step(RobotStateMap& reference_map, RobotStateMap& estimate_map, ControllerOutputData& output_data);
 
     /// @brief reset the controller
     inline void reset() {
@@ -186,7 +188,8 @@ public:
     /// @brief sends motor commands based on a reference and estimated state
     /// @param reference_map current target robot state map
     /// @param estimate_map current estimate robot state map
-    void step(RobotStateMap& reference_map, RobotStateMap& estimate_map);
+    /// @param output_data data structure to store the controller outputs for sending to comms
+    void step(RobotStateMap& reference_map, RobotStateMap& estimate_map, ControllerOutputData& output_data);
 
     /// @brief reset the controller
     inline void reset() {
@@ -224,7 +227,8 @@ public:
     /// @brief sends motor commands based on a reference and estimated state
     /// @param reference_map current target robot state map
     /// @param estimate_map current estimate robot state map
-    void step(RobotStateMap& reference_map, RobotStateMap& estimate_map);
+    /// @param output_data data structure to store the controller outputs for sending to comms
+    void step(RobotStateMap& reference_map, RobotStateMap& estimate_map, ControllerOutputData& output_data);
 
     /// @brief reset the controller
     inline void reset() {
@@ -292,7 +296,8 @@ struct FeederController : public Controller {
         /// @brief sends motor commands based on a reference and estimated state
         /// @param reference_map current target robot state map
         /// @param estimate_map current estimate robot state map
-        void step(RobotStateMap& reference_map, RobotStateMap& estimate_map);
+        /// @param output_data data structure to store the controller outputs for sending to comms
+        void step(RobotStateMap& reference_map, RobotStateMap& estimate_map, ControllerOutputData& output_data);
     
         /// @brief reset the controller
         inline void reset() {

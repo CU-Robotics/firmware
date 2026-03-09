@@ -3,6 +3,8 @@
 #include <stdint.h>     // for uint8_t, uint32_t
 #include "comms/data/comms_data.hpp" // for CommsData, TypeLabel, to_string
 
+constexpr uint32_t MAX_NUM_MOTOR_NAMES = 16;
+
 namespace Cfg {
 
 enum class MotorName : uint32_t{

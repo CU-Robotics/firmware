@@ -7,6 +7,7 @@
 #include "rev_encoder_data.hpp"
 #include "stereo_cam_trigger_data.hpp"
 #include "lidar_data_packet_si.hpp"
+#include "controller_output_data.hpp"
 
 #include "comms/data/logging_data.hpp"              // for LoggingData
 #include "comms/data/data_structs.hpp"              // for shared data structs
@@ -57,8 +58,13 @@ struct FirmwareData {
     
     std::map<Cfg::MotorName, MotorStateData> motor_state_data_map;
 
-    /// @brief Transmitter data
-    TransmitterData transmitter_data;
+    /// @brief dr16 Transmitter data
+    DR16Data dr16_data;
+
+    /// @brief ET16S Transmitter data
+    ET16SData et16s_data;
+
+    ControllerOutputData controller_output_data;
 
     /// @brief Config section
     ConfigSection config_section;

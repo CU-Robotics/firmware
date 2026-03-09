@@ -18,8 +18,10 @@ enum class TypeLabel : uint16_t {
     LidarDataPacketSI,
     LimitSwitchData,
     StereoCamTriggerData,
-    TransmitterData,
+    DR16Data,
+    ET16SData,
     MotorStateData,
+    ControllerOutputData,
     TargetState,
     EstimatedState,
     OverrideState,
@@ -33,9 +35,9 @@ enum class TypeLabel : uint16_t {
     IcmImuConfig,
     LsmImuConfig,
     D200LidarConfig,
-    RealsenseCameraConfig,
     StereoCameraTriggerConfig,
     StateConfig,
+    TransmitterConfig,
 };
 
 /// @brief Converts a TypeLabel to a string.
@@ -65,10 +67,14 @@ inline std::string to_string(TypeLabel type_label) {
         return "LimitSwitchData";
     case TypeLabel::StereoCamTriggerData:
         return "StereoCamTriggerData";
-    case TypeLabel::TransmitterData:
-        return "TransmitterData";
+    case TypeLabel::DR16Data:
+        return "DR16Data";
+    case TypeLabel::ET16SData:
+        return "ET16SData";
     case TypeLabel::MotorStateData:
         return "MotorStateData";
+    case TypeLabel::ControllerOutputData:
+        return "ControllerOutputData";
     case TypeLabel::TargetState:
         return "TargetState";
     case TypeLabel::EstimatedState:
@@ -95,12 +101,12 @@ inline std::string to_string(TypeLabel type_label) {
         return "LsmImuConfig";
     case TypeLabel::D200LidarConfig:
         return "D200LidarConfig";
-    case TypeLabel::RealsenseCameraConfig:
-        return "RealsenseCameraConfig";
     case TypeLabel::StereoCameraTriggerConfig:
         return "StereoCameraTriggerConfig";
     case TypeLabel::StateConfig:
         return "StateConfig";
+    case TypeLabel::TransmitterConfig:
+        return "TransmitterConfig";
     // no default case, so the compiler will warn us if we forget a case
     }
 

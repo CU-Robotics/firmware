@@ -7,6 +7,7 @@
 #include "comms/config_data/motor.hpp"      // for Motor
 #include "comms/config_data/sensor.hpp"     // for BuffEncoder, IcmImu, D200Lidar, RealsenseCamera
 #include "comms/config_data/state.hpp"      // for StateConfig
+#include "comms/config_data/transmitter.hpp" // for Transmitter
 
 namespace Cfg {
 
@@ -48,6 +49,7 @@ struct RobotConfig {
     std::vector<Estimator> estimators;
     std::vector<State> states;
     std::vector<Motor> motors;
+    Transmitter transmitter;
     uint32_t num_sections_received = 0;
 
     bool is_configured() const {

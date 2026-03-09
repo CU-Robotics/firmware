@@ -273,7 +273,7 @@ ifeq ($(wildcard $(BEAR_WRAPPER)),)
   BEAR_WRAPPER := /usr/lib/bear/wrapper
 endif
 ifeq ($(wildcard $(BEAR_WRAPPER)),)
-  BEAR_WRAPPER := /usr/lib/x86_64-linux-gnu/bear/wrapper
+  BEAR_WRAPPER := /usr/lib/aarch64-linux-gnu/bear/wrapper
 endif
 
 # Run this target to generate compile_commands.json for clangd.

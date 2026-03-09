@@ -1,20 +1,24 @@
 #include "sensors/d200.hpp"
-#include "comms/config_data/hardware_serial_resolve.hpp"
+#include "comms/config_data/hardware_serial_port.hpp"
 #include "utils/safety.hpp"
 #include "comms/data/sendable.hpp"
 
 D200LD14P::D200LD14P(const Cfg::D200Lidar& config_) 
   : Sensor(),
     config(config_),
-    port(grab_hw_serial_port(config.hardware_serial_port)) 
-{}
-
-HardwareSerial& D200LD14P::grab_hw_serial_port(Cfg::HardwareSerialPort port) {
-  auto port_opt = Cfg::resolve_hardware_serial_port(port);
-  if (!port_opt.has_value()) {
-    safety::safety_procedure("D200LD14P: failed to resolve hardware serial port %u", static_cast<uint32_t>(port));
-  }
-  return *port_opt.value();
+    port(Cfg::try_grab_hw_serial_port(config.hardware_serial_port))
+{
+  Serial.printf("D200 LIDAR CONFIGURE DATA:\n");
+  Serial.printf("hardware serial port: %u\n", static_cast<uint32_t>(config.hardware_serial_port));
+  Serial.printf("x offset: %f\n", config.x_offset);
+  Serial.printf("y offset: %f\n", config.y_offset);
+  Serial.printf("yaw offset: %f\n", config.yaw_offset);
+  Serial.printf("valid region start: %f\n", config.valid_region_start);
+  Serial.printf("valid region end: %f\n", config.valid_region_end);
+  Serial.printf("dead zone start: %f\n", config.dead_zone_start);
+  Serial.printf("dead zone end: %f\n", config.dead_zone_end);
+  Serial.printf("dead zone check range: %f\n", config.dead_zone_check_range);
+  Serial.printf("lidar name: %u\n", static_cast<uint32_t>(config.lidar_name));
 }
 
 void D200LD14P::init() {
@@ -111,6 +115,7 @@ void D200LD14P::send_to_comms() const {
   for (size_t pkt_index = 0; pkt_index < D200_NUM_PACKETS_CACHED; pkt_index++) {
     Comms::Sendable<LidarDataPacketSI> sendable_packet;
     sendable_packet.data = packets[pkt_index];
+    sendable_packet.data.lidar_name = config.lidar_name;
     sendable_packet.send_to_comms();
   }
 }

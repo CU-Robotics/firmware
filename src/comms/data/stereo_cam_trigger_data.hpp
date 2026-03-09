@@ -10,4 +10,8 @@ struct StereoCamTriggerData : Comms::CommsData {
     Cfg::SensorName camera_trigger_name;
 
     /// State matching has not been designed yet.
+
+    void print() const {
+        printf("StereoCamTriggerData - camera_trigger_name: %lu\n", static_cast<uint32_t>(camera_trigger_name));
+    }
 };

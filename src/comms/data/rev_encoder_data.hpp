@@ -18,4 +18,8 @@ struct RevSensorData : Comms::CommsData {
 	int ticks;
 	/// Angle in radians.
 	float radians;
+
+	void print() const {
+		printf("RevSensorData - encoder_name: %lu, ticks: %d, radians: %f\n", static_cast<uint32_t>(encoder_name), ticks, radians);
+	}
 };

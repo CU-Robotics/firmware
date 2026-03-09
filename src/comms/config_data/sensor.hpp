@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <stdint.h>     // for uint8_t, uint32_t
 #include "comms/data/comms_data.hpp" // for CommsData, TypeLabel, to_string
+#include "comms/config_data/hardware_serial_port.hpp" // for HardwareSerialPort
 
 namespace Cfg {
 
@@ -12,18 +13,6 @@ enum class CommunicationProtocol : uint32_t {
     I2C,
     HARDWARE_SERIAL,
     DIGITAL_PIN,
-};
-
-enum class HardwareSerialPort : uint32_t{
-    UnsetHardwareSerialPort,
-    Serial1,
-    Serial2,
-    Serial3,
-    Serial4,
-    Serial5,
-    Serial6,
-    Serial7,
-    Serial8,
 };
 
 enum class SensorName : uint32_t {

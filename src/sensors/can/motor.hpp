@@ -82,6 +82,8 @@ public:
     /// @return The CAN motor ID
     inline uint32_t get_id() const { return motor_config.physical_id; }
 
+    inline Cfg::MotorName get_name() const { return motor_config.motor_name; }
+
     /// @brief Get the bus ID
     /// @return The bus ID
     inline uint32_t get_bus_id() const { return motor_config.physical_bus; }

@@ -2,7 +2,7 @@
 #include "motor.hpp"
 #include "sensors/RefSystem.hpp"
 
-void XDriveController::step(RobotStateMap& reference_map, RobotStateMap& estimate_map) {
+void XDriveController::step(RobotStateMap& reference_map, RobotStateMap& estimate_map, ControllerOutputData& output_data) {
     float dt = timer.delta();
 
     Cfg::StateName drive_states[3]  = { chassis_x_state, chassis_y_state, chassis_heading_state };
@@ -88,6 +88,7 @@ void XDriveController::step(RobotStateMap& reference_map, RobotStateMap& estimat
             pid.kd = low_level_velocity_controller.gains.d;
             motor_outputs[i] = pid.filter(dt, true, false) * power_limit_ratio;
             drive_motors[i]->write_motor_torque(motor_outputs[i]);
+            output_data.set_motor_output(drive_motors[i]->get_name(), motor_outputs[i]);
         }
 
     } else {
@@ -159,12 +160,13 @@ void XDriveController::step(RobotStateMap& reference_map, RobotStateMap& estimat
             pid.kf = low_level_velocity_controller.gains.f;
             motor_outputs[i] = pid.filter(dt, true, false) * power_limit_ratio;
             drive_motors[i]->write_motor_torque(motor_outputs[i]);
+            output_data.set_motor_output(drive_motors[i]->get_name(), motor_outputs[i]);
             // Serial.printf("motor %d error: %f output: %f\n", i, -micro_estimate[i][1] + motor_velocity[i], outputs[i]);
         }
     }
 }
 
-void YawController::step(RobotStateMap& reference_map, RobotStateMap& estimate_map) {
+void YawController::step(RobotStateMap& reference_map, RobotStateMap& estimate_map, ControllerOutputData& output_data) {
     float dt = timer.delta();
     float output = 0.0;
 
@@ -195,10 +197,13 @@ void YawController::step(RobotStateMap& reference_map, RobotStateMap& estimate_m
     yaw_motor_1->write_motor_torque(motor_outputs[0]);
     yaw_motor_2->write_motor_torque(motor_outputs[1]);
 
+    output_data.set_motor_output(yaw_motor_1->get_name(), motor_outputs[0]);
+    output_data.set_motor_output(yaw_motor_2->get_name(), motor_outputs[1]);
+
     // Serial.printf("Yaw est: %f, yaw ref: %f, yaw output: %f\n", estimate[3][0], reference[3][0], output);
 }
 
-void PitchController::step(RobotStateMap& reference_map, RobotStateMap& estimate_map) {
+void PitchController::step(RobotStateMap& reference_map, RobotStateMap& estimate_map, ControllerOutputData& output_data) {
     float dt = timer.delta();
     float output = 0.0;
 
@@ -230,10 +235,13 @@ void PitchController::step(RobotStateMap& reference_map, RobotStateMap& estimate
     pitch_motor_1->write_motor_torque(motor_outputs[0]);
     pitch_motor_2->write_motor_torque(motor_outputs[1]);
 
+    output_data.set_motor_output(pitch_motor_1->get_name(), motor_outputs[0]);
+    output_data.set_motor_output(pitch_motor_2->get_name(), motor_outputs[1]);
+
     // Serial.printf("Pitch est: %f, pitch ref: %f, pitch output: %f\n", estimate[4][0], reference[4][0], output);
 }
 
-void FlywheelController::step(RobotStateMap& reference_map, RobotStateMap& estimate_map) {
+void FlywheelController::step(RobotStateMap& reference_map, RobotStateMap& estimate_map, ControllerOutputData& output_data) {
     float dt = timer.delta();
 
     pid_high.kp = high_level_velocity_controller.gains.p;
@@ -268,6 +276,9 @@ void FlywheelController::step(RobotStateMap& reference_map, RobotStateMap& estim
 
     flywheel_motor_1->write_motor_torque(motor_outputs[0]);
     flywheel_motor_2->write_motor_torque(motor_outputs[1]);
+
+    output_data.set_motor_output(flywheel_motor_1->get_name(), motor_outputs[0]);
+    output_data.set_motor_output(flywheel_motor_2->get_name(), motor_outputs[1]);
 }
 
 // void FeederController::step(float reference[STATE_LEN][3], float estimate[STATE_LEN][3], float micro_estimate[CAN_MAX_MOTORS][MICRO_STATE_LEN], float outputs[CAN_MAX_MOTORS]) {
@@ -294,7 +305,7 @@ void FlywheelController::step(RobotStateMap& reference_map, RobotStateMap& estim
 // }
 
 
-void FeederController::step(RobotStateMap& reference_map, RobotStateMap& estimate_map) {
+void FeederController::step(RobotStateMap& reference_map, RobotStateMap& estimate_map, ControllerOutputData& output_data) {
     float dt = timer.delta();
 
     pidp.kp = full_state_position_controller.gains.p;
@@ -321,4 +332,5 @@ void FeederController::step(RobotStateMap& reference_map, RobotStateMap& estimat
     float output = outputp * controller_config.gear_ratios.feeder_direction; // negative because the feeder motor is reversed
 
     feeder_motor->write_motor_torque(output);
+    output_data.set_motor_output(feeder_motor->get_name(), output);
 }

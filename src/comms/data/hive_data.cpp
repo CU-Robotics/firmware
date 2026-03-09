@@ -101,6 +101,12 @@ void HiveData::set_data(CommsData* data) {
         Serial.printf("Stereo camera trigger %u received\n", static_cast<uint32_t>(stereo_camera_trigger->camera_trigger_name));
         break;
     }
+    case TypeLabel::TransmitterConfig: {
+        Cfg::Transmitter* transmitter = static_cast<Cfg::Transmitter*>(data);
+        config.transmitter = *transmitter;
+        config.num_sections_received++;
+        Serial.printf("Transmitter %u received\n", static_cast<uint32_t>(transmitter->transmitter_type));
+    }
     default:
     #if defined(HIVE)
         throw std::runtime_error("Invalid type label given to place in mega struct");

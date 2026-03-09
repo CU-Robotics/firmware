@@ -3,7 +3,10 @@
 
 #include <cstdint>		// for access to fixed-width types
 #include "Arduino.h"	// for access to HardwareSerial defines
-#include "Transmitter.hpp"
+#include "transmitter.hpp"
+#include "comms/data/dr16_data.hpp"
+#include "utils/timing.hpp"
+#include "comms/config_data/transmitter.hpp"
 
 constexpr uint16_t DR16_PACKET_SIZE = 18;				// the size in bytes of a DR16-Receiver packet
 constexpr uint16_t DR16_INPUT_VALUE_COUNT = 7;			// the size in floats of the normalized input
@@ -67,7 +70,8 @@ constexpr uint32_t DR16_ALIGNMENT_LONG_INTERVAL_THRESHOLD = 1000; 	// time in us
 class DR16 : public Transmitter {
 public:
 	/// @brief Constructor, left empty
-	DR16();
+	DR16(const Cfg::DR16& config_);
+	~DR16() {};
 
 	/// @brief Initializes DR16 receiver, starts the Serial interface, and zeros input buffers
 	void init() override;
@@ -75,49 +79,54 @@ public:
 	/// @brief Attempts to read a full packet from the receiver. This function shouldn't be ran more than 100kHz
 	void read() override;
 
-	/// @brief Zeros the normalized input array
-	void zero() override;
+	bool is_safety_mode() override;
+	bool is_hive_mode() override;
+	bool is_teensy_mode() override;
+
+	void manual_controls(const RobotStateMap& estimated_state_map, RobotStateMap& target_state_map, Governor& governor, bool not_safety_mode, float& feed, float& last_feed, bool& hive_toggle, bool& safety_toggle) override;
 
 public:
+	/// @brief Zeros the normalized input array
+	void zero();
 	/// @brief Returns the fail bit. Set only if invalid packets have been received for more then 250ms
 	/// @return Failure status
-	uint8_t is_fail() override { return m_fail; }
+	uint8_t is_fail() { return m_fail; }
 
 	/// @brief Returns a the current connection status for the dr16 controller
 	/// @return true for connected false for not connected
-	bool is_connected() override { return m_connected; }
+	bool is_connected() { return m_connected; }
 
 	/// @brief Get the 7 float length input buffer. These values are normalized [-1, 1]
 	/// @return float buffer
-	float* get_input() override;
+	float* get_input();
 
 	/// @brief Get right stick x value
 	/// @return Right stick x value [-1.f, 1.f]
-	float get_r_stick_x() override;
+	float get_r_stick_x();
 
 	/// @brief Get right stick y value
 	/// @return Right stick y value [-1.f, 1.f]
-	float get_r_stick_y() override;
+	float get_r_stick_y();
 
 	/// @brief Get left stick x value
 	/// @return Left stick x value [-1.f, 1.f]
-	float get_l_stick_x() override;
+	float get_l_stick_x();
 
 	/// @brief Get left stick y value
 	/// @return Left stick y value [-1.f, 1.f]
-	float get_l_stick_y() override;
+	float get_l_stick_y();
 
 	/// @brief Get wheel value
 	/// @return Wheel value [-1.f, 1.f]
-	float get_wheel() override;
+	float get_wheel();
 
 	/// @brief Get left switch value
 	/// @return Switch value [1, 2, 3]
-	SwitchPos get_l_switch() override;
+	SwitchPos get_l_switch();
 
 	/// @brief Get right switch value
 	/// @return Switch value [1, 2, 3]
-	SwitchPos get_r_switch() override;
+	SwitchPos get_r_switch();
 
 	/// @brief Prints the normalized input buffer
 	void print() override;
@@ -127,11 +136,11 @@ public:
 
 	/// @brief Get mouse velocity x
 	/// @return Amount of points since last read
-	std::optional<int> get_mouse_x();
+	int get_mouse_x();
 
 	/// @brief Get mouse velocity y
 	/// @return Amount of points since last read
-	std::optional<int> get_mouse_y();
+	int get_mouse_y();
 
 	/// @brief Get mouse velocity z (scroll wheel)
 	/// @return Amount of points since last read
@@ -139,27 +148,31 @@ public:
 
 	/// @brief status of left mouse button
 	/// @return Is left mouse button pressed
-	std::optional<bool> get_l_mouse_button();
+	bool get_l_mouse_button();
 
 	/// @brief status of right mouse button
 	/// @return Is right mouse button pressed
-	std::optional<bool> get_r_mouse_button();
+	bool get_r_mouse_button();
 
 	/// @brief Get raw 18-byte packet
 	/// @return 18-byte packet
-	uint8_t* get_raw() override { return m_inputRaw; }
+	uint8_t* get_raw() { return m_inputRaw; }
 
-	std::optional<Keys> get_keys() override {
+	Keys get_keys() {
 		return keys;
 	}
-	/// @brief getter for transmitter data
-	/// @return Filled Transmitter data struct
-	TransmitterData get_transmitter_data();
-
+	
+	void send_to_comms() override;
+	
 	/// @brief A simple check to see if read data is within expected values
 	/// @return True/false whether data is deemed valid or not
-	bool is_data_valid() override;
-private:
+	bool is_data_valid();
+	private:
+
+	/// @brief getter for transmitter data
+	/// @return Filled Transmitter data struct
+	DR16Data get_dr16_data();
+
 	/// @brief Maps the input value to a specified value range
 	/// @param value the input value
 	/// @param in_low the lowest value the input could be
@@ -168,7 +181,9 @@ private:
 	/// @param out_high the highest the mapped value should be
 	/// @return Mapped input in the range of [out_low, out_high]
 	float bounded_map(int value, int in_low, int in_high, int out_low, int out_high);
-
+	
+	const Cfg::DR16& config;
+		
 	/// @brief Keep track of mouse x velocity
 	int16_t mouse_x = 0;
 	/// @brief Keep track of mouse y velocity
@@ -179,17 +194,33 @@ private:
 	bool l_mouse_button = 0;
 	/// @brief Keep track of right mouse button status
 	bool r_mouse_button = 0;
+	
+	Keys keys;
+	
+	// manual controls
+	float transmitter_pos_x = 0;
+	float transmitter_pos_y = 0;
+	float vtm_pos_x = 0;
+	float vtm_pos_y = 0;
+	float pos_offset_x = 0;
+    float pos_offset_y = 0;
+	
+	bool hive_toggle = false;
+	bool safety_toggle = false;
 
-public:
+	Timer control_input_timer;
+	Timer timer;
+	
+	public:
 	/// @brief normalized input buffer
 	float m_input[DR16_INPUT_VALUE_COUNT] = { 0 };
-
+	
 	/// @brief raw input split into the 7 input channels
 	float m_inputRawSeperated[DR16_INPUT_VALUE_COUNT] = { 0 };
-
+	
 	/// @brief non-normalized, raw 18 byte packet
 	uint8_t m_inputRaw[DR16_PACKET_SIZE] = { 0 };
-
+	
 	/// @brief stores previous time value (in micros) for use in calculating a dt
 	uint32_t m_prevTime = 0;
 	/// @brief time since last valid packet

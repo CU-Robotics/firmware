@@ -31,9 +31,14 @@ void FirmwareData::set_data(CommsData* data) {
         estimated_state = *static_cast<EstimatedState*>(data);
         break;
     }
-    case TypeLabel::TransmitterData: {
+    case TypeLabel::DR16Data: {
         // place the data in the mega struct
-        transmitter_data = *static_cast<TransmitterData*>(data);
+        dr16_data = *static_cast<DR16Data*>(data);
+        break;
+    }
+    case TypeLabel::ET16SData: {
+        // place the data in the mega struct
+        et16s_data = *static_cast<ET16SData*>(data);
         break;
     }
     case TypeLabel::BuffEncoderData: {
@@ -83,6 +88,11 @@ void FirmwareData::set_data(CommsData* data) {
         //determine which lidar sensor the data is for
         LidarDataPacketSI single_lidar_data = *static_cast<LidarDataPacketSI*>(data);
         lidar_data_map.insert_or_assign(single_lidar_data.lidar_name, single_lidar_data);
+        break;
+    }
+    case TypeLabel::ControllerOutputData: {
+        // place the data in the mega struct
+        controller_output_data = *static_cast<ControllerOutputData*>(data);
         break;
     }
     case TypeLabel::ConfigSection: {
@@ -176,10 +186,15 @@ TEST_CASE("setting firmware data structs") {
     firmware_data.set_data(&lidar_sensor_data);
     CHECK(firmware_data.lidars[1].back().lidar_speed == 55);
 
-    TransmitterData transmitter_data;
-    transmitter_data.mouse_x = 55;
-    firmware_data.set_data(&transmitter_data);
-    CHECK(firmware_data.transmitter_data.mouse_x == 55);
+    DR16Data dr16_data;
+    dr16_data.mouse_x = 55;
+    firmware_data.set_data(&dr16_data);
+    CHECK(firmware_data.dr16_data.mouse_x == 55);
+
+    ET16SData et16s_data;
+    et16s_data.mouse_x = 55;
+    firmware_data.set_data(&et16s_data);
+    CHECK(firmware_data.et16s_data.mouse_x == 55);
 
     ConfigSection config_section;
     config_section.section_id = 55;
