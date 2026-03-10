@@ -40,3 +40,10 @@ void RobotStateMap::from_comms_packet(State::Raw robot_state_array[NUM_STATES]) 
         }
     }
 }
+
+void RobotStateMap::print() {
+    Serial.println("RobotStateMap:");
+    for (const auto& [state_name, state] : robot_state) {
+        Serial.printf("\tStateName: %lu, Position: %f, Velocity: %f, Acceleration: %f\n", static_cast<uint32_t>(state_name), state.get_position(), state.get_velocity(), state.get_acceleration());
+    }
+}

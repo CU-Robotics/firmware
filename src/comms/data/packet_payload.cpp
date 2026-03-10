@@ -217,8 +217,6 @@ bool PacketPayload::try_append_data(CommsData* data) {
     // append into raw data buffer.
     memcpy(raw_data + append_offset, data, data->size);
 
-    Serial.printf("Appended data of type %s and size %u at offset %u\n", to_string(data->type_label).c_str(), data->size, append_offset);
-
     remaining_data_size -= data->size;
 
     return true; // success

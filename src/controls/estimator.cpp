@@ -177,13 +177,13 @@ void GimbalAndChassisEstimator::step_states(RobotStateMap& updated_state_map, co
     // output[2][0] = chassis_angle;
     // output[2][1] = 0;
     // output[2][2] = 0;
-
+    
     updated_state_map[yaw_state].set_position(yaw_angle);
     updated_state_map[yaw_state].set_velocity(current_yaw_velocity);
     updated_state_map[yaw_state].set_acceleration(roll_angle);
     updated_state_map[pitch_state].set_position(pitch_enc_angle);
     updated_state_map[pitch_state].set_velocity(current_pitch_velocity);
-    updated_state_map[pitch_state].set_acceleration(pitch_enc_angle);
+    updated_state_map[pitch_state].set_acceleration(0);
 
     // 3 odom wheel estimation
     // for (int i = 0; i < 3; i++) {
@@ -261,8 +261,7 @@ void GimbalAndChassisEstimator::step_states(RobotStateMap& updated_state_map, co
 
     updated_state_map[chassis_heading_state].set_position(chassis_angle);
     updated_state_map[chassis_heading_state].set_velocity(d_chassis_heading / dt);
-    updated_state_map[chassis_heading_state].set_acceleration(yaw_enc_angle);
-
+    updated_state_map[chassis_heading_state].set_acceleration(0);
 
 
     previous_pos[0] = pos_estimate[0];
@@ -271,8 +270,6 @@ void GimbalAndChassisEstimator::step_states(RobotStateMap& updated_state_map, co
 
 FlywheelEstimator::FlywheelEstimator(const Cfg::Estimator& estimator_config, SensorManager& sensor_manager, CANManager& can, std::vector<Cfg::StateName> available_states) : 
 ball_exit_velocity(get_state_name_by_generic_use(Cfg::GenericEstimatorStateUse::ShooterBallVelocity, estimator_config, available_states)) {
-
-    printf("State name for shooter ball velocity: %lu\n", static_cast<uint32_t>(ball_exit_velocity));
 
     flywheel_motor_left = can.get_motor_by_name(estimator_config.get_motor_name_by_generic_use(Cfg::GenericEstimatorMotorUse::FlywheelLeft));
     flywheel_motor_right = can.get_motor_by_name(estimator_config.get_motor_name_by_generic_use(Cfg::GenericEstimatorMotorUse::FlywheelRight));
@@ -328,7 +325,7 @@ void NewFeederEstimator::step_states(RobotStateMap& updated_state_map, const Rob
     ball_count += diff/(M_PI/feeder_ratio);
     updated_state_map[feeder_ball_state].set_position(ball_count * feeder_direction); // ball count
     updated_state_map[feeder_ball_state].set_velocity(feeder_velocity * feeder_direction); // ball velocity
-    updated_state_map[feeder_ball_state].set_acceleration(feeder_angle); // this is not the acceleration just the encoder value for debugging
+    updated_state_map[feeder_ball_state].set_acceleration(0); // this is not the acceleration just the encoder value for debugging
 
 }
 

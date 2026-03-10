@@ -39,6 +39,8 @@ public:
         sendable.send_to_comms();
     }
 
+    void print();
+
     void from_comms_packet(State::Raw robot_state_array[NUM_STATES]);
 
 private:

@@ -50,7 +50,7 @@ public:
     BuffEncoder(const Cfg::BuffEncoder& encoder_config) : Sensor(), config_data(encoder_config), comms_data(encoder_config.encoder_name) {};
 
     /// @brief initialize sensor
-    void init() override {};
+    void init() override;
 
     /// @brief Read via SPI the current angle of the encoder
     /// @note Returns and sets m_angle when it reads

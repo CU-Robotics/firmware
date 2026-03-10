@@ -74,7 +74,6 @@ void SensorManager::read() {
 
 void SensorManager::send_to_comms() {
     for(auto& [sensor_name, sensor] : sensors) {
-        Serial.printf("Sending data for sensor %u to comms\n", static_cast<uint32_t>(sensor_name));
         sensor->send_to_comms();
     }
 }

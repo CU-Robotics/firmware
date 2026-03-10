@@ -13,6 +13,6 @@ struct BuffEncoderData : Comms::CommsData {
     float m_angle;
 
     void print() const {
-        printf("BuffEncoderData - encoder_name: %lu, m_angle: %f\n", static_cast<uint32_t>(encoder_name), m_angle);
+        Serial.printf("BuffEncoderData - encoder_name: %lu, m_angle: %f\n", static_cast<uint32_t>(encoder_name), m_angle);
     }
 };

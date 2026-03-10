@@ -195,7 +195,6 @@ int main() {
         sensor_manager.read();
         sensor_manager.send_to_comms();
 
-        Serial.println("Finished sensor read and send to comms");
         
         // check whether this packet is a config packet
         // if (comms_layer.get_hive_data().config_section.request_bit == 1) {
@@ -240,10 +239,9 @@ int main() {
             override_request = true;
         }
 
-        Serial.println("Stepping estimator manager");
         // step estimates and construct estimated state
         estimator_manager.step(estimated_state_map, override_request);
-        Serial.println("finished estimator manager step");
+        estimated_state_map.print();
         override_request = false;
 
         if ((feed - estimated_state_map[Cfg::StateName::Feeder].get_position() > 2 && transmitter_manager.is_teensy_mode()) ||
@@ -266,7 +264,6 @@ int main() {
 
         // generate motor outputs from controls
         controller_manager.step(reference_map, estimated_state_map);
-        Serial.println("Finished controller step");
 
         target_state_map.send_to_comms<TargetState>();
         estimated_state_map.send_to_comms<EstimatedState>();
@@ -311,7 +308,7 @@ int main() {
         if (not_safety_mode) {
             // SAFETY OFF
             can.write();
-            // Serial.printf("Can write\n");
+            Serial.printf("Can write\n");
             // Serial.printf("Can write\n");
         } else {
             // SAFETY ON
@@ -323,10 +320,9 @@ int main() {
                         ? (int)floor(estimated_state_map[Cfg::StateName::Feeder].get_position()) + 1
                         : (int)floor(estimated_state_map[Cfg::StateName::Feeder].get_position()); // reset feed to the current state
             last_feed = feed;                          // reset last feed to the current state
-            // Serial.printf("Can zero\n");
+            Serial.printf("Can zero\n");
             safety_toggle = false; // reset hive toggle
         }
-
 
         // LED heartbeat -- linked to loop count to reveal slowdowns and
         // freezes.

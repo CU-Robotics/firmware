@@ -34,10 +34,10 @@ int CommsLayer::init() {
     }
 
     // ethernet init failing is not a fatal error
-    // bool ethernet_init = initialize_ethernet();
-    // if (!ethernet_init) {
-    //     Serial.printf("CommsLayer: EthernetComms init failed\n");
-    // }
+    bool ethernet_init = initialize_ethernet();
+    if (!ethernet_init) {
+        Serial.printf("CommsLayer: EthernetComms init failed\n");
+    }
 
     Serial.printf("CommsLayer: initialized\n");
 
@@ -89,9 +89,9 @@ void CommsLayer::send_packets() {
     m_hid.send_packet(m_hid_outgoing);
     
     // prepare and send an ethernet packet
-    // m_ethernet_payload.construct_data();
-    // memcpy(m_ethernet_outgoing.payload(), m_ethernet_payload.data(), m_ethernet_payload.get_max_size());
-    // m_ethernet.send_packet(m_ethernet_outgoing);
+    m_ethernet_payload.construct_data();
+    memcpy(m_ethernet_outgoing.payload(), m_ethernet_payload.data(), m_ethernet_payload.get_max_size());
+    m_ethernet.send_packet(m_ethernet_outgoing);
 };
 
 void CommsLayer::receive_packets() {
@@ -162,7 +162,9 @@ void CommsLayer::set_firmware_data(FirmwareData& data) {
 };
 
 void CommsLayer::configure() {
+    int time = millis();
     while(!m_hive_data.config.is_configured()) {
+        Serial.printf("time since config start: %d ms\n", millis() - time);
         run();
         Cfg::RobotConfig& config = comms_layer.get_hive_data().config;
         Serial.printf("Config: received %d of %d sections\n", config.num_sections_received, config.config_start.num_config_sections);
@@ -172,7 +174,7 @@ void CommsLayer::configure() {
         if(config.num_sections_received == 0) {
             
         }
-        config_loop_timer.delay_micros(100000);
+        config_loop_timer.delay_micros(5000);
     }
 }
 
