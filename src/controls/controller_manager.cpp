@@ -40,9 +40,7 @@ void ControllerManager::init_controller(const Cfg::Controller& controller_config
 }
 
 void ControllerManager::step(RobotStateMap& reference_map, RobotStateMap& estimate_map) {
-    Comms::Sendable<ControllerOutputData> controller_output_data;
     for (const auto& controller : controllers) {
-        controller->step(reference_map, estimate_map, controller_output_data.data);
+        controller->step(reference_map, estimate_map);
     }
-    controller_output_data.send_to_comms();
 }

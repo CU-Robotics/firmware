@@ -1,16 +1,18 @@
 #pragma once
 #include "controls/state.hpp"
+#include "state.hpp"
+#include <cstddef>
 #include <map>
 #include <vector>
 #include <Arduino.h>
+
+constexpr size_t NUM_STATES = static_cast<size_t>(Cfg::StateName::StateNameCount);
 
 // Forward declaration
 namespace Comms {
     template<typename T>
     class Sendable; // Forward declaration of Sendable
 }
-
-constexpr size_t NUM_STATES = 24;
 
 class RobotStateMap {
 public:

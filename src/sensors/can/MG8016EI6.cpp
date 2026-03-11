@@ -137,7 +137,7 @@ int MG8016EI6::write(CAN_message_t& msg) const {
     return 0;
 }
 
-void MG8016EI6::write_motor_torque(float torque) {
+void MG8016EI6::execute_motor_torque_command(float torque) {
     // Clamp the torque value
     if (torque > 1.0f) {
         torque = 1.0f;

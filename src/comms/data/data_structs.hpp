@@ -23,8 +23,6 @@
 
 #include "robot_state_data.hpp"
 
-#include "config_section.hpp"
-
 #include "comms_ref_data.hpp"
 
 #endif // DATA_STRUCTS_HPP

@@ -48,7 +48,7 @@ void C620::zero_motor() {
     write_motor_torque(0.0f);
 }
 
-void C620::write_motor_torque(float torque) {
+void C620::execute_motor_torque_command(float torque) {
     // clamp torque to -1 to 1 just in case. We dont want to overflow the int
     if (torque < -1.0f) torque = -1.0f;
     if (torque > 1.0f) torque = 1.0f;

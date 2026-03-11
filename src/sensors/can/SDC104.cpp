@@ -109,7 +109,7 @@ void SDC104::zero_motor() {
     write_motor_torque(0.0f);
 }
 
-void SDC104::write_motor_torque(float torque) {
+void SDC104::execute_motor_torque_command(float torque) {
     // clamp the torque value
     if (torque < -1.0f) torque = -1.0f;
     if (torque > 1.0f) torque = 1.0f;

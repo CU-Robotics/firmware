@@ -16,11 +16,6 @@ void FirmwareData::set_data(CommsData* data) {
         big_test_data = *static_cast<BigTestData*>(data);
         break;
     }
-    case TypeLabel::LoggingData: {
-        // place the data in the mega struct
-        logging_data = *static_cast<LoggingData*>(data);
-        break;
-    }
     case TypeLabel::TargetState: {
         // place the data in the mega struct
         temp_reference = *static_cast<TargetState*>(data);
@@ -89,16 +84,6 @@ void FirmwareData::set_data(CommsData* data) {
         //determine which lidar sensor the data is for
         LidarDataPacketSI single_lidar_data = *static_cast<LidarDataPacketSI*>(data);
         lidar_data_map.insert_or_assign(single_lidar_data.lidar_name, single_lidar_data);
-        break;
-    }
-    case TypeLabel::ControllerOutputData: {
-        // place the data in the mega struct
-        controller_output_data = *static_cast<ControllerOutputData*>(data);
-        break;
-    }
-    case TypeLabel::ConfigSection: {
-        // place the data in the mega struct
-        config_section = *static_cast<ConfigSection*>(data);
         break;
     }
     case TypeLabel::CommsRefData: {

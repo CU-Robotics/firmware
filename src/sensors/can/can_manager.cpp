@@ -177,6 +177,7 @@ void CANManager::send_to_comms(){
         MotorState state = motor->get_state();
         motor_state_sendable.data.motor_name = name;
         motor_state_sendable.data.torque = state.torque;
+        motor_state_sendable.data.commanded_torque = motor->get_commanded_motor_torque();
         motor_state_sendable.data.speed = state.speed;
         motor_state_sendable.data.position = state.position;
         motor_state_sendable.data.temperature = state.temperature;

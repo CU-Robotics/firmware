@@ -7,7 +7,6 @@
 #include "safety.hpp"
 #include "utils/timing.hpp"
 #include "sensors/can/can_manager.hpp"
-#include "state.hpp"
 #include "robot_state_map.hpp"
 
 #include "comms/config_data/controller.hpp"
@@ -33,7 +32,7 @@ public:
     /// @param reference_map current target robot state map
     /// @param estimate_map current estimate robot state map
     /// @param output_data data structure to store the controller outputs for sending to comms
-    virtual void step(RobotStateMap& reference_map, RobotStateMap& estimate_map, ControllerOutputData& output_data) = 0;
+    virtual void step(RobotStateMap& reference_map, RobotStateMap& estimate_map) = 0;
 
     /// @brief Resets integrators/timers
     virtual void reset() { timer.start(); }
@@ -107,7 +106,7 @@ public:
     /// @brief sends motor commands based on a reference and estimated state
     /// @param reference_map current target robot state map
     /// @param estimate_map current estimate robot state map
-    void step(RobotStateMap& reference_map, RobotStateMap& estimate_map, ControllerOutputData& output_data);
+    void step(RobotStateMap& reference_map, RobotStateMap& estimate_map);
 
     /// @brief reset the controller
     inline void reset() {
@@ -150,7 +149,7 @@ public:
     /// @param reference_map current target robot state map
     /// @param estimate_map current estimate robot state map
     /// @param output_data data structure to store the controller outputs for sending to comms
-    void step(RobotStateMap& reference_map, RobotStateMap& estimate_map, ControllerOutputData& output_data);
+    void step(RobotStateMap& reference_map, RobotStateMap& estimate_map);
 
     /// @brief reset the controller
     inline void reset() {
@@ -189,7 +188,7 @@ public:
     /// @param reference_map current target robot state map
     /// @param estimate_map current estimate robot state map
     /// @param output_data data structure to store the controller outputs for sending to comms
-    void step(RobotStateMap& reference_map, RobotStateMap& estimate_map, ControllerOutputData& output_data);
+    void step(RobotStateMap& reference_map, RobotStateMap& estimate_map);
 
     /// @brief reset the controller
     inline void reset() {
@@ -228,7 +227,7 @@ public:
     /// @param reference_map current target robot state map
     /// @param estimate_map current estimate robot state map
     /// @param output_data data structure to store the controller outputs for sending to comms
-    void step(RobotStateMap& reference_map, RobotStateMap& estimate_map, ControllerOutputData& output_data);
+    void step(RobotStateMap& reference_map, RobotStateMap& estimate_map);
 
     /// @brief reset the controller
     inline void reset() {
@@ -237,38 +236,6 @@ public:
         pid_low.sumError = 0.0;
     }
 };
-
-// /// @brief Controls the feeder
-// struct FeederController : public Controller {
-// private:
-//     Cfg::SubController full_state_position_controller;
-//     Cfg::SubController full_state_velocity_controller;
-//     /// @brief filter for controlling balls/sec
-//     PIDFilter pid_high;
-//     /// @brief filter for controlling motor velocity
-//     PIDFilter pid_low;
-
-// public:
-//     /// @brief default constructor
-//     FeederController() {
-//         full_state_position_controller = controller_config.get_sub_controller_by_type(Cfg::FullStatePositionController);
-//         full_state_velocity_controller = controller_config.get_sub_controller_by_type(Cfg::FullStateVelocityController);
-//     }
-
-//     /// @brief calculate motor outputs based on reference and estimate
-//     /// @param reference current target robot state
-//     /// @param estimate current estimate robot state
-//     /// @param micro_estimate current micro estimate robot state (state of motors, not joints)
-//     /// @param outputs motor outputs
-//     void step(float reference[STATE_LEN][3], float estimate[STATE_LEN][3], float micro_estimate[CAN_MAX_MOTORS][MICRO_STATE_LEN], float outputs[CAN_MAX_MOTORS]);
-
-//     /// @brief reset the controller
-//     inline void reset() {
-//         Controller::reset();
-//         pid_high.sumError = 0.0;
-//         pid_low.sumError = 0.0;
-//     }
-// };
 
 /// @brief Controller for the ball feeder
 struct FeederController : public Controller {
@@ -297,7 +264,7 @@ struct FeederController : public Controller {
         /// @param reference_map current target robot state map
         /// @param estimate_map current estimate robot state map
         /// @param output_data data structure to store the controller outputs for sending to comms
-        void step(RobotStateMap& reference_map, RobotStateMap& estimate_map, ControllerOutputData& output_data);
+        void step(RobotStateMap& reference_map, RobotStateMap& estimate_map);
     
         /// @brief reset the controller
         inline void reset() {

@@ -73,7 +73,7 @@ public:
 
     /// @brief Write motor torque given a normalized value
     /// @param torque A value between [-1, 1] representing the torque range of [-33A, 33A]
-    void write_motor_torque(float torque) override;
+    void execute_motor_torque_command(float torque) override;
 
     /// @brief Write motor speed
     /// @param speed The speed in rev/s

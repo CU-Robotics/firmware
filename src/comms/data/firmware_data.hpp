@@ -7,9 +7,7 @@
 #include "rev_encoder_data.hpp"
 #include "stereo_cam_trigger_data.hpp"
 #include "lidar_data_packet_si.hpp"
-#include "controller_output_data.hpp"
 
-#include "comms/data/logging_data.hpp"              // for LoggingData
 #include "comms/data/data_structs.hpp"              // for shared data structs
 #include "comms/data/comms_data.hpp"                // for CommsData
 #include "sensors/RefSystemPacketDefs.hpp"          // for RefData
@@ -38,9 +36,6 @@ struct FirmwareData {
     /// @brief Estimated state
     EstimatedState estimated_state;
     
-    /// @brief Logging data
-    Comms::LoggingData logging_data;
-    
     std::map<Cfg::SensorName, BuffEncoderData> buff_encoder_data_map;
 
     std::map<Cfg::SensorName, LsmSensorData> lsm_sensor_data_map;
@@ -63,11 +58,6 @@ struct FirmwareData {
 
     /// @brief ET16S Transmitter data
     ET16SData et16s_data;
-
-    ControllerOutputData controller_output_data;
-
-    /// @brief Config section
-    ConfigSection config_section;
 
     /// @brief Referee data
     RefData ref_data;

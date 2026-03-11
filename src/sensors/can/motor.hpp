@@ -62,7 +62,16 @@ public:
     /// @brief Generic write motor function handling only torque. This is the only common interface of all the motors we use
     /// @param torque The torque value between [-1, 1]
     /// @note This does not issue a CAN command over the bus
-    virtual void write_motor_torque(float torque) = 0;
+    void write_motor_torque(float torque) {
+        commanded_motor_torque = torque;
+        execute_motor_torque_command(torque);
+    }
+
+    /// @brief Get the last commanded motor torque. This is used to send to comms so we can log the commanded torque and not just the actual torque
+    /// @return The last commanded motor torque
+    float get_commanded_motor_torque() const {
+        return commanded_motor_torque;
+    }
 
     /// @brief Print the current state of the motor
     virtual void print_state() const {
@@ -110,6 +119,10 @@ protected:
         return true;
     }
 
+    /// @brief Execute the motor torque command. This is the actual implementation of writing the motor torque that differs between motors. This is called by write_motor_torque after updating the commanded_motor_torque variable
+    /// @param torque The torque value between [-1, 1]
+    virtual void execute_motor_torque_command(float torque) = 0;
+
 protected:
     /// @brief motor configuration info, storing motor type, controller type, bus, ID, and name
     Cfg::Motor motor_config;
@@ -129,6 +142,10 @@ protected:
 
     /// @brief The current state of the motor
     MotorState m_state;
+
+private: 
+    /// @brief The last commanded motor torque. This is stored to be sent to comms, it is updated whenever write_motor_torque is called
+    float commanded_motor_torque = 0.0f;
 
 };
 

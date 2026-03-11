@@ -79,7 +79,7 @@ void GIM::write_motor_off() {
     }
 }
 
-void GIM::write_motor_torque(float torque) {
+void GIM::execute_motor_torque_command(float torque) {
     if (torque < -1.0f) torque = -1.0f;
     if (torque > 1.0f) torque = 1.0f;
 

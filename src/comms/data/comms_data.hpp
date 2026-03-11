@@ -9,7 +9,6 @@ enum class TypeLabel : uint16_t {
     NONE = 0x00,
     TestData,
     BigTestData,
-    LoggingData,
     BuffEncoderData,
     RevEncoderData,
     ICMSensorData,
@@ -20,11 +19,9 @@ enum class TypeLabel : uint16_t {
     DR16Data,
     ET16SData,
     MotorStateData,
-    ControllerOutputData,
     TargetState,
     EstimatedState,
     OverrideState,
-    ConfigSection,
     CommsRefData,
     ConfigStart,
     ControllerConfig,
@@ -50,8 +47,6 @@ inline std::string to_string(TypeLabel type_label) {
         return "TestData";
     case TypeLabel::BigTestData:
         return "BigTestData";
-    case TypeLabel::LoggingData:
-        return "LoggingData";
     case TypeLabel::BuffEncoderData:
         return "BuffEncoderData";
     case TypeLabel::ICMSensorData:
@@ -72,16 +67,13 @@ inline std::string to_string(TypeLabel type_label) {
         return "ET16SData";
     case TypeLabel::MotorStateData:
         return "MotorStateData";
-    case TypeLabel::ControllerOutputData:
-        return "ControllerOutputData";
     case TypeLabel::TargetState:
         return "TargetState";
     case TypeLabel::EstimatedState:
         return "EstimatedState";
     case TypeLabel::OverrideState:
         return "OverrideState";
-    case TypeLabel::ConfigSection:
-        return "ConfigSection";
+
     case TypeLabel::CommsRefData:
         return "CommsRefData";
     case TypeLabel::ConfigStart:
@@ -123,7 +115,6 @@ enum class PhysicalMedium : uint16_t {
 enum class Priority : uint16_t {
     High = 0x00,
     Medium,
-    Logging,
 };
 
 /// @brief base class for all data structs that want to be sent over comms.
