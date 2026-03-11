@@ -17,7 +17,7 @@ void BuffEncoder::read() {
     data[0] = (MT6835_OP_ANGLE << 4);
     data[1] = MT6835_REG_ANGLE1;
 
-    Serial.printf("Pin: %u, Sending Buff Encoder read command\n", config_data.spi_cs);
+    // Serial.printf("Pin: %u, Sending Buff Encoder read command\n", config_data.spi_cs);
     // do the SPI transfer
     SPI.beginTransaction(m_settings);
     digitalWrite(config_data.spi_cs, LOW);
@@ -32,7 +32,7 @@ void BuffEncoder::read() {
     // assign angle
     m_angle = radians;
 
-    Serial.printf("Buff Encoder %u - angle: %f\n", static_cast<uint32_t>(config_data.encoder_name), m_angle);
+    // Serial.printf("Buff Encoder %u - angle: %f\n", static_cast<uint32_t>(config_data.encoder_name), m_angle);
 
     comms_data.m_angle = m_angle;
 }

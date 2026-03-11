@@ -23,6 +23,9 @@ class State {
         /// @brief Set the position value of the state.
         /// @param position The position value to set. This will be constrained (or wrapped if is_wrapping is true) to the limits specified in the configuration.
         void set_position(float position);
+
+        void set_position_no_bound(float position);
+
         /// @brief Get the position value of the state.
         /// @return The position value of the state.
         float get_position() const;
@@ -30,6 +33,9 @@ class State {
         /// @brief Set the velocity value of the state.
         /// @param velocity The velocity value to set. This will be constrained to the limits specified in the configuration.
         void set_velocity(float velocity);
+
+        void set_velocity_no_bound(float velocity);
+
         /// @brief Get the velocity value of the state.
         /// @return The velocity value of the state.
         float get_velocity() const;
@@ -37,9 +43,14 @@ class State {
         /// @brief Set the acceleration value of the state.
         /// @param acceleration The acceleration value to set. This will be constrained to the limits specified in the configuration.
         void set_acceleration(float acceleration);
+
+        void set_acceleration_no_bound(float acceleration);
+
         /// @brief Get the acceleration value of the state.
         /// @return The acceleration value of the state.
         float get_acceleration() const;
+
+        State get_error_no_bounds(const State& other) const;
         
         /// @note These arithmetic operators are overloaded so that the state limits are preserved when doing arithmetic operations on states.
 

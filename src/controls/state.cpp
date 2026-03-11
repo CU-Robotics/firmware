@@ -20,12 +20,24 @@ void State::set_position(float _position) {
     m_state.position = _position;
 }
 
+void State::set_position_no_bound(float _position) {
+    if (m_config.is_wrapping) {
+        _position = Utils::wrap(_position, m_config.reference_limits.position.min, m_config.reference_limits.position.max);
+    }
+
+    m_state.position = _position;
+}
+
 float State::get_position() const {
     return m_state.position;
 }
 
 void State::set_velocity(float _velocity) {
     _velocity = constrain(_velocity, m_config.reference_limits.velocity.min, m_config.reference_limits.velocity.max);
+    m_state.velocity = _velocity;
+}
+
+void State::set_velocity_no_bound(float _velocity) {
     m_state.velocity = _velocity;
 }
 
@@ -38,12 +50,24 @@ void State::set_acceleration(float _acceleration) {
     m_state.acceleration = _acceleration;
 }
 
+void State::set_acceleration_no_bound(float _acceleration) {
+    m_state.acceleration = _acceleration;
+}
+
 float State::get_acceleration() const {
     return m_state.acceleration;
 }
 
 State::Raw State::get_raw() const {
     return m_state;
+}
+
+State State::get_error_no_bounds(const State& other) const{
+    State error(m_config);
+    error.set_position_no_bound(get_position() - other.get_position());
+    error.set_velocity_no_bound(get_velocity() - other.get_velocity());
+    error.set_acceleration_no_bound(get_acceleration() - other.get_acceleration());
+    return error;
 }
 
 // Operator Overloads

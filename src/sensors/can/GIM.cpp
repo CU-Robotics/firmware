@@ -56,7 +56,7 @@ int GIM::write(CAN_message_t& msg) const {
 
 void GIM::zero_motor() {
     // stop the motor
-    write_motor_torque(0.f);
+    execute_motor_torque_command(0.0f);
 }
 
 void GIM::write_motor_on() {

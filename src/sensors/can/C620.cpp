@@ -45,7 +45,7 @@ int C620::write(CAN_message_t& msg) const {
 
 void C620::zero_motor() {
     // write 0 torque to the output msg
-    write_motor_torque(0.0f);
+    execute_motor_torque_command(0.0f);
 }
 
 void C620::execute_motor_torque_command(float torque) {

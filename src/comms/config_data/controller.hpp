@@ -55,8 +55,8 @@ enum class SubControllerType : uint32_t {
     ChassisAngularVelocityController,
     PowerBufferController,
     
-    LowLevelVelocityController,
     HighLevelVelocityController,
+    LowLevelVelocityController,
     
     FullStatePositionController,
     FullStateVelocityController,
@@ -104,9 +104,7 @@ struct Controller : Comms::CommsData {
             }
         }
         // return empty subcontroller if not found
-        SubController empty;
-        empty.sub_controller_type = SubControllerType::UnsetSubControllerType;
-        return empty;
+        safety::safety_procedure("Subcontroller type %u not found in controller config", static_cast<uint32_t>(type));
     }
 
     /// @brief Get the motor name of this controller with the given generic use

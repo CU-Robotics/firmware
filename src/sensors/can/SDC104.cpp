@@ -106,7 +106,7 @@ int SDC104::write(CAN_message_t& msg) const {
 }
 
 void SDC104::zero_motor() {
-    write_motor_torque(0.0f);
+    execute_motor_torque_command(0.0f);
 }
 
 void SDC104::execute_motor_torque_command(float torque) {

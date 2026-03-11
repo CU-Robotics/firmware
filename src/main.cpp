@@ -225,14 +225,13 @@ int main() {
             }
         }
 
-        Serial.println("getting hive data");
 
         // override temp state if needed. Dont override in teensy mode so the sentry doesnt move during inspection
         if (comms_layer.get_hive_data().override_state_data.active && !(transmitter_manager.is_teensy_mode())) {
             // clear the request
             comms_layer.get_hive_data().override_state_data.active = false;
 
-            Serial.printf("Overriding state with hive state\n");
+        Serial.printf("Overriding state with hive state\n");
             hive_state_map_offset.from_comms_packet(comms_layer.get_hive_data().override_state_data.state);
 
             estimated_state_map = hive_state_map_offset;
@@ -241,7 +240,7 @@ int main() {
 
         // step estimates and construct estimated state
         estimator_manager.step(estimated_state_map, override_request);
-        estimated_state_map.print();
+        // estimated_state_map.print();
         override_request = false;
 
         if ((feed - estimated_state_map[Cfg::StateName::Feeder].get_position() > 2 && transmitter_manager.is_teensy_mode()) ||

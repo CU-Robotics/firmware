@@ -38,7 +38,8 @@ const RobotStateMap& Governor::step_reference_map(const RobotStateMap& ungoverne
         State ungoverned_reference = ungoverned_reference_map[reference_name];
 
         if (reference.config().governor_type == Cfg::StateOrder::Position) { // position based governor
-            State error = ungoverned_reference - reference;
+            State error = ungoverned_reference.get_error_no_bounds(reference);
+            if (reference_name == Cfg::StateName::GimbalPitch) Serial.printf("Position error: %f\n", error.get_position());
             
             // Set the accel refrence to the max or min based on which direction it needs to go
             if (error.get_position() > threshold) reference.set_acceleration(reference.config().reference_limits.acceleration.max);
@@ -77,7 +78,7 @@ const RobotStateMap& Governor::step_reference_map(const RobotStateMap& ungoverne
             reference.set_position(reference.get_position() + reference.get_velocity() * dt);
 
         } else if (reference.config().governor_type == Cfg::StateOrder::Velocity) { // velocity based governor
-            State error = ungoverned_reference - reference;
+            State error = ungoverned_reference.get_error_no_bounds(reference);
 
             // check which direction the target is and set acceleration if the velocity error is less the max acceleration 
             if (error.get_velocity() > (reference.config().reference_limits.acceleration.max * dt)) {
