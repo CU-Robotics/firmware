@@ -79,33 +79,15 @@ void RefSystem::write(uint8_t* packet, uint8_t length) {
 }
 
 void RefSystem::send_to_comms() {
-    CommsRefData output_array;
-    
-    // copys select packets into the output array
-    memcpy(output_array.raw + REF_COMMS_GAME_STATUS_OFFSET, ref_data.game_status.raw, ref_data.game_status.packet_size);
-    memcpy(output_array.raw + REF_COMMS_GAME_RESULT_OFFSET, ref_data.game_result.raw, ref_data.game_result.packet_size);
-    memcpy(output_array.raw + REF_COMMS_GAME_ROBOT_HP_OFFSET, ref_data.game_robot_hp.raw, ref_data.game_robot_hp.packet_size);
-    memcpy(output_array.raw + REF_COMMS_EVENT_DATE_OFFSET, ref_data.event_data.raw, ref_data.event_data.packet_size);
-    memcpy(output_array.raw + REF_COMMS_PROJECTILE_SUPPLIER_STATUS_OFFSET, ref_data.projectile_supplier_status.raw, ref_data.projectile_supplier_status.packet_size);
-    memcpy(output_array.raw + REF_COMMS_REFEREE_WARNING_OFFSET, ref_data.referee_warning.raw, ref_data.referee_warning.packet_size);
-    memcpy(output_array.raw + REF_COMMS_ROBOT_PERFORMANCE_OFFSET, ref_data.robot_performance.raw, ref_data.robot_performance.packet_size);
-    memcpy(output_array.raw + REF_COMMS_ROBOT_POWER_HEAT_OFFSET, ref_data.robot_power_heat.raw, ref_data.robot_power_heat.packet_size);
-    memcpy(output_array.raw + REF_COMMS_ROBOT_POSITION_OFFSET, ref_data.robot_position.raw, ref_data.robot_position.packet_size);
-    memcpy(output_array.raw + REF_COMMS_ROBOT_BUFF_OFFSET, ref_data.robot_buff.raw, ref_data.robot_buff.packet_size);
-
-    if(damage_status_changed) {
-        memcpy(output_array.raw + REF_COMMS_DAMAGE_STATUS_OFFSET, ref_data.damage_status.raw, ref_data.damage_status.packet_size);
-        damage_status_changed = false; // reset the flag
-    } else {
-        //if the damage status has not changed, send (15, 15) which means invalid
-        memset(output_array.raw + REF_COMMS_DAMAGE_STATUS_OFFSET, 255, ref_data.damage_status.packet_size);
-    }
-
-    memcpy(output_array.raw + REF_COMMS_LAUNCHING_STATUS_OFFSET, ref_data.launching_status.raw, ref_data.launching_status.packet_size);
-    memcpy(output_array.raw + REF_COMMS_PROJECTILE_ALLOWANCE_OFFSET, ref_data.projectile_allowance.raw, ref_data.projectile_allowance.packet_size);
-    memcpy(output_array.raw + REF_COMMS_RFID_STATUS_OFFSET, ref_data.rfid_status.raw, ref_data.rfid_status.packet_size);
-    memcpy(output_array.raw + REF_COMMS_KBM_INTERACTION_OFFSET, ref_data.kbm_interaction.raw, ref_data.kbm_interaction.packet_size);
-    Comms::Sendable<CommsRefData> ref_data_sendable = output_array;
+    CommsRefData ref_data_for_comms;
+    ref_data_for_comms.game_status_data = ref_data.game_status.to_comms_data();
+    ref_data_for_comms.game_result_data = ref_data.game_result.to_comms_data();
+    ref_data_for_comms.game_robot_hp_data = ref_data.game_robot_hp.to_comms_data();
+    ref_data_for_comms.game_event_data = ref_data.event_data.to_comms_data();
+    ref_data_for_comms.damage_status_data = ref_data.damage_status.to_comms_data();
+    ref_data_for_comms.launching_status_data = ref_data.launching_status.to_comms_data();
+    ref_data_for_comms.projectile_allowance_data = ref_data.projectile_allowance.to_comms_data();
+    Comms::Sendable<CommsRefData> ref_data_sendable = ref_data_for_comms;
     ref_data_sendable.send_to_comms();
 }
 

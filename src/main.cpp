@@ -293,15 +293,15 @@ int main() {
         }
         last_loop_slow = is_slow_loop;
 
-        if (!last_gimbal_power && ref.ref_data.robot_performance.gimbol_power_active) {
+        if (!last_gimbal_power && ref.ref_data.robot_performance.gimbal_power_active) {
             gimbal_power_timer.start();
         }
-        last_gimbal_power = ref.ref_data.robot_performance.gimbol_power_active;
+        last_gimbal_power = ref.ref_data.robot_performance.gimbal_power_active;
         bool gimbal_power_recently_turned_on = gimbal_power_timer.get_elapsed_micros_no_restart() < 3000000;
 
         not_safety_mode =
             (!transmitter_manager.is_safety_mode() &&
-             comms_layer.is_configured() && !is_slow_loop && ref.ref_data.robot_performance.gimbol_power_active &&
+             comms_layer.is_configured() && !is_slow_loop && ref.ref_data.robot_performance.gimbal_power_active &&
              !gimbal_power_recently_turned_on);
         //  SAFETY MODE
         if (not_safety_mode) {

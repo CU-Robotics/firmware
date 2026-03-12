@@ -286,7 +286,6 @@ void FeederController::step(RobotStateMap& reference_map, RobotStateMap& estimat
     pidp.setpoint = reference_map[feeder_position_state].get_position();
     pidp.measurement = estimate_map[feeder_position_state].get_position();
 
-
     float outputp = pidp.filter(dt, true, true);
     float output = outputp * controller_config.gear_ratios.feeder_direction;
 

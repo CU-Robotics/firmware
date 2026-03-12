@@ -15,7 +15,6 @@ namespace Comms {
 struct HiveData {
     /// @brief Set a data section in the mega struct.
     /// @param data The data to be set.
-    /// @warning This is not thread safe, call this on local copies only
     void set_data(CommsData* data);
     
     /// @brief Test data
@@ -23,12 +22,13 @@ struct HiveData {
     /// @brief Big test data
     BigTestData big_test_data;
 
-    /// @brief Target state
+    /// @brief Target state received from Hive; This is used as a reference for firmware to follow using its reference governor, state estimator and controllers.
     TargetState target_state_data;
 
-    /// @brief Override state
+    /// @brief Override state received from Hive; This is used to override the robot state estimate on firmware with a new one.
     OverrideState override_state_data;
 
+    /// @brief The configuration data filled as config sections are received over comms. This should only be used after all config sections have been received.
     Cfg::RobotConfig config;
 };
 

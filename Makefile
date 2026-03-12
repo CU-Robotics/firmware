@@ -171,6 +171,15 @@ $(BUILD_DIR)/%.cpp.o: %.cpp
 	@$(OBJDUMP) -dstz $@ > $@.dump
 
 
+
+DOC_SCRIPT = $(TOOLS_DIR)/build_docs.sh
+# Phony target to generate documentation using Doxygen
+.PHONY: docs
+
+docs: build
+	@chmod +x $(DOC_SCRIPT)
+	@$(DOC_SCRIPT)
+
 # Phony target to prevent conflicts with files named 'clean' and force a rebuild every time
 .PHONY: clean
 
@@ -257,7 +266,12 @@ help:
 	@echo "  monitor:      monitors any actively running firmware and displays serial output"
 	@echo "  kill:         stops any running firmware"
 	@echo "  restart:      restarts any running firmware"
-
+	@echo "  clean:        removes all build artifacts and generated files"
+	@echo "  clean_src:    removes only the source object files"
+	@echo "  clean_libs:   removes only the library object files"
+	@echo "  clean_teensy4: removes only the Teensy object files"
+	@echo "  cdb: 		   generates compile_commands.json for clangd using Bear"
+	@echo "  docs:         generates documentation of our src/ code using Doxygen"
 
 # --- Compile DB generation with Bear -----------------------------------------
 .PHONY: cdb
