@@ -4,7 +4,8 @@
 
 namespace Comms {
 
-/// @brief TypeLabel is a unique identifier for each type of data that can be sent over comms.
+
+    /// @brief TypeLabel is a unique identifier for each type of data that can be sent over comms.
 enum class TypeLabel : uint16_t {
     NONE = 0x00,
     TestData,
@@ -24,6 +25,7 @@ enum class TypeLabel : uint16_t {
     OverrideState,
     CommsRefData,
     ConfigStart,
+    ConfigurationStatus,
     ControllerConfig,
     EstimatorConfig,
     MotorConfig,
@@ -78,6 +80,8 @@ inline std::string to_string(TypeLabel type_label) {
         return "CommsRefData";
     case TypeLabel::ConfigStart:
         return "ConfigStart";
+    case TypeLabel::ConfigurationStatus:
+        return "ConfigurationStatus";
     case TypeLabel::ControllerConfig:
         return "ControllerConfig";
     case TypeLabel::EstimatorConfig:

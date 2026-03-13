@@ -70,7 +70,7 @@ enum FrameType {
     /// @brief Sentry data received by player clients' Small Maps
     SMALL_MAP_SENTRY_COMMAND = 0x0307,
     /// @brief Robot data received by player clients' Small Map
-    SMALL_MAP_ROBOT_DATA = 0x0308
+    SMALL_MAP_ROBOT_DATA = 0x0308,
 };
 
 /// @brief Struct for the Frame header portion
@@ -278,21 +278,21 @@ struct GameRobotHP {
         }
     }
 
-    GameRobotHPData to_comms_data() {
-        GameRobotHPData data;
-        data.red_hero_hp = red_team_HP[0];
-        data.red_engineer_hp = red_team_HP[1];
-        data.red_standard_3_hp = red_team_HP[2];
-        data.red_standard_4_hp = red_team_HP[3];
-        data.red_standard_5_hp = red_team_HP[4];
-        data.red_sentry_hp = red_team_HP[5];
+    RobotHealthData to_comms_data() {
+        RobotHealthData data;
+        data.red_hero_health = red_team_HP[0];
+        data.red_engineer_health = red_team_HP[1];
+        data.red_standard_3_health = red_team_HP[2];
+        data.red_standard_4_health = red_team_HP[3];
+        data.red_standard_5_health = red_team_HP[4];
+        data.red_sentry_health = red_team_HP[5];
 
-        data.blue_hero_hp = blue_team_HP[0];
-        data.blue_engineer_hp = blue_team_HP[1];
-        data.blue_standard_3_hp = blue_team_HP[2];
-        data.blue_standard_4_hp = blue_team_HP[3];
-        data.blue_standard_5_hp = blue_team_HP[4];
-        data.blue_sentry_hp = blue_team_HP[5];
+        data.blue_hero_health = blue_team_HP[0];
+        data.blue_engineer_health = blue_team_HP[1];
+        data.blue_standard_3_health = blue_team_HP[2];
+        data.blue_standard_4_health = blue_team_HP[3];
+        data.blue_standard_5_health = blue_team_HP[4];
+        data.blue_sentry_health = blue_team_HP[5];
         return data;
     }
 };

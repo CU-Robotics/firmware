@@ -318,9 +318,6 @@ void NewFeederEstimator::step_states(RobotStateMap& updated_state_map, const Rob
     if (diff > PI) diff -= 2 * PI;
     else if (diff < -PI) diff += 2 * PI;
 
-    Serial.printf("feeder diff %f\n",diff);
-    Serial.printf("feeder angle %f\n",feeder_angle);
-    Serial.printf("feeder offset: %f, feeder ratio: %f, feeder direction: %f\n", feeder_offset, feeder_ratio, feeder_direction);
     float feeder_velocity = (dt > 0) ? (diff/(M_PI/feeder_ratio))/dt : 0;
   
     ball_count += diff/(M_PI/feeder_ratio);

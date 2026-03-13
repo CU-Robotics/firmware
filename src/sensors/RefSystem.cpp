@@ -82,12 +82,15 @@ void RefSystem::send_to_comms() {
     CommsRefData ref_data_for_comms;
     ref_data_for_comms.game_status_data = ref_data.game_status.to_comms_data();
     ref_data_for_comms.game_result_data = ref_data.game_result.to_comms_data();
-    ref_data_for_comms.game_robot_hp_data = ref_data.game_robot_hp.to_comms_data();
+    ref_data_for_comms.robot_health_data = ref_data.game_robot_hp.to_comms_data();
     ref_data_for_comms.game_event_data = ref_data.event_data.to_comms_data();
+    ref_data_for_comms.robot_performance_data = ref_data.robot_performance.to_comms_data();
+    ref_data_for_comms.robot_power_heat_data = ref_data.robot_power_heat.to_comms_data();
     ref_data_for_comms.damage_status_data = ref_data.damage_status.to_comms_data();
     ref_data_for_comms.launching_status_data = ref_data.launching_status.to_comms_data();
     ref_data_for_comms.projectile_allowance_data = ref_data.projectile_allowance.to_comms_data();
     Comms::Sendable<CommsRefData> ref_data_sendable = ref_data_for_comms;
+    Serial.printf("robot current health: %u\n", ref_data_for_comms.robot_performance_data.current_health);
     ref_data_sendable.send_to_comms();
 }
 
@@ -233,9 +236,12 @@ void RefSystem::set_ref_data(Frame& frame, uint8_t raw_buffer[REF_MAX_PACKET_SIZ
     // grab the type
     FrameType type = static_cast<FrameType>(frame.commandID);
 
+    Serial.printf("Received frame with type %lu and length %u\n", static_cast<uint32_t>(type), frame.header.data_length);
     switch (type) {
     case FrameType::GAME_STATUS:
+        Serial.printf("Received Game Status with length %u\n", frame.header.data_length);
         ref_data.game_status.set_data(frame.data);
+        ref_data.game_status.print();
         break;
     case FrameType::GAME_RESULT:
         ref_data.game_result.set_data(frame.data);

@@ -663,7 +663,6 @@ void ET16S::manual_controls(const RobotStateMap& estimated_state_map, RobotState
 	// }
 	// last_switch = transmitter->get_r_switch();
 	// set manual controls
-	Serial.println("Setting manual control target state");
 	target_state_map[Cfg::StateName::ChassisX].set_position(chassis_pos_x);
 	target_state_map[Cfg::StateName::ChassisX].set_velocity(chassis_vel_x);
 	target_state_map[Cfg::StateName::ChassisY].set_position(chassis_pos_y);
@@ -674,7 +673,6 @@ void ET16S::manual_controls(const RobotStateMap& estimated_state_map, RobotState
 	target_state_map[Cfg::StateName::GimbalPitch].set_position(pitch_target);
 	target_state_map[Cfg::StateName::GimbalPitch].set_velocity(0);
 	target_state_map[Cfg::StateName::Flywheels].set_velocity(fly_wheel_target);
-	Serial.println("Finished manual control processing");
 
 	// when in teensy control mode reset hive toggle
 	if (is_teensy_mode()) {

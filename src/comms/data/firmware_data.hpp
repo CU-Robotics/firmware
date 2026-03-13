@@ -10,8 +10,9 @@
 
 #include "comms/data/data_structs.hpp"              // for shared data structs
 #include "comms/data/comms_data.hpp"                // for CommsData
-#include "sensors/RefSystemPacketDefs.hpp"          // for RefData
+#include "comms/data/comms_ref_data.hpp"            // for CommsRefData
 #include "comms/data/motor_state_data.hpp"
+#include "comms/data/configuration_status_data.hpp" // for ConfigurationStatusData
 
 
 #include <map>                                   // for std::map
@@ -53,6 +54,8 @@ struct FirmwareData {
     
     std::map<Cfg::MotorName, MotorStateData> motor_state_data_map;
 
+    ConfigurationStatusData config_status_data;
+
     /// @brief dr16 Transmitter data
     DR16Data dr16_data;
 
@@ -60,7 +63,7 @@ struct FirmwareData {
     ET16SData et16s_data;
 
     /// @brief Referee data
-    RefData ref_data;
+    CommsRefData ref_data;
 };
 
 } // namespace Comms

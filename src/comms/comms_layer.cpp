@@ -1,4 +1,6 @@
 #include "comms_layer.hpp"
+#include "comms/data/configuration_status_data.hpp"
+#include "comms/data/sendable.hpp"
 
 
 /// @brief This resets the whole processor and kicks it back to program entry (teensy4/startup.c)
@@ -163,19 +165,29 @@ void CommsLayer::set_firmware_data(FirmwareData& data) {
 
 void CommsLayer::configure() {
     int time = millis();
+    while (!m_hive_data.config.config_start.num_config_sections != 0) {
+        Serial.printf("Waiting for config start packet... time since start: %d ms\n", millis() - time);
+        run();
+        config_loop_timer.delay_micros(5000);
+    }
+    Serial.printf("Config start packet received, expecting %d config sections\n", m_hive_data.config.config_start.num_config_sections);
+
+
+    Sendable<ConfigurationStatusData> config_status_sendable;
     while(!m_hive_data.config.is_configured()) {
-        Serial.printf("time since config start: %d ms\n", millis() - time);
+        config_status_sendable.data.ready_for_config = 1;
+        config_status_sendable.send_to_comms();
         run();
         Cfg::RobotConfig& config = comms_layer.get_hive_data().config;
         Serial.printf("Config: received %d of %d sections\n", config.num_sections_received, config.config_start.num_config_sections);
         if(config.is_configured()) {
             configured = true;
         }
-        if(config.num_sections_received == 0) {
-            
-        }
         config_loop_timer.delay_micros(5000);
     }
+    config_status_sendable.data.ready_for_config = 0;
+    config_status_sendable.data.is_configured = 1;
+    config_status_sendable.send_to_comms();
 }
 
 void CommsLayer::reconfigure() {

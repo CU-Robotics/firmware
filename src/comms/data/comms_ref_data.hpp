@@ -7,6 +7,7 @@ struct GameStatusData {
     uint32_t competition_type = 0;
     uint32_t current_stage = 0;
     uint32_t round_time_remaining = 0;
+    uint32_t _padding = 0;
     uint64_t unix_time = 0;
 };
 
@@ -14,20 +15,20 @@ struct GameResultData {
     uint32_t winner = 0;
 };
 
-struct GameRobotHPData {
-    uint32_t red_hero_hp = 0;
-    uint32_t red_engineer_hp = 0;
-    uint32_t red_standard_3_hp = 0;
-    uint32_t red_standard_4_hp = 0;
-    uint32_t red_standard_5_hp = 0;
-    uint32_t red_sentry_hp = 0;
+struct RobotHealthData {
+    uint32_t red_hero_health = 0;
+    uint32_t red_engineer_health = 0;
+    uint32_t red_standard_3_health = 0;
+    uint32_t red_standard_4_health = 0;
+    uint32_t red_standard_5_health = 0;
+    uint32_t red_sentry_health = 0;
     
-    uint32_t blue_hero_hp = 0;
-    uint32_t blue_engineer_hp = 0;
-    uint32_t blue_standard_3_hp = 0;
-    uint32_t blue_standard_4_hp = 0;
-    uint32_t blue_standard_5_hp = 0;
-    uint32_t blue_sentry_hp = 0;
+    uint32_t blue_hero_health = 0;
+    uint32_t blue_engineer_health = 0;
+    uint32_t blue_standard_3_health = 0;
+    uint32_t blue_standard_4_health = 0;
+    uint32_t blue_standard_5_health = 0;
+    uint32_t blue_sentry_health = 0;
 };
 
 struct GameEventData {
@@ -82,11 +83,12 @@ struct CommsRefData : Comms::CommsData {
 
     GameStatusData game_status_data;
     GameResultData game_result_data;
-    GameRobotHPData game_robot_hp_data;
+    RobotHealthData robot_health_data;
     GameEventData game_event_data;
     RobotPerformanceData robot_performance_data;
     RobotPowerHeatData robot_power_heat_data;
     DamageStatusData damage_status_data;
     LaunchingStatusData launching_status_data;
     ProjectileAllowanceData projectile_allowance_data;
+    uint32_t _padding = 0;
 };

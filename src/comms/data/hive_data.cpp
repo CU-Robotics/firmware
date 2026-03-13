@@ -10,6 +10,8 @@
 #include "comms/comms_layer.hpp"            // for CommsLayer
 #endif
 
+extern "C" void reset_teensy(void);
+
 namespace Comms {
 
 void HiveData::set_data(CommsData* data) {
@@ -42,7 +44,13 @@ void HiveData::set_data(CommsData* data) {
     }
     case TypeLabel::ConfigStart: {
         Cfg::ConfigStart* config_start = static_cast<Cfg::ConfigStart*>(data);
+        if (config.is_configured()) {
+            Serial.printf("Recieved config start packet with %d sections; rebooting teensy to reconfigure.\n", config.config_start.num_config_sections);
+            delay(100);
+            reset_teensy();
+        }
         config.config_start = *config_start;
+
         break;
     }
     case TypeLabel::ControllerConfig: {
