@@ -7,13 +7,14 @@
 #include "comms/data/stereo_cam_trigger_data.hpp"
 
 /// @brief define to enable FPS logging in the timer interrupt callback (debugging)
-// #define LOG_STEREO_FPS
 
 /// @brief class to manage triggering synchronized exposures for dual USB cameras
 class StereoCamTrigger : public Sensor{
   private:
+    /// @brief Configuration for stereo cam trigger
     const Cfg::StereoCamTrigger& config;
 
+    /// @brief data to be sent to comms
     StereoCamTriggerData comms_data;
     
     /// @brief Teensyduino timer instance used to maintain signal
@@ -29,14 +30,15 @@ class StereoCamTrigger : public Sensor{
     void track_exposures();
   public:
     /// @brief constructor for StereoCamTrigger
-    /// @param _fps desired FPS (frames per second) of the trigger signal
+    /// @param config configuration data for the stereo cam trigger
     StereoCamTrigger(const Cfg::StereoCamTrigger& config): Sensor(), config(config), comms_data(config.camera_trigger_name) {}
     
     /// @brief initialize trigger manager by starting the interval timer
     void init() override;
-
+    /// @brief empty read function since the updates are done in the timer interrupt callback
     void read() override {};
-
+    /// @brief Send exposure timestamp and estimated state at exposure to comms
+    /// @note This is not implemented currently
     void send_to_comms() const override;
     
     /// @brief start interval timer. Begins sending trigger signal to cameras via timer interrupt

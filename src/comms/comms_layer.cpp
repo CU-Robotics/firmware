@@ -172,38 +172,18 @@ void CommsLayer::configure() {
     }
     Serial.printf("Config start packet received, expecting %d config sections\n", m_hive_data.config.config_start.num_config_sections);
 
-
     Sendable<ConfigurationStatusData> config_status_sendable;
     while(!m_hive_data.config.is_configured()) {
         config_status_sendable.data.ready_for_config = 1;
         config_status_sendable.send_to_comms();
         run();
-        Cfg::RobotConfig& config = comms_layer.get_hive_data().config;
-        Serial.printf("Config: received %d of %d sections\n", config.num_sections_received, config.config_start.num_config_sections);
-        if(config.is_configured()) {
-            configured = true;
-        }
+        Serial.printf("Config: received %d of %d sections\n", m_hive_data.config.num_sections_received, m_hive_data.config.config_start.num_config_sections);
         config_loop_timer.delay_micros(5000);
     }
+
     config_status_sendable.data.ready_for_config = 0;
     config_status_sendable.data.is_configured = 1;
     config_status_sendable.send_to_comms();
-}
-
-void CommsLayer::reconfigure() {
-    // force it to reconfigure
-    configured = false;
-
-    // perform a normal config, but dont try to load from the config, just process and store
-    configure();
-
-    Serial.printf("Config: Rebooting Teensy...\n");
-    delay(10);  // delay to allow the print to finish before the reboot
-    // issue the reboot call
-    reset_teensy();
-
-    // reset_teensy() never returns
-    __builtin_unreachable();
 }
 
 bool CommsLayer::initialize_hid() {

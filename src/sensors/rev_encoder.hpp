@@ -7,6 +7,7 @@
 /// @brief the class for the Rev Through Bore Encoder(www.revrobotics.com/rev-11-1271/)
 class RevEncoder : public Sensor{
 private:
+	/// @brief configuration struct for this rev encoder
 	const Cfg::RevEncoder& config;
 	/// @brief Used to read rise time of the encoder
 	FreqMeasureMulti freq;
@@ -16,22 +17,19 @@ private:
 	float radians;
 	/// @brief the starting value of the encoder in radians
 	float starting_value = 0;
-
+	/// @brief data to be sent to comms
 	RevSensorData comms_data;
 public:
 	/// @brief Construct a new rev_encoder object
-	/// @param encoder_pin the pin number that the encoders signal pin is plugged into
+	/// @param config the configuration struct for this rev encoder, containing the encoder name and encoder pin
 	RevEncoder(const Cfg::RevEncoder& config) : Sensor(), config(config), comms_data(config.encoder_name) {};
 
-	/// @brief initialize the encoder with the correct pin
-	/// @param encoder_pin the pin number that the encoders signal pin is plugged into
-	/// @param is_relative if the encoder is relative or absolute
+	/// @brief initialize the encoder
 	void init() override;
 
 	/// @brief updates ticks and radians to the current angle 
-	/// @return true if successful, false if no data available
 	void read() override;
-
+	/// @brief sends the current rev sensor data to comms
 	void send_to_comms() const override;
 	
 	/// @brief get the last angle of the encoder in ticks

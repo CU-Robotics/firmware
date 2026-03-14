@@ -56,12 +56,15 @@ public:
     /// @note Returns and sets m_angle when it reads
     void read() override;
 
+    /// @brief Send the current data to comms
     void send_to_comms() const override;
 
     /// @brief Get the angle of the last read function adjusted by the offset
     /// @return Read angle (radians)
     inline float get_angle() const { return m_angle; }
 
+    /// @brief Get the configured name of this encoder
+    /// @return The name of this encoder
     inline Cfg::SensorName get_name() const { return config_data.encoder_name; }
  
     /// @brief Print the data for debugging
@@ -75,6 +78,7 @@ private:
     /// @brief Configuration data for the encoder
     const Cfg::BuffEncoder& config_data;
 
+    /// @brief Data to be send to comms
     BuffEncoderData comms_data;
 
     /// @brief The SPI settings of the buff encoders

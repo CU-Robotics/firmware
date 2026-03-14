@@ -56,6 +56,7 @@ struct LidarDataPacketSI : Comms::CommsData {
     /// @brief the yaw velocity of the robot when the packet was received (rad/s)
     float yaw_velocity = 0;
 
+    /// @brief print the lidar data packet details
     void print() const {
         printf("LidarDataPacketSI - lidar_name: %lu, lidar_speed: %f, start_angle: %f, end_angle: %f, timestamp: %f, sample_time: %f, yaw: %f, yaw_velocity: %f\n", 
             static_cast<uint32_t>(lidar_name), lidar_speed, start_angle, end_angle, timestamp, sample_time, yaw, yaw_velocity);

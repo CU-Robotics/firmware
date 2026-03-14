@@ -18,16 +18,21 @@
 /// @brief Parent estimator struct. All estimators should inherit from this.
 struct Estimator {
 public:
+    /// @brief default constructor
     Estimator() { };
-
+    /// @brief default destructor
     virtual ~Estimator() { };
 
     /// @brief step the current state(s) and update the estimate array accordingly
-    /// @param outputs estimated state array to update with certain estimated states
-    /// @param curr_state current state array to update with new state
-    /// @param override true if we want to override the current state with the new state
+    /// @param updated_state_map the map of states to update with the new estimates
+    /// @param previous_state_map the map of states with the previous estimates.
+    /// @param override whether the current estimate is being overriden by an incoming override state from hive.
     virtual void step_states(RobotStateMap& updated_state_map, const RobotStateMap& previous_state_map, int override) = 0;
-    
+    /// @brief Helper function to get a state name by its generic use. Will trigger safety procedure if the state is not available.
+    /// @param use the generic use of the state to get
+    /// @param estimator_config config data for this estimator to get the requested state name from
+    /// @param available_states vector of state names that are available to be estimated; this is to prevent multiple estimators from trying to estimate the same state
+    /// @return the state name that corresponds to the generic use requested
     const Cfg::StateName& get_state_name_by_generic_use(Cfg::GenericEstimatorStateUse use, const Cfg::Estimator& estimator_config, std::vector<Cfg::StateName> available_states) {
         const Cfg::StateName& requested_state_name = estimator_config.get_state_name_by_generic_use(use);
         for (const auto& state_name : available_states) {
@@ -149,23 +154,38 @@ private:
     /// @brief delta time
     float dt = 0;
 
+    /// @brief ratio to convert from chassis x meters to chassis motor radians
     float chassis_x_to_motor_rad;
+    /// @brief ratio to convert from chassis y meters to chassis motor radians
     float chassis_y_to_motor_rad;
+    /// @brief ratio to convert from chassis heading radians to chassis motor radians
     float chassis_rad_to_motor_rad;
 
+    /// @brief BuffEncoder on the yaw
     std::shared_ptr<BuffEncoder> buff_enc_yaw;
+    /// @brief BuffEncoder on the pitch
     std::shared_ptr<BuffEncoder> buff_enc_pitch;
+    /// @brief ICM20649 IMU
     std::shared_ptr<ICM20649> icm_imu;
 
+    /// @brief chassis motor 1
     std::shared_ptr<Motor> chassis_1;
+    /// @brief chassis motor 2
     std::shared_ptr<Motor> chassis_2;
+    /// @brief chassis motor 3
     std::shared_ptr<Motor> chassis_3;
+    /// @brief chassis motor 4
     std::shared_ptr<Motor> chassis_4;
 
+    /// @brief state name for the chassis x axis
     const Cfg::StateName& chassis_x_state;
+    /// @brief state name for the chassis y axis
     const Cfg::StateName& chassis_y_state;
+    /// @brief state name for the chassis heading axis
     const Cfg::StateName& chassis_heading_state;
+    /// @brief state name for the yaw axis
     const Cfg::StateName& yaw_state;
+    /// @brief state name for the pitch axis
     const Cfg::StateName& pitch_state;
 
     /// @brief position estimate to store position after integrating used for chassis odometry
@@ -176,15 +196,13 @@ private:
 
 public:
     /// @brief estimate the state of the gimbal
-    /// @param config_data inputted sensor values from Hive yaml
-    /// @param sensor_manager sensor manager object 
-    /// @param can can from Estimator Manager
+    /// @param estimator_config config data for this estimator
+    /// @param sensor_manager reference to the sensor manager to get sensors
+    /// @param can reference to the CAN manager to get motor objects so we can read directly from motors for odometry
+    /// @param available_states vector of state names that are available
     GimbalAndChassisEstimator(const Cfg::Estimator& estimator_config, SensorManager& sensor_manager, CANManager& can, std::vector<Cfg::StateName> available_states);
 
-    /// @brief calculate estimated states and add to output array
-    /// @param output output array to add estimated states to
-    /// @param curr_state current state of the system
-    /// @param override override the current state
+    /// @copydoc Estimator::step_states
     void step_states(RobotStateMap& updated_state_map, const RobotStateMap& previous_state_map, int override) override;
 };
 
@@ -204,32 +222,31 @@ private:
     /// @brief ref weight for weighted average
     float ref_estimate_weight = 0;
 
+    /// @brief radius of the flywheel in meters
     float flywheel_radius = 0;
 
+    /// @brief flywheel motor left
     std::shared_ptr<Motor> flywheel_motor_left;
+    /// @brief flywheel motor right
     std::shared_ptr<Motor> flywheel_motor_right;
-
+    /// @brief state name for the ball exit velocity
     const Cfg::StateName& ball_exit_velocity;
 
 public:
     /// @brief make new flywheel estimator and set can data pointer and num states
-    /// @param can can pointer from EstimatorManager
+    /// @param estimator_config config data for this estimator
+    /// @param sensor_manager reference to the sensor manager to get sensors
+    /// @param can reference to the CAN manager to get motor objects so we can read directly from motors for flywheel velocity
+    /// @param available_states vector of state names that are available
     FlywheelEstimator(const Cfg::Estimator& estimator_config, SensorManager& sensor_manager, CANManager& can, std::vector<Cfg::StateName> available_states);
 
-    /// @brief generate estimated states and replace in output array
-    /// @param output array to be updated with the calculated states
-    /// @param curr_state current state of the flywheel
-    /// @param override override flag
+    /// @copydoc Estimator::step_states
     void step_states(RobotStateMap& updated_state_map, const RobotStateMap& previous_state_map, int override);
 };
 
 /// @brief This estimator estimates our "micro" state which is stores all the motor velocities(in rad/s), whereas the other estimators estimate "macro" state which stores robot joints
-struct NewFeederEstimator : public Estimator {
+struct FeederEstimator : public Estimator {
     private:
-        /// @brief can from EstimatorManager
-        CANManager* can;
-        /// @brief sensor manager
-        SensorManager* sensor_manager;
         /// @brief delta time
         float dt = 0;
         /// @brief previous feeder angle
@@ -246,20 +263,19 @@ struct NewFeederEstimator : public Estimator {
         /// @brief gear ratio of the feeder
         float feeder_ratio = 1;
 
+        /// @brief state name for the feeder ball velocity
         const Cfg::StateName& feeder_ball_state;
-
+        /// @brief BuffEncoder on the feeder
         std::shared_ptr<BuffEncoder> feeder_encoder;
     public:
-        /// @brief Make new local estimator and set can data pointer and num states
-        /// @param can can pointer from EstimatorManager
-        /// @param sensor_manager sensor manager object
-        /// @param config_data config data from yaml
-        NewFeederEstimator(const Cfg::Estimator& estimator_config, SensorManager& sensor_manager, CANManager& can, std::vector<Cfg::StateName> available_states);
+        /// @brief Make new feeder estimator
+        /// @param estimator_config config data for this estimator
+        /// @param sensor_manager reference to the sensor manager to get sensors
+        /// @param can reference to the CAN manager (not used)
+        /// @param available_states vector of state names that are available
+        FeederEstimator(const Cfg::Estimator& estimator_config, SensorManager& sensor_manager, CANManager& can, std::vector<Cfg::StateName> available_states);
     
-        /// @brief step through each motor and add to micro state
-        /// @param output entire micro state 
-        /// @param curr_state current micro state
-        /// @param override override flag
+        /// @copydoc Estimator::step_states
         void step_states(RobotStateMap& updated_state_map, const RobotStateMap& previous_state_map, int override) override;
     };
 

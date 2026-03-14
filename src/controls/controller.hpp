@@ -23,6 +23,7 @@ protected:
     
 public:
     /// @brief Construct the controller and get the config data
+    /// @param _controller_config config data for this controller
     Controller(const Cfg::Controller& _controller_config) : controller_config(_controller_config) { };
 
     /// @brief sends motor commands based on a reference and estimated state
@@ -33,8 +34,13 @@ public:
     /// @brief Resets integrators/timers
     virtual void reset() { timer.start(); }
     /// @brief Get the controller configuration data
+    /// @return const reference to the controller config struct for this controller
     const Cfg::Controller& config() const { return controller_config; }
     /// @brief Helper function to get a motor by its generic use. Will trigger safety procedure if the motor is not available.
+    /// @param use the generic use of the motor to get
+    /// @param can reference to the CAN manager to get motor objects so we can write directly to motors
+    /// @param available_motors list of motor names that are available to be used; this is to prevent multiple controllers from trying to control the same motor
+    /// @return shared pointer to the motor object that corresponds to the generic use requested
     std::shared_ptr<Motor> get_motor_by_generic_use(Cfg::GenericControllerMotorUse use, CANManager& can, std::vector<Cfg::MotorName>& available_motors) const {
         Cfg::MotorName requested_motor_name = controller_config.get_motor_name_by_generic_use(use);
         for (const auto& motor_name : available_motors) {
@@ -60,7 +66,7 @@ private:
     Cfg::SubController chassis_angular_velocity_controller;
     /// @brief control the actual motor velocities based on the outputs of the higher level controllers
     Cfg::SubController low_level_velocity_controller;
-    /// @brief control input to motors based on ref power buffer so we don't draw too much.
+/// @brief control input to motors based on ref power buffer so we don't draw too much.
     Cfg::SubController power_buffer_controller;
 
     /// @brief filter for calculating pid position controller outputs. 3 for x, y, and chassis angle

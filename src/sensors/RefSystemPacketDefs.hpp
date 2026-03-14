@@ -191,6 +191,8 @@ struct GameStatus {
         unix_time |= data[3];
     }
 
+    /// @brief Converts this GameStatus struct to a GameStatusData struct for comms transmission
+    /// @return GameStatusData struct with the same data as this GameStatus struct
     GameStatusData to_comms_data() {
         GameStatusData data;
         data.competition_type = competition_type;
@@ -229,6 +231,8 @@ struct GameResult {
         winner = data[0];
     }
 
+    /// @brief Converts this GameResult struct to a GameResultData struct for comms transmission
+    /// @return GameResultData struct with the same data as this GameResult struct
     GameResultData to_comms_data() {
         GameResultData data;
         data.winner = winner;
@@ -278,6 +282,8 @@ struct GameRobotHP {
         }
     }
 
+    /// @brief Converts this GameRobotHP struct to a RobotHealthData struct for comms transmission
+    /// @return RobotHealthData struct with the same data as this GameRobotHP struct
     RobotHealthData to_comms_data() {
         RobotHealthData data;
         data.red_hero_health = red_team_HP[0];
@@ -307,9 +313,9 @@ struct EventData {
     /// @brief The raw byte array of data received from ref
     /// @note this is only the FrameData data rather than the whole ref packet
     uint8_t raw[REF_MAX_PACKET_SIZE] = {0};
-
+    /// @brief Reload zone status; 0 if no robot is in the reload zone, 1 if at least one robot is in the reload zone
     uint16_t reload_zone_status = 0;
-    /// @brief Capture point status
+    /// @brief Capture point status; 0 if uncaptured, 1 if captured by own team, 2 if captured by enemy team, 3 if captured by both teams
     uint16_t capture_point_status = 0;
 
     /// @brief Prints the EventData packet
@@ -327,6 +333,8 @@ struct EventData {
         capture_point_status = (data[2] >> 5) & 0x03; // bits 21 and 22
     }
 
+    /// @brief Converts this EventData struct to a GameEventData struct for comms transmission
+    /// @return GameEventData struct with the same data as this EventData struct
     GameEventData to_comms_data() {
         GameEventData data;
         data.reload_zone_status = reload_zone_status;
@@ -526,6 +534,8 @@ struct RobotPerformance {
         reserved = (data[12] >> 3) & 0x1F;
     }
 
+    /// @brief Converts this RobotPerformance struct to a RobotPerformanceData struct for comms transmission
+    /// @return RobotPerformanceData struct with the same data as this RobotPerformance struct
     RobotPerformanceData to_comms_data() {
         RobotPerformanceData data;
         data.robot_id = robot_ID;
@@ -596,6 +606,8 @@ struct RobotPowerHeat {
         barrel_heat_42mm = (data[15] << 8) | data[14];
     }
 
+    /// @brief Converts this RobotPowerHeat struct to a RobotPowerHeatData struct for comms transmission
+    /// @return RobotPowerHeatData struct with the same data as this RobotPowerHeat struct
     RobotPowerHeatData to_comms_data() {
         RobotPowerHeatData data;
         data.chassis_voltage_output = chassis_voltage_output;
@@ -759,10 +771,11 @@ struct DamageStatus {
         armor_plate_ID = data[0] & 0x0F;
         damage_type = (data[0] >> 4) & 0x0F;
     }
-
+    /// @brief Converts this DamageStatus struct to a DamageStatusData struct for comms transmission
+    /// @return DamageStatusData struct with the same data as this DamageStatus struct
     DamageStatusData to_comms_data() {
         DamageStatusData data;
-        data.armor_plate_id = armor_plate_ID;
+        data.armor_plate_ID = armor_plate_ID;
         data.damage_type = damage_type;
         return data;
     }
@@ -810,6 +823,8 @@ struct LaunchingStatus {
         memcpy(&initial_speed, &initial_speed_raw, sizeof(initial_speed));
     }
 
+    /// @brief Converts this LaunchingStatus struct to a LaunchingStatusData struct for comms transmission
+    /// @return LaunchingStatusData struct with the same data as this LaunchingStatus struct
     LaunchingStatusData to_comms_data() {
         LaunchingStatusData data;
         data.projectile_type = projectile_type;
@@ -855,6 +870,8 @@ struct ProjectileAllowance {
         num_gold = (data[5] << 8) | data[4];
     }
 
+    /// @brief Converts this ProjectileAllowance struct to a ProjectileAllowanceData struct for comms transmission
+    /// @return ProjectileAllowanceData struct with the same data as this ProjectileAllowance struct
     ProjectileAllowanceData to_comms_data() {
         ProjectileAllowanceData data;
         data.num_17mm = num_17mm;

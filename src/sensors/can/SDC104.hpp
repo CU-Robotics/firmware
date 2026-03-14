@@ -10,10 +10,7 @@ public:
     SDC104() = delete;
 
     /// @brief Main constructor. Defines the controller type, global ID, id, can bus, and motor type
-    /// @param gid The global ID, not the per-bus motor ID
-    /// @param id The per-bus motor ID. This is 1-indexed
-    /// @param bus_id The CAN bus index/ID
-    /// @param motor_type The motor type (not used for SDC104, do not specify)
+    /// @param motor_config The configuration for this motor, including its controller type, physical bus and id, motor type, and motor name.
     SDC104(Cfg::Motor motor_config)
         : Motor(motor_config) {
     }

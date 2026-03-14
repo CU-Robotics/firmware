@@ -293,7 +293,7 @@ void FlywheelEstimator::step_states(RobotStateMap& updated_state_map, const Robo
     updated_state_map[ball_exit_velocity].set_velocity((projectile_speed_ref * ref_estimate_weight) + (linear_velocity * motor_estimate_weight));
 }
 
-NewFeederEstimator::NewFeederEstimator(const Cfg::Estimator& estimator_config, SensorManager& sensor_manager, CANManager& can, std::vector<Cfg::StateName> available_states) :
+FeederEstimator::FeederEstimator(const Cfg::Estimator& estimator_config, SensorManager& sensor_manager, CANManager& can, std::vector<Cfg::StateName> available_states) :
     feeder_ball_state(get_state_name_by_generic_use(Cfg::GenericEstimatorStateUse::FeederBallPosition, estimator_config, available_states)),
     feeder_encoder(sensor_manager.get_sensor_by_name<BuffEncoder>(estimator_config.get_sensor_name_by_generic_use(Cfg::GenericSensorUse::FeederBuffEncoder))) {
     feeder_offset = estimator_config.sensor_info.feeder_encoder_offset;
@@ -301,7 +301,7 @@ NewFeederEstimator::NewFeederEstimator(const Cfg::Estimator& estimator_config, S
     feeder_ratio = estimator_config.sensor_info.feeder_ratio;
 }
 
-void NewFeederEstimator::step_states(RobotStateMap& updated_state_map, const RobotStateMap& previous_state_map, int override) {
+void FeederEstimator::step_states(RobotStateMap& updated_state_map, const RobotStateMap& previous_state_map, int override) {
     dt = time.delta();
     float feeder_angle = feeder_encoder->get_angle();
     float diff;

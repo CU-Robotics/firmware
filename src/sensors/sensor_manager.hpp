@@ -22,18 +22,25 @@ public:
     /// @brief Destructor for the SensorManager class
     ~SensorManager();
 
-    /// @brief Initialize the sensor manager with configuration data
+    /// @brief Initialize the sensor manager with configuration data. This will configure and initialize all sensors.
+    /// @param config_data The configuration data to use to initialize the sensor manager and all sensors
     void init(const Cfg::RobotConfig& config_data);
 
+    /// @brief Configure the sensors based on the configuration data
+    /// @param config_data The configuration data to use to configure the sensors
     void configure_sensors(const Cfg::RobotConfig& config_data);
-
+    /// @brief Call each sensor's init function
     void initialize_sensors();
 
-    /// @brief Read all sensor data and send to comms
+    /// @brief Call each sensor's read function to update their data
     void read();
-
+    /// @brief Call each sensor's send_to_comms function to send their data to comms
     void send_to_comms();
     
+    /// @brief Get a sensor by its name and type. Will trigger safety procedure if the sensor is not found or is not of the requested type.
+    /// @param name The name of the sensor to get
+    /// @tparam SensorType The type of the sensor to get, must be derived from the Sensor class
+    /// @return A shared pointer to the sensor with the requested name and type
     template<typename SensorType>
     requires std::derived_from<SensorType, Sensor>
     std::shared_ptr<SensorType> get_sensor_by_name(const Cfg::SensorName& name) {
@@ -50,6 +57,7 @@ public:
         }
     }
 private:
+    /// @brief Map of sensor pointers by name
     std::map<Cfg::SensorName, std::shared_ptr<Sensor>> sensors;
 };
 

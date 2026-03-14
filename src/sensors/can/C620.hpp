@@ -12,10 +12,7 @@ public:
     C620() = delete;
 
     /// @brief Main constructor. Defines the controller type, global ID, id, and can bus
-    /// @param gid The global ID, not the per-bus motor ID
-    /// @param id The per-bus motor ID. This is 1-indexed
-    /// @param bus_id The CAN bus index/ID
-    /// @param motor_type The motor type (not used for C620)
+    /// @param motor_config The configuration for this motor, including its controller type, physical bus and id, motor type, and motor name.
     C620(const Cfg::Motor& motor_config)
         : Motor(motor_config) {
         m_base_id = 0x200;

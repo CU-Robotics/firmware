@@ -33,7 +33,7 @@ void EstimatorManager::init_estimator(const Cfg::Estimator& estimator_config, Se
         estimators.push_back(std::make_unique<FlywheelEstimator>(estimator_config, sensor_manager, can, available_states));
         break;
     case Cfg::EstimatorType::FeederPosition:
-        estimators.push_back(std::make_unique<NewFeederEstimator>(estimator_config, sensor_manager, can, available_states));
+        estimators.push_back(std::make_unique<FeederEstimator>(estimator_config, sensor_manager, can, available_states));
         break;
     default:
         break;

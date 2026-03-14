@@ -52,6 +52,11 @@ struct PIDFilter {
         return output;
     }
 
+    /// @brief set the pidf gains
+    /// @param kp proportional gain
+    /// @param ki integral gain
+    /// @param kd derivative gain
+    /// @param kf feedforward gain
     void set_gains(float kp, float ki, float kd, float kf) {
         this->kp = kp;
         this->ki = ki;

@@ -29,10 +29,8 @@ public:
     /// @return Exit status, 0 for success, < 0 for error
     /// @note Should never return
     int run();
-
+    /// @brief Requests the configuration data from the Hive and waits until it is fully received before returning
     void configure();
-
-    void reconfigure();
 public:
     /// @brief Send a CommsData packet to the appropriate packet payload
     /// @param data The CommsData packet to send
@@ -57,7 +55,9 @@ public:
     /// @brief Clear all physical layer outgoing buffers
     void clear_outgoing_buffers();
 
-    bool is_configured() const { return configured; }
+    /// @brief Check if the configuration process is complete
+    /// @return True if configuration is complete, false if not
+    bool is_configured() const { return m_hive_data.config.is_configured() == 0; }
 
 public:
     /// @brief Get the outgoing ethernet packet
@@ -123,10 +123,8 @@ private:
 
     /// @brief Firmware data
     FirmwareData m_firmware_data;
-
-    /// @brief Flag to indicate if the CommsLayer has been configured
-    bool configured = false;
-
+    
+    /// @brief Timer for use in the configuration process
     Timer config_loop_timer;
 };
 

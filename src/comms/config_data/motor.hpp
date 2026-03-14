@@ -4,7 +4,7 @@
 #include "comms/data/comms_data.hpp" // for CommsData, TypeLabel, to_string
 
 namespace Cfg {
-
+/// @brief Different motors a robot can have
 enum class MotorName : uint32_t{
     UnsetMotorName,
     Chassis1,
@@ -21,7 +21,7 @@ enum class MotorName : uint32_t{
 
     MotorNameCount
 };
-
+/// @brief Different types of motor controllers that motors can use
 enum class MotorControllerType : uint32_t {
     UnsetMotorControllerType,
     C620,
@@ -30,7 +30,7 @@ enum class MotorControllerType : uint32_t {
     GIM,
     SDC104,
 };
-
+/// @brief Different types of motors that can be used on the robot.
 enum class MotorType : uint32_t {
     UnsetMotorType,
     M3508,
@@ -40,12 +40,17 @@ enum class MotorType : uint32_t {
     GIM6010,
     GIM8108,
 };
-
+/// @brief The `Motor` struct represents the configuration for a motor, including its controller type, physical bus and id, motor type, and motor name.
 struct Motor : Comms::CommsData {
+    /// @brief The motor controller that this motor uses.
     MotorControllerType motor_controller_type;
+    /// @brief Which physical bus this motor is on.
     uint32_t physical_bus;
+    /// @brief The id of this motor on its physical bus.
     uint32_t physical_id;
+    /// @brief The type of this motor
     MotorType motor_type;
+    /// @brief The name of this motor.
     MotorName motor_name;
 };
     

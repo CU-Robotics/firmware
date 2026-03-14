@@ -21,12 +21,13 @@ public:
     ControllerManager() {}
 
     /// @brief Initializes controllers with data from the config yaml
+    /// @param controller_configurations read-only config reference storing all config data
     /// @param _can reference to the can data struct
-    /// @param _config_data read-only config reference storing all config data
     void init(const std::vector<Cfg::Controller>& controller_configurations, CANManager& _can);
 
     /// @brief Initializes and adds a new controller to the controller manager
     /// @param controller_config the controller configuration data to use to initialize the controller
+    /// @param _can reference to the can data struct to use to initialize the controller
     void init_controller(const Cfg::Controller& controller_config, CANManager& _can);
 
     /// @brief Steps all controllers in the controller manager. This should be called every control loop iteration

@@ -78,7 +78,9 @@ struct InputChannel {
 class ET16S : public Transmitter {
 	public:
 	/// @brief Constructor, left empty
+	/// @param config_ reference to config struct for this sensor
 	ET16S(const Cfg::ET16S& config_);
+	/// @brief Destructor, left empty
 	~ET16S() {};
 	/// @brief Starts Serial Connection to Reciever, Initilizes immutable transmitter channels, calls set_config function.
 	void init() override;
@@ -86,21 +88,25 @@ class ET16S : public Transmitter {
 	void read() override;
 	/// @brief prints integer input value for every channel
 	void print_raw() override;
+	/// @brief prints formatted transmitter data
 	void print() override;
-
+	/// @brief sends mapped data to comms
 	void send_to_comms() override;
-
+	/// @brief whether the ET16S is in safety mode, determined if switch a is in forward position or if the ET16S is disconnected.
+	/// @return true if in safety mode, false if not in safety mode
 	bool is_safety_mode() override;
+	/// @brief whether the ET16S is in hive mode, determined by the position of switch a is in backward position.
+	/// @return true if in hive mode, false if not in hive mode
 	bool is_hive_mode() override;
+	/// @brief whether the ET16S is in teensy mode, determined by the position of switch a is in middle position .
+	/// @return true if in teensy mode, false if not in teensy mode
 	bool is_teensy_mode() override;
-
+	/// @copydoc Transmitter::manual_controls
 	void manual_controls(const RobotStateMap& estimated_state_map, RobotStateMap& target_state_map, Governor& governor, bool not_safety_mode, float& feed, float& last_feed, bool& hive_toggle, bool& safety_toggle) override;
 	
 	/// @brief prints data in binary for a specific channel
 	/// @param channel_num channel number from 0-16 inclusive
 	void print_format_bin(int channel_num);
-
-	/// @brief prints all mapped channel values
 
 	/// @brief get safety values
 	/// @return safety value(1-3) 1 is safe
@@ -307,15 +313,23 @@ private:
 	int trim_six_num;
 
 	// manual controls
+	/// @brief Mouse x axis position
 	float vtm_pos_x = 0;
+	/// @brief Mouse y axis position
 	float vtm_pos_y = 0;
+	/// @brief Position offset for chassis x (so the sentry doesn't drive to 0,0)
 	float pos_offset_x = 0;
+	/// @brief Position offset for chassis y (so the sentry doesn't drive to 0,0)
     float pos_offset_y = 0;
-	
+
+	/// @brief Whether hive mode has been toggled
 	bool hive_toggle = false;
+	/// @brief Whether safety mode has been toggled
 	bool safety_toggle = false;
 
+	/// @brief Timer for control input for integrating mouse velocities into position target for manual controls
 	Timer control_input_timer;
+	/// @brief Timer for tracking long loops that can happen at startup or halts
 	Timer timer;
 
 	/// @brief the number of samples to average
@@ -329,6 +343,7 @@ private:
 	/// @brief raw data packet
 	uint8_t m_inputRaw[ET16S_PACKET_SIZE] = { 0 };
 
+	/// @brief Configuration struct for the ET16S transmitter.
 	const Cfg::ET16S& config;
 
 	/// @brief getter for transmitter data

@@ -57,11 +57,11 @@ public:
 
 public:
     /// @brief Initialize the CAN buses and motor map
-    /// @note This can be called multiple times in the event of hot reloading
+    /// @param motor_configs The vector of motor configurations read from the config yaml
     void init(const std::vector<Cfg::Motor>& motor_configs);
 
     /// @brief Configure a motor and add it to the motor map
-    /// @param motor_info motor configuration data
+    /// @param motor_config The configuration for the motor to configure, read from the config yaml
     void configure_motor(const Cfg::Motor& motor_config);
 
     /// @brief Read data from all busses and distribute them to the correct motors
@@ -71,6 +71,7 @@ public:
     /// @note This issues a CAN command over the bus
     void write();
 
+    /// @brief Send the state of all motors to comms
     void send_to_comms();
 
     /// @brief Issue zero torque commands to all motors

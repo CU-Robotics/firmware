@@ -70,7 +70,9 @@ constexpr uint32_t DR16_ALIGNMENT_LONG_INTERVAL_THRESHOLD = 1000; 	// time in us
 class DR16 : public Transmitter {
 public:
 	/// @brief Constructor, left empty
+	/// @param config_ reference to config struct for this sensor
 	DR16(const Cfg::DR16& config_);
+	/// @brief Destructor, left empty
 	~DR16() {};
 
 	/// @brief Initializes DR16 receiver, starts the Serial interface, and zeros input buffers
@@ -78,11 +80,16 @@ public:
 
 	/// @brief Attempts to read a full packet from the receiver. This function shouldn't be ran more than 100kHz
 	void read() override;
-
+	/// @brief Whether the DR16 is in safety mode, determined if the left switch is in the forward position or if the DR16 is disconnected.
+	/// @return true if in safety mode, false if not in safety mode
 	bool is_safety_mode() override;
+	/// @brief Whether the DR16 is in hive mode, determined if the left switch is in the backward position.
+	/// @return true if in hive mode, false if not in hive mode
 	bool is_hive_mode() override;
+	/// @brief Whether the DR16 is in teensy mode, determined if the left switch is in the middle position.
+	/// @return true if in teensy mode, false if not in teensy mode
 	bool is_teensy_mode() override;
-
+	/// @copydoc Transmitter::manual_controls
 	void manual_controls(const RobotStateMap& estimated_state_map, RobotStateMap& target_state_map, Governor& governor, bool not_safety_mode, float& feed, float& last_feed, bool& hive_toggle, bool& safety_toggle) override;
 
 public:
@@ -158,10 +165,13 @@ public:
 	/// @return 18-byte packet
 	uint8_t* get_raw() { return m_inputRaw; }
 
+	/// @brief Get the state of all the keys
+	/// @return Keys struct containing the state of all the keys
 	Keys get_keys() {
 		return keys;
 	}
 	
+	/// @brief Send the current DR16 data to comms
 	void send_to_comms() override;
 	
 	/// @brief A simple check to see if read data is within expected values
@@ -182,6 +192,7 @@ public:
 	/// @return Mapped input in the range of [out_low, out_high]
 	float bounded_map(int value, int in_low, int in_high, int out_low, int out_high);
 	
+	/// @brief Configuration struct for the DR16 transmitter.
 	const Cfg::DR16& config;
 		
 	/// @brief Keep track of mouse x velocity
@@ -194,21 +205,30 @@ public:
 	bool l_mouse_button = 0;
 	/// @brief Keep track of right mouse button status
 	bool r_mouse_button = 0;
-	
+	/// @brief Keep track of key presses
 	Keys keys;
 	
 	// manual controls
+	/// @brief Mouse x axis position
 	float transmitter_pos_x = 0;
+	/// @brief Mouse y axis position
 	float transmitter_pos_y = 0;
+	/// @brief Mouse x axis position from ref
 	float vtm_pos_x = 0;
+	/// @brief Mouse y axis position from ref
 	float vtm_pos_y = 0;
+	/// @brief Position offset for chassis x (so the sentry doesn't drive to 0,0)
 	float pos_offset_x = 0;
+	/// @brief Position offset for chassis y (so the sentry doesn't drive to 0,0)
     float pos_offset_y = 0;
 	
+	/// @brief Whether hive mode has been toggled
 	bool hive_toggle = false;
+	/// @brief Whether safety mode has been toggled
 	bool safety_toggle = false;
-
+	/// @brief Timer for control input for integrating mouse velocities into position target for manual controls
 	Timer control_input_timer;
+	/// @brief Timer for tracking long loops that can happen at startup or halts
 	Timer timer;
 	
 	public:

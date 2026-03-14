@@ -1,7 +1,9 @@
 #pragma once
 #include "sensors/transmitter/transmitter_utils.hpp"
 #include "comms/data/comms_data.hpp"
+/// @brief data struct for sending DR16 transmitter data to comms
 struct DR16Data : Comms::CommsData {
+    /// @brief Default constructor that initializes the CommsData with the correct type label, physical medium, priority, and data size for the DR16Data struct.
     DR16Data() : CommsData(Comms::TypeLabel::DR16Data, Comms::PhysicalMedium::Ethernet, Comms::Priority::High, sizeof(DR16Data)) { }
     /// mouse x velocity
     int16_t mouse_x = 0;
@@ -27,6 +29,6 @@ struct DR16Data : Comms::CommsData {
     float r_stick_y = 0;
     /// wheel
     float wheel = 0;
-    
+    /// @brief the state of all the keys
     Keys keys;
 };

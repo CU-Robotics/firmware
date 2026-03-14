@@ -28,12 +28,8 @@ public:
     /// @brief Deleted default constructor. Must explicitly construct this object
     Motor() = delete;
 
-    /// @brief Main constructor. Defines the motor and controller type, global ID, id, and can bus
-    /// @param controller_type The motor controller type 
-    /// @param gid The global ID, not the per-bus motor ID
-    /// @param id The per-bus motor ID. This is 1-indexed 
-    /// @param bus The CAN bus index/ID
-    /// @param motor_type The motor type, defaults to NULL_MOTOR_TYPE if not specified.
+    /// @brief Main constructor. 
+    /// @param motor_config The configuration struct for this motor
     Motor(Cfg::Motor motor_config)
          : motor_config(motor_config), m_physical_id(motor_config.physical_id), m_bus_id(motor_config.physical_bus) { }
 
@@ -91,6 +87,8 @@ public:
     /// @return The CAN motor ID
     inline uint32_t get_id() const { return motor_config.physical_id; }
 
+    /// @brief Get the configured motor name
+    /// @return The motor name
     inline Cfg::MotorName get_name() const { return motor_config.motor_name; }
 
     /// @brief Get the bus ID
@@ -130,8 +128,9 @@ protected:
     /// @brief The base ID for the motor
     uint32_t m_base_id = 0;
 
+    /// @brief The physical ID of the motor on its bus.
     uint32_t m_physical_id = 0;
-
+    /// @brief The bus ID that the motor is on
     uint32_t m_bus_id = 0;
 
     /// @brief The output CAN frame. To be sent to the motor

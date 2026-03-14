@@ -7,25 +7,29 @@
 
 /// @brief Structure for the ICM sensor.
 struct ICMSensorData : Comms::CommsData {
+    /// @brief Default constructor that initializes the CommsData with the correct type label, physical medium, priority, and data size for the ICMSensorData struct.
     ICMSensorData() : CommsData(Comms::TypeLabel::ICMSensorData, Comms::PhysicalMedium::Ethernet, Comms::Priority::Medium, sizeof(ICMSensorData)) { }
+    /// @brief Constructor that initializes the CommsData with the correct type label, physical medium, priority, and data size for the ICMSensorData struct, and also sets the imu_name field.
+    /// @param name The name of the sensor
     ICMSensorData(Cfg::SensorName name) : CommsData(Comms::TypeLabel::ICMSensorData, Comms::PhysicalMedium::Ethernet, Comms::Priority::Medium, sizeof(ICMSensorData)), imu_name(name) { }
-    /// Sensor ID.
+    /// @brief The name of the IMU sensor that this data is from.
     Cfg::SensorName imu_name;
-    /// Acceleration in X-axis.
+    /// @brief Acceleration in X-axis.
     float accel_X;
-    /// Acceleration in Y-axis.
+    /// @brief Acceleration in Y-axis.
     float accel_Y;
-    /// Acceleration in Z-axis.
+    /// @brief Acceleration in Z-axis.
     float accel_Z;
-    /// Gyroscope reading in X-axis.
+    /// @brief Gyroscope reading in X-axis.
     float gyro_X;
-    /// Gyroscope reading in Y-axis.
+    /// @brief Gyroscope reading in Y-axis.
     float gyro_Y;
-    /// Gyroscope reading in Z-axis.
+    /// @brief Gyroscope reading in Z-axis.
     float gyro_Z;
-    /// Temperature reading.
+    /// @brief Temperature reading.
     float temperature;
 
+    /// @brief Print the ICM sensor data for debugging purposes.
     void print() const {
         printf("ICMSensorData - imu_name: %lu, accel_X: %f, accel_Y: %f, accel_Z: %f, gyro_X: %f, gyro_Y: %f, gyro_Z: %f, temperature: %f\n", 
             static_cast<uint32_t>(imu_name), accel_X, accel_Y, accel_Z, gyro_X, gyro_Y, gyro_Z, temperature);

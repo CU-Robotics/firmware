@@ -89,7 +89,6 @@ public:
     void write(uint8_t* packet, uint8_t length);
 
     /// @brief Generate a byte array for all ref data to be sent over comms
-    /// @return The data struct
     /// @note Only sends some packets, not all
     void send_to_comms();
 
