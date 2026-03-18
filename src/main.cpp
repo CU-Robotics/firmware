@@ -16,11 +16,11 @@ int main() {
     can.init();
 
     float motor_info[CAN_MAX_MOTORS][4] = {};
-    motor_info[0][0] = 1; // controller type c610
-    motor_info[0][1] = 2; // physical id 2
-    motor_info[0][2] = 1; // can bus 1
+    motor_info[0][0] = 2; // controller type c610
+    motor_info[0][1] = 1; // physical id 2
+    motor_info[0][2] = 0; // can bus 1
     motor_info[0][3] = 0; // motor type not used
-    motor_info[1][0] = 1; // controller type c610
+    motor_info[1][0] = 2; // controller type c610
     motor_info[1][1] = 1; // physical id 1
     motor_info[1][2] = 1; // can bus 1
     motor_info[1][3] = 0; // motor type not used
@@ -33,7 +33,7 @@ int main() {
 
     while (true) {
         can.write_motor_torque(1, 1, 1.0f);
-        can.write_motor_torque(1, 2, -0.1f);
+        can.write_motor_torque(0, 1, 1.0f);
 
         can.write();
         can.read();
