@@ -5,7 +5,7 @@
 namespace Cfg {
 /// @brief StateName is a unique identifier for every possible robot state that we want to estimate and control.
 enum class StateName : uint32_t {
-    Unset,
+    UnsetStateName,
     ChassisX,
     ChassisY,
     ChassisHeading,
@@ -26,9 +26,9 @@ enum class StateOrder : uint32_t {
 /// @brief ReferenceLimit represents the limits for a state.
 struct ReferenceLimit {
     /// @brief The minimum value
-    float min;
+    float min = 0.0;
     /// @brief The maximum value
-    float max;
+    float max = 0.0;
 };
 
 /// @brief ReferenceLimits represents the limits for all orders of a state. States are governed by these values.
@@ -45,11 +45,11 @@ struct State : Comms::CommsData {
     /// @brief The reference limits for this state. The reference governor uses these values to determine how to limit the reference state that the controllers are trying to achieve.
     ReferenceLimits reference_limits;
     /// @brief The governor type for this state. This determines whether the reference governor limits the position, velocity, or acceleration reference for this state.
-    StateOrder governor_type;
+    StateOrder governor_type = StateOrder::Position;
     /// @brief whether this state's position value wraps between the position reference limits.
-    uint32_t is_wrapping;
+    uint32_t is_wrapping = 0;
     /// @brief Name of this state
-    StateName name;
+    StateName name = StateName::UnsetStateName;
 };
 
 };

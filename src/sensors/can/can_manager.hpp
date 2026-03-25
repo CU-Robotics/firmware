@@ -1,9 +1,6 @@
-#ifndef CAN_MANAGER_HPP
-#define CAN_MANAGER_HPP
+#pragma once
 
 #include "motor.hpp"
-
-
 #include <map>
 #include <memory>
 /// @brief Debug flag to enable verbose logging. This can get quite noisy so it is off by default. Critical errors are still printed regardless of flag
@@ -128,5 +125,3 @@ private:
     uint32_t m_motor_init_timeout = 250u;
 
 };
-
-#endif // CAN_MANAGER_HPP

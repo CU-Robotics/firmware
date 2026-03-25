@@ -5,7 +5,7 @@
 
 RobotStateMap::RobotStateMap(const std::vector<Cfg::State>& _state_configurations) {
     for (const auto& state : _state_configurations) {
-        if(state.name == Cfg::StateName::Unset || state.name == Cfg::StateName::StateNameCount) {
+        if(state.name == Cfg::StateName::UnsetStateName || state.name == Cfg::StateName::StateNameCount) {
             safety::safety_procedure("RobotStateMap: Invalid state name in state configurations: %u", static_cast<uint32_t>(state.name));
         }
         robot_state.emplace(state.name, State(state));

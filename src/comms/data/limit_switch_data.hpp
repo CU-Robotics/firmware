@@ -11,9 +11,9 @@ struct LimitSwitchData : Comms::CommsData {
     /// @param name The name of the limit switch that this data corresponds to.
     LimitSwitchData(Cfg::SensorName name) : CommsData(Comms::TypeLabel::LimitSwitchData, Comms::PhysicalMedium::Ethernet, Comms::Priority::Medium, sizeof(LimitSwitchData)), switch_name(name) { }
     /// @brief The name of the limit switch that this data corresponds to.
-    Cfg::SensorName switch_name;
+    Cfg::SensorName switch_name = Cfg::SensorName::UnsetSensorName;
     /// @brief Whether the limit switch is currently pressed. 1 for pressed, 0 for not pressed.
-    uint8_t is_pressed;
+    uint8_t is_pressed = 0;
     /// @brief Print the limit switch data to the serial console for debugging purposes.
     void print() const {
         printf("LimitSwitchData - switch_name: %lu, is_pressed: %u\n", static_cast<uint32_t>(switch_name), is_pressed);

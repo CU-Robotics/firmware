@@ -1,8 +1,7 @@
+#pragma once
 #include "math.h"
 #include <Arduino.h>
 
-#ifndef PID_FILTER_H
-#define PID_FILTER_H
 
 /// @brief PIDF filter used in controls. Gains are configurable via K
 struct PIDFilter {
@@ -64,5 +63,3 @@ struct PIDFilter {
         this->kf = kf;
     }
 };
-
-#endif // PID_FILTER_H

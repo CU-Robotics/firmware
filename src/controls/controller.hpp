@@ -1,5 +1,4 @@
-#ifndef CONTROLLER_H
-#define CONTROLLER_H
+#pragma once
 
 #include "estimator.hpp"
 #include "filters/pid_filter.hpp"
@@ -310,6 +309,4 @@ struct FeederController : public Controller {
             pidp.sumError = 0.0;
             pidv.sumError = 0.0;
         }
-    };
-
-#endif // CONTROLLER_H
+};

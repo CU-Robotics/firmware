@@ -1,5 +1,4 @@
-#ifndef LOWPASS_FILTER_H
-#define LOWPASS_FILTER_H
+#pragma once
 
 /// @brief Filter out short term fluctuations in signals
 class LowpassFilter {
@@ -24,5 +23,3 @@ public:
         return output;
     }
 };
-
-#endif // LOWPASS_FILTER_H

@@ -93,55 +93,55 @@ enum class SubControllerType : uint32_t {
 /// @brief Gains for a sub controller.
 struct Gains {
     /// @brief Proportional gain.
-    float p;
+    float p = 0.0;
     /// @brief Integral gain.
-    float i;
+    float i = 0.0;
     /// @brief Derivative gain.
-    float d;
+    float d = 0.0;
     /// @brief Feedforward gain.
-    float f;
+    float f = 0.0;
     /// @brief Power buffer threshold (Joules) at which the controller will start to limit power to the motors.
-    float power_buffer_threshold;
+    float power_buffer_threshold = 0.0;
     /// @brief Power buffer threshold (Joules) at which the controller will cut power completely to the motors.
-    float power_buffer_critical_threshold;
+    float power_buffer_critical_threshold = 0.0;
 };
 /// @brief Gear ratios for a controller. These are generally used to convert between motor vaues and state values, or vice versa
 struct GearRatios {
     /// @brief the ratio between chassis x velocity in m/s and motor velocity in rad/s for the chassis motors.
-    float chassis_x_to_motor_rad;
+    float chassis_x_to_motor_rad = 0.0;
     /// @brief the ratio between chassis y velocity in m/s and motor velocity in rad/s for the chassis motors
-    float chassis_y_to_motor_rad;
+    float chassis_y_to_motor_rad = 0.0;
     /// @brief convert a value from chassis angle to motor radians
-    float chassis_rad_to_motor_rad;
+    float chassis_rad_to_motor_rad = 0.0;
     /// @brief direction of motor 1 either 1 or -1
-    int motor1_direction;
+    int motor1_direction = 0;
     /// @brief direction of motor 2 either 1 or -1
-    int motor2_direction;
+    int motor2_direction = 0;
     /// @brief the ratio between ball velocity in m/s and flywheel velocity in rad/s for the flywheel motors.
-    int ball_to_flywheel_rad;
+    float ball_to_flywheel_rad = 0.0;
     /// @brief direction of the feeder motor either 1 or -1
-    int feeder_direction;
+    int feeder_direction = 0;
 };
 /// @brief Subcontroller configuration for a controller.
 struct SubController {
     /// @brief Gains for the subcontroller. Different subcontrollers will use different subsets of these gains, but all of the gains are included here for simplicity and flexibility of the config.
     Gains gains;
     /// @brief The type of the subcontroller, as defined by the SubControllerType enum
-    SubControllerType sub_controller_type; 
+    SubControllerType sub_controller_type = SubControllerType::UnsetSubControllerType; 
 };
 
 /// @brief Controller configuration struct. This struct contains all the configuration data for a controller, including the specific motors and states that it uses, as well as the subcontrollers that it uses and their gains.
 struct Controller : Comms::CommsData {
     /// @brief The specific motor names that this controller uses, indexed by their generic use as defined by the GenericControllerMotorUse enum
-    MotorName generic_motor_use_to_names[MAX_GENERIC_MOTOR_USES_PER_CONTROLLER]; // list of motor names that this controller controls
+    MotorName generic_motor_use_to_names[MAX_GENERIC_MOTOR_USES_PER_CONTROLLER] = { MotorName::UnsetMotorName }; // list of motor names that this controller controls
     /// @brief The specific state names that this controller uses, indexed by their generic use as defined by the GenericControllerStateUse enum
-    StateName generic_state_use_to_names[MAX_GENERIC_STATE_USES_PER_CONTROLLER]; // list of state names that this controller uses
+    StateName generic_state_use_to_names[MAX_GENERIC_STATE_USES_PER_CONTROLLER] = { StateName::UnsetStateName }; // list of state names that this controller uses
     /// @brief The subcontrollers that this controller uses.
-    SubController type_to_sub_controller[MAX_SUB_CONTROLLERS_PER_CONTROLLER]; // list of subcontrollers that this controller contains
+    SubController type_to_sub_controller[MAX_SUB_CONTROLLERS_PER_CONTROLLER] = { SubController() }; // list of subcontrollers that this controller contains
     /// @brief Gear ratios for this controller.
     GearRatios gear_ratios;
     /// @brief The type of this controller, as defined by the ControllerType enum
-    ControllerType controller_type;
+    ControllerType controller_type = ControllerType::UnsetControllerType;
 
     /// @brief Get the subcontroller of this controller with the given type
     /// @param type The type of the subcontroller, as defined by the SubControllerType enum

@@ -1,8 +1,8 @@
+#pragma once
 #include "utils/timing.hpp"
 #include "controls/robot_state_map.hpp"
 
-#ifndef STATE_H
-#define STATE_H
+
 
 /// @brief Use reference limits from config to convert ungoverned reference states to generated governed reference states to be sent to controllers.
 class Governor {
@@ -22,7 +22,8 @@ public:
     /// @param state_configurations The configuration data for the reference state map
     Governor(std::vector<Cfg::State> state_configurations) : reference_state_map(state_configurations) {}
 
-    /// @brief Should not be used often as it defeats the purpose of the reference governor
+    /// @brief Set the governed reference map.
+    /// @note Should not be used often as it defeats the purpose of the reference governor
     /// @param new_reference State map setting the reference map (should equal the robots current estimate)
     void set_reference_map(const RobotStateMap& new_reference);
 
@@ -53,5 +54,3 @@ public:
     /// @return The map of governed reference states
     const RobotStateMap& step_reference_map(const RobotStateMap& ungoverned_reference_map);
 };
-
-#endif

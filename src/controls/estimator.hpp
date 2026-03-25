@@ -1,12 +1,11 @@
-#ifndef ESTIMATORS_H
-#define ESTIMATORS_H
+#pragma once
 
 #include "estimator.hpp"
 #include "robot_state_map.hpp"
 #include "safety.hpp"
 #include "sensors/can/can_manager.hpp"
 #include "state.hpp"
-#include "comms/config_layer.hpp"
+#include "utils/timing.hpp"
 
 #include "sensors/buff_encoder.hpp"
 #include "sensors/rev_encoder.hpp"
@@ -278,5 +277,3 @@ struct FeederEstimator : public Estimator {
         /// @copydoc Estimator::step_states
         void step_states(RobotStateMap& updated_state_map, const RobotStateMap& previous_state_map, int override) override;
     };
-
-#endif

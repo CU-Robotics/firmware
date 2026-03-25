@@ -3,7 +3,7 @@
 
 void ControllerManager::init(const std::vector<Cfg::Controller>& controller_configurations, CANManager& can) {
     available_motors.clear();
-    for (size_t i = 0; i < (uint32_t)(Cfg::MotorName::MotorNameCount); i++) {
+    for (size_t i = 0; i < static_cast<size_t>(Cfg::MotorName::MotorNameCount); i++) {
         available_motors.push_back(static_cast<Cfg::MotorName>(i));
     }
     for(const Cfg::Controller& controller_config : controller_configurations) {

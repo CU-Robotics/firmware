@@ -13,11 +13,11 @@ struct RevSensorData : Comms::CommsData {
 	/// @param name The name of the encoder that this data corresponds to.
 	RevSensorData(Cfg::SensorName name) : CommsData(Comms::TypeLabel::RevEncoderData, Comms::PhysicalMedium::Ethernet, Comms::Priority::Medium, sizeof(RevSensorData)), encoder_name(name) { }
 	/// @brief The name of the encoder that this data corresponds to.
-	Cfg::SensorName encoder_name;
+	Cfg::SensorName encoder_name = Cfg::SensorName::UnsetSensorName;
 	/// @brief Encoder ticks.
-	int ticks;
+	int ticks = 0;
 	/// @brief Angle in radians.
-	float radians;
+	float radians = 0.0;
 
 	/// @brief Print the Rev encoder data to the serial console for debugging purposes.
 	void print() const {

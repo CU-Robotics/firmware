@@ -1,5 +1,4 @@
-#ifndef DR16_HPP
-#define DR16_HPP
+#pragma once
 
 #include <cstdint>		// for access to fixed-width types
 #include "Arduino.h"	// for access to HardwareSerial defines
@@ -252,5 +251,3 @@ public:
 	/// @brief keeps track of what time the last packet came in
 	uint32_t m_disctTime = 0;
 };
-
-#endif // DR16_HPP

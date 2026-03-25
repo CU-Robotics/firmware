@@ -1,5 +1,4 @@
-#ifndef MG8016EI6_DRIVER_HPP
-#define MG8016EI6_DRIVER_HPP
+#pragma once
 
 #include "motor.hpp"
 
@@ -318,5 +317,3 @@ private:
     static constexpr uint8_t CMD_READ_STATE_3 = 0x9D;
 
 };
-
-#endif // MG8016E_I6_DRIVER_HPP

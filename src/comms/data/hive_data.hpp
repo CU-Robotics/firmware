@@ -1,13 +1,8 @@
 #pragma once
 
-#if defined(HIVE)
-#include "modules/comms/data/comms_data.hpp"    // for CommsData
-#include "modules/comms/data/data_structs.hpp"  // for shared data structs
-#elif defined(FIRMWARE)
 #include "comms/data/comms_data.hpp"            // for CommsData
 #include "comms/data/data_structs.hpp"          // for shared data structs
 #include "comms/config_data/robot_config.hpp"   // for RobotConfig
-#endif
 
 namespace Comms {
 

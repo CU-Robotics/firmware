@@ -1,5 +1,4 @@
-#ifndef REF_SYSTEM_HPP
-#define REF_SYSTEM_HPP
+#pragma once
 
 #include "RefSystemPacketDefs.hpp"
 #include "comms/data/comms_ref_data.hpp"
@@ -189,5 +188,3 @@ public:
 };
 
 extern RefSystem ref;
-
-#endif // REF_SYSTEM_HPP

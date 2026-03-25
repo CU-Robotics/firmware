@@ -13,22 +13,21 @@ struct LsmSensorData : Comms::CommsData {
     /// @param name The name of the LSM sensor that this data corresponds to.
     LsmSensorData(Cfg::SensorName name) : CommsData(Comms::TypeLabel::LsmSensorData, Comms::PhysicalMedium::Ethernet, Comms::Priority::Medium, sizeof(LsmSensorData)), imu_name(name) { }
     /// @brief The name of the LSM sensor that this data corresponds to.
-    Cfg::SensorName imu_name;
+    Cfg::SensorName imu_name = Cfg::SensorName::UnsetSensorName;
     /// @brief Acceleration in X-axis.
-    float accel_X;
+    float accel_X = 0.0;
     /// @brief Acceleration in Y-axis.
-    float accel_Y;
+    float accel_Y = 0.0;
     /// @brief Acceleration in Z-axis.
-    float accel_Z;
+    float accel_Z = 0.0;
     /// @brief Gyroscope reading in X-axis.
-    float gyro_X;
+    float gyro_X = 0.0;
     /// @brief Gyroscope reading in Y-axis.
-    float gyro_Y;
+    float gyro_Y = 0.0;
     /// @brief Gyroscope reading in Z-axis.
-    float gyro_Z;
+    float gyro_Z = 0.0;
     /// @brief Temperature reading.
-    float temperature;
-
+    float temperature = 0.0;
     /// @brief Print the LSM sensor data to the serial console for debugging purposes.
     void print() const {
         printf("LsmSensorData - imu_name: %lu, accel_X: %f, accel_Y: %f, accel_Z: %f, gyro_X: %f, gyro_Y: %f, gyro_Z: %f, temperature: %f\n", 

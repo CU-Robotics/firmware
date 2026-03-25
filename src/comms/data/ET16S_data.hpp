@@ -11,13 +11,13 @@ struct ET16SData : Comms::CommsData {
 	/// @brief Safety switch position
 	SwitchPos safety_switch = SwitchPos::INVALID;
 	/// @brief r_stick_x value from -1 to 1
-    float r_stick_x;
+    float r_stick_x = 0.0;
 	/// @brief r_stick_y value from -1 to 1
-	float r_stick_y;
+	float r_stick_y = 0.0;
 	/// @brief l_stick_x value from -1 to 1
-	float l_stick_x;
+	float l_stick_x = 0.0;
 	/// @brief l_stick_y value from -1 to 1
-	float l_stick_y;
+	float l_stick_y = 0.0;
 	/// @brief switch_b position
 	SwitchPos switch_b = SwitchPos::INVALID;
 	/// @brief switch_c position
@@ -33,23 +33,23 @@ struct ET16SData : Comms::CommsData {
 	/// @brief switch_h position
 	SwitchPos switch_h = SwitchPos::INVALID;
 	/// @brief left slider value
-	float l_slider = 0;
+	float l_slider = 0.0;
 	/// @brief right slider value
-	float r_slider = 0;
+	float r_slider = 0.0;
 	/// @brief trim one value
-	float trim_one = 0;
+	float trim_one = 0.0;
 	/// @brief trim two value
-	float trim_two = 0;
+	float trim_two = 0.0;
 	/// @brief trim three value
-	float trim_three = 0;
+	float trim_three = 0.0;
 	/// @brief trim four value
-	float trim_four = 0;
+	float trim_four = 0.0;
 	/// @brief trim five value
-	float trim_five = 0;
+	float trim_five = 0.0;
 	/// @brief trim six value
-	float trim_six = 0;
+	float trim_six = 0.0;
 	/// @brief left dial value
-	float l_dial = 0;
+	float l_dial = 0.0;
 	/// @brief right dial value
-	float r_dial = 0;
+	float r_dial = 0.0;
 };

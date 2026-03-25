@@ -2,14 +2,7 @@
 #include "safety.hpp"
 
 #include <algorithm>                        // for min
-
-#if defined(HIVE)
-#include <iostream>                         // for std::cout
-#include "modules/comms/comms_layer.hpp"    // for CommsLayer
-#include <mutex>                            // for std::lock_guard, std::mutex
-#elif defined(FIRMWARE)
 #include "comms/comms_layer.hpp"            // for CommsLayer
-#endif
 
 namespace Comms {
 

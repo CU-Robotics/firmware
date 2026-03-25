@@ -11,9 +11,9 @@ struct BuffEncoderData : Comms::CommsData {
     /// @param name The name of the encoder that this data corresponds to.
     BuffEncoderData(Cfg::SensorName name) : CommsData(Comms::TypeLabel::BuffEncoderData, Comms::PhysicalMedium::Ethernet, Comms::Priority::Medium, sizeof(BuffEncoderData)), encoder_name(name) { }
     /// @brief The name of the encoder that this data corresponds to.
-    Cfg::SensorName encoder_name;
+    Cfg::SensorName encoder_name = Cfg::SensorName::UnsetSensorName;
     /// @brief Measured angle.
-    float m_angle;
+    float m_angle = 0.0;
 
     /// @brief print the buff encoder data details
     void print() const {

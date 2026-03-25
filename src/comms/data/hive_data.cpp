@@ -2,13 +2,7 @@
 #include "comms_data.hpp"
 #include "config_data/sensor.hpp"
 
-#if defined(HIVE)
-#include "modules/comms/comms_layer.hpp"    // for CommsLayer
-#include "modules/hive/environment.hpp"     // for Hive::env
-#include <doctest/doctest.h>                // for doctest
-#elif defined(FIRMWARE)
 #include "comms/comms_layer.hpp"            // for CommsLayer
-#endif
 
 extern "C" void reset_teensy(void);
 
@@ -116,46 +110,8 @@ void HiveData::set_data(CommsData* data) {
         Serial.printf("Transmitter %u received\n", static_cast<uint32_t>(transmitter->transmitter_type));
     }
     default:
-    #if defined(HIVE)
-        throw std::runtime_error("Invalid type label given to place in mega struct");
-    #elif defined(FIRMWARE)
-        // assert(false && "Invalid type label given to place in mega struct");
-        Serial.printf("Invalid type label given to place in mega struct: %d\n", static_cast<uint8_t>(data->type_label));
-    #endif
+        safety::safety_procedure("HiveData::set_data: Invalid type label given to place in mega struct: %d\n", static_cast<uint8_t>(data->type_label));
     }
 }
 
 }   // namespace Comms
-
-#if defined(HIVE)
-
-TEST_CASE("setting hive data structs") {
-    Comms::HiveData hive_data;
-
-    TestData test_data;
-    test_data.x = 55;
-    hive_data.set_data(&test_data);
-    CHECK(hive_data.test_data.x == 55);
-
-    BigTestData big_test_data;
-    big_test_data.blah[1] = 55;
-    hive_data.set_data(&big_test_data);
-    CHECK(hive_data.big_test_data.blah[1] == 55);
-
-    TargetState target_state;
-    target_state.time = 55;
-    hive_data.set_data(&target_state);
-    CHECK(hive_data.target_state.time == 55);
-
-    OverrideState override_state;
-    override_state.time = 55;
-    hive_data.set_data(&override_state);
-    CHECK(hive_data.override_state.time == 55);
-
-    ConfigSection config_section;
-    config_section.section_id = 55;
-    hive_data.set_data(&config_section);
-    CHECK(hive_data.config_section.section_id == 55);
-}
-
-#endif  // defined (HIVE)

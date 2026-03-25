@@ -11,7 +11,7 @@ struct StereoCamTriggerData : Comms::CommsData {
     /// @param name The name of the camera trigger that this data corresponds to.
     StereoCamTriggerData(Cfg::SensorName name) : CommsData(Comms::TypeLabel::StereoCamTriggerData, Comms::PhysicalMedium::Ethernet, Comms::Priority::Medium, sizeof(StereoCamTriggerData)), camera_trigger_name(name) { }
     /// @brief The name of the camera trigger that this data corresponds to.
-    Cfg::SensorName camera_trigger_name;
+    Cfg::SensorName camera_trigger_name = Cfg::SensorName::UnsetSensorName;
 
     /// State matching has not been designed yet.
 

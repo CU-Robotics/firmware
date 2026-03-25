@@ -1,3 +1,4 @@
+#pragma once
 #include "motor.hpp"
 //GIM3505
 constexpr float GIM3505_TORQUE_CONSTANT = 0.52f; // Nm/A
