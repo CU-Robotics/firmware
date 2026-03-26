@@ -26,7 +26,8 @@ public:
     /// @brief Whether the transmitter is currently in teensy mode.
     /// @return true if the transmitter is in teensy mode, false otherwise.
     bool is_teensy_mode();
-
+    /// @brief Whether the mode has been changed in between the last two reads.
+    /// @return true if the mode has been changed, false otherwise.
     bool mode_changed();
     
     /// @copydoc Transmitter::manual_controls

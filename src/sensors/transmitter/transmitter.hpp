@@ -4,7 +4,6 @@
 /// @brief A unifying interface for all transmitters
 class Transmitter {
 public:
-
 	Transmitter() = default;
 	/// @brief standard destructor
 	virtual ~Transmitter() {};
@@ -39,7 +38,6 @@ public:
 	/// @brief Uses the transmitter input to update the target state map with the desired setpoints for each state.
 	/// @param estimated_state_map The current estimated state of the robot.
 	/// @param target_state_map The map of target states to update.
-	/// @param governor A reference to the governor to update the reference map if needed.
 	/// @param not_safety_mode Whether we are in safety mode.
 	/// @param feed The feed value.
 	/// @param last_feed The last feed value.

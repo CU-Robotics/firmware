@@ -89,6 +89,7 @@ public:
 	/// @return true if in teensy mode, false if not in teensy mode
 	bool is_teensy_mode() override;
 
+	/// @copydoc Transmitter::mode_changed
 	bool mode_changed() override;
 
 	/// @copydoc Transmitter::manual_controls
@@ -197,7 +198,9 @@ public:
 	/// @brief Configuration struct for the DR16 transmitter.
 	const Cfg::DR16& config;
 
+	/// @brief previous left switch position, used for detecting toggles
 	SwitchPos prev_l_switch_pos = SwitchPos::FORWARD; // used for tracking switch toggles
+	/// @brief Whether the mode has been changed in between the last two reads.
 	bool mode_changed_flag = false;
 	
 	/// @brief Keep track of mouse x velocity

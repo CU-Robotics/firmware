@@ -154,8 +154,6 @@ int main() {
     // param to specify whether this is the first loop
     int count_one = 0;
 
-    bool hive_toggle = false;
-    bool safety_toggle = false;
     bool not_safety_mode = false;
     bool last_gimbal_power = false; // used to detect gimbal power changes
     bool last_loop_slow = false;    // used to detect multiple slow loops in a row
@@ -310,7 +308,6 @@ int main() {
                         : (int)floor(estimated_state_map[Cfg::StateName::Feeder].get_position()); // reset feed to the current state
             last_feed = feed;                          // reset last feed to the current state
             Serial.printf("Can zero\n");
-            safety_toggle = false; // reset hive toggle
         }
 
         // LED heartbeat -- linked to loop count to reveal slowdowns and
