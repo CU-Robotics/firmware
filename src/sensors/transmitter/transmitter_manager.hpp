@@ -26,11 +26,15 @@ public:
     /// @brief Whether the transmitter is currently in teensy mode.
     /// @return true if the transmitter is in teensy mode, false otherwise.
     bool is_teensy_mode();
+
+    bool mode_changed();
     
     /// @copydoc Transmitter::manual_controls
-    void manual_controls(const RobotStateMap& estimated_state_map, RobotStateMap& target_state_map, Governor& governor, bool not_safety_mode, float& feed, float& last_feed, bool& hive_toggle, bool& safety_toggle);
+    void manual_controls(const RobotStateMap& estimated_state_map, RobotStateMap& target_state_map, bool not_safety_mode, float& feed, float& last_feed);
 
 private:
     /// @brief pointer to the transmitter object. This is allocated and assigned upin initialization based on the provided configuration.
     std::unique_ptr<Transmitter> transmitter;
+
+
 };

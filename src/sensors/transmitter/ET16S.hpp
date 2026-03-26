@@ -101,8 +101,12 @@ class ET16S : public Transmitter {
 	/// @brief whether the ET16S is in teensy mode, determined by the position of switch a is in middle position .
 	/// @return true if in teensy mode, false if not in teensy mode
 	bool is_teensy_mode() override;
+	/// @brief whether the mode has been changed in between the last two reads.
+	/// @return true if the mode has been changed, false otherwise.
+	bool mode_changed() override;
+
 	/// @copydoc Transmitter::manual_controls
-	void manual_controls(const RobotStateMap& estimated_state_map, RobotStateMap& target_state_map, Governor& governor, bool not_safety_mode, float& feed, float& last_feed, bool& hive_toggle, bool& safety_toggle) override;
+	void manual_controls(const RobotStateMap& estimated_state_map, RobotStateMap& target_state_map, bool not_safety_mode, float& feed, float& last_feed) override;
 	
 	/// @brief prints data in binary for a specific channel
 	/// @param channel_num channel number from 0-16 inclusive
@@ -311,6 +315,9 @@ private:
 	int trim_five_num;
 	/// @brief trim six index	
 	int trim_six_num;
+
+	SwitchPos prev_safety_switch_pos = SwitchPos::FORWARD;
+	bool mode_changed_flag = false;
 
 	// manual controls
 	/// @brief Mouse x axis position

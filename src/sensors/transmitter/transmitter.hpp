@@ -31,6 +31,10 @@ public:
 	/// @brief Whether the transmitter is currently in teensy mode.
 	/// @return true if the transmitter is in teensy mode, false otherwise.
 	virtual bool is_teensy_mode() = 0;
+
+	/// @brief Whether the mode has been changed in between the last two reads.
+	/// @return true if the mode has been changed, false otherwise.
+	virtual bool mode_changed() = 0;
 	
 	/// @brief Uses the transmitter input to update the target state map with the desired setpoints for each state.
 	/// @param estimated_state_map The current estimated state of the robot.
@@ -39,7 +43,5 @@ public:
 	/// @param not_safety_mode Whether we are in safety mode.
 	/// @param feed The feed value.
 	/// @param last_feed The last feed value.
-	/// @param hive_toggle Hive toggle value. Used to keep track of when we toggle into hive mode.
-	/// @param safety_toggle The safety toggle value. Used to keep track of when we toggle into safety mode.
-	virtual void manual_controls(const RobotStateMap& estimated_state_map, RobotStateMap& target_state_map, Governor& governor, bool not_safety_mode, float& feed, float& last_feed, bool& hive_toggle, bool& safety_toggle) = 0;
+	virtual void manual_controls(const RobotStateMap& estimated_state_map, RobotStateMap& target_state_map, bool not_safety_mode, float& feed, float& last_feed) = 0;
 };

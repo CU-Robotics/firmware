@@ -45,7 +45,9 @@ TransmitterManager transmitter_manager;
 
 Comms::CommsLayer comms_layer;
 
+#ifdef PROFILER
 Profiler prof;
+#endif
 
 SensorManager sensor_manager;
 EstimatorManager estimator_manager;
@@ -151,7 +153,7 @@ int main() {
 
     // param to specify whether this is the first loop
     int count_one = 0;
-    
+
     bool hive_toggle = false;
     bool safety_toggle = false;
     bool not_safety_mode = false;
@@ -195,14 +197,6 @@ int main() {
         sensor_manager.read();
         sensor_manager.send_to_comms();
 
-        
-        // check whether this packet is a config packet
-        // if (comms_layer.get_hive_data().config_section.request_bit == 1) {
-        //     Serial.println("\n\nConfig request received, reconfiguring from comms!\n\n");
-        //     // trigger safety mode
-        //     can.issue_safety_mode();
-        //     config_layer.reconfigure(&comms_layer);
-        // }
 
         // print loopc every second to verify it is still alive
         if (loopc % 1000 == 0) {
@@ -210,21 +204,14 @@ int main() {
         }
 
         // manual controls on firmware
-        transmitter_manager.manual_controls(estimated_state_map, target_state_map, governor, not_safety_mode, feed, last_feed, hive_toggle, safety_toggle);
+        transmitter_manager.manual_controls(estimated_state_map, target_state_map, not_safety_mode, feed, last_feed);
 
         // check if we want to use hive controls instead
         if (transmitter_manager.is_hive_mode()) {
             // hid_incoming.get_target_state_map(target_state_map);
             target_state_map.from_comms_packet(comms_layer.get_hive_data().target_state_data.state);
-            last_feed = target_state_map[Cfg::StateName::Feeder].get_position();
-            // if you just switched to hive controls, set the reference to the
-            // current state'
-            if (hive_toggle) {
-                governor.set_reference_map(estimated_state_map);
-                hive_toggle = false;
-            }
+            last_feed = target_state_map[Cfg::StateName::Feeder].get_position();            
         }
-
 
         // override temp state if needed. Dont override in teensy mode so the sentry doesnt move during inspection
         if (comms_layer.get_hive_data().override_state_data.active && !(transmitter_manager.is_teensy_mode())) {
@@ -258,6 +245,9 @@ int main() {
             count_one++;
         }
 
+        if (transmitter_manager.mode_changed()) {
+            governor.set_reference_map(estimated_state_map);
+        }
         // reference govern
         reference_map = governor.step_reference_map(target_state_map);
 

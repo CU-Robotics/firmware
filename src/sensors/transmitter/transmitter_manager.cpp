@@ -58,9 +58,18 @@ bool TransmitterManager::is_teensy_mode() {
     }
 }
 
-void TransmitterManager::manual_controls(const RobotStateMap& estimated_state_map, RobotStateMap& target_state_map, Governor& governor, bool not_safety_mode, float& feed, float& last_feed, bool& hive_toggle, bool& safety_toggle) {
+bool TransmitterManager::mode_changed() {
     if (transmitter) {
-        transmitter->manual_controls(estimated_state_map, target_state_map, governor, not_safety_mode, feed, last_feed, hive_toggle, safety_toggle);
+        return transmitter->mode_changed();
+    } else {
+        safety::safety_procedure("TransmitterManager::mode_changed called before transmitter was initialized");
+        return false; // default to no mode change if not initialized
+    }
+}
+
+void TransmitterManager::manual_controls(const RobotStateMap& estimated_state_map, RobotStateMap& target_state_map, bool not_safety_mode, float& feed, float& last_feed) {
+    if (transmitter) {
+        transmitter->manual_controls(estimated_state_map, target_state_map, not_safety_mode, feed, last_feed);
     } else {
         safety::safety_procedure("TransmitterManager::manual_controls called before transmitter was initialized");
     }
