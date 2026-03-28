@@ -122,6 +122,7 @@ int main() {
     const Cfg::RobotConfig& config = comms_layer.get_hive_data().config;
     
     Serial.println("Configured!");
+    Serial.printf("transmitter type: %d\n", static_cast<int>(config.transmitter.transmitter_type));
     
     // initialize objects
     Governor governor(config.states);
@@ -151,6 +152,14 @@ int main() {
 
     // param to specify whether this is the first loop
     int count_one = 0;
+
+    bool has_lower_feeder = false;
+    for (const auto& state_config : config.states) {
+        if (state_config.name == Cfg::StateName::LowerFeeder) {
+            has_lower_feeder = true;
+            break;
+        }
+    }
     
     bool hive_toggle = false;
     bool safety_toggle = false;
@@ -297,7 +306,12 @@ int main() {
             gimbal_power_timer.start();
         }
         last_gimbal_power = ref.ref_data.robot_performance.gimbal_power_active;
-        bool gimbal_power_recently_turned_on = gimbal_power_timer.get_elapsed_micros_no_restart() < 3000000;
+        // bool gimbal_power_recently_turned_on = gimbal_power_timer.get_elapsed_micros_no_restart() < 3000000;
+
+        
+
+        // Serial.printf("TM: is safety mode: %d, comms layer configured: %d, is slow loop: %d, gimbal power active: %d, gimbal power recently turned on: %d\n", transmitter_manager.is_safety_mode(), comms_layer.is_configured(), is_slow_loop, ref.ref_data.robot_performance.gimbal_power_active, gimbal_power_recently_turned_on);
+
 
         not_safety_mode =
             (!transmitter_manager.is_safety_mode() &&
@@ -307,19 +321,19 @@ int main() {
         if (not_safety_mode) {
             // SAFETY OFF
             can.write();
-            Serial.printf("Can write\n");
             // Serial.printf("Can write\n");
         } else {
             // SAFETY ON
             // TODO: Reset all controller integrators here
             can.issue_safety_mode();
             governor.set_position_reference(Cfg::StateName::Feeder, estimated_state_map[Cfg::StateName::Feeder].get_position());
+            if (has_lower_feeder) governor.set_position_reference(Cfg::StateName::LowerFeeder, estimated_state_map[Cfg::StateName::LowerFeeder].get_position());
 
             feed = (fmod(fmod(estimated_state_map[Cfg::StateName::Feeder].get_position(), 1) + 1, 1) > 0.2)
                         ? (int)floor(estimated_state_map[Cfg::StateName::Feeder].get_position()) + 1
                         : (int)floor(estimated_state_map[Cfg::StateName::Feeder].get_position()); // reset feed to the current state
             last_feed = feed;                          // reset last feed to the current state
-            Serial.printf("Can zero\n");
+            // Serial.printf("Can zero\n");
             safety_toggle = false; // reset hive toggle
         }
 

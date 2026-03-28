@@ -25,6 +25,8 @@ enum class SensorName : uint32_t {
     LeftD200Lidar,
     RightD200Lidar,
     StereoCameraTrigger,
+    LowerFeederEncoder,
+    UpperFeederEncoder,
 
     SensorNameCount
 };

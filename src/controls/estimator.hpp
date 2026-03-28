@@ -277,6 +277,46 @@ struct FeederEstimator : public Estimator {
     
         /// @copydoc Estimator::step_states
         void step_states(RobotStateMap& updated_state_map, const RobotStateMap& previous_state_map, int override) override;
+};
+
+/// @brief This estimator estimates our "micro" state which is stores all the motor velocities(in rad/s), whereas the other estimators estimate "macro" state which stores robot joints
+struct LowerFeederEstimator : public Estimator {
+    private:
+        /// @brief delta time
+        float dt = 0;
+        /// @brief previous feeder angle
+        float prev_feeder_angle = 0;
+        /// @brief previous ball count
+        float ball_count = 0;
+        /// @brief first loop counter
+        int count = 0;
+        /// @brief feeder encoder offset for improving feeder delay
+        float feeder_offset = 0;
+        /// @brief feeder direction multiplier
+        /// @note 1 for normal direction, -1 for reverse direction
+        float feeder_direction = 1;
+        /// @brief gear ratio of the feeder
+        float feeder_ratio = 1;
+
+        /// @brief state name for the feeder ball velocity
+        const Cfg::StateName& feeder_ball_state;
+        /// @brief BuffEncoder on the feeder
+        std::shared_ptr<BuffEncoder> feeder_encoder;
+
+        /// @brief feeder motor closer to the indexer
+        std::shared_ptr<Motor> close_feeder_motor;
+        /// @brief feeder motor farther from the indexer
+        std::shared_ptr<Motor> far_feeder_motor;
+    public:
+        /// @brief Make new feeder estimator
+        /// @param estimator_config config data for this estimator
+        /// @param sensor_manager reference to the sensor manager to get sensors
+        /// @param can reference to the CAN manager (not used)
+        /// @param available_states vector of state names that are available
+        LowerFeederEstimator(const Cfg::Estimator& estimator_config, SensorManager& sensor_manager, CANManager& can, std::vector<Cfg::StateName> available_states);
+    
+        /// @copydoc Estimator::step_states
+        void step_states(RobotStateMap& updated_state_map, const RobotStateMap& previous_state_map, int override) override;
     };
 
 #endif

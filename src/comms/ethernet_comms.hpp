@@ -10,7 +10,7 @@ namespace qn = qindesign::network;
 
 // DEBUG define for displaying all comms errors/status updates
 // This is very noisy on start up
-#define COMMS_DEBUG
+// #define COMMS_DEBUG
 
 namespace Comms {
 

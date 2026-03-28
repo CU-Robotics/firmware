@@ -35,6 +35,9 @@ void EstimatorManager::init_estimator(const Cfg::Estimator& estimator_config, Se
     case Cfg::EstimatorType::FeederPosition:
         estimators.push_back(std::make_unique<FeederEstimator>(estimator_config, sensor_manager, can, available_states));
         break;
+    case Cfg::EstimatorType::LowerFeederPosition:
+        estimators.push_back(std::make_unique<LowerFeederEstimator>(estimator_config, sensor_manager, can, available_states));
+        break;
     default:
         break;
     }

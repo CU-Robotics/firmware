@@ -85,7 +85,7 @@ void XDriveController::step(RobotStateMap& reference_map, RobotStateMap& estimat
             pid.ki = low_level_velocity_controller.gains.i;
             pid.kd = low_level_velocity_controller.gains.d;
             motor_outputs[i] = pid.filter(dt, true, false) * power_limit_ratio;
-           drive_motors[i]->write_motor_torque(motor_outputs[i]);
+            drive_motors[i]->write_motor_torque(motor_outputs[i]);
         }
 
     } else {
@@ -130,10 +130,10 @@ void XDriveController::step(RobotStateMap& reference_map, RobotStateMap& estimat
         // Adjust for chassis heading so control is field relative
         float chassis_heading = estimate_map[Cfg::StateName::ChassisHeading].get_position();
         // Convert to motor velocities
-        motor_velocity[0] = output[0] * cos(chassis_heading) + output[1] * sin(chassis_heading) + output[2];
-        motor_velocity[1] = output[0] * sin(chassis_heading) - output[1] * cos(chassis_heading) + output[2];
-        motor_velocity[2] = -output[0] * cos(chassis_heading) - output[1] * sin(chassis_heading) + output[2];
-        motor_velocity[3] = -output[0] * sin(chassis_heading) + output[1] * cos(chassis_heading) + output[2];
+        motor_velocity[1] = output[0] * cos(chassis_heading) + output[1] * sin(chassis_heading) + output[2];
+        motor_velocity[2] = output[0] * sin(chassis_heading) - output[1] * cos(chassis_heading) + output[2];
+        motor_velocity[3] = -output[0] * cos(chassis_heading) - output[1] * sin(chassis_heading) + output[2];
+        motor_velocity[0] = -output[0] * sin(chassis_heading) + output[1] * cos(chassis_heading) + output[2];
         // Power limiting
         float power_buffer = ref.ref_data.robot_power_heat.buffer_energy;
         float power_limit_ratio = 1.0;
@@ -145,7 +145,6 @@ void XDriveController::step(RobotStateMap& reference_map, RobotStateMap& estimat
 
         float motor_outputs[4];
 
-
         // Low level velocity controller
         for (int i = 0; i < 4; i++) {
             PIDFilter pid;
@@ -154,7 +153,6 @@ void XDriveController::step(RobotStateMap& reference_map, RobotStateMap& estimat
             pid.kp = low_level_velocity_controller.gains.p;
             pid.ki = low_level_velocity_controller.gains.i;
             pid.kd = low_level_velocity_controller.gains.d;
-            pid.kf = low_level_velocity_controller.gains.f;
             motor_outputs[i] = pid.filter(dt, true, false) * power_limit_ratio;
             drive_motors[i]->write_motor_torque(motor_outputs[i]);
             // Serial.printf("motor %d error: %f output: %f\n", i, -micro_estimate[i][1] + motor_velocity[i], outputs[i]);
@@ -264,7 +262,6 @@ void FlywheelController::step(RobotStateMap& reference_map, RobotStateMap& estim
 
 void FeederController::step(RobotStateMap& reference_map, RobotStateMap& estimate_map) {
     float dt = timer.delta();
-
     pidp.kp = full_state_position_controller.gains.p;
     pidp.ki = full_state_position_controller.gains.i;
     pidp.kd = full_state_position_controller.gains.d;
@@ -282,4 +279,38 @@ void FeederController::step(RobotStateMap& reference_map, RobotStateMap& estimat
     float output = outputp * controller_config.gear_ratios.feeder_direction;
 
    feeder_motor->write_motor_torque(output);
+}
+
+void LowerFeederController::step(RobotStateMap& reference_map, RobotStateMap& estimate_map) {
+    float dt = timer.delta();
+    pidp.kp = full_state_position_controller.gains.p;
+    pidp.ki = full_state_position_controller.gains.i;
+    pidp.kd = full_state_position_controller.gains.d;
+    pidp.kf = full_state_position_controller.gains.f;
+
+    pidv.kp = full_state_velocity_controller.gains.p;
+    pidv.ki = full_state_velocity_controller.gains.i;
+    pidv.kd = full_state_velocity_controller.gains.d;
+    pidv.kf = full_state_velocity_controller.gains.f;
+    
+
+    // pidp.setpoint = reference_map[feeder_position_state].get_acceleration();
+    // Serial.printf("Feeder Accel Setpoint: %f\n", pidp.setpoint);
+    // pidp.measurement = estimate_map[feeder_position_state].get_position();
+    pidp.measurement = 0;
+
+    pidv.setpoint = reference_map[lower_feeder_position_state].get_velocity();
+    pidv.measurement = estimate_map[lower_feeder_position_state].get_velocity();
+    
+    float outputp = pidp.filter(dt, true, true);
+    float outputv = pidv.filter(dt, true, false);
+    float output = (outputp + outputv) * controller_config.gear_ratios.feeder_direction;
+    
+    // Serial.printf("Feeder Velocity Setpoint: %f, Measurement: %f, output: %f\n", pidv.setpoint, pidv.measurement, output);
+    Serial.printf("lower feeder reference position: %f, reference velocity: %f, estimate position: %f, estimate velocity: %f\n", 
+                    reference_map[lower_feeder_position_state].get_position(), reference_map[lower_feeder_position_state].get_velocity(),
+                    estimate_map[lower_feeder_position_state].get_position(), estimate_map[lower_feeder_position_state].get_velocity());
+        
+    close_feeder_motor->write_motor_torque(output);
+    far_feeder_motor->write_motor_torque(-output);
 }

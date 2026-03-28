@@ -326,6 +326,8 @@ private:
 	bool hive_toggle = false;
 	/// @brief Whether safety mode has been toggled
 	bool safety_toggle = false;
+	/// @brief Whether the robot has a lower feeder state
+	bool has_lower_feeder = false;
 
 	/// @brief Timer for control input for integrating mouse velocities into position target for manual controls
 	Timer control_input_timer;

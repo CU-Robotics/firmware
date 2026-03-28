@@ -42,6 +42,8 @@ enum class GenericControllerMotorUse : uint32_t {
     FlywheelLeft,
     FlywheelRight,
     Feeder,
+    CloseFeeder,
+    FarFeeder,
 };
 
 
@@ -64,6 +66,7 @@ enum class GenericControllerStateUse : uint32_t {
     GimbalPitch,
     ShooterBallVelocity,
     FeederBallPosition,
+    LowerFeederBallPosition,
 };
 /// @brief This enum represents the different types of controllers that can be configured in the config.
 enum class ControllerType : uint32_t {
@@ -73,6 +76,7 @@ enum class ControllerType : uint32_t {
     PitchController,
     FlywheelController,
     FeederController,
+    LowerFeederController,
 };
 /// @brief This enum represents the different types of subcontrollers that a controller can be configured to have.
 enum class SubControllerType : uint32_t {

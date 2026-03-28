@@ -18,6 +18,9 @@ enum class MotorName : uint32_t{
     Flywheel1,
     Flywheel2,
     Feeder,
+    UpperFeeder,
+    LowerFeederClose,
+    LowerFeederFar,
 
     MotorNameCount
 };

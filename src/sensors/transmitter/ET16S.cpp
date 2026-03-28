@@ -26,6 +26,12 @@ void ET16S::init() {
 	//configure remaining channels
 	set_config();
 
+	for (const auto& state_config : config.states) {
+        if (state_config.name == Cfg::StateName::LowerFeeder) {
+            has_lower_feeder = true;
+            break;
+        }
+    }
 }
 
 void ET16S::read() {
@@ -646,15 +652,16 @@ void ET16S::manual_controls(const RobotStateMap& estimated_state_map, RobotState
 	// if the right switch is forward, and either the left mouse button is pressed or the right switch is not
 	// backward, set the feeder to something. Otherwise, set it to 0
 	float feeder_target = (((ref.ref_data.kbm_interaction.button_left) &&
-							get_switch_b() != SwitchPos::BACKWARD) || get_switch_b() == SwitchPos::FORWARD) ? 10 : 0;
+							get_switch_b() != SwitchPos::BACKWARD) || get_switch_b() == SwitchPos::FORWARD) ? 5 : 0;
 	if (estimated_state_map[Cfg::StateName::Feeder].config().governor_type == Cfg::StateOrder::Position) {
 		float dt2 = timer.delta();
-		if (dt2 > 0.1)
-			dt2 = 0;
+		if (dt2 > 0.1) dt2 = 0;
 		// check if the shooter is active
-		if (not_safety_mode && ref.ref_data.robot_performance.shooter_power_active)
+		if (not_safety_mode && ref.ref_data.robot_performance.shooter_power_active) {
 			feed += feeder_target * dt2;
+		}
 		target_state_map[Cfg::StateName::Feeder].set_position((int)feed);
+		if (has_lower_feeder) target_state_map[Cfg::StateName::LowerFeeder].set_position((int)feed);
 	} else { 
 		target_state_map[Cfg::StateName::Feeder].set_velocity(feeder_target);
 	}

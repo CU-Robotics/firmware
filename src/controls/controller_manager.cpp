@@ -33,6 +33,9 @@ void ControllerManager::init_controller(const Cfg::Controller& controller_config
         case Cfg::ControllerType::FeederController:
             controllers.push_back(std::make_unique<FeederController>(controller_config, can, available_motors));
             break;
+        case Cfg::ControllerType::LowerFeederController:
+            controllers.push_back(std::make_unique<LowerFeederController>(controller_config, can, available_motors));
+            break;
         default:
             Serial.printf("ControllerManager::init_controller: Unrecognized controller type %d\n", controller_config.controller_type);
             break;
