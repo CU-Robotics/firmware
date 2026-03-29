@@ -45,7 +45,9 @@ TransmitterManager transmitter_manager;
 
 Comms::CommsLayer comms_layer;
 
+#ifdef PROFILER
 Profiler prof;
+#endif
 
 SensorManager sensor_manager;
 EstimatorManager estimator_manager;
@@ -160,9 +162,7 @@ int main() {
             break;
         }
     }
-    
-    bool hive_toggle = false;
-    bool safety_toggle = false;
+
     bool not_safety_mode = false;
     bool last_gimbal_power = false; // used to detect gimbal power changes
     bool last_loop_slow = false;    // used to detect multiple slow loops in a row
@@ -204,14 +204,6 @@ int main() {
         sensor_manager.read();
         sensor_manager.send_to_comms();
 
-        
-        // check whether this packet is a config packet
-        // if (comms_layer.get_hive_data().config_section.request_bit == 1) {
-        //     Serial.println("\n\nConfig request received, reconfiguring from comms!\n\n");
-        //     // trigger safety mode
-        //     can.issue_safety_mode();
-        //     config_layer.reconfigure(&comms_layer);
-        // }
 
         // print loopc every second to verify it is still alive
         if (loopc % 1000 == 0) {
@@ -219,21 +211,14 @@ int main() {
         }
 
         // manual controls on firmware
-        transmitter_manager.manual_controls(estimated_state_map, target_state_map, governor, not_safety_mode, feed, last_feed, hive_toggle, safety_toggle);
+        transmitter_manager.manual_controls(estimated_state_map, target_state_map, not_safety_mode, feed, last_feed, has_lower_feeder);
 
         // check if we want to use hive controls instead
         if (transmitter_manager.is_hive_mode()) {
             // hid_incoming.get_target_state_map(target_state_map);
             target_state_map.from_comms_packet(comms_layer.get_hive_data().target_state_data.state);
-            last_feed = target_state_map[Cfg::StateName::Feeder].get_position();
-            // if you just switched to hive controls, set the reference to the
-            // current state'
-            if (hive_toggle) {
-                governor.set_reference_map(estimated_state_map);
-                hive_toggle = false;
-            }
+            last_feed = target_state_map[Cfg::StateName::Feeder].get_position();            
         }
-
 
         // override temp state if needed. Dont override in teensy mode so the sentry doesnt move during inspection
         if (comms_layer.get_hive_data().override_state_data.active && !(transmitter_manager.is_teensy_mode())) {
@@ -267,6 +252,9 @@ int main() {
             count_one++;
         }
 
+        if (transmitter_manager.mode_changed()) {
+            governor.set_reference_map(estimated_state_map);
+        }
         // reference govern
         reference_map = governor.step_reference_map(target_state_map);
 
@@ -306,12 +294,9 @@ int main() {
             gimbal_power_timer.start();
         }
         last_gimbal_power = ref.ref_data.robot_performance.gimbal_power_active;
-        // bool gimbal_power_recently_turned_on = gimbal_power_timer.get_elapsed_micros_no_restart() < 3000000;
-
-        
+        bool gimbal_power_recently_turned_on = gimbal_power_timer.get_elapsed_micros_no_restart() < 3000000;
 
         // Serial.printf("TM: is safety mode: %d, comms layer configured: %d, is slow loop: %d, gimbal power active: %d, gimbal power recently turned on: %d\n", transmitter_manager.is_safety_mode(), comms_layer.is_configured(), is_slow_loop, ref.ref_data.robot_performance.gimbal_power_active, gimbal_power_recently_turned_on);
-
 
         not_safety_mode =
             (!transmitter_manager.is_safety_mode() &&
@@ -334,7 +319,6 @@ int main() {
                         : (int)floor(estimated_state_map[Cfg::StateName::Feeder].get_position()); // reset feed to the current state
             last_feed = feed;                          // reset last feed to the current state
             // Serial.printf("Can zero\n");
-            safety_toggle = false; // reset hive toggle
         }
 
         // LED heartbeat -- linked to loop count to reveal slowdowns and

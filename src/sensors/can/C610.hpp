@@ -1,5 +1,4 @@
-#ifndef C610_DRIVER_HPP
-#define C610_DRIVER_HPP
+#pragma once
 
 #include "motor.hpp"
 
@@ -54,5 +53,3 @@ private:
     const int32_t m_min_torque = -10000;
 
 };
-
-#endif // C610_DRIVER_HPP

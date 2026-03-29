@@ -351,6 +351,12 @@ void LowerFeederEstimator::step_states(RobotStateMap& updated_state_map, const R
         diff = feeder_angle - prev_feeder_angle;
     }
   
+    if (diff < -1 && diff > -5) {
+        num_encoder_resets++;
+        reset_value = feeder_angle;
+        // Serial.printf("Feeder angle diff is large: %d, feeder angle: %f, prev feeder angle: %f\n", num_encoder_resets, feeder_angle, prev_feeder_angle);
+    }
+
     prev_feeder_angle = feeder_angle;
     if (diff > PI) diff -= 2 * PI;
     else if (diff < -PI) diff += 2 * PI;
@@ -363,9 +369,9 @@ void LowerFeederEstimator::step_states(RobotStateMap& updated_state_map, const R
     float motor_velocity_far = far_feeder_motor->get_state().speed;
     // use the motor velocities because encoder spi is a bit broken rn
 
-    float ball_velocity = (((motor_velocity_close - motor_velocity_far)/(2.0 * 36.0)) / (M_PI * 2)) * (feeder_ratio * 2.0); // balls/s, convert from rad/s using the feeder ratio and average of the two motors
+    float ball_velocity = (((-motor_velocity_close + motor_velocity_far)/(2.0 * 36.0)) / (M_PI * 2)) * (feeder_ratio * 2.0); // balls/s, convert from rad/s using the feeder ratio and average of the two motors
 
-    Serial.printf("encoder estimate: %f, motor estimate: %f\n", feeder_velocity, ball_velocity);
+    Serial.printf("encoder estimate: %f, motor estimate: %f, resets: %d, reset value: %f\n", feeder_velocity, ball_velocity, num_encoder_resets, reset_value);
 
     updated_state_map[feeder_ball_state].set_position(ball_count * feeder_direction); // ball count
     updated_state_map[feeder_ball_state].set_velocity(ball_velocity * feeder_direction); // ball velocity

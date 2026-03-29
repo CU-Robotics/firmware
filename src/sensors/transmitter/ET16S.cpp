@@ -25,13 +25,6 @@ void ET16S::init() {
 	channel[3].kind = InputKind::STICK;
 	//configure remaining channels
 	set_config();
-
-	for (const auto& state_config : config.states) {
-        if (state_config.name == Cfg::StateName::LowerFeeder) {
-            has_lower_feeder = true;
-            break;
-        }
-    }
 }
 
 void ET16S::read() {
@@ -77,6 +70,9 @@ void ET16S::read() {
 	set_channel_data();
 	//Check flag byte for disconnect
 	test_connection();
+
+	mode_changed_flag = (get_safety_switch() != prev_safety_switch_pos);
+	prev_safety_switch_pos = get_safety_switch();
 }
 
 void ET16S::print() {
@@ -578,6 +574,10 @@ bool ET16S::is_hive_mode() {
 	return get_safety_switch() == SwitchPos::BACKWARD;
 }
 
+bool ET16S::mode_changed(){
+	return mode_changed_flag;
+}
+
 
 ET16SData ET16S::get_ET16S_data(){
 	ET16SData ET16S_data;
@@ -607,7 +607,7 @@ ET16SData ET16S::get_ET16S_data(){
 	return ET16S_data;
 }
 
-void ET16S::manual_controls(const RobotStateMap& estimated_state_map, RobotStateMap& target_state_map, Governor& governor, bool not_safety_mode, float& feed, float& last_feed, bool& hive_toggle, bool& safety_toggle) {
+void ET16S::manual_controls(const RobotStateMap& estimated_state_map, RobotStateMap& target_state_map, bool not_safety_mode, float& feed, float& last_feed, bool has_lower_feeder) {
 	float delta = control_input_timer.delta();
 	
 	vtm_pos_x += ref.ref_data.kbm_interaction.mouse_speed_x * 0.05 * delta;
@@ -660,7 +660,7 @@ void ET16S::manual_controls(const RobotStateMap& estimated_state_map, RobotState
 		if (not_safety_mode && ref.ref_data.robot_performance.shooter_power_active) {
 			feed += feeder_target * dt2;
 		}
-		target_state_map[Cfg::StateName::Feeder].set_position((int)feed);
+		target_state_map[Cfg::StateName::Feeder].set_position(estimated_state_map[Cfg::StateName::Feeder].get_position());
 		if (has_lower_feeder) target_state_map[Cfg::StateName::LowerFeeder].set_position((int)feed);
 	} else { 
 		target_state_map[Cfg::StateName::Feeder].set_velocity(feeder_target);
@@ -682,14 +682,9 @@ void ET16S::manual_controls(const RobotStateMap& estimated_state_map, RobotState
 	target_state_map[Cfg::StateName::Flywheels].set_velocity(fly_wheel_target);
 
 	// when in teensy control mode reset hive toggle
-	if (is_teensy_mode()) {
-		if (!hive_toggle || !safety_toggle) {
-			pos_offset_x = estimated_state_map[Cfg::StateName::ChassisX].get_position();
-			pos_offset_y = estimated_state_map[Cfg::StateName::ChassisY].get_position();
-			feed = last_feed;
-			governor.set_reference_map(estimated_state_map);
-		}
-		hive_toggle = true;
-		safety_toggle = true;
+	if (is_teensy_mode() && mode_changed()) {
+		pos_offset_x = estimated_state_map[Cfg::StateName::ChassisX].get_position();
+		pos_offset_y = estimated_state_map[Cfg::StateName::ChassisY].get_position();
+		feed = last_feed;
 	}
 }

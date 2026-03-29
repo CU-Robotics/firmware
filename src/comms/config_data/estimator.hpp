@@ -94,49 +94,49 @@ enum class EstimatorType : uint32_t {
 // This includes the offsets for the encoders, the ratios and directions for the feeder, etc.
 struct SensorInfo {
     /// @brief the offset for the yaw encoder used in the gimbal and chassis estimator, in radians. This is used to convert the raw encoder values to the actual angles of the gimbal and chassis.
-    float yaw_encoder_offset;
+    float yaw_encoder_offset = 0.0;
     /// @brief The pitch encoder offset used in the gimbal and chassis estimator, in radians. This is used to convert the raw encoder values to the actual angles of the gimbal and chassis.
-    float pitch_encoder_offset;
+    float pitch_encoder_offset = 0.0;
     /// @brief The feeder encoder offset used in the feeder position estimator, in radians. This is used to convert the raw encoder values to the actual angle of the feeder spindexer
-    float feeder_encoder_offset;
+    float feeder_encoder_offset = 0.0;
     /// @brief The ratio between the feeder spindexer angle and the amount of balls fed. This is typically calculated as (number of balls fed per revolution of the spindexer) / (2 * PI)
-    float feeder_ratio;
+    float feeder_ratio = 0.0;
     /// @brief the direction for the feeder, used to determine the sign of the encoder values.
-    float feeder_direction;
+    float feeder_direction = 0.0;
     /// @brief the pitch angle at IMU calibration, in radians.
-    float pitch_angle_at_imu_calibration;
+    float pitch_angle_at_imu_calibration = 0.0;
     /// @brief the start angle for the yaw, in radians
-    float yaw_start_angle;
+    float yaw_start_angle = 0.0;
     /// @brief the start angle for the pitch, in radians
-    float pitch_start_angle;
+    float pitch_start_angle = 0.0;
     /// @brief the start angle for the roll, in radians
-    float roll_start_angle;
+    float roll_start_angle = 0.0;
     /// @brief an average reading of the 3 imu axis gyro values during a calibration where the yaw is spun freely.
-    float yaw_axis_vector[3];
+    float yaw_axis_vector[3] = { 0.0, 0.0, 0.0 };
     /// @brief an average reading of the 3 imu axis gyro values during a calibration where the pitch is dropped freely from its top position.
-    float pitch_axis_vector[3];
+    float pitch_axis_vector[3] = { 0.0, 0.0, 0.0 };
     /// @brief the ratio between chassis x velocity in m/s and motor velocity in rad/s for the chassis motors, used by the X Drive estimator.
-    float chassis_x_to_motor_rad;
+    float chassis_x_to_motor_rad = 0.0;
     /// @brief the ratio between chassis y velocity in m/s and motor velocity in rad/s for the chassis motors, used by the X Drive estimator.
-    float chassis_y_to_motor_rad;
+    float chassis_y_to_motor_rad = 0.0;
     /// @brief the ratio between chassis angular velocity in rad/s and motor velocity in rad/s for the chassis motors, used by the X Drive estimator.
-    float chassis_rad_to_motor_rad;
+    float chassis_rad_to_motor_rad = 0.0;
     /// @brief the radius of the flywheel, in meters.
-    float flywheel_radius;
+    float flywheel_radius = 0.0;
     /// @brief How much weight the estimator should put on the flywheel motor velocity when estimating the shooter ball velocity vs the velocity of the ball given from the referee system.
-    float flywheel_motor_estimate_weight;
+    float flywheel_motor_estimate_weight = 0.0;
 };
 
 /// @brief The `Estimator` struct represents the configuration for an estimator, including its type, the generic uses for states, motors and sensors, and the sensor info.
 struct Estimator : Comms::CommsData {
     /// @brief Type of the estimator, as defined by the EstimatorType enum.
-    EstimatorType estimator_type;
+    EstimatorType estimator_type = EstimatorType::UnsetEstimatorType;
     /// @brief The specific state names that this estimator estimates, indexed by their generic use as defined by the GenericEstimatorStateUse enum
-    StateName generic_state_uses_to_names[MAX_GENERIC_STATE_USES_PER_ESTIMATOR];
+    StateName generic_state_uses_to_names[MAX_GENERIC_STATE_USES_PER_ESTIMATOR] = { StateName::UnsetStateName };
     /// @brief The specific motor names that this estimator uses, indexed by their generic use as defined by the GenericControllerMotorUse enum
-    MotorName generic_motor_uses_to_names[MAX_GENERIC_MOTOR_USES_PER_ESTIMATOR];
+    MotorName generic_motor_uses_to_names[MAX_GENERIC_MOTOR_USES_PER_ESTIMATOR] = { MotorName::UnsetMotorName };
     /// @brief The specific sensor names that this estimator uses, indexed by their generic use as defined by the GenericControllerSensorUse enum
-    SensorName generic_sensor_uses_to_names[MAX_GENERIC_SENSOR_USES_PER_ESTIMATOR];
+    SensorName generic_sensor_uses_to_names[MAX_GENERIC_SENSOR_USES_PER_ESTIMATOR] = { SensorName::UnsetSensorName };
     /// @brief The sensor info for this estimator, which contains all the sensor related information for the estimator config.
     SensorInfo sensor_info;
 
@@ -156,10 +156,8 @@ struct Estimator : Comms::CommsData {
     const StateName& get_state_name_by_generic_use(GenericEstimatorStateUse state_use) const {
         int state_index = static_cast<int>(state_use);
         for(uint32_t i = 0; i < MAX_GENERIC_STATE_USES_PER_ESTIMATOR; i++) {
-            printf("Estimator state use %lu: %lu\n", i, static_cast<uint32_t>(generic_state_uses_to_names[i]));
         }
         safety::assert_or_safety_procedure(state_index < (int)MAX_GENERIC_STATE_USES_PER_ESTIMATOR && state_index >= 0, "Generic state use index out of bounds");
-        printf("Returning state name %lu for state use %d\n", static_cast<uint32_t>(generic_state_uses_to_names[state_index]), state_index);
         return generic_state_uses_to_names[state_index];
     }
 

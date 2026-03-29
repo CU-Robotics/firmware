@@ -1,6 +1,4 @@
-#ifndef D200_H
-#define D200_H
-
+#pragma once
 // Arduino library
 #include <Arduino.h>
 #include <HardwareSerial.h>
@@ -212,6 +210,3 @@ public:
   /// @return the current packet index
   int get_current_packet_index() { return current_packet; };
 };
-
-
-#endif // D200_H

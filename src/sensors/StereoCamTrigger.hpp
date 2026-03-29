@@ -1,5 +1,4 @@
-#ifndef STEREO_CAM_TRIGGER_H
-#define STEREO_CAM_TRIGGER_H
+#pragma once
 
 #include <Arduino.h>
 #include <avr/interrupt.h>
@@ -48,5 +47,3 @@ class StereoCamTrigger : public Sensor{
     /// @brief stop interval timer. Can start again by calling start()
     void stop();
 };
-
-#endif

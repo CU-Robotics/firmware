@@ -294,10 +294,8 @@ void LowerFeederController::step(RobotStateMap& reference_map, RobotStateMap& es
     pidv.kf = full_state_velocity_controller.gains.f;
     
 
-    // pidp.setpoint = reference_map[feeder_position_state].get_acceleration();
-    // Serial.printf("Feeder Accel Setpoint: %f\n", pidp.setpoint);
-    // pidp.measurement = estimate_map[feeder_position_state].get_position();
-    pidp.measurement = 0;
+    pidp.setpoint = reference_map[lower_feeder_position_state].get_position();
+    pidp.measurement = estimate_map[lower_feeder_position_state].get_position();
 
     pidv.setpoint = reference_map[lower_feeder_position_state].get_velocity();
     pidv.measurement = estimate_map[lower_feeder_position_state].get_velocity();

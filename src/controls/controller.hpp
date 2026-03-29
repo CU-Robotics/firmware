@@ -1,5 +1,4 @@
-#ifndef CONTROLLER_H
-#define CONTROLLER_H
+#pragma once
 
 #include "estimator.hpp"
 #include "filters/pid_filter.hpp"
@@ -312,7 +311,7 @@ struct FeederController : public Controller {
         }
     };
 
-    /// @brief Controller for the ball feeder
+/// @brief Controller for the lower ball feeder on bottom fed
 struct LowerFeederController : public Controller {
     private:
         /// @brief control position of the feeder
@@ -357,6 +356,4 @@ struct LowerFeederController : public Controller {
             pidp.sumError = 0.0;
             pidv.sumError = 0.0;
         }
-    };
-
-#endif // CONTROLLER_H
+};

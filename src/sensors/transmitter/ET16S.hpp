@@ -101,8 +101,11 @@ class ET16S : public Transmitter {
 	/// @brief whether the ET16S is in teensy mode, determined by the position of switch a is in middle position .
 	/// @return true if in teensy mode, false if not in teensy mode
 	bool is_teensy_mode() override;
+	/// @copydoc Transmitter::mode_changed
+	bool mode_changed() override;
+
 	/// @copydoc Transmitter::manual_controls
-	void manual_controls(const RobotStateMap& estimated_state_map, RobotStateMap& target_state_map, Governor& governor, bool not_safety_mode, float& feed, float& last_feed, bool& hive_toggle, bool& safety_toggle) override;
+	void manual_controls(const RobotStateMap& estimated_state_map, RobotStateMap& target_state_map, bool not_safety_mode, float& feed, float& last_feed, bool has_lower_feeder) override;
 	
 	/// @brief prints data in binary for a specific channel
 	/// @param channel_num channel number from 0-16 inclusive
@@ -312,6 +315,12 @@ private:
 	/// @brief trim six index	
 	int trim_six_num;
 
+	/// @brief previous safety switch position, used for detecting toggles
+	SwitchPos prev_safety_switch_pos = SwitchPos::FORWARD;
+
+	/// @brief Whether the mode has been changed in between the last two reads.
+	bool mode_changed_flag = false;
+
 	// manual controls
 	/// @brief Mouse x axis position
 	float vtm_pos_x = 0;
@@ -326,8 +335,6 @@ private:
 	bool hive_toggle = false;
 	/// @brief Whether safety mode has been toggled
 	bool safety_toggle = false;
-	/// @brief Whether the robot has a lower feeder state
-	bool has_lower_feeder = false;
 
 	/// @brief Timer for control input for integrating mouse velocities into position target for manual controls
 	Timer control_input_timer;

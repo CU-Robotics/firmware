@@ -1,5 +1,4 @@
-#ifndef SENSOR_MANAGER_HPP
-#define SENSOR_MANAGER_HPP
+#pragma once
 
 #include <concepts>
 #include <map>
@@ -60,5 +59,3 @@ private:
     /// @brief Map of sensor pointers by name
     std::map<Cfg::SensorName, std::shared_ptr<Sensor>> sensors;
 };
-
-#endif // SENSOR_MANAGER_HPP

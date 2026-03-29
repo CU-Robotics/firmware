@@ -11,7 +11,7 @@ constexpr size_t NUM_STATES = static_cast<size_t>(Cfg::StateName::StateNameCount
 // Forward declaration
 namespace Comms {
     template<typename T>
-    class Sendable; // Forward declaration of Sendable
+    struct Sendable; // Forward declaration of Sendable
 }
 /// @brief Manage all of the congiured states
 class RobotStateMap {

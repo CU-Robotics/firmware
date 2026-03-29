@@ -1,5 +1,4 @@
-#ifndef ICMSENSOR_H
-#define ICMSENSOR_H
+#pragma once
 
 #include <Arduino.h> // https://www.arduino.cc/reference/en/
 #include <Wire.h> // https://www.arduino.cc/reference/en/language/functions/communication/wire/
@@ -93,5 +92,3 @@ protected:
     /// @brief temperature value
     float temperature = 0;
 };
-
-#endif

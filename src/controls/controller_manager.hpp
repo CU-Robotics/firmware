@@ -1,11 +1,9 @@
-#ifndef CONTROLLER_MANAGER_H
-#define CONTROLLER_MANAGER_H
+#pragma once
 
 #include "controller.hpp"
 #include "robot_state_map.hpp"
 #include "sensors/can/can_manager.hpp"
 #include <memory>
-#include "comms/config_layer.hpp"
 
 /// @brief Manage all controllers
 class ControllerManager {
@@ -35,4 +33,3 @@ public:
     /// @param estimate_map the map of estimated states that controllers should use to calculate their outputs
     void step(RobotStateMap& reference_map, RobotStateMap& estimate_map);
 };
-#endif // CONTROLLER_MANAGER_H

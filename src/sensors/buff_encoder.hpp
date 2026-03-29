@@ -1,5 +1,4 @@
-#ifndef BUFF_ENCODER_H
-#define BUFF_ENCODER_H
+#pragma once
 
 #include <Arduino.h>
 #include <SPI.h>
@@ -84,5 +83,3 @@ private:
     /// @brief The SPI settings of the buff encoders
     static const SPISettings m_settings;
 };
-
-#endif

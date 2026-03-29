@@ -1,5 +1,4 @@
-#ifndef DR16_HPP
-#define DR16_HPP
+#pragma once
 
 #include <cstdint>		// for access to fixed-width types
 #include "Arduino.h"	// for access to HardwareSerial defines
@@ -89,8 +88,12 @@ public:
 	/// @brief Whether the DR16 is in teensy mode, determined if the left switch is in the middle position.
 	/// @return true if in teensy mode, false if not in teensy mode
 	bool is_teensy_mode() override;
+
+	/// @copydoc Transmitter::mode_changed
+	bool mode_changed() override;
+
 	/// @copydoc Transmitter::manual_controls
-	void manual_controls(const RobotStateMap& estimated_state_map, RobotStateMap& target_state_map, Governor& governor, bool not_safety_mode, float& feed, float& last_feed, bool& hive_toggle, bool& safety_toggle) override;
+	void manual_controls(const RobotStateMap& estimated_state_map, RobotStateMap& target_state_map, bool not_safety_mode, float& feed, float& last_feed, bool has_lower_feeder) override;
 
 public:
 	/// @brief Zeros the normalized input array
@@ -194,7 +197,12 @@ public:
 	
 	/// @brief Configuration struct for the DR16 transmitter.
 	const Cfg::DR16& config;
-		
+
+	/// @brief previous left switch position, used for detecting toggles
+	SwitchPos prev_l_switch_pos = SwitchPos::FORWARD; // used for tracking switch toggles
+	/// @brief Whether the mode has been changed in between the last two reads.
+	bool mode_changed_flag = false;
+	
 	/// @brief Keep track of mouse x velocity
 	int16_t mouse_x = 0;
 	/// @brief Keep track of mouse y velocity
@@ -222,10 +230,6 @@ public:
 	/// @brief Position offset for chassis y (so the sentry doesn't drive to 0,0)
     float pos_offset_y = 0;
 	
-	/// @brief Whether hive mode has been toggled
-	bool hive_toggle = false;
-	/// @brief Whether safety mode has been toggled
-	bool safety_toggle = false;
 	/// @brief Timer for control input for integrating mouse velocities into position target for manual controls
 	Timer control_input_timer;
 	/// @brief Timer for tracking long loops that can happen at startup or halts
@@ -252,5 +256,3 @@ public:
 	/// @brief keeps track of what time the last packet came in
 	uint32_t m_disctTime = 0;
 };
-
-#endif // DR16_HPP

@@ -1,5 +1,4 @@
-#ifndef ICM20649_H
-#define ICM20649_H
+#pragma once
 
 // adafruit library specific to ICM20(...) hardware
 #include <Adafruit_ICM20649.h> 
@@ -53,7 +52,3 @@ private:
     /// ICM sensor data.
     ICMSensorData comms_data;
 };
-
-
-
-#endif

@@ -1,5 +1,4 @@
-#ifndef LSM6DSOX_H
-#define LSM6DSOX_H
+#pragma once
 
 #include "AdafruitIMUSensor.hpp" // abstract parent
 // adafruit library specific to LSM6DS(...) hardware
@@ -38,5 +37,3 @@ private:
     Adafruit_LSM6DSOX sensor;
 
 };
-
-#endif

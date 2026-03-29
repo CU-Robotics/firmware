@@ -1,5 +1,4 @@
-#ifndef REF_SYSTEM_PACKET_DEFINITIONS_HPP
-#define REF_SYSTEM_PACKET_DEFINITIONS_HPP
+#pragma once
 
 #include <Arduino.h>
 #include "comms/data/comms_ref_data.hpp"
@@ -1715,5 +1714,3 @@ constexpr uint32_t REF_COMMS_RFID_STATUS_OFFSET = 120;
 constexpr uint32_t REF_COMMS_KBM_INTERACTION_OFFSET = 124;
 /// @brief End of the Ref Data packet for comms
 constexpr uint32_t REF_COMMS_END_OFFSET = 136;
-
-#endif // REF_SYSTEM_PACKET_DEFINITIONS_HPP

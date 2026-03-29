@@ -1,5 +1,4 @@
-#ifndef ESTIMATOR_H
-#define ESTIMATOR_H
+#pragma once
 
 #include "state.hpp"
 #include "estimator.hpp"
@@ -37,5 +36,3 @@ private:
     /// @param can CAN manager reference so the estimator can grab its motors
     void init_estimator(const Cfg::Estimator& estimator_config, SensorManager& sensor_manager, CANManager& can);
 };
-
-#endif

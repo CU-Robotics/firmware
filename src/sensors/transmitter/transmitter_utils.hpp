@@ -1,6 +1,7 @@
 #pragma once
 
 /// @brief state of a set of keyboard keys
+#include <sys/types.h>
 struct Keys {
     /// @brief W key status
     uint8_t w = 0;
@@ -44,3 +45,8 @@ enum class SwitchPos : uint32_t{
 	MIDDLE
 };
 
+enum class TransmitterMode : uint32_t {
+    SAFETY_MODE = 0,
+    TEENSY_MODE,
+    HIVE_MODE
+};
