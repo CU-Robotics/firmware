@@ -48,5 +48,6 @@ void RobotStateMap::print() {
     Serial.println("RobotStateMap:");
     for (const auto& [state_name, state] : robot_state) {
         Serial.printf("\tStateName: %lu, Position: %f, Velocity: %f, Acceleration: %f\n", static_cast<uint32_t>(state_name), state.get_position(), state.get_velocity(), state.get_acceleration());
+        Serial.printf("\t\tPosition limits: [%f, %f]\n", state.config().reference_limits.position.min, state.config().reference_limits.position.max);
     }
 }

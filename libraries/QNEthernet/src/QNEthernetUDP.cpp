@@ -497,7 +497,6 @@ bool EthernetUDP::send(const char *host, uint16_t port,
 #endif  // LWIP_DNS
 }
 
-__attribute__((noinline, optimize("-O0")))
 bool EthernetUDP::send(const ip_addr_t *ipaddr, uint16_t port,
                        const uint8_t *data, size_t len) {
   if (len > kMaxPossiblePayloadSize) {
