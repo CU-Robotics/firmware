@@ -49,11 +49,6 @@ private:
     /// @brief approximate gyroscope data rate (Hz) calculated from divisor.
     float gyro_rate;
 
-
-    float gyro_offset_x;
-    float gyro_offset_y;
-    float gyro_offset_z;
-
     /// ICM sensor data.
     ICMSensorData comms_data;
 };
