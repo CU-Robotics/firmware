@@ -330,7 +330,7 @@ void DR16::manual_controls(const RobotStateMap& estimated_state_map, RobotStateM
 	
 	pos_x = merge_input(mouse_x,ref.ref_data.kbm_interaction.mouse_speed_x) * 0.05 * delta;
 	pos_y = merge_input(mouse_y,ref.ref_data.kbm_interaction.mouse_speed_y) * 0.05 * delta;
-	l_mouse_button = merge_input(l_mouse_button,ref->ref_data.kbm_interaction.button_left)
+	l_mouse_button = merge_input(l_mouse_button,ref.ref_data.kbm_interaction.button_left);
 	float pitch_min = estimated_state_map[Cfg::StateName::GimbalPitch].config().reference_limits.position.min;
     float pitch_max = estimated_state_map[Cfg::StateName::GimbalPitch].config().reference_limits.position.max;
     float pitch_average = 0.5 * (pitch_min + pitch_max);
