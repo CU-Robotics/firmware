@@ -10,12 +10,9 @@ public:
     SDC104() = delete;
 
     /// @brief Main constructor. Defines the controller type, global ID, id, can bus, and motor type
-    /// @param gid The global ID, not the per-bus motor ID
-    /// @param id The per-bus motor ID. This is 1-indexed
-    /// @param bus_id The CAN bus index/ID
-    /// @param motor_type The motor type (not used for SDC104, do not specify)
-    SDC104(uint32_t gid, uint32_t id, uint8_t bus_id, MotorType motor_type)
-        : Motor(MotorControllerType::SDC104, gid, id, bus_id, motor_type) {
+    /// @param motor_config The configuration for this motor, including its controller type, physical bus and id, motor type, and motor name.
+    SDC104(Cfg::Motor motor_config)
+        : Motor(motor_config) {
     }
 
     /// @brief Destructor, does nothing
@@ -73,7 +70,7 @@ public:
 
     /// @brief Write motor torque given a normalized value
     /// @param torque A value between [-1, 1] representing the torque range of [-33A, 33A]
-    void write_motor_torque(float torque) override;
+    void execute_motor_torque_command(float torque) override;
 
     /// @brief Write motor speed
     /// @param speed The speed in rev/s

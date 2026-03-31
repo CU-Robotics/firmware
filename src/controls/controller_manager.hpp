@@ -1,61 +1,35 @@
-#ifndef CONTROLLER_MANAGER_H
-#define CONTROLLER_MANAGER_H
+#pragma once
 
 #include "controller.hpp"
+#include "robot_state_map.hpp"
 #include "sensors/can/can_manager.hpp"
-#include "comms/config_layer.hpp"
-
-#define MOTOR_INFO_TYPE 0
-#define MOTOR_INFO_ID 1
-#define MOTOR_INFO_BUS 2
+#include <memory>
 
 /// @brief Manage all controllers
 class ControllerManager {
 private:
-    /// @brief Array storing every controller
-    Controller* controllers[NUM_ROBOT_CONTROLLERS];
-    
-    /// @brief number of controllers configured for this robot
-    int num_controllers = 0;
+    /// @brief List of all controllers that are currently active
+    std::vector<std::unique_ptr<Controller>> controllers;
 
-    /// @brief array of motor outputs
-    float outputs[CAN_MAX_MOTORS] = { 0 };
-
-    /// @brief config struct to store all config data
-    /// @note this is read only
-    const Config* config_data = nullptr;
-
-    /// @brief can data pointer used to write to the can bus
-    CANManager* can;
-
+    /// @brief List of motors that are available to be used by controllers. 
+    //  This is used to make sure that two controllers cant write to the same motor
+    std::vector<Cfg::MotorName> available_motors;
 public:
-    /// @brief default constructor, does nothing
-    ControllerManager() = default;
+    /// @brief assign reference to the can manager
+    ControllerManager() {}
 
     /// @brief Initializes controllers with data from the config yaml
-    /// @param _can pointer to the can data struct
-    /// @param _config_data read-only config reference storing all config data
-    void init(CANManager* _can, const Config* _config_data);
+    /// @param controller_configurations read-only config reference storing all config data
+    /// @param _can reference to the can data struct
+    void init(const std::vector<Cfg::Controller>& controller_configurations, CANManager& _can);
 
-    /// @brief Populates the corresponding index of the "controllers" array attribute with a controller object
-    /// @param controller_type denotes what kind of controller to initialize (see contoller.hpp)
-    /// @param gains gains matrix input (see controller.hpp for what each gain means)
-    /// @param gear_ratios gear ratios array, used to relate motor inputs to joint states
-    void init_controller(int controller_type, const float gains[NUM_GAINS], const float gear_ratios[CAN_MAX_MOTORS]);
+    /// @brief Initializes and adds a new controller to the controller manager
+    /// @param controller_config the controller configuration data to use to initialize the controller
+    /// @param _can reference to the can data struct to use to initialize the controller
+    void init_controller(const Cfg::Controller& controller_config, CANManager& _can);
 
-    /// @brief Steps through controllers and sets the new motor inputs (ie. motor current, torque)
-    /// @param macro_reference Governor reference (governed target state)
-    /// @param macro_estimate estimated current joint states
-    /// @param micro_estimate estimated current motor states
-    void step(float macro_reference[STATE_LEN][3], float macro_estimate[STATE_LEN][3], float micro_estimate[CAN_MAX_MOTORS][MICRO_STATE_LEN]);
-
-    /// @brief get the ratio (between 0 and 1) of power limit. 1 when 60 to 20 and x/20 under 20.
-    /// @return ratio to scale the chassis control based on current power buffer
-    float powerlimit_ratio();
-
-    /// @brief An abstracted method to write to a specific motor by ID
-    /// @param motor_id The ID of a motor, these IDs are defined in the config
-    /// @param value 
-    void actuator_write(int motor_id, float value);
+    /// @brief Steps all controllers in the controller manager. This should be called every control loop iteration
+    /// @param reference_map the map of reference states that controllers should try to achieve
+    /// @param estimate_map the map of estimated states that controllers should use to calculate their outputs
+    void step(RobotStateMap& reference_map, RobotStateMap& estimate_map);
 };
-#endif // CONTROLLER_MANAGER_H

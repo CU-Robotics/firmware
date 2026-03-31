@@ -11,6 +11,7 @@
 // C++ includes
 #include <algorithm>
 #include <cerrno>
+#include <Arduino.h>
 
 #include "QNDNSClient.h"
 #include "QNEthernet.h"
@@ -466,6 +467,7 @@ int EthernetUDP::endPacket() {
   return true;
 }
 
+__attribute__((noinline, optimize("-O0")))
 bool EthernetUDP::send(const IPAddress &ip, uint16_t port,
                        const uint8_t *data, size_t len) {
 #if LWIP_IPV4
@@ -476,6 +478,7 @@ bool EthernetUDP::send(const IPAddress &ip, uint16_t port,
 #endif  // LWIP_IPV4
 }
 
+__attribute__((noinline, optimize("-O0")))
 bool EthernetUDP::send(const char *host, uint16_t port,
                        const uint8_t *data, size_t len) {
 #if LWIP_DNS
@@ -494,6 +497,7 @@ bool EthernetUDP::send(const char *host, uint16_t port,
 #endif  // LWIP_DNS
 }
 
+__attribute__((noinline, optimize("-O0")))
 bool EthernetUDP::send(const ip_addr_t *ipaddr, uint16_t port,
                        const uint8_t *data, size_t len) {
   if (len > kMaxPossiblePayloadSize) {
@@ -511,6 +515,7 @@ bool EthernetUDP::send(const ip_addr_t *ipaddr, uint16_t port,
   if (p == nullptr) {
     Ethernet.loop();  // Allow the stack to move along
     errno = ENOMEM;
+    Serial.printf("EthernetComms: Failed to allocate pbuf for sending errno: %d\n", errno);
     return false;
   }
 
@@ -519,6 +524,7 @@ bool EthernetUDP::send(const ip_addr_t *ipaddr, uint16_t port,
   if (len != 0 && (err = pbuf_take(p, data, len)) != ERR_OK) {
     pbuf_free(p);
     errno = err_to_errno(err);
+    Serial.printf("EthernetComms: Failed to copy data to pbuf for sending errno: %d\n", errno);
     return false;
   }
 
@@ -540,6 +546,7 @@ bool EthernetUDP::send(const ip_addr_t *ipaddr, uint16_t port,
 
   if (err != ERR_OK) {
     errno = err_to_errno(err);
+    Serial.printf("EthernetComms: Failed to send UDP packet errno: %d\n", errno);
     return false;
   }
   return true;

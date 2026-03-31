@@ -1,4 +1,19 @@
 #include "comms_layer.hpp"
+#include "comms/data/configuration_status_data.hpp"
+#include "comms/data/sendable.hpp"
+
+
+/// @brief This resets the whole processor and kicks it back to program entry (teensy4/startup.c)
+/// @param void specify no arguments (needed in C)
+/// @note Dont abuse this function, it is not to be used lightly
+extern "C" void reset_teensy(void) {
+    // Register information found in the NXP IM.XRT 1060 reference manual
+    SRC_GPR5 = 0x0BAD00F1;
+    // Register information found in the Arm-v7-m reference manual
+    SCB_AIRCR = 0x05FA0004;
+    // loop to catch execution while the reset occurs
+    while (1);
+}
 
 namespace Comms {
 
@@ -147,6 +162,29 @@ FirmwareData& CommsLayer::get_firmware_data() {
 void CommsLayer::set_firmware_data(FirmwareData& data) {
     m_firmware_data = data;
 };
+
+void CommsLayer::configure() {
+    int time = millis();
+    while (!m_hive_data.config.config_start.num_config_sections != 0) {
+        Serial.printf("Waiting for config start packet... time since start: %d ms\n", millis() - time);
+        run();
+        config_loop_timer.delay_micros(5000);
+    }
+    Serial.printf("Config start packet received, expecting %d config sections\n", m_hive_data.config.config_start.num_config_sections);
+
+    Sendable<ConfigurationStatusData> config_status_sendable;
+    while(!m_hive_data.config.is_configured()) {
+        config_status_sendable.data.ready_for_config = 1;
+        config_status_sendable.send_to_comms();
+        run();
+        Serial.printf("Config: received %d of %d sections\n", m_hive_data.config.num_sections_received, m_hive_data.config.config_start.num_config_sections);
+        config_loop_timer.delay_micros(5000);
+    }
+
+    config_status_sendable.data.ready_for_config = 0;
+    config_status_sendable.data.is_configured = 1;
+    config_status_sendable.send_to_comms();
+}
 
 bool CommsLayer::initialize_hid() {
     // Initialize the HID physical layer

@@ -1,5 +1,4 @@
-#ifndef REF_SYSTEM_HPP
-#define REF_SYSTEM_HPP
+#pragma once
 
 #include "RefSystemPacketDefs.hpp"
 #include "comms/data/comms_ref_data.hpp"
@@ -89,9 +88,8 @@ public:
     void write(uint8_t* packet, uint8_t length);
 
     /// @brief Generate a byte array for all ref data to be sent over comms
-    /// @return The data struct
     /// @note Only sends some packets, not all
-    CommsRefData get_data_for_comms();
+    void send_to_comms();
 
 private:
     /// @brief Helper function: Reads and stores frame header
@@ -189,6 +187,4 @@ public:
     RefData ref_data {};
 };
 
-extern RefSystem* ref;
-
-#endif // REF_SYSTEM_HPP
+extern RefSystem ref;

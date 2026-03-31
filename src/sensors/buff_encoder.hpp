@@ -1,10 +1,11 @@
-#ifndef BUFF_ENCODER_H
-#define BUFF_ENCODER_H
+#pragma once
 
 #include <Arduino.h>
 #include <SPI.h>
-#include "Sensor.hpp"
+#include <cstdint>
+#include "sensors/sensor.hpp"
 #include "comms/data/buff_encoder_data.hpp"
+
 
 // Encoder Registers and Config
 constexpr uint32_t MT6835_OP_READ = 0b0011;
@@ -40,51 +41,45 @@ constexpr uint32_t MT6835_REG_NLC_BASE = 0x013;
 constexpr uint32_t MT6835_REG_CAL_STATUS = 0x113;
 constexpr uint32_t MT6835_BITORDER = MSBFIRST;
 
-// Chip Select pins for the two encoders
-constexpr int YAW_BUFF_CS = 37;
-constexpr int PITCH_BUFF_CS = 36;
-
 /// @brief Driver for the Buff-Encoder
 class BuffEncoder : public Sensor {
 public:
-    /// @brief 
-    /// @param 
-    BuffEncoder() : Sensor(SensorType::BUFFENC) { };
+    /// @brief Constructor for the BuffEncoder class
+    /// @param encoder_config configuration data for the encoder
+    BuffEncoder(const Cfg::BuffEncoder& encoder_config) : Sensor(), config_data(encoder_config), comms_data(encoder_config.encoder_name) {};
 
-    /// @brief Initialize the encoder object with the specific Chip Select pin
-    /// @param cs The Chip Select pin
-    BuffEncoder(int cs) : Sensor(SensorType::BUFFENC), m_CS(cs) { };
-
-    /// @brief initialize sensor with new cs(if needed)
-    /// @param cs input Chip Select pin
-    void init(int cs) { m_CS = cs; };
+    /// @brief initialize sensor
+    void init() override;
 
     /// @brief Read via SPI the current angle of the encoder
     /// @note Returns and sets m_angle when it reads
-    /// @return true if successful, false if no data available
-    bool read() override;
+    void read() override;
 
-    /// @brief Get the angle of the last read function
+    /// @brief Send the current data to comms
+    void send_to_comms() const override;
+
+    /// @brief Get the angle of the last read function adjusted by the offset
     /// @return Read angle (radians)
     inline float get_angle() const { return m_angle; }
 
+    /// @brief Get the configured name of this encoder
+    /// @return The name of this encoder
+    inline Cfg::SensorName get_name() const { return config_data.encoder_name; }
+ 
     /// @brief Print the data for debugging
-    void print();
+    void print() const;
 
 private:
-    /// @brief Stored Chip Select pin
-    int m_CS = 0;
 
     /// @brief Read angle from the encoder
     float m_angle = 0.f;
 
+    /// @brief Configuration data for the encoder
+    const Cfg::BuffEncoder& config_data;
+
+    /// @brief Data to be send to comms
+    BuffEncoderData comms_data;
+
     /// @brief The SPI settings of the buff encoders
     static const SPISettings m_settings;
-
-    ///buff sensor data struct.
-    BuffEncoderData buff_sensor_data;
-
 };
-
-
-#endif

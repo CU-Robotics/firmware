@@ -2,22 +2,11 @@
 
 #include <queue>                                // for std::queue
 
-#if defined(HIVE)
-#include <stdexcept>                            // for std::runtime_error
-#elif defined(FIRMWARE)
 #include <cassert>                              // for assert
-#endif
 
-#if defined(HIVE)
-#include <doctest/doctest.h>                    // for TEST_CASE
-#include "modules/comms/data/comms_data.hpp"    // for CommsData
-#include "modules/comms/data/logging_data.hpp"  // for LoggingData
-#include <mutex>                                // for std::mutex
-#elif defined(FIRMWARE)
 #include "comms/data/comms_data.hpp"            // for CommsData
-#include "comms/data/logging_data.hpp"          // for LoggingData
 #include <Arduino.h>                            // for Serial
-#endif
+
 
 namespace Comms {
 
@@ -73,10 +62,6 @@ public:
     /// @return The size of the medium priority send queue.
     uint16_t get_medium_priority_queue_size() const;
     
-    /// @brief Get the size of the logging send queue.
-    /// @return The size of the logging send queue.
-    uint16_t get_logging_queue_size() const;
-
     /// @brief Get the max size of the raw data buffer.
     /// @return The max size of the raw data buffer.
     uint16_t get_max_size() const;
@@ -94,17 +79,6 @@ private:
     /// @return True if the data was appended, false if it could not be appended.
     bool try_append_data(CommsData* data);
 
-    /// @brief Fill the raw data buffer with LoggingData.
-    /// @param logging_queue The queue to fill the raw data buffer with.
-    /// @note This is a distinct function because LoggingData has a dynamic size AND it can be split across multiple packets.
-    void fill_logging_data_from_queue(std::queue<LoggingData*>& logging_queue);
-
-    /// @brief Try to append a LoggingData to the raw data buffer.
-    /// @param log The LoggingData to append.
-    /// @return True if the data was appended, false if it could not be appended.
-    /// @note This is a distinct function because LoggingData has a dynamic size AND it can be split across multiple packets.
-    bool try_append_splittable_logging_data(LoggingData* log);
-
     /// @brief Place the incoming data in the mega struct.
     /// @param data The CommsData to place in the mega struct.
     void place_incoming_data_in_mega_struct(CommsData* data);
@@ -118,8 +92,6 @@ private:
     std::queue<CommsData*> high_priority_send_queue;
     /// @brief The medium priority send queue.
     std::queue<CommsData*> medium_priority_send_queue;
-    /// @brief The logging send queue.
-    std::queue<LoggingData*> logging_send_queue;
 
     /// @brief The raw data buffer. This is the complete data packet.
     uint8_t* raw_data = nullptr;
@@ -127,11 +99,6 @@ private:
     uint16_t max_data_size = 0;
     /// @brief The remaining size of the data packet.
     uint16_t remaining_data_size = 0;
-
-#if defined(HIVE)
-    /// @brief Mutex to protect concurrent accesses to this PacketPayload
-    std::mutex m_mutex;
-#endif
 };
 
 }   // namespace Comms
