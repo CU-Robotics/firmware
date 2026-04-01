@@ -48,5 +48,3 @@ void setup() {
     RUN_TEST(test_rotate_vector_3d)
     UNITY_END();
 }
-
-void loop() {}

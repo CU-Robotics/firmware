@@ -47,5 +47,3 @@ void setup() {
     RUN_TEST(testSensorReadCalled);
     UNITY_END();
 }
-
-void loop() {}
