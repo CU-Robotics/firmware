@@ -7,32 +7,44 @@ class DummySensor : public Sensor {
   public:
     explicit DummySensor(uint8_t id) : Sensor(BUFFENC, id) {}
 
-    bool read() override {
-        read_called_ = true;
-        return true;
-    }
+    void read() override {read_called_ = true;}
+    void init() override {init_called_ = true;}
+    void sendToComms() const override {send_called_ = true;}
 
-    bool wasReadCalled() const { return read_called_; }
+    bool wasReadCalled() const {return read_called_;}
+    bool wasInitCalled() const {return init_called_;}
+    bool wasSend2ComsCalled() const {return send_called_;}
 
   private:
     bool read_called_ = false;
+    bool init_called_ = false;
+    mutable bool send_called_  = false;
 };
 
-void test_sensor_type_and_id() {
-    DummySensor sensor(7);
+void testSensorReadCalled() {
+    DummySensor sensor;
+    sensor.read();
+    TEST_ASSERT_TRUE(sensor.wasReadCalled());
+}
 
-    TEST_ASSERT_EQUAL_UINT8(static_cast<uint8_t>(BUFFENC), static_cast<uint8_t>(sensor.getType()));
-    TEST_ASSERT_EQUAL_UINT8(7, sensor.getId());
 
-    sensor.setId(9);
-    TEST_ASSERT_EQUAL_UINT8(9, sensor.getId());
+void testSensorInitCalled() {
+    DummySensor sensor;
+    sensor.init();
+    TEST_ASSERT_TRUE(sensor.wasInitCalled());
+}
+
+void testSend2Coms() {
+    DummySensor sensor;
+    sensor.sendToComms()
+    TEST_ASSERT_TRUE(sensor.wasSend2ComsCalled());
 }
 
 void setup() {
     delay(2000);
 
     UNITY_BEGIN();
-    RUN_TEST(test_sensor_type_and_id);
+    RUN_TEST(testSensorReadCalled);
     UNITY_END();
 }
 

@@ -4,7 +4,7 @@
 
 #include "filters/pid_filter.hpp"
 
-void test_wrap_around() {
+void testWrapAround() {
     PIDFilter pid;
 
     pid.set_gains(1.0f, 0.0f, 0.0f, 0.0f);
@@ -17,7 +17,7 @@ void test_wrap_around() {
     TEST_ASSERT_FLOAT_WITHIN(1e-2f, 0.2f, output);
 }
 
-void test_proportional() {
+void testProportional() {
     PIDFilter pid;
 
     pid.set_gains(2.0f, 0.0f, 0.0f, 0.0f);
@@ -30,7 +30,7 @@ void test_proportional() {
     TEST_ASSERT_FLOAT_WITHIN(1e-5f, 4.0f, output);
 }
 
-void test_derivative() {
+void testDerivative() {
     PIDFilter pid;
 
     pid.set_gains(0.0f, 0.0f, 1.0f, 0.0f);
@@ -46,23 +46,7 @@ void test_derivative() {
     TEST_ASSERT_FLOAT_WITHIN(1e-5f, 1.0f, output);
 }
 
-/* If we ever add integral
-void test_integral() {
-    PIDFilter pid;
-
-    pid.set_gains(0.0f, 1.0f, 0.0f, 0.0f);
-
-    pid.setpoint = 1.0f;
-    pid.measurement = 0.0f;
-
-    float output = pid.filter(1.0f, false, false);
-
-    TEST_ASSERT_FLOAT_WITHIN(1e-5f, 1.0f, output);
-}
-*/
-
-
-void test_output_bound() {
+void testOutputBound() {
     PIDFilter pid;
 
     pid.set_gains(10.0f, 0.0f, 0.0f, 0.0f);
@@ -75,7 +59,7 @@ void test_output_bound() {
     TEST_ASSERT_FLOAT_WITHIN(1e-5f, 1.0f, output);
 }
 
-void test_feedforward() {
+void testFeedforward() {
     PIDFilter pid;
 
     pid.set_gains(0.0f, 0.0f, 0.0f, 0.5f);
@@ -93,12 +77,11 @@ void setup() {
 
     UNITY_BEGIN();
 
-    RUN_TEST(test_wrap_around);
-    RUN_TEST(test_proportional);
-    RUN_TEST(test_derivative);
-    RUN_TEST(test_output_bound);
-    RUN_TEST(test_feedforward);
-    //RUN_TEST(test_integral);
+    RUN_TEST(testWrapAround);
+    RUN_TEST(testProportional);
+    RUN_TEST(testDerivative);
+    RUN_TEST(testOutputBound);
+    RUN_TEST(testFeedforward);
 
     UNITY_END();
 }
