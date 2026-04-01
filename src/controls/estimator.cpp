@@ -184,6 +184,8 @@ void GimbalAndChassisEstimator::step_states(RobotStateMap& updated_state_map, co
     updated_state_map[pitch_state].set_position(pitch_enc_angle);
     updated_state_map[pitch_state].set_velocity(current_pitch_velocity);
     updated_state_map[pitch_state].set_acceleration(0);
+    updated_state_map[chassis_heading_state].set_position(chassis_angle);
+
 
     // 3 odom wheel estimation
     // for (int i = 0; i < 3; i++) {
@@ -259,7 +261,6 @@ void GimbalAndChassisEstimator::step_states(RobotStateMap& updated_state_map, co
     updated_state_map[chassis_y_state].set_velocity(vel_estimate[1]);
     updated_state_map[chassis_y_state].set_acceleration(0);
 
-    updated_state_map[chassis_heading_state].set_position(chassis_angle);
     updated_state_map[chassis_heading_state].set_velocity(d_chassis_heading / dt);
     updated_state_map[chassis_heading_state].set_acceleration(0);
 
