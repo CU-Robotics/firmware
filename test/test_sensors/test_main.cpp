@@ -27,7 +27,6 @@ void testSensorReadCalled() {
     TEST_ASSERT_TRUE(sensor.wasReadCalled());
 }
 
-
 void testSensorInitCalled() {
     DummySensor sensor;
     sensor.init();
@@ -36,8 +35,19 @@ void testSensorInitCalled() {
 
 void testSend2Coms() {
     DummySensor sensor;
-    sensor.sendToComms()
+    sensor.sendToComms();
     TEST_ASSERT_TRUE(sensor.wasSend2ComsCalled());
+}
+
+void testSensorLifeCycle() {
+    DummySensor sensor;
+    sensor.init();
+    sensor.read();
+    sensor.send_to_comms();
+
+    TEST_ASSERT_TRUE(sensor.wasInitCalled());
+    TEST_ASSERT_TRUE(sensor.wasReadCalled());
+    TEST_ASSERT_TRUE(sensor.wasSendCalled());
 }
 
 void setup() {
@@ -45,5 +55,10 @@ void setup() {
 
     UNITY_BEGIN();
     RUN_TEST(testSensorReadCalled);
+    RUN_TEST(testSensorInitCalled);
+    RUN_TEST(testSend2Coms);
+    RUN_TEST(testSensorLifeCycle);
     UNITY_END();
 }
+
+void loop() {}
