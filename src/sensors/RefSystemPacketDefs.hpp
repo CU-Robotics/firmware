@@ -1,7 +1,7 @@
-#ifndef REF_SYSTEM_PACKET_DEFINITIONS_HPP
-#define REF_SYSTEM_PACKET_DEFINITIONS_HPP
+#pragma once
 
 #include <Arduino.h>
+#include "comms/data/comms_ref_data.hpp"
 
 /// @brief Maximum size of a Ref System packet in bytes
 constexpr uint16_t REF_MAX_PACKET_SIZE = 128;
@@ -69,7 +69,7 @@ enum FrameType {
     /// @brief Sentry data received by player clients' Small Maps
     SMALL_MAP_SENTRY_COMMAND = 0x0307,
     /// @brief Robot data received by player clients' Small Map
-    SMALL_MAP_ROBOT_DATA = 0x0308
+    SMALL_MAP_ROBOT_DATA = 0x0308,
 };
 
 /// @brief Struct for the Frame header portion
@@ -189,6 +189,17 @@ struct GameStatus {
         unix_time <<= 8;
         unix_time |= data[3];
     }
+
+    /// @brief Converts this GameStatus struct to a GameStatusData struct for comms transmission
+    /// @return GameStatusData struct with the same data as this GameStatus struct
+    GameStatusData to_comms_data() {
+        GameStatusData data;
+        data.competition_type = competition_type;
+        data.current_stage = current_stage;
+        data.round_time_remaining = round_time_remaining;
+        data.unix_time = unix_time;
+        return data;
+    }
 };
 
 /// @brief Competition result data
@@ -217,6 +228,14 @@ struct GameResult {
     void set_data(FrameData data) {
         memcpy(raw, data.data, packet_size);
         winner = data[0];
+    }
+
+    /// @brief Converts this GameResult struct to a GameResultData struct for comms transmission
+    /// @return GameResultData struct with the same data as this GameResult struct
+    GameResultData to_comms_data() {
+        GameResultData data;
+        data.winner = winner;
+        return data;
     }
 };
 
@@ -261,6 +280,26 @@ struct GameRobotHP {
             blue_team_HP[i] = (data[16 + 2 * i + 1] << 8) | data[16 + 2 * i];
         }
     }
+
+    /// @brief Converts this GameRobotHP struct to a RobotHealthData struct for comms transmission
+    /// @return RobotHealthData struct with the same data as this GameRobotHP struct
+    RobotHealthData to_comms_data() {
+        RobotHealthData data;
+        data.red_hero_health = red_team_HP[0];
+        data.red_engineer_health = red_team_HP[1];
+        data.red_standard_3_health = red_team_HP[2];
+        data.red_standard_4_health = red_team_HP[3];
+        data.red_standard_5_health = red_team_HP[4];
+        data.red_sentry_health = red_team_HP[5];
+
+        data.blue_hero_health = blue_team_HP[0];
+        data.blue_engineer_health = blue_team_HP[1];
+        data.blue_standard_3_health = blue_team_HP[2];
+        data.blue_standard_4_health = blue_team_HP[3];
+        data.blue_standard_5_health = blue_team_HP[4];
+        data.blue_sentry_health = blue_team_HP[5];
+        return data;
+    }
 };
 
 /// @brief Site event data
@@ -273,22 +312,33 @@ struct EventData {
     /// @brief The raw byte array of data received from ref
     /// @note this is only the FrameData data rather than the whole ref packet
     uint8_t raw[REF_MAX_PACKET_SIZE] = {0};
-
-    /// @brief Site event type
-    /// @todo Fill this out before china
-    uint32_t site_event_data = 0;
+    /// @brief Reload zone status; 0 if no robot is in the reload zone, 1 if at least one robot is in the reload zone
+    uint16_t reload_zone_status = 0;
+    /// @brief Capture point status; 0 if uncaptured, 1 if captured by own team, 2 if captured by enemy team, 3 if captured by both teams
+    uint16_t capture_point_status = 0;
 
     /// @brief Prints the EventData packet
     void print() {
         Serial.println("EventData:");
-        Serial.printf("\tSite Event Data: %.8x\n", site_event_data);
+        Serial.printf("\tReload Zone Status: %u\n", reload_zone_status);
+        Serial.printf("\tCapture Point Status: %u\n", capture_point_status);
     }
 
     /// @brief Fills in this struct with the data from a FrameData object
     /// @param data FrameData object to extract data from
     void set_data(FrameData data) {
         memcpy(raw, data.data, packet_size);
-        site_event_data = (data[3] << 24) | (data[2] << 16) | (data[1] << 8) | data[0];
+        reload_zone_status = (data[0] >> 2) & 0x01;   // bit 2
+        capture_point_status = (data[2] >> 5) & 0x03; // bits 21 and 22
+    }
+
+    /// @brief Converts this EventData struct to a GameEventData struct for comms transmission
+    /// @return GameEventData struct with the same data as this EventData struct
+    GameEventData to_comms_data() {
+        GameEventData data;
+        data.reload_zone_status = reload_zone_status;
+        data.capture_point_status = capture_point_status;
+        return data;
     }
 };
 
@@ -443,7 +493,7 @@ struct RobotPerformance {
     /// @brief Chassis power usage limit (unknown units)
     uint16_t chassis_power_limit = 0;
     /// @brief Whether gimbol line is powered
-    uint8_t gimbol_power_active : 1;
+    uint8_t gimbal_power_active : 1;
     /// @brief Whether chassis line is powered
     uint8_t chassis_power_active : 1;
     /// @brief Whether shooter line is powered
@@ -461,7 +511,7 @@ struct RobotPerformance {
         Serial.printf("\tBarrel Cooling Rate: %u\n", barrel_cooling_rate);
         Serial.printf("\tBarrel Heat Limit: %u\n", barrel_heat_limit);
         Serial.printf("\tChassis Power Limit: %u\n", chassis_power_limit);
-        Serial.printf("\tGimbol Power Active: %u\n", gimbol_power_active);
+        Serial.printf("\tGimbal Power Active: %u\n", gimbal_power_active);
         Serial.printf("\tChassis Power Active: %u\n", chassis_power_active);
         Serial.printf("\tShooter Power Active: %u\n", shooter_power_active);
     }
@@ -477,10 +527,27 @@ struct RobotPerformance {
         barrel_cooling_rate = (data[7] << 8) | data[6];
         barrel_heat_limit = (data[9] << 8) | data[8];
         chassis_power_limit = (data[11] << 8) | data[10];
-        gimbol_power_active = data[12] & 0x01;
+        gimbal_power_active = data[12] & 0x01;
         chassis_power_active = (data[12] >> 1) & 0x01;
         shooter_power_active = (data[12] >> 2) & 0x01;
         reserved = (data[12] >> 3) & 0x1F;
+    }
+
+    /// @brief Converts this RobotPerformance struct to a RobotPerformanceData struct for comms transmission
+    /// @return RobotPerformanceData struct with the same data as this RobotPerformance struct
+    RobotPerformanceData to_comms_data() {
+        RobotPerformanceData data;
+        data.robot_id = robot_ID;
+        data.robot_level = robot_level;
+        data.current_health = current_HP;
+        data.max_health = max_HP;
+        data.barrel_cooling_rate = barrel_cooling_rate;
+        data.barrel_heat_limit = barrel_heat_limit;
+        data.chassis_power_limit = chassis_power_limit;
+        data.gimbal_power_active = gimbal_power_active;
+        data.chassis_power_active = chassis_power_active;
+        data.shooter_power_active = shooter_power_active;
+        return data;
     }
 };
 
@@ -536,6 +603,20 @@ struct RobotPowerHeat {
         barrel_heat_1_17mm = (data[11] << 8) | data[10];
         barrel_heat_2_17mm = (data[13] << 8) | data[12];
         barrel_heat_42mm = (data[15] << 8) | data[14];
+    }
+
+    /// @brief Converts this RobotPowerHeat struct to a RobotPowerHeatData struct for comms transmission
+    /// @return RobotPowerHeatData struct with the same data as this RobotPowerHeat struct
+    RobotPowerHeatData to_comms_data() {
+        RobotPowerHeatData data;
+        data.chassis_voltage_output = chassis_voltage_output;
+        data.chassis_current_output = chassis_current_output;
+        data.chassis_power = chassis_power;
+        data.buffer_energy = buffer_energy;
+        data.barrel_heat_1_17mm = barrel_heat_1_17mm;
+        data.barrel_heat_2_17mm = barrel_heat_2_17mm;
+        data.barrel_heat_42mm = barrel_heat_42mm;
+        return data;
     }
 };
 
@@ -689,6 +770,14 @@ struct DamageStatus {
         armor_plate_ID = data[0] & 0x0F;
         damage_type = (data[0] >> 4) & 0x0F;
     }
+    /// @brief Converts this DamageStatus struct to a DamageStatusData struct for comms transmission
+    /// @return DamageStatusData struct with the same data as this DamageStatus struct
+    DamageStatusData to_comms_data() {
+        DamageStatusData data;
+        data.armor_plate_ID = armor_plate_ID;
+        data.damage_type = damage_type;
+        return data;
+    }
 };
 
 /// @brief Real-time launching data
@@ -732,6 +821,17 @@ struct LaunchingStatus {
         uint32_t initial_speed_raw = (data[6] << 24) | (data[5] << 16) | (data[4] << 8) | data[3];
         memcpy(&initial_speed, &initial_speed_raw, sizeof(initial_speed));
     }
+
+    /// @brief Converts this LaunchingStatus struct to a LaunchingStatusData struct for comms transmission
+    /// @return LaunchingStatusData struct with the same data as this LaunchingStatus struct
+    LaunchingStatusData to_comms_data() {
+        LaunchingStatusData data;
+        data.projectile_type = projectile_type;
+        data.launching_mechanism = launching_mechanism;
+        data.launching_frequency = launching_frequency;
+        data.initial_speed = initial_speed;
+        return data;
+    }
 };
 
 /// @brief Projectile allowance data
@@ -767,6 +867,16 @@ struct ProjectileAllowance {
         num_17mm = (data[1] << 8) | data[0];
         num_42mm = (data[3] << 8) | data[2];
         num_gold = (data[5] << 8) | data[4];
+    }
+
+    /// @brief Converts this ProjectileAllowance struct to a ProjectileAllowanceData struct for comms transmission
+    /// @return ProjectileAllowanceData struct with the same data as this ProjectileAllowance struct
+    ProjectileAllowanceData to_comms_data() {
+        ProjectileAllowanceData data;
+        data.num_17mm = num_17mm;
+        data.num_42mm = num_42mm;
+        data.num_gold = num_gold;
+        return data;
     }
 };
 
@@ -1604,5 +1714,3 @@ constexpr uint32_t REF_COMMS_RFID_STATUS_OFFSET = 120;
 constexpr uint32_t REF_COMMS_KBM_INTERACTION_OFFSET = 124;
 /// @brief End of the Ref Data packet for comms
 constexpr uint32_t REF_COMMS_END_OFFSET = 136;
-
-#endif // REF_SYSTEM_PACKET_DEFINITIONS_HPP

@@ -2,27 +2,10 @@
 #define CAN_MOTOR_HPP
 
 #include <Arduino.h>
+#include "comms/config_data/motor.hpp"
 
 #include <FlexCAN_T4.h>
-
-/// @brief Defines the motor controller types. Enum values chosen based on the yaml config specification
-enum class MotorControllerType {
-    NULL_MOTOR_CONTROLLER_TYPE = 0,
-    C610,
-    C620,
-    MG8016,
-    GIM,
-    SDC104,
-};
-
-// Todo
-enum class MotorType {
-    NULL_MOTOR_TYPE = 0,
-    GIM3505,
-    GIM4310,
-    GIM6010,
-    GIM8108,
-};
+#include <cstdint>
 
 /// @brief Unified motor state
 struct MotorState {
@@ -45,14 +28,10 @@ public:
     /// @brief Deleted default constructor. Must explicitly construct this object
     Motor() = delete;
 
-    /// @brief Main constructor. Defines the motor and controller type, global ID, id, and can bus
-    /// @param controller_type The motor controller type 
-    /// @param gid The global ID, not the per-bus motor ID
-    /// @param id The per-bus motor ID. This is 1-indexed 
-    /// @param bus The CAN bus index/ID
-    /// @param motor_type The motor type, defaults to NULL_MOTOR_TYPE if not specified.
-    Motor(MotorControllerType controller_type, uint32_t gid, uint32_t id, uint8_t bus, MotorType motor_type)
-        : m_controller_type(controller_type), m_gid(gid), m_id(id), m_bus_id(bus), m_motor_type(motor_type) { }
+    /// @brief Main constructor. 
+    /// @param motor_config The configuration struct for this motor
+    Motor(Cfg::Motor motor_config)
+         : motor_config(motor_config), m_physical_id(motor_config.physical_id), m_bus_id(motor_config.physical_bus) { }
 
 /// @brief Virtual destructor
     virtual ~Motor() { }
@@ -79,34 +58,42 @@ public:
     /// @brief Generic write motor function handling only torque. This is the only common interface of all the motors we use
     /// @param torque The torque value between [-1, 1]
     /// @note This does not issue a CAN command over the bus
-    virtual void write_motor_torque(float torque) = 0;
+    void write_motor_torque(float torque) {
+        commanded_motor_torque = torque;
+        execute_motor_torque_command(torque);
+    }
+
+    /// @brief Get the last commanded motor torque. This is used to send to comms so we can log the commanded torque and not just the actual torque
+    /// @return The last commanded motor torque
+    float get_commanded_motor_torque() const {
+        return commanded_motor_torque;
+    }
 
     /// @brief Print the current state of the motor
     virtual void print_state() const {
-        Serial.printf("Bus: %x\tID: %x\tTemp: %.2dc\tTorque: % 4.3f%%\tSpeed: % 6.2frad/s\tPos: %5.5d?\n", m_bus_id, m_id, m_state.temperature, m_state.torque, m_state.speed, m_state.position);
+        Serial.printf("Name: %u\tBus: %u\tID: %u\tTemp: %.2dc\tTorque: % 4.3f%%\tSpeed: % 6.2frad/s\tPos: %5.5d?\n", static_cast<uint32_t>(motor_config.motor_name), motor_config.physical_bus, motor_config.physical_id, m_state.temperature, m_state.torque, m_state.speed, m_state.position);
     }
 
 public:
     /// @brief Get the motor controller type
     /// @return The motor controller type
-    inline MotorControllerType get_controller_type() const { return m_controller_type; }
+    inline Cfg::MotorControllerType get_controller_type() const { return motor_config.motor_controller_type; }
 
     /// @brief Get the motor type
     /// @return The motor type
-    inline MotorType get_motor_type() const { return m_motor_type; }
-
-    /// @brief Get the global ID
-    /// @return The unique global ID
-    inline uint32_t get_global_id() const { return m_gid; }
+    inline Cfg::MotorType get_motor_type() const { return motor_config.motor_type; }
 
     /// @brief Get the per-bus motor ID
     /// @return The CAN motor ID
-    inline uint32_t get_id() const { return m_id; }
+    inline uint32_t get_id() const { return motor_config.physical_id; }
+
+    /// @brief Get the configured motor name
+    /// @return The motor name
+    inline Cfg::MotorName get_name() const { return motor_config.motor_name; }
 
     /// @brief Get the bus ID
     /// @return The bus ID
-    inline uint32_t get_bus_id() const { return m_bus_id; }
-
+    inline uint32_t get_bus_id() const { return motor_config.physical_bus; }
     /// @brief Get the current state of the motor
     /// @return The current state of the motor
     inline MotorState get_state() const { return m_state; }
@@ -117,37 +104,34 @@ protected:
     /// @return True if the message is for this motor, false otherwise
     inline virtual bool check_msg_id(const CAN_message_t& msg) const {
         // early return if msg ID does not match
-        if (msg.id != m_base_id + m_id) {
+        if (msg.id != m_base_id + m_physical_id) {
             return false;
         }
 
         // early return if the bus does not match
         // msg.bus is 1-indexed
-        if ((uint32_t)(msg.bus - 1) != m_bus_id) {
+        if ((uint32_t)(msg.bus - 1) != motor_config.physical_bus) {
             return false;
         }
 
         return true;
     }
 
+    /// @brief Execute the motor torque command. This is the actual implementation of writing the motor torque that differs between motors. This is called by write_motor_torque after updating the commanded_motor_torque variable
+    /// @param torque The torque value between [-1, 1]
+    virtual void execute_motor_torque_command(float torque) = 0;
+
 protected:
-    /// @brief What controller this motor uses
-    MotorControllerType m_controller_type = MotorControllerType::NULL_MOTOR_CONTROLLER_TYPE;
-
-    /// @brief The unique global motor ID for this motor. This is not it's per-bus ID
-    uint32_t m_gid = 0;
-
-    /// @brief The per-bus CAN id for this motor. This is not it's global ID from config
-    uint32_t m_id = 0;
-
-    /// @brief ID of the CAN bus
-    uint32_t m_bus_id = 0;
+    /// @brief motor configuration info, storing motor type, controller type, bus, ID, and name
+    Cfg::Motor motor_config;
 
     /// @brief The base ID for the motor
     uint32_t m_base_id = 0;
 
-    /// @brief The motor type
-    MotorType m_motor_type = MotorType::NULL_MOTOR_TYPE;
+    /// @brief The physical ID of the motor on its bus.
+    uint32_t m_physical_id = 0;
+    /// @brief The bus ID that the motor is on
+    uint32_t m_bus_id = 0;
 
     /// @brief The output CAN frame. To be sent to the motor
     CAN_message_t m_output;
@@ -157,6 +141,10 @@ protected:
 
     /// @brief The current state of the motor
     MotorState m_state;
+
+private: 
+    /// @brief The last commanded motor torque. This is stored to be sent to comms, it is updated whenever write_motor_torque is called
+    float commanded_motor_torque = 0.0f;
 
 };
 

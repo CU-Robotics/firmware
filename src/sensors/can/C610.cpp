@@ -31,7 +31,7 @@ int C610::write(CAN_message_t& msg) const {
 
     // set only the buffer bytes that correspond to this motor
     // get the per-struct motor ID
-    uint8_t motor_id = (m_id - 1) % 4;
+    uint8_t motor_id = (m_physical_id - 1) % 4;
 
     // fill in the output array
     // message format is specified in the C610 datasheet (Speed Controller Receiving Message Format)
@@ -45,10 +45,10 @@ int C610::write(CAN_message_t& msg) const {
 
 void C610::zero_motor() {
     // write 0 torque to the output msg
-    write_motor_torque(0.0f);
+    execute_motor_torque_command(0.0f);
 }
 
-void C610::write_motor_torque(float torque) {
+void C610::execute_motor_torque_command(float torque) {
     // clamp torque to -1 to 1 just in case. We dont want to overflow the int
     if (torque < -1.0f) torque = -1.0f;
     if (torque > 1.0f) torque = 1.0f;
@@ -60,7 +60,7 @@ void C610::write_motor_torque(float torque) {
     int16_t int_torque = (int16_t)mapped_torque;
 
     // map the ID
-    uint8_t message_id = (m_id - 1) / 4;
+    uint8_t message_id = (m_physical_id - 1) / 4;
 
     // set the output ID
     if (message_id == 0)
@@ -69,7 +69,7 @@ void C610::write_motor_torque(float torque) {
         m_output.id = 0x1FF;    // last 4 motors
     
     // get the per-struct motor ID
-    uint8_t motor_id = (m_id - 1) % 4;
+    uint8_t motor_id = (m_physical_id - 1) % 4;
 
     // fill in the output array
     m_output.buf[motor_id * 2] = (int_torque >> 8) & 0xFF;  // upper byte
