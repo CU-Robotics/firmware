@@ -129,6 +129,7 @@ void XDriveController::step(RobotStateMap& reference_map, RobotStateMap& estimat
         // Serial.printf("chassis heading output: %f, chassis x output: %f, chassis y output: %f chassis angle:%f\n", output[2], output[0], output[1], estimate[2][0]);
         // Adjust for chassis heading so control is field relative
         float chassis_heading = estimate_map[Cfg::StateName::ChassisHeading].get_position();
+
         // Convert to motor velocities
         motor_velocity[1] = output[0] * cos(chassis_heading) + output[1] * sin(chassis_heading) + output[2];
         motor_velocity[2] = output[0] * sin(chassis_heading) - output[1] * cos(chassis_heading) + output[2];
@@ -176,8 +177,6 @@ void YawController::step(RobotStateMap& reference_map, RobotStateMap& estimate_m
     pidp.setpoint = reference_map[yaw_angle_state].get_position();
     pidp.measurement = estimate_map[yaw_angle_state].get_position();
 
-    Serial.printf("yaw reference position: %f, estimate position: %f\n", reference_map[yaw_angle_state].get_position(), estimate_map[yaw_angle_state].get_position());
-
     pidv.setpoint = reference_map[yaw_angle_state].get_velocity();
     pidv.measurement = estimate_map[yaw_angle_state].get_velocity();
 
@@ -194,8 +193,6 @@ void YawController::step(RobotStateMap& reference_map, RobotStateMap& estimate_m
 
     yaw_motor_1->write_motor_torque(motor_outputs[0]);
     yaw_motor_2->write_motor_torque(motor_outputs[1]);
-
-    Serial.printf("yaw output: %f\n", output);
 }
 
 void PitchController::step(RobotStateMap& reference_map, RobotStateMap& estimate_map) {
@@ -229,8 +226,6 @@ void PitchController::step(RobotStateMap& reference_map, RobotStateMap& estimate
 
     pitch_motor_1->write_motor_torque(motor_outputs[0]);
     pitch_motor_2->write_motor_torque(motor_outputs[1]);
-
-    Serial.printf("pitch output: %f\n", output);
 }
 
 void FlywheelController::step(RobotStateMap& reference_map, RobotStateMap& estimate_map) {

@@ -164,7 +164,7 @@ void GimbalAndChassisEstimator::step_states(RobotStateMap& updated_state_map, co
     global_roll_angle += -global_roll_velocity * (dt);
 
     // chassis_angle = yaw_angle - yaw_enc_angle;
-    chassis_angle = -yaw_enc_angle;
+    chassis_angle = yaw_enc_angle;
     if (count1 == 0) {
         initial_chassis_angle = chassis_angle;
         prev_global_chassis_angle = chassis_angle;
