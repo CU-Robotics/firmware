@@ -176,6 +176,8 @@ void YawController::step(RobotStateMap& reference_map, RobotStateMap& estimate_m
     pidp.setpoint = reference_map[yaw_angle_state].get_position();
     pidp.measurement = estimate_map[yaw_angle_state].get_position();
 
+    Serial.printf("yaw reference position: %f, estimate position: %f\n", reference_map[yaw_angle_state].get_position(), estimate_map[yaw_angle_state].get_position());
+
     pidv.setpoint = reference_map[yaw_angle_state].get_velocity();
     pidv.measurement = estimate_map[yaw_angle_state].get_velocity();
 
@@ -192,6 +194,8 @@ void YawController::step(RobotStateMap& reference_map, RobotStateMap& estimate_m
 
     yaw_motor_1->write_motor_torque(motor_outputs[0]);
     yaw_motor_2->write_motor_torque(motor_outputs[1]);
+
+    Serial.printf("yaw output: %f\n", output);
 }
 
 void PitchController::step(RobotStateMap& reference_map, RobotStateMap& estimate_map) {
@@ -225,6 +229,8 @@ void PitchController::step(RobotStateMap& reference_map, RobotStateMap& estimate
 
     pitch_motor_1->write_motor_torque(motor_outputs[0]);
     pitch_motor_2->write_motor_torque(motor_outputs[1]);
+
+    Serial.printf("pitch output: %f\n", output);
 }
 
 void FlywheelController::step(RobotStateMap& reference_map, RobotStateMap& estimate_map) {
@@ -305,9 +311,9 @@ void LowerFeederController::step(RobotStateMap& reference_map, RobotStateMap& es
     float output = (outputp + outputv) * controller_config.gear_ratios.feeder_direction;
     
     // Serial.printf("Feeder Velocity Setpoint: %f, Measurement: %f, output: %f\n", pidv.setpoint, pidv.measurement, output);
-    Serial.printf("lower feeder reference position: %f, reference velocity: %f, estimate position: %f, estimate velocity: %f\n", 
-                    reference_map[lower_feeder_position_state].get_position(), reference_map[lower_feeder_position_state].get_velocity(),
-                    estimate_map[lower_feeder_position_state].get_position(), estimate_map[lower_feeder_position_state].get_velocity());
+    // Serial.printf("lower feeder reference position: %f, reference velocity: %f, estimate position: %f, estimate velocity: %f\n", 
+    //                 reference_map[lower_feeder_position_state].get_position(), reference_map[lower_feeder_position_state].get_velocity(),
+    //                 estimate_map[lower_feeder_position_state].get_position(), estimate_map[lower_feeder_position_state].get_velocity());
         
     close_feeder_motor->write_motor_torque(output);
     far_feeder_motor->write_motor_torque(-output);

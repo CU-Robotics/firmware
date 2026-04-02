@@ -238,14 +238,14 @@ int main() {
 
         override_request = false;
 
-        if ((feed - estimated_state_map[Cfg::StateName::Feeder].get_position() > 2 && transmitter_manager.is_teensy_mode()) ||
-            (target_state_map[Cfg::StateName::Feeder].get_position() - estimated_state_map[Cfg::StateName::Feeder].get_position() > 2 &&
-             transmitter_manager.is_hive_mode())) {
-            Serial.printf("Feeder is lowkey jammed. current ball count: %f, feed: %f, hive target: %f\n",
-                            estimated_state_map[Cfg::StateName::Feeder].get_position(), feed, target_state_map[Cfg::StateName::Feeder].get_position());
-            feed = estimated_state_map[Cfg::StateName::Feeder].get_position() + 1;
-            governor.set_position_reference(Cfg::StateName::Feeder, feed);
-        }
+        // if ((feed - estimated_state_map[Cfg::StateName::Feeder].get_position() > 2 && transmitter_manager.is_teensy_mode()) ||
+        //     (target_state_map[Cfg::StateName::Feeder].get_position() - estimated_state_map[Cfg::StateName::Feeder].get_position() > 2 &&
+        //      transmitter_manager.is_hive_mode())) {
+        //     Serial.printf("Feeder is lowkey jammed. current ball count: %f, feed: %f, hive target: %f\n",
+        //                     estimated_state_map[Cfg::StateName::Feeder].get_position(), feed, target_state_map[Cfg::StateName::Feeder].get_position());
+        //     feed = estimated_state_map[Cfg::StateName::Feeder].get_position() + 1;
+        //     governor.set_position_reference(Cfg::StateName::Feeder, feed);
+        // }
 
         // if first loop set target state to estimated state
         if (count_one == 0) {
@@ -323,7 +323,7 @@ int main() {
                         ? (int)floor(estimated_state_map[Cfg::StateName::Feeder].get_position()) + 1
                         : (int)floor(estimated_state_map[Cfg::StateName::Feeder].get_position()); // reset feed to the current state
             last_feed = feed;                          // reset last feed to the current state
-            Serial.printf("Can zero\n");
+            // Serial.printf("Can zero\n");
         }
 
         // LED heartbeat -- linked to loop count to reveal slowdowns and
