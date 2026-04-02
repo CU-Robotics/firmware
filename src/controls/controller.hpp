@@ -65,7 +65,7 @@ private:
     Cfg::SubController chassis_angular_velocity_controller;
     /// @brief control the actual motor velocities based on the outputs of the higher level controllers
     Cfg::SubController low_level_velocity_controller;
-/// @brief control input to motors based on ref power buffer so we don't draw too much.
+    /// @brief control input to motors based on ref power buffer so we don't draw too much.
     Cfg::SubController power_buffer_controller;
 
     /// @brief filter for calculating pid position controller outputs. 3 for x, y, and chassis angle

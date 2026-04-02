@@ -113,7 +113,7 @@ int main() {
 
     // Execute setup functions
     pinMode(LED_BUILTIN, OUTPUT);
-
+    
     comms_layer.init();
 
     // Configure the robot from comms data, which is filled on Hive.
@@ -128,7 +128,7 @@ int main() {
     
     // initialize objects
     Governor governor(config.states);
-
+    
     can.init(config.motors);
     
     safety::register_safety_function([&](){ can.issue_safety_mode(); });
@@ -235,6 +235,7 @@ int main() {
         // step estimates and construct estimated state
         estimator_manager.step(estimated_state_map, override_request);
         // estimated_state_map.print();
+
         override_request = false;
 
         if ((feed - estimated_state_map[Cfg::StateName::Feeder].get_position() > 2 && transmitter_manager.is_teensy_mode()) ||
@@ -263,6 +264,10 @@ int main() {
 
         target_state_map.send_to_comms<TargetState>();
         estimated_state_map.send_to_comms<EstimatedState>();
+
+        Comms::Sendable<ConfigurationStatusData> config_status_sendable;
+        config_status_sendable.data.is_configured = comms_layer.is_configured() ? 1 : 0;
+        config_status_sendable.send_to_comms();
 
         comms_layer.run();
 
@@ -318,7 +323,7 @@ int main() {
                         ? (int)floor(estimated_state_map[Cfg::StateName::Feeder].get_position()) + 1
                         : (int)floor(estimated_state_map[Cfg::StateName::Feeder].get_position()); // reset feed to the current state
             last_feed = feed;                          // reset last feed to the current state
-            // Serial.printf("Can zero\n");
+            Serial.printf("Can zero\n");
         }
 
         // LED heartbeat -- linked to loop count to reveal slowdowns and

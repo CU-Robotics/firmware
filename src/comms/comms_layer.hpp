@@ -57,7 +57,7 @@ public:
 
     /// @brief Check if the configuration process is complete
     /// @return True if configuration is complete, false if not
-    bool is_configured() const { return m_hive_data.config.is_configured() == 1; }
+    bool is_configured() const { return m_hive_data.config.is_configured(); }
 
 public:
     /// @brief Get the outgoing ethernet packet

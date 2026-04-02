@@ -43,9 +43,6 @@ struct PIDFilter {
         // if(wrap) Serial.println(error);
         sumError += error * dt;
         float output = (kp * error) + (kd * ((error - prevError) / dt)) + kf;
-        // + (K[1] * sumError)
-        // + (K[2] * ((error - prevError) / dt));
-        // + (K[3] * feedForward);
         prevError = error;
         if (fabs(output) > 1.0 && bound) output /= fabs(output);
         return output;

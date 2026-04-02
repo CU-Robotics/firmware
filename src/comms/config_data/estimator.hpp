@@ -88,7 +88,6 @@ enum class EstimatorType : uint32_t {
     FlywheelVelocity,
     FeederPosition,
     LowerFeederPosition,
-    Actuators,
 };
 /// @brief The `SensorInfo` struct contains all the sensor related information for the estimator config.
 // This includes the offsets for the encoders, the ratios and directions for the feeder, etc.

@@ -160,7 +160,7 @@ void GimbalAndChassisEstimator::step_states(RobotStateMap& updated_state_map, co
     chassis_angle = -yaw_enc_angle;
     if (count1 == 0) {
         initial_chassis_angle = chassis_angle;
-        prev_chassis_angle = chassis_angle;
+        prev_global_chassis_angle = chassis_angle;
         count1++;
     }
 
@@ -184,6 +184,9 @@ void GimbalAndChassisEstimator::step_states(RobotStateMap& updated_state_map, co
     updated_state_map[pitch_state].set_position(pitch_enc_angle);
     updated_state_map[pitch_state].set_velocity(current_pitch_velocity);
     updated_state_map[pitch_state].set_acceleration(0);
+    updated_state_map[chassis_heading_state].set_position(chassis_angle);
+
+    
 
     // 3 odom wheel estimation
     // for (int i = 0; i < 3; i++) {
@@ -196,17 +199,16 @@ void GimbalAndChassisEstimator::step_states(RobotStateMap& updated_state_map, co
     //     odom_pos_diff[i] = rev_diff[i] * odom_wheel_radius;
     //     total_odom_pos[i] = odom_pos_diff[i] + total_odom_pos[i];
     // }
-
-    chassis_angle = yaw_angle - yaw_enc_angle;
-    while (chassis_angle >= PI)
-        chassis_angle -= 2 * PI;
-    while (chassis_angle <= -PI)
-        chassis_angle += 2 * PI;
-    // chassis_angle = -(total_odom_pos[0] + total_odom_pos[2])/(2*odom_axis_offset_x)+initial_chassis_angle;  
-    float d_chassis_heading = (chassis_angle - prev_chassis_angle);
+    float global_chassis_angle = yaw_angle - yaw_enc_angle;
+    while (global_chassis_angle >= PI)
+        global_chassis_angle -= 2 * PI;
+    while (global_chassis_angle <= -PI)
+        global_chassis_angle += 2 * PI;
+    // global_chassis_angle = -(total_odom_pos[0] + total_odom_pos[2])/(2*odom_axis_offset_x)+initial_global_chassis_angle;  
+    float d_chassis_heading = (global_chassis_angle - prev_global_chassis_angle);
     if (d_chassis_heading > PI) d_chassis_heading -= 2 * PI;
     else if (d_chassis_heading < -PI) d_chassis_heading += 2 * PI;
-    prev_chassis_angle = chassis_angle;
+    prev_global_chassis_angle = global_chassis_angle;
     if (override == 1) {
         pos_estimate[0] = previous_state_map[chassis_x_state].get_position();
         pos_estimate[1] = previous_state_map[chassis_y_state].get_position();
@@ -259,7 +261,6 @@ void GimbalAndChassisEstimator::step_states(RobotStateMap& updated_state_map, co
     updated_state_map[chassis_y_state].set_velocity(vel_estimate[1]);
     updated_state_map[chassis_y_state].set_acceleration(0);
 
-    updated_state_map[chassis_heading_state].set_position(chassis_angle);
     updated_state_map[chassis_heading_state].set_velocity(d_chassis_heading / dt);
     updated_state_map[chassis_heading_state].set_acceleration(0);
 

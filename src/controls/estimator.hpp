@@ -136,7 +136,7 @@ private:
     /// @brief odom pos difference
     float odom_pos_diff[3] = { 0 };
     /// @brief previous chassis angle
-    float prev_chassis_angle = 0;
+    float prev_global_chassis_angle = 0;
     /// @brief odom pod offset from the center of the robot
     float odom_axis_offset_x;
     /// @brief odom pod offset from the center of the robot
