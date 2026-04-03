@@ -113,7 +113,7 @@ int main() {
 
     // Execute setup functions
     pinMode(LED_BUILTIN, OUTPUT);
-
+    
     comms_layer.init();
 
     // Configure the robot from comms data, which is filled on Hive.
@@ -127,7 +127,7 @@ int main() {
     
     // initialize objects
     Governor governor(config.states);
-
+    
     can.init(config.motors);
     
     safety::register_safety_function([&](){ can.issue_safety_mode(); });
@@ -227,6 +227,7 @@ int main() {
         // step estimates and construct estimated state
         estimator_manager.step(estimated_state_map, override_request);
         // estimated_state_map.print();
+
         override_request = false;
 
         if ((feed - estimated_state_map[Cfg::StateName::Feeder].get_position() > 2 && transmitter_manager.is_teensy_mode()) ||
@@ -255,6 +256,10 @@ int main() {
 
         target_state_map.send_to_comms<TargetState>();
         estimated_state_map.send_to_comms<EstimatedState>();
+
+        Comms::Sendable<ConfigurationStatusData> config_status_sendable;
+        config_status_sendable.data.is_configured = comms_layer.is_configured() ? 1 : 0;
+        config_status_sendable.send_to_comms();
 
         comms_layer.run();
 
@@ -297,7 +302,6 @@ int main() {
             // SAFETY OFF
             can.write();
             Serial.printf("Can write\n");
-            // Serial.printf("Can write\n");
         } else {
             // SAFETY ON
             // TODO: Reset all controller integrators here

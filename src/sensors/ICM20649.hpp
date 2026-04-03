@@ -6,7 +6,6 @@
 #include "sensors/AdafruitIMUSensor.hpp"
 #include "comms/data/icm_sensor_data.hpp" 
 
-
 /// @brief Sensor access for an ICM20649 IMU Sensor. Child of the abstract IMUSensor class.
 /// @note supports I2C and SPI communication. 
 /// @see Adafruit library this class utilizes: https://adafruit.github.io/Adafruit_ICM20X/html/class_adafruit___i_c_m20_x.html
@@ -24,12 +23,13 @@ public:
     /// @brief sends the current ICM sensor data to comms
     void send_to_comms() const override;
 
-    /// @brief set teh gyro rate range of the sensor
+    /// @brief set the gyro rate range of the sensor
     /// @param range new rate range
     void set_gyro_range(Cfg::ICMImuGyroRange range);
     /// @brief set the accelerometer range of the sensor
     /// @param range new rate range
     void set_accel_range(Cfg::ICMImuAccelRange range);
+
 private:
     /// @brief Configuration data for this sensor
     const Cfg::IcmImu& config;
