@@ -56,14 +56,14 @@ int GIM::write(CAN_message_t& msg) const {
 
 void GIM::zero_motor() {
     // stop the motor
-    write_motor_torque(0.f);
+    execute_motor_torque_command(0.0f);
 }
 
 void GIM::write_motor_on() {
     uint8_t buf[8];
     create_cmd_start_motor(buf);
 
-    m_output.id = m_base_id + m_id;
+    m_output.id = m_base_id + m_physical_id;
     for (int i = 0; i < 8; i++) {
         m_output.buf[i] = buf[i];
     }
@@ -73,13 +73,13 @@ void GIM::write_motor_off() {
     uint8_t buf[8];
     create_cmd_stop_motor(buf);
 
-    m_output.id = m_base_id + m_id;
+    m_output.id = m_base_id + m_physical_id;
     for (int i = 0; i < 8; i++) {
         m_output.buf[i] = buf[i];
     }
 }
 
-void GIM::write_motor_torque(float torque) {
+void GIM::execute_motor_torque_command(float torque) {
     if (torque < -1.0f) torque = -1.0f;
     if (torque > 1.0f) torque = 1.0f;
 
@@ -91,7 +91,7 @@ void GIM::write_motor_torque(float torque) {
     create_cmd_torque_control(buf, mapped_torque, 0);
 
     // fill in the output array
-    m_output.id = m_base_id + m_id;
+    m_output.id = m_base_id + m_physical_id;
     for (int i = 0; i < 8; i++) {
         m_output.buf[i] = buf[i];
     }
@@ -110,7 +110,7 @@ void GIM::write_motor_speed(float speed) {
     create_cmd_speed_control(buf, mapped_rpm, 0); // hardcore 0 duration until we find out what it does
 
     // fill the output
-    m_output.id = m_base_id + m_id;
+    m_output.id = m_base_id + m_physical_id;
     for (int i = 0; i < 8; i++) {
         m_output.buf[i] = buf[i];
     }
@@ -122,7 +122,7 @@ void GIM::write_motor_position(float position) {
     create_cmd_position_control(buf, position, 0); // hardcore 0 duration until we find out what it does
 
     // fill the output
-    m_output.id = m_base_id + m_id;
+    m_output.id = m_base_id + m_physical_id;
     for (int i = 0; i < 8; i++) {
         m_output.buf[i] = buf[i];
     }
@@ -133,7 +133,7 @@ void GIM::write_motor_stop() {
     create_cmd_stop_control(buf);
 
     // fill the output
-    m_output.id = m_base_id + m_id;
+    m_output.id = m_base_id + m_physical_id;
     for (int i = 0; i < 8; i++) {
         m_output.buf[i] = buf[i];
     }
@@ -254,9 +254,9 @@ void GIM::create_cmd_stop_control(uint8_t buf[8]) {
     buf[7] = 0;
 }
 
-void GIM::create_cmd_modify_parameter(uint8_t buf[8], uint8_t param_id, uint32_t data) {
+void GIM::create_cmd_modify_parameter(uint8_t buf[8], uint8_t m_physical_id, uint32_t data) {
     buf[0] = CMD_MODIFY_PARAMETER;
-    buf[1] = param_id;
+    buf[1] = m_physical_id;
     buf[2] = 0;
     buf[3] = 0;
     buf[4] = *((uint8_t*)(&data) + 0); // low byte
@@ -265,9 +265,9 @@ void GIM::create_cmd_modify_parameter(uint8_t buf[8], uint8_t param_id, uint32_t
     buf[7] = *((uint8_t*)(&data) + 3); // high byte
 }
 
-void GIM::create_cmd_retrieve_parameter(uint8_t buf[8], uint8_t param_id) {
+void GIM::create_cmd_retrieve_parameter(uint8_t buf[8], uint8_t m_physical_id) {
     buf[0] = CMD_RETRIEVE_PARAMETER;
-    buf[1] = param_id;
+    buf[1] = m_physical_id;
     buf[2] = 0;
     buf[3] = 0;
     buf[4] = 0;

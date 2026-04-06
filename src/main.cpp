@@ -1,27 +1,33 @@
 #include <Arduino.h>
 
+#include "can_manager.hpp"
 #include "comms/comms_layer.hpp"
+#include "controls/state.hpp"
+#include "controls/reference_governor.hpp"
 #include "git_info.h"
 
+#include "safety.hpp"
 #include "sensors/buff_encoder.hpp"
+#include "state.hpp"
 #include "utils/profiler.hpp"
 
-#include "sensors/ET16S.hpp"
-#include "sensors/Transmitter.hpp"
+
+#include "sensors/transmitter/transmitter_utils.hpp"
+#include "sensors/transmitter/transmitter_manager.hpp"
 #include "sensors/d200.hpp"
 
 #include "controls/controller_manager.hpp"
 #include "controls/estimator_manager.hpp"
-#include "sensors/ACS712.hpp"
 #include "sensors/StereoCamTrigger.hpp"
-#include "sensors/dr16.hpp"
+#include "sensors/RefSystem.hpp"
 #include "utils/profiler.hpp"
 
-#include "SensorManager.hpp"
+#include "sensor_manager.hpp"
 #include <TeensyDebug.h>
 
 #include "comms/data/hive_data.hpp"
 #include "comms/data/sendable.hpp"
+#include "comms/data/robot_state_data.hpp"
 #include "utils/timing.hpp"
 #include "utils/watchdog.hpp"
 
@@ -34,15 +40,10 @@ extern "C" void reset_teensy(void);
 // Declare global objects
 
 CANManager can;
-RefSystem *ref;
-ACS712 current_sensor;
-Transmitter *transmitter = nullptr;
+RefSystem ref;
+TransmitterManager transmitter_manager;
 
 Comms::CommsLayer comms_layer;
-
-StereoCamTrigger stereoCamTrigger(60);
-
-ConfigLayer config_layer;
 
 #ifdef PROFILER
 Profiler prof;
@@ -51,8 +52,6 @@ Profiler prof;
 SensorManager sensor_manager;
 EstimatorManager estimator_manager;
 ControllerManager controller_manager;
-
-Governor governor;
 
 Watchdog watchdog;
 
@@ -114,90 +113,59 @@ int main() {
 
     // Execute setup functions
     pinMode(LED_BUILTIN, OUTPUT);
-    // Determine which transmitter is in use and instantiate its respective object.
-    // This allows for 'transmitter' to be used everywhere dr16 would be used
-    TransmitterType transmitter_type = transmitter->who_am_i();
-    if (transmitter_type == TransmitterType::DR16) {
-        transmitter = new DR16;
-    } else if (transmitter_type == TransmitterType::ET16S) {
-        transmitter = new ET16S;
-    }
-
-    // initialize objects
-    can.init();
-    transmitter->init();
+    
     comms_layer.init();
 
-    ref = sensor_manager.get_ref();
-
-    // Config config
+    // Configure the robot from comms data, which is filled on Hive.
     Serial.println("Configuring...");
-    const Config *config = config_layer.configure(&comms_layer);
+
+    comms_layer.configure();
+    
+    const Cfg::RobotConfig& config = comms_layer.get_hive_data().config;
+    
     Serial.println("Configured!");
+    
+    // initialize objects
+    Governor governor(config.states);
+    
+    can.init(config.motors);
+    
+    safety::register_safety_function([&](){ can.issue_safety_mode(); });
 
-    // configure motors
-    can.configure(config->motor_info);
-
+    ref.init();
+    transmitter_manager.init(config.transmitter);
+    
     // initialize sensors
     sensor_manager.init(config);
-
-    // estimate micro and macro state
-    estimator_manager.init(&can, config, &sensor_manager);
-
+    
+    estimator_manager.init(config.estimators, sensor_manager, can);
+    
     // generate controller outputs based on governed references and estimated
     // state
-    controller_manager.init(&can, config);
-
-    // set reference limits in the reference governor
-    governor.set_reference_limits(config->set_reference_limits);
-
-    // print all of config
-    config->print();
-
+    controller_manager.init(config.controllers, can);
+    
     // variables for use in main
-    float temp_state[STATE_LEN][3] = {{0}};                          // Temp state array
-    float temp_micro_state[CAN_MAX_MOTORS][MICRO_STATE_LEN] = {{0}}; // Temp micro state array
-    float temp_reference[STATE_LEN][3] = {{0}};                      // Temp governed state
-    float target_state[STATE_LEN][3] = {{0}};                        // Temp ungoverned state
-    float hive_state_offset[STATE_LEN][3] = {{0}};                   // Hive offset state
+    RobotStateMap estimated_state_map(config.states);
+    RobotStateMap reference_map(config.states);                   
+    RobotStateMap target_state_map(config.states);// Temp ungoverned state
+    RobotStateMap hive_state_map_offset(config.states);// Hive offset state
     bool override_request = false;
-    // float motor_inputs[CAN_MAX_MOTORS] = { 0 }; //Array for storing
-    // controller outputs to send to CAN
-
-    // manual controls variables
-    float vtm_pos_x = 0;
-    float vtm_pos_y = 0;
-    float transmitter_pos_x = 0;
-    float transmitter_pos_y = 0;
-    float pos_offset_x = 0;
-    float pos_offset_y = 0;
-    float feed = 0;
-    float last_feed = 0;
-
-    // get the pitch min and max, and shift them to be centered around 0
-    float pitch_min = config->set_reference_limits[4][0][0];
-    float pitch_max = config->set_reference_limits[4][0][1];
-    float pitch_average = 0.5 * (pitch_min + pitch_max);
-    pitch_min -= pitch_average;
-    pitch_max -= pitch_average;
 
     // param to specify whether this is the first loop
     int count_one = 0;
 
-    // whether we are in hive mode or not
-    bool hive_toggle = false;
-    bool safety_toggle = false;
     bool not_safety_mode = false;
     bool last_gimbal_power = false; // used to detect gimbal power changes
     bool last_loop_slow = false;    // used to detect multiple slow loops in a row
     int slow_loop_counter = 0;      // used to count slow loops in a row
-    // int last_switch = 0;
+    
+    // manual controls variables
+    float feed = 0;
+    float last_feed = 0;
 
     // main loop timers
     Timer loop_timer;
-    Timer timer;
     Timer stall_timer;
-    Timer control_input_timer;
     Timer gimbal_power_timer;
 
     // start the main loop watchdog
@@ -207,28 +175,26 @@ int main() {
 
     // Main loop
     while (true) {
-        // LimitSwitch* limit_switch = sensor_manager.get_limit_switch(0);
-        // Serial.printf("Limit Switch: %d\n", limit_switch->isPressed());
-
         // start main loop time timer
         stall_timer.start();
 
-        // read sensors
-        sensor_manager.read();
-
-        // read CAN and Transmitter -- These are kept out of sensor manager for safety reasons
+        // read CAN and send motor states to comms
         can.read();
-        transmitter->read();
+        can.send_to_comms();
 
-        sensor_manager.send_sensor_data_to_comms();
+        // read ref and send to comms
+        ref.read();
+        ref.send_to_comms();
 
-        // check whether this packet is a config packet
-        if (comms_layer.get_hive_data().config_section.request_bit == 1) {
-            Serial.println("\n\nConfig request received, reconfiguring from comms!\n\n");
-            // trigger safety mode
-            can.issue_safety_mode();
-            config_layer.reconfigure(&comms_layer);
-        }
+        // read transmitter and send to comms
+        transmitter_manager.read();
+        transmitter_manager.send_to_comms();
+
+        // read sensors and send to comms
+        // this happens in one function call 
+        sensor_manager.read();
+        sensor_manager.send_to_comms();
+
 
         // print loopc every second to verify it is still alive
         if (loopc % 1000 == 0) {
@@ -236,206 +202,63 @@ int main() {
         }
 
         // manual controls on firmware
-        std::optional<Transmitter::Keys> transmitter_keys = transmitter->get_keys();
-        std::optional<int> mouse_x = transmitter->get_mouse_x();
-        std::optional<int> mouse_y = transmitter->get_mouse_y();
-        std::optional<bool> l_mouse_button = transmitter->get_l_mouse_button();
-        // std::optional<bool> r_mouse_button = transmitter->get_r_mouse_button();
+        transmitter_manager.manual_controls(estimated_state_map, target_state_map, not_safety_mode, feed, last_feed);
 
-        float delta = control_input_timer.delta();
-        if (mouse_x.has_value() && mouse_y.has_value()) {
-            transmitter_pos_x += mouse_x.value() * 0.05 * delta;
-            transmitter_pos_y += mouse_y.value() * 0.05 * delta;
+        // check if we want to use hive controls instead
+        if (transmitter_manager.is_hive_mode()) {
+            // hid_incoming.get_target_state_map(target_state_map);
+            target_state_map.from_comms_packet(comms_layer.get_hive_data().target_state_data.state);
+            last_feed = target_state_map[Cfg::StateName::Feeder].get_position();            
         }
-
-        vtm_pos_x += ref->ref_data.kbm_interaction.mouse_speed_x * 0.05 * delta;
-        vtm_pos_y += ref->ref_data.kbm_interaction.mouse_speed_y * 0.05 * delta;
-
-        // clamp to pitch limits
-        if (transmitter_pos_y < pitch_min) {
-            transmitter_pos_y = pitch_min;
-        }
-        if (transmitter_pos_y > pitch_max) {
-            transmitter_pos_y = pitch_max;
-        }
-
-        float chassis_vel_x = 0;
-        float chassis_vel_y = 0;
-        float chassis_pos_x = 0;
-        float chassis_pos_y = 0;
-
-        if (config->governor_types[0] == 2) { // if we should be controlling velocity
-
-            chassis_vel_x = transmitter->get_l_stick_y() * 5.4 +
-                            (-ref->ref_data.kbm_interaction.key_w + ref->ref_data.kbm_interaction.key_s) * 2.5;
-
-            if (transmitter_keys.has_value()) {
-                chassis_vel_x += (-transmitter_keys.value().w + transmitter_keys.value().s) * 2.5;
-            }
-
-            chassis_vel_y = -transmitter->get_l_stick_x() * 5.4 +
-                            (ref->ref_data.kbm_interaction.key_d - ref->ref_data.kbm_interaction.key_a) * 2.5;
-
-            if (transmitter_keys.has_value()) {
-                chassis_vel_y += (transmitter_keys.value().d - transmitter_keys.value().a) * 2.5;
-            }
-        } else if (config->governor_types[0] == 1) { // if we should be controlling position
-            chassis_pos_x = transmitter->get_l_stick_x() * 2 + pos_offset_x;
-            chassis_pos_y = transmitter->get_l_stick_y() * 2 + pos_offset_y;
-        }
-
-        float chassis_spin = transmitter->get_wheel() * 25;
-        float pitch_target = 1.57 + -transmitter->get_r_stick_y() * 0.3 + transmitter_pos_y + vtm_pos_y;
-        float yaw_target = -transmitter->get_r_stick_x() * 1.5 - transmitter_pos_x - vtm_pos_x;
-
-        float fly_wheel_target =
-            (transmitter->get_r_switch() == SwitchPos::FORWARD || transmitter->get_r_switch() == SwitchPos::MIDDLE)
-                ? 18
-                : 0; // m/s
-        // if the right switch is forward, and either the left mouse button is pressed or the right switch is not
-        // backward, set the feeder to something. Otherwise, set it to 0
-        float feeder_target = (((l_mouse_button.has_value() || ref->ref_data.kbm_interaction.button_left) &&
-                                transmitter->get_r_switch() != SwitchPos::BACKWARD) ||
-                               transmitter->get_r_switch() == SwitchPos::FORWARD)
-                                  ? 10
-                                  : 0;
-        if (config->governor_types[6] == 1) {
-            float dt2 = timer.delta();
-            if (dt2 > 0.1)
-                dt2 = 0;
-            // check if the shooter is active
-            if (not_safety_mode && ref->ref_data.robot_performance.shooter_power_active)
-                feed += feeder_target * dt2;
-            target_state[6][0] = (int)feed;
-        } else {
-            target_state[6][1] = feeder_target;
-        }
-        // if (transmitter->get_r_switch() == 1 && last_switch != 1) {
-        //     feed++;
-        // }
-        // last_switch = transmitter->get_r_switch();
-        // set manual controls
-        target_state[0][0] = chassis_pos_x;
-        target_state[0][1] = chassis_vel_x;
-        target_state[1][0] = chassis_pos_y;
-        target_state[1][1] = chassis_vel_y;
-        target_state[2][1] = chassis_spin;
-        target_state[3][0] = yaw_target;
-        target_state[3][1] = 0;
-        target_state[4][0] = pitch_target;
-        target_state[4][1] = 0;
-        target_state[5][1] = fly_wheel_target;
-        target_state[7][0] = 1;
-
-        // if the left switch is all the way down use Hive controls
-
-        if (transmitter->get_l_switch() == SwitchPos::BACKWARD) {
-            // hid_incoming.get_target_state(target_state);
-            memcpy(target_state, comms_layer.get_hive_data().target_state.state, sizeof(target_state));
-            last_feed = target_state[6][0];
-            // if you just switched to hive controls, set the reference to the
-            // current state'
-            if (hive_toggle) {
-                governor.set_reference(temp_state);
-                hive_toggle = false;
-            }
-        }
-
-        // when in teensy control mode reset hive toggle
-        if (transmitter->get_l_switch() == SwitchPos::MIDDLE) {
-            if (!hive_toggle || !safety_toggle) {
-                pos_offset_x = temp_state[0][0];
-                pos_offset_y = temp_state[1][0];
-                feed = last_feed;
-                governor.set_reference(temp_state);
-            }
-            hive_toggle = true;
-            safety_toggle = true;
-        }
-
-        // print transmitter
-
-        // Serial.printf("transmitter:\n\t");
-        // transmitter->print();
-
-        // Serial.printf("Target state:\n");
-        // for (int i = 0; i < 8; i++) {
-        //     Serial.printf("\t%d: %f %f %f\n", i, target_state[i][0],
-        //     target_state[i][1], target_state[i][2]);
-        // }
 
         // override temp state if needed. Dont override in teensy mode so the sentry doesnt move during inspection
-        if (comms_layer.get_hive_data().override_state.active && !(transmitter->get_l_switch() == SwitchPos::MIDDLE)) {
+        if (comms_layer.get_hive_data().override_state_data.active && !(transmitter_manager.is_teensy_mode())) {
             // clear the request
-            comms_layer.get_hive_data().override_state.active = false;
+            comms_layer.get_hive_data().override_state_data.active = false;
 
-            Serial.printf("Overriding state with hive state\n");
-            memcpy(hive_state_offset, comms_layer.get_hive_data().override_state.state, sizeof(hive_state_offset));
+        Serial.printf("Overriding state with hive state\n");
+            hive_state_map_offset.from_comms_packet(comms_layer.get_hive_data().override_state_data.state);
 
-            memcpy(temp_state, hive_state_offset, sizeof(hive_state_offset));
+            estimated_state_map = hive_state_map_offset;
             override_request = true;
         }
 
         // step estimates and construct estimated state
-        estimator_manager.step(temp_state, temp_micro_state, override_request);
+        estimator_manager.step(estimated_state_map, override_request);
+        // estimated_state_map.print();
+
         override_request = false;
 
-        if ((feed - temp_state[6][0] > 2 && transmitter->get_l_switch() == SwitchPos::MIDDLE) ||
-            (comms_layer.get_hive_data().target_state.state[6][0] - temp_state[6][0] > 2 &&
-             transmitter->get_l_switch() == SwitchPos::BACKWARD)) {
+        if ((feed - estimated_state_map[Cfg::StateName::Feeder].get_position() > 2 && transmitter_manager.is_teensy_mode()) ||
+            (target_state_map[Cfg::StateName::Feeder].get_position() - estimated_state_map[Cfg::StateName::Feeder].get_position() > 2 &&
+             transmitter_manager.is_hive_mode())) {
             Serial.printf("Feeder is lowkey jammed. current ball count: %f, feed: %f, hive target: %f\n",
-                          temp_state[6][0], feed, comms_layer.get_hive_data().target_state.state[6][0]);
-            feed = temp_state[6][0] + 1;
-            governor.set_reference_at_index(feed, 6, 0);
+                            estimated_state_map[Cfg::StateName::Feeder].get_position(), feed, target_state_map[Cfg::StateName::Feeder].get_position());
+            feed = estimated_state_map[Cfg::StateName::Feeder].get_position() + 1;
+            governor.set_position_reference(Cfg::StateName::Feeder, feed);
         }
 
         // if first loop set target state to estimated state
         if (count_one == 0) {
-            temp_state[7][0] = 0;
-            governor.set_reference(temp_state);
-            // print temp state
-            for (int i = 0; i < 8; i++) {
-                Serial.printf("\t%d: %f %f %f\n", i, temp_state[i][0], temp_state[i][1], temp_state[i][2]);
-            }
+            governor.set_reference_map(estimated_state_map);
             count_one++;
         }
 
-        // Serial.printf("Estimated state:\n");
-        // for (int i = 0; i < 8; i++) {
-        //     Serial.printf("\t%d: %f %f %f\n", i, temp_state[i][0],
-        //     temp_state[i][1], temp_state[i][2]);
-        // }
-
-        // give the sensors the current estimated state
-        sensor_manager.set_estimated_state(temp_state);
-
+        if (transmitter_manager.mode_changed()) {
+            governor.set_reference_map(estimated_state_map);
+        }
         // reference govern
-        governor.set_estimate(temp_state);
-        governor.step_reference(target_state, config->governor_types);
-        governor.get_reference(temp_reference);
+        reference_map = governor.step_reference_map(target_state_map);
 
         // generate motor outputs from controls
-        controller_manager.step(temp_reference, temp_state, temp_micro_state);
+        controller_manager.step(reference_map, estimated_state_map);
 
-        // can.print_state();
+        target_state_map.send_to_comms<TargetState>();
+        estimated_state_map.send_to_comms<EstimatedState>();
 
-        // construct ref data packet
-        CommsRefData ref_data = ref->get_data_for_comms();
-        Comms::Sendable<CommsRefData> ref_data_sendable = ref_data;
-        ref_data_sendable.send_to_comms();
-
-        Comms::Sendable<TargetState> target_state_sendable;
-        memcpy(target_state_sendable.data.state, temp_reference, sizeof(temp_reference));
-        target_state_sendable.data.time = millis() / 1000.0;
-        target_state_sendable.send_to_comms();
-
-        Comms::Sendable<EstimatedState> estimated_state;
-        memcpy(estimated_state.data.state, temp_state, sizeof(temp_state));
-        estimated_state.data.time = millis() / 1000.0;
-        estimated_state.send_to_comms();
-
-        Comms::Sendable<TransmitterData> transmitter_sendable = transmitter->get_transmitter_data();
-        transmitter_sendable.send_to_comms();
+        Comms::Sendable<ConfigurationStatusData> config_status_sendable;
+        config_status_sendable.data.is_configured = comms_layer.is_configured() ? 1 : 0;
+        config_status_sendable.send_to_comms();
 
         comms_layer.run();
 
@@ -463,41 +286,37 @@ int main() {
         }
         last_loop_slow = is_slow_loop;
 
-        if (!last_gimbal_power && ref->ref_data.robot_performance.gimbol_power_active) {
+        if (!last_gimbal_power && ref.ref_data.robot_performance.gimbal_power_active) {
             gimbal_power_timer.start();
         }
-        last_gimbal_power = ref->ref_data.robot_performance.gimbol_power_active;
+        last_gimbal_power = ref.ref_data.robot_performance.gimbal_power_active;
         bool gimbal_power_recently_turned_on = gimbal_power_timer.get_elapsed_micros_no_restart() < 3000000;
 
         not_safety_mode =
-            (transmitter->is_connected() &&
-             (transmitter->get_l_switch() == SwitchPos::BACKWARD || transmitter->get_l_switch() == SwitchPos::MIDDLE) &&
-             config_layer.is_configured() && !is_slow_loop && ref->ref_data.robot_performance.gimbol_power_active &&
+            (!transmitter_manager.is_safety_mode() &&
+             comms_layer.is_configured() && !is_slow_loop && ref.ref_data.robot_performance.gimbal_power_active &&
              !gimbal_power_recently_turned_on);
         //  SAFETY MODE
         if (not_safety_mode) {
             // SAFETY OFF
             can.write();
-            // Serial.printf("Can write\n");
-            // Serial.printf("Can write\n");
+            Serial.printf("Can write\n");
         } else {
             // SAFETY ON
             // TODO: Reset all controller integrators here
             can.issue_safety_mode();
-            governor.set_reference_at_index(temp_state[6][0], 6, 0);
+            governor.set_position_reference(Cfg::StateName::Feeder, estimated_state_map[Cfg::StateName::Feeder].get_position());
 
-            feed = (fmod(fmod(temp_state[6][0], 1) + 1, 1) > 0.2)
-                       ? (int)floor(temp_state[6][0]) + 1
-                       : (int)floor(temp_state[6][0]); // reset feed to the current state
+            feed = (fmod(fmod(estimated_state_map[Cfg::StateName::Feeder].get_position(), 1) + 1, 1) > 0.2)
+                        ? (int)floor(estimated_state_map[Cfg::StateName::Feeder].get_position()) + 1
+                        : (int)floor(estimated_state_map[Cfg::StateName::Feeder].get_position()); // reset feed to the current state
             last_feed = feed;                          // reset last feed to the current state
-            // Serial.printf("Can zero\n");
-            safety_toggle = false; // reset hive toggle
+            Serial.printf("Can zero\n");
         }
 
         // LED heartbeat -- linked to loop count to reveal slowdowns and
         // freezes.
-        loopc % (int)(1E3 / float(HEARTBEAT_FREQ)) < (int)(1E3 / float(5 * HEARTBEAT_FREQ)) ? digitalWrite(13, HIGH)
-                                                                                            : digitalWrite(13, LOW);
+        loopc % (int)(1E3 / float(HEARTBEAT_FREQ)) < (int)(1E3 / float(5 * HEARTBEAT_FREQ)) ? digitalWrite(13, HIGH) : digitalWrite(13, LOW);
         loopc++;
 
         // feed the watchdog to keep the loop running

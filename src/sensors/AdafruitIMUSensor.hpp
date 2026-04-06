@@ -1,27 +1,20 @@
-#ifndef ICMSENSOR_H
-#define ICMSENSOR_H
+#pragma once
 
 #include <Arduino.h> // https://www.arduino.cc/reference/en/
 #include <Wire.h> // https://www.arduino.cc/reference/en/language/functions/communication/wire/
 
 #include <Adafruit_Sensor.h>
-#include "Sensor.hpp"
+#include "sensors/sensor.hpp"
 
-/// @brief Abstract parent class for all IMUSensors, which give acceleration and gyroscope data. 
-class IMUSensor : public Sensor {
+/// @brief Abstract parent class for all AdafruitIMUSensors, which give acceleration and gyroscope data. 
+class AdafruitIMUSensor : public Sensor {
 public:
     /// @brief Constructor that takes a SensorType and passes it to the Sensor constructor.
-    IMUSensor() : Sensor(SensorType::ICM) {}
-
-
-    /// @brief read values from the sensor. Call this to update sensor data before accessing them from the getters.
-    /// @return true if successful, false if no data available 
-    virtual bool read() = 0;
+    AdafruitIMUSensor() : Sensor() {}
 
     /// @brief Get the temperature of the sensor
     /// @return temperature in Celcius
     inline float get_temperature() { return temperature; };
-
 
     //POSSIBLE BUG REASON: the accelerations are not corrected for the offset possibly being the reason for the weird values.
     /// @brief Get the acceleration of the sensor in its local x axis.
@@ -99,5 +92,3 @@ protected:
     /// @brief temperature value
     float temperature = 0;
 };
-
-#endif

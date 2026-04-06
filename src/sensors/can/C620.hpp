@@ -1,5 +1,4 @@
-#ifndef C620_DRIVER_HPP
-#define C620_DRIVER_HPP
+#pragma once
 
 #include "motor.hpp"
 
@@ -12,12 +11,9 @@ public:
     C620() = delete;
 
     /// @brief Main constructor. Defines the controller type, global ID, id, and can bus
-    /// @param gid The global ID, not the per-bus motor ID
-    /// @param id The per-bus motor ID. This is 1-indexed
-    /// @param bus_id The CAN bus index/ID
-    /// @param motor_type The motor type (not used for C620)
-    C620(uint32_t gid, uint32_t id, uint8_t bus_id, MotorType motor_type)
-        : Motor(MotorControllerType::C620, gid, id, bus_id, motor_type) {
+    /// @param motor_config The configuration for this motor, including its controller type, physical bus and id, motor type, and motor name.
+    C620(const Cfg::Motor& motor_config)
+        : Motor(motor_config) {
         m_base_id = 0x200;
     }
 
@@ -45,7 +41,7 @@ public:
 
     /// @brief Write motor torque given a normalized value
     /// @param torque A value between [-1, 1] representing the torque range of [-20A, 20A]
-    void write_motor_torque(float torque) override;
+    void execute_motor_torque_command(float torque) override;
 
 private:
 
@@ -57,5 +53,3 @@ private:
     const int32_t m_min_torque = -16384;
 
 };
-
-#endif // C620_DRIVER_HPP

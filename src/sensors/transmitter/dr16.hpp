@@ -1,9 +1,11 @@
-#ifndef DR16_HPP
-#define DR16_HPP
+#pragma once
 
 #include <cstdint>		// for access to fixed-width types
 #include "Arduino.h"	// for access to HardwareSerial defines
-#include "Transmitter.hpp"
+#include "transmitter.hpp"
+#include "comms/data/dr16_data.hpp"
+#include "utils/timing.hpp"
+#include "comms/config_data/transmitter.hpp"
 
 constexpr uint16_t DR16_PACKET_SIZE = 18;				// the size in bytes of a DR16-Receiver packet
 constexpr uint16_t DR16_INPUT_VALUE_COUNT = 7;			// the size in floats of the normalized input
@@ -67,57 +69,74 @@ constexpr uint32_t DR16_ALIGNMENT_LONG_INTERVAL_THRESHOLD = 1000; 	// time in us
 class DR16 : public Transmitter {
 public:
 	/// @brief Constructor, left empty
-	DR16();
+	/// @param config_ reference to config struct for this sensor
+	DR16(const Cfg::DR16& config_);
+	/// @brief Destructor, left empty
+	~DR16() {};
 
 	/// @brief Initializes DR16 receiver, starts the Serial interface, and zeros input buffers
 	void init() override;
 
 	/// @brief Attempts to read a full packet from the receiver. This function shouldn't be ran more than 100kHz
 	void read() override;
+	/// @brief Whether the DR16 is in safety mode, determined if the left switch is in the forward position or if the DR16 is disconnected.
+	/// @return true if in safety mode, false if not in safety mode
+	bool is_safety_mode() override;
+	/// @brief Whether the DR16 is in hive mode, determined if the left switch is in the backward position.
+	/// @return true if in hive mode, false if not in hive mode
+	bool is_hive_mode() override;
+	/// @brief Whether the DR16 is in teensy mode, determined if the left switch is in the middle position.
+	/// @return true if in teensy mode, false if not in teensy mode
+	bool is_teensy_mode() override;
 
-	/// @brief Zeros the normalized input array
-	void zero() override;
+	/// @copydoc Transmitter::mode_changed
+	bool mode_changed() override;
+
+	/// @copydoc Transmitter::manual_controls
+	void manual_controls(const RobotStateMap& estimated_state_map, RobotStateMap& target_state_map, bool not_safety_mode, float& feed, float& last_feed) override;
 
 public:
+	/// @brief Zeros the normalized input array
+	void zero();
 	/// @brief Returns the fail bit. Set only if invalid packets have been received for more then 250ms
 	/// @return Failure status
-	uint8_t is_fail() override { return m_fail; }
+	uint8_t is_fail() { return m_fail; }
 
 	/// @brief Returns a the current connection status for the dr16 controller
 	/// @return true for connected false for not connected
-	bool is_connected() override { return m_connected; }
+	bool is_connected() { return m_connected; }
 
 	/// @brief Get the 7 float length input buffer. These values are normalized [-1, 1]
 	/// @return float buffer
-	float* get_input() override;
+	float* get_input();
 
 	/// @brief Get right stick x value
 	/// @return Right stick x value [-1.f, 1.f]
-	float get_r_stick_x() override;
+	float get_r_stick_x();
 
 	/// @brief Get right stick y value
 	/// @return Right stick y value [-1.f, 1.f]
-	float get_r_stick_y() override;
+	float get_r_stick_y();
 
 	/// @brief Get left stick x value
 	/// @return Left stick x value [-1.f, 1.f]
-	float get_l_stick_x() override;
+	float get_l_stick_x();
 
 	/// @brief Get left stick y value
 	/// @return Left stick y value [-1.f, 1.f]
-	float get_l_stick_y() override;
+	float get_l_stick_y();
 
 	/// @brief Get wheel value
 	/// @return Wheel value [-1.f, 1.f]
-	float get_wheel() override;
+	float get_wheel();
 
 	/// @brief Get left switch value
 	/// @return Switch value [1, 2, 3]
-	SwitchPos get_l_switch() override;
+	SwitchPos get_l_switch();
 
 	/// @brief Get right switch value
 	/// @return Switch value [1, 2, 3]
-	SwitchPos get_r_switch() override;
+	SwitchPos get_r_switch();
 
 	/// @brief Prints the normalized input buffer
 	void print() override;
@@ -127,11 +146,11 @@ public:
 
 	/// @brief Get mouse velocity x
 	/// @return Amount of points since last read
-	std::optional<int> get_mouse_x();
+	int get_mouse_x();
 
 	/// @brief Get mouse velocity y
 	/// @return Amount of points since last read
-	std::optional<int> get_mouse_y();
+	int get_mouse_y();
 
 	/// @brief Get mouse velocity z (scroll wheel)
 	/// @return Amount of points since last read
@@ -139,27 +158,34 @@ public:
 
 	/// @brief status of left mouse button
 	/// @return Is left mouse button pressed
-	std::optional<bool> get_l_mouse_button();
+	bool get_l_mouse_button();
 
 	/// @brief status of right mouse button
 	/// @return Is right mouse button pressed
-	std::optional<bool> get_r_mouse_button();
+	bool get_r_mouse_button();
 
 	/// @brief Get raw 18-byte packet
 	/// @return 18-byte packet
-	uint8_t* get_raw() override { return m_inputRaw; }
+	uint8_t* get_raw() { return m_inputRaw; }
 
-	std::optional<Keys> get_keys() override {
+	/// @brief Get the state of all the keys
+	/// @return Keys struct containing the state of all the keys
+	Keys get_keys() {
 		return keys;
 	}
-	/// @brief getter for transmitter data
-	/// @return Filled Transmitter data struct
-	TransmitterData get_transmitter_data();
-
+	
+	/// @brief Send the current DR16 data to comms
+	void send_to_comms() override;
+	
 	/// @brief A simple check to see if read data is within expected values
 	/// @return True/false whether data is deemed valid or not
-	bool is_data_valid() override;
-private:
+	bool is_data_valid();
+	private:
+
+	/// @brief getter for transmitter data
+	/// @return Filled Transmitter data struct
+	DR16Data get_dr16_data();
+
 	/// @brief Maps the input value to a specified value range
 	/// @param value the input value
 	/// @param in_low the lowest value the input could be
@@ -168,7 +194,15 @@ private:
 	/// @param out_high the highest the mapped value should be
 	/// @return Mapped input in the range of [out_low, out_high]
 	float bounded_map(int value, int in_low, int in_high, int out_low, int out_high);
+	
+	/// @brief Configuration struct for the DR16 transmitter.
+	const Cfg::DR16& config;
 
+	/// @brief previous left switch position, used for detecting toggles
+	SwitchPos prev_l_switch_pos = SwitchPos::FORWARD; // used for tracking switch toggles
+	/// @brief Whether the mode has been changed in between the last two reads.
+	bool mode_changed_flag = false;
+	
 	/// @brief Keep track of mouse x velocity
 	int16_t mouse_x = 0;
 	/// @brief Keep track of mouse y velocity
@@ -179,17 +213,38 @@ private:
 	bool l_mouse_button = 0;
 	/// @brief Keep track of right mouse button status
 	bool r_mouse_button = 0;
-
-public:
+	/// @brief Keep track of key presses
+	Keys keys;
+	
+	// manual controls
+	/// @brief Mouse x axis position
+	float transmitter_pos_x = 0;
+	/// @brief Mouse y axis position
+	float transmitter_pos_y = 0;
+	/// @brief Mouse x axis position from ref
+	float vtm_pos_x = 0;
+	/// @brief Mouse y axis position from ref
+	float vtm_pos_y = 0;
+	/// @brief Position offset for chassis x (so the sentry doesn't drive to 0,0)
+	float pos_offset_x = 0;
+	/// @brief Position offset for chassis y (so the sentry doesn't drive to 0,0)
+    float pos_offset_y = 0;
+	
+	/// @brief Timer for control input for integrating mouse velocities into position target for manual controls
+	Timer control_input_timer;
+	/// @brief Timer for tracking long loops that can happen at startup or halts
+	Timer timer;
+	
+	public:
 	/// @brief normalized input buffer
 	float m_input[DR16_INPUT_VALUE_COUNT] = { 0 };
-
+	
 	/// @brief raw input split into the 7 input channels
 	float m_inputRawSeperated[DR16_INPUT_VALUE_COUNT] = { 0 };
-
+	
 	/// @brief non-normalized, raw 18 byte packet
 	uint8_t m_inputRaw[DR16_PACKET_SIZE] = { 0 };
-
+	
 	/// @brief stores previous time value (in micros) for use in calculating a dt
 	uint32_t m_prevTime = 0;
 	/// @brief time since last valid packet
@@ -201,5 +256,3 @@ public:
 	/// @brief keeps track of what time the last packet came in
 	uint32_t m_disctTime = 0;
 };
-
-#endif // DR16_HPP

@@ -1,57 +1,37 @@
 #pragma once 
 
-#if defined(FIRMWARE)
 #include "comms/data/comms_data.hpp"            // for CommsData
-#elif defined(HIVE)
-#include "modules/comms/data/comms_data.hpp"    // for CommsData
-#endif
-// TODO: replace with kyle3's new state struct
-/// @brief Structure for the full robot state including time
-struct TempRobotState : Comms::CommsData {
-    TempRobotState() : CommsData(Comms::TypeLabel::TempRobotState, Comms::PhysicalMedium::Ethernet, Comms::Priority::High, sizeof(TempRobotState)) { }
-  
-    /// @brief Time of the teensy
-    double time = 0.0;
-    /// @brief Full robot state array
-    float state[24][3] = { {0} };
-    /// @brief The delay in communication between the teensy and the khadas
-    double comms_delay = 0;
-};
+#include "controls/state.hpp"
+#include "controls/robot_state_map.hpp"
 
-/// @brief Full robot state, in the form of TargetState
+/// @brief Comms data struct for sending the target reference state. 
 struct TargetState : Comms::CommsData {
-    TargetState() : CommsData(Comms::TypeLabel::TargetState, Comms::PhysicalMedium::Ethernet, Comms::Priority::High, sizeof(TargetState)) { }
-
-    /// @brief Time of the teensy
+    /// @brief default constructor that initializes the CommsData with the correct type label, physical medium, priority, and data size for the TargetState struct.
+    TargetState() : CommsData(Comms::TypeLabel::TargetState, Comms::PhysicalMedium::Ethernet, Comms::Priority::High, sizeof(TargetState)) {}
+    /// @brief The time at which the target state was generated
     double time = 0.0;
-    /// @brief Full robot state array
-    float state[24][3] = { {0} };
-    /// @brief The delay in communication between the teensy and the khadas
-    double comms_delay = 0;
+    /// @brief The array of raw state values for each state, indexed by the StateName enum values.
+    State::Raw state[static_cast<size_t>(Cfg::StateName::StateNameCount)] = { {0, 0, 0} };
 };
-
-/// @brief Full robot state, in the form of EstimatedState
+/// @brief Comms data struct for sending the estimated state.
 struct EstimatedState : Comms::CommsData {
-    EstimatedState() : CommsData(Comms::TypeLabel::EstimatedState, Comms::PhysicalMedium::Ethernet, Comms::Priority::High, sizeof(EstimatedState)) { }
-  
-    /// @brief Time of the teensy
+    /// @brief default constructor that initializes the CommsData with the correct type label, physical medium, priority, and data size for the EstimatedState struct.
+    EstimatedState() : CommsData(Comms::TypeLabel::EstimatedState, Comms::PhysicalMedium::Ethernet, Comms::Priority::High, sizeof(EstimatedState)) {}
+    /// @brief The time at which the estimated state was generated
     double time = 0.0;
-    /// @brief Full robot state array
-    float state[24][3] = { {0} };
-    /// @brief The delay in communication between the teensy and the khadas
-    double comms_delay = 0;
+    /// @brief The array of raw state values for each state, indexed by the StateName enum values.
+    State::Raw state[static_cast<size_t>(Cfg::StateName::StateNameCount)] = { {0, 0, 0} };
 };
 
-/// @brief Full robot state, in the form of OverrideState
+/// @brief Comms data struct for sending the override state. This is used to override firmware's estimated state with something from hive.
 struct OverrideState : Comms::CommsData {
-    OverrideState() : CommsData(Comms::TypeLabel::OverrideState, Comms::PhysicalMedium::Ethernet, Comms::Priority::High, sizeof(OverrideState)) { }
-  
-    /// @brief Time of the teensy
+    /// @brief default constructor that initializes the CommsData with the correct type label, physical medium, priority, and data size for the OverrideState struct.
+    OverrideState() : CommsData(Comms::TypeLabel::OverrideState, Comms::PhysicalMedium::Ethernet, Comms::Priority::High, sizeof(OverrideState)) {}
+    /// @brief The time at which the override state was generated
     double time = 0.0;
-    /// @brief Full robot state array
-    float state[24][3] = { {0} };
-    /// @brief The delay in communication between the teensy and the khadas
-    double comms_delay = 0;
-    /// @brief Whether this request is active or not
-    bool active = false;
+    /// @brief The array of raw state values for each state, indexed by the StateName enum values.
+    State::Raw state[static_cast<size_t>(Cfg::StateName::StateNameCount)] = { {0, 0, 0} };
+    /// @brief Whether to actively override firmware's estimated state with this incoming state.
+    uint64_t active = false;
 };
+

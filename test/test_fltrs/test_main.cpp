@@ -85,3 +85,5 @@ void setup() {
 
     UNITY_END();
 }
+
+void loop() {}

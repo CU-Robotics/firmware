@@ -1,8 +1,10 @@
-#include <math.h>
-
 #ifndef WRAPPING_H
 #define WRAPPING_H
 
-float wrapAngle(float angle);
+namespace Utils {
+
+float wrap(float value, float min, float max);
+
+} // namespace Utils
 
 #endif // WRAPPING_H
