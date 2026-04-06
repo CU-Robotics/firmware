@@ -4,7 +4,7 @@
 
 #include "filters/pid_filter.hpp"
 
-void testWrapAround() {
+void test_wrap_around() {
     PIDFilter pid;
 
     pid.set_gains(1.0f, 0.0f, 0.0f, 0.0f);
@@ -17,7 +17,7 @@ void testWrapAround() {
     TEST_ASSERT_FLOAT_WITHIN(1e-2f, 0.2f, output);
 }
 
-void testProportional() {
+void test_proportional() {
     PIDFilter pid;
 
     pid.set_gains(2.0f, 0.0f, 0.0f, 0.0f);
@@ -30,7 +30,7 @@ void testProportional() {
     TEST_ASSERT_FLOAT_WITHIN(1e-5f, 4.0f, output);
 }
 
-void testDerivative() {
+void test_derivative() {
     PIDFilter pid;
 
     pid.set_gains(0.0f, 0.0f, 1.0f, 0.0f);
@@ -46,7 +46,7 @@ void testDerivative() {
     TEST_ASSERT_FLOAT_WITHIN(1e-5f, 1.0f, output);
 }
 
-void testOutputBound() {
+void test_output_bound() {
     PIDFilter pid;
 
     pid.set_gains(10.0f, 0.0f, 0.0f, 0.0f);
@@ -59,7 +59,7 @@ void testOutputBound() {
     TEST_ASSERT_FLOAT_WITHIN(1e-5f, 1.0f, output);
 }
 
-void testFeedforward() {
+void test_feedforward() {
     PIDFilter pid;
 
     pid.set_gains(0.0f, 0.0f, 0.0f, 0.5f);
@@ -77,11 +77,11 @@ void setup() {
 
     UNITY_BEGIN();
 
-    RUN_TEST(testWrapAround);
-    RUN_TEST(testProportional);
-    RUN_TEST(testDerivative);
-    RUN_TEST(testOutputBound);
-    RUN_TEST(testFeedforward);
+    RUN_TEST(test_wrap_around);
+    RUN_TEST(test_proportional);
+    RUN_TEST(test_derivative);
+    RUN_TEST(test_output_bound);
+    RUN_TEST(test_feedforward);
 
     UNITY_END();
 }

@@ -55,9 +55,7 @@ void test_power_limit_proportional_midpoint(void) {
     TEST_ASSERT_FLOAT_WITHIN(1e-5f, expected, compute_power_limit_ratio(35.0f, 60.0f, 10.0f));
 }
 
-// ─────────────────────────────────────────────
 // XDrive Kinematics
-// ─────────────────────────────────────────────
 
 void test_xdrive_pure_x_at_zero_heading(void) {
     MotorVelocities mv = xdrive_mix(1.0f, 0.0f, 0.0f, 0.0f);
@@ -100,13 +98,10 @@ void test_xdrive_opposite_motor_pairs_negate(void) {
     TEST_ASSERT_FLOAT_WITHIN(1e-4f, -mv.v[3], mv.v[1]);
 }
 
-// ─────────────────────────────────────────────
 // Motor Index Inconsistency (position vs velocity mode)
-//
 // Position mode assigns motor velocities in [1,2,3,0] order while
 // velocity mode uses [0,1,2,3]. This test documents the divergence
 // so it can't be silently broken further — update it if intentionally fixed.
-// ─────────────────────────────────────────────
 
 void test_xdrive_motor_index_inconsistency_documented(void) {
     float x = 1.0f, y = 0.0f, rot = 0.0f, h = 0.0f;
@@ -128,9 +123,7 @@ void test_xdrive_motor_index_inconsistency_documented(void) {
     TEST_ASSERT_FLOAT_WITHIN(1e-5f, vel_motor[0], pos_motor[1]);
 }
 
-// ─────────────────────────────────────────────
 // Output Clamping (Yaw / Pitch use constrain to [-1, 1])
-// ─────────────────────────────────────────────
 
 void test_clamp_large_positive_becomes_one(void) {
     TEST_ASSERT_EQUAL_FLOAT(1.0f, clamp1(5.0f));
@@ -147,10 +140,8 @@ void test_clamp_value_within_range_unchanged(void) {
     TEST_ASSERT_EQUAL_FLOAT(-1.0f, clamp1(-1.0f));
 }
 
-// ─────────────────────────────────────────────
 // Pitch Feedforward – Gravity Compensation
 // pidp.kf = gains.f * sin(pitch_angle)
-// ─────────────────────────────────────────────
 
 void test_pitch_feedforward_zero_at_level(void) {
     float kf = 1.5f * sinf(0.0f);
