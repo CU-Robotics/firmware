@@ -50,7 +50,7 @@ if [[ ! -x "$COMPILER_C" ]]; then
     exit 1
 fi
 
-tmp_db="$(mktemp compile_commands.json.XXXXXX)"
+tmp_db="$(mktemp "${TMPDIR:-/tmp}/compile_commands.json.XXXXXX")"
 cleanup() {
     rm -f "$tmp_db"
 }
