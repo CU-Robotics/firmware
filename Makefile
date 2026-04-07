@@ -119,7 +119,7 @@ MAKEFLAGS += -j$(nproc)
 
 
 # Main build target; depends on the target executable and git scraper
-build: $(BUILD_DIR)/$(TARGET_EXEC)
+build: clangd $(BUILD_DIR)/$(TARGET_EXEC)
 
 # Final linking step to create the executable.
 # This rule links all the object files to produce the final ELF executable.
@@ -188,6 +188,7 @@ docs: build
 clean:
 	rm -rf $(BUILD_DIR)
 	rm -rf $(TARGET_EXEC).elf $(TARGET_EXEC).hex $(TARGET_EXEC).map $(TARGET_EXEC).dump
+	rm -f compile_commands.json
 
 # Clean only the source object files
 clean_src:
