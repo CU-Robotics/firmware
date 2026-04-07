@@ -101,15 +101,14 @@ for src in $SRC_FILES; do
     printf '    "directory": "%s",\n' "$(json_escape "$CURDIR")" >&3
     printf '    "file": "%s",\n' "$(json_escape "$src")" >&3
     printf '    "output": "%s",\n' "$(json_escape "$obj")" >&3
-    printf ',\n' >&3
-    printf '    "arguments": [\n' >&3
+    printf '    "arguments": [' >&3
     for i in "${!args[@]}"; do
         if [[ $i -gt 0 ]]; then
-            printf ',\n' >&3
+            printf ', ' >&3
         fi
-        printf '      "%s"' "$(json_escape "${args[$i]}")" >&3
+        printf '"%s"' "$(json_escape "${args[$i]}")" >&3
     done
-    printf '\n    ]\n' >&3
+    printf ']\n' >&3
     printf '  }' >&3
 
     entry_count=$((entry_count + 1))
