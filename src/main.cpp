@@ -7,20 +7,13 @@
 #include "git_info.h"
 
 #include "safety.hpp"
-#include "sensors/buff_encoder.hpp"
 #include "state.hpp"
-#include "utils/profiler.hpp"
 
-
-#include "sensors/transmitter/transmitter_utils.hpp"
 #include "sensors/transmitter/transmitter_manager.hpp"
-#include "sensors/d200.hpp"
 
 #include "controls/controller_manager.hpp"
 #include "controls/estimator_manager.hpp"
-#include "sensors/StereoCamTrigger.hpp"
 #include "sensors/RefSystem.hpp"
-#include "utils/profiler.hpp"
 
 #include "sensor_manager.hpp"
 #include <TeensyDebug.h>

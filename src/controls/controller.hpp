@@ -1,6 +1,5 @@
 #pragma once
 
-#include "estimator.hpp"
 #include "filters/pid_filter.hpp"
 #include "motor.hpp"
 #include "safety.hpp"
@@ -24,6 +23,8 @@ public:
     /// @brief Construct the controller and get the config data
     /// @param _controller_config config data for this controller
     Controller(const Cfg::Controller& _controller_config) : controller_config(_controller_config) { };
+
+    virtual ~Controller() { };
 
     /// @brief sends motor commands based on a reference and estimated state
     /// @param reference_map current target robot state map

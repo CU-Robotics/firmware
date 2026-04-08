@@ -83,6 +83,9 @@ CXXFLAGS := $(CPU_CFLAGS) -std=gnu++23 \
 # -Map=... and --cref: Generate a cross-reference map file
 LINKING_FLAGS = -Wl,--gc-sections,--relax,-Tteensy4/imxrt1062_t41.ld,--print-memory-usage,-Map=$(BUILD_DIR)/$(TARGET_EXEC).map,--cref
 
+# get number of processors for parallel builds; use nproc for linux and sysctl for macOS
+NPROC := $(shell nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || echo 4)
+
 # Set the Arduino path based on the detected operating system
 ifeq ($(UNAME),Darwin)
  ARDUINO_PATH = $(abspath $(HOME)/Library/Arduino15)
@@ -276,41 +279,50 @@ help:
 # --- Compile DB generation with Bear -----------------------------------------
 .PHONY: cdb
 
-# Directory to host wrapper symlinks
+# Directory for wrapper symlinks (macOS only)
 BEAR_WRAPDIR ?= .bearwrap
 
-# Try to find Bear's wrapper path on common installs
-# 1) Homebrew (stable path via /opt, not versioned Cellar)
+# Bear's wrapper binary location (macOS only — Homebrew default path)
 BEAR_WRAPPER ?= $(shell brew --prefix bear 2>/dev/null)/lib/bear/wrapper
-# 2) Fallbacks for typical Linux layouts
-ifeq ($(wildcard $(BEAR_WRAPPER)),)
-  BEAR_WRAPPER := /usr/lib/bear/wrapper
-endif
-ifeq ($(wildcard $(BEAR_WRAPPER)),)
-  BEAR_WRAPPER := /usr/lib/x86_64-linux-gnu/bear/wrapper
-endif
 
-# Run this target to generate compile_commands.json for clangd.
-# To make clangd parse our project correctly, configure extra args:
-# * --query-driver=/path/to/compiler so it trusts the cross-compiler in firmware/tools/compiler/arm-gnu-toolchain/bin
-# * --compile-args=-isystem./teensy4 and --compile-args=-isystem./libraries to silence errors in external headers
-# Add these in your IDE's clangd settings (e.g. .vscode/settings.json, .zed/settings.json, etc.).
+# Generates compile_commands.json for clangd.
+# Uses LD_PRELOAD mode on Linux (fast, simple) and wrapper-dir mode on macOS
+# (required because SIP strips DYLD_INSERT_LIBRARIES from protected binaries
+# like /bin/sh, which would otherwise neuter Bear's interception).
+#
+# After running this, configure your editor's clangd with:
+#   --query-driver=**/arm-gnu-toolchain/bin/arm-none-eabi-*
+# Example VSCode config snippet:
+#   "clangd.arguments": [
+#     "--query-driver=**/arm-gnu-toolchain/bin/arm-none-eabi-*",
+#     "--background-index",
+#     "--clang-tidy"
+#   ]
+# See .vscode/settings.json or .zed/settings.json.
+# You must also make a .clangd file in the root of the repo with:
+# CompileFlags:
+#  Remove: [--specs=*]
+# This is because Clang doesn't understand the --specs=nano.specs flag we use for building.
+# There are some Clangd errors that occur inside teensy and library files that occur because of differences between our compiler and Clang. These should be ignored.
 cdb:
 	@command -v bear >/dev/null || { echo "Error: bear not found in PATH"; exit 1; }
-	@test -x "$(BEAR_WRAPPER)" || { echo "Error: bear wrapper not found at $(BEAR_WRAPPER)"; exit 1; }
-	@echo "[cdb] Preparing Bear wrapper links in $(BEAR_WRAPDIR)"
+	@echo "[cdb] Pre-building git_scraper outside Bear interception"
+	@$(MAKE) git_scraper
 	@rm -f compile_commands.json compile_commands.events.json
+ifeq ($(UNAME),Darwin)
+	@test -x "$(BEAR_WRAPPER)" || { echo "Error: bear wrapper not found at $(BEAR_WRAPPER). Install via 'brew install bear'."; exit 1; }
+	@echo "[cdb] macOS detected — using Bear wrapper-dir mode (SIP workaround)"
 	@mkdir -p $(BEAR_WRAPDIR)
-	# Create wrapper symlinks named like your cross-compilers:
 	@ln -sf "$(BEAR_WRAPPER)" "$(BEAR_WRAPDIR)/arm-none-eabi-g++"
 	@ln -sf "$(BEAR_WRAPPER)" "$(BEAR_WRAPDIR)/arm-none-eabi-gcc"
-	# Put toolchain bin in PATH so the wrapper can find the real compilers,
-	# and ask Bear to put $(BEAR_WRAPDIR) at the *front* of PATH for interception.
-	@echo "[cdb] Running build through Bear to capture commands"
-	@PATH="$(COMPILER_TOOLS_PATH):$$PATH" \
-	bear --wrapper-dir "$(BEAR_WRAPDIR)" -- \
-	  $(MAKE) -B build \
-	  COMPILER_CPP=arm-none-eabi-g++ \
-	  COMPILER_C=arm-none-eabi-gcc
+	@PATH="$(BEAR_WRAPDIR):$(COMPILER_TOOLS_PATH):$$PATH" \
+	  bear --wrapper-dir "$(BEAR_WRAPDIR)" -- \
+	    $(MAKE) -B -j$(NPROC) $(BUILD_DIR)/$(TARGET_EXEC) \
+	      COMPILER_CPP=arm-none-eabi-g++ \
+	      COMPILER_C=arm-none-eabi-gcc
+else
+	@echo "[cdb] Linux detected — using Bear LD_PRELOAD mode"
+	@bear -- $(MAKE) -B -j$(NPROC) $(BUILD_DIR)/$(TARGET_EXEC)
+endif
 	@{ command -v jq >/dev/null && jq 'length' compile_commands.json; } >/dev/null 2>&1 || true
 	@echo "[cdb] Done: compile_commands.json generated"
