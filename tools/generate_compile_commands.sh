@@ -56,8 +56,16 @@ cleanup() {
 }
 trap cleanup EXIT
 
-mapfile -t cxx_sys_includes < <(get_system_includes "$COMPILER_CPP" c++)
-mapfile -t c_sys_includes < <(get_system_includes "$COMPILER_C" c)
+cxx_sys_includes=()
+while IFS= read -r line; do
+    cxx_sys_includes+=("$line")
+done < <(get_system_includes "$COMPILER_CPP" c++)
+
+c_sys_includes=()
+while IFS= read -r line; do
+    c_sys_includes+=("$line")
+done < <(get_system_includes "$COMPILER_C" c)
+
 read -r -a cppflags <<< "$CPPFLAGS"
 read -r -a cxxflags <<< "$CXXFLAGS"
 read -r -a cflags <<< "$CFLAGS"
