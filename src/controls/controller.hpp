@@ -25,6 +25,9 @@ public:
     /// @param _controller_config config data for this controller
     Controller(const Cfg::Controller& _controller_config) : controller_config(_controller_config) { };
 
+    /// @brief Virtual destructor since this is a parent class
+    virtual ~Controller() { };
+
     /// @brief sends motor commands based on a reference and estimated state
     /// @param reference_map current target robot state map
     /// @param estimate_map current estimate robot state map
