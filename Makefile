@@ -277,9 +277,14 @@ help:
 
 
 # Generate compile_commands.json from the Makefile's flags and source lists.
-.PHONY: clangd
+COMPILE_DB = compile_commands.json
 COMPILE_DB_SCRIPT = $(TOOLS_DIR)/generate_compile_commands.sh
-clangd:
+COMPILE_DB_DIR_DEPS = $(SRC_INC_DIRS) $(LIBRARY_INC_DIRS) $(TEENSY_INC_DIRS)
+
+.PHONY: clangd
+clangd: $(COMPILE_DB)
+
+$(COMPILE_DB): Makefile $(COMPILE_DB_SCRIPT) $(COMPILE_DB_DIR_DEPS)
 	@CURDIR="$(CURDIR)" \
 	BUILD_DIR="$(BUILD_DIR)" \
 	COMPILER_CPP="$(COMPILER_CPP)" \

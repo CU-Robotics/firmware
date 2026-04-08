@@ -2,13 +2,14 @@
 
 set -euo pipefail
 
+JSON_ESCAPED=
+
 json_escape() {
-    local s="${1//\\/\\\\}"
-    s="${s//\"/\\\"}"
-    s="${s//$'\n'/\\n}"
-    s="${s//$'\r'/\\r}"
-    s="${s//$'\t'/\\t}"
-    printf '%s' "$s"
+    JSON_ESCAPED="${1//\\/\\\\}"
+    JSON_ESCAPED="${JSON_ESCAPED//\"/\\\"}"
+    JSON_ESCAPED="${JSON_ESCAPED//$'\n'/\\n}"
+    JSON_ESCAPED="${JSON_ESCAPED//$'\r'/\\r}"
+    JSON_ESCAPED="${JSON_ESCAPED//$'\t'/\\t}"
 }
 
 get_system_includes() {
@@ -70,6 +71,19 @@ read -r -a cppflags <<< "$CPPFLAGS"
 read -r -a cxxflags <<< "$CXXFLAGS"
 read -r -a cflags <<< "$CFLAGS"
 
+json_escape "$CURDIR"
+escaped_curdir="$JSON_ESCAPED"
+
+cxx_base_args=("$COMPILER_CPP" --target="$TARGET_TRIPLE" "${cppflags[@]}" "${cxxflags[@]}")
+for include_dir in "${cxx_sys_includes[@]}"; do
+    cxx_base_args+=(-isystem "$include_dir")
+done
+
+c_base_args=("$COMPILER_C" --target="$TARGET_TRIPLE" "${cppflags[@]}" "${cflags[@]}")
+for include_dir in "${c_sys_includes[@]}"; do
+    c_base_args+=(-isystem "$include_dir")
+done
+
 first=1
 entry_count=0
 
@@ -79,14 +93,10 @@ printf '[\n' >&3
 for src in $SRC_FILES; do
     case "$src" in
         *.cc|*.cpp|*.cxx)
-            compiler="$COMPILER_CPP"
-            flags=(--target="$TARGET_TRIPLE" "${cppflags[@]}" "${cxxflags[@]}")
-            sys_includes=("${cxx_sys_includes[@]}")
+            args=("${cxx_base_args[@]}")
             ;;
         *.c)
-            compiler="$COMPILER_C"
-            flags=(--target="$TARGET_TRIPLE" "${cppflags[@]}" "${cflags[@]}")
-            sys_includes=("${c_sys_includes[@]}")
+            args=("${c_base_args[@]}")
             ;;
         *)
             continue
@@ -94,10 +104,6 @@ for src in $SRC_FILES; do
     esac
 
     obj="$BUILD_DIR/$src.o"
-    args=("$compiler" "${flags[@]}")
-    for include_dir in "${sys_includes[@]}"; do
-        args+=(-isystem "$include_dir")
-    done
     args+=(-c "$src" -o "$obj")
 
     if [[ $first -eq 0 ]]; then
@@ -105,16 +111,22 @@ for src in $SRC_FILES; do
     fi
     first=0
 
+    json_escape "$src"
+    escaped_src="$JSON_ESCAPED"
+    json_escape "$obj"
+    escaped_obj="$JSON_ESCAPED"
+
     printf '  {\n' >&3
-    printf '    "directory": "%s",\n' "$(json_escape "$CURDIR")" >&3
-    printf '    "file": "%s",\n' "$(json_escape "$src")" >&3
-    printf '    "output": "%s",\n' "$(json_escape "$obj")" >&3
+    printf '    "directory": "%s",\n' "$escaped_curdir" >&3
+    printf '    "file": "%s",\n' "$escaped_src" >&3
+    printf '    "output": "%s",\n' "$escaped_obj" >&3
     printf '    "arguments": [' >&3
     for i in "${!args[@]}"; do
         if [[ $i -gt 0 ]]; then
             printf ', ' >&3
         fi
-        printf '"%s"' "$(json_escape "${args[$i]}")" >&3
+        json_escape "${args[$i]}"
+        printf '"%s"' "$JSON_ESCAPED" >&3
     done
     printf ']\n' >&3
     printf '  }' >&3
