@@ -326,3 +326,8 @@ else
 endif
 	@{ command -v jq >/dev/null && jq 'length' compile_commands.json; } >/dev/null 2>&1 || true
 	@echo "[cdb] Done: compile_commands.json generated"
+	@echo "After running this, configure your editor's clangd with: --query-driver=**/arm-gnu-toolchain/bin/arm-none-eabi-*"
+	@echo "You must also make a .clangd file in the root of the repo with:"
+	@echo "CompileFlags:"
+	@echo " Remove: [--specs=*]"
+	@echo "For more information see the the documenation for the 'cdb' target in the Makefile"
