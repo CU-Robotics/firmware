@@ -306,8 +306,8 @@ BEAR_WRAPPER ?= $(shell brew --prefix bear 2>/dev/null)/lib/bear/wrapper
 # There are some Clangd errors that occur inside teensy and library files that occur because of differences between our compiler and Clang. These should be ignored.
 cdb:
 	@command -v bear >/dev/null || { echo "Error: bear not found in PATH"; exit 1; }
-	@echo "[cdb] Pre-building git_scraper outside Bear interception"
-	@$(MAKE) git_scraper
+# 	@echo "[cdb] Pre-building git_scraper outside Bear interception"
+# 	@$(MAKE) git_scraper
 	@rm -f compile_commands.json compile_commands.events.json
 ifeq ($(UNAME),Darwin)
 	@test -x "$(BEAR_WRAPPER)" || { echo "Error: bear wrapper not found at $(BEAR_WRAPPER). Install via 'brew install bear'."; exit 1; }
@@ -317,12 +317,12 @@ ifeq ($(UNAME),Darwin)
 	@ln -sf "$(BEAR_WRAPPER)" "$(BEAR_WRAPDIR)/arm-none-eabi-gcc"
 	@PATH="$(BEAR_WRAPDIR):$(COMPILER_TOOLS_PATH):$$PATH" \
 	  bear --wrapper-dir "$(BEAR_WRAPDIR)" -- \
-	    $(MAKE) -B -j$(NPROC) $(BUILD_DIR)/$(TARGET_EXEC) \
+	    $(MAKE) -B build \
 	      COMPILER_CPP=arm-none-eabi-g++ \
 	      COMPILER_C=arm-none-eabi-gcc
 else
 	@echo "[cdb] Linux detected — using Bear LD_PRELOAD mode"
-	@bear -- $(MAKE) -B -j$(NPROC) $(BUILD_DIR)/$(TARGET_EXEC)
+	@bear -- $(MAKE) -B build
 endif
 	@{ command -v jq >/dev/null && jq 'length' compile_commands.json; } >/dev/null 2>&1 || true
 	@echo "[cdb] Done: compile_commands.json generated"
