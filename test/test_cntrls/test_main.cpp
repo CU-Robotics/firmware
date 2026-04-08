@@ -2,8 +2,6 @@
 #include <unity.h>
 #include <cmath>
 
-#include "controls/controller.hpp"
-
 // Helpers
 
 static float compute_power_limit_ratio(float buffer, float limit_thresh, float critical_thresh) {
