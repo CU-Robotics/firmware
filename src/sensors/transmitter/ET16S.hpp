@@ -303,17 +303,17 @@ private:
 	/// @brief left dial index	
 	int l_dial_num=15;
 	/// @brief trim one index	
-	int trim_one_num;
+	int trim_one_num = 16;
 	/// @brief trim two index	
-	int trim_two_num;
+	int trim_two_num = 17;
 	/// @brief trim three index	
-	int trim_three_num;
+	int trim_three_num = 18;
 	/// @brief trim four index	
-	int trim_four_num;
+	int trim_four_num = 19;
 	/// @brief trim five index	
-	int trim_five_num;
+	int trim_five_num = 20;
 	/// @brief trim six index	
-	int trim_six_num;
+	int trim_six_num = 21;
 
 	/// @brief previous safety switch position, used for detecting toggles
 	SwitchPos prev_safety_switch_pos = SwitchPos::FORWARD;
