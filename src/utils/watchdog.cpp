@@ -1,7 +1,14 @@
 #include "watchdog.hpp"
+#include "safety.hpp"
 
 void watchdog_callback() {
-    Serial.println("Watchdog is almost out of time, please feed the watchdog");
+    const bool safety_called = safety::call_safety_function();
+
+    Serial.println(
+        safety_called
+            ? "[Watchdog] Warning fired, safety function called."
+            : "[Watchdog] Warning fired, but no safety function registered!"
+    );
 }
 
 Watchdog::Watchdog() {
