@@ -4,6 +4,7 @@
 #include "utils/vector_math.hpp"
 #include "utils/wrapping.hpp"
 
+// Wrap tests
 
 void test_wrap_basic() {
     TEST_ASSERT_FLOAT_WITHIN(1e-5f, 5.0f, Utils::wrap(5.0f, 0.0f, 10.0f));
@@ -36,6 +37,8 @@ void test_wrap_angle_negative() {
 void test_wrap_negative_range() {
     TEST_ASSERT_FLOAT_WITHIN(1e-5f, -M_PI + 0.1f, Utils::wrap(M_PI + 0.1f, -M_PI, M_PI));
 }
+
+// Matrix math tests
 
 void test_determinant_3x3() {
     float mat[3][3] = {
@@ -97,6 +100,8 @@ void setup() {
     delay(2000);
 
     UNITY_BEGIN();
+
+    // Wrap tests
     RUN_TEST(test_wrap_basic);
     RUN_TEST(test_wrap_at_max_clamps_to_min);
     RUN_TEST(test_wrap_above_max);
@@ -105,6 +110,8 @@ void setup() {
     RUN_TEST(test_wrap_angle_full_rotation);
     RUN_TEST(test_wrap_angle_negative);
     RUN_TEST(test_wrap_negative_range);
+
+    // Matrix Math tests
     RUN_TEST(test_determinant_3x3);
     RUN_TEST(test_rotate_vector_3d);
     RUN_TEST(test_solve_system_all_same);
