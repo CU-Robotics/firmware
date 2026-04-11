@@ -11,6 +11,15 @@
 #include "comms/config_data/controller.hpp"
 #include <memory>
 
+// Pure math helpers – shared with unit tests
+
+struct MotorVelocities { float v[4]; };
+
+float compute_power_limit_ratio(float buffer, float limit_thresh, float critical_thresh);
+MotorVelocities xdrive_mix(float x, float y, float rot, float heading);
+float clamp1(float v);
+
+
 /// @brief Parent controller struct, all controllers should be based off of this.
 struct Controller {
 protected:

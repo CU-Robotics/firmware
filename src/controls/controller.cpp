@@ -1,6 +1,29 @@
 #include "controller.hpp"
 #include "motor.hpp"
 #include "sensors/RefSystem.hpp"
+#include <cmath>
+
+// Pure math helpers (declared in controller.hpp, tested directly in unit tests)
+
+float compute_power_limit_ratio(float buffer, float limit_thresh, float critical_thresh) {
+    if (buffer >= limit_thresh) return 1.0f;
+    return constrain((buffer - critical_thresh) / limit_thresh, 0.0f, 1.0f);
+}
+
+MotorVelocities xdrive_mix(float x, float y, float rot, float heading) {
+    float ch = cos(heading);
+    float sh = sin(heading);
+    return {{
+         x * ch + y * sh + rot,
+         x * sh - y * ch + rot,
+        -x * ch - y * sh + rot,
+        -x * sh + y * ch + rot
+    }};
+}
+
+float clamp1(float v) {
+    return constrain(v, -1.0f, 1.0f);
+}
 
 void XDriveController::step(RobotStateMap& reference_map, RobotStateMap& estimate_map) {
     float dt = timer.delta();
@@ -57,22 +80,21 @@ void XDriveController::step(RobotStateMap& reference_map, RobotStateMap& estimat
         outputp[2] = pidp[2].filter(dt, false, false);
         outputv[2] = pidv[2].filter(dt, false, false);
         output[2] = (outputp[2] + outputv[2]) * controller_config.gear_ratios.chassis_rad_to_motor_rad;
-        float chassis_heading = estimate_map[Cfg::StateName::ChassisHeading].get_position();
 
-        // Convert to motor velocities
-        motor_velocity[1] = output[0] * cos(chassis_heading) + output[1] * sin(chassis_heading) + output[2];
-        motor_velocity[2] = output[0] * sin(chassis_heading) - output[1] * cos(chassis_heading) + output[2];
-        motor_velocity[3] = -output[0] * cos(chassis_heading) - output[1] * sin(chassis_heading) + output[2];
-        motor_velocity[0] = -output[0] * sin(chassis_heading) + output[1] * cos(chassis_heading) + output[2];
+        float chassis_heading = estimate_map[Cfg::StateName::ChassisHeading].get_position();
+        MotorVelocities mv = xdrive_mix(output[0], output[1], output[2], chassis_heading);
+        // position mode uses [1,2,3,0] index order
+        motor_velocity[1] = mv.v[0];
+        motor_velocity[2] = mv.v[1];
+        motor_velocity[3] = mv.v[2];
+        motor_velocity[0] = mv.v[3];
 
         // Power limiting
-        float power_buffer = ref.ref_data.robot_power_heat.buffer_energy;
-        float power_limit_ratio = 1.0;
-        float power_buffer_limit_thresh = power_buffer_controller.gains.power_buffer_threshold;
-        float power_buffer_critical_thresh = power_buffer_controller.gains.power_buffer_critical_threshold;
-        if (power_buffer < power_buffer_limit_thresh) {
-            power_limit_ratio = constrain(((power_buffer - power_buffer_critical_thresh) / power_buffer_limit_thresh), 0.0, 1.0);
-        }
+        float power_limit_ratio = compute_power_limit_ratio(
+            ref.ref_data.robot_power_heat.buffer_energy,
+            power_buffer_controller.gains.power_buffer_threshold,
+            power_buffer_controller.gains.power_buffer_critical_threshold
+        );
 
         float motor_outputs[4];
 
@@ -85,7 +107,7 @@ void XDriveController::step(RobotStateMap& reference_map, RobotStateMap& estimat
             pid.ki = low_level_velocity_controller.gains.i;
             pid.kd = low_level_velocity_controller.gains.d;
             motor_outputs[i] = pid.filter(dt, true, false) * power_limit_ratio;
-           drive_motors[i]->write_motor_torque(motor_outputs[i]);
+            drive_motors[i]->write_motor_torque(motor_outputs[i]);
         }
 
     } else {
@@ -126,25 +148,22 @@ void XDriveController::step(RobotStateMap& reference_map, RobotStateMap& estimat
         outputp[2] = pidp[2].filter(dt, false, false);
         outputv[2] = pidv[2].filter(dt, false, false);
         output[2] = (outputp[2] + outputv[2]) * controller_config.gear_ratios.chassis_rad_to_motor_rad;
-        // Serial.printf("chassis heading output: %f, chassis x output: %f, chassis y output: %f chassis angle:%f\n", output[2], output[0], output[1], estimate[2][0]);
-        // Adjust for chassis heading so control is field relative
+
         float chassis_heading = estimate_map[Cfg::StateName::ChassisHeading].get_position();
-        // Convert to motor velocities
-        motor_velocity[0] = output[0] * cos(chassis_heading) + output[1] * sin(chassis_heading) + output[2];
-        motor_velocity[1] = output[0] * sin(chassis_heading) - output[1] * cos(chassis_heading) + output[2];
-        motor_velocity[2] = -output[0] * cos(chassis_heading) - output[1] * sin(chassis_heading) + output[2];
-        motor_velocity[3] = -output[0] * sin(chassis_heading) + output[1] * cos(chassis_heading) + output[2];
+        MotorVelocities mv = xdrive_mix(output[0], output[1], output[2], chassis_heading);
+        motor_velocity[0] = mv.v[0];
+        motor_velocity[1] = mv.v[1];
+        motor_velocity[2] = mv.v[2];
+        motor_velocity[3] = mv.v[3];
+
         // Power limiting
-        float power_buffer = ref.ref_data.robot_power_heat.buffer_energy;
-        float power_limit_ratio = 1.0;
-        float power_buffer_limit_thresh = power_buffer_controller.gains.power_buffer_threshold;
-        float power_buffer_critical_thresh = power_buffer_controller.gains.power_buffer_critical_threshold;
-        if (power_buffer < power_buffer_limit_thresh) {
-            power_limit_ratio = constrain(((power_buffer - power_buffer_critical_thresh) / power_buffer_limit_thresh), 0.0, 1.0);
-        }
+        float power_limit_ratio = compute_power_limit_ratio(
+            ref.ref_data.robot_power_heat.buffer_energy,
+            power_buffer_controller.gains.power_buffer_threshold,
+            power_buffer_controller.gains.power_buffer_critical_threshold
+        );
 
         float motor_outputs[4];
-
 
         // Low level velocity controller
         for (int i = 0; i < 4; i++) {
@@ -156,7 +175,6 @@ void XDriveController::step(RobotStateMap& reference_map, RobotStateMap& estimat
             pid.kd = low_level_velocity_controller.gains.d;
             motor_outputs[i] = pid.filter(dt, true, false) * power_limit_ratio;
             drive_motors[i]->write_motor_torque(motor_outputs[i]);
-            // Serial.printf("motor %d error: %f output: %f\n", i, -micro_estimate[i][1] + motor_velocity[i], outputs[i]);
         }
     }
 }
@@ -180,11 +198,10 @@ void YawController::step(RobotStateMap& reference_map, RobotStateMap& estimate_m
     pidv.setpoint = reference_map[yaw_angle_state].get_velocity();
     pidv.measurement = estimate_map[yaw_angle_state].get_velocity();
 
-    output += pidp.filter(dt, true, true); // position wraps
-    output += pidv.filter(dt, true, false); // no wrap for velocity
-    
-    output = constrain(output, -1.0, 1.0);
+    output += pidp.filter(dt, true, true);
+    output += pidv.filter(dt, true, false);
 
+    output = clamp1(output);
 
     float motor_outputs[2];
 
@@ -211,13 +228,12 @@ void PitchController::step(RobotStateMap& reference_map, RobotStateMap& estimate
     pidp.setpoint = reference_map[pitch_angle_state].get_position();
     pidp.measurement = estimate_map[pitch_angle_state].get_position();
 
-
     pidv.setpoint = reference_map[pitch_angle_state].get_velocity();
     pidv.measurement = estimate_map[pitch_angle_state].get_velocity();
 
-    output += pidp.filter(dt, true, false); // position wraps
-    output += pidv.filter(dt, true, false); // no wrap for velocity
-    output = constrain(output, -1.0, 1.0);
+    output += pidp.filter(dt, true, false);
+    output += pidv.filter(dt, true, false);
+    output = clamp1(output);
 
     float motor_outputs[2]; 
 
@@ -280,5 +296,5 @@ void FeederController::step(RobotStateMap& reference_map, RobotStateMap& estimat
     float outputp = pidp.filter(dt, true, true);
     float output = outputp * controller_config.gear_ratios.feeder_direction;
 
-   feeder_motor->write_motor_torque(output);
+    feeder_motor->write_motor_torque(output);
 }

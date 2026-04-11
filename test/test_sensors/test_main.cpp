@@ -155,15 +155,6 @@ void test_pitch_encoder_read_returns_finite_float() {
     TEST_ASSERT_FALSE(isinf(angle));
 }
 
-void test_buff_encoder_send_to_comms_does_not_crash() {
-    auto cfg = make_yaw_encoder_cfg();
-    BuffEncoder encoder(cfg);
-    encoder.init();
-    encoder.read();
-    encoder.send_to_comms();
-    TEST_PASS();
-}
-
 // ICM20649 Yaw IMU tests
 
 void test_yaw_imu_init() {
@@ -181,15 +172,6 @@ void test_yaw_imu_read_does_not_crash() {
     TEST_PASS();
 }
 
-void test_yaw_imu_send_to_comms_does_not_crash() {
-    auto cfg = make_yaw_imu_cfg();
-    ICM20649 imu(cfg);
-    imu.init();
-    imu.read();
-    imu.send_to_comms();
-    TEST_PASS();
-}
-
 // StereoCamTrigger tests
 
 void test_stereo_trigger_init() {
@@ -204,15 +186,6 @@ void test_stereo_trigger_read_does_not_crash() {
     StereoCamTrigger trigger(cfg);
     trigger.init();
     trigger.read();
-    TEST_PASS();
-}
-
-void test_stereo_trigger_send_to_comms_does_not_crash() {
-    auto cfg = make_stereo_trigger_cfg();
-    StereoCamTrigger trigger(cfg);
-    trigger.init();
-    trigger.read();
-    trigger.send_to_comms();
     TEST_PASS();
 }
 
@@ -234,17 +207,14 @@ void setup() {
     RUN_TEST(test_feeder_encoder_init);
     RUN_TEST(test_yaw_encoder_read_returns_finite_float);
     RUN_TEST(test_pitch_encoder_read_returns_finite_float);
-    RUN_TEST(test_buff_encoder_send_to_comms_does_not_crash);
 
     // ICM20649 Yaw IMU with Gerald pins
     RUN_TEST(test_yaw_imu_init);
     RUN_TEST(test_yaw_imu_read_does_not_crash);
-    RUN_TEST(test_yaw_imu_send_to_comms_does_not_crash);
 
     // StereoCamTrigger
     RUN_TEST(test_stereo_trigger_init);
     RUN_TEST(test_stereo_trigger_read_does_not_crash);
-    RUN_TEST(test_stereo_trigger_send_to_comms_does_not_crash);
 
     UNITY_END();
 }

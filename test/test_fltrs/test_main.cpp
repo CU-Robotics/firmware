@@ -3,6 +3,39 @@
 #include <math.h>
 
 #include "filters/pid_filter.hpp"
+#include "filters/lowpass_filter.hpp"
+
+// Low Pass tests
+
+void test_lowpass_passthrough() {
+    LowpassFilter lpf(0.0f);
+
+    float output = lpf.filter(5.0f);
+
+    TEST_ASSERT_FLOAT_WITHIN(1e-5f, 5.0f, output);
+}
+
+void test_lowpass_smoothing() {
+    LowpassFilter lpf(0.5f);
+
+    lpf.filter(1.0f);
+    float output = lpf.filter(1.0f);
+
+    TEST_ASSERT_FLOAT_WITHIN(1e-5f, 0.75f, output);
+}
+
+void test_lowpass_convergence() {
+    LowpassFilter lpf(0.4f);
+
+    float output = 0.0f;
+    for (int i = 0; i < 50; i++) {
+        output = lpf.filter(10.0f);
+    }
+
+    TEST_ASSERT_FLOAT_WITHIN(1e-2f, 10.0f, output);
+}
+
+// PID tests
 
 void test_wrap_around() {
     PIDFilter pid;
@@ -77,11 +110,17 @@ void setup() {
 
     UNITY_BEGIN();
 
+    // PIDF tests
     RUN_TEST(test_wrap_around);
     RUN_TEST(test_proportional);
     RUN_TEST(test_derivative);
     RUN_TEST(test_output_bound);
     RUN_TEST(test_feedforward);
+
+    // Low Pass tests
+    RUN_TEST(test_lowpass_passthrough);
+    RUN_TEST(test_lowpass_smoothing);
+    RUN_TEST(test_lowpass_convergence);
 
     UNITY_END();
 }
