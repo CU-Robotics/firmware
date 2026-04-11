@@ -273,7 +273,6 @@ restart:
 help: 
 	@echo "Basic usage: make [target]"
 	@echo "Targets:"
-<<<<<<< HEAD
 	@echo "  install:      installs all required dependencies"
 	@echo "  build:        compiles the source code and links with libraries"
 	@echo "  test:         runs PlatformIO Unity tests on Teensy 4.1"
@@ -285,18 +284,6 @@ help:
 	@echo "  clean:        removes all build artifacts and generated files"
 	@echo "  clean_src:    removes only the source object files"
 	@echo "  clean_libs:   removes only the library object files"
-=======
-	@echo "  install:       installs all required dependencies"
-	@echo "  build:         compiles the source code and links with libraries"
-	@echo "  upload:        builds the source and uploads it to the Teensy"
-	@echo "  gdb:           starts GDB and attaches to the firmware running on a connected Teensy"
-	@echo "  monitor:       monitors any actively running firmware and displays serial output"
-	@echo "  kill:          stops any running firmware"
-	@echo "  restart:       restarts any running firmware"
-	@echo "  clean:         removes all build artifacts and generated files"
-	@echo "  clean_src:     removes only the source object files"
-	@echo "  clean_libs:    removes only the library object files"
->>>>>>> main
 	@echo "  clean_teensy4: removes only the Teensy object files"
 	@echo "  clangd:        generates compile_commands.json for clangd"
 	@echo "  docs:          generates documentation of our src/ code using Doxygen"
