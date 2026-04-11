@@ -10,6 +10,7 @@
 #include "sensors/buff_encoder.hpp"
 #include "state.hpp"
 #include "utils/profiler.hpp"
+#include "utils/boot_splash.hpp"
 
 
 #include "sensors/transmitter/transmitter_utils.hpp"
@@ -54,42 +55,6 @@ EstimatorManager estimator_manager;
 ControllerManager controller_manager;
 
 Watchdog watchdog;
-
-// DONT put anything else in this function. It is not a setup function
-void print_logo() {
-    if (Serial) {
-        Serial.println("TEENSY SERIAL START\n\n");
-        Serial.print("\033[1;33m");
-        Serial.println("                  .:^!?!^.                        ");
-        Serial.println("           .:~!?JYYYJ?7?Y5Y7!!.                   ");
-        Serial.println("         :?5YJ?!~:.      ^777YP?.                 ");
-        Serial.println("         5G~                  ~YP?:               ");
-        Serial.println("         7P5555Y:               ^YP?:....         ");
-        Serial.println("        ~55J7~^.   ..    .        ^JYYYYYYYYYJJ!. ");
-        Serial.println("        YG^     !Y5555J:^PJ    Y5:      ...::^5G^ ");
-        Serial.println("       :GY    .YG?^..^~ ~GY    5G^ ^!~~^^^!!~7G?  ");
-        Serial.println(" .!JYYY5G!    7BJ       ~GY    5G^ ~??JJJY555GP!  ");
-        Serial.println("^55!^:.^~.    ^PP~   .: ^GP:  ^PP:           :7PY.");
-        Serial.println("YG^            :JP5YY55: ~YP55PY^              ~GJ");
-        Serial.println("?G~      .?7~:   .^~~^.    .^:.                :G5");
-        Serial.println(".5P^     7BYJ5YJ7^.                          .~5P^");
-        Serial.println(" .JPJ!~!JP?  .:~?PP^            .:.    .^!JYY5Y!. ");
-        Serial.println("   :!?!?!:       5P.         .!Y5YYYJ?Y5Y?!^:.    ");
-        Serial.println("                 7G7        7GY!. .:~!^.          ");
-        Serial.println("                  JG!      :G5                    ");
-        Serial.println("                   7PY!^^~?PY:                    ");
-        Serial.println("                    .!JJJJ?^                      ");
-        Serial.print("\033[0m");
-        Serial.println("\n\033[1;92mFW Ver. 2.1.0");
-        Serial.printf("\nLast Built: %s at %s", __DATE__, __TIME__);
-        Serial.printf("\nGit Hash: %s", GIT_COMMIT_HASH);
-        Serial.printf("\nGit Branch: %s", GIT_BRANCH);
-        Serial.printf("\nCommit Message: %s", GIT_COMMIT_MSG);
-        Serial.printf("\nRandom Num: %x", ARM_DWT_CYCCNT);
-        Serial.println("\033[0m\n");
-    }
-}
-
 // Master loop
 int main() {
     uint32_t loopc = 0; // Loop counter for heartbeat
@@ -97,8 +62,9 @@ int main() {
     Serial.begin(115200); // the serial monitor is actually always active (for
                           // debug use Serial.println & tycmd)
     debug.begin(SerialUSB1);
-
-    print_logo();
+	
+	//Print Splash Screen
+	Utils::print_logo();
 
     // check to see if there is a crash report, and if so, print it repeatedly
     // over Serial in the future, we'll send this directly over comms
@@ -177,14 +143,14 @@ int main() {
     while (true) {
         // start main loop time timer
         stall_timer.start();
-
+		void read_write(){
         // read CAN and send motor states to comms
         can.read();
         can.send_to_comms();
 
         // read ref and send to comms
         ref.read();
-        ref.send_to_comms();
+        ref.send_to_comms()
 
         // read transmitter and send to comms
         transmitter_manager.read();
@@ -194,6 +160,9 @@ int main() {
         // this happens in one function call 
         sensor_manager.read();
         sensor_manager.send_to_comms();
+		}
+		readwrite();
+		
 
 
         // print loopc every second to verify it is still alive
@@ -209,7 +178,6 @@ int main() {
             // hid_incoming.get_target_state_map(target_state_map);
             target_state_map.from_comms_packet(comms_layer.get_hive_data().target_state_data.state);
             last_feed = target_state_map[Cfg::StateName::Feeder].get_position();            
-
         }
 
         // override temp state if needed. Dont override in teensy mode so the sentry doesnt move during inspection
