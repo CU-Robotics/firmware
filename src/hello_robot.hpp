@@ -60,7 +60,7 @@ private:
     Timer stall_timer;
     Timer gimbal_power_timer;
 	// param to specify whether this is the first loop
-    int count_one = 0;
+    bool is_first_loop = true;
 
     bool last_gimbal_power = false; // used to detect gimbal power changes
     bool last_loop_slow = false;    // used to detect multiple slow loops in a row
@@ -79,9 +79,11 @@ private:
 	
     void setup();
 	void crash_report();
-    void update_telemetry();
+    void read_telemetry();
+	void process_behaviors();
     void update_controls();
     void check_safety();
+	void loop_timing();
 
 public:
     void init();
