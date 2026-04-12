@@ -127,12 +127,14 @@ build: clangd $(BUILD_DIR)/$(TARGET_EXEC)
 test:
 	@echo "[Running PlatformIO Unity tests on Teensy 4.1]"
 	@command -v pio >/dev/null || { echo "PlatformIO not found."; exit 1; }
+	@command -v tycmd >/dev/null || { echo "tycmd not found. Run 'make install'."; exit 1; }
+	@tycmd reset -b 2>/dev/null || true; sleep 1
 	@pio test -e teensy41_test_sensors
-	@tycmd reset -b && sleep 10
+	@tycmd reset -b; sleep 1
 	@pio test -e teensy41_test_fltrs
-	@tycmd reset -b && sleep 10
+	@tycmd reset -b; sleep 1
 	@pio test -e teensy41_test_utils
-	@tycmd reset -b && sleep 10
+	@tycmd reset -b; sleep 1
 	@pio test -e teensy41_test_cntrls
 # Final linking step to create the executable.
 # This rule links all the object files to produce the final ELF executable.
