@@ -47,3 +47,6 @@ src/git_info.h
 
 #ignore bear files
 .bearwrap
+
+# Ignore PlatformIO build artifacts
+.pio

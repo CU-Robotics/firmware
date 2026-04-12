@@ -111,16 +111,31 @@ SIZE			= $(COMPILER_TOOLS_PATH)/arm-none-eabi-size
 # Path to the Git scraper tool source file
 GIT_SCRAPER = $(TOOLS_DIR)/git_scraper.cpp
 
+# Host compiler used by git scraper
+HOST_CXX ?= g++
+
 # Utilize all available CPU cores for parallel build
 MAKEFLAGS += -j$(nproc)
 
 # Phony target to force a build every time
-.PHONY: build
-
+.PHONY: build test
 
 # Main build target; depends on the target executable and git scraper
 build: clangd $(BUILD_DIR)/$(TARGET_EXEC)
 
+# Unit testing target, runs on Teensy via PlatformIO and Unity
+test:
+	@echo "[Running PlatformIO Unity tests on Teensy 4.1]"
+	@command -v pio >/dev/null || { echo "PlatformIO not found."; exit 1; }
+	@command -v tycmd >/dev/null || { echo "tycmd not found. Run 'make install'."; exit 1; }
+	@tycmd reset -b 2>/dev/null || true; sleep 1
+	@pio test -e teensy41_test_sensors
+	@tycmd reset -b; sleep 1
+	@pio test -e teensy41_test_fltrs
+	@tycmd reset -b; sleep 1
+	@pio test -e teensy41_test_utils
+	@tycmd reset -b; sleep 1
+	@pio test -e teensy41_test_cntrls
 # Final linking step to create the executable.
 # This rule links all the object files to produce the final ELF executable.
 # It depends on all object files and the 'git_scraper' target to ensure
@@ -210,7 +225,7 @@ clean_teensy4:
 
 # Build, run, and clean up the git scraper tool to store current Git info in a header file
 git_scraper:
-	@g++ -std=gnu++17 $(GIT_SCRAPER) -o $(TOOLS_DIR)/git_scraper
+	@$(HOST_CXX) -std=gnu++17 $(GIT_SCRAPER) -o $(TOOLS_DIR)/git_scraper
 	@$(TOOLS_DIR)/git_scraper
 	@rm $(TOOLS_DIR)/git_scraper
 
@@ -261,16 +276,17 @@ restart:
 help: 
 	@echo "Basic usage: make [target]"
 	@echo "Targets:"
-	@echo "  install:       installs all required dependencies"
-	@echo "  build:         compiles the source code and links with libraries"
-	@echo "  upload:        builds the source and uploads it to the Teensy"
-	@echo "  gdb:           starts GDB and attaches to the firmware running on a connected Teensy"
-	@echo "  monitor:       monitors any actively running firmware and displays serial output"
-	@echo "  kill:          stops any running firmware"
-	@echo "  restart:       restarts any running firmware"
-	@echo "  clean:         removes all build artifacts and generated files"
-	@echo "  clean_src:     removes only the source object files"
-	@echo "  clean_libs:    removes only the library object files"
+	@echo "  install:      installs all required dependencies"
+	@echo "  build:        compiles the source code and links with libraries"
+	@echo "  test:         runs PlatformIO Unity tests on Teensy 4.1"
+	@echo "  upload:       builds the source and uploads it to the Teensy"
+	@echo "  gdb:          starts GDB and attaches to the firmware running on a connected Teensy"
+	@echo "  monitor:      monitors any actively running firmware and displays serial output"
+	@echo "  kill:         stops any running firmware"
+	@echo "  restart:      restarts any running firmware"
+	@echo "  clean:        removes all build artifacts and generated files"
+	@echo "  clean_src:    removes only the source object files"
+	@echo "  clean_libs:   removes only the library object files"
 	@echo "  clean_teensy4: removes only the Teensy object files"
 	@echo "  clangd:        generates compile_commands.json for clangd"
 	@echo "  docs:          generates documentation of our src/ code using Doxygen"

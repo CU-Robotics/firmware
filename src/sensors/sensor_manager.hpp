@@ -3,7 +3,6 @@
 #include <concepts>
 #include <map>
 #include <memory>
-#include <string>
 
 #include "sensors/sensor.hpp"
 #include "comms/config_data/robot_config.hpp"
