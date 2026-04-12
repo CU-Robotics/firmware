@@ -114,15 +114,11 @@ GIT_SCRAPER = $(TOOLS_DIR)/git_scraper.cpp
 # Host compiler used by git scraper
 HOST_CXX ?= g++
 
-# PlatformIO unit test settings
-PIO_TEST_ENV ?= teensy41_test
-
 # Utilize all available CPU cores for parallel build
 MAKEFLAGS += -j$(nproc)
 
 # Phony target to force a build every time
 .PHONY: build test
-
 
 # Main build target; depends on the target executable and git scraper
 build: clangd $(BUILD_DIR)/$(TARGET_EXEC)
@@ -131,7 +127,7 @@ build: clangd $(BUILD_DIR)/$(TARGET_EXEC)
 test:
 	@echo "[Running PlatformIO Unity tests on Teensy 4.1]"
 	@command -v pio >/dev/null || { echo "PlatformIO not found."; exit 1; }
-	@pio test -e teensy41_test
+	@pio test -e teensy41_test_sensors -e teensy41_test_fltrs -e teensy41_test_utils -e teensy41_test_cntrls
 
 # Final linking step to create the executable.
 # This rule links all the object files to produce the final ELF executable.
