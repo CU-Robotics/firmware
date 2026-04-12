@@ -127,8 +127,13 @@ build: clangd $(BUILD_DIR)/$(TARGET_EXEC)
 test:
 	@echo "[Running PlatformIO Unity tests on Teensy 4.1]"
 	@command -v pio >/dev/null || { echo "PlatformIO not found."; exit 1; }
-	@pio test -e teensy41_test_sensors -e teensy41_test_fltrs -e teensy41_test_utils -e teensy41_test_cntrls
-
+	@pio test -e teensy41_test_sensors
+	@tycmd reset -b && sleep 10
+	@pio test -e teensy41_test_fltrs
+	@tycmd reset -b && sleep 10
+	@pio test -e teensy41_test_utils
+	@tycmd reset -b && sleep 10
+	@pio test -e teensy41_test_cntrls
 # Final linking step to create the executable.
 # This rule links all the object files to produce the final ELF executable.
 # It depends on all object files and the 'git_scraper' target to ensure
