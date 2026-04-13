@@ -77,6 +77,11 @@ private:
     std::optional<RobotStateMap> hive_state_map_offset;// Hive offset state
     bool override_request = false;
 	
+	// CLI Buffer variables
+    char cli_buffer[64] = {0};
+    uint8_t cli_index = 0;
+
+	
     void setup();
 	void crash_report();
     void read_telemetry();
@@ -84,6 +89,8 @@ private:
     void update_controls();
     void check_safety();
 	void loop_timing();
+	
+    void process_cli();
 
 public:
     void init();

@@ -56,6 +56,8 @@ void HelloRobot::run(){
 		update_controls();
 		check_safety();
 		loop_timing();
+
+		process_cli();
 	}
 }
 void HelloRobot::crash_report(){
@@ -204,7 +206,7 @@ void HelloRobot::check_safety(){
 void HelloRobot::loop_timing(){
 	// print loopc every second to verify it is still alive
 	if (loopc % 1000 == 0) {
-		Serial.println(loopc);
+		//Serial.println(loopc);
 	}
 	// LED heartbeat -- linked to loop count to reveal slowdowns and
 	// freezes.
@@ -217,4 +219,46 @@ void HelloRobot::loop_timing(){
 	// Keep the loop running at the desired rate
 	loop_timer.delay_micros((int)(1E6 / (float)(LOOP_FREQ)));
 }
+void HelloRobot::process_cli(){
+// Read all available characters in the hardware buffer
+    while (Serial.available() > 0) {
+        char c = Serial.read();
 
+        // If the character is a newline or carriage return, the command is complete
+        if (c == '\n' || c == '\r') {
+            if (cli_index == 0) continue; // Ignore empty lines
+
+            cli_buffer[cli_index] = '\0'; // Null-terminate the string
+            String cmd = String(cli_buffer);
+			cmd.trim();
+            // ==========================================
+            // COMMAND DICTIONARY
+            // ==========================================
+            if (cmd == "ping") {
+                Serial.println("pong! Robot is alive.");
+            } 
+			else if (cmd == "print tx") {
+                // Access the transmitter data
+                Serial.printf(" \rSafety: %d | L_X: %.2f | L_Y: %.2f | R_X: %.2f | R_Y: %.2f", 
+                              transmitter_manager.transmitter.is_safety_mode(),
+                              transmitter_manager.get_l_stick_x(),
+                              transmitter_manager.get_l_stick_y(),
+                              transmitter_manager.get_r_stick_x(),
+                              transmitter_manager.get_r_stick_y());
+            } 
+            else if (cmd == "print dt") {
+                Serial.printf("Last loop dt: %f seconds\n", stall_timer.delta());
+            }
+            else {
+                Serial.println("Unknown command. Try: ping");
+            }
+
+            // Reset the buffer for the next command
+            cli_index = 0; 
+        } 
+        else if (cli_index < 63) {
+            // Add the typed character to the buffer
+            cli_buffer[cli_index++] = c;
+        }
+    }
+}
