@@ -41,51 +41,124 @@ extern "C" void reset_teensy(void);
 #ifdef PROFILER
 Profiler prof;
 #endif
+
+
+/// @brief Coordinates all hardware, networking, and control systems.
 class HelloRobot {
 private:
+	// ==========================================
+    // MANAGERS & HARDWARE INTERFACES
+    // ==========================================
+	
+	/// @brief Manages all CAN bus read/write operations and motor command queues.
     CANManager can;
-    //RefSystem ref;
+    
+    /// @brief Manages the ET16S/DR16 radio transmitters
     TransmitterManager transmitter_manager;
 
-    //Comms::CommsLayer comms_layer;
+    /// @brief Handles initialization and polling for all connected I2C/SPI sensors.
     SensorManager sensor_manager;
-	EstimatorManager estimator_manager;
-	ControllerManager controller_manager;
-	
-	Watchdog watchdog;
-    bool not_safety_mode = false;
-    uint32_t loopc = 0; // Loop counter for heartbeat
-	// main loop timers
+    
+    /// @brief Steps state estimators for robot kinematics.
+    EstimatorManager estimator_manager;
+    
+    /// @brief Calculates controls and feed-forward outputs for all physical actuators.
+    ControllerManager controller_manager;
+    
+    /// @brief Hardware watchdog that resets the Teensy if the loop hangs.
+    Watchdog watchdog;
+
+	// ==========================================
+    // SYSTEM TIMERS & COUNTERS
+    // ==========================================
+    
+    /// @brief Timer used to strictly regulate the loop to LOOP_FREQ.
     Timer loop_timer;
+    
+    /// @brief Timer used to detect stall conditions and compute delta-time (dt).
     Timer stall_timer;
+    
+    /// @brief Timer to track how long gimbal power has been active.
     Timer gimbal_power_timer;
-	// param to specify whether this is the first loop
+    
+    /// @brief Absolute count of executed loops since boot. Used for heartbeat math.
+    uint32_t loopc = 0; 
+    
+    /// @brief Counts consecutive slow loops to trigger a hard reset if the system locks.
+    int slow_loop_counter = 0;
+
+	// ==========================================
+    // STATE FLAGS
+    // ==========================================
+    
+    /// @brief Flag indicating if the motors are armed and allowed to move.
+    bool not_safety_mode = false;
+    
+    /// @brief Param to specify whether this is the first loop.
     bool is_first_loop = true;
 
-    bool last_gimbal_power = false; // used to detect gimbal power changes
-    bool last_loop_slow = false;    // used to detect multiple slow loops in a row
-    int slow_loop_counter = 0;      // used to count slow loops in a row
+    /// @brief Cache of the previous loop's gimbal power state to detect changes.
+    bool last_gimbal_power = false; 
     
-    // manual controls variables
-    float feed = 0;
-    float last_feed = 0;
-	// variables for use in loop
-	std::optional<Governor> governor;
-	std::optional<RobotStateMap> estimated_state_map;
-    std::optional<RobotStateMap> reference_map;              
-    std::optional<RobotStateMap> target_state_map;// Temp ungoverned state
-    std::optional<RobotStateMap> hive_state_map_offset;// Hive offset state
-    bool override_request = false;
+    /// @brief Used to detect multiple slow loops in a row
+    bool last_loop_slow = false;
+
 	
-    void setup();
+	// ==========================================
+    // ROBOT VARIABLES
+    // ==========================================
+    
+    /// @brief Target position for the feeder mechanism.
+    float feed = 0;
+    
+    /// @brief Previous target position for the feeder mechanism.
+    float last_feed = 0;
+    
+    /// @brief Flag set when Hive requests an override.
+    bool override_request = false;
+
+	// ==========================================
+    // STATE MAPS
+    // ==========================================
+    
+    /// @brief Governor
+    std::optional<Governor> governor;
+    
+    /// @brief Map containing the current estimated state of the robot.
+    std::optional<RobotStateMap> estimated_state_map;
+    
+    /// @brief Map containing the immediate reference values handed to controllers.
+    std::optional<RobotStateMap> reference_map;              
+    
+    /// @brief Temp ungoverned state
+    std::optional<RobotStateMap> target_state_map;
+    
+    /// @brief Hive offset state
+    std::optional<RobotStateMap> hive_state_map_offset;
+	
+	/// @brief check to see if there is a crash report, and if so, print it repeatedly
 	void crash_report();
+	
+	/// @brief Reads data from CAN, RefSystem, Transmitter, and Sensors.
     void read_telemetry();
+	
+	/// @brief Processes manual inputs, hive modes, and state overrides.
 	void process_behaviors();
+	/// @brief Steps estimators, governors, and controllers to generate motor targets.
     void update_controls();
+	/// @brief Checks loop timing/safety constraints and writes to the CAN bus.
     void check_safety();
+	/// @brief LED hearbeat, feeds the watchdog, and ensures consistent loop time.
 	void loop_timing();
 
 public:
+    /**
+     * @brief Bootstraps the robot's architecture.
+     * * Downloads the active configuration from the Hive data layer and uses it 
+     * to instantiate the state maps, reference governor, and hardware managers.
+     */
     void init();
+    
+    /// @brief Begins the main loop.
     void run();
 };

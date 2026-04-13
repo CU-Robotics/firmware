@@ -59,7 +59,6 @@ void HelloRobot::run(){
 	}
 }
 void HelloRobot::crash_report(){
-	// check to see if there is a crash report, and if so, print it repeatedly
 	// over Serial in the future, we'll send this directly over comms
 	if (CrashReport) {
 		while (1) {
@@ -118,13 +117,13 @@ void HelloRobot::update_controls(){
 	estimator_manager.step(*estimated_state_map, override_request);
 	// estimated_state_map.print();
 	override_request = false;
-
-	if ((feed - (*estimated_state_map)[Cfg::StateName::Feeder].get_position() > 2 && transmitter_manager.is_teensy_mode()) ||
-		((*target_state_map)[Cfg::StateName::Feeder].get_position() - (*estimated_state_map)[Cfg::StateName::Feeder].get_position() > 2 &&
-		 transmitter_manager.is_hive_mode())) {
+	float current_feed = (*estimated_state_map)[Cfg::StateName::Feeder].get_position();
+    float target_feed = (*target_state_map)[Cfg::StateName::Feeder].get_position();
+	if ((feed - current_feed > 2 && transmitter_manager.is_teensy_mode()) ||
+		(target_feed - current_feed > 2 && transmitter_manager.is_hive_mode())) {
 		Serial.printf("Feeder is lowkey jammed. current ball count: %f, feed: %f, hive target: %f\n",
 					  (*estimated_state_map)[Cfg::StateName::Feeder].get_position(), feed, (*target_state_map)[Cfg::StateName::Feeder].get_position());
-		feed = (*estimated_state_map)[Cfg::StateName::Feeder].get_position() + 1;
+		feed = current_feed + 1;
 		governor->set_position_reference(Cfg::StateName::Feeder, feed);
 	}
 
@@ -191,8 +190,8 @@ void HelloRobot::check_safety(){
 		// SAFETY ON
 		// TODO: Reset all controller integrators here
 		can.issue_safety_mode();
-		governor->set_position_reference(Cfg::StateName::Feeder, (*estimated_state_map)[Cfg::StateName::Feeder].get_position());
 		float current_feed = (*estimated_state_map)[Cfg::StateName::Feeder].get_position();
+		governor->set_position_reference(Cfg::StateName::Feeder, current_feed);
 		feed = (fmod(fmod(current_feed, 1) + 1, 1) > 0.2)
 			? (int)floor(current_feed) + 1
 			: (int)floor(current_feed); // reset feed to the current state
