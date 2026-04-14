@@ -79,7 +79,7 @@ void ET16S::read() {
 
 void ET16S::print() {
 	for (int i = 0; i < ET16S_INPUT_VALUE_COUNT; i++) {
-		logger.printf(LogDestination::Serial, "%f ", channel[i].data);
+		logger.printf("%f ", channel[i].data);
 	}
 
 	logger.println();
@@ -87,7 +87,7 @@ void ET16S::print() {
 
 void ET16S::print_raw() {
 	for (int i = 0; i < ET16S_INPUT_VALUE_COUNT; i++) {
-		logger.printf(LogDestination::Serial, "%.3u ", channel[i].raw_format);
+		logger.printf("%.3u ", channel[i].raw_format);
 	}
 
 	logger.println();
@@ -103,7 +103,7 @@ void ET16S::print_raw_bin(uint8_t m_inputRaw[ET16S_PACKET_SIZE]) {
 				logger.print("0");
 		}
 
-		logger.printf(LogDestination::Serial, " ");
+		logger.printf(" ");
 	}
 
 	logger.println();
@@ -123,7 +123,7 @@ void ET16S::print_format_bin(int channel_num) {
 			logger.print("0");
 	}
 
-	logger.printf(LogDestination::Serial, " ");
+	logger.printf(" ");
 	logger.println();
 }
 

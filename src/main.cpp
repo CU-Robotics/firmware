@@ -60,35 +60,35 @@ Watchdog watchdog;
 // DONT put anything else in this function. It is not a setup function
 void print_logo() {
     if (Serial) {
-        logger.println(LogDestination::Serial, "TEENSY SERIAL START\n\n");
-        logger.print(LogDestination::Serial, "\033[1;33m");
-        logger.println(LogDestination::Serial, "                  .:^!?!^.                        ");
-        logger.println(LogDestination::Serial, "           .:~!?JYYYJ?7?Y5Y7!!.                   ");
-        logger.println(LogDestination::Serial, "         :?5YJ?!~:.      ^777YP?.                 ");
-        logger.println(LogDestination::Serial, "         5G~                  ~YP?:               ");
-        logger.println(LogDestination::Serial, "         7P5555Y:               ^YP?:....         ");
-        logger.println(LogDestination::Serial, "        ~55J7~^.   ..    .        ^JYYYYYYYYYJJ!. ");
-        logger.println(LogDestination::Serial, "        YG^     !Y5555J:^PJ    Y5:      ...::^5G^ ");
-        logger.println(LogDestination::Serial, "       :GY    .YG?^..^~ ~GY    5G^ ^!~~^^^!!~7G?  ");
-        logger.println(LogDestination::Serial, " .!JYYY5G!    7BJ       ~GY    5G^ ~??JJJY555GP!  ");
-        logger.println(LogDestination::Serial, "^55!^:.^~.    ^PP~   .: ^GP:  ^PP:           :7PY.");
-        logger.println(LogDestination::Serial, "YG^            :JP5YY55: ~YP55PY^              ~GJ");
-        logger.println(LogDestination::Serial, "?G~      .?7~:   .^~~^.    .^:.                :G5");
-        logger.println(LogDestination::Serial, ".5P^     7BYJ5YJ7^.                          .~5P^");
-        logger.println(LogDestination::Serial, " .JPJ!~!JP?  .:~?PP^            .:.    .^!JYY5Y!. ");
-        logger.println(LogDestination::Serial, "   :!?!?!:       5P.         .!Y5YYYJ?Y5Y?!^:.    ");
-        logger.println(LogDestination::Serial, "                 7G7        7GY!. .:~!^.          ");
-        logger.println(LogDestination::Serial, "                  JG!      :G5                    ");
-        logger.println(LogDestination::Serial, "                   7PY!^^~?PY:                    ");
-        logger.println(LogDestination::Serial, "                    .!JJJJ?^                      ");
-        logger.print(LogDestination::Serial, "\033[0m");
-        logger.println(LogDestination::Serial, "\n\033[1;92mFW Ver. 2.1.0");
-        logger.printf(LogDestination::Serial, "\nLast Built: %s at %s", __DATE__, __TIME__);
-        logger.printf(LogDestination::Serial, "\nGit Hash: %s", GIT_COMMIT_HASH);
-        logger.printf(LogDestination::Serial, "\nGit Branch: %s", GIT_BRANCH);
-        logger.printf(LogDestination::Serial, "\nCommit Message: %s", GIT_COMMIT_MSG);
-        logger.printf(LogDestination::Serial, "\nRandom Num: %x", ARM_DWT_CYCCNT);
-        logger.println(LogDestination::Serial, "\033[0m\n");
+        logger.println("TEENSY SERIAL START\n\n");
+        logger.print("\033[1;33m");
+        logger.println("                  .:^!?!^.                        ");
+        logger.println("           .:~!?JYYYJ?7?Y5Y7!!.                   ");
+        logger.println("         :?5YJ?!~:.      ^777YP?.                 ");
+        logger.println("         5G~                  ~YP?:               ");
+        logger.println("         7P5555Y:               ^YP?:....         ");
+        logger.println("        ~55J7~^.   ..    .        ^JYYYYYYYYYJJ!. ");
+        logger.println("        YG^     !Y5555J:^PJ    Y5:      ...::^5G^ ");
+        logger.println("       :GY    .YG?^..^~ ~GY    5G^ ^!~~^^^!!~7G?  ");
+        logger.println(" .!JYYY5G!    7BJ       ~GY    5G^ ~??JJJY555GP!  ");
+        logger.println("^55!^:.^~.    ^PP~   .: ^GP:  ^PP:           :7PY.");
+        logger.println("YG^            :JP5YY55: ~YP55PY^              ~GJ");
+        logger.println("?G~      .?7~:   .^~~^.    .^:.                :G5");
+        logger.println(".5P^     7BYJ5YJ7^.                          .~5P^");
+        logger.println(" .JPJ!~!JP?  .:~?PP^            .:.    .^!JYY5Y!. ");
+        logger.println("   :!?!?!:       5P.         .!Y5YYYJ?Y5Y?!^:.    ");
+        logger.println("                 7G7        7GY!. .:~!^.          ");
+        logger.println("                  JG!      :G5                    ");
+        logger.println("                   7PY!^^~?PY:                    ");
+        logger.println("                    .!JJJJ?^                      ");
+        logger.print("\033[0m");
+        logger.println("\n\033[1;92mFW Ver. 2.1.0");
+        logger.printf("\nLast Built: %s at %s", __DATE__, __TIME__);
+        logger.printf("\nGit Hash: %s", GIT_COMMIT_HASH);
+        logger.printf("\nGit Branch: %s", GIT_BRANCH);
+        logger.printf("\nCommit Message: %s", GIT_COMMIT_MSG);
+        logger.printf("\nRandom Num: %x", ARM_DWT_CYCCNT);
+        logger.println("\033[0m\n");
     }
 }
 
@@ -106,8 +106,8 @@ int main() {
     // over Serial in the future, we'll send this directly over comms
     if (CrashReport) {
         while (1) {
-            logger.println(LogDestination::Serial, CrashReport);
-            logger.println(LogDestination::Serial, "\nReflash to clear CrashReport (and also please "
+            logger.println(CrashReport);
+            logger.println("\nReflash to clear CrashReport (and also please "
                                                    "fix why it crashed)");
             delay(1000);
         }
@@ -173,9 +173,9 @@ int main() {
     // start the main loop watchdog
     watchdog.start();
 
-    logger.println(LogDestination::Serial, "Entering main loop...\n");
+    logger.println("Entering main loop...\n");
     logger.println("[pre-main log (Default)]");
-    logger.println(LogDestination::Comms, "[pre-main log (Comms)]");
+    logger.println("[pre-main log (Comms)]");
 
     // Main loop
     while (true) {
@@ -202,7 +202,7 @@ int main() {
 
         // print loopc every second to verify it is still alive
         if (loopc % 1000 == 0) {
-            logger.printf(LogDestination::Serial, "[loopc: %d]\n", loopc);
+            logger.printf("[loopc: %d]\n", loopc);
         }
 
         // manual controls on firmware
@@ -254,9 +254,9 @@ int main() {
         // reference govern
         reference_map = governor.step_reference_map(target_state_map);
 
-        // logger.printf(LogDestination::Serial, "Reference state:\n");
+        // logger.printf("Reference state:\n");
         // for (int i = 0; i < 8; i++) {
-        //     logger.printf(LogDestination::Serial, "\t%d: %f %f %f\n", i, temp_reference[i][0], temp_reference[i][1],
+        //     logger.printf("\t%d: %f %f %f\n", i, temp_reference[i][0], temp_reference[i][1],
         //     temp_reference[i][2]);
         // }
 
@@ -275,7 +275,7 @@ int main() {
         size_t bytes_copied = logger.grab_log_data(LOGGER_BUFFER_SIZE, (uint8_t *)temp_log_buffer);
         if (bytes_copied > 0) {
             Comms::Sendable<Comms::LoggingData> logging_sendable;
-            // logger.printf(LogDestination::Serial, "logger bytes copied: %d\n", bytes_copied);
+            // logger.printf("logger bytes copied: %d\n", bytes_copied);
             logging_sendable.data.deserialize(temp_log_buffer, bytes_copied);
             logging_sendable.send_to_comms();
         }
@@ -291,13 +291,13 @@ int main() {
             // zero the can bus just in case
             can.issue_safety_mode();
 
-            logger.printf(LogDestination::Serial, "Slow loop with dt: %f, slow loop count %d\n", dt, slow_loop_counter);
+            logger.printf("Slow loop with dt: %f, slow loop count %d\n", dt, slow_loop_counter);
             // mark this as a slow loop to trigger safety mode
             is_slow_loop = true;
             if (last_loop_slow) {
                 slow_loop_counter++;
                 if (slow_loop_counter > 10) {
-                    logger.printf(LogDestination::Serial, "Kowabunga bitches\n");
+                    logger.printf("Kowabunga bitches\n");
                     reset_teensy();
                 }
             } else {

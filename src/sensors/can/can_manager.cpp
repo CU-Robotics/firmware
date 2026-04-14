@@ -98,7 +98,7 @@ void CANManager::read() {
             // how would this happen?
             if (distribute_msg(msg) == Cfg::MotorName::UnsetMotorName) {
                 // - 1 on msg.bus to maintain bus IDs being 0-indexed
-                logger.printf(LogDestination::Serial, "CANManager failed to distribute message with raw CAN ID: %.4x on bus: %x\n", msg.id, msg.bus - 1);
+                logger.printf("CANManager failed to distribute message with raw CAN ID: %.4x on bus: %x\n", msg.id, msg.bus - 1);
             }
         }
     }

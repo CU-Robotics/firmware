@@ -184,7 +184,7 @@ bool PacketPayload::try_append_data(CommsData* data) {
 void PacketPayload::place_incoming_data_in_mega_struct(CommsData* data) {
     HiveData& hive_data = comms_layer.get_hive_data();
 
-    // logger.printf(LogDestination::Serial, "Placing incoming in mega struct: %s\n", to_string(data->type_label).c_str());
+    // logger.printf("Placing incoming in mega struct: %s\n", to_string(data->type_label).c_str());
     hive_data.set_data(data);
 }
 
@@ -192,7 +192,7 @@ void PacketPayload::place_outgoing_data_in_mega_struct(CommsData* data) {
 
     FirmwareData& firmware_data = comms_layer.get_firmware_data();
 
-    // logger.printf(LogDestination::Serial, "Placing outgoing in mega struct: %s\n", to_string(data->type_label).c_str());
+    // logger.printf("Placing outgoing in mega struct: %s\n", to_string(data->type_label).c_str());
     firmware_data.set_data(data);
 }
 

@@ -3,7 +3,7 @@
 
 SDManager::SDManager() {
     if (!SDinternal.begin()) {
-        logger.println(LogDestination::Serial, "SD_ERROR::SDManager card initialization failed");
+        logger.println("SD_ERROR::SDManager card initialization failed");
         // TODO: perhaps there should be a better error handler here?? 
     }
 }
@@ -11,9 +11,9 @@ SDManager::SDManager() {
 int SDManager::open(const char* filepath, int setting) {
     // check if exists
     if (!exists(filepath)) {
-        logger.print(LogDestination::Serial, "SD_NOTICE::filepath ");
-        logger.print(LogDestination::Serial, filepath);
-        logger.println(LogDestination::Serial, " does not exist or contains no file");
+        logger.print("SD_NOTICE::filepath ");
+        logger.print(filepath);
+        logger.println(" does not exist or contains no file");
         return -1;
     }
     if (file) file.close();
@@ -32,15 +32,15 @@ void SDManager::close() {
 
 int SDManager::touch(const char* filename) {
     if (SDinternal.exists(filename)) {
-        logger.print(LogDestination::Serial, "SD_NOTICE::file located at ");
-        logger.print(LogDestination::Serial, filename);
-        logger.println(LogDestination::Serial, " already exists");
+        logger.print("SD_NOTICE::file located at ");
+        logger.print(filename);
+        logger.println(" already exists");
         return -1;
     }
     if (!SDinternal.open(filename, FILE_WRITE)) {
-        logger.print(LogDestination::Serial, "SD_NOTICE::file located at ");
-        logger.print(LogDestination::Serial, filename);
-        logger.println(LogDestination::Serial, " could not be created (directory may not exist)");
+        logger.print("SD_NOTICE::file located at ");
+        logger.print(filename);
+        logger.println(" could not be created (directory may not exist)");
         return -1;
     };
     return 0;
@@ -48,9 +48,9 @@ int SDManager::touch(const char* filename) {
 
 int SDManager::mkdir(const char* dirname) {
     if (!SDinternal.mkdir(dirname)) {
-        logger.print(LogDestination::Serial, "SD_NOTICE::directory ");
+        logger.print("SD_NOTICE::directory ");
         logger.print(dirname);
-        logger.println(LogDestination::Serial, " could not be created");
+        logger.println(" could not be created");
         return -1;
     }
     return 0;
@@ -65,9 +65,9 @@ int SDManager::rm(const char* filename, bool r) {
     File cur;
     if (SDinternal.exists(filename)) cur = SDinternal.open(filename);
     else {
-        logger.print(LogDestination::Serial, "SD_NOTICE::file at ");
-        logger.print(LogDestination::Serial, filename);
-        logger.println(LogDestination::Serial, " could not be erased (no such file or directory)");
+        logger.print("SD_NOTICE::file at ");
+        logger.print(filename);
+        logger.println(" could not be erased (no such file or directory)");
         return FILE_NOT_FOUND;
     }
 
@@ -75,9 +75,9 @@ int SDManager::rm(const char* filename, bool r) {
         // attempt to remove dir
         if (!r) {     // non-recursive erase
             if (!SDinternal.rmdir(filename)) {
-                logger.print(LogDestination::Serial, "SD_NOTICE::file at ");
-                logger.print(LogDestination::Serial, filename);
-                logger.println(LogDestination::Serial, " could not be erased");
+                logger.print("SD_NOTICE::file at ");
+                logger.print(filename);
+                logger.println(" could not be erased");
                 return RM_ERR_DIR_MISC;
             }
         } else {
@@ -97,9 +97,9 @@ int SDManager::rm(const char* filename, bool r) {
     } else {
         // attempt to remove file
         if (!SDinternal.remove(filename)) {
-            logger.print(LogDestination::Serial, "SD_NOTICE::file at ");
-            logger.print(LogDestination::Serial, filename);
-            logger.println(LogDestination::Serial, " could not be erased");
+            logger.print("SD_NOTICE::file at ");
+            logger.print(filename);
+            logger.println(" could not be erased");
             return RM_ERR_FILE_MISC;
         }
     }
@@ -108,7 +108,7 @@ int SDManager::rm(const char* filename, bool r) {
 
 int SDManager::read(uint8_t* dest, unsigned int len) {
     if (!file) {
-        logger.println(LogDestination::Serial, "SD_NOTICE::file cannot be read (no file open)");
+        logger.println("SD_NOTICE::file cannot be read (no file open)");
         return -1;
     }
     return file.read(dest, len);
@@ -116,7 +116,7 @@ int SDManager::read(uint8_t* dest, unsigned int len) {
 
 int SDManager::write(uint8_t* src, unsigned int len) {
     if (!file) {
-        logger.println(LogDestination::Serial, "SD_NOTICE::file cannot be written to (no file open)");
+        logger.println("SD_NOTICE::file cannot be written to (no file open)");
         return -1;
     }
     return file.write(src, len);
@@ -155,9 +155,9 @@ void SDManager::enumerate_files(const char* root, bool r, int tabs) {
     // check current
 
     if (!exists(root)) {
-        logger.print(LogDestination::Serial, "SD_NOTICE::file ");
+        logger.print("SD_NOTICE::file ");
         logger.print(root);
-        logger.println(LogDestination::Serial, " does not exist");
+        logger.println(" does not exist");
         return;
     }
 
@@ -166,17 +166,17 @@ void SDManager::enumerate_files(const char* root, bool r, int tabs) {
     // print current
 
     for (int i = 0; i < tabs; i++) {
-        logger.print(LogDestination::Serial, "-\t");
+        logger.print("-\t");
     }
     logger.print(dir.name());
 
     // if not dir, then exit
     if (!dir.isDirectory()) {
-        logger.println(LogDestination::Serial, "");
+        logger.println("");
         return;
     }
 
-    logger.println(LogDestination::Serial, " (dir)");   // label directory
+    logger.println(" (dir)");   // label directory
 
     // if not recursive, then exit
     if ((!r) && tabs > 0) return;

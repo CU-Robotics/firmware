@@ -308,7 +308,7 @@ void FeederEstimator::step_states(RobotStateMap& updated_state_map, const RobotS
     float feeder_angle = feeder_encoder->get_angle();
     float diff;
     if (count == 0) {
-        logger.printf(LogDestination::Serial, "prev_feeder_angle %f\n",prev_feeder_angle);
+        logger.printf("prev_feeder_angle %f\n",prev_feeder_angle);
         dt = 0; // first dt loop generates huge time so check for that
         diff = fmod((feeder_angle - feeder_offset), (float)(M_PI / feeder_ratio)) ;
         count++;

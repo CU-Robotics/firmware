@@ -77,7 +77,7 @@ void Profiler::print(const char *name) {
             }
 
             // print values
-            logger.printf(LogDestination::Serial, "Profiling for: %s\n Min: %u us\n Max: %u us\n Avg: %u us\n", name, min, max,
+            logger.printf("Profiling for: %s\n Min: %u us\n Max: %u us\n Avg: %u us\n", name, min, max,
                           (trueCount == 0 ? 0 : sum / trueCount));
             return;
         }

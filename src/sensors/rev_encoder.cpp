@@ -48,7 +48,7 @@ float RevEncoder::get_angle_radians() {
 }
 
 void RevEncoder::print() {
-    logger.println(LogDestination::Serial, "Rev Encoder:");
+    logger.println("Rev Encoder:");
     logger.print("\tTicks: ");
     logger.println(ticks);
     logger.print("\tRadians: ");

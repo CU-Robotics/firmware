@@ -45,13 +45,13 @@ void RefSystem::read() {
 void RefSystem::write(uint8_t* packet, uint8_t length) {
     // return if over baud rate
     if (bytes_sent >= REF_MAX_BAUD_RATE) {
-        logger.println(LogDestination::Serial, "Too many bytes");
+        logger.println("Too many bytes");
         return;
     }
 
     // return if writing too many bytes
     if (length > REF_MAX_PACKET_SIZE) {
-        logger.println(LogDestination::Serial, "Packet Too Long to Send!");
+        logger.println("Packet Too Long to Send!");
         return;
     }
 
@@ -76,7 +76,7 @@ void RefSystem::write(uint8_t* packet, uint8_t length) {
         packets_sent++;
         bytes_sent += length;
     } else
-        logger.println(LogDestination::Serial, "Failed to write");
+        logger.println("Failed to write");
 }
 
 void RefSystem::send_to_comms() {
@@ -111,7 +111,7 @@ bool RefSystem::read_frame_header(HardwareSerial* serial, uint8_t raw_buffer[REF
     // read and verify header
     int bytes_read = serial->readBytes(raw_buffer, FrameHeader::packet_size);
     if (bytes_read != FrameHeader::packet_size) {
-        logger.println(LogDestination::Serial, "Couldnt read enough bytes for Header");
+        logger.println("Couldnt read enough bytes for Header");
         packets_failed++;
         return false;
     }
@@ -119,7 +119,7 @@ bool RefSystem::read_frame_header(HardwareSerial* serial, uint8_t raw_buffer[REF
     // set read data
     frame.header.SOF = raw_buffer[buffer_index + 0];
     if (frame.header.SOF != 0xA5) {
-        logger.println(LogDestination::Serial, "Not a valid frame");
+        logger.println("Not a valid frame");
         return false;
     }
 
@@ -129,7 +129,7 @@ bool RefSystem::read_frame_header(HardwareSerial* serial, uint8_t raw_buffer[REF
 
     // verify the CRC is correct
     if (frame.header.CRC != generateCRC8(raw_buffer, 4)) {
-        logger.println(LogDestination::Serial, "Header failed CRC");
+        logger.println("Header failed CRC");
         packets_failed++;
         return false;
     }
@@ -148,7 +148,7 @@ bool RefSystem::read_frame_command_ID(HardwareSerial* serial, uint8_t raw_buffer
     // read and verify command ID
     int bytes_read = serial->readBytes(raw_buffer + buffer_index, 2);
     if (bytes_read != 2) {
-        logger.println(LogDestination::Serial, "Couldnt read enough bytes for ID");
+        logger.println("Couldnt read enough bytes for ID");
         packets_failed++;
         return false;
     }
@@ -158,7 +158,7 @@ bool RefSystem::read_frame_command_ID(HardwareSerial* serial, uint8_t raw_buffer
 
     // sanity check, verify the ID is valid
     if (frame.commandID > REF_MAX_COMMAND_ID) {
-        logger.println(LogDestination::Serial, "Invalid Command ID");
+        logger.println("Invalid Command ID");
         packets_failed++;
         return false;
     }
@@ -177,7 +177,7 @@ bool RefSystem::read_frame_data(HardwareSerial* serial, uint8_t raw_buffer[REF_M
     // read and verify data
     int bytes_read = serial->readBytes(raw_buffer + buffer_index, frame.header.data_length);
     if (bytes_read != frame.header.data_length) {
-        logger.println(LogDestination::Serial, "Couldnt read enough bytes for Data");
+        logger.println("Couldnt read enough bytes for Data");
         packets_failed++;
         return false;
     }
@@ -199,7 +199,7 @@ int RefSystem::read_frame_tail(HardwareSerial* serial, uint8_t raw_buffer[REF_MA
     // read and verify tail
     int bytes_read = serial->readBytes(raw_buffer + buffer_index, 2);
     if (bytes_read != 2) {
-        logger.println(LogDestination::Serial, "Couldnt read enough bytes for CRC");
+        logger.println("Couldnt read enough bytes for CRC");
         packets_failed++;
         return 0;
     }
@@ -208,7 +208,7 @@ int RefSystem::read_frame_tail(HardwareSerial* serial, uint8_t raw_buffer[REF_MA
     frame.CRC = (raw_buffer[buffer_index + 1] << 8) | raw_buffer[buffer_index + 0];
 
     if (frame.CRC != generateCRC16(raw_buffer, buffer_index)) {
-        logger.println(LogDestination::Serial, "Tail failed CRC");
+        logger.println("Tail failed CRC");
         packets_failed++;
         return -1;
     }
