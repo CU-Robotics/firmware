@@ -1,8 +1,5 @@
 #include "hello_robot.hpp"
 
-
-//extern "C" void reset_teensy(void);
-
 // Master loop
 int main() {
 
@@ -12,6 +9,7 @@ int main() {
 	
 	//Print Splash Screen
 	Utils::print_logo();
+	
 	static HelloRobot robot;
     robot.init();
     robot.run();

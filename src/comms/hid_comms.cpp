@@ -10,11 +10,11 @@ void HIDComms::init() {
 }
 
 bool HIDComms::recv_packet(HIDPacket& incoming_packet) {
-    uint32_t start_time = micros();
+    // uint32_t start_time = micros();
     // attempt to read a full packet
     // this has no timeout
     int bytes_read = usb_rawhid_recv(incoming_packet.data_start(), 0);
-    Serial.printf("diff of HID recv: %u\n", micros() - start_time);
+    // Serial.printf("diff of HID recv: %u\n", micros() - start_time);
     // Serial.printf("HIDComms: first %d bytes as u8: ", bytes_read);
     // for (int i = 0; i < bytes_read; i++) {
     //     Serial.printf("%d ", incoming_packet.data_start()[i]);
@@ -47,15 +47,15 @@ bool HIDComms::send_packet(HIDPacket& outgoing_packet) {
 
     // attempt to write a full packet
     // this has no timeout
-    uint32_t start_time = micros();
+    // uint32_t start_time = micros();
     // Serial.printf("HIDComms: sending packet\n");
     // for (unsigned int i = 0; i < HID_PACKET_MAX_SIZE; i++){
     //     Serial.printf("%d ", outgoing_packet.data_start()[i]);
     // }
     // Serial.println();
     int bytes_sent = usb_rawhid_send(outgoing_packet.data_start(), 0);
-    Serial.printf("HIDComms: time taken to send packet: %u\n", micros() - start_time);
-    Serial.printf("HIDComms: sent %d bytes\n", bytes_sent);
+    // Serial.printf("HIDComms: time taken to send packet: %u\n", micros() - start_time);
+    // Serial.printf("HIDComms: sent %d bytes\n", bytes_sent);
     if (bytes_sent == HID_PACKET_MAX_SIZE) {
         // increment total number of packets sent and return success
         m_packetsSent++;

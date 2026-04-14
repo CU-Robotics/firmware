@@ -18,6 +18,7 @@ void EstimatorManager::init(
         available_states.push_back(static_cast<Cfg::StateName>(i));
     }
     for (const Cfg::Estimator& estimator_config : estimator_configurations) {
+        Serial.printf("Initializing estimator %u\n", static_cast<uint32_t>(estimator_config.estimator_type));
         init_estimator(estimator_config, sensor_manager, can);
     }
 
@@ -36,6 +37,7 @@ void EstimatorManager::init_estimator(const Cfg::Estimator& estimator_config, Se
         estimators.push_back(std::make_unique<FeederEstimator>(estimator_config, sensor_manager, can, available_states));
         break;
     default:
+        safety::safety_procedure("Invalid estimator type received in config: %u", static_cast<uint32_t>(estimator_config.estimator_type));
         break;
     }
 }

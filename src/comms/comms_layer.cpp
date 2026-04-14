@@ -167,14 +167,16 @@ void CommsLayer::set_firmware_data(FirmwareData& data) {
 
 void CommsLayer::configure() {
     int time = millis();
+    Sendable<ConfigurationStatusData> config_status_sendable;
     while (!m_hive_data.config.config_start.num_config_sections != 0) {
         Serial.printf("Waiting for config start packet... time since start: %d ms\n", millis() - time);
+        config_status_sendable.data.is_configured = 0;
+        config_status_sendable.send_to_comms();
         run();
         config_loop_timer.delay_micros(5000);
     }
     Serial.printf("Config start packet received, expecting %d config sections\n", m_hive_data.config.config_start.num_config_sections);
 
-    Sendable<ConfigurationStatusData> config_status_sendable;
     while(!m_hive_data.config.is_configured()) {
         config_status_sendable.data.ready_for_config = 1;
         config_status_sendable.send_to_comms();
@@ -182,10 +184,6 @@ void CommsLayer::configure() {
         Serial.printf("Config: received %d of %d sections\n", m_hive_data.config.num_sections_received, m_hive_data.config.config_start.num_config_sections);
         config_loop_timer.delay_micros(5000);
     }
-
-    config_status_sendable.data.ready_for_config = 0;
-    config_status_sendable.data.is_configured = 1;
-    config_status_sendable.send_to_comms();
 }
 
 bool CommsLayer::initialize_hid() {

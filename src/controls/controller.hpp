@@ -25,6 +25,9 @@ public:
     /// @param _controller_config config data for this controller
     Controller(const Cfg::Controller& _controller_config) : controller_config(_controller_config) { };
 
+    /// @brief Virtual destructor since this is a parent class
+    virtual ~Controller() { };
+
     /// @brief sends motor commands based on a reference and estimated state
     /// @param reference_map current target robot state map
     /// @param estimate_map current estimate robot state map
@@ -65,7 +68,7 @@ private:
     Cfg::SubController chassis_angular_velocity_controller;
     /// @brief control the actual motor velocities based on the outputs of the higher level controllers
     Cfg::SubController low_level_velocity_controller;
-/// @brief control input to motors based on ref power buffer so we don't draw too much.
+    /// @brief control input to motors based on ref power buffer so we don't draw too much.
     Cfg::SubController power_buffer_controller;
 
     /// @brief filter for calculating pid position controller outputs. 3 for x, y, and chassis angle
@@ -114,10 +117,10 @@ public:
         low_level_velocity_controller = controller_config.get_sub_controller_by_type(Cfg::SubControllerType::LowLevelVelocityController);
         power_buffer_controller = controller_config.get_sub_controller_by_type(Cfg::SubControllerType::PowerBufferController);
 
-        chassis_motor_1 = get_motor_by_generic_use(Cfg::GenericControllerMotorUse::ChassisFrontLeft, can, available_motors);
+        chassis_motor_1 = get_motor_by_generic_use(Cfg::GenericControllerMotorUse::ChassisFrontRight, can, available_motors);
         chassis_motor_2 = get_motor_by_generic_use(Cfg::GenericControllerMotorUse::ChassisBackRight, can, available_motors);
         chassis_motor_3 = get_motor_by_generic_use(Cfg::GenericControllerMotorUse::ChassisBackLeft, can, available_motors);
-        chassis_motor_4 = get_motor_by_generic_use(Cfg::GenericControllerMotorUse::ChassisFrontRight, can, available_motors);
+        chassis_motor_4 = get_motor_by_generic_use(Cfg::GenericControllerMotorUse::ChassisFrontLeft, can, available_motors);
     }
 
     /// @brief sends motor commands based on a reference and estimated state

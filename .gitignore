@@ -24,7 +24,6 @@ build/
 # Ignore clangd files
 compile_commands.json
 .cache/
-.clangd
 
 # Ignore any tools/ directory artifacts
 tools/*.txt

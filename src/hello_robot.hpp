@@ -28,13 +28,14 @@
 #include "sensor_manager.hpp"
 #include <TeensyDebug.h>
 
-
 #include "comms/data/hive_data.hpp"
 #include "comms/data/sendable.hpp"
 #include "comms/data/robot_state_data.hpp"
 #include "utils/timing.hpp"
 #include "utils/watchdog.hpp"
+
 extern "C" void reset_teensy(void);
+
 // Loop constants
 #define LOOP_FREQ 1000
 #define HEARTBEAT_FREQ 2
