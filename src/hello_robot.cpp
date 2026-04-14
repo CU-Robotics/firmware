@@ -152,7 +152,7 @@ void HelloRobot::check_safety(){
 
 	// check whether this was a slow loop or not
 	float dt = stall_timer.delta();
-	if (dt > 0.002) {
+	if (dt > 0.002f) {
 		// zero the can bus just in case
 		can.issue_safety_mode();
 
@@ -192,7 +192,7 @@ void HelloRobot::check_safety(){
 		can.issue_safety_mode();
 		float current_feed = (*estimated_state_map)[Cfg::StateName::Feeder].get_position();
 		governor->set_position_reference(Cfg::StateName::Feeder, current_feed);
-		feed = (fmod(fmod(current_feed, 1) + 1, 1) > 0.2)
+		feed = (fmodf(fmodf(current_feed, 1) + 1, 1) > 0.2f)
 			? (int)floor(current_feed) + 1
 			: (int)floor(current_feed); // reset feed to the current state
 		last_feed = feed;                          // reset last feed to the current state

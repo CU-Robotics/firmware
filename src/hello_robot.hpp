@@ -88,6 +88,19 @@ private:
     int slow_loop_counter = 0;
 
 	// ==========================================
+    // ROBOT VARIABLES
+    // ==========================================
+	
+    /// @brief Target position for the feeder mechanism.
+    float feed = 0;
+    
+    /// @brief Previous target position for the feeder mechanism.
+    float last_feed = 0;
+	
+	/// @brief Flag set when Hive requests an override.
+    bool override_request = false;
+
+	// ==========================================
     // STATE FLAGS
     // ==========================================
     
@@ -104,18 +117,7 @@ private:
     bool last_loop_slow = false;
 
 	
-	// ==========================================
-    // ROBOT VARIABLES
-    // ==========================================
     
-    /// @brief Target position for the feeder mechanism.
-    float feed = 0;
-    
-    /// @brief Previous target position for the feeder mechanism.
-    float last_feed = 0;
-    
-    /// @brief Flag set when Hive requests an override.
-    bool override_request = false;
 
 	// ==========================================
     // STATE MAPS
