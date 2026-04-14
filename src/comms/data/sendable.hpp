@@ -1,13 +1,7 @@
 #pragma once
 
 #include <type_traits>                          // for is_base_of, is_copy_constructible
-
-#if defined(HIVE)
-#include "modules/hive/environment.hpp"         // for Hive::env
-#include "modules/comms/comms_layer.hpp"        // for CommsLayer
-#elif defined(FIRMWARE)
 #include "comms_layer.hpp"                      // for CommsLayer
-#endif
 
 namespace Comms {
 
@@ -30,11 +24,7 @@ public:
 
     /// @brief Add this Sendable to the comms layer to be sent.
     void send_to_comms() {
-    #if defined(HIVE)
-        Hive::env->comms_layer->queue_data(new T(data)); 
-    #elif defined(FIRMWARE)
         comms_layer.queue_data(new T(data));
-    #endif
     }
 
     /// @brief Copy assignment operator. Allows easier creation of Sendables.

@@ -6,6 +6,8 @@
 #include "comms/data/packet_payload.hpp"    // for PacketPayload
 #include "comms/data/hive_data.hpp"         // for HiveData
 #include "comms/data/firmware_data.hpp"     // for FirmwareData
+#include "comms/config_data/robot_config.hpp" // for RobotConfig
+#include "config_data/robot_config.hpp"
 
 namespace Comms {
 
@@ -27,7 +29,8 @@ public:
     /// @return Exit status, 0 for success, < 0 for error
     /// @note Should never return
     int run();
-
+    /// @brief Requests the configuration data from the Hive and waits until it is fully received before returning
+    void configure();
 public:
     /// @brief Send a CommsData packet to the appropriate packet payload
     /// @param data The CommsData packet to send
@@ -51,6 +54,10 @@ public:
 
     /// @brief Clear all physical layer outgoing buffers
     void clear_outgoing_buffers();
+
+    /// @brief Check if the configuration process is complete
+    /// @return True if configuration is complete, false if not
+    bool is_configured() const { return m_hive_data.config.is_configured(); }
 
 public:
     /// @brief Get the outgoing ethernet packet
@@ -116,7 +123,9 @@ private:
 
     /// @brief Firmware data
     FirmwareData m_firmware_data;
-
+    
+    /// @brief Timer for use in the configuration process
+    Timer config_loop_timer;
 };
 
 }   // namespace Comms

@@ -1,8 +1,8 @@
 #include "ET16S.hpp"
-#include "utils/logger.hpp"
+#include "sensors/RefSystem.hpp"
+#include "comms/data/sendable.hpp"
 
-
-ET16S::ET16S() { }
+ET16S::ET16S(const Cfg::ET16S& config) : config(config) { }
 
 void ET16S::init() {
 	Serial8.begin(100000, SERIAL_8E1_RXINV_TXINV);
@@ -16,7 +16,7 @@ void ET16S::init() {
 
 	//configure sticks
 	//right stick horizontal
-	channel[r_stick_x_num.value()].kind = InputKind::STICK;
+	channel[r_stick_x_num].kind = InputKind::STICK;
 	//right stick vertical
 	channel[1].kind = InputKind::STICK;
 	//left stick vertical
@@ -71,6 +71,9 @@ void ET16S::read() {
 	set_channel_data();
 	//Check flag byte for disconnect
 	test_connection();
+
+	mode_changed_flag = (get_safety_switch() != prev_safety_switch_pos);
+	prev_safety_switch_pos = get_safety_switch();
 }
 
 void ET16S::print() {
@@ -304,43 +307,22 @@ void ET16S::set_config() {
 	//Valid channel types include STICK,TWO_SWITCH_THREE_SWITCH,
 	//DIAL,SLIDER,TRIM,FLAG,INVALID
 	//note (trim is not mapped)
-	channel[r_stick_x_num.value()].id = ChannelId::R_STICK_X;
-	channel[r_stick_y_num.value()].id = ChannelId::R_STICK_Y;
-	channel[l_stick_x_num.value()].id = ChannelId::L_STICK_X;
-	channel[l_stick_y_num.value()].id = ChannelId::L_STICK_Y;
-	if (switch_b_num.has_value()) {
-		channel[switch_b_num.value()].id = ChannelId::SWITCH_B;
-	}
-	if (switch_c_num.has_value()) {
-		channel[switch_c_num.value()].id = ChannelId::SWITCH_C;
-	}
-	if (switch_d_num.has_value()) {
-		channel[switch_d_num.value()].id = ChannelId::SWITCH_D;
-	}
-	if (switch_e_num.has_value()) {
-		channel[switch_e_num.value()].id = ChannelId::SWITCH_E;
-	}
-	if (switch_f_num.has_value()) {
-		channel[switch_f_num.value()].id = ChannelId::SWITCH_F;
-	}
-	if (switch_g_num.has_value()) {
-		channel[switch_g_num.value()].id = ChannelId::SWITCH_G;
-	}
-	if (switch_h_num.has_value()) {
-		channel[switch_h_num.value()].id = ChannelId::SWITCH_H;
-	}
-	if (r_slider_num.has_value()) {
-		channel[r_slider_num.value()].id = ChannelId::R_SLIDER;
-	}
-	if (l_slider_num.has_value()) {
-		channel[l_slider_num.value()].id = ChannelId::L_SLIDER;
-	}
-	if (r_dial_num.has_value()) {
-		channel[r_dial_num.value()].id = ChannelId::R_DIAL;
-	}
-	if(l_dial_num.has_value()){
-		channel[l_dial_num.value()].id = ChannelId::L_DIAL;
-	}
+	channel[r_stick_x_num].id = ChannelId::R_STICK_X;
+	channel[r_stick_y_num].id = ChannelId::R_STICK_Y;
+	channel[l_stick_x_num].id = ChannelId::L_STICK_X;
+	channel[l_stick_y_num].id = ChannelId::L_STICK_Y;
+	
+	channel[switch_b_num].id = ChannelId::SWITCH_B;
+	channel[switch_c_num].id = ChannelId::SWITCH_C;
+	channel[switch_d_num].id = ChannelId::SWITCH_D;
+	channel[switch_e_num].id = ChannelId::SWITCH_E;
+	channel[switch_f_num].id = ChannelId::SWITCH_F;
+	channel[switch_g_num].id = ChannelId::SWITCH_G;
+	channel[switch_h_num].id = ChannelId::SWITCH_H;
+	channel[r_slider_num].id = ChannelId::R_SLIDER;
+	channel[l_slider_num].id = ChannelId::L_SLIDER;
+	channel[r_dial_num].id = ChannelId::R_DIAL;
+	channel[l_dial_num].id = ChannelId::L_DIAL;
 	channel[16].id = ChannelId::FLAG;
 
 	for (int i = 5; i < ET16S_INPUT_VALUE_COUNT; i++){
@@ -467,107 +449,90 @@ SwitchPos ET16S::get_safety_switch() {
 }
 
 float ET16S::get_r_stick_x() {
-	return channel[r_stick_x_num.value()].data;
+	return channel[r_stick_x_num].data;
 }
 
 float ET16S::get_r_stick_y() {
-	return channel[r_stick_y_num.value()].data;
+	return channel[r_stick_y_num].data;
 }
 
 float ET16S::get_l_stick_x() {
-	return channel[l_stick_x_num.value()].data;
+	return channel[l_stick_x_num].data;
 }
 
 float ET16S::get_l_stick_y() {
-	return channel[l_stick_y_num.value()].data;
+	return channel[l_stick_y_num].data;
 }
 
-std::optional<SwitchPos> ET16S::get_switch_b(){
-	if (!switch_b_num.has_value()){ return {}; }
-	return static_cast<SwitchPos> (channel[switch_b_num.value()].data);
+SwitchPos ET16S::get_switch_b(){
+	return static_cast<SwitchPos> (channel[switch_b_num].data);
 }
 
-std::optional<SwitchPos> ET16S::get_switch_c(){
-	if (!switch_c_num.has_value()){ return {}; }
-	return static_cast<SwitchPos> (channel[switch_c_num.value()].data);
+SwitchPos ET16S::get_switch_c(){
+	return static_cast<SwitchPos> (channel[switch_c_num].data);
 }
 
-std::optional<SwitchPos> ET16S::get_switch_d(){
-	if (!switch_d_num.has_value()){ return {}; }
-	return static_cast<SwitchPos> (channel[switch_d_num.value()].data);
+SwitchPos ET16S::get_switch_d(){
+	return static_cast<SwitchPos> (channel[switch_d_num].data);
 }
 
-std::optional<SwitchPos> ET16S::get_switch_e(){
-	if (!switch_e_num.has_value()){ return {}; }
-	return static_cast<SwitchPos> (channel[switch_e_num.value()].data);
+SwitchPos ET16S::get_switch_e(){
+	return static_cast<SwitchPos> (channel[switch_e_num].data);
 }
 
-std::optional<SwitchPos> ET16S::get_switch_f(){
-	if (!switch_f_num.has_value()){ return {}; }
-	return static_cast<SwitchPos> (channel[switch_f_num.value()].data);
+SwitchPos ET16S::get_switch_f(){
+	return static_cast<SwitchPos> (channel[switch_f_num].data);
 }
 
-std::optional<SwitchPos> ET16S::get_switch_g(){
-	if (!switch_g_num.has_value()){ return {}; }
-	return static_cast<SwitchPos> (channel[switch_g_num.value()].data);
+SwitchPos ET16S::get_switch_g(){
+	return static_cast<SwitchPos> (channel[switch_g_num].data);
 }
 
-std::optional<SwitchPos> ET16S::get_switch_h(){
-	if (!switch_h_num.has_value()){ return {}; }
-	return static_cast<SwitchPos> (channel[switch_h_num.value()].data);
+SwitchPos ET16S::get_switch_h(){
+	return static_cast<SwitchPos> (channel[switch_h_num].data);
 }
 
-std::optional<float> ET16S::get_l_slider(){
-	if (!l_slider_num.has_value()){ return {}; }
-	return channel[l_slider_num.value()].data;
+float ET16S::get_l_slider(){
+	return channel[l_slider_num].data;
 }
 
-std::optional<float> ET16S::get_r_slider(){
-	if (!r_slider_num.has_value()){ return {}; }
-	return channel[r_slider_num.value()].data;
+float ET16S::get_r_slider(){
+	return channel[r_slider_num].data;
 }
 
-std::optional<float> ET16S::get_trim_one(){
-	if (!trim_one_num.has_value()){ return {}; }
-	return channel[trim_one_num.value()].data;
+float ET16S::get_trim_one(){
+	return channel[trim_one_num].data;
 }
 
-std::optional<float> ET16S::get_trim_two(){
-	if (!trim_two_num.has_value()){ return {}; }
-	return channel[trim_two_num.value()].data;
+float ET16S::get_trim_two(){
+	return channel[trim_two_num].data;
 }
 
-std::optional<float> ET16S::get_trim_three(){
-	if (!trim_three_num.has_value()){ return {}; }
-	return channel[trim_three_num.value()].data;
+float ET16S::get_trim_three(){
+	return channel[trim_three_num].data;
 }
 
-std::optional<float> ET16S::get_trim_four(){
-	if (!trim_four_num.has_value()){ return {}; }
-	return channel[trim_four_num.value()].data;
+float ET16S::get_trim_four(){
+	return channel[trim_four_num].data;
 }
 
-std::optional<float> ET16S::get_trim_five(){
-	if (!trim_five_num.has_value()){ return {}; }
-	return channel[trim_five_num.value()].data;
+float ET16S::get_trim_five(){
+	return channel[trim_five_num].data;
 }
 
-std::optional<float> ET16S::get_trim_six(){
-	if (!trim_six_num.has_value()){ return {}; }
-	return channel[trim_six_num.value()].data;
+float ET16S::get_trim_six(){
+	return channel[trim_six_num].data;
 }
 
-std::optional<float> ET16S::get_l_dial(){
-	if (!l_dial_num.has_value()){ return {}; }
-	return channel[l_dial_num.value()].data;
+float ET16S::get_l_dial(){
+	return channel[l_dial_num].data;
 }
 
-std::optional<float> ET16S::get_r_dial(){
-	if (!r_dial_num.has_value()){ return {}; }
-	return channel[r_dial_num.value()].data;
+float ET16S::get_r_dial(){
+	return channel[r_dial_num].data;
 }
 
-std::optional<float> ET16S::get_channel_data(int chan_num){
+float ET16S::get_channel_data(int chan_num){
 	// Will return nothing if an incorrect channel  number is given
 	if ((chan_num < 0) || (chan_num > 16)){		
 		return {};
@@ -584,41 +549,142 @@ SwitchPos ET16S::get_l_switch(){
 }
 
 SwitchPos ET16S::get_r_switch(){
-	return static_cast<SwitchPos> (channel[switch_d_num.value()].data);
+	return static_cast<SwitchPos> (channel[switch_d_num].data);
 }
 
 float ET16S::get_wheel(){
 	// index will need to be changed to use a different control for wheel
-	return channel[l_slider_num.value()].data;
+	return channel[l_slider_num].data;
 }
-TransmitterData ET16S::get_transmitter_data(){
-	TransmitterData transmitter_data;
-	transmitter_data.l_mouse_button = get_l_mouse_button();
-	transmitter_data.r_mouse_button = get_r_mouse_button();
-	transmitter_data.l_switch = get_l_switch();
-	transmitter_data.r_switch = get_r_switch();
-	transmitter_data.l_stick_x = get_l_stick_x();
-	transmitter_data.l_stick_y = get_l_stick_y();
-	transmitter_data.r_stick_x = get_r_stick_x();
-	transmitter_data.r_stick_y = get_r_stick_y();
-	transmitter_data.wheel = get_wheel();
-	transmitter_data.l_dial = get_l_dial();
-	transmitter_data.r_dial = get_r_dial();
-	transmitter_data.safety_switch = get_safety_switch();
-	transmitter_data.switch_b = get_switch_b();
-	transmitter_data.switch_c = get_switch_c();
-	transmitter_data.switch_d = get_switch_d();
-	transmitter_data.switch_e = get_switch_e();
-	transmitter_data.switch_f = get_switch_f();
-	transmitter_data.switch_g = get_switch_g();
-	transmitter_data.switch_h = get_switch_h();
-	transmitter_data.l_slider = get_l_slider();
-	transmitter_data.r_slider = get_r_slider();
-	transmitter_data.trim_one = get_trim_one();
-	transmitter_data.trim_two = get_trim_two();
-	transmitter_data.trim_three = get_trim_three();
-	transmitter_data.trim_four = get_trim_four();
-	transmitter_data.trim_five = get_trim_five();
-	transmitter_data.trim_six = get_trim_six();
-	return transmitter_data;
+
+void ET16S::send_to_comms() {
+	Comms::Sendable<ET16SData> sendable;
+	sendable.data = get_ET16S_data();
+	sendable.send_to_comms();
+}
+
+bool ET16S::is_safety_mode() {
+	return (get_safety_switch() == SwitchPos::FORWARD) || !is_connected();
+}
+
+bool ET16S::is_teensy_mode() {
+	return get_safety_switch() == SwitchPos::MIDDLE;
+}
+
+bool ET16S::is_hive_mode() {
+	return get_safety_switch() == SwitchPos::BACKWARD;
+}
+
+bool ET16S::mode_changed(){
+	return mode_changed_flag;
+}
+
+
+ET16SData ET16S::get_ET16S_data(){
+	ET16SData ET16S_data;
+	ET16S_data.safety_switch = get_safety_switch();
+	ET16S_data.r_stick_x = get_r_stick_x();
+	ET16S_data.r_stick_y = get_r_stick_y();
+	ET16S_data.l_stick_x = get_l_stick_x();
+	ET16S_data.l_stick_y = get_l_stick_y();
+	ET16S_data.switch_b = get_switch_b();
+	ET16S_data.switch_c = get_switch_c();
+	ET16S_data.switch_d = get_switch_d();
+	ET16S_data.switch_e = get_switch_e();
+	ET16S_data.switch_f = get_switch_f();
+	ET16S_data.switch_g = get_switch_g();
+	ET16S_data.switch_h = get_switch_h();
+	ET16S_data.l_slider = get_l_slider();
+	ET16S_data.r_slider = get_r_slider();
+	ET16S_data.trim_one = get_trim_one();
+	ET16S_data.trim_two = get_trim_two();
+	ET16S_data.trim_three = get_trim_three();
+	ET16S_data.trim_four = get_trim_four();
+	ET16S_data.trim_five = get_trim_five();
+	ET16S_data.trim_six = get_trim_six();
+	ET16S_data.l_dial = get_l_dial();
+	ET16S_data.r_dial = get_r_dial();
+
+	return ET16S_data;
+}
+
+void ET16S::manual_controls(const RobotStateMap& estimated_state_map, RobotStateMap& target_state_map, bool not_safety_mode, float& feed, float& last_feed) {
+	float delta = control_input_timer.delta();
+	
+	vtm_pos_x += ref.ref_data.kbm_interaction.mouse_speed_x * 0.05 * delta;
+	vtm_pos_y += ref.ref_data.kbm_interaction.mouse_speed_y * 0.05 * delta;
+
+	float pitch_min = estimated_state_map[Cfg::StateName::GimbalPitch].config().reference_limits.position.min;
+    float pitch_max = estimated_state_map[Cfg::StateName::GimbalPitch].config().reference_limits.position.max;
+    float pitch_average = 0.5 * (pitch_min + pitch_max);
+    pitch_min -= pitch_average;
+    pitch_max -= pitch_average;
+
+	if (vtm_pos_y < pitch_min) {
+		vtm_pos_y = pitch_min;
+	}
+	if (vtm_pos_y > pitch_max) {
+		vtm_pos_y = pitch_max;
+	}
+
+	float chassis_vel_x = 0;
+	float chassis_vel_y = 0;
+	float chassis_pos_x = 0;
+	float chassis_pos_y = 0;
+
+	if (estimated_state_map[Cfg::StateName::ChassisX].config().governor_type == Cfg::StateOrder::Velocity) { // if we should be controlling velocity
+
+		chassis_vel_x = get_l_stick_y() * 5.4 +
+						(-ref.ref_data.kbm_interaction.key_w + ref.ref_data.kbm_interaction.key_s) * 2.5;
+		chassis_vel_y = -(get_l_stick_x() * 5.4) +
+						(ref.ref_data.kbm_interaction.key_d - ref.ref_data.kbm_interaction.key_a) * 2.5;
+		
+	} else if (estimated_state_map[Cfg::StateName::ChassisX].config().governor_type == Cfg::StateOrder::Position) { // if we should be controlling position
+		chassis_pos_x = get_l_stick_x() * 2 + pos_offset_x;
+		chassis_pos_y = get_l_stick_y() * 2 + pos_offset_y;
+	}
+
+	float chassis_spin = get_wheel() * 25;
+	float pitch_target = 1.57 + -get_r_stick_y() * 0.3 + vtm_pos_y;
+	float yaw_target = -get_r_stick_x() * 1.5 - vtm_pos_x;
+
+	float fly_wheel_target =
+		(get_switch_b() == SwitchPos::FORWARD || get_switch_b() == SwitchPos::MIDDLE) ? 18 : 0; // m/s
+	// if the right switch is forward, and either the left mouse button is pressed or the right switch is not
+	// backward, set the feeder to something. Otherwise, set it to 0
+	float feeder_target = (((ref.ref_data.kbm_interaction.button_left) &&
+							get_switch_b() != SwitchPos::BACKWARD) || get_switch_b() == SwitchPos::FORWARD) ? 10 : 0;
+	if (estimated_state_map[Cfg::StateName::Feeder].config().governor_type == Cfg::StateOrder::Position) {
+		float dt2 = timer.delta();
+		if (dt2 > 0.1)
+			dt2 = 0;
+		// check if the shooter is active
+		if (not_safety_mode && ref.ref_data.robot_performance.shooter_power_active)
+			feed += feeder_target * dt2;
+		target_state_map[Cfg::StateName::Feeder].set_position((int)feed);
+	} else { 
+		target_state_map[Cfg::StateName::Feeder].set_velocity(feeder_target);
+	}
+	// if (transmitter->get_r_switch() == 1 && last_switch != 1) {
+	//     feed++;
+	// }
+	// last_switch = transmitter->get_r_switch();
+	// set manual controls
+	target_state_map[Cfg::StateName::ChassisX].set_position(chassis_pos_x);
+	target_state_map[Cfg::StateName::ChassisX].set_velocity(chassis_vel_x);
+	target_state_map[Cfg::StateName::ChassisY].set_position(chassis_pos_y);
+	target_state_map[Cfg::StateName::ChassisY].set_velocity(chassis_vel_y);
+	target_state_map[Cfg::StateName::ChassisHeading].set_velocity(chassis_spin);
+	target_state_map[Cfg::StateName::GimbalYaw].set_position(yaw_target);
+	target_state_map[Cfg::StateName::GimbalYaw].set_velocity(0);
+	target_state_map[Cfg::StateName::GimbalPitch].set_position(pitch_target);
+	target_state_map[Cfg::StateName::GimbalPitch].set_velocity(0);
+	target_state_map[Cfg::StateName::Flywheels].set_velocity(fly_wheel_target);
+
+	// when in teensy control mode reset hive toggle
+	if (is_teensy_mode() && mode_changed()) {
+		pos_offset_x = estimated_state_map[Cfg::StateName::ChassisX].get_position();
+		pos_offset_y = estimated_state_map[Cfg::StateName::ChassisY].get_position();
+		feed = last_feed;
+	}
 }

@@ -1,52 +1,40 @@
-#include "d200.hpp"
-#include "utils/logger.hpp"
+#include "sensors/d200.hpp"
+#include "comms/config_data/hardware_serial_port.hpp"
+#include "utils/safety.hpp"
+#include "comms/data/sendable.hpp"
 
-
-D200LD14P::D200LD14P(HardwareSerial *_port, uint8_t _id) : Sensor(SensorType::LIDAR, _id) {
-  port = _port;
-  current_packet = 0;
-  port->begin(D200_BAUD);
+D200LD14P::D200LD14P(const Cfg::D200Lidar& config_) 
+  : Sensor(),
+    config(config_),
+    port(Cfg::try_grab_hw_serial_port(config.hardware_serial_port))
+{
+  Serial.printf("D200 LIDAR CONFIGURE DATA:\n");
+  Serial.printf("hardware serial port: %u\n", static_cast<uint32_t>(config.hardware_serial_port));
+  Serial.printf("x offset: %f\n", config.x_offset);
+  Serial.printf("y offset: %f\n", config.y_offset);
+  Serial.printf("yaw offset: %f\n", config.yaw_offset);
+  Serial.printf("valid region start: %f\n", config.valid_region_start);
+  Serial.printf("valid region end: %f\n", config.valid_region_end);
+  Serial.printf("dead zone start: %f\n", config.dead_zone_start);
+  Serial.printf("dead zone end: %f\n", config.dead_zone_end);
+  Serial.printf("dead zone check range: %f\n", config.dead_zone_check_range);
+  Serial.printf("lidar name: %u\n", static_cast<uint32_t>(config.lidar_name));
 }
 
-uint8_t D200LD14P::calc_checksum(uint8_t *buf, int len) {
-  uint8_t crc8 = 0;
-  for (int i = 0; i < len; i++) {
-    crc8 = CRC_TABLE[(crc8 ^ *buf++) & 0xff];
-  }
-  return crc8;
+void D200LD14P::init() {
+  port.begin(D200_BAUD);
 }
 
-void D200LD14P::set_speed(float speed) {
-  // convert to deg/s
-  uint16_t speed_deg = constrain((uint16_t) (speed * 180.0 / M_PI), MIN_SPEED, MAX_SPEED);
-
-  uint8_t lsb = speed_deg & 0xff;
-  uint8_t msb = (speed_deg >> 8) & 0xff;
-
-  uint8_t cmd[D200_CMD_PACKET_LEN] = { 0x54, 0xa2, 0x04, lsb, msb, 0, 0, 0 };
-  cmd[D200_CMD_PACKET_LEN - 1] = calc_checksum(cmd, D200_CMD_PACKET_LEN - 1);
-
-  port->write(cmd, D200_CMD_PACKET_LEN);
-}
-
-void D200LD14P::start_motor() {
-  port->write(D200_START_CMD, D200_CMD_PACKET_LEN);
-}
-
-void D200LD14P::stop_motor() {
-  port->write(D200_STOP_CMD, D200_CMD_PACKET_LEN);
-}
-
-bool D200LD14P::read() {
+void D200LD14P::read() {
   // consume bytes until we reach a start character (only relevant for startup)
-  while (port->available() && port->peek() != D200_START_CHAR) {
-    port->read();
+  while (port.available() && port.peek() != D200_START_CHAR) {
+    port.read();
   }
 
   // read packet by packet
-  while (port->available() >= D200_DATA_PACKET_LEN) {
-    uint8_t start_char = port->read();
-    uint8_t frame_char = port->read();
+  while (port.available() >= D200_DATA_PACKET_LEN) {
+    uint8_t start_char = port.read();
+    uint8_t frame_char = port.read();
     
     // we either get a data packet or a command packet,
     // determined by the frame character
@@ -55,12 +43,12 @@ bool D200LD14P::read() {
       : D200_CMD_PACKET_LEN;
     
     uint8_t buf[packet_len];
-
+    
     buf[0] = start_char;
     buf[1] = frame_char;
     
     // read remainder of packet into buffer
-    port->readBytes(&buf[2], packet_len - 2);
+    port.readBytes(&buf[2], packet_len - 2);
 
     // we don't care about command packets as long as
     // they are removed from the buffer
@@ -108,31 +96,68 @@ bool D200LD14P::read() {
       p->sample_time = (float) millis() / 1000.0; // ms -> s
       p->yaw = robot_yaw;
       p->yaw_velocity = robot_yaw_velocity;
-      p->id = id;
+      p->lidar_name = config.lidar_name;
       
-      for (int i = 0; i < D200_POINTS_PER_PACKET; i++) {
+      for (int i = 0; i < (int)D200_POINTS_PER_PACKET; i++) {
         // points start at byte 6, each point is 3 bytes
         int base = 6 + i * 3;
         uint16_t distance = (buf[base + 1] << 8) | buf[base];
-
+        
         // convert measurements to SI
         p->distances[i] = (float) distance / 1000.0; // mm -> m
         p->intensities[i] = buf[base + 2]; // units are ambiguous (not documented)
       }
     }
   }
+}
 
-  return true;
+void D200LD14P::send_to_comms() const {
+  for (size_t pkt_index = 0; pkt_index < D200_NUM_PACKETS_CACHED; pkt_index++) {
+    Comms::Sendable<LidarDataPacketSI> sendable_packet;
+    sendable_packet.data = packets[pkt_index];
+    sendable_packet.data.lidar_name = config.lidar_name;
+    sendable_packet.send_to_comms();
+  }
+}
+
+uint8_t D200LD14P::calc_checksum(uint8_t *buf, int len) {
+  uint8_t crc8 = 0;
+  for (int i = 0; i < len; i++) {
+    crc8 = CRC_TABLE[(crc8 ^ *buf++) & 0xff];
+  }
+  return crc8;
+}
+
+void D200LD14P::set_speed(float speed) {
+  // convert to deg/s
+  uint16_t speed_deg = constrain((uint16_t) (speed * 180.0 / M_PI), MIN_SPEED, MAX_SPEED);
+
+  uint8_t lsb = speed_deg & 0xff;
+  uint8_t msb = (speed_deg >> 8) & 0xff;
+
+  uint8_t cmd[D200_CMD_PACKET_LEN] = { 0x54, 0xa2, 0x04, lsb, msb, 0, 0, 0 };
+  cmd[D200_CMD_PACKET_LEN - 1] = calc_checksum(cmd, D200_CMD_PACKET_LEN - 1);
+
+  port.write(cmd, D200_CMD_PACKET_LEN);
+}
+
+void D200LD14P::start_motor() {
+  port.write(D200_START_CMD, D200_CMD_PACKET_LEN);
+}
+
+void D200LD14P::stop_motor() {
+  port.write(D200_STOP_CMD, D200_CMD_PACKET_LEN);
 }
 
 void D200LD14P::get_data(LidarDataPacketSI data[D200_NUM_PACKETS_CACHED]) {
   memcpy(data, packets, sizeof(packets));
 }
 
+
 void D200LD14P::flush_packet_buffer() {
   LidarDataPacketSI zero_packet = {};
   
-  for (int i = 0; i < D200_NUM_PACKETS_CACHED; i++) {
+  for (int i = 0; i < (int)D200_NUM_PACKETS_CACHED; i++) {
     packets[i] = zero_packet;
   }
 }
@@ -149,7 +174,7 @@ uint32_t D200LD14P::bitcast_float(float f32) {
 
 void D200LD14P::export_data(uint8_t bytes[D200_NUM_PACKETS_CACHED * D200_PAYLOAD_SIZE]) {
   // write each packet into byte array
-  for (int i = 0; i < D200_NUM_PACKETS_CACHED; i++) {
+  for (int i = 0; i < (int)D200_NUM_PACKETS_CACHED; i++) {
     int offset = i * D200_PAYLOAD_SIZE;
     LidarDataPacketSI packet = packets[i];
 
@@ -170,7 +195,7 @@ void D200LD14P::export_data(uint8_t bytes[D200_NUM_PACKETS_CACHED * D200_PAYLOAD
     bytes[offset + 7] = (start_angle >> 16) & 0xff;
     bytes[offset + 8] = (start_angle >> 24) & 0xff;
 
-    for (int j = 0; j < D200_POINTS_PER_PACKET; j++) {
+    for (int j = 0; j < (int)D200_POINTS_PER_PACKET; j++) {
       int point_offset = offset + 9 + j * 5;
       uint32_t distance = bitcast_float(packet.distances[j]);
 

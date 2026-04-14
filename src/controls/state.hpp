@@ -1,79 +1,101 @@
-#include "../utils/timing.hpp"
+#pragma once
+#include "comms/config_data/state.hpp"
 
-#ifndef STATE_H
-#define STATE_H
+/// @brief The State class represents the state of a particular joint of the robot
+class State {
+    public: 
+        /// @brief Raw state struct for direct access to state values.
+        struct Raw {
+            /// @brief The position of the state.
+            float position;
+            /// @brief The velocity of the state.
+            float velocity;
+            /// @brief The acceleration of the state.
+            float acceleration;
+        };
 
-// Maximum state length. Do not change unless you know what you're doing.
-// (the Teensy and Hive must agree on this value)
-#define STATE_LEN 24
+    public:
+        /// @brief Construct a new State object with the given configuration.
+        /// @param _config The configuration for the state; this includes the name of the state, the limits of the state, and whether the state wraps at those limits.
+        State(const Cfg::State& _config);
 
-#define MICRO_STATE_LEN 3
+        /// @brief Get the configuration for this state.
+        /// @return A const reference to the configuration for this state.
+        const Cfg::State& config() const;
+        
+        
+        /// @brief Set the position value of the state.
+        /// @param position The position value to set. This will be constrained (or wrapped if is_wrapping is true) to the limits specified in the configuration.
+        void set_position(float position);
 
-#define NUM_ESTIMATORS 16
+        
+        /// @brief Get the position value of the state.
+        /// @return The position value of the state.
+        float get_position() const;
+        
+        /// @brief Set the velocity value of the state.
+        /// @param velocity The velocity value to set. This will be constrained to the limits specified in the configuration.
+        void set_velocity(float velocity);
+        
+        /// @brief Get the velocity value of the state.
+        /// @return The velocity value of the state.
+        float get_velocity() const;
+        
+        /// @brief Set the acceleration value of the state.
+        /// @param acceleration The acceleration value to set. This will be constrained to the limits specified in the configuration.
+        void set_acceleration(float acceleration);
+        
+        /// @brief Get the acceleration value of the state.
+        /// @return The acceleration value of the state.
+        float get_acceleration() const;
+        
+        /// @brief Get the difference between this state and another state, ignoring limits. 
+        // This will simply subtract the position, velocity, and acceleration values of the two states without applying any constraints or wrapping.
+        /// @param other The other state to compare to this state.
+        /// @return A new State object that represents the error between this state and the other state, without applying limits or wrapping.
+        State get_error_no_bounds(const State& other) const;
+        
+        /// @note These arithmetic operators are overloaded so that the state limits are preserved when doing arithmetic operations on states.
 
-/// @brief Use state estimate and ungoverned reference to generated governed references to be sent to controllers.
-class Governor {
-private:
-    // This is a sample state (it does not represent every robot):
-    // {x, y, psi (chassis angle), theta (yaw angle), phi (pitch angle), feed, flywheel}
-    // In this example case, as with all other cases, the unused state rows are kept blank.
-
-    /// @brief state reference, also known as desired state. Stored as a concatenated 2D matrix that
-    /// @brief can be split into position [0], velocity [1], and acceleration [2] vectors.
-    float reference[STATE_LEN][3];
-
-    /// @brief state estimation (from sensors), stored as a concatenated 2D matrix with the same
-    /// @brief shape as the state reference.
-    float estimate[STATE_LEN][3];
-
-    /// @brief Reference limits. Used to keep the reference physically obtainable,
-    /// @brief where [n][m][0] is the low bound and [n][m][1] is the high bound.
-    float reference_limits[STATE_LEN][3][2];
-
-    /// @brief Timer for the reference governor
-    Timer governor_timer;
-
-    /// @brief counter so dt isnt big in the first loop
-    int count = 0;
-
-public:
-    /// @brief Only use one time!!!!!! Use step reference
-    /// @param reference start reference at the beginning(should equal current estimate)
-    void set_reference(float reference[STATE_LEN][3]);
-
-    /// @brief Sets a specific value in the reference matrix at a specific state and derivative index
-    /// @param value The value to set in the reference matrix
-    /// @param state_val The index of the state to set; Corresponds to the sub-state index
-    /// @param state_type The index of the derivative to set; 0 for position, 1 for velocity, 2 for acceleration
-    /// @note This function should be used sparingly, as setting the reference defeats its purpose.
-    void set_reference_at_index(float value, int state_val, int state_type);
-
-    /// @brief Gives the instantaneous governed state reference matrix (also known as desired state)
-    /// @param reference The array to override with the reference matrix; Must be of shape [STATE_LEN][3]
-    void get_reference(float reference[STATE_LEN][3]);
-
-    /// @brief Steps the reference matrix towards a goal, applying a reference governor to prevent impossible motion
-    /// @param ungoverned_reference The desired robot state to step towards in the form of a matrix; Must be of shape [STATE_LEN][3]
-    /// @param governor_type position based governor (1) or velocity based governor (2)
-    void step_reference(float ungoverned_reference[STATE_LEN][3], const float governor_type[STATE_LEN]);
-
-    /// @brief Gives the instantaneous state estimate matrix
-    /// @param estimate The array to override with the estimate matrix; Must be of shape [STATE_LEN][3]
-    void get_estimate(float estimate[STATE_LEN][3]);
-
-    /// @brief Sets the instantaneous state estimate matrix
-    /// @param estimate The current state estimate, in the form of a 2D matrix
-    void set_estimate(float estimate[STATE_LEN][3]);
-
-    /// @brief Sets the instantaneous state estimate at a specific location within the estimate matrix
-    /// @param estimate Estimate value
-    /// @param row The row of the matrix in which to write to; Corresponds to the index of a sub-state
-    /// @param col The column of the matrix in which to write to; Corresponds to the derivative order
-    void set_estimate_at_location(float estimate, int row, int col);
-
-    /// @brief Sets the reference limits matrix which is used by the reference governor
-    /// @param reference_limits Reference limits, in the form of a 3D tensor; Must be of shape [STATE_LEN][3][2]
-    void set_reference_limits(const float reference_limits[STATE_LEN][3][2]);
-};
-
-#endif
+        /// @brief Operator+: Add two states together, preserving limits and wrapping if necessary.
+        /// @param other The other state to add to this state.
+        /// @return The resulting sum state.
+        State operator+(const State& other) const;
+        
+        /// @brief Operator-: Subtract one state from another, preserving limits and wrapping if necessary.
+        /// @param other The other state to subtract from this state.
+        /// @return The resulting difference state.
+        State operator-(const State& other) const;
+        
+        /// @note The assignment operator is overloaded so that the configuration of the state is preserved when assigning one state to another.
+        
+        /// @brief Operator=: Assign the value of another state to this state, preserving the original configuration of this state.
+        /// @param other The other state to assign to this state.
+        /// @return A reference to this state.
+        State& operator=(const State& other);
+        
+        /// @brief Get a copy of the raw state values.
+        /// @return A Raw struct containing the position, velocity, and acceleration values of this state.
+        Raw get_raw() const;
+        
+        private:
+        /// @brief The raw state values. This is used for direct access to the state values, and is updated whenever the state is updated.
+        Raw m_state;
+        
+        /// @brief The configuration for the state; this includes the name of the state, the limits of the state, and whether the state wraps at those limits.
+        const Cfg::State& m_config;
+    private:
+        /// These functions set state values without applying limits or wrapping. 
+        // They should only be used in specific cases, such as when calculating the error between two states, 
+        // where we want to preserve the actual difference between the states without having it be affected by limits or wrapping.
+        
+        /// @brief Set the position value of the state without applying limits or wrapping.
+        /// @param position The position value to set.
+        void set_position_no_bound(float position);
+        /// @brief Set the velocity value of the state without applying limits.
+        /// @param velocity The velocity value to set.
+        void set_velocity_no_bound(float velocity);
+        /// @brief Set the acceleration value of the state without applying limits.
+        /// @param acceleration The acceleration value to set.
+        void set_acceleration_no_bound(float acceleration);
+    };

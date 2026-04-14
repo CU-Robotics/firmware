@@ -1,9 +1,7 @@
-#include "IMUSensor.hpp"
-#include "utils/logger.hpp"
-
+#include "AdafruitIMUSensor.hpp"
 
 // default implementation for printing data
-void IMUSensor::print() {
+void AdafruitIMUSensor::print() {
 	// Display the temperature data, measured in Celcius
 	logger.print("\t\tTemperature ");
 	logger.print(get_temperature());

@@ -82,9 +82,9 @@ bool EthernetComms::send_packet(EthernetPacket& packet) {
 
 	// check if the last call to this function is within the regulation time
 	// this is to prevent the Teensy from running too fast and overloading the hardware
-	if (m_regulation_timer.get_elapsed_micros_no_restart() < m_regulation_time) {
-		return {};
-	}
+	// if (m_regulation_timer.get_elapsed_micros_no_restart() < m_regulation_time) {
+	// 	return {};
+	// }
 
 	m_last_send_time = micros();
 
