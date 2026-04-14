@@ -117,9 +117,6 @@ private:
     /// @brief Used to detect multiple slow loops in a row
     bool last_loop_slow = false;
 
-	
-    
-
 	// ==========================================
     // STATE MAPS
     // ==========================================
@@ -147,10 +144,13 @@ private:
 	
 	/// @brief Processes manual inputs, hive modes, and state overrides.
 	void process_behaviors();
+	
 	/// @brief Steps estimators, governors, and controllers to generate motor targets.
     void update_controls();
+	
 	/// @brief Checks loop timing/safety constraints and writes to the CAN bus.
     void check_safety();
+	
 	/// @brief LED hearbeat, feeds the watchdog, and ensures consistent loop time.
 	void loop_timing();
 
