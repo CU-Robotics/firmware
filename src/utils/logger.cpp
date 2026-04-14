@@ -261,7 +261,16 @@ size_t Logger::println(double n, int digits) { return print(n, digits) + println
 int Logger::vprintf(const char *format, va_list args) {
     uint8_t buffer[1024];
     int retval = vsnprintf_((char *)buffer, 1024, format, args);
-    write(buffer, retval);
+    if (retval <= 0) {
+        return retval;
+    }
+
+    size_t bytes_to_write = static_cast<size_t>(retval);
+    if (bytes_to_write >= sizeof(buffer)) {
+        bytes_to_write = sizeof(buffer) - 1;
+    }
+
+    write(buffer, bytes_to_write);
 
     return retval;
 }
