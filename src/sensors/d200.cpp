@@ -1,6 +1,7 @@
 #include "sensors/d200.hpp"
 #include "comms/config_data/hardware_serial_port.hpp"
 #include "utils/safety.hpp"
+#include "utils/logger.hpp"
 #include "comms/data/sendable.hpp"
 
 D200LD14P::D200LD14P(const Cfg::D200Lidar& config_) 

@@ -9,6 +9,7 @@
 #include "safety.hpp"
 #include "sensors/buff_encoder.hpp"
 #include "state.hpp"
+#include "utils/logger.hpp"
 #include "utils/profiler.hpp"
 
 
@@ -26,6 +27,7 @@
 #include <TeensyDebug.h>
 
 #include "comms/data/hive_data.hpp"
+#include "comms/data/logging_data.hpp"
 #include "comms/data/sendable.hpp"
 #include "comms/data/robot_state_data.hpp"
 #include "utils/timing.hpp"

@@ -2,6 +2,7 @@
 #include <Arduino.h>
 #include "sensors/RefSystem.hpp"
 #include "comms/data/sendable.hpp"
+#include "utils/logger.hpp"
 
 DR16::DR16(const Cfg::DR16& config_) : config(config_) {
 

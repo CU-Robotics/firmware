@@ -4,6 +4,7 @@
 #include "icm_sensor_data.hpp"
 #include "lsm_sensor_data.hpp"
 #include "limit_switch_data.hpp"
+#include "logging_data.hpp"
 #include "rev_encoder_data.hpp"
 #include "stereo_cam_trigger_data.hpp"
 #include "lidar_data_packet_si.hpp"
@@ -55,6 +56,8 @@ struct FirmwareData {
     std::map<Cfg::MotorName, MotorStateData> motor_state_data_map;
     /// @brief Configuration status data. This is sent from firmware to indicate the status of the configuration process.
     ConfigurationStatusData config_status_data;
+    /// @brief Logging data transmitted from firmware.
+    LoggingData logging_data;
 
     /// @brief dr16 Transmitter data
     DR16Data dr16_data;

@@ -1,6 +1,7 @@
 #include "comms_layer.hpp"
 #include "comms/data/configuration_status_data.hpp"
 #include "comms/data/sendable.hpp"
+#include "utils/logger.hpp"
 
 
 /// @brief This resets the whole processor and kicks it back to program entry (teensy4/startup.c)

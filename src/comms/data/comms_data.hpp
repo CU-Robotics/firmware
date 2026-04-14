@@ -36,6 +36,7 @@ enum class TypeLabel : uint16_t {
     StereoCameraTriggerConfig,
     StateConfig,
     TransmitterConfig,
+    LoggingData,
 };
 
 /// @brief Converts a TypeLabel to a string.
@@ -69,6 +70,8 @@ inline std::string to_string(TypeLabel type_label) {
         return "ET16SData";
     case TypeLabel::MotorStateData:
         return "MotorStateData";
+    case TypeLabel::LoggingData:
+        return "LoggingData";
     case TypeLabel::TargetState:
         return "TargetState";
     case TypeLabel::EstimatedState:
@@ -119,6 +122,7 @@ enum class PhysicalMedium : uint16_t {
 enum class Priority : uint16_t {
     High = 0x00,
     Medium,
+    Logging,
 };
 
 /// @brief base class for all data structs that want to be sent over comms.

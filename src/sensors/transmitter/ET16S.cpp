@@ -1,6 +1,7 @@
 #include "ET16S.hpp"
 #include "sensors/RefSystem.hpp"
 #include "comms/data/sendable.hpp"
+#include "utils/logger.hpp"
 
 ET16S::ET16S(const Cfg::ET16S& config) : config(config) { }
 

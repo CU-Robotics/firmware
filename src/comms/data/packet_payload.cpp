@@ -1,7 +1,6 @@
 #include "packet_payload.hpp"
 #include "safety.hpp"
 
-#include <algorithm>                        // for min
 #include "comms/comms_layer.hpp"            // for CommsLayer
 
 namespace Comms {
@@ -25,6 +24,11 @@ PacketPayload::~PacketPayload() {
         delete medium_priority_send_queue.front();
         medium_priority_send_queue.pop();
     }
+
+    while (!logging_send_queue.empty()) {
+        delete logging_send_queue.front();
+        logging_send_queue.pop();
+    }
 }
 
 void PacketPayload::construct_data() {
@@ -32,7 +36,7 @@ void PacketPayload::construct_data() {
 
     append_data_from_queue(high_priority_send_queue);
     append_data_from_queue(medium_priority_send_queue);
-
+    append_data_from_queue(logging_send_queue);
 }
 
 void PacketPayload::deconstruct_data(uint8_t* data, uint16_t size) {
@@ -80,7 +84,15 @@ void PacketPayload::add(CommsData* data) {
             } else {
                 delete data;
             }
-            break;    
+            break;
+        } case Priority::Logging: {
+            if (logging_send_queue.size() < MAX_QUEUE_SIZE) {
+                logging_send_queue.push(data);
+            } else {
+                Serial.println("[Logger] Queue overflow!");
+                delete data;
+            }
+            break;
         }
         // Don't have a default case so that the compiler will warn us if we forget to handle a priority case
     }
@@ -100,6 +112,11 @@ void PacketPayload::clear_queues() {
         delete medium_priority_send_queue.front();
         medium_priority_send_queue.pop();
     }
+
+    while (!logging_send_queue.empty()) {
+        delete logging_send_queue.front();
+        logging_send_queue.pop();
+    }
     // clear the raw data buffer
     clear_raw_data();
 }
@@ -110,6 +127,10 @@ uint16_t PacketPayload::get_high_priority_queue_size() const {
 
 uint16_t PacketPayload::get_medium_priority_queue_size() const {
     return medium_priority_send_queue.size();
+}
+
+uint16_t PacketPayload::get_logging_queue_size() const {
+    return logging_send_queue.size();
 }
 
 uint16_t PacketPayload::get_max_size() const {
@@ -125,22 +146,6 @@ void PacketPayload::clear_raw_data() {
 void PacketPayload::append_data_from_queue(std::queue<CommsData*>& queue) {
     while (!queue.empty() && remaining_data_size > 0) {
         CommsData* next_data = queue.front();
-
-        if (next_data->type_label == TypeLabel::LoggingData) {
-            auto *logging_data = static_cast<LoggingData *>(next_data);
-            bool finished_append = try_append_splittable_logging_data(logging_data);
-
-            if (finished_append) {
-                place_outgoing_data_in_mega_struct(next_data);
-                delete next_data;
-                queue.pop();
-            } else {
-                // could not append entire log this pass; try again next time
-                break;
-            }
-
-            continue;
-        }
 
         bool successful_append = try_append_data(next_data);
 
@@ -176,7 +181,6 @@ bool PacketPayload::try_append_data(CommsData* data) {
 
     return true; // success
 }
-
 void PacketPayload::place_incoming_data_in_mega_struct(CommsData* data) {
     HiveData& hive_data = comms_layer.get_hive_data();
 

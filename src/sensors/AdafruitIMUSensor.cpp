@@ -1,4 +1,5 @@
 #include "AdafruitIMUSensor.hpp"
+#include "utils/logger.hpp"
 
 // default implementation for printing data
 void AdafruitIMUSensor::print() {

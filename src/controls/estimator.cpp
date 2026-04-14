@@ -1,6 +1,7 @@
 #include "estimator.hpp"
 #include "ICM20649.hpp"
 #include "utils/vector_math.hpp"
+#include "utils/logger.hpp"
 #include "sensors/RefSystem.hpp"
 
 GimbalAndChassisEstimator::GimbalAndChassisEstimator(const Cfg::Estimator& estimator_config, SensorManager& sensor_manager, CANManager& can, std::vector<Cfg::StateName> available_states) : 
@@ -327,4 +328,3 @@ void FeederEstimator::step_states(RobotStateMap& updated_state_map, const RobotS
     updated_state_map[feeder_ball_state].set_acceleration(0); // this is not the acceleration just the encoder value for debugging
 
 }
-

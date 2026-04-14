@@ -2,6 +2,7 @@
 #include <cmath>
 #include "comms/data/rev_encoder_data.hpp"
 #include "comms/data/sendable.hpp"
+#include "utils/logger.hpp"
 
 void RevEncoder::init() {
     pinMode(this->config.digital_pin, INPUT);  // Set the pin used to measure the encoder to be an input
