@@ -4,6 +4,8 @@
 void watchdog_callback() {
     const bool safety_called = safety::call_safety_function();
 
+    // TODO: Read and print a flag to identify the cause of stall
+
     Serial.println(
         safety_called
             ? "[Watchdog] Warning fired, safety function called."

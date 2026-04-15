@@ -1685,6 +1685,7 @@ void SPIClass::transfer(const void * buf, void * retbuf, size_t count)
     uint8_t *p_write = (uint8_t*)buf;
     uint8_t *p_read = (uint8_t*)retbuf;
     size_t count_read = count;
+    constexpr uint32_t transfer_timeout_us = 10000U;
 
 	// Pass 1 keep it simple and don't try packing 8 bits into 16 yet..
 	// Lets clear the reader queue
@@ -1695,23 +1696,31 @@ void SPIClass::transfer(const void * buf, void * retbuf, size_t count)
 		port().TDR = p_write? *p_write++ : _transferWriteFill;
 		count--; // how many bytes left to output.
 		// Make sure queue is not full before pushing next byte out
+		uint32_t wait_start_us = micros();
+
 		do {
 			if ((port().RSR & LPSPI_RSR_RXEMPTY) == 0)  {
 				uint8_t b = port().RDR;  // Read any pending RX bytes in
 				if (p_read) *p_read++ = b; 
 				count_read--;
+				wait_start_us = micros(); // Reset the stall timer
 			}
+
+			if ((micros() - wait_start_us) > transfer_timeout_us) return;
 		} while ((port().SR & LPSPI_SR_TDF) == 0) ;
 
 	}
 
 	// now lets wait for all of the read bytes to be returned...
+	uint32_t wait_start_us = micros();
 	while (count_read) {
 		if ((port().RSR & LPSPI_RSR_RXEMPTY) == 0)  {
 			uint8_t b = port().RDR;  // Read any pending RX bytes in
 			if (p_read) *p_read++ = b; 
 			count_read--;
+			wait_start_us = micros();
 		}
+		if ((micros() - wait_start_us) > transfer_timeout_us) return;
 	}
 }
 
