@@ -409,3 +409,46 @@ void DR16::manual_controls(const RobotStateMap& estimated_state_map, RobotStateM
 		feed = last_feed;
 	}
 }
+RobotIntent DR16::get_intent() {
+    RobotIntent intent;
+    
+    // ==========================================
+    // 1. PHYSICAL HARDWARE (Always Evaluated)
+    // ==========================================
+    // Map the physical DJI joysticks to base velocities
+    intent.chassis_vel_x = get_l_stick_y() * 5.4f;
+    intent.chassis_vel_y = -(get_l_stick_x() * 5.4f);
+    intent.chassis_spin  = get_wheel() * 25.0f; 
+
+    // Map physical right stick to gimbal targets
+    intent.pitch_target  = -get_r_stick_y() * 0.3f;
+    intent.yaw_target    = -get_r_stick_x() * 1.5f;
+
+    // Map a physical switch (e.g., Left Switch) to the flywheel
+    intent.flywheel_target = (get_switch_l() == SwitchPos::UP || get_switch_l() == SwitchPos::MID) ? 18.0f : 0.0f;
+
+
+    // ==========================================
+    // 2. NATIVE KBM OVERLAY (If Active)
+    // ==========================================
+    // has_native_kbm() checks if DBUS keyboard/mouse bytes are non-zero
+    if (has_native_kbm()) {
+        
+        // Signal the TeleopManager to lock out the wireless VTM
+        intent.native_kbm_active = true; 
+        
+        // Superimpose WASD keys on top of the physical left stick
+        intent.chassis_vel_x += (-native_key_w + native_key_s) * 2.5f;
+        intent.chassis_vel_y += (native_key_d - native_key_a) * 2.5f;
+
+        // Superimpose mouse movement on top of the physical right stick
+        intent.yaw_target   -= native_mouse_x * 0.05f;
+        intent.pitch_target += native_mouse_y * 0.05f;
+
+        // Map Left and Right clicks to the new Dual Feeder targets
+        intent.top_feeder_target    = (native_mouse_left_click) ? 10.0f : 0.0f;
+        intent.bottom_feeder_target = (native_mouse_right_click) ? 10.0f : 0.0f;
+    }
+    
+    return intent;
+}
