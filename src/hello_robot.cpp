@@ -55,11 +55,13 @@ void HelloRobot::run(){
 		process_behaviors();
 		update_controls();
 		check_safety();
+		process_cli();
 		loop_timing();
 
-		process_cli();
+		
 	}
 }
+
 void HelloRobot::crash_report(){
 	// check to see if there is a crash report, and if so, print it repeatedly
 	// over Serial in the future, we'll send this directly over comms
@@ -219,11 +221,11 @@ void HelloRobot::loop_timing(){
 	// Keep the loop running at the desired rate
 	loop_timer.delay_micros((int)(1E6 / (float)(LOOP_FREQ)));
 }
+
 void HelloRobot::process_cli(){
-// Read all available characters in the hardware buffer
+	// Read all available characters in the hardware buffer
     while (Serial.available() > 0) {
         char c = Serial.read();
-
         // If the character is a newline or carriage return, the command is complete
         if (c == '\n' || c == '\r') {
             if (cli_index == 0) continue; // Ignore empty lines
@@ -245,13 +247,13 @@ void HelloRobot::process_cli(){
                               transmitter_manager.get_l_stick_y(),
                               transmitter_manager.get_r_stick_x(),
                               transmitter_manager.get_r_stick_y());
-            } 
-            else if (cmd == "print dt") {
-                Serial.printf("Last loop dt: %f seconds\n", stall_timer.delta());
             }
+			else if (cmd == "print dt") {
+                Serial.printf("Last loop dt: %f seconds\n", stall_timer.delta());
+			} 
             else {
                 Serial.println("Unknown command. Try: ping");
-            }
+			}
 
             // Reset the buffer for the next command
             cli_index = 0; 

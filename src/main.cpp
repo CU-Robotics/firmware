@@ -1,13 +1,12 @@
 #include "hello_robot.hpp"
 
 
-//extern "C" void reset_teensy(void);
-
 // Master loop
 int main() {
 
     Serial.begin(115200); // the serial monitor is actually always active (for
                           // debug use Serial.println & tycmd)
+	while(!Serial);
     debug.begin(SerialUSB1);
 	
 	//Print Splash Screen
