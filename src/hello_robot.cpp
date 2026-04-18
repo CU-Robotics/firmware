@@ -244,33 +244,64 @@ void HelloRobot::loop_timing(){
 }
 void HelloRobot::process_cli(){
 
-	static bool live_profiler_active = false;
     static uint32_t last_redraw_time = 0;
-
-	// Live view mode is for screen refreshing to make it look like a dashboard
-    if (live_profiler_active) {
-        // Redraw the screen only once every 1000 milliseconds
-        if (millis() - last_redraw_time >= 1000) {
+	static uint32_t redraw_interval = 1000; // Time in ms between frames
+	enum class LiveMode { NONE, PROFILER_VIEW, TRANSMITTER, ESTIMATED_STATE, HEARTBEAT };
+    
+    static LiveMode current_live_mode = LiveMode::NONE;
+	
+	// ==========================================
+    // 2. LIVE VIEW RENDERER
+    // ==========================================
+    if (current_live_mode != LiveMode::NONE) {
+        
+        // Check if it's time to draw the next frame
+        if (millis() - last_redraw_time >= redraw_interval) {
             Serial.print("\033[H"); // Move cursor to top-left
-            prof.print_summary();
+            
+            // Draw whichever screen is currently active
+            switch (current_live_mode) {
+			case LiveMode::PROFILER_VIEW:
+				prof.print_summary();
+				break;
+                    
+			case LiveMode::TRANSMITTER:
+				Serial.printf("=== LIVE TRANSMITTER DATA ===\n");
+				//Serial.printf(" Safety Mode: %s\n", transmitter_manager.is_safety_mode() ? "ON" : "OFF");
+				//Serial.printf(" Left Stick:  X: %5.2f | Y: %5.2f\n", transmitter.get_l_stick_x(), transmitter.get_l_stick_y());
+				//Serial.printf(" Right Stick: X: %5.2f | Y: %5.2f\n", transmitter.get_r_stick_x(), transmitter.get_r_stick_y());
+				break;
+			case LiveMode::ESTIMATED_STATE:
+				Serial.printf("=== LIVE ESTIMATED STATE ===\n");
+				estimated_state_map->print();
+				break;
+			
+			case LiveMode::HEARTBEAT:
+				Serial.printf("=== LIVE HEARTBEAT  ===\n");
+				Serial.println(loopc);
+				break;
+			
+			default:
+				break;
+            }
+
             Serial.println("\n[ LIVE MODE ACTIVE - PRESS ANY KEY TO EXIT ]");
             last_redraw_time = millis();
         }
 
         // If the user types anything, exit live mode
         if (Serial.available() > 0) {
-            live_profiler_active = false;
+            current_live_mode = LiveMode::NONE;
             
-            // Flush the buffer so the exit keystroke isn't read as a command
+            // Flush the buffer
             while(Serial.available()) Serial.read(); 
             
-            Serial.println("\n\n[Exited Live Profiler]");
+            Serial.println("\n\n[Exited Live View]");
             cli_index = 0; 
         }
         
-        return; 
+        return; // Return immediately so normal parsing doesn't run
     }
-	
 	// Read all available characters in the hardware buffer
     while (Serial.available() > 0) {
         char c = Serial.read();
@@ -281,55 +312,48 @@ void HelloRobot::process_cli(){
             cli_buffer[cli_index] = '\0'; // Null-terminate the string
             String cmd = String(cli_buffer);
 			cmd.trim();
+			
             // ==========================================
             // COMMAND DICTIONARY
             // ==========================================
+			/* Adding new commands is simple.
+			   add if statement to cmd elseif block below
+			   If it is live add to live mode enum and switch statement above
+			   as well as to cmd elseif block below
+			 */
             if (cmd == "ping") {
                 Serial.println("pong! Robot is alive.");
             } 
-			/*else if (cmd == "print tx") {
-			// Access the transmitter data
-			Serial.printf(" \rSafety: %d | L_X: %.2f | L_Y: %.2f | R_X: %.2f | R_Y: %.2f", 
-			transmitter_manager.transmitter.is_safety_mode(),
-			transmitter_manager.get_l_stick_x(),
-			transmitter_manager.get_l_stick_y(),
-			transmitter_manager.get_r_stick_x(),
-			transmitter_manager.get_r_stick_y());
-			}*/
+			else if (cmd == "print tx") {
+			  current_live_mode = LiveMode::TRANSMITTER;
+                redraw_interval = 100;  // 10Hz
+                last_redraw_time = 0;
+                Serial.print("\033[2J");
+			}
 			else if (cmd == "print dt") {
                 Serial.printf("Last loop dt: %f seconds\n", stall_timer.delta());
 			}
 			else if (cmd == "prof") {
-                live_profiler_active = true;
-                last_redraw_time = 0; // Force an immediate redraw
-                Serial.print("\033[2J"); // Clear the terminal screen
+				current_live_mode = LiveMode::PROFILER_VIEW;
+                redraw_interval = 1000; // 1Hz
+                last_redraw_time = 0;   // Force immediate redraw
+                Serial.print("\033[2J"); // Clear screen
             }
 			else if (cmd == "print estimated state"){
-				stimated_state_map.print();
+
+				current_live_mode = LiveMode::ESTIMATED_STATE;
+                redraw_interval = 500;  // 2Hz update
+                last_redraw_time = 0;
+                Serial.print("\033[2J");
 			}
 			else if (cmd== "heartbeat"){
-				// Redraw the screen only once every 1000 milliseconds
-				if (millis() - last_redraw_time >= 1000) {
-					Serial.print("\033[H"); // Move cursor to top-left
-				    Serial.println(loopc);
-					Serial.println("\n[ LIVE MODE ACTIVE - PRESS ANY KEY TO EXIT ]");
-					last_redraw_time = millis();
-				}
-
-				// If the user types anything, exit live mode
-				if (Serial.available() > 0) {
-            
-					// Flush the buffer so the exit keystroke isn't read as a command
-					while(Serial.available()) Serial.read(); 
-            
-					Serial.println("\n\n[Exited Live Profiler]");
-					cli_index = 0; 
-				}
-        
-				return; 				
+				current_live_mode = LiveMode::HEARTBEAT;
+                redraw_interval = 500;  // 2Hz update
+                last_redraw_time = 0;
+                Serial.print("\033[2J");
 			}
             else {
-                Serial.println("Unknown command. Try: ping");
+                Serial.println("Unknown command. Try: ping, print dt, prof, print estimated state, heartbeat");
 			}
 
             // Reset the buffer for the next command
