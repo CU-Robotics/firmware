@@ -296,9 +296,9 @@ struct LowerFeederEstimator : public Estimator {
         float feeder_direction = 1;
         /// @brief gear ratio of the feeder
         float feeder_ratio = 1;
-
+        /// @brief value for checking if the buff encoder spi is failing
         float reset_value = 0;
-
+        /// @brief counts the number of time the buff encoder has reset from an spi issue
         int num_encoder_resets = 0;
 
         /// @brief state name for the feeder ball velocity
