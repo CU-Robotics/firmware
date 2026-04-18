@@ -220,7 +220,8 @@ upload: build
     # Teensy serial isn't immediately available after upload, so we wait a bit
     # The Teensy waits for 20 + 280 + 20 ms after power up/boot
 	@sleep 0.4s
-	@bash $(TOOLS_DIR)/monitor.sh
+#@bash $(TOOLS_DIR)/monitor.sh
+	@tycmd monitor
 
 
 # Install required tools for building and uploading firmware

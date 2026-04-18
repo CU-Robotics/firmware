@@ -38,11 +38,12 @@ extern "C" void reset_teensy(void);
 // Loop constants
 #define LOOP_FREQ 1000
 #define HEARTBEAT_FREQ 2
-#ifdef PROFILER
-Profiler prof;
-#endif
+
 class HelloRobot {
 private:
+#ifdef PROFILER
+	Profiler prof;
+#endif
     CANManager can;
     //RefSystem ref;
     TransmitterManager transmitter_manager;
@@ -80,6 +81,7 @@ private:
 	// CLI Buffer variables
     char cli_buffer[64] = {0};
     uint8_t cli_index = 0;
+	bool live_profiler_active = false;
 
 	
     void setup();

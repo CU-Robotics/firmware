@@ -2,11 +2,11 @@
 #define PROFILER_H
 
 // Use this flag to toggle profiling globally.
-// #define PROFILER
+#define PROFILER
 
 #include <Arduino.h>
 
-#define PROF_MAX_SECTIONS 4   // max number of active profiling sections
+#define PROF_MAX_SECTIONS 10   // max number of active profiling sections
 #define PROF_MAX_NAME 16      // max length of section name
 #define PROF_MAX_TIMES (1000) // max number of start/end times per section
 
@@ -45,6 +45,8 @@ struct Profiler {
     /// @brief Print stats for a profiling section
     /// @param name The name of the section to print stats for
     void print(const char *name);
+
+	void print_summary();
 };
 
 extern Profiler prof; // Global profiler

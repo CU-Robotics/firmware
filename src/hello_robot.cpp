@@ -50,12 +50,33 @@ void HelloRobot::run(){
     while (true) {
         // start main loop time timer
         stall_timer.start();
-		
+
+		#ifdef PROFILER
+		prof.begin("Telemetry");
+        read_telemetry();
+        prof.end("Telemetry");
+
+        prof.begin("Behaviors");
+        process_behaviors();
+        prof.end("Behaviors");
+
+        prof.begin("Controls");
+        update_controls();
+        prof.end("Controls");
+
+        prof.begin("Safety");
+        check_safety();
+        prof.end("Safety");
+        prof.begin("CLI");
+        process_cli();
+        prof.end("CLI");
+		#else
 		read_telemetry();
 		process_behaviors();
 		update_controls();
 		check_safety();
 		process_cli();
+		#endif
 		loop_timing();
 
 		
@@ -221,8 +242,35 @@ void HelloRobot::loop_timing(){
 	// Keep the loop running at the desired rate
 	loop_timer.delay_micros((int)(1E6 / (float)(LOOP_FREQ)));
 }
-
 void HelloRobot::process_cli(){
+
+	static bool live_profiler_active = false;
+    static uint32_t last_redraw_time = 0;
+
+	// Live view mode is for screen refreshing to make it look like a dashboard
+    if (live_profiler_active) {
+        // Redraw the screen only once every 1000 milliseconds
+        if (millis() - last_redraw_time >= 1000) {
+            Serial.print("\033[H"); // Move cursor to top-left
+            prof.print_summary();
+            Serial.println("\n[ LIVE MODE ACTIVE - PRESS ANY KEY TO EXIT ]");
+            last_redraw_time = millis();
+        }
+
+        // If the user types anything, exit live mode
+        if (Serial.available() > 0) {
+            live_profiler_active = false;
+            
+            // Flush the buffer so the exit keystroke isn't read as a command
+            while(Serial.available()) Serial.read(); 
+            
+            Serial.println("\n\n[Exited Live Profiler]");
+            cli_index = 0; 
+        }
+        
+        return; 
+    }
+	
 	// Read all available characters in the hardware buffer
     while (Serial.available() > 0) {
         char c = Serial.read();
@@ -239,18 +287,47 @@ void HelloRobot::process_cli(){
             if (cmd == "ping") {
                 Serial.println("pong! Robot is alive.");
             } 
-			else if (cmd == "print tx") {
-                // Access the transmitter data
-                Serial.printf(" \rSafety: %d | L_X: %.2f | L_Y: %.2f | R_X: %.2f | R_Y: %.2f", 
-                              transmitter_manager.transmitter.is_safety_mode(),
-                              transmitter_manager.get_l_stick_x(),
-                              transmitter_manager.get_l_stick_y(),
-                              transmitter_manager.get_r_stick_x(),
-                              transmitter_manager.get_r_stick_y());
-            }
+			/*else if (cmd == "print tx") {
+			// Access the transmitter data
+			Serial.printf(" \rSafety: %d | L_X: %.2f | L_Y: %.2f | R_X: %.2f | R_Y: %.2f", 
+			transmitter_manager.transmitter.is_safety_mode(),
+			transmitter_manager.get_l_stick_x(),
+			transmitter_manager.get_l_stick_y(),
+			transmitter_manager.get_r_stick_x(),
+			transmitter_manager.get_r_stick_y());
+			}*/
 			else if (cmd == "print dt") {
                 Serial.printf("Last loop dt: %f seconds\n", stall_timer.delta());
-			} 
+			}
+			else if (cmd == "prof") {
+                live_profiler_active = true;
+                last_redraw_time = 0; // Force an immediate redraw
+                Serial.print("\033[2J"); // Clear the terminal screen
+            }
+			else if (cmd == "print estimated state"){
+				stimated_state_map.print();
+			}
+			else if (cmd== "heartbeat"){
+				// Redraw the screen only once every 1000 milliseconds
+				if (millis() - last_redraw_time >= 1000) {
+					Serial.print("\033[H"); // Move cursor to top-left
+				    Serial.println(loopc);
+					Serial.println("\n[ LIVE MODE ACTIVE - PRESS ANY KEY TO EXIT ]");
+					last_redraw_time = millis();
+				}
+
+				// If the user types anything, exit live mode
+				if (Serial.available() > 0) {
+            
+					// Flush the buffer so the exit keystroke isn't read as a command
+					while(Serial.available()) Serial.read(); 
+            
+					Serial.println("\n\n[Exited Live Profiler]");
+					cli_index = 0; 
+				}
+        
+				return; 				
+			}
             else {
                 Serial.println("Unknown command. Try: ping");
 			}

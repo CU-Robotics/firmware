@@ -83,3 +83,37 @@ void Profiler::print(const char *name) {
     }
 #endif
 }
+void Profiler::print_summary() {
+#ifdef PROFILER
+    Serial.println("\n================ PROFILER SUMMARY ================");
+    Serial.println(" Subsystem        | Avg Time (us) | Max Time (us) ");
+    Serial.println("--------------------------------------------------");
+
+    // Iterate through all possible sections
+    for (uint32_t i = 0; i < PROF_MAX_SECTIONS; i++) {
+        // If the section actually has a name, it's active
+        if (sections[i].name[0] != '\0') {
+            uint32_t sum = 0;
+            uint32_t max = 0;
+            
+            uint32_t trueCount = sections[i].overflowed ? PROF_MAX_TIMES : sections[i].count;
+            if (trueCount == 0) continue; // Skip if no data yet
+
+            for (uint32_t j = 0; j < trueCount; j++) {
+                // if the last run was started and not ended, ignore it
+                if (sections[i].started && j == sections[i].count) continue;
+
+                uint32_t delta = sections[i].time_lengths[j];
+                sum += delta;
+                if (delta > max) max = delta;
+            }
+
+            uint32_t avg = sum / trueCount;
+            
+            // %-16s pads the string to 16 characters so the table columns align perfectly
+            Serial.printf(" %-16s | %13u | %13u \n", sections[i].name, avg, max);
+        }
+    }
+    Serial.println("==================================================\n");
+#endif
+}
