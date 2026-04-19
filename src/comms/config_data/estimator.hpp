@@ -114,6 +114,12 @@ struct SensorInfo {
     float yaw_axis_vector[3] = { 0.0, 0.0, 0.0 };
     /// @brief an average reading of the 3 imu axis gyro values during a calibration where the pitch is dropped freely from its top position.
     float pitch_axis_vector[3] = { 0.0, 0.0, 0.0 };
+    /// @brief the direction of the pitch encoder
+    float pitch_encoder_direction;
+    /// @brief the direction of the yaw encoder
+    float yaw_encoder_direction;
+    /// @brief whether or not the imu is mounted on the pitch
+    uint32_t pitch_imu;
     /// @brief the ratio between chassis x velocity in m/s and motor velocity in rad/s for the chassis motors, used by the X Drive estimator.
     float chassis_x_to_motor_rad = 0.0;
     /// @brief the ratio between chassis y velocity in m/s and motor velocity in rad/s for the chassis motors, used by the X Drive estimator.

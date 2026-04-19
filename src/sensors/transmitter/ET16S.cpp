@@ -660,8 +660,13 @@ void ET16S::manual_controls(const RobotStateMap& estimated_state_map, RobotState
 		if (not_safety_mode && ref.ref_data.robot_performance.shooter_power_active) {
 			feed += feeder_target * dt2;
 		}
-		target_state_map[Cfg::StateName::Feeder].set_position(estimated_state_map[Cfg::StateName::LowerFeeder].get_position());
-		if (has_lower_feeder) target_state_map[Cfg::StateName::LowerFeeder].set_position((int)feed);
+		
+		if (has_lower_feeder) {
+			target_state_map[Cfg::StateName::Feeder].set_position(estimated_state_map[Cfg::StateName::LowerFeeder].get_position());
+			target_state_map[Cfg::StateName::LowerFeeder].set_position((int)feed);
+		} else {
+			target_state_map[Cfg::StateName::Feeder].set_position((int)feed);
+		}
 	} else { 
 		target_state_map[Cfg::StateName::Feeder].set_velocity(feeder_target);
 	}

@@ -25,6 +25,11 @@ GimbalAndChassisEstimator::GimbalAndChassisEstimator(const Cfg::Estimator& estim
     Serial.println("Gimbal and Chassis Estimator initialized!");
     yaw_encoder_offset = estimator_config.sensor_info.yaw_encoder_offset;
     pitch_encoder_offset = estimator_config.sensor_info.pitch_encoder_offset;
+    
+    pitch_encoder_direction = estimator_config.sensor_info.pitch_encoder_direction;
+    yaw_encoder_direction = estimator_config.sensor_info.yaw_encoder_direction;
+
+    pitch_imu = static_cast<bool>(estimator_config.sensor_info.pitch_imu);
 
     yaw_angle = estimator_config.sensor_info.yaw_start_angle;
     pitch_angle = estimator_config.sensor_info.pitch_start_angle;
@@ -52,13 +57,13 @@ GimbalAndChassisEstimator::GimbalAndChassisEstimator(const Cfg::Estimator& estim
 }
 
 void GimbalAndChassisEstimator::step_states(RobotStateMap& updated_state_map, const RobotStateMap& previous_state_map, int override) {
-    float pitch_enc_angle = (buff_enc_pitch->get_angle()) - pitch_encoder_offset;
+    float pitch_enc_angle = (buff_enc_pitch->get_angle() * pitch_encoder_direction) - pitch_encoder_offset;
     while (pitch_enc_angle >= PI)
         pitch_enc_angle -= 2 * PI;
     while (pitch_enc_angle <= -PI)
         pitch_enc_angle += 2 * PI;
 
-    float yaw_enc_angle = (buff_enc_yaw->get_angle()) - yaw_encoder_offset;
+    float yaw_enc_angle = (buff_enc_yaw->get_angle() * yaw_encoder_direction) - yaw_encoder_offset;
     while (yaw_enc_angle >= PI)
         yaw_enc_angle -= 2 * PI;
     while (yaw_enc_angle <= -PI)
@@ -66,7 +71,7 @@ void GimbalAndChassisEstimator::step_states(RobotStateMap& updated_state_map, co
 
     // calculates yaw velocity before integrating to find position
     // calculates the difference in initial and current pitch angle
-    // float pitch_diff = starting_pitch_angle - pitch_enc_angle;
+    float pitch_diff = starting_pitch_angle - pitch_enc_angle;
 
     // gimbal rotation axis in spherical coordinates in imu refrence frame
     if (imu_yaw_axis_vector[0] == 0)
@@ -76,7 +81,12 @@ void GimbalAndChassisEstimator::step_states(RobotStateMap& updated_state_map, co
     } else {
         yaw_axis_spherical[1] = atan(imu_yaw_axis_vector[1] / imu_yaw_axis_vector[0]); // theta
     }
-    yaw_axis_spherical[2] = acos(imu_yaw_axis_vector[2] / Utils::magnitude(imu_yaw_axis_vector, 3));// - pitch_diff; // phi
+
+    if pitch_imu {
+        yaw_axis_spherical[2] = acos(imu_yaw_axis_vector[2] / Utils::magnitude(imu_yaw_axis_vector, 3)) - pitch_diff; // phi
+    } else {
+        yaw_axis_spherical[2] = acos(imu_yaw_axis_vector[2] / Utils::magnitude(imu_yaw_axis_vector, 3)); // phi
+    }
 
     // roll_axis_spherical[1] = yaw_axis_spherical[1]; // theta
     // roll_axis_spherical[2] = yaw_axis_spherical[2]-(PI*0.5); // phi
@@ -136,9 +146,8 @@ void GimbalAndChassisEstimator::step_states(RobotStateMap& updated_state_map, co
 
     float imu_vel_offset = 1;
     // calculate the pitch yaw and roll velocities (Gimbal Relative)
-    // current_pitch_velocity = Utils::vectorProduct(pitch_axis_unitvector, raw_omega_vector, 3) / imu_vel_offset;
-    // current_yaw_velocity = Utils::vectorProduct(yaw_axis_unitvector, raw_omega_vector, 3) / imu_vel_offset;
-    current_yaw_velocity = -raw_omega_vector[1];
+    current_pitch_velocity = Utils::vectorProduct(pitch_axis_unitvector, raw_omega_vector, 3) / imu_vel_offset;
+    current_yaw_velocity = Utils::vectorProduct(yaw_axis_unitvector, raw_omega_vector, 3) / imu_vel_offset;
     current_roll_velocity = -Utils::vectorProduct(roll_axis_unitvector, raw_omega_vector, 3) / imu_vel_offset;
     
     // calculate the pitch yaw and roll velocities (Global Reference)
@@ -368,20 +377,20 @@ void LowerFeederEstimator::step_states(RobotStateMap& updated_state_map, const R
     if (diff > PI) diff -= 2 * PI;
     else if (diff < -PI) diff += 2 * PI;
 
-    // float feeder_velocity = (dt > 0) ? (diff/(M_PI/feeder_ratio))/dt : 0;
+    // velocity estimation with buff encoder
+    float feeder_velocity = (dt > 0) ? (diff/(M_PI/feeder_ratio))/dt : 0;
   
     ball_count += diff/(M_PI/feeder_ratio);
 
-    float motor_velocity_close = close_feeder_motor->get_state().speed;
-    float motor_velocity_far = far_feeder_motor->get_state().speed;
-    // use the motor velocities because encoder spi is a bit broken rn
-
-    float ball_velocity = (((-motor_velocity_close + motor_velocity_far)/(2.0 * 36.0)) / (M_PI * 2)) * (feeder_ratio * 2.0); // balls/s, convert from rad/s using the feeder ratio and average of the two motors
+    // feeder velocity estimation with motor velocity
+    // float motor_velocity_close = close_feeder_motor->get_state().speed;
+    // float motor_velocity_far = far_feeder_motor->get_state().speed;
+    // float ball_velocity = (((-motor_velocity_close + motor_velocity_far)/(2.0 * 36.0)) / (M_PI * 2)) * (feeder_ratio * 2.0); // balls/s, convert from rad/s using the feeder ratio and average of the two motors
 
     // Serial.printf("encoder estimate: %f, motor estimate: %f, resets: %d, reset value: %f\n", feeder_velocity, ball_velocity, num_encoder_resets, reset_value);
 
     updated_state_map[feeder_ball_state].set_position(ball_count * feeder_direction); // ball count
-    updated_state_map[feeder_ball_state].set_velocity(ball_velocity * feeder_direction); // ball velocity
+    updated_state_map[feeder_ball_state].set_velocity(feeder_velocity * feeder_direction); // ball velocity
     updated_state_map[feeder_ball_state].set_acceleration(0); // this is not the acceleration just the encoder value for debugging
 }
 

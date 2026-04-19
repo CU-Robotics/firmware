@@ -63,6 +63,13 @@ private:
     /// @brief calculated chassis angle
     float chassis_angle;
 
+    /// @brief the direction of the pitch encoder
+    float pitch_encoder_direction;
+    /// @brief the direction of the yaw encoder
+    float yaw_encoder_direction;
+    /// @brief whether or not the IMU is mounted on the pitch axis
+    bool pitch_imu;
+
     /// @brief yaw imu vector
     float imu_yaw_axis_vector[3];
 
@@ -296,6 +303,7 @@ struct LowerFeederEstimator : public Estimator {
         float feeder_direction = 1;
         /// @brief gear ratio of the feeder
         float feeder_ratio = 1;
+
         /// @brief value for checking if the buff encoder spi is failing
         float reset_value = 0;
         /// @brief counts the number of time the buff encoder has reset from an spi issue
