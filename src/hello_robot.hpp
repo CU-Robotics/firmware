@@ -70,6 +70,7 @@ private:
     // manual controls variables
     float feed = 0;
     float last_feed = 0;
+	bool has_lower_feeder = false;
 	// variables for use in loop
 	std::optional<Governor> governor;
 	std::optional<RobotStateMap> estimated_state_map;

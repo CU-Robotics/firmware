@@ -126,7 +126,7 @@ void HelloRobot::read_telemetry(){
 }
 void HelloRobot::process_behaviors(){
 	// manual controls on firmware
-	transmitter_manager.manual_controls(*estimated_state_map, *target_state_map, not_safety_mode, feed, last_feed);
+	transmitter_manager.manual_controls(*estimated_state_map, *target_state_map, not_safety_mode, feed, last_feed, has_lower_feeder);
 
 	// check if we want to use hive controls instead
 	if (transmitter_manager.is_hive_mode()) {
@@ -225,7 +225,8 @@ void HelloRobot::check_safety(){
 		// SAFETY ON
 		// TODO: Reset all controller integrators here
 		can.issue_safety_mode();
-		governor->set_position_reference(Cfg::StateName::Feeder, (*estimated_state_map)[Cfg::StateName::Feeder].get_position());
+if (has_lower_feeder) governor->set_position_reference(Cfg::StateName::LowerFeeder, (*estimated_state_map)[Cfg::StateName::LowerFeeder].get_position());
+
 		float current_feed = (*estimated_state_map)[Cfg::StateName::Feeder].get_position();
 		feed = (fmod(fmod(current_feed, 1) + 1, 1) > 0.2)
 			? (int)floor(current_feed) + 1
@@ -233,7 +234,6 @@ void HelloRobot::check_safety(){
 		last_feed = feed;                          // reset last feed to the current state
 		//Serial.printf("Can zero\n");
 	}
-
 }
 void HelloRobot::loop_timing(){
 	// print loopc every second to verify it is still alive
