@@ -23,11 +23,11 @@
 #include "controls/estimator_manager.hpp"
 #include "sensors/StereoCamTrigger.hpp"
 #include "sensors/RefSystem.hpp"
-#include "utils/profiler.hpp"
-
 #include "sensor_manager.hpp"
-#include <TeensyDebug.h>
 
+#include <TeensyDebug.h>
+#include "utils/profiler.hpp"
+#include "utils/system_log.hpp"
 
 #include "comms/data/hive_data.hpp"
 #include "comms/data/sendable.hpp"
@@ -45,7 +45,7 @@ private:
 	Profiler prof;
 #endif
     CANManager can;
-    //RefSystem ref;
+
     TransmitterManager transmitter_manager;
 
     //Comms::CommsLayer comms_layer;

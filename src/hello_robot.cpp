@@ -311,7 +311,7 @@ void HelloRobot::process_cli() {
                 }
                 Serial.println(); // Add a blank line between stacked views
             }
-
+			SystemLog.draw_dashboard_box(); // puts all non-CLI prints in neat box
             Serial.println("\n[ LIVE MODE ACTIVE - PRESS ANY KEY TO EXIT ]");
             
             // Critical: \033[J clears everything *below* the cursor. 
@@ -325,6 +325,7 @@ void HelloRobot::process_cli() {
         // Exit live mode on any keystroke
         if (Serial.available() > 0) {
             num_active_views = 0; // Empty the array
+			SystemLog.is_live_view_active = false; //Turn standard scrolling prints back on
             while(Serial.available()) Serial.read(); // Flush buffer
             Serial.println("\n\n[Exited Live View]");
             cli_index = 0; 
@@ -357,6 +358,7 @@ void HelloRobot::process_cli() {
             // --- THE PARSER ---
             else if (cmd.startsWith("live ")) {
                 num_active_views = 0;
+				SystemLog.is_live_view_active = true;
                 redraw_interval = 1000;  // Default to slow refresh
                 
                 // Start reading after the word "live " (index 5)
