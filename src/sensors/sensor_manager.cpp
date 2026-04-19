@@ -77,3 +77,8 @@ void SensorManager::send_to_comms() {
         sensor->send_to_comms();
     }
 }
+void SensorManager::print_sensors_live() {
+    for(auto& [sensor_name, sensor] : sensors) {
+        sensor->print_live_data(); 
+    }
+}

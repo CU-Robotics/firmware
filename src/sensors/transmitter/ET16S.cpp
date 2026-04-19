@@ -106,6 +106,18 @@ void ET16S::print_raw_bin(uint8_t m_inputRaw[ET16S_PACKET_SIZE]) {
 
 	Serial.println();
 }
+void ET16S::print_live_data() {
+    Serial.printf("=== LIVE ET16S TRANSMITTER DATA ===\n");
+    Serial.printf(" Safety Mode: %s\n", is_safety_mode() ? "ON" : "OFF");
+    Serial.printf(" Control Mode: %s\n", is_teensy_mode() ? "TEENSY" : (is_hive_mode() ? "HIVE" : "UNKNOWN"));
+    Serial.println("-----------------------------------");
+    Serial.printf(" L Stick: X: %5.2f | Y: %5.2f\n", get_l_stick_x(), get_l_stick_y());
+    Serial.printf(" R Stick: X: %5.2f | Y: %5.2f\n", get_r_stick_x(), get_r_stick_y());
+    Serial.printf(" L Dial : %5.2f    | R Dial : %5.2f\n", get_l_dial(), get_r_dial());
+    Serial.println("-----------------------------------");
+    Serial.printf(" SW_B: %d | SW_C: %d | SW_D: %d | SW_E: %d\n", 
+                  (int)get_switch_b(), (int)get_switch_c(), (int)get_switch_d(), (int)get_switch_e());
+}
 
 void ET16S::print_format_bin(int channel_num) {
 	if (channel_num > ET16S_INPUT_VALUE_COUNT || channel_num < 0) {

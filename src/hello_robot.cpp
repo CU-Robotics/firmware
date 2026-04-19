@@ -255,12 +255,12 @@ void HelloRobot::process_cli(){
 
     static uint32_t last_redraw_time = 0;
 	static uint32_t redraw_interval = 1000; // Time in ms between frames
-	enum class LiveMode { NONE, PROFILER_VIEW, TRANSMITTER, ESTIMATED_STATE, HEARTBEAT };
+	enum class LiveMode { NONE, PROFILER_VIEW, TRANSMITTER, ESTIMATED_STATE, TARGET_STATE,HEARTBEAT ,SENSORS};
     
     static LiveMode current_live_mode = LiveMode::NONE;
 	
 	// ==========================================
-    // 2. LIVE VIEW RENDERER
+    //  LIVE VIEW
     // ==========================================
     if (current_live_mode != LiveMode::NONE) {
         
@@ -273,23 +273,28 @@ void HelloRobot::process_cli(){
 			case LiveMode::PROFILER_VIEW:
 				prof.print_summary();
 				break;
-                    
+				
 			case LiveMode::TRANSMITTER:
-				Serial.printf("=== LIVE TRANSMITTER DATA ===\n");
-				//Serial.printf(" Safety Mode: %s\n", transmitter_manager.is_safety_mode() ? "ON" : "OFF");
-				//Serial.printf(" Left Stick:  X: %5.2f | Y: %5.2f\n", transmitter.get_l_stick_x(), transmitter.get_l_stick_y());
-				//Serial.printf(" Right Stick: X: %5.2f | Y: %5.2f\n", transmitter.get_r_stick_x(), transmitter.get_r_stick_y());
+				transmitter_manager.print_live_data();
 				break;
+				
 			case LiveMode::ESTIMATED_STATE:
 				Serial.printf("=== LIVE ESTIMATED STATE ===\n");
 				estimated_state_map->print();
 				break;
-			
+				
+			case LiveMode::TARGET_STATE:
+				Serial.printf("=== LIVE TARGET STATE ===\n");
+				target_state_map->print();
+				break;
+
 			case LiveMode::HEARTBEAT:
 				Serial.printf("=== LIVE HEARTBEAT  ===\n");
 				Serial.println(loopc);
 				break;
-			
+			case LiveMode::SENSORS:
+				sensor_manager.print_sensors_live(); 
+				break;
 			default:
 				break;
             }
@@ -349,12 +354,23 @@ void HelloRobot::process_cli(){
                 Serial.print("\033[2J"); // Clear screen
             }
 			else if (cmd == "print estimated state"){
-
 				current_live_mode = LiveMode::ESTIMATED_STATE;
                 redraw_interval = 500;  // 2Hz update
                 last_redraw_time = 0;
                 Serial.print("\033[2J");
 			}
+			else if (cmd == "print target state"){
+				current_live_mode = LiveMode::TARGET_STATE;
+                redraw_interval = 500;  // 2Hz update
+                last_redraw_time = 0;
+                Serial.print("\033[2J");
+			}
+			else if (cmd == "print sensors") {
+                current_live_mode = LiveMode::SENSORS;
+                redraw_interval = 100;  
+                last_redraw_time = 0;
+                Serial.print("\033[2J");
+            }
 			else if (cmd== "heartbeat"){
 				current_live_mode = LiveMode::HEARTBEAT;
                 redraw_interval = 500;  // 2Hz update

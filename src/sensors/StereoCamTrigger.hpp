@@ -39,6 +39,9 @@ class StereoCamTrigger : public Sensor{
     /// @brief Send exposure timestamp and estimated state at exposure to comms
     /// @note This is not implemented currently
     void send_to_comms() const override;
+
+	/// @brief Prints a formatted dashboard of the camera trigger state
+    void print_live_data() override;
     
     /// @brief start interval timer. Begins sending trigger signal to cameras via timer interrupt
     /// @param res the desired resolution (or interval size) of the timer interrupt in micros
@@ -46,4 +49,5 @@ class StereoCamTrigger : public Sensor{
     
     /// @brief stop interval timer. Can start again by calling start()
     void stop();
+	
 };

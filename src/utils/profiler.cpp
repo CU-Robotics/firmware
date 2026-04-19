@@ -11,17 +11,14 @@ void Profiler::clear() {
         sec = profiler_section_t();
 #endif
 }
-
 void Profiler::begin(const char *name) {
 #ifdef PROFILER
-    // find section by name or first empty slot
     for (uint32_t i = 0; i < PROF_MAX_SECTIONS; i++) {
-        if (strcmp(sections[i].name, name) == 0 || (sections[i].count == 0 && sections[i].overflowed == 0)) {
-            // start section
+        if (strcmp(sections[i].name, name) == 0 || (sections[i].count == 0 && sections[i].name[0] == '\0')) {
             strncpy(sections[i].name, name, PROF_MAX_NAME);
-            sections[i].name[PROF_MAX_NAME] = '\0'; // ensure null termination
+            sections[i].name[PROF_MAX_NAME] = '\0'; 
             sections[i].start_time = micros();
-            sections[i].started = 1; // label section as started
+            sections[i].started = 1; 
             return;
         }
     }
@@ -30,88 +27,48 @@ void Profiler::begin(const char *name) {
 
 void Profiler::end(const char *name) {
 #ifdef PROFILER
-    // find section by name
     for (uint32_t i = 0; i < PROF_MAX_SECTIONS; i++) {
         if (strcmp(sections[i].name, name) == 0) {
-            // end section
-            if (sections[i].count < PROF_MAX_TIMES) {
-                sections[i].time_lengths[sections[i].count] = micros() - sections[i].start_time;
-                sections[i].count++;
-                sections[i].started = 0; // label section as finished
+            if (!sections[i].started) return;
 
-                // if count is now at limit, reset count and label as overflowed
-                if (sections[i].count == PROF_MAX_TIMES) {
-                    sections[i].count = 0;
-                    sections[i].overflowed = 1;
+            uint32_t delta = micros() - sections[i].start_time;
+
+            // Running Average Math
+            if (sections[i].count == 0) {
+                // First run: set absolute baselines
+                sections[i].avg_time = (float)delta;
+                sections[i].max_time = delta;
+            } else {
+                // Subsequent runs: Moving Average
+                sections[i].avg_time = (sections[i].avg_time * 0.99f) + ((float)delta * 0.01f);
+                
+                // Track absolute max
+                if (delta > sections[i].max_time) {
+                    sections[i].max_time = delta;
                 }
             }
+
+            sections[i].count++;
+            sections[i].started = 0; 
             return;
         }
     }
 #endif
 }
 
-void Profiler::print(const char *name) {
-#ifdef PROFILER
-    uint32_t sum = 0;
-    uint32_t min = UINT32_MAX;
-    uint32_t max = 0;
-
-    // find section by name
-    for (uint32_t i = 0; i < PROF_MAX_SECTIONS; i++) {
-        if (strcmp(sections[i].name, name) == 0) {
-            // calculate values
-            uint32_t trueCount = sections[i].overflowed ? PROF_MAX_TIMES : sections[i].count;
-            for (uint32_t j = 0; j < trueCount; j++) {
-                // if the last run was started and not ended, ignore it
-                if (sections[i].started && j == sections[i].count)
-                    continue;
-
-                uint32_t delta = sections[i].time_lengths[j];
-                sum += delta;
-                if (delta < min)
-                    min = delta;
-                if (delta > max)
-                    max = delta;
-            }
-
-            // print values
-            Serial.printf("Profiling for: %s\n Min: %u us\n Max: %u us\n Avg: %u us\n", name, min, max,
-                          (trueCount == 0 ? 0 : sum / trueCount));
-            return;
-        }
-    }
-#endif
-}
 void Profiler::print_summary() {
 #ifdef PROFILER
     Serial.println("\n================ PROFILER SUMMARY ================");
     Serial.println(" Subsystem        | Avg Time (us) | Max Time (us) ");
     Serial.println("--------------------------------------------------");
 
-    // Iterate through all possible sections
     for (uint32_t i = 0; i < PROF_MAX_SECTIONS; i++) {
-        // If the section actually has a name, it's active
-        if (sections[i].name[0] != '\0') {
-            uint32_t sum = 0;
-            uint32_t max = 0;
+        if (sections[i].name[0] != '\0' && sections[i].count > 0) {
             
-            uint32_t trueCount = sections[i].overflowed ? PROF_MAX_TIMES : sections[i].count;
-            if (trueCount == 0) continue; // Skip if no data yet
-
-            for (uint32_t j = 0; j < trueCount; j++) {
-                // if the last run was started and not ended, ignore it
-                if (sections[i].started && j == sections[i].count) continue;
-
-                uint32_t delta = sections[i].time_lengths[j];
-                sum += delta;
-                if (delta > max) max = delta;
-            }
-
-            uint32_t avg = sum / trueCount;
-            
-            // %-16s pads the string to 16 characters so the table columns align perfectly
-            Serial.printf(" %-16s | %13u | %13u \n", sections[i].name, avg, max);
+            Serial.printf(" %-16s | %13u | %13u \n", 
+                          sections[i].name, 
+                          (uint32_t)sections[i].avg_time, 
+                          sections[i].max_time);
         }
     }
     Serial.println("==================================================\n");
