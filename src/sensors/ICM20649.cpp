@@ -31,6 +31,23 @@ void ICM20649::init() {
 
     set_accel_range(config.accel_range);
     set_gyro_range(config.gyro_range);
+    Serial.println("ICM CALIBRATING...");
+    float gyro_offset_x = 0, gyro_offset_y = 0, gyro_offset_z = 0;
+    for (uint32_t i = 0; i < config.num_calibration_reads; i++) {
+        read();
+        gyro_offset_x += get_gyro_X();
+        gyro_offset_y += get_gyro_Y();
+        gyro_offset_z += get_gyro_Z();
+        delay(1);
+    }
+
+    gyro_offset_x /= config.num_calibration_reads;
+    gyro_offset_y /= config.num_calibration_reads;
+    gyro_offset_z /= config.num_calibration_reads;
+
+    set_offsets(gyro_offset_x, gyro_offset_y, gyro_offset_z);
+
+    Serial.printf("ICM CALIBRATION COMPLETE! Offsets: X: %f, Y: %f, Z: %f\n", gyro_offset_x, gyro_offset_y, gyro_offset_z);
 }
 
 void ICM20649::read() {

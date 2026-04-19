@@ -55,6 +55,8 @@ enum class GenericEstimatorMotorUse : uint32_t {
     FlywheelLeft,
     FlywheelRight,
     Feeder,
+    FeederClose,
+    FeederFar,
 };
 
 /// @brief This enum represents the different generic uses for states that an estimator can have. These are used to map the specific states on the robot to their generic uses in the estimator config.
@@ -76,6 +78,7 @@ enum class GenericEstimatorStateUse : uint32_t {
     GimbalPitch,
     ShooterBallVelocity,
     FeederBallPosition,
+    LowerFeederBallPosition,
 };
 
 /// @brief The different types of estimators that can be configured in the config.
@@ -84,7 +87,7 @@ enum class EstimatorType : uint32_t {
     GimbalAndChassis,
     FlywheelVelocity,
     FeederPosition,
-    Actuators,
+    LowerFeederPosition,
 };
 /// @brief The `SensorInfo` struct contains all the sensor related information for the estimator config.
 // This includes the offsets for the encoders, the ratios and directions for the feeder, etc.

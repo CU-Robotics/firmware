@@ -3,6 +3,7 @@
 #include "sensors/transmitter/dr16.hpp"
 
 void TransmitterManager::init(const Cfg::Transmitter& transmitter_config) {
+    Serial.printf("Initializing TransmitterManager with transmitter type: %d\n", static_cast<int>(transmitter_config.transmitter_type));
     switch (transmitter_config.transmitter_type) {
         case Cfg::TransmitterType::DR16:
             transmitter = std::make_unique<DR16>(transmitter_config.dr16);
@@ -13,6 +14,8 @@ void TransmitterManager::init(const Cfg::Transmitter& transmitter_config) {
     }
 
     transmitter->init();
+
+    Serial.printf("Transmitter initialized with type: %d\n", static_cast<int>(transmitter_config.transmitter_type));
 }
 
 void TransmitterManager::read() {
@@ -67,9 +70,9 @@ bool TransmitterManager::mode_changed() {
     }
 }
 
-void TransmitterManager::manual_controls(const RobotStateMap& estimated_state_map, RobotStateMap& target_state_map, bool not_safety_mode, float& feed, float& last_feed) {
+void TransmitterManager::manual_controls(const RobotStateMap& estimated_state_map, RobotStateMap& target_state_map, bool not_safety_mode, float& feed, float& last_feed, bool has_lower_feeder) {
     if (transmitter) {
-        transmitter->manual_controls(estimated_state_map, target_state_map, not_safety_mode, feed, last_feed);
+        transmitter->manual_controls(estimated_state_map, target_state_map, not_safety_mode, feed, last_feed, has_lower_feeder);
     } else {
         safety::safety_procedure("TransmitterManager::manual_controls called before transmitter was initialized");
     }

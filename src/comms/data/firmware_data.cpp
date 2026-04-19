@@ -40,6 +40,7 @@ void FirmwareData::set_data(CommsData* data) {
         //determine if the data is for yaw or pitch
         BuffEncoderData single_buff_encoder_data = *static_cast<BuffEncoderData*>(data);
         buff_encoder_data_map.insert_or_assign(single_buff_encoder_data.encoder_name, single_buff_encoder_data);
+        // single_buff_encoder_data.print();
         break;
     }
     case TypeLabel::ICMSensorData: {

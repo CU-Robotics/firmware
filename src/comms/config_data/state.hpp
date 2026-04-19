@@ -13,6 +13,8 @@ enum class StateName : uint32_t {
     GimbalPitch,
     Flywheels,
     Feeder,
+    LowerFeeder,
+    placeholder,
 
     StateNameCount
 };

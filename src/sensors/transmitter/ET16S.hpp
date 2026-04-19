@@ -105,7 +105,7 @@ class ET16S : public Transmitter {
 	bool mode_changed() override;
 
 	/// @copydoc Transmitter::manual_controls
-	void manual_controls(const RobotStateMap& estimated_state_map, RobotStateMap& target_state_map, bool not_safety_mode, float& feed, float& last_feed) override;
+	void manual_controls(const RobotStateMap& estimated_state_map, RobotStateMap& target_state_map, bool not_safety_mode, float& feed, float& last_feed, bool has_lower_feeder) override;
 	
 	/// @brief prints data in binary for a specific channel
 	/// @param channel_num channel number from 0-16 inclusive
@@ -303,17 +303,17 @@ private:
 	/// @brief left dial index	
 	int l_dial_num=15;
 	/// @brief trim one index	
-	int trim_one_num;
+	int trim_one_num = 16;
 	/// @brief trim two index	
-	int trim_two_num;
+	int trim_two_num = 17;
 	/// @brief trim three index	
-	int trim_three_num;
+	int trim_three_num = 18;
 	/// @brief trim four index	
-	int trim_four_num;
+	int trim_four_num = 19;
 	/// @brief trim five index	
-	int trim_five_num;
+	int trim_five_num = 20;
 	/// @brief trim six index	
-	int trim_six_num;
+	int trim_six_num = 21;
 
 	/// @brief previous safety switch position, used for detecting toggles
 	SwitchPos prev_safety_switch_pos = SwitchPos::FORWARD;

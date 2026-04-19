@@ -41,5 +41,6 @@ public:
 	/// @param not_safety_mode Whether we are in safety mode.
 	/// @param feed The feed value.
 	/// @param last_feed The last feed value.
-	virtual void manual_controls(const RobotStateMap& estimated_state_map, RobotStateMap& target_state_map, bool not_safety_mode, float& feed, float& last_feed) = 0;
+	/// @param has_lower_feeder Whether the robot has a lower feeder state.
+	virtual void manual_controls(const RobotStateMap& estimated_state_map, RobotStateMap& target_state_map, bool not_safety_mode, float& feed, float& last_feed, bool has_lower_feeder) = 0;
 };

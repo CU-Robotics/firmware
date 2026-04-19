@@ -320,7 +320,7 @@ DR16Data DR16::get_dr16_data(){
 	return dr16_data;
 }
 
-void DR16::manual_controls(const RobotStateMap& estimated_state_map, RobotStateMap& target_state_map, bool not_safety_mode, float& feed, float& last_feed) {
+void DR16::manual_controls(const RobotStateMap& estimated_state_map, RobotStateMap& target_state_map, bool not_safety_mode, float& feed, float& last_feed, bool has_lower_feeder) {
 	float delta = control_input_timer.delta();
 	// Used for determing whether we are using vtm or usb to dr16
 	auto merge_input = [](auto primary_val, auto secondary_val) {

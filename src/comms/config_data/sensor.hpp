@@ -25,6 +25,8 @@ enum class SensorName : uint32_t {
     LeftD200Lidar,
     RightD200Lidar,
     StereoCameraTrigger,
+    LowerFeederEncoder,
+    UpperFeederEncoder,
 
     SensorNameCount
 };
@@ -110,6 +112,8 @@ struct IcmImu : Comms::CommsData {
     uint32_t spi_mosi = 0;
     /// @brief Serial Clock pin for SPI
     uint32_t spi_sck = 0;
+    /// @brief how many reads to average the calibrated offsets over during imu init
+    uint32_t num_calibration_reads;
     /// @brief Acceleration range for the ICM IMU in Gs
     ICMImuAccelRange accel_range = ICMImuAccelRange::A_16G;
     /// @brief Gyroscope range for the ICM IMU in degrees per second

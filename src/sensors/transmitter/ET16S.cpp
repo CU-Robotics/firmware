@@ -25,7 +25,6 @@ void ET16S::init() {
 	channel[3].kind = InputKind::STICK;
 	//configure remaining channels
 	set_config();
-
 }
 
 void ET16S::read() {
@@ -608,7 +607,7 @@ ET16SData ET16S::get_ET16S_data(){
 	return ET16S_data;
 }
 
-void ET16S::manual_controls(const RobotStateMap& estimated_state_map, RobotStateMap& target_state_map, bool not_safety_mode, float& feed, float& last_feed) {
+void ET16S::manual_controls(const RobotStateMap& estimated_state_map, RobotStateMap& target_state_map, bool not_safety_mode, float& feed, float& last_feed, bool has_lower_feeder) {
 	float delta = control_input_timer.delta();
 	
 	vtm_pos_x += ref.ref_data.kbm_interaction.mouse_speed_x * 0.05 * delta;
@@ -653,15 +652,16 @@ void ET16S::manual_controls(const RobotStateMap& estimated_state_map, RobotState
 	// if the right switch is forward, and either the left mouse button is pressed or the right switch is not
 	// backward, set the feeder to something. Otherwise, set it to 0
 	float feeder_target = (((ref.ref_data.kbm_interaction.button_left) &&
-							get_switch_b() != SwitchPos::BACKWARD) || get_switch_b() == SwitchPos::FORWARD) ? 10 : 0;
+							get_switch_b() != SwitchPos::BACKWARD) || get_switch_b() == SwitchPos::FORWARD) ? 12 : 0;
 	if (estimated_state_map[Cfg::StateName::Feeder].config().governor_type == Cfg::StateOrder::Position) {
 		float dt2 = timer.delta();
-		if (dt2 > 0.1)
-			dt2 = 0;
+		if (dt2 > 0.1) dt2 = 0;
 		// check if the shooter is active
-		if (not_safety_mode && ref.ref_data.robot_performance.shooter_power_active)
+		if (not_safety_mode && ref.ref_data.robot_performance.shooter_power_active) {
 			feed += feeder_target * dt2;
-		target_state_map[Cfg::StateName::Feeder].set_position((int)feed);
+		}
+		target_state_map[Cfg::StateName::Feeder].set_position(estimated_state_map[Cfg::StateName::LowerFeeder].get_position());
+		if (has_lower_feeder) target_state_map[Cfg::StateName::LowerFeeder].set_position((int)feed);
 	} else { 
 		target_state_map[Cfg::StateName::Feeder].set_velocity(feeder_target);
 	}

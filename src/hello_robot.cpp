@@ -15,6 +15,8 @@ void HelloRobot::init(){
 	const Cfg::RobotConfig& config = Comms::comms_layer.get_hive_data().config;
     
     Serial.println("Configured!");
+
+	Serial.printf("transmitter type: %d\n", static_cast<int>(config.transmitter.transmitter_type));
 	
     governor.emplace(config.states);
 
@@ -39,6 +41,13 @@ void HelloRobot::init(){
     target_state_map.emplace(config.states);// Temp ungoverned state
     hive_state_map_offset.emplace(config.states);// Hive offset state
 	
+	for (const auto& state_config : config.states) {
+        if (state_config.name == Cfg::StateName::LowerFeeder) {
+            has_lower_feeder = true;
+            break;
+        }
+    }
+
     // start the main loop watchdog
     watchdog.start();
 	

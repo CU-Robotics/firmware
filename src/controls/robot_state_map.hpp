@@ -13,7 +13,7 @@ namespace Comms {
     template<typename T>
     struct Sendable; // Forward declaration of Sendable
 }
-/// @brief Manage all of the congiured states
+/// @brief Manage all of the configured states
 class RobotStateMap {
 public:
     /// @brief Construct a new RobotStateMap object with the given state configurations. The state configurations are used to set up the state map with the correct state names and limits.
