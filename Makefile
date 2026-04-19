@@ -243,7 +243,7 @@ gdb:
 # monitors currently running firmware on robot
 monitor:
 	@echo [Monitoring]
-	@bash $(TOOLS_DIR)/monitor.sh
+	@tycmd monitor
 
 
 # resets teensy and switches it into boot-loader mode, effectively stopping any execution
