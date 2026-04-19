@@ -251,141 +251,169 @@ void HelloRobot::loop_timing(){
 	// Keep the loop running at the desired rate
 	loop_timer.delay_micros((int)(1E6 / (float)(LOOP_FREQ)));
 }
-void HelloRobot::process_cli(){
 
-    static uint32_t last_redraw_time = 0;
-	static uint32_t redraw_interval = 1000; // Time in ms between frames
-	enum class LiveMode { NONE, PROFILER_VIEW, TRANSMITTER, ESTIMATED_STATE, TARGET_STATE,HEARTBEAT ,SENSORS};
-    
-    static LiveMode current_live_mode = LiveMode::NONE;
-	
-	// ==========================================
-    //  LIVE VIEW
+void HelloRobot::process_cli() {
     // ==========================================
-    if (current_live_mode != LiveMode::NONE) {
+    // 1. LIVE VIEW DEFINITIONS
+    // ==========================================
+    enum class LiveMode { NONE, PROFILE_VIEW, TRANSMITTER, ESTIMATED_STATE, TARGET_STATE, SENSORS, HEARTBEAT };
+    
+    const uint8_t MAX_LIVE_VIEWS = 4;
+    static LiveMode active_views[MAX_LIVE_VIEWS];
+    static uint8_t num_active_views = 0;
+    
+    static uint32_t last_redraw_time = 0;
+    static uint32_t redraw_interval = 1000; 
+
+    // ==========================================
+    // 2. LIVE VIEW RENDERER
+    // ==========================================
+    if (num_active_views > 0) {
         
-        // Check if it's time to draw the next frame
         if (millis() - last_redraw_time >= redraw_interval) {
             Serial.print("\033[H"); // Move cursor to top-left
             
-            // Draw whichever screen is currently active
-            switch (current_live_mode) {
-			case LiveMode::PROFILER_VIEW:
-				prof.print_summary();
-				break;
+            // Loop through the array and draw the views in the exact order the user typed them
+            for (int i = 0; i < num_active_views; i++) {
+                switch (active_views[i]) {
+				case LiveMode::PROFILE_VIEW:
+#ifdef PROFILER
+					prof.print_summary();
+#endif
+					break;
+                        
+				case LiveMode::TRANSMITTER:
+					transmitter_manager.print_live_data();
+					break;
+                        
+				case LiveMode::SENSORS:
+					Serial.printf("=== LIVE SENSOR READOUT ===\n");
+					sensor_manager.print_sensors_live(); 
+					break;
+                        
+				case LiveMode::ESTIMATED_STATE:
+					Serial.printf("=== LIVE ESTIMATED STATE ===\n");
+					estimated_state_map->print();
+					break;
 				
-			case LiveMode::TRANSMITTER:
-				transmitter_manager.print_live_data();
-				break;
-				
-			case LiveMode::ESTIMATED_STATE:
-				Serial.printf("=== LIVE ESTIMATED STATE ===\n");
-				estimated_state_map->print();
-				break;
-				
-			case LiveMode::TARGET_STATE:
-				Serial.printf("=== LIVE TARGET STATE ===\n");
-				target_state_map->print();
-				break;
+				case LiveMode::TARGET_STATE:
+					Serial.printf("=== LIVE TARGET STATE ===\n");
+					target_state_map->print();
+					break;
 
-			case LiveMode::HEARTBEAT:
-				Serial.printf("=== LIVE HEARTBEAT  ===\n");
-				Serial.println(loopc);
-				break;
-			case LiveMode::SENSORS:
-				sensor_manager.print_sensors_live(); 
-				break;
-			default:
-				break;
+				case LiveMode::HEARTBEAT:
+					Serial.printf("=== LIVE HEARTBEAT  ===\n");
+					Serial.println(loopc);
+					break;
+                        
+				default:
+					break;
+                }
+                Serial.println(); // Add a blank line between stacked views
             }
 
             Serial.println("\n[ LIVE MODE ACTIVE - PRESS ANY KEY TO EXIT ]");
+            
+            // Critical: \033[J clears everything *below* the cursor. 
+            // This prevents "ghost text" from getting left behind if a tall view 
+            // updates and suddenly becomes shorter.
+            Serial.print("\033[J"); 
+            
             last_redraw_time = millis();
         }
 
-        // If the user types anything, exit live mode
+        // Exit live mode on any keystroke
         if (Serial.available() > 0) {
-            current_live_mode = LiveMode::NONE;
-            
-            // Flush the buffer
-            while(Serial.available()) Serial.read(); 
-            
+            num_active_views = 0; // Empty the array
+            while(Serial.available()) Serial.read(); // Flush buffer
             Serial.println("\n\n[Exited Live View]");
             cli_index = 0; 
         }
         
-        return; // Return immediately so normal parsing doesn't run
+        return; 
     }
-	// Read all available characters in the hardware buffer
+
+    // ==========================================
+    // 3. NORMAL CLI PARSING
+    // ==========================================
+	/* Adding new commands is simple.
+	   add if statement to cmd elseif block below
+	   If it is live add to live mode enum and switch statement above
+	   as well as to cmd elseif block below
+	*/
     while (Serial.available() > 0) {
         char c = Serial.read();
-        // If the character is a newline or carriage return, the command is complete
+        
         if (c == '\n' || c == '\r') {
-            if (cli_index == 0) continue; // Ignore empty lines
+            if (cli_index == 0) continue; 
 
-            cli_buffer[cli_index] = '\0'; // Null-terminate the string
+            cli_buffer[cli_index] = '\0'; 
             String cmd = String(cli_buffer);
-			cmd.trim();
-			
-            // ==========================================
-            // COMMAND DICTIONARY
-            // ==========================================
-			/* Adding new commands is simple.
-			   add if statement to cmd elseif block below
-			   If it is live add to live mode enum and switch statement above
-			   as well as to cmd elseif block below
-			 */
+            cmd.trim();
+
             if (cmd == "ping") {
                 Serial.println("pong! Robot is alive.");
             } 
-			else if (cmd == "print tx") {
-			  current_live_mode = LiveMode::TRANSMITTER;
-                redraw_interval = 100;  // 10Hz
-                last_redraw_time = 0;
-                Serial.print("\033[2J");
-			}
-			else if (cmd == "print dt") {
-                Serial.printf("Last loop dt: %f seconds\n", stall_timer.delta());
-			}
-			else if (cmd == "prof") {
-				current_live_mode = LiveMode::PROFILER_VIEW;
-                redraw_interval = 1000; // 1Hz
-                last_redraw_time = 0;   // Force immediate redraw
-                Serial.print("\033[2J"); // Clear screen
-            }
-			else if (cmd == "print estimated state"){
-				current_live_mode = LiveMode::ESTIMATED_STATE;
-                redraw_interval = 500;  // 2Hz update
-                last_redraw_time = 0;
-                Serial.print("\033[2J");
-			}
-			else if (cmd == "print target state"){
-				current_live_mode = LiveMode::TARGET_STATE;
-                redraw_interval = 500;  // 2Hz update
-                last_redraw_time = 0;
-                Serial.print("\033[2J");
-			}
-			else if (cmd == "print sensors") {
-                current_live_mode = LiveMode::SENSORS;
-                redraw_interval = 100;  
-                last_redraw_time = 0;
-                Serial.print("\033[2J");
-            }
-			else if (cmd== "heartbeat"){
-				current_live_mode = LiveMode::HEARTBEAT;
-                redraw_interval = 500;  // 2Hz update
-                last_redraw_time = 0;
-                Serial.print("\033[2J");
-			}
-            else {
-                Serial.println("Unknown command. Try: ping, print dt, prof, print estimated state, heartbeat");
-			}
+            // --- THE PARSER ---
+            else if (cmd.startsWith("live ")) {
+                num_active_views = 0;
+                redraw_interval = 1000;  // Default to slow refresh
+                
+                // Start reading after the word "live " (index 5)
+                int startIndex = 5; 
+                
+                // Parse the command word by word
+                while (startIndex < (int)cmd.length() && num_active_views < MAX_LIVE_VIEWS) {
+                    int spaceIndex = cmd.indexOf(' ', startIndex);
+                    if (spaceIndex == -1) spaceIndex = cmd.length(); // End of string
+                    
+                    // Extract the word
+                    String arg = cmd.substring(startIndex, spaceIndex);
+                    arg.trim();
+                    
+                    // Check the word and push the corresponding view to the stack
+                    if (arg == "prof") {
+                        active_views[num_active_views++] = LiveMode::PROFILE_VIEW;
+                    } 
+                    else if (arg == "tx") {
+                        active_views[num_active_views++] = LiveMode::TRANSMITTER;
+                        redraw_interval = 100; // If TX is anywhere in the stack, speed up the refresh rate
+                    } 
+                    else if (arg == "sensors") {
+                        active_views[num_active_views++] = LiveMode::SENSORS;
+                        redraw_interval = 100; // If Sensors are active, speed up the refresh rate
+                    }
+					else if (arg == "target_state") {
+                        active_views[num_active_views++] = LiveMode::TARGET_STATE;
+                        redraw_interval = 100; // If Sensors are active, speed up the refresh rate
+                    }
+					else if (arg == "estimated_state") {
+                        active_views[num_active_views++] = LiveMode::ESTIMATED_STATE;
+                        redraw_interval = 100; // If Sensors are active, speed up the refresh rate
+                    }
+					else if (arg == "heartbeat") {
+                        active_views[num_active_views++] = LiveMode::HEARTBEAT;
+                        redraw_interval = 100; // If Sensors are active, speed up the refresh rate
+                    }
+                    
+                    // Move to the next word
+                    startIndex = spaceIndex + 1;
+                }
 
-            // Reset the buffer for the next command
+                if (num_active_views > 0) {
+                    last_redraw_time = 0;    // Force immediate redraw
+                    Serial.print("\033[2J"); // Clear screen to prep the canvas
+                } else {
+                    Serial.println("Usage: live [prof] [tx] [sensors]");
+                }
+            }
+            else {
+                Serial.println("Unknown command. Try: ping, live prof tx");
+            }
+
             cli_index = 0; 
         } 
         else if (cli_index < 63) {
-            // Add the typed character to the buffer
             cli_buffer[cli_index++] = c;
         }
     }
