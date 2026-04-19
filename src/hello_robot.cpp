@@ -140,7 +140,7 @@ void HelloRobot::process_behaviors(){
 		// clear the request
 		Comms::comms_layer.get_hive_data().override_state_data.active = false;
 
-		Serial.printf("Overriding state with hive state\n");
+		SystemLog.printf("Overriding state with hive state\n");
 		hive_state_map_offset->from_comms_packet(Comms::comms_layer.get_hive_data().override_state_data.state);
 
 		*estimated_state_map = *hive_state_map_offset;
@@ -156,7 +156,7 @@ void HelloRobot::update_controls(){
 	if ((feed - (*estimated_state_map)[Cfg::StateName::Feeder].get_position() > 2 && transmitter_manager.is_teensy_mode()) ||
 		((*target_state_map)[Cfg::StateName::Feeder].get_position() - (*estimated_state_map)[Cfg::StateName::Feeder].get_position() > 2 &&
 		 transmitter_manager.is_hive_mode())) {
-		Serial.printf("Feeder is lowkey jammed. current ball count: %f, feed: %f, hive target: %f\n",
+		SystemLog.printf("Feeder is lowkey jammed. current ball count: %f, feed: %f, hive target: %f\n",
 					  (*estimated_state_map)[Cfg::StateName::Feeder].get_position(), feed, (*target_state_map)[Cfg::StateName::Feeder].get_position());
 		feed = (*estimated_state_map)[Cfg::StateName::Feeder].get_position() + 1;
 		governor->set_position_reference(Cfg::StateName::Feeder, feed);
@@ -191,13 +191,13 @@ void HelloRobot::check_safety(){
 		// zero the can bus just in case
 		can.issue_safety_mode();
 
-		Serial.printf("Slow loop with dt: %f, slow loop count %d\n", dt, slow_loop_counter);
+		SystemLog.printf("Slow loop with dt: %f, slow loop count %d\n", dt, slow_loop_counter);
 		// mark this as a slow loop to trigger safety mode
 		is_slow_loop = true;
 		if (last_loop_slow) {
 			slow_loop_counter++;
 			if (slow_loop_counter > 10) {
-				Serial.printf("Kowabunga bitches\n");
+				SystemLog.printf("Kowabunga bitches\n");
 				reset_teensy();
 			}
 		} else {
