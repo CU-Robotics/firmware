@@ -151,7 +151,7 @@ void HelloRobot::update_controls(){
 	estimator_manager.step(*estimated_state_map, override_request);
 	// estimated_state_map.print();
 	override_request = false;
-
+	float current_feed = (*estimated_state_map)[Cfg::StateName::Feeder].get_position();
 	if ((feed - (*estimated_state_map)[Cfg::StateName::Feeder].get_position() > 2 && transmitter_manager.is_teensy_mode()) ||
 		((*target_state_map)[Cfg::StateName::Feeder].get_position() - (*estimated_state_map)[Cfg::StateName::Feeder].get_position() > 2 && transmitter_manager.is_hive_mode())) {
 		SystemLog.printf("Feeder is lowkey jammed. current ball count: %f, feed: %f, hive target: %f\n",

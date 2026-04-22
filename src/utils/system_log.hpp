@@ -33,7 +33,7 @@ public:
     size_t write(uint8_t c) override;
     
 	/// @brief implements print class print for println,printf,etc...
-	/// @param *buffer with message
+	/// @param buffer with message
 	/// @param size of message
     size_t write(const uint8_t *buffer, size_t size) override; 
 	/// @brief draws dashboard for live prints from CLI
