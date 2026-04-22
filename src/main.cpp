@@ -1,6 +1,5 @@
 #include "hello_robot.hpp"
 
-
 // Master loop
 int main() {
 
@@ -11,10 +10,10 @@ int main() {
 	
 	//Print Splash Screen
 	Utils::print_logo();
+	
 	static HelloRobot robot;
     robot.init();
     robot.run();
 	
-
     return 0;
 }
