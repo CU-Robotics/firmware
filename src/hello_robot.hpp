@@ -42,7 +42,7 @@ extern "C" void reset_teensy(void);
 #define HEARTBEAT_FREQ 2
 
 #ifdef PROFILER
-Profiler prof;
+extern Profiler prof; 
 #endif
 
 

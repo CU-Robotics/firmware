@@ -10,6 +10,15 @@ TARGET_EXEC := firmware
 # Directory where build outputs will be placed
 BUILD_DIR := ./build
 
+ifneq ($(filter debug,$(MAKECMDGOALS)),)
+    BUILD_DIR := ./build/debug
+    PROFILER_FLAG := -DPROFILER
+endif
+
+ifneq ($(filter release,$(MAKECMDGOALS)),)
+    BUILD_DIR := ./build/release
+endif
+
 # Tools directory
 TOOLS_DIR := ./tools
 
@@ -50,18 +59,11 @@ INCLUDE_FLAGS := $(TEENSY_INC_FLAGS) $(LIBRARY_INC_FLAGS) $(SRC_INC_FLAGS)
 
 # Compiler flags specific to Teensy 4.1
 TEENSY4_FLAGS = -DF_CPU=600000000 -DUSB_CUSTOM -DLAYOUT_US_ENGLISH -D__IMXRT1062__ -DTEENSYDUINO=159 -DARDUINO_TEENSY41 -DARDUINO=10813 -DFIRMWARE
-ifneq ($(filter debug,$(MAKECMDGOALS)),)
-    # If "make debug" is run, append the profiler macro
-    TEENSY_FLAGS += -DPROFILER
-endif
 
-ifneq ($(filter release,$(MAKECMDGOALS)),)
-    # (Optional) If "make release" is run, you can add explicit release flags here later
-endif
 # CPU flags to optimize code for the Teensy processor
 CPU_CFLAGS = -mcpu=cortex-m7 -mfloat-abi=hard -mfpu=fpv5-d16 -mthumb
 
-DEFINES := $(TEENSY4_FLAGS)
+DEFINES := $(TEENSY4_FLAGS) $(PROFILER_FLAG)
 
 # Preprocessor flags for both C and C++ files
 # -MMD: Generate dependency files for each source file
