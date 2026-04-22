@@ -141,9 +141,11 @@ private:
     /// @brief Hive offset state
     std::optional<RobotStateMap> hive_state_map_offset;
 	
-	// CLI Buffer variables
+	/// @brief CLI Buffer
     char cli_buffer[64] = {0};
+	/// @brief index for cli_buffer
     uint8_t cli_index = 0;
+	/// @brief flag for live CLI printing
 	bool live_profiler_active = false;
 
 	
@@ -164,7 +166,8 @@ private:
 	
 	/// @brief LED hearbeat, feeds the watchdog, and ensures consistent loop time.
 	void loop_timing();
-	
+
+	/// @brief Command line interface for live printing
     void process_cli();
 
 public:
