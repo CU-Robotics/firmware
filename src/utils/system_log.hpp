@@ -1,6 +1,6 @@
 #pragma once
 #include <Arduino.h>
-
+/// @brief Serial wrapper for handling print statements
 class SystemLogger : public Print {
 private:
 	/// @brief number of messages in dashboard box
