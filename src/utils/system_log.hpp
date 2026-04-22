@@ -14,18 +14,18 @@ private:
     char current_line[MAX_LINE_LEN] = {0};
     uint8_t line_length = 0;
 
-    // Helper to finalize the line and push it to history
+    /// @brief handles whether we print to dashboard or direct to serial
     void push_message();
 
 public:
     bool is_live_view_active = false;
 
-    // This is the ONLY function we have to implement to satisfy the Print class
+    /// @brief implements print class print for general print statements.
     size_t write(uint8_t c) override;
     
-    // Optional but speeds up printf() and String printing significantly
+	/// @brief implements print class print for println,printf,etc...
     size_t write(const uint8_t *buffer, size_t size) override; 
-
+	/// @brief draws dashboard for live prints from CLI
     void draw_dashboard_box();
 };
 

@@ -354,8 +354,38 @@ void HelloRobot::process_cli() {
 
             if (cmd == "ping") {
                 Serial.println("pong! Robot is alive.");
-            } 
-            // --- THE PARSER ---
+            }
+			else if (cmd == "help") {
+                Serial.println("NAME");
+                Serial.println("       Robot CLI - Control and monitor firmware");
+                Serial.println();
+                Serial.println("SYNOPSIS");
+                Serial.println("       [command] [arguments...]");
+                Serial.println();
+                Serial.println("DESCRIPTION");
+                Serial.println("       Provides a serial interface to interact with the robot, check");
+                Serial.println("       connection status, and launch live, real-time data dashboards.");
+                Serial.println();
+                Serial.println("COMMANDS");
+                Serial.println("       ping");
+                Serial.println("              Replies with 'pong!' to verify the serial connection is active.");
+                Serial.println();
+                Serial.println("       live [view1] [view2] ...");
+                Serial.println("              Launches a live updating dashboard with the specified views.");
+                Serial.println("              Views are stacked vertically in the order provided.");
+                Serial.println("              Press ANY KEY to exit live mode.");
+                Serial.println();
+                Serial.println("              Available views:");
+                Serial.println("                prof            : Execution time profiler (only available if running make debug) ");
+                Serial.println("                tx              : Real-time radio transmitter inputs");
+                Serial.println("                sensors         : Real-time readouts from all configured sensors");
+                Serial.println("                estimated_state : The robot's current estimated state map");
+                Serial.println("                target_state    : The robot's current target state map");
+                Serial.println("                heartbeat       : The main loop counter (loopc)");
+                Serial.println();
+                Serial.println("       help");
+                Serial.println("              Displays this manual.");
+            }            // --- THE PARSER ---
             else if (cmd.startsWith("live ")) {
                 num_active_views = 0;
 				SystemLog.is_live_view_active = true;
