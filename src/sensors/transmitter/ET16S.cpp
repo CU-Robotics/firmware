@@ -108,17 +108,41 @@ void ET16S::print_raw_bin(uint8_t m_inputRaw[ET16S_PACKET_SIZE]) {
 }
 void ET16S::print_live_data() {
     Serial.printf("=== LIVE ET16S TRANSMITTER DATA ===\n");
-    Serial.printf(" Safety Mode: %s\n", is_safety_mode() ? "ON" : "OFF");
-    Serial.printf(" Control Mode: %s\n", is_teensy_mode() ? "TEENSY" : (is_hive_mode() ? "HIVE" : "UNKNOWN"));
-    Serial.println("-----------------------------------");
-    Serial.printf(" L Stick: X: %5.2f | Y: %5.2f\n", get_l_stick_x(), get_l_stick_y());
-    Serial.printf(" R Stick: X: %5.2f | Y: %5.2f\n", get_r_stick_x(), get_r_stick_y());
-    Serial.printf(" L Dial : %5.2f    | R Dial : %5.2f\n", get_l_dial(), get_r_dial());
-    Serial.println("-----------------------------------");
-    Serial.printf(" SW_B: %d | SW_C: %d | SW_D: %d | SW_E: %d\n", 
-                  (int)get_switch_b(), (int)get_switch_c(), (int)get_switch_d(), (int)get_switch_e());
-}
+    
+    const char* mode_str = "UNKNOWN";
+    if (is_safety_mode()) {
+        mode_str = "SAFETY";
+    } else if (is_teensy_mode()) {
+        mode_str = "TEENSY";
+    } else if (is_hive_mode()) {
+        mode_str = "HIVE";
+    }
 
+    Serial.printf(" Control Mode: %-7s\n", mode_str);
+    
+    Serial.println("---------------------------------------");
+    Serial.printf(" L Stick : X: %5.2f | Y: %5.2f\n", get_l_stick_x(), get_l_stick_y());
+    Serial.printf(" R Stick : X: %5.2f | Y: %5.2f\n", get_r_stick_x(), get_r_stick_y());
+    Serial.printf(" L Dial  :    %5.2f | R Dial  :    %5.2f\n", get_l_dial(), get_r_dial());
+    Serial.printf(" L Slider:    %5.2f | R Slider:    %5.2f\n", get_l_slider(), get_r_slider());
+    Serial.println("---------------------------------------");
+
+    // Lambda to convert the float value into the SwitchPos string
+    auto sw_str = [](auto val) -> const char* {
+        switch (static_cast<SwitchPos>(static_cast<uint32_t>(val))) {
+            case SwitchPos::FORWARD:  return "FORWARD";
+            case SwitchPos::BACKWARD: return "BACKWARD";
+            case SwitchPos::MIDDLE:   return "MIDDLE";
+            default:                  return "INVALID";
+        }
+    };
+
+    // Print using the lambda and the %-8s padding to prevent text ghosting
+    Serial.printf(" SW_B: %-8s | SW_C: %-8s\n", sw_str(get_switch_b()), sw_str(get_switch_c()));
+    Serial.printf(" SW_D: %-8s | SW_E: %-8s\n", sw_str(get_switch_d()), sw_str(get_switch_e()));
+    Serial.printf(" SW_F: %-8s | SW_G: %-8s\n", sw_str(get_switch_f()), sw_str(get_switch_g()));
+    Serial.printf(" SW_H: %-8s |\n", sw_str(get_switch_h()));
+}
 void ET16S::print_format_bin(int channel_num) {
 	if (channel_num > ET16S_INPUT_VALUE_COUNT || channel_num < 0) {
 		Serial.print("Invalid channel used for print_format_bin. Must be 0-16");

@@ -315,11 +315,9 @@ void HelloRobot::process_cli() {
                 Serial.println(); // Add a blank line between stacked views
             }
 			SystemLog.draw_dashboard_box(); // puts all non-CLI prints in neat box
-            Serial.println("\n[ LIVE MODE ACTIVE - PRESS ANY KEY TO EXIT ]");
+            Serial.println("\n[ LIVE MODE ACTIVE - PRESS ENTER TO EXIT ]");
             
-            // Critical: \033[J clears everything *below* the cursor. 
-            // This prevents "ghost text" from getting left behind if a tall view 
-            // updates and suddenly becomes shorter.
+            // \033[J clears everything *below* the cursor. 
             Serial.print("\033[J"); 
             
             last_redraw_time = millis();
@@ -376,7 +374,7 @@ void HelloRobot::process_cli() {
                 Serial.println("       live [view1] [view2] ...");
                 Serial.println("              Launches a live updating dashboard with the specified views.");
                 Serial.println("              Views are stacked vertically in the order provided.");
-                Serial.println("              Press ANY KEY to exit live mode.");
+                Serial.println("              Press ENTER to exit live mode.");
                 Serial.println();
                 Serial.println("              Available views:");
                 Serial.println("                prof            : Execution time profiler (only available if running make debug) ");

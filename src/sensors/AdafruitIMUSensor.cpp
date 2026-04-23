@@ -25,7 +25,7 @@ void AdafruitIMUSensor::print() {
 	Serial.println();
 }
 void AdafruitIMUSensor::print_live_data() {
-    Serial.printf("=== LIVE ADAFRUIT IMU DATA ===\n");
+    Serial.printf("=== LIVE ADAFRUIT SENSOR DATA ===\n");
     
     // Print temperature
     Serial.printf(" Temperature: %5.2f °C\n", get_temperature());

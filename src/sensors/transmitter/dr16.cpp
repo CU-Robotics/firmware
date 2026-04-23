@@ -411,13 +411,36 @@ void DR16::manual_controls(const RobotStateMap& estimated_state_map, RobotStateM
 }
 void DR16::print_live_data() {
     Serial.printf("=== LIVE DR16 TRANSMITTER DATA ===\n");
-    Serial.printf(" Safety Mode : %s\n", is_safety_mode() ? "ON" : "OFF");
-    Serial.printf(" Control Mode: %s\n", is_teensy_mode() ? "TEENSY" : (is_hive_mode() ? "HIVE" : "UNKNOWN"));
+    
+    const char* mode_str = "UNKNOWN";
+    if (is_safety_mode()) {
+        mode_str = "SAFETY";
+    } else if (is_teensy_mode()) {
+        mode_str = "TEENSY";
+    } else if (is_hive_mode()) {
+        mode_str = "HIVE";
+    }
+
+    Serial.printf(" Control Mode: %-7s\n", mode_str);
+    
     Serial.println("----------------------------------");
     Serial.printf(" L Stick: X: %5.2f | Y: %5.2f\n", get_l_stick_x(), get_l_stick_y());
     Serial.printf(" R Stick: X: %5.2f | Y: %5.2f\n", get_r_stick_x(), get_r_stick_y());
     Serial.printf(" Wheel  : %5.2f\n", get_wheel());
-    Serial.printf(" L Switch: %d     | R Switch: %d\n", (int)get_l_switch(), (int)get_r_switch());
+	
+	// Lambda to convert the float value into the SwitchPos string
+    auto sw_str = [](auto val) -> const char* {
+        switch (static_cast<SwitchPos>(static_cast<uint32_t>(val))) {
+            case SwitchPos::FORWARD:  return "FORWARD";
+            case SwitchPos::BACKWARD: return "BACKWARD";
+            case SwitchPos::MIDDLE:   return "MIDDLE";
+            default:                  return "INVALID";
+        }
+    };
+
+    // Print using the lambda and the %-8s padding
+    Serial.printf(" L Switch: %-8s | R Switch: %-8s\n", sw_str(get_l_switch()), sw_str(get_r_switch()));
+	
     Serial.println("------------- MOUSE --------------");
     Serial.printf(" X: %5d | Y: %5d | Z: %5d\n", get_mouse_x(), get_mouse_y(), get_mouse_z());
     Serial.printf(" L_Btn: %d | R_Btn: %d\n", get_l_mouse_button(), get_r_mouse_button());
