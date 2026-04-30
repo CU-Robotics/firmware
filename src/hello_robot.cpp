@@ -344,19 +344,18 @@ void HelloRobot::process_cli() {
 	   as well as to cmd elseif block below
 	*/
     while (Serial.available() > 0) {
-        char c = Serial.read();
-        
+		char c = Serial.read();
+		
+        cli_buffer[cli_index] = '\0';
         if (c == '\n' || c == '\r') {
             if (cli_index == 0) continue; 
 
             cli_buffer[cli_index] = '\0'; 
-            String cmd = String(cli_buffer);
-            cmd.trim();
 
-            if (cmd == "ping") {
+			if (strncmp(cli_buffer, "ping", 4) == 0) {
                 Serial.println("pong! Robot is alive.");
             }
-			else if (cmd == "help") {
+			if (strncmp(cli_buffer, "help", 4) == 0) {
                 Serial.println("NAME");
                 Serial.println("       Robot CLI - Control and monitor firmware");
                 Serial.println();
@@ -387,50 +386,39 @@ void HelloRobot::process_cli() {
                 Serial.println("       help");
                 Serial.println("              Displays this manual.");
             }            // --- THE PARSER ---
-            else if (cmd.startsWith("live ")) {
+			else if (strncmp(cli_buffer, "live ", 5) == 0) {
                 num_active_views = 0;
 				SystemLog.is_live_view_active = true;
                 redraw_interval = 1000;  // Default to slow refresh
                 
-                // Start reading after the word "live " (index 5)
-                int startIndex = 5; 
-                
+                // The first token will be "live", which we ignore
+                char* token = strtok(cli_buffer, " ");
                 // Parse the command word by word
-                while (startIndex < (int)cmd.length() && num_active_views < MAX_LIVE_VIEWS) {
-                    int spaceIndex = cmd.indexOf(' ', startIndex);
-                    if (spaceIndex == -1) spaceIndex = cmd.length(); // End of string
-                    
-                    // Extract the word
-                    String arg = cmd.substring(startIndex, spaceIndex);
-                    arg.trim();
+				while ((token = strtok(NULL, " ")) != NULL && num_active_views < MAX_LIVE_VIEWS) {
                     
                     // Check the word and push the corresponding view to the stack
-                    if (arg == "prof") {
+					if (strcmp(token, "prof") == 0) {
                         active_views[num_active_views++] = LiveMode::PROFILE_VIEW;
                     } 
-                    else if (arg == "tx") {
+					else if (strcmp(token, "tx") == 0) {
                         active_views[num_active_views++] = LiveMode::TRANSMITTER;
-                        redraw_interval = 100; // If TX is anywhere in the stack, speed up the refresh rate
-                    } 
-                    else if (arg == "sensors") {
+                        redraw_interval = 100;
+					} 
+					else if (strcmp(token, "sensors") == 0) {
                         active_views[num_active_views++] = LiveMode::SENSORS;
-                        redraw_interval = 100; // If Sensors are active, speed up the refresh rate
-                    }
-					else if (arg == "target_state") {
+                        redraw_interval = 100;                     }
+					else if (strcmp(token, "target_state") == 0) {
                         active_views[num_active_views++] = LiveMode::TARGET_STATE;
-                        redraw_interval = 100; // If Sensors are active, speed up the refresh rate
+                        redraw_interval = 100;
                     }
-					else if (arg == "estimated_state") {
+					else if (strcmp(token, "estimated_state") == 0) {
                         active_views[num_active_views++] = LiveMode::ESTIMATED_STATE;
-                        redraw_interval = 100; // If Sensors are active, speed up the refresh rate
+                        redraw_interval = 100;
                     }
-					else if (arg == "heartbeat") {
+					else if (strcmp(token, "heartbeat") == 0) {
                         active_views[num_active_views++] = LiveMode::HEARTBEAT;
-                        redraw_interval = 100; // If Sensors are active, speed up the refresh rate
+                        redraw_interval = 100;
                     }
-                    
-                    // Move to the next word
-                    startIndex = spaceIndex + 1;
                 }
 
                 if (num_active_views > 0) {
