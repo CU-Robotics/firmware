@@ -119,7 +119,7 @@ struct SensorInfo {
     /// @brief the direction of the yaw encoder
     float yaw_encoder_direction;
     /// @brief whether or not the imu is mounted on the pitch
-    uint32_t pitch_imu;
+    uint32_t has_pitch_imu;
     /// @brief the ratio between chassis x velocity in m/s and motor velocity in rad/s for the chassis motors, used by the X Drive estimator.
     float chassis_x_to_motor_rad = 0.0;
     /// @brief the ratio between chassis y velocity in m/s and motor velocity in rad/s for the chassis motors, used by the X Drive estimator.

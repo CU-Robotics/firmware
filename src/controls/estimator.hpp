@@ -68,7 +68,7 @@ private:
     /// @brief the direction of the yaw encoder
     float yaw_encoder_direction;
     /// @brief whether or not the IMU is mounted on the pitch axis
-    bool pitch_imu;
+    bool has_pitch_imu;
 
     /// @brief yaw imu vector
     float imu_yaw_axis_vector[3];

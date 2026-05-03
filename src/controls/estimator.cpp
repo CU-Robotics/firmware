@@ -29,7 +29,7 @@ GimbalAndChassisEstimator::GimbalAndChassisEstimator(const Cfg::Estimator& estim
     pitch_encoder_direction = estimator_config.sensor_info.pitch_encoder_direction;
     yaw_encoder_direction = estimator_config.sensor_info.yaw_encoder_direction;
 
-    pitch_imu = static_cast<bool>(estimator_config.sensor_info.pitch_imu);
+    has_pitch_imu = static_cast<bool>(estimator_config.sensor_info.has_pitch_imu);
 
     yaw_angle = estimator_config.sensor_info.yaw_start_angle;
     pitch_angle = estimator_config.sensor_info.pitch_start_angle;
@@ -82,7 +82,7 @@ void GimbalAndChassisEstimator::step_states(RobotStateMap& updated_state_map, co
         yaw_axis_spherical[1] = atan(imu_yaw_axis_vector[1] / imu_yaw_axis_vector[0]); // theta
     }
 
-    if pitch_imu {
+    if (has_pitch_imu) {
         yaw_axis_spherical[2] = acos(imu_yaw_axis_vector[2] / Utils::magnitude(imu_yaw_axis_vector, 3)) - pitch_diff; // phi
     } else {
         yaw_axis_spherical[2] = acos(imu_yaw_axis_vector[2] / Utils::magnitude(imu_yaw_axis_vector, 3)); // phi
@@ -366,11 +366,12 @@ void LowerFeederEstimator::step_states(RobotStateMap& updated_state_map, const R
     } else {
         diff = feeder_angle - prev_feeder_angle;
     }
-  
-    if (diff < -1 && diff > -5) {
+
+    // code to check if the encoder value is getting reset to near 0. Indicates a problem with the spi bus
+    if (fabs(diff) > 1 && fabs(diff) < 5) {
         num_encoder_resets++;
         reset_value = feeder_angle;
-        // Serial.printf("Feeder angle diff is large: %d, feeder angle: %f, prev feeder angle: %f\n", num_encoder_resets, feeder_angle, prev_feeder_angle);
+        Serial.printf("Feeder angle diff is large: %d, feeder angle: %f, prev feeder angle: %f\n", num_encoder_resets, feeder_angle, prev_feeder_angle);
     }
 
     prev_feeder_angle = feeder_angle;

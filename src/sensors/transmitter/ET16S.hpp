@@ -301,7 +301,7 @@ private:
 	/// @brief right dial index	
 	int r_dial_num = 13;
 	/// @brief left dial index	
-	int l_dial_num=15;
+	int l_dial_num = 15;
 	/// @brief trim one index	
 	int trim_one_num = 16;
 	/// @brief trim two index	

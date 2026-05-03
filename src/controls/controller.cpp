@@ -88,7 +88,7 @@ void XDriveController::step(RobotStateMap& reference_map, RobotStateMap& estimat
             drive_motors[i]->write_motor_torque(motor_outputs[i]);
         }
 
-    } else {
+    } else if (reference_map[Cfg::StateName::ChassisX].config().governor_type == Cfg::StateOrder::Velocity) {
 
         // High level velocity controller
         for (int i = 0; i < 2; i++) {
@@ -158,6 +158,8 @@ void XDriveController::step(RobotStateMap& reference_map, RobotStateMap& estimat
             drive_motors[i]->write_motor_torque(motor_outputs[i]);
             // Serial.printf("motor %d error: %f output: %f\n", i, -micro_estimate[i][1] + motor_velocity[i], outputs[i]);
         }
+    } else {
+        Serial.printf("governor type not used for xdrive controller");
     }
 }
 
