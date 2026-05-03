@@ -45,6 +45,23 @@ public:
 protected:
     ///@brief create a timer object for each estimator
     Timer time;
+
+    /// @brief Internal tracking for estimator exceedance on a single state.
+    struct ErrorMonitor {
+        bool initialized = false;
+        bool exceeding = false;
+        uint32_t exceed_start_us = 0;
+    };
+
+    /// @brief Check whether a state estimate exceeds its configured reference limits and dispatch to the estimator-specific handler.
+    /// @param estimator_name Name of the estimator for diagnostics.
+    /// @param state_name Name of the state being checked.
+    /// @param state The state object to check.
+    /// @param monitor Persistent monitor for this state.
+    void check_state_limits(const char* estimator_name, const char* state_name, const State& state, ErrorMonitor& monitor);
+
+    /// @brief Handle an estimator-specific limit violation once the exceedance duration has been reached. Default calls safety procedure; override to customize.
+    virtual void handleEstimatorError(const char* estimator_name, const char* state_name, const State& state, float violation_amount);
 };
 
 /// @brief Estimate the yaw, pitch, and chassis heading
@@ -194,6 +211,13 @@ private:
     /// @brief state name for the pitch axis
     const Cfg::StateName& pitch_state;
 
+    /// @brief error monitors for each estimated state
+    ErrorMonitor chassis_x_monitor;
+    ErrorMonitor chassis_y_monitor;
+    ErrorMonitor chassis_heading_monitor;
+    ErrorMonitor yaw_monitor;
+    ErrorMonitor pitch_monitor;
+
     /// @brief position estimate to store position after integrating used for chassis odometry
     float pos_estimate[3] = { 0,0,0 };
 
@@ -237,6 +261,8 @@ private:
     std::shared_ptr<Motor> flywheel_motor_right;
     /// @brief state name for the ball exit velocity
     const Cfg::StateName& ball_exit_velocity;
+    /// @brief monitor for flywheel estimate limits
+    ErrorMonitor flywheel_monitor;
 
 public:
     /// @brief make new flywheel estimator and set can data pointer and num states
@@ -273,6 +299,8 @@ struct FeederEstimator : public Estimator {
         const Cfg::StateName& feeder_ball_state;
         /// @brief BuffEncoder on the feeder
         std::shared_ptr<BuffEncoder> feeder_encoder;
+        /// @brief monitor for feeder estimate limits
+        ErrorMonitor feeder_monitor;
     public:
         /// @brief Make new feeder estimator
         /// @param estimator_config config data for this estimator

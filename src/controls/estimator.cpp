@@ -3,6 +3,77 @@
 #include "utils/vector_math.hpp"
 #include "sensors/RefSystem.hpp"
 
+// Estimator shared checking implementation
+void Estimator::check_state_limits(const char* estimator_name, const char* state_name, const State& state, ErrorMonitor& monitor) {
+    const Cfg::State& config = state.config();
+    // Check position, velocity, acceleration against reference limits
+    bool violated = false;
+    float violation_amount = 0.0f;
+
+    float pos = state.get_position();
+    if (pos < config.reference_limits.position.min) {
+        violated = true;
+        violation_amount = config.reference_limits.position.min - pos;
+    } else if (pos > config.reference_limits.position.max) {
+        violated = true;
+        violation_amount = pos - config.reference_limits.position.max;
+    }
+
+    float vel = state.get_velocity();
+    if (!violated) {
+        if (vel < config.reference_limits.velocity.min) {
+            violated = true;
+            violation_amount = config.reference_limits.velocity.min - vel;
+        } else if (vel > config.reference_limits.velocity.max) {
+            violated = true;
+            violation_amount = vel - config.reference_limits.velocity.max;
+        }
+    }
+
+    // Acceleration reference limits are much less likely to be represent our robots true physical limits so ignore
+    // float acc = state.get_acceleration();
+    // if (!violated) {
+    //     if (acc < config.reference_limits.acceleration.min) {
+    //         violated = true;
+    //         violation_amount = config.reference_limits.acceleration.min - acc;
+    //     } else if (acc > config.reference_limits.acceleration.max) {
+    //         violated = true;
+    //         violation_amount = acc - config.reference_limits.acceleration.max;
+    //     }
+    // }
+
+    if (violated) {
+        if (!monitor.exceeding) {
+            monitor.exceeding = true;
+            monitor.exceed_start_us = micros();
+        }
+        const uint32_t elapsed_us = static_cast<uint32_t>(micros() - monitor.exceed_start_us);
+        // Use state's configured exceed time if present; 0 means immediate
+        if (config.max_error_exceed_time_us == 0 || elapsed_us >= config.max_error_exceed_time_us) {
+            handleEstimatorError(estimator_name, state_name, state, violation_amount);
+        }
+    } else {
+        monitor.exceeding = false;
+        monitor.exceed_start_us = 0;
+    }
+}
+
+void Estimator::handleEstimatorError(const char* estimator_name, const char* state_name, const State& state, float violation_amount) {
+    const Cfg::State& config = state.config();
+    safety::safety_procedure(
+        "%s: %s estimate exceeded physical limits by %f (limits pos:[%f,%f] vel:[%f,%f] acc:[%f,%f])",
+        estimator_name,
+        state_name,
+        violation_amount,
+        config.reference_limits.position.min,
+        config.reference_limits.position.max,
+        config.reference_limits.velocity.min,
+        config.reference_limits.velocity.max,
+        config.reference_limits.acceleration.min,
+        config.reference_limits.acceleration.max
+    );
+}
+
 GimbalAndChassisEstimator::GimbalAndChassisEstimator(const Cfg::Estimator& estimator_config, SensorManager& sensor_manager, CANManager& can, std::vector<Cfg::StateName> available_states) : 
     buff_enc_yaw(sensor_manager.get_sensor_by_name<BuffEncoder>(estimator_config.get_sensor_name_by_generic_use(Cfg::GenericSensorUse::YawBuffEncoder))), 
     buff_enc_pitch(sensor_manager.get_sensor_by_name<BuffEncoder>(estimator_config.get_sensor_name_by_generic_use(Cfg::GenericSensorUse::PitchBuffEncoder))),

@@ -52,6 +52,10 @@ struct State : Comms::CommsData {
     uint32_t is_wrapping = 0;
     /// @brief Name of this state
     StateName name = StateName::UnsetStateName;
+    /// @brief The maximum acceptable error between the estimate and target for this state before entering safety mode
+    float max_controller_error = 0.0f;
+    /// @brief The maximum time in microseconds that the controller error can exceed the limit before entering safety mode
+    uint32_t max_error_exceed_time_us = 0;
 };
 
 };
