@@ -315,7 +315,7 @@ struct LowerFeederEstimator : public Estimator {
         std::shared_ptr<BuffEncoder> feeder_encoder;
 
         /// @brief feeder motor closer to the indexer
-        std::shared_ptr<Motor> close_feeder_motor;
+        std::shared_ptr<Motor> near_feeder_motor;
         /// @brief feeder motor farther from the indexer
         std::shared_ptr<Motor> far_feeder_motor;
     public:

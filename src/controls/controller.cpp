@@ -312,6 +312,6 @@ void LowerFeederController::step(RobotStateMap& reference_map, RobotStateMap& es
     //                 reference_map[lower_feeder_position_state].get_position(), reference_map[lower_feeder_position_state].get_velocity(),
     //                 estimate_map[lower_feeder_position_state].get_position(), estimate_map[lower_feeder_position_state].get_velocity());
         
-    close_feeder_motor->write_motor_torque(output);
+    near_feeder_motor->write_motor_torque(output);
     far_feeder_motor->write_motor_torque(-output);
 }

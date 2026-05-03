@@ -326,7 +326,7 @@ struct LowerFeederController : public Controller {
         /// @brief filter for calculating pid velocity controller outputs
         PIDFilter pidv;
         /// @brief motor attached to the feeder
-        std::shared_ptr<Motor> close_feeder_motor;
+        std::shared_ptr<Motor> near_feeder_motor;
         /// @brief motor attached to the feeder
         std::shared_ptr<Motor> far_feeder_motor;
         /// @brief state name for the feeder position
@@ -344,7 +344,7 @@ struct LowerFeederController : public Controller {
             full_state_position_controller = controller_config.get_sub_controller_by_type(Cfg::SubControllerType::FullStatePositionController);
             full_state_velocity_controller = controller_config.get_sub_controller_by_type(Cfg::SubControllerType::FullStateVelocityController);
                 
-            close_feeder_motor = get_motor_by_generic_use(Cfg::GenericControllerMotorUse::CloseFeeder, can, available_motors);
+            near_feeder_motor = get_motor_by_generic_use(Cfg::GenericControllerMotorUse::NearFeeder, can, available_motors);
             far_feeder_motor = get_motor_by_generic_use(Cfg::GenericControllerMotorUse::FarFeeder, can, available_motors);
         }
 

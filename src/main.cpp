@@ -211,7 +211,7 @@ int main() {
         }
 
         // manual controls on firmware
-        transmitter_manager.manual_controls(estimated_state_map, target_state_map, not_safety_mode, feed, last_feed, has_lower_feeder);
+        transmitter_manager.manual_controls(estimated_state_map, target_state_map, not_safety_mode, feed, last_feed);
 
         // check if we want to use hive controls instead
         if (transmitter_manager.is_hive_mode()) {
@@ -300,8 +300,6 @@ int main() {
         }
         last_gimbal_power = ref.ref_data.robot_performance.gimbal_power_active;
         bool gimbal_power_recently_turned_on = gimbal_power_timer.get_elapsed_micros_no_restart() < 3000000;
-
-        // Serial.printf("TM: is safety mode: %d, comms layer configured: %d, is slow loop: %d, gimbal power active: %d, gimbal power recently turned on: %d\n", transmitter_manager.is_safety_mode(), comms_layer.is_configured(), is_slow_loop, ref.ref_data.robot_performance.gimbal_power_active, gimbal_power_recently_turned_on);
 
         not_safety_mode =
             (!transmitter_manager.is_safety_mode() &&

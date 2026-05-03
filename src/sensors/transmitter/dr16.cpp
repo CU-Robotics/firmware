@@ -320,7 +320,9 @@ DR16Data DR16::get_dr16_data(){
 	return dr16_data;
 }
 
-void DR16::manual_controls(const RobotStateMap& estimated_state_map, RobotStateMap& target_state_map, bool not_safety_mode, float& feed, float& last_feed, bool has_lower_feeder) {
+void DR16::manual_controls(const RobotStateMap& estimated_state_map, RobotStateMap& target_state_map, bool not_safety_mode, float& feed, float& last_feed) {
+	bool has_lower_feeder = estimated_state_map.get_state_map().find(Cfg::StateName::LowerFeeder) != estimated_state_map.get_state_map().end();
+
 	float delta = control_input_timer.delta();
 	transmitter_pos_x += mouse_x * 0.05 * delta;
 	transmitter_pos_y += mouse_y * 0.05 * delta;

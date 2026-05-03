@@ -1,6 +1,7 @@
 #include "ET16S.hpp"
 #include "sensors/RefSystem.hpp"
 #include "comms/data/sendable.hpp"
+#include "state.hpp"
 
 ET16S::ET16S(const Cfg::ET16S& config) : config(config) { }
 
@@ -607,7 +608,9 @@ ET16SData ET16S::get_ET16S_data(){
 	return ET16S_data;
 }
 
-void ET16S::manual_controls(const RobotStateMap& estimated_state_map, RobotStateMap& target_state_map, bool not_safety_mode, float& feed, float& last_feed, bool has_lower_feeder) {
+void ET16S::manual_controls(const RobotStateMap& estimated_state_map, RobotStateMap& target_state_map, bool not_safety_mode, float& feed, float& last_feed) {
+	bool has_lower_feeder = estimated_state_map.get_state_map().find(Cfg::StateName::LowerFeeder) != estimated_state_map.get_state_map().end();
+	
 	float delta = control_input_timer.delta();
 	
 	vtm_pos_x += ref.ref_data.kbm_interaction.mouse_speed_x * 0.05 * delta;

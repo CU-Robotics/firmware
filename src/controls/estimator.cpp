@@ -322,7 +322,6 @@ void FeederEstimator::step_states(RobotStateMap& updated_state_map, const RobotS
     float feeder_angle = feeder_encoder->get_angle();
     float diff;
     if (count == 0) {
-        Serial.printf("prev_feeder_angle %f\n",prev_feeder_angle);
         dt = 0; // first dt loop generates huge time so check for that
         diff = fmod((feeder_angle - feeder_offset), (float)(M_PI / feeder_ratio)) ;
         count++;
@@ -350,7 +349,7 @@ LowerFeederEstimator::LowerFeederEstimator(const Cfg::Estimator& estimator_confi
     feeder_direction = estimator_config.sensor_info.feeder_direction;
     feeder_ratio = estimator_config.sensor_info.feeder_ratio;
 
-    close_feeder_motor = can.get_motor_by_name(estimator_config.get_motor_name_by_generic_use(Cfg::GenericEstimatorMotorUse::FeederClose));
+    near_feeder_motor = can.get_motor_by_name(estimator_config.get_motor_name_by_generic_use(Cfg::GenericEstimatorMotorUse::FeederClose));
     far_feeder_motor = can.get_motor_by_name(estimator_config.get_motor_name_by_generic_use(Cfg::GenericEstimatorMotorUse::FeederFar));
 }
 
@@ -359,7 +358,6 @@ void LowerFeederEstimator::step_states(RobotStateMap& updated_state_map, const R
     float feeder_angle = feeder_encoder->get_angle();
     float diff;
     if (count == 0) {
-        Serial.printf("prev_feeder_angle %f\n",prev_feeder_angle);
         dt = 0; // first dt loop generates huge time so check for that
         diff = fmod((feeder_angle - feeder_offset), (float)(M_PI / feeder_ratio)) ;
         count++;
@@ -382,13 +380,6 @@ void LowerFeederEstimator::step_states(RobotStateMap& updated_state_map, const R
     float feeder_velocity = (dt > 0) ? (diff/(M_PI/feeder_ratio))/dt : 0;
   
     ball_count += diff/(M_PI/feeder_ratio);
-
-    // feeder velocity estimation with motor velocity
-    // float motor_velocity_close = close_feeder_motor->get_state().speed;
-    // float motor_velocity_far = far_feeder_motor->get_state().speed;
-    // float ball_velocity = (((-motor_velocity_close + motor_velocity_far)/(2.0 * 36.0)) / (M_PI * 2)) * (feeder_ratio * 2.0); // balls/s, convert from rad/s using the feeder ratio and average of the two motors
-
-    // Serial.printf("encoder estimate: %f, motor estimate: %f, resets: %d, reset value: %f\n", feeder_velocity, ball_velocity, num_encoder_resets, reset_value);
 
     updated_state_map[feeder_ball_state].set_position(ball_count * feeder_direction); // ball count
     updated_state_map[feeder_ball_state].set_velocity(feeder_velocity * feeder_direction); // ball velocity
