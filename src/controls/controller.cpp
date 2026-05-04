@@ -84,6 +84,7 @@ void Controller::checkControllerError(const char* controller_name, const char* s
             monitor.exceed_start_us = micros();
         }
 
+        // If error exceeds the configured threshold for too long, trigger the error handler
         const uint32_t elapsed_us = static_cast<uint32_t>(micros() - monitor.exceed_start_us);
         if (elapsed_us >= config.max_error_exceed_time_us) {
             handleControllerError(controller_name, state_name, reference_state, estimate_state, error);

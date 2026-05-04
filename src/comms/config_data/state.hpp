@@ -54,7 +54,7 @@ struct State : Comms::CommsData {
     StateName name = StateName::UnsetStateName;
     /// @brief The maximum acceptable error between the estimate and target for this state before entering safety mode
     float max_controller_error = 0.0f;
-    /// @brief The maximum time in microseconds that the controller error can exceed the limit before entering safety mode
+    /// @brief The maximum time in microseconds that a check (controller error or estimator state violation) can exceed its limit before entering safety mode
     uint32_t max_error_exceed_time_us = 0;
 };
 

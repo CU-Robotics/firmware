@@ -53,7 +53,7 @@ void Estimator::check_state_limits(const char* estimator_name, const char* state
             monitor.exceed_start_us = micros();
         }
         const uint32_t elapsed_us = static_cast<uint32_t>(micros() - monitor.exceed_start_us);
-        // Use state's configured exceed time if present; 0 means immediate
+        // If state violation exceeds the configured threshold for too long, trigger the error handler. Setting max_error_exceed_time_us to 0 means immediate escalation.
         if (elapsed_us >= config.max_error_exceed_time_us) {
             handleEstimatorError(estimator_name, state_name, state, violation_amount);
         }
