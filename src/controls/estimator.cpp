@@ -5,8 +5,10 @@
 
 // Estimator shared checking implementation
 void Estimator::check_state_limits(const char* estimator_name, const char* state_name, const State& state, ErrorMonitor& monitor) {
-    // Skip limit checking if in safety mode (robot is not actively controlled)
+    // Reset monitor to clean slate when safety mode is active (robot is not being actively estimated)
     if (safety::is_safety_mode_active()) {
+        monitor.exceeding = false;
+        monitor.exceed_start_us = 0;
         return;
     }
 
