@@ -259,14 +259,7 @@ void XDriveController::step(RobotStateMap& reference_map, RobotStateMap& estimat
 }
 
 void XDriveController::handleControllerError(const char* controller_name, const char* state_name, const State& reference_state, const State& estimate_state, float error) {
-    const Cfg::State& config = reference_state.config();
-    safety::safety_procedure(
-        "%s: %s controller error exceeded threshold. error=%f threshold=%f",
-        controller_name,
-        state_name,
-        error,
-        config.max_controller_error
-    );
+    Controller::handleControllerError(controller_name, state_name, reference_state, estimate_state, error);
 }
 
 void YawController::step(RobotStateMap& reference_map, RobotStateMap& estimate_map) {
@@ -305,14 +298,7 @@ void YawController::step(RobotStateMap& reference_map, RobotStateMap& estimate_m
 }
 
 void YawController::handleControllerError(const char* controller_name, const char* state_name, const State& reference_state, const State& estimate_state, float error) {
-    const Cfg::State& config = reference_state.config();
-    safety::safety_procedure(
-        "%s: %s controller error exceeded threshold. error=%f threshold=%f",
-        controller_name,
-        state_name,
-        error,
-        config.max_controller_error
-    );
+    Controller::handleControllerError(controller_name, state_name, reference_state, estimate_state, error);
 }
 
 void PitchController::step(RobotStateMap& reference_map, RobotStateMap& estimate_map) {
@@ -350,14 +336,7 @@ void PitchController::step(RobotStateMap& reference_map, RobotStateMap& estimate
 }
 
 void PitchController::handleControllerError(const char* controller_name, const char* state_name, const State& reference_state, const State& estimate_state, float error) {
-    const Cfg::State& config = reference_state.config();
-    safety::safety_procedure(
-        "%s: %s controller error exceeded threshold. error=%f threshold=%f",
-        controller_name,
-        state_name,
-        error,
-        config.max_controller_error
-    );
+    Controller::handleControllerError(controller_name, state_name, reference_state, estimate_state, error);
 }
 
 void FlywheelController::step(RobotStateMap& reference_map, RobotStateMap& estimate_map) {
@@ -395,14 +374,7 @@ void FlywheelController::step(RobotStateMap& reference_map, RobotStateMap& estim
 }
 
 void FlywheelController::handleControllerError(const char* controller_name, const char* state_name, const State& reference_state, const State& estimate_state, float error) {
-    const Cfg::State& config = reference_state.config();
-    safety::safety_procedure(
-        "%s: %s controller error exceeded threshold. error=%f threshold=%f",
-        controller_name,
-        state_name,
-        error,
-        config.max_controller_error
-    );
+    Controller::handleControllerError(controller_name, state_name, reference_state, estimate_state, error);
 }
 
 void FeederController::step(RobotStateMap& reference_map, RobotStateMap& estimate_map) {
@@ -428,14 +400,7 @@ void FeederController::step(RobotStateMap& reference_map, RobotStateMap& estimat
 }
 
 void FeederController::handleControllerError(const char* controller_name, const char* state_name, const State& reference_state, const State& estimate_state, float error) {
-    const Cfg::State& config = reference_state.config();
-    safety::safety_procedure(
-        "%s: %s controller error exceeded threshold. error=%f threshold=%f",
-        controller_name,
-        state_name,
-        error,
-        config.max_controller_error
-    );
+    Controller::handleControllerError(controller_name, state_name, reference_state, estimate_state, error);
 }
 
 void LowerFeederController::step(RobotStateMap& reference_map, RobotStateMap& estimate_map) {
