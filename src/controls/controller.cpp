@@ -60,6 +60,10 @@ float normalize_wrapped_error(float error, const Cfg::State& config) {
 void Controller::checkControllerError(const char* controller_name, const char* state_name, const State& reference_state, const State& estimate_state, ErrorMonitor& monitor) {
     // Skip error checking if in safety mode (robot is not actively controlled)
     if (safety::is_safety_mode_active()) {
+        monitor.exceeding = false;
+        monitor.exceed_start_us = 0;
+        monitor.initialized = false;
+        monitor.previous_error = 0.0f;
         // Reset monitor to clean slate when safety mode is active
         monitor.exceeding = false;
         monitor.exceed_start_us = 0;
