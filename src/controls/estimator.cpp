@@ -1,3 +1,6 @@
+#include <cmath>
+#include <limits>
+
 #include "estimator.hpp"
 #include "ICM20649.hpp"
 #include "utils/vector_math.hpp"
@@ -11,7 +14,13 @@ void Estimator::check_state_limits(const char* estimator_name, const char* state
     float violation_amount = 0.0f;
 
     float pos = state.get_position();
-    if (pos < config.reference_limits.position.min) {
+    float vel = state.get_velocity();
+
+    // Non-finite values indicate broken estimation and should fail safe immediately.
+    if (!std::isfinite(pos) || !std::isfinite(vel)) {
+        violated = true;
+        violation_amount = std::numeric_limits<float>::quiet_NaN();
+    } else if (pos < config.reference_limits.position.min) {
         violated = true;
         violation_amount = config.reference_limits.position.min - pos;
     } else if (pos > config.reference_limits.position.max) {
@@ -19,7 +28,6 @@ void Estimator::check_state_limits(const char* estimator_name, const char* state
         violation_amount = pos - config.reference_limits.position.max;
     }
 
-    float vel = state.get_velocity();
     if (!violated) {
         if (vel < config.reference_limits.velocity.min) {
             violated = true;

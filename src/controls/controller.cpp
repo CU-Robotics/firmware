@@ -72,6 +72,12 @@ void Controller::checkControllerError(const char* controller_name, const char* s
     const float reference_value = get_state_error_value(reference_state);
     const float estimate_value = get_state_error_value(estimate_state);
 
+    // Non-finite values indicate broken sensing/state propagation and should fail safe immediately.
+    if (!std::isfinite(reference_value) || !std::isfinite(estimate_value)) {
+        handleControllerError(controller_name, state_name, reference_state, estimate_state, reference_value - estimate_value);
+        return;
+    }
+
     float error = reference_value - estimate_value;
     if (!monitor.initialized) {
         monitor.initialized = true;
