@@ -54,7 +54,7 @@ void Estimator::check_state_limits(const char* estimator_name, const char* state
         }
         const uint32_t elapsed_us = static_cast<uint32_t>(micros() - monitor.exceed_start_us);
         // Use state's configured exceed time if present; 0 means immediate
-        if (config.max_error_exceed_time_us == 0 || elapsed_us >= config.max_error_exceed_time_us) {
+        if (elapsed_us >= config.max_error_exceed_time_us) {
             handleEstimatorError(estimator_name, state_name, state, violation_amount);
         }
     } else {

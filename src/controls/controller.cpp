@@ -5,6 +5,7 @@
 namespace {
 float unwrap_controller_error(float error, float previous_error, const Cfg::State& config) {
     if (!config.is_wrapping || config.governor_type != Cfg::StateOrder::Position) {
+        // Wrapping only applies to position control, and only if the state is configured to wrap
         return error;
     }
 
@@ -26,6 +27,7 @@ float unwrap_controller_error(float error, float previous_error, const Cfg::Stat
 
 float normalize_wrapped_error(float error, const Cfg::State& config) {
     if (!config.is_wrapping || config.governor_type != Cfg::StateOrder::Position) {
+        // Wrapping only applies to position control, and only if the state is configured to wrap
         return error;
     }
 
@@ -74,7 +76,7 @@ void Controller::checkControllerError(const char* controller_name, const char* s
         }
 
         const uint32_t elapsed_us = static_cast<uint32_t>(micros() - monitor.exceed_start_us);
-        if (config.max_error_exceed_time_us == 0 || elapsed_us >= config.max_error_exceed_time_us) {
+        if (elapsed_us >= config.max_error_exceed_time_us) {
             handleControllerError(controller_name, state_name, reference_state, estimate_state, error);
         }
     } else {
