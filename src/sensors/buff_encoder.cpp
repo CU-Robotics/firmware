@@ -3,13 +3,13 @@
 
 const SPISettings BuffEncoder::m_settings = SPISettings(1000000, MT6835_BITORDER, SPI_MODE3);
 
-void BuffEncoder::init() {
+void BuffEncoder::init_impl() {
     // set the SPI pins to the correct mode
     pinMode(config_data.spi_cs, OUTPUT);
     digitalWrite(config_data.spi_cs, HIGH); // set CS high to start
 }
 
-void BuffEncoder::read() {
+void BuffEncoder::read_impl() {
 
     uint8_t data[6] = { 0 }; // transact 48 bits
 
@@ -37,7 +37,7 @@ void BuffEncoder::read() {
     comms_data.m_angle = m_angle;
 }
 
-void BuffEncoder::send_to_comms() const {
+void BuffEncoder::send_to_comms_impl() const {
     Comms::Sendable<BuffEncoderData> sendable;
     sendable.data = comms_data;
     sendable.send_to_comms();
@@ -47,7 +47,7 @@ void BuffEncoder::print() const{
     Serial.printf("Buff Encoder:\n\t");
     Serial.println(get_angle());
 }
-void BuffEncoder::print_live_data() {
+void BuffEncoder::print_live_data_impl() {
     // Note: casting get_name() to int so it prints the enum number
     Serial.printf(" [Buff Encoder %d] Angle (rad): %8.4f\n", 
                   (int)get_name(), get_angle());

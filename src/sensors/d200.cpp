@@ -4,7 +4,7 @@
 #include "comms/data/sendable.hpp"
 
 D200LD14P::D200LD14P(const Cfg::D200Lidar& config_) 
-  : Sensor(),
+	: Sensor<D200LD14P>(),
     config(config_),
     port(Cfg::try_grab_hw_serial_port(config.hardware_serial_port))
 {
@@ -21,11 +21,11 @@ D200LD14P::D200LD14P(const Cfg::D200Lidar& config_)
   Serial.printf("lidar name: %u\n", static_cast<uint32_t>(config.lidar_name));
 }
 
-void D200LD14P::init() {
+void D200LD14P::init_impl() {
   port.begin(D200_BAUD);
 }
 
-void D200LD14P::read() {
+void D200LD14P::read_impl() {
   // consume bytes until we reach a start character (only relevant for startup)
   while (port.available() && port.peek() != D200_START_CHAR) {
     port.read();
@@ -111,7 +111,7 @@ void D200LD14P::read() {
   }
 }
 
-void D200LD14P::send_to_comms() const {
+void D200LD14P::send_to_comms_impl() const {
   for (size_t pkt_index = 0; pkt_index < D200_NUM_PACKETS_CACHED; pkt_index++) {
     Comms::Sendable<LidarDataPacketSI> sendable_packet;
     sendable_packet.data = packets[pkt_index];
@@ -232,7 +232,7 @@ void D200LD14P::print_latest_packet() {
   Serial.print("timestamp: ");
   Serial.println(p.timestamp);
 }
-void D200LD14P::print_live_data() {
+void D200LD14P::print_live_data_impl() {
     Serial.printf(" [D200 Lidar]     Latest Pkt Index: %d | Yaw: %5.2f rad | Yaw Vel: %5.2f rad/s\n", 
                   get_latest_packet_index(), robot_yaw, robot_yaw_velocity);
 }

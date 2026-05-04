@@ -2,7 +2,7 @@
 #include "comms/data/sendable.hpp"
 
 // initialize LSM
-void LSM6DSOX::init() {
+void LSM6DSOX::init_impl() {
     // start I2C communication (SPI not supported on LSM6DOX+LIS3MDL hardware)
     sensor.begin_I2C();
 
@@ -10,7 +10,7 @@ void LSM6DSOX::init() {
     set_gyro_range(config.gyro_range);
 }
 
-void LSM6DSOX::read() {
+void LSM6DSOX::read_impl() {
     // get the event data from the sensor class
     sensor.getEvent(&accel, &gyro, &temp);
 
@@ -37,7 +37,7 @@ void LSM6DSOX::read() {
 
 }
 
-void LSM6DSOX::send_to_comms() const {
+void LSM6DSOX::send_to_comms_impl() const {
     Comms::Sendable<LsmSensorData> sendable;
     sendable.data = comms_data;
     sendable.send_to_comms();

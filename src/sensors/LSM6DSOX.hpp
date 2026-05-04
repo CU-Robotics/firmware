@@ -7,19 +7,19 @@
 
 /// @brief Sensor access for an LSM6DSOX IMU Sensor. Child of the abstract AdafruitIMUSensor class. 
 /// @see Adafruit library this class utilizes: https://adafruit.github.io/Adafruit_LSM6DS/html/class_adafruit___l_s_m6_d_s_o_x.html
-class LSM6DSOX : public AdafruitIMUSensor {
+class LSM6DSOX : public AdafruitIMUSensor<LSM6DSOX> {
 public:
     /// @brief Default constructor, initiaizes config data and comms_data with name from config.
     /// @param config configuration struct for this LSM6DSOX sensor
     LSM6DSOX(const Cfg::LsmImu& config) : config(config), comms_data(config.imu_name) {}
 
     /// @brief Initialize the sensor
-    void init() override;
+    void init_impl();
 
     /// @copydoc AdafruitIMUSensor::read()    
-    void read() override;
+    void read_impl();
     /// @brief Send the sensor data to comms
-    void send_to_comms() const override;
+    void send_to_comms_impl() const;
     /// @brief set the gyro rate range of the sensor
     /// @param range The range to set for the gyroscope
     void set_gyro_range(Cfg::LsmImuGyroRange range);

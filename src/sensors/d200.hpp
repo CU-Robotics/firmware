@@ -104,7 +104,7 @@ struct D200Calibration {
 };
 
 /// @brief class for LiDAR driver
-class D200LD14P : public Sensor {
+class D200LD14P : public Sensor<D200LD14P> {
 private:
   /// @brief reference to config struct for this sensor
   const Cfg::D200Lidar& config;
@@ -157,16 +157,16 @@ public:
   D200LD14P(const Cfg::D200Lidar& config);
 
   /// @brief initialize the d200 module
-  void init() override;
+  void init_impl();
 
   /// @brief read latest packet(s) from D200 module
-  void read() override;
+  void read_impl();
 
   /// @brief send latest packet(s) to comms
-  void send_to_comms() const override;
+  void send_to_comms_impl() const;
 	
   /// @brief Prints a formatted dashboard of live Lidar stats
-  void print_live_data() override;
+  void print_live_data_impl();
 
   /// @brief set rotation the speed of the LiDAR
   /// @param speed desired rotation speed of LiDAR (rad/s)

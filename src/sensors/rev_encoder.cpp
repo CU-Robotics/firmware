@@ -3,7 +3,7 @@
 #include "comms/data/rev_encoder_data.hpp"
 #include "comms/data/sendable.hpp"
 
-void RevEncoder::init() {
+void RevEncoder::init_impl() {
     pinMode(this->config.digital_pin, INPUT);  // Set the pin used to measure the encoder to be an input
     freq.begin(this->config.digital_pin, FREQMEASUREMULTI_MARK_ONLY);
     Serial.printf("Rev Encoder %u init: calculating starting value...\n", static_cast<unsigned int>(this->config.encoder_name));
@@ -16,7 +16,7 @@ void RevEncoder::init() {
     }
 }
 
-void RevEncoder::read() {
+void RevEncoder::read_impl() {
     while (this->freq.available() > 1) {
         this->freq.read();
     }
@@ -31,7 +31,7 @@ void RevEncoder::read() {
     comms_data.ticks = this->ticks;
 }
 
-void RevEncoder::send_to_comms() const {
+void RevEncoder::send_to_comms_impl() const {
     Comms::Sendable<RevSensorData> sendable;
         
     sendable.data = comms_data;
@@ -53,7 +53,7 @@ void RevEncoder::print() {
     Serial.print("\tRadians: ");
     Serial.println(radians);
 }
-void RevEncoder::print_live_data() {
+void RevEncoder::print_live_data_impl() {
     Serial.printf(" [Rev Encoder %d]  Angle (rad): %8.4f | Ticks: %8.0f\n", 
                   (int)config.encoder_name, get_angle_radians(), get_angle_ticks());
 }

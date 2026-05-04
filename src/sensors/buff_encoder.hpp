@@ -42,21 +42,21 @@ constexpr uint32_t MT6835_REG_CAL_STATUS = 0x113;
 constexpr uint32_t MT6835_BITORDER = MSBFIRST;
 
 /// @brief Driver for the Buff-Encoder
-class BuffEncoder : public Sensor {
+class BuffEncoder : public Sensor<BuffEncoder> {
 public:
     /// @brief Constructor for the BuffEncoder class
     /// @param encoder_config configuration data for the encoder
-    BuffEncoder(const Cfg::BuffEncoder& encoder_config) : Sensor(), config_data(encoder_config), comms_data(encoder_config.encoder_name) {};
+    BuffEncoder(const Cfg::BuffEncoder& encoder_config) : Sensor<BuffEncoder>(), config_data(encoder_config), comms_data(encoder_config.encoder_name) {};
 
     /// @brief initialize sensor
-    void init() override;
+    void init_impl();
 
     /// @brief Read via SPI the current angle of the encoder
     /// @note Returns and sets m_angle when it reads
-    void read() override;
+    void read_impl();
 
     /// @brief Send the current data to comms
-    void send_to_comms() const override;
+    void send_to_comms_impl() const;
 
     /// @brief Get the angle of the last read function adjusted by the offset
     /// @return Read angle (radians)
@@ -69,7 +69,7 @@ public:
     /// @brief Print the data for debugging
     void print() const;
 	/// @brief Prints a formatted dashboard of live Buff Encoder values
-    void print_live_data() override;
+    void print_live_data_impl();
 
 private:
 

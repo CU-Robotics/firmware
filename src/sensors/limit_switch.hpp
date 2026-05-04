@@ -7,23 +7,23 @@
 // NC should be untied
 
 /// @brief Class to manage a limit switch
-class LimitSwitch : public Sensor {
+class LimitSwitch : public Sensor<LimitSwitch> {
 public:
     /// @brief Constructor for the LimitSwitch class
     /// @param config The configuration data for the limit switch
-    LimitSwitch(const Cfg::LimitSwitch& config) : Sensor(), config(config), comms_data(config.switch_name) {}
+    LimitSwitch(const Cfg::LimitSwitch& config) : Sensor<LimitSwitch>(), config(config), comms_data(config.switch_name) {}
 
     /// @brief initialize sensor
-    void init() override;
+    void init_impl();
     /// @brief Read the state of the limit switch
-    void read() override;
+    void read_impl();
     /// @brief Send the limit switch state to comms
-    void send_to_comms() const override;
+    void send_to_comms_impl() const ;
     /// @brief Get whether the limit switch is currently pressed
     /// @return true if the limit switch is pressed, false otherwise
     inline bool get_is_pressed() const { return is_pressed; }
 	/// @brief Prints a formatted dashboard of the live Limit Switch state
-    void print_live_data() override;
+    void print_live_data_impl();
     
 private:
     /// @brief Configuration data for the limit switch

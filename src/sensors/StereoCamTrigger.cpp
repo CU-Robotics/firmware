@@ -30,7 +30,7 @@ void StereoCamTrigger::stop() {
   }
 }
 
-void StereoCamTrigger::init() {
+void StereoCamTrigger::init_impl() {
   // configure GPIO pin for sending output signal
   pinMode(config.digital_trigger_pin_1, OUTPUT);
   pinMode(config.digital_trigger_pin_2, OUTPUT);
@@ -43,14 +43,14 @@ void StereoCamTrigger::init() {
   start(mpf);
 }
 
-void StereoCamTrigger::send_to_comms() const {
+void StereoCamTrigger::send_to_comms_impl() const {
   Comms::Sendable<StereoCamTriggerData> sendable;
 
   sendable.data = comms_data;
   sendable.send_to_comms();
 }
 
-void StereoCamTrigger::print_live_data() {
+void StereoCamTrigger::print_live_data_impl() {
     Serial.printf(" [Stereo Cam]     Status: %s | Last Exposure (us): %u\n", 
                   stopped ? "STOPPED" : "RUNNING", latest_exposure_timestamp);
 }

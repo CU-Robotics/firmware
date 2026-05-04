@@ -28,6 +28,9 @@ void SensorManager::init(const Cfg::RobotConfig& config_data) {
 
     initialize_sensors();
 }
+void SensorManager::add_sensor(Cfg::SensorName name,SensorVariant sensor){
+	sensors[name] = std::move(sensor);
+}
 
 void SensorManager::configure_sensors(const Cfg::RobotConfig& config_data) {
     for (const auto& buff_encoder_config : config_data.buff_encoders) {
@@ -60,25 +63,43 @@ void SensorManager::configure_sensors(const Cfg::RobotConfig& config_data) {
     }
 }
 
-void SensorManager::initialize_sensors(){
-    for(auto& [sensor_name, sensor] : sensors) {
-        sensor->init();
+void SensorManager::initialize_sensors() {
+    for (auto& [sensor_name, sensor] : sensors) {
+        // std::visit checks which type the variant currently holds
+        std::visit([](auto&& sensor_ptr) {
+            // 'sensor_ptr' resolves to std::shared_ptr<ICM20649>, etc.
+            if (sensor_ptr) {
+                sensor_ptr->init(); 
+            }
+        }, sensor);
     }
 }
 
 void SensorManager::read() {
-    for(auto& [sensor_name, sensor] : sensors) {
-        sensor->read();
+    for (auto& [sensor_name, sensor] : sensors) {
+        std::visit([](auto&& sensor_ptr) {
+            if (sensor_ptr) {
+                sensor_ptr->read();
+            }
+        }, sensor);
     }
 }
-
 void SensorManager::send_to_comms() {
-    for(auto& [sensor_name, sensor] : sensors) {
-        sensor->send_to_comms();
+    for (const auto& [sensor_name, sensor] : sensors) {
+        std::visit([](const auto& sensor_ptr) {
+            if (sensor_ptr) {
+                sensor_ptr->send_to_comms();
+            }
+        }, sensor);
     }
 }
 void SensorManager::print_sensors_live() {
-    for(auto& [sensor_name, sensor] : sensors) {
-        sensor->print_live_data(); 
-    }
+	for(auto& [sensor_name, sensor] : sensors) {
+		std::visit( [](auto&& sensor_ptr){
+			if(sensor_ptr){
+				sensor_ptr->print_live_data();
+					}
+		}, sensor);
+	}
 }
+

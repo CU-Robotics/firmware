@@ -3,7 +3,7 @@
 #include "comms/data/sendable.hpp"
 
 // initialize ICM
-void ICM20649::init() {
+void ICM20649::init_impl() {
     
     // begin sensor depending on selected protocol
     switch (config.communication_protocol) {
@@ -50,7 +50,7 @@ void ICM20649::init() {
     Serial.printf("ICM CALIBRATION COMPLETE! Offsets: X: %f, Y: %f, Z: %f\n", gyro_offset_x, gyro_offset_y, gyro_offset_z);
 }
 
-void ICM20649::read() {
+void ICM20649::read_impl() {
     // get the event data from the sensor class
     sensor.getEvent(&accel, &gyro, &temp);
 
@@ -77,7 +77,7 @@ void ICM20649::read() {
     comms_data.temperature = temperature;
 }
 
-void ICM20649::send_to_comms() const {
+void ICM20649::send_to_comms_impl() const {
     Comms::Sendable<ICMSensorData> sendable;
     sendable.data = comms_data;
     sendable.send_to_comms();

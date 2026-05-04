@@ -2,13 +2,14 @@
 
 #include <Arduino.h>
 #include <avr/interrupt.h>
+#include <type_traits>
 #include "sensors/sensor.hpp"
 #include "comms/data/stereo_cam_trigger_data.hpp"
 
 /// @brief define to enable FPS logging in the timer interrupt callback (debugging)
 
 /// @brief class to manage triggering synchronized exposures for dual USB cameras
-class StereoCamTrigger : public Sensor{
+class StereoCamTrigger : public Sensor<StereoCamTrigger>{
   private:
     /// @brief Configuration for stereo cam trigger
     const Cfg::StereoCamTrigger& config;
@@ -30,18 +31,18 @@ class StereoCamTrigger : public Sensor{
   public:
     /// @brief constructor for StereoCamTrigger
     /// @param config configuration data for the stereo cam trigger
-    StereoCamTrigger(const Cfg::StereoCamTrigger& config): Sensor(), config(config), comms_data(config.camera_trigger_name) {}
+    StereoCamTrigger(const Cfg::StereoCamTrigger& config): Sensor<StereoCamTrigger>(), config(config), comms_data(config.camera_trigger_name) {}
     
     /// @brief initialize trigger manager by starting the interval timer
-    void init() override;
+    void init_impl();
     /// @brief empty read function since the updates are done in the timer interrupt callback
-    void read() override {};
+    void read_impl() {};
     /// @brief Send exposure timestamp and estimated state at exposure to comms
     /// @note This is not implemented currently
-    void send_to_comms() const override;
+    void send_to_comms_impl() const ;
 
 	/// @brief Prints a formatted dashboard of the camera trigger state
-    void print_live_data() override;
+    void print_live_data_impl() ;
     
     /// @brief start interval timer. Begins sending trigger signal to cameras via timer interrupt
     /// @param res the desired resolution (or interval size) of the timer interrupt in micros
