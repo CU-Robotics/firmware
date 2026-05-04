@@ -156,7 +156,6 @@ void XDriveController::step(RobotStateMap& reference_map, RobotStateMap& estimat
             pid.kd = low_level_velocity_controller.gains.d;
             motor_outputs[i] = pid.filter(dt, true, false) * power_limit_ratio;
             drive_motors[i]->write_motor_torque(motor_outputs[i]);
-            // Serial.printf("motor %d error: %f output: %f\n", i, -micro_estimate[i][1] + motor_velocity[i], outputs[i]);
         }
     } else {
         Serial.printf("governor type not used for xdrive controller");

@@ -250,7 +250,7 @@ public:
     void step_states(RobotStateMap& updated_state_map, const RobotStateMap& previous_state_map, int override);
 };
 
-/// @brief This estimator estimates our "micro" state which is stores all the motor velocities(in rad/s), whereas the other estimators estimate "macro" state which stores robot joints
+/// @brief Estimate the state of the feeder ball velocity based on the feeder encoder velocity.
 struct FeederEstimator : public Estimator {
     private:
         /// @brief delta time
@@ -285,7 +285,7 @@ struct FeederEstimator : public Estimator {
         void step_states(RobotStateMap& updated_state_map, const RobotStateMap& previous_state_map, int override) override;
 };
 
-/// @brief This estimator estimates our "micro" state which is stores all the motor velocities(in rad/s), whereas the other estimators estimate "macro" state which stores robot joints
+/// @brief Estimate the state of the feeder ball velocity for the lower feeder based on the feeder encoder velocity. This is separate from the main FeederEstimator because it has different config data and we want to be able to disable one without affecting the other.
 struct LowerFeederEstimator : public Estimator {
     private:
         /// @brief delta time
