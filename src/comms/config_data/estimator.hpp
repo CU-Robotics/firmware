@@ -55,6 +55,8 @@ enum class GenericEstimatorMotorUse : uint32_t {
     FlywheelLeft,
     FlywheelRight,
     Feeder,
+    FeederClose,
+    FeederFar,
 };
 
 /// @brief This enum represents the different generic uses for states that an estimator can have. These are used to map the specific states on the robot to their generic uses in the estimator config.
@@ -76,6 +78,7 @@ enum class GenericEstimatorStateUse : uint32_t {
     GimbalPitch,
     ShooterBallVelocity,
     FeederBallPosition,
+    LowerFeederBallPosition,
 };
 
 /// @brief The different types of estimators that can be configured in the config.
@@ -84,6 +87,7 @@ enum class EstimatorType : uint32_t {
     GimbalAndChassis,
     FlywheelVelocity,
     FeederPosition,
+    LowerFeederPosition,
 };
 /// @brief The `SensorInfo` struct contains all the sensor related information for the estimator config.
 // This includes the offsets for the encoders, the ratios and directions for the feeder, etc.
@@ -110,6 +114,12 @@ struct SensorInfo {
     float yaw_axis_vector[3] = { 0.0, 0.0, 0.0 };
     /// @brief an average reading of the 3 imu axis gyro values during a calibration where the pitch is dropped freely from its top position.
     float pitch_axis_vector[3] = { 0.0, 0.0, 0.0 };
+    /// @brief the direction of the pitch encoder
+    float pitch_encoder_direction;
+    /// @brief the direction of the yaw encoder
+    float yaw_encoder_direction;
+    /// @brief whether or not the imu is mounted on the pitch
+    uint32_t has_pitch_imu;
     /// @brief the ratio between chassis x velocity in m/s and motor velocity in rad/s for the chassis motors, used by the X Drive estimator.
     float chassis_x_to_motor_rad = 0.0;
     /// @brief the ratio between chassis y velocity in m/s and motor velocity in rad/s for the chassis motors, used by the X Drive estimator.

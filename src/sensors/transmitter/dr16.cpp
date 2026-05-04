@@ -321,6 +321,8 @@ DR16Data DR16::get_dr16_data(){
 }
 
 void DR16::manual_controls(const RobotStateMap& estimated_state_map, RobotStateMap& target_state_map, bool not_safety_mode, float& feed, float& last_feed) {
+	bool has_lower_feeder = estimated_state_map.get_state_map().find(Cfg::StateName::LowerFeeder) != estimated_state_map.get_state_map().end();
+
 	float delta = control_input_timer.delta();
 	transmitter_pos_x += mouse_x * 0.05 * delta;
 	transmitter_pos_y += mouse_y * 0.05 * delta;
@@ -387,7 +389,13 @@ void DR16::manual_controls(const RobotStateMap& estimated_state_map, RobotStateM
 		// check if the shooter is active
 		if (not_safety_mode && ref.ref_data.robot_performance.shooter_power_active)
 			feed += feeder_target * dt2;
-		target_state_map[Cfg::StateName::Feeder].set_position((int)feed);
+		
+		if (has_lower_feeder) {
+			target_state_map[Cfg::StateName::Feeder].set_position(estimated_state_map[Cfg::StateName::LowerFeeder].get_position());
+			target_state_map[Cfg::StateName::LowerFeeder].set_position((int)feed);
+		} else {
+			target_state_map[Cfg::StateName::Feeder].set_position((int)feed);
+		}
 	} else { 
 		target_state_map[Cfg::StateName::Feeder].set_velocity(feeder_target);
 	}

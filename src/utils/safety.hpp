@@ -25,6 +25,16 @@ namespace safety {
         safety_function_handle() = std::move(func);
     }
 
+    /// @brief Call the registered safety function and return true. If no safety function is registered, return false.
+    /// @return true if a safety function was registered and invoked, false otherwise.
+    inline bool call_safety_function() {
+        SafetyFunction &func = safety_function_handle();
+        if (!func) { return false; }
+
+        func();
+        return true;
+    }
+
     /// @brief Trigger the safety procedure, which will call the registered safety function and then enter an infinite loop. If a safety function is not registered, it will immediately enter the infinite loop.
     /// @param message The message to print when the safety procedure is triggered, which can include format specifiers for the additional arguments
     /// @param args Variadic arguments to be formatted into the message
@@ -32,10 +42,7 @@ namespace safety {
     template<typename... Args>
     [[noreturn]] inline void safety_procedure(const char* message, Args&&... args) {
         Serial.printf("Safety procedure triggered!\n");
-        SafetyFunction func = safety_function_handle();
-        if (func) {
-            func();
-        } else{
+        if (!call_safety_function()) {
             Serial.printf("Safety procedure triggered but no safety function registered!\n");
         }
 

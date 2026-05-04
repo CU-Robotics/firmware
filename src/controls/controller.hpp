@@ -312,4 +312,51 @@ struct FeederController : public Controller {
             pidp.sumError = 0.0;
             pidv.sumError = 0.0;
         }
+    };
+
+/// @brief Controller for the lower ball feeder on bottom fed
+struct LowerFeederController : public Controller {
+    private:
+        /// @brief control position of the feeder
+        Cfg::SubController full_state_position_controller;
+        /// @brief control velocity of the feeder
+        Cfg::SubController full_state_velocity_controller;
+        /// @brief filter for calculating pid position controller outputs
+        PIDFilter pidp;
+        /// @brief filter for calculating pid velocity controller outputs
+        PIDFilter pidv;
+        /// @brief motor attached to the feeder
+        std::shared_ptr<Motor> near_feeder_motor;
+        /// @brief motor attached to the feeder
+        std::shared_ptr<Motor> far_feeder_motor;
+        /// @brief state name for the feeder position
+        const Cfg::StateName& feeder_position_state;
+        /// @brief state name for the lower feeder position
+        const Cfg::StateName& lower_feeder_position_state;
+    public:
+        /// @brief Construct the controller and get the subcontroller configs and motor objects from the config data
+        /// @param controller_config config data for this controller
+        /// @param can reference to the CAN manager to get motor objects so we can write directly to motors
+        /// @param available_motors list of motor names that are available to be used; this is to prevent multiple controllers from trying to control the same motor
+        LowerFeederController(const Cfg::Controller& controller_config, CANManager& can, std::vector<Cfg::MotorName>& available_motors) : Controller(controller_config),
+            feeder_position_state(controller_config.get_state_name_by_generic_use(Cfg::GenericControllerStateUse::FeederBallPosition)),
+            lower_feeder_position_state(controller_config.get_state_name_by_generic_use(Cfg::GenericControllerStateUse::LowerFeederBallPosition)) {
+            full_state_position_controller = controller_config.get_sub_controller_by_type(Cfg::SubControllerType::FullStatePositionController);
+            full_state_velocity_controller = controller_config.get_sub_controller_by_type(Cfg::SubControllerType::FullStateVelocityController);
+                
+            near_feeder_motor = get_motor_by_generic_use(Cfg::GenericControllerMotorUse::NearFeeder, can, available_motors);
+            far_feeder_motor = get_motor_by_generic_use(Cfg::GenericControllerMotorUse::FarFeeder, can, available_motors);
+        }
+
+        /// @brief sends motor commands based on a reference and estimated state
+        /// @param reference_map current target robot state map
+        /// @param estimate_map current estimate robot state map
+        void step(RobotStateMap& reference_map, RobotStateMap& estimate_map);
+    
+        /// @brief reset the controller
+        inline void reset() {
+            Controller::reset();
+            pidp.sumError = 0.0;
+            pidv.sumError = 0.0;
+        }
 };
