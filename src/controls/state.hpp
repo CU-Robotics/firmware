@@ -25,7 +25,10 @@ class State {
         
         
         /// @brief Set the position value of the state.
-        /// @param position The position value to set. This will be constrained (or wrapped if is_wrapping is true) to the limits specified in the configuration.
+        /// @details This should be used for bounded/reference state updates where the value must stay inside the configured limits.
+        /// For wrapped states, the value will be wrapped into range; otherwise it will be constrained to the configured limits.
+        /// Reference state maps should use this setter so controller targets stay inside the allowed operating envelope.
+        /// @param position The position value to set.
         void set_position(float position);
 
         
@@ -34,7 +37,9 @@ class State {
         float get_position() const;
         
         /// @brief Set the velocity value of the state.
-        /// @param velocity The velocity value to set. This will be constrained to the limits specified in the configuration.
+        /// @details This should be used for bounded/reference state updates where the value must stay inside the configured limits.
+        /// Reference state maps should use this setter so commanded velocities remain inside the allowed operating envelope.
+        /// @param velocity The velocity value to set.
         void set_velocity(float velocity);
         
         /// @brief Get the velocity value of the state.
@@ -42,7 +47,9 @@ class State {
         float get_velocity() const;
         
         /// @brief Set the acceleration value of the state.
-        /// @param acceleration The acceleration value to set. This will be constrained to the limits specified in the configuration.
+        /// @details This should be used for bounded/reference state updates where the value must stay inside the configured limits.
+        /// Reference state maps should use this setter so commanded accelerations remain inside the allowed operating envelope.
+        /// @param acceleration The acceleration value to set.
         void set_acceleration(float acceleration);
         
         /// @brief Get the acceleration value of the state.
@@ -77,25 +84,29 @@ class State {
         /// @brief Get a copy of the raw state values.
         /// @return A Raw struct containing the position, velocity, and acceleration values of this state.
         Raw get_raw() const;
+
+        /// @brief Set the position value without applying limits or wrapping.
+        /// @details This should be used for estimate/raw state updates where we want to preserve the measured value exactly.
+        /// Estimators should use this setter because clamping an estimate makes the controller see a sanitized value instead of reality,
+        /// which can hide overtravel or other physical violations.
+        /// @note Intended for use by estimators and other raw state producers.
+        /// @param position The raw position value to set.
+        void set_position_no_bound(float position);
+        /// @brief Set the velocity value without applying limits.
+        /// @details This should be used for estimate/raw state updates where we want to preserve the measured value exactly.
+        /// @note Intended for use by estimators and other raw state producers.
+        /// @param velocity The raw velocity value to set.
+        void set_velocity_no_bound(float velocity);
+        /// @brief Set the acceleration value without applying limits.
+        /// @details This should be used for estimate/raw state updates where we want to preserve the measured value exactly.
+        /// @note Intended for use by estimators and other raw state producers.
+        /// @param acceleration The raw acceleration value to set.
+        void set_acceleration_no_bound(float acceleration);
         
-        private:
+    private:
         /// @brief The raw state values. This is used for direct access to the state values, and is updated whenever the state is updated.
         Raw m_state;
         
         /// @brief The configuration for the state; this includes the name of the state, the limits of the state, and whether the state wraps at those limits.
         const Cfg::State& m_config;
-    private:
-        /// These functions set state values without applying limits or wrapping. 
-        // They should only be used in specific cases, such as when calculating the error between two states, 
-        // where we want to preserve the actual difference between the states without having it be affected by limits or wrapping.
-        
-        /// @brief Set the position value of the state without applying limits or wrapping.
-        /// @param position The position value to set.
-        void set_position_no_bound(float position);
-        /// @brief Set the velocity value of the state without applying limits.
-        /// @param velocity The velocity value to set.
-        void set_velocity_no_bound(float velocity);
-        /// @brief Set the acceleration value of the state without applying limits.
-        /// @param acceleration The acceleration value to set.
-        void set_acceleration_no_bound(float acceleration);
     };
