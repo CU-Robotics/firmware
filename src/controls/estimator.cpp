@@ -61,7 +61,7 @@ void Estimator::check_state_limits(const char* estimator_name, const char* state
 void Estimator::handleEstimatorError(const char* estimator_name, const char* state_name, const State& state, float violation_amount) {
     const Cfg::State& config = state.config();
     safety::safety_procedure(
-        "%s: %s estimate exceeded physical limits by %f (limits pos:[%f,%f] vel:[%f,%f] acc:[%f,%f])",
+        "%s: %s estimate exceeded reference limits by %f (limits pos:[%f,%f] vel:[%f,%f] acc:[%f,%f])",
         estimator_name,
         state_name,
         violation_amount,
