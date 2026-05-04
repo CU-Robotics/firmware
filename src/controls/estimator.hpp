@@ -48,8 +48,11 @@ protected:
 
     /// @brief Internal tracking for estimator exceedance on a single state.
     struct ErrorMonitor {
+        /// @brief Whether the error monitor has been initialized
         bool initialized = false;
+        /// @brief Whether the state estimate is currently exceeding physical limits
         bool exceeding = false;
+        /// @brief Timestamp in microseconds when the limit exceedance first occurred
         uint32_t exceed_start_us = 0;
     };
 
@@ -61,6 +64,10 @@ protected:
     void check_state_limits(const char* estimator_name, const char* state_name, const State& state, ErrorMonitor& monitor);
 
     /// @brief Handle an estimator-specific limit violation once the exceedance duration has been reached. Default calls safety procedure; override to customize.
+    /// @param estimator_name Name of the estimator for diagnostics.
+    /// @param state_name Name of the state whose estimate violated limits.
+    /// @param state The state object that exceeded its physical limits.
+    /// @param violation_amount How far the estimate exceeded its limit.
     virtual void handleEstimatorError(const char* estimator_name, const char* state_name, const State& state, float violation_amount);
 };
 
@@ -211,11 +218,15 @@ private:
     /// @brief state name for the pitch axis
     const Cfg::StateName& pitch_state;
 
-    /// @brief error monitors for each estimated state
+    /// @brief error monitor for chassis x axis estimates
     ErrorMonitor chassis_x_monitor;
+    /// @brief error monitor for chassis y axis estimates
     ErrorMonitor chassis_y_monitor;
+    /// @brief error monitor for chassis heading estimates
     ErrorMonitor chassis_heading_monitor;
+    /// @brief error monitor for yaw gimbal estimates
     ErrorMonitor yaw_monitor;
+    /// @brief error monitor for pitch gimbal estimates
     ErrorMonitor pitch_monitor;
 
     /// @brief position estimate to store position after integrating used for chassis odometry

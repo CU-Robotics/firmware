@@ -23,9 +23,13 @@ protected:
 
     /// @brief Internal tracking for controller error exceedance on a single state.
     struct ErrorMonitor {
+        /// @brief Whether the error monitor has been initialized with an initial error value
         bool initialized = false;
+        /// @brief Whether the error is currently exceeding the configured limit
         bool exceeding = false;
+        /// @brief The previous control loop error value, used for unwrapping wrapped errors
         float previous_error = 0.0f;
+        /// @brief Timestamp in microseconds when the error first exceeded the limit
         uint32_t exceed_start_us = 0;
     };
     
@@ -180,6 +184,11 @@ public:
     void step(RobotStateMap& reference_map, RobotStateMap& estimate_map);
 
     /// @brief Handle a chassis controller error.
+    /// @param controller_name Name of the controller for diagnostics.
+    /// @param state_name Name of the controlled state for diagnostics.
+    /// @param reference_state Target state.
+    /// @param estimate_state Estimated state.
+    /// @param error The signed controller error that triggered the escalation.
     void handleControllerError(const char* controller_name, const char* state_name, const State& reference_state, const State& estimate_state, float error) override;
 
     /// @brief reset the controller
@@ -236,6 +245,11 @@ public:
     void step(RobotStateMap& reference_map, RobotStateMap& estimate_map);
 
     /// @brief Handle a yaw controller error.
+    /// @param controller_name Name of the controller for diagnostics.
+    /// @param state_name Name of the controlled state for diagnostics.
+    /// @param reference_state Target state.
+    /// @param estimate_state Estimated state.
+    /// @param error The signed controller error that triggered the escalation.
     void handleControllerError(const char* controller_name, const char* state_name, const State& reference_state, const State& estimate_state, float error) override;
 
     /// @brief reset the controller
@@ -287,6 +301,11 @@ public:
     void step(RobotStateMap& reference_map, RobotStateMap& estimate_map);
 
     /// @brief Handle a pitch controller error.
+    /// @param controller_name Name of the controller for diagnostics.
+    /// @param state_name Name of the controlled state for diagnostics.
+    /// @param reference_state Target state.
+    /// @param estimate_state Estimated state.
+    /// @param error The signed controller error that triggered the escalation.
     void handleControllerError(const char* controller_name, const char* state_name, const State& reference_state, const State& estimate_state, float error) override;
 
     /// @brief reset the controller
@@ -340,6 +359,11 @@ public:
     void step(RobotStateMap& reference_map, RobotStateMap& estimate_map);
 
     /// @brief Handle a flywheel controller error.
+    /// @param controller_name Name of the controller for diagnostics.
+    /// @param state_name Name of the controlled state for diagnostics.
+    /// @param reference_state Target state.
+    /// @param estimate_state Estimated state.
+    /// @param error The signed controller error that triggered the escalation.
     void handleControllerError(const char* controller_name, const char* state_name, const State& reference_state, const State& estimate_state, float error) override;
 
     /// @brief reset the controller
@@ -388,6 +412,11 @@ struct FeederController : public Controller {
         void step(RobotStateMap& reference_map, RobotStateMap& estimate_map);
 
         /// @brief Handle a feeder controller error.
+        /// @param controller_name Name of the controller for diagnostics.
+        /// @param state_name Name of the controlled state for diagnostics.
+        /// @param reference_state Target state.
+        /// @param estimate_state Estimated state.
+        /// @param error The signed controller error that triggered the escalation.
         void handleControllerError(const char* controller_name, const char* state_name, const State& reference_state, const State& estimate_state, float error) override;
     
         /// @brief reset the controller

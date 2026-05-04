@@ -3,6 +3,11 @@
 #include "sensors/RefSystem.hpp"
 
 namespace {
+/// @brief Unwrap a potentially wrapped error value to maintain continuity across wrap boundaries.
+/// @param error The current error value.
+/// @param previous_error The previous control loop error value.
+/// @param config The state configuration containing wrap range information.
+/// @return The unwrapped error maintaining continuity from the previous value.
 float unwrap_controller_error(float error, float previous_error, const Cfg::State& config) {
     if (!config.is_wrapping || config.governor_type != Cfg::StateOrder::Position) {
         // Wrapping only applies to position control, and only if the state is configured to wrap
@@ -25,6 +30,10 @@ float unwrap_controller_error(float error, float previous_error, const Cfg::Stat
     return error;
 }
 
+/// @brief Normalize a wrapped error value into its canonical form within the wrap range.
+/// @param error The error value to normalize.
+/// @param config The state configuration containing wrap range information.
+/// @return The normalized error value constrained to the wrapped position range.
 float normalize_wrapped_error(float error, const Cfg::State& config) {
     if (!config.is_wrapping || config.governor_type != Cfg::StateOrder::Position) {
         // Wrapping only applies to position control, and only if the state is configured to wrap
