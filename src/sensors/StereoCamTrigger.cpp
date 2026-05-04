@@ -1,6 +1,10 @@
 #include "StereoCamTrigger.hpp"
 #include "comms/data/sendable.hpp"
 
+extern std::unique_ptr<RobotStateMap> estimated_state_map_interrupt_safe;
+
+StereoCamTrigger::StereoCamTrigger(const Cfg::StereoCamTrigger& config): Sensor(), config(config), comms_data(config.camera_trigger_name) {}
+
 void StereoCamTrigger::track_exposures() {
   // generate HIGH pulse with given width to create square wave
   digitalWrite(config.digital_trigger_pin_1, HIGH);
@@ -11,7 +15,11 @@ void StereoCamTrigger::track_exposures() {
   digitalWrite(config.digital_trigger_pin_1, LOW);
   digitalWrite(config.digital_trigger_pin_2, LOW);
 
-  // Do state matching
+  
+  if(estimated_state_map_interrupt_safe != nullptr) {
+    // copy the estimated state map to the local estimated state map
+    estimated_state_map_interrupt_safe->fill_state_array(comms_data.state);
+  }
 }
 
 void StereoCamTrigger::start(int res) {

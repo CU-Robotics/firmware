@@ -6,6 +6,7 @@
 #include "controls/reference_governor.hpp"
 #include "git_info.h"
 
+#include "robot_state_map.hpp"
 #include "safety.hpp"
 #include "sensors/buff_encoder.hpp"
 #include "state.hpp"
@@ -24,6 +25,7 @@
 
 #include "sensor_manager.hpp"
 #include <TeensyDebug.h>
+#include <wiring.h>
 
 #include "comms/data/hive_data.hpp"
 #include "comms/data/sendable.hpp"
@@ -48,6 +50,8 @@ Comms::CommsLayer comms_layer;
 #ifdef PROFILER
 Profiler prof;
 #endif
+
+std::unique_ptr<RobotStateMap> estimated_state_map_interrupt_safe;
 
 SensorManager sensor_manager;
 EstimatorManager estimator_manager;
@@ -147,6 +151,7 @@ int main() {
     
     // variables for use in main
     RobotStateMap estimated_state_map(config.states);
+    estimated_state_map_interrupt_safe = std::make_unique<RobotStateMap>(config.states);
     RobotStateMap reference_map(config.states);                   
     RobotStateMap target_state_map(config.states);// Temp ungoverned state
     RobotStateMap hive_state_map_offset(config.states);// Hive offset state
@@ -235,6 +240,10 @@ int main() {
         // step estimates and construct estimated state
         estimator_manager.step(estimated_state_map, override_request);
         // estimated_state_map.print();
+
+        noInterrupts();
+            *estimated_state_map_interrupt_safe = estimated_state_map;
+        interrupts();
 
         override_request = false;
 

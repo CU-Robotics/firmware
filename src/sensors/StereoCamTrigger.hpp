@@ -4,6 +4,10 @@
 #include <avr/interrupt.h>
 #include "sensors/sensor.hpp"
 #include "comms/data/stereo_cam_trigger_data.hpp"
+#include "robot_state_map.hpp"
+#include <memory>
+
+
 
 /// @brief define to enable FPS logging in the timer interrupt callback (debugging)
 
@@ -30,7 +34,8 @@ class StereoCamTrigger : public Sensor{
   public:
     /// @brief constructor for StereoCamTrigger
     /// @param config configuration data for the stereo cam trigger
-    StereoCamTrigger(const Cfg::StereoCamTrigger& config): Sensor(), config(config), comms_data(config.camera_trigger_name) {}
+    /// @param _state_configurations the state configurations used to set up the estimated state map
+    StereoCamTrigger(const Cfg::StereoCamTrigger& config);
     
     /// @brief initialize trigger manager by starting the interval timer
     void init() override;

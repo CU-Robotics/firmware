@@ -2,6 +2,7 @@
 
 #include "comms/data/comms_data.hpp"            // for CommsData
 #include "comms/config_data/sensor.hpp"
+#include "controls/state.hpp"
 
 /// @brief Structure to send stereo cam trigger data to comms.
 struct StereoCamTriggerData : Comms::CommsData {
@@ -13,10 +14,12 @@ struct StereoCamTriggerData : Comms::CommsData {
     /// @brief The name of the camera trigger that this data corresponds to.
     Cfg::SensorName camera_trigger_name = Cfg::SensorName::UnsetSensorName;
 
+    State::Raw state[static_cast<size_t>(Cfg::StateName::StateNameCount)] = { {0, 0, 0} };
+
     /// State matching has not been designed yet.
 
     /// @brief Print the stereo camera trigger data to the serial console for debugging purposes.
     void print() const {
-        printf("StereoCamTriggerData - camera_trigger_name: %lu\n", static_cast<uint32_t>(camera_trigger_name));
+        printf("StereoCamTriggerData - camera_trigger_name: %lu\n", static_cast<unsigned long>(camera_trigger_name));
     }
 };
