@@ -46,6 +46,12 @@ public:
     /// @param estimate_map current estimate robot state map
     virtual void step(RobotStateMap& reference_map, RobotStateMap& estimate_map) = 0;
 
+    /// @brief Validate controller state before stepping.
+    /// Managers call this so controller-specific checks live outside the control loop itself.
+    /// @param reference_map current target robot state map
+    /// @param estimate_map current estimate robot state map
+    virtual void validate(RobotStateMap& reference_map, RobotStateMap& estimate_map) { }
+
     /// @brief Resets integrators/timers
     virtual void reset() { timer.start(); }
     /// @brief Get the controller configuration data
@@ -183,6 +189,9 @@ public:
     /// @param estimate_map current estimate robot state map
     void step(RobotStateMap& reference_map, RobotStateMap& estimate_map);
 
+    /// @copydoc Controller::validate
+    void validate(RobotStateMap& reference_map, RobotStateMap& estimate_map) override;
+
     /// @brief Handle a chassis controller error.
     /// @param controller_name Name of the controller for diagnostics.
     /// @param state_name Name of the controlled state for diagnostics.
@@ -244,6 +253,9 @@ public:
     /// @param estimate_map current estimate robot state map
     void step(RobotStateMap& reference_map, RobotStateMap& estimate_map);
 
+    /// @copydoc Controller::validate
+    void validate(RobotStateMap& reference_map, RobotStateMap& estimate_map) override;
+
     /// @brief Handle a yaw controller error.
     /// @param controller_name Name of the controller for diagnostics.
     /// @param state_name Name of the controlled state for diagnostics.
@@ -299,6 +311,9 @@ public:
     /// @param reference_map current target robot state map
     /// @param estimate_map current estimate robot state map
     void step(RobotStateMap& reference_map, RobotStateMap& estimate_map);
+
+    /// @copydoc Controller::validate
+    void validate(RobotStateMap& reference_map, RobotStateMap& estimate_map) override;
 
     /// @brief Handle a pitch controller error.
     /// @param controller_name Name of the controller for diagnostics.
@@ -358,6 +373,9 @@ public:
     /// @param estimate_map current estimate robot state map
     void step(RobotStateMap& reference_map, RobotStateMap& estimate_map);
 
+    /// @copydoc Controller::validate
+    void validate(RobotStateMap& reference_map, RobotStateMap& estimate_map) override;
+
     /// @brief Handle a flywheel controller error.
     /// @param controller_name Name of the controller for diagnostics.
     /// @param state_name Name of the controlled state for diagnostics.
@@ -411,6 +429,9 @@ struct FeederController : public Controller {
         /// @param estimate_map current estimate robot state map
         void step(RobotStateMap& reference_map, RobotStateMap& estimate_map);
 
+        /// @copydoc Controller::validate
+        void validate(RobotStateMap& reference_map, RobotStateMap& estimate_map) override;
+
         /// @brief Handle a feeder controller error.
         /// @param controller_name Name of the controller for diagnostics.
         /// @param state_name Name of the controlled state for diagnostics.
@@ -447,6 +468,9 @@ struct LowerFeederController : public Controller {
         const Cfg::StateName& feeder_position_state;
         /// @brief state name for the lower feeder position
         const Cfg::StateName& lower_feeder_position_state;
+
+        /// @brief error tracking for the lower feeder state
+        ErrorMonitor lower_feeder_error_monitor;
     public:
         /// @brief Construct the controller and get the subcontroller configs and motor objects from the config data
         /// @param controller_config config data for this controller
@@ -466,11 +490,15 @@ struct LowerFeederController : public Controller {
         /// @param reference_map current target robot state map
         /// @param estimate_map current estimate robot state map
         void step(RobotStateMap& reference_map, RobotStateMap& estimate_map);
+
+        /// @copydoc Controller::validate
+        void validate(RobotStateMap& reference_map, RobotStateMap& estimate_map) override;
     
         /// @brief reset the controller
         inline void reset() {
             Controller::reset();
             pidp.sumError = 0.0;
             pidv.sumError = 0.0;
+            lower_feeder_error_monitor = ErrorMonitor{};
         }
 };

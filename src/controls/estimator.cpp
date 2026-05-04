@@ -79,6 +79,14 @@ void Estimator::handleEstimatorError(const char* estimator_name, const char* sta
     );
 }
 
+void GimbalAndChassisEstimator::validate(RobotStateMap& updated_state_map) {
+    check_state_limits("GimbalAndChassisEstimator", "Chassis X", updated_state_map[chassis_x_state], chassis_x_monitor);
+    check_state_limits("GimbalAndChassisEstimator", "Chassis Y", updated_state_map[chassis_y_state], chassis_y_monitor);
+    check_state_limits("GimbalAndChassisEstimator", "Chassis Heading", updated_state_map[chassis_heading_state], chassis_heading_monitor);
+    check_state_limits("GimbalAndChassisEstimator", "Yaw", updated_state_map[yaw_state], yaw_monitor);
+    check_state_limits("GimbalAndChassisEstimator", "Pitch", updated_state_map[pitch_state], pitch_monitor);
+}
+
 GimbalAndChassisEstimator::GimbalAndChassisEstimator(const Cfg::Estimator& estimator_config, SensorManager& sensor_manager, CANManager& can, std::vector<Cfg::StateName> available_states) : 
     buff_enc_yaw(sensor_manager.get_sensor_by_name<BuffEncoder>(estimator_config.get_sensor_name_by_generic_use(Cfg::GenericSensorUse::YawBuffEncoder))), 
     buff_enc_pitch(sensor_manager.get_sensor_by_name<BuffEncoder>(estimator_config.get_sensor_name_by_generic_use(Cfg::GenericSensorUse::PitchBuffEncoder))),
@@ -386,6 +394,10 @@ void FlywheelEstimator::step_states(RobotStateMap& updated_state_map, const Robo
     updated_state_map[ball_exit_velocity].set_velocity_no_bound((projectile_speed_ref * ref_estimate_weight) + (linear_velocity * motor_estimate_weight));
 }
 
+void FlywheelEstimator::validate(RobotStateMap& updated_state_map) {
+    check_state_limits("FlywheelEstimator", "Flywheel Velocity", updated_state_map[ball_exit_velocity], flywheel_monitor);
+}
+
 FeederEstimator::FeederEstimator(const Cfg::Estimator& estimator_config, SensorManager& sensor_manager, CANManager& can, std::vector<Cfg::StateName> available_states) :
     feeder_ball_state(get_state_name_by_generic_use(Cfg::GenericEstimatorStateUse::FeederBallPosition, estimator_config, available_states)),
     feeder_encoder(sensor_manager.get_sensor_by_name<BuffEncoder>(estimator_config.get_sensor_name_by_generic_use(Cfg::GenericSensorUse::FeederBuffEncoder))) {
@@ -417,6 +429,14 @@ void FeederEstimator::step_states(RobotStateMap& updated_state_map, const RobotS
     updated_state_map[feeder_ball_state].set_velocity_no_bound(feeder_velocity * feeder_direction); // ball velocity
     updated_state_map[feeder_ball_state].set_acceleration_no_bound(0); // this is not the acceleration just the encoder value for debugging
 
+}
+
+void FeederEstimator::validate(RobotStateMap& updated_state_map) {
+    check_state_limits("FeederEstimator", "Feeder", updated_state_map[feeder_ball_state], feeder_monitor);
+}
+
+void LowerFeederEstimator::validate(RobotStateMap& updated_state_map) {
+    check_state_limits("LowerFeederEstimator", "Lower Feeder", updated_state_map[feeder_ball_state], lower_feeder_monitor);
 }
 
 LowerFeederEstimator::LowerFeederEstimator(const Cfg::Estimator& estimator_config, SensorManager& sensor_manager, CANManager& can, std::vector<Cfg::StateName> available_states) :
