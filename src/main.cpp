@@ -305,6 +305,10 @@ int main() {
             (!transmitter_manager.is_safety_mode() &&
              comms_layer.is_configured() && !is_slow_loop && ref.ref_data.robot_performance.gimbal_power_active &&
              !gimbal_power_recently_turned_on);
+        
+        // Update the shared safety mode state so controllers and estimators can skip checks when in safety mode
+        safety::set_safety_mode(!not_safety_mode);
+        
         //  SAFETY MODE
         if (not_safety_mode) {
             // SAFETY OFF

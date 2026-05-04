@@ -19,6 +19,19 @@ namespace safety {
         return safety_function;
     }
 
+    /// @brief Get a reference to the static safety mode active flag
+    /// @return A reference to the static boolean indicating if safety mode is currently active
+    inline bool& is_safety_mode_active() {
+        static bool safety_mode_active = false;
+        return safety_mode_active;
+    }
+
+    /// @brief Set the safety mode state
+    /// @param active true if safety mode is active (robot not being actively controlled), false otherwise
+    inline void set_safety_mode(bool active) {
+        is_safety_mode_active() = active;
+    }
+
     /// @brief Register a safety function to be called when a safety procedure is triggered
     /// @param func The safety function to register
     inline void register_safety_function(SafetyFunction func) {

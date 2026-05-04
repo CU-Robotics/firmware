@@ -47,6 +47,11 @@ float normalize_wrapped_error(float error, const Cfg::State& config) {
 } // namespace
 
 void Controller::checkControllerError(const char* controller_name, const char* state_name, const State& reference_state, const State& estimate_state, ErrorMonitor& monitor) {
+    // Skip error checking if in safety mode (robot is not actively controlled)
+    if (safety::is_safety_mode_active()) {
+        return;
+    }
+
     const Cfg::State& config = reference_state.config();
     const float reference_value = get_state_error_value(reference_state);
     const float estimate_value = get_state_error_value(estimate_state);

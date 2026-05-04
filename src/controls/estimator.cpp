@@ -5,6 +5,11 @@
 
 // Estimator shared checking implementation
 void Estimator::check_state_limits(const char* estimator_name, const char* state_name, const State& state, ErrorMonitor& monitor) {
+    // Skip limit checking if in safety mode (robot is not actively controlled)
+    if (safety::is_safety_mode_active()) {
+        return;
+    }
+
     const Cfg::State& config = state.config();
     // Check position, velocity, acceleration against reference limits
     bool violated = false;
