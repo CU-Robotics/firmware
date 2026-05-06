@@ -31,7 +31,7 @@ public:
     /// @brief Validate estimator outputs after stepping.
     /// Managers call this so limit checks live outside the estimator step logic.
     /// @param updated_state_map the current estimate map produced by the estimators
-    virtual void validate(RobotStateMap& updated_state_map) { }
+    virtual void validate(const RobotStateMap& updated_state_map) { }
     /// @brief Helper function to get a state name by its generic use. Will trigger safety procedure if the state is not available.
     /// @param use the generic use of the state to get
     /// @param estimator_config config data for this estimator to get the requested state name from
@@ -252,7 +252,7 @@ public:
     void step_states(RobotStateMap& updated_state_map, const RobotStateMap& previous_state_map, int override) override;
 
     /// @copydoc Estimator::validate
-    void validate(RobotStateMap& updated_state_map) override;
+    void validate(const RobotStateMap& updated_state_map) override;
 };
 
 /// @brief Estimate the state of the flywheels as meters/second of balls exiting the barrel.
@@ -295,7 +295,7 @@ public:
     void step_states(RobotStateMap& updated_state_map, const RobotStateMap& previous_state_map, int override);
 
     /// @copydoc Estimator::validate
-    void validate(RobotStateMap& updated_state_map) override;
+    void validate(const RobotStateMap& updated_state_map) override;
 };
 
 /// @brief This estimator estimates our "micro" state which is stores all the motor velocities(in rad/s), whereas the other estimators estimate "macro" state which stores robot joints
@@ -335,7 +335,7 @@ struct FeederEstimator : public Estimator {
         void step_states(RobotStateMap& updated_state_map, const RobotStateMap& previous_state_map, int override) override;
 
         /// @copydoc Estimator::validate
-        void validate(RobotStateMap& updated_state_map) override;
+        void validate(const RobotStateMap& updated_state_map) override;
 };
 
 /// @brief This estimator estimates our "micro" state which is stores all the motor velocities(in rad/s), whereas the other estimators estimate "macro" state which stores robot joints
@@ -386,5 +386,5 @@ struct LowerFeederEstimator : public Estimator {
         void step_states(RobotStateMap& updated_state_map, const RobotStateMap& previous_state_map, int override) override;
 
         /// @copydoc Estimator::validate
-        void validate(RobotStateMap& updated_state_map) override;
+        void validate(const RobotStateMap& updated_state_map) override;
     };

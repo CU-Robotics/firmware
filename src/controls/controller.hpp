@@ -50,7 +50,7 @@ public:
     /// Managers call this so controller-specific checks live outside the control loop itself.
     /// @param reference_map current target robot state map
     /// @param estimate_map current estimate robot state map
-    virtual void validate(RobotStateMap& reference_map, RobotStateMap& estimate_map) { }
+    virtual void validate(const RobotStateMap& reference_map, const RobotStateMap& estimate_map) { }
 
     /// @brief Resets integrators/timers
     virtual void reset() { timer.start(); }
@@ -190,7 +190,7 @@ public:
     void step(RobotStateMap& reference_map, RobotStateMap& estimate_map);
 
     /// @copydoc Controller::validate
-    void validate(RobotStateMap& reference_map, RobotStateMap& estimate_map) override;
+    void validate(const RobotStateMap& reference_map, const RobotStateMap& estimate_map) override;
 
     /// @brief Handle a chassis controller error.
     /// @param controller_name Name of the controller for diagnostics.
@@ -254,7 +254,7 @@ public:
     void step(RobotStateMap& reference_map, RobotStateMap& estimate_map);
 
     /// @copydoc Controller::validate
-    void validate(RobotStateMap& reference_map, RobotStateMap& estimate_map) override;
+    void validate(const RobotStateMap& reference_map, const RobotStateMap& estimate_map) override;
 
     /// @brief Handle a yaw controller error.
     /// @param controller_name Name of the controller for diagnostics.
@@ -313,7 +313,7 @@ public:
     void step(RobotStateMap& reference_map, RobotStateMap& estimate_map);
 
     /// @copydoc Controller::validate
-    void validate(RobotStateMap& reference_map, RobotStateMap& estimate_map) override;
+    void validate(const RobotStateMap& reference_map, const RobotStateMap& estimate_map) override;
 
     /// @brief Handle a pitch controller error.
     /// @param controller_name Name of the controller for diagnostics.
@@ -374,7 +374,7 @@ public:
     void step(RobotStateMap& reference_map, RobotStateMap& estimate_map);
 
     /// @copydoc Controller::validate
-    void validate(RobotStateMap& reference_map, RobotStateMap& estimate_map) override;
+    void validate(const RobotStateMap& reference_map, const RobotStateMap& estimate_map) override;
 
     /// @brief Handle a flywheel controller error.
     /// @param controller_name Name of the controller for diagnostics.
@@ -430,7 +430,7 @@ struct FeederController : public Controller {
         void step(RobotStateMap& reference_map, RobotStateMap& estimate_map);
 
         /// @copydoc Controller::validate
-        void validate(RobotStateMap& reference_map, RobotStateMap& estimate_map) override;
+        void validate(const RobotStateMap& reference_map, const RobotStateMap& estimate_map) override;
 
         /// @brief Handle a feeder controller error.
         /// @param controller_name Name of the controller for diagnostics.
@@ -492,7 +492,7 @@ struct LowerFeederController : public Controller {
         void step(RobotStateMap& reference_map, RobotStateMap& estimate_map);
 
         /// @copydoc Controller::validate
-        void validate(RobotStateMap& reference_map, RobotStateMap& estimate_map) override;
+        void validate(const RobotStateMap& reference_map, const RobotStateMap& estimate_map) override;
     
         /// @brief reset the controller
         inline void reset() {

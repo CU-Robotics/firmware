@@ -85,7 +85,7 @@ void Estimator::handleEstimatorError(const char* estimator_name, const char* sta
     );
 }
 
-void GimbalAndChassisEstimator::validate(RobotStateMap& updated_state_map) {
+void GimbalAndChassisEstimator::validate(const RobotStateMap& updated_state_map) {
     check_state_limits("GimbalAndChassisEstimator", "Chassis X", updated_state_map[chassis_x_state], chassis_x_monitor);
     check_state_limits("GimbalAndChassisEstimator", "Chassis Y", updated_state_map[chassis_y_state], chassis_y_monitor);
     check_state_limits("GimbalAndChassisEstimator", "Chassis Heading", updated_state_map[chassis_heading_state], chassis_heading_monitor);
@@ -400,7 +400,7 @@ void FlywheelEstimator::step_states(RobotStateMap& updated_state_map, const Robo
     updated_state_map[ball_exit_velocity].set_velocity_no_bound((projectile_speed_ref * ref_estimate_weight) + (linear_velocity * motor_estimate_weight));
 }
 
-void FlywheelEstimator::validate(RobotStateMap& updated_state_map) {
+void FlywheelEstimator::validate(const RobotStateMap& updated_state_map) {
     check_state_limits("FlywheelEstimator", "Flywheel Velocity", updated_state_map[ball_exit_velocity], flywheel_monitor);
 }
 
@@ -437,11 +437,11 @@ void FeederEstimator::step_states(RobotStateMap& updated_state_map, const RobotS
 
 }
 
-void FeederEstimator::validate(RobotStateMap& updated_state_map) {
+void FeederEstimator::validate(const RobotStateMap& updated_state_map) {
     check_state_limits("FeederEstimator", "Feeder", updated_state_map[feeder_ball_state], feeder_monitor);
 }
 
-void LowerFeederEstimator::validate(RobotStateMap& updated_state_map) {
+void LowerFeederEstimator::validate(const RobotStateMap& updated_state_map) {
     check_state_limits("LowerFeederEstimator", "Lower Feeder", updated_state_map[feeder_ball_state], lower_feeder_monitor);
 }
 

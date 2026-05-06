@@ -117,7 +117,7 @@ void Controller::handleControllerError(const char* controller_name, const char* 
     );
 }
 
-void XDriveController::validate(RobotStateMap& reference_map, RobotStateMap& estimate_map) {
+void XDriveController::validate(const RobotStateMap& reference_map, const RobotStateMap& estimate_map) {
     // Our estimates of the chassis states are not accurate enough to run checks against their references.
     // checkControllerError("XDriveController", "Chassis X", reference_map[chassis_x_state], estimate_map[chassis_x_state], chassis_x_error_monitor);
     // checkControllerError("XDriveController", "Chassis Y", reference_map[chassis_y_state], estimate_map[chassis_y_state], chassis_y_error_monitor);
@@ -289,7 +289,7 @@ void XDriveController::handleControllerError(const char* controller_name, const 
     Controller::handleControllerError(controller_name, state_name, reference_state, estimate_state, error);
 }
 
-void YawController::validate(RobotStateMap& reference_map, RobotStateMap& estimate_map) {
+void YawController::validate(const RobotStateMap& reference_map, const RobotStateMap& estimate_map) {
     checkControllerError("YawController", "Gimbal Yaw", reference_map[yaw_angle_state], estimate_map[yaw_angle_state], yaw_error_monitor);
 }
 
@@ -333,7 +333,7 @@ void YawController::handleControllerError(const char* controller_name, const cha
     Controller::handleControllerError(controller_name, state_name, reference_state, estimate_state, error);
 }
 
-void PitchController::validate(RobotStateMap& reference_map, RobotStateMap& estimate_map) {
+void PitchController::validate(const RobotStateMap& reference_map, const RobotStateMap& estimate_map) {
     checkControllerError("PitchController", "Gimbal Pitch", reference_map[pitch_angle_state], estimate_map[pitch_angle_state], pitch_error_monitor);
 }
 
@@ -374,7 +374,7 @@ void PitchController::handleControllerError(const char* controller_name, const c
     Controller::handleControllerError(controller_name, state_name, reference_state, estimate_state, error);
 }
 
-void FlywheelController::validate(RobotStateMap& reference_map, RobotStateMap& estimate_map) {
+void FlywheelController::validate(const RobotStateMap& reference_map, const RobotStateMap& estimate_map) {
     // checkControllerError("FlywheelController", "Flywheels", reference_map[flywheel_velocity_state], estimate_map[flywheel_velocity_state], flywheel_error_monitor);
 }
 
@@ -415,7 +415,7 @@ void FlywheelController::handleControllerError(const char* controller_name, cons
     Controller::handleControllerError(controller_name, state_name, reference_state, estimate_state, error);
 }
 
-void FeederController::validate(RobotStateMap& reference_map, RobotStateMap& estimate_map) {
+void FeederController::validate(const RobotStateMap& reference_map, const RobotStateMap& estimate_map) {
     // checkControllerError("FeederController", "Feeder", reference_map[feeder_position_state], estimate_map[feeder_position_state], feeder_error_monitor);
 }
 
@@ -444,7 +444,7 @@ void FeederController::handleControllerError(const char* controller_name, const 
     Controller::handleControllerError(controller_name, state_name, reference_state, estimate_state, error);
 }
 
-void LowerFeederController::validate(RobotStateMap& reference_map, RobotStateMap& estimate_map) {
+void LowerFeederController::validate(const RobotStateMap& reference_map, const RobotStateMap& estimate_map) {
     // checkControllerError("LowerFeederController", "Lower Feeder", reference_map[lower_feeder_position_state], estimate_map[lower_feeder_position_state], lower_feeder_error_monitor);
 }
 
