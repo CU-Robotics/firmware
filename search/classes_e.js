@@ -1,0 +1,23 @@
+var searchData=
+[
+  ['radardecision_1400',['RadarDecision',['../structRadarDecision.html',1,'']]],
+  ['radarprogress_1401',['RadarProgress',['../structRadarProgress.html',1,'']]],
+  ['raw_1402',['Raw',['../structState_1_1Raw.html',1,'State']]],
+  ['refdata_1403',['RefData',['../structRefData.html',1,'']]],
+  ['refereewarning_1404',['RefereeWarning',['../structRefereeWarning.html',1,'']]],
+  ['refinternaldata_1405',['RefInternalData',['../structRefSystem_1_1RefInternalData.html',1,'RefSystem']]],
+  ['refsystem_1406',['RefSystem',['../classRefSystem.html',1,'']]],
+  ['revencoder_1407',['RevEncoder',['../structCfg_1_1RevEncoder.html',1,'Cfg::RevEncoder'],['../classRevEncoder.html',1,'RevEncoder']]],
+  ['revsensordata_1408',['RevSensorData',['../structRevSensorData.html',1,'']]],
+  ['rfidstatus_1409',['RFIDStatus',['../structRFIDStatus.html',1,'']]],
+  ['robotbuff_1410',['RobotBuff',['../structRobotBuff.html',1,'']]],
+  ['robotconfig_1411',['RobotConfig',['../structCfg_1_1RobotConfig.html',1,'Cfg']]],
+  ['robothealthdata_1412',['RobotHealthData',['../structRobotHealthData.html',1,'']]],
+  ['robotinteraction_1413',['RobotInteraction',['../structRobotInteraction.html',1,'']]],
+  ['robotperformance_1414',['RobotPerformance',['../structRobotPerformance.html',1,'']]],
+  ['robotperformancedata_1415',['RobotPerformanceData',['../structRobotPerformanceData.html',1,'']]],
+  ['robotposition_1416',['RobotPosition',['../structRobotPosition.html',1,'']]],
+  ['robotpowerheat_1417',['RobotPowerHeat',['../structRobotPowerHeat.html',1,'']]],
+  ['robotpowerheatdata_1418',['RobotPowerHeatData',['../structRobotPowerHeatData.html',1,'']]],
+  ['robotstatemap_1419',['RobotStateMap',['../classRobotStateMap.html',1,'']]]
+];

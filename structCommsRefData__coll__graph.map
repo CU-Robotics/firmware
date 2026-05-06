@@ -1,0 +1,13 @@
+<map id="CommsRefData" name="CommsRefData">
+<area shape="rect" id="node1" title="Mega struct fo al of the ref data we want to send over comms." alt="" coords="369,235,484,261"/>
+<area shape="rect" id="node2" href="$structComms_1_1CommsData.html" title="base class for all data structs that want to be sent over comms." alt="" coords="14,7,159,33"/>
+<area shape="rect" id="node3" href="$structDamageStatusData.html" title="Damage status data." alt="" coords="19,57,154,84"/>
+<area shape="rect" id="node4" href="$structRobotHealthData.html" title="Robot health data." alt="" coords="26,108,147,135"/>
+<area shape="rect" id="node5" href="$structGameEventData.html" title="Site event data." alt="" coords="28,159,145,185"/>
+<area shape="rect" id="node6" href="$structRobotPowerHeatData.html" title="Real&#45;time chassis power and barrel heat data." alt="" coords="13,209,161,236"/>
+<area shape="rect" id="node7" href="$structGameResultData.html" title="Competition result data." alt="" coords="26,260,147,287"/>
+<area shape="rect" id="node8" href="$structGameStatusData.html" title="Competition status data." alt="" coords="25,311,148,337"/>
+<area shape="rect" id="node9" href="$structLaunchingStatusData.html" title="Real&#45;time launching data." alt="" coords="13,361,160,388"/>
+<area shape="rect" id="node10" href="$structRobotPerformanceData.html" title="Robot performance system data." alt="" coords="8,412,165,439"/>
+<area shape="rect" id="node11" href="$structProjectileAllowanceData.html" title="Projectile allowance data." alt="" coords="5,463,168,489"/>
+</map>

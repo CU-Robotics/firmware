@@ -1,0 +1,5 @@
+<map id="Governor" name="Governor">
+<area shape="rect" id="node1" title="Use reference limits from config to convert ungoverned reference states to generated governed referen..." alt="" coords="101,95,176,121"/>
+<area shape="rect" id="node2" href="$classRobotStateMap.html" title="Manage all of the configured states." alt="" coords="5,5,117,32"/>
+<area shape="rect" id="node3" href="$structTimer.html" title="Timer class. Operates based on micros() and provides a simple interface for timing operations." alt="" coords="190,5,245,32"/>
+</map>

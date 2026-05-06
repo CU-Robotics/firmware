@@ -1,0 +1,33 @@
+<map id="Graphical Class Hierarchy" name="Graphical Class Hierarchy">
+<area shape="rect" id="node1" href="$structComms_1_1CommsData.html" title="base class for all data structs that want to be sent over comms." alt="" coords="5,740,151,767"/>
+<area shape="rect" id="node2" href="$structBigTestData.html" title="Data struct for testing purposes." alt="" coords="233,5,327,32"/>
+<area shape="rect" id="node3" href="$structBuffEncoderData.html" title="Structure for the buff encoder sensor." alt="" coords="221,56,339,83"/>
+<area shape="rect" id="node4" href="$structCfg_1_1BuffEncoder.html" title="Buff encoder configuration struct." alt="" coords="221,107,339,133"/>
+<area shape="rect" id="node5" href="$structCfg_1_1ConfigStart.html" title="The ConfigStart struct is the first packet sent from comms to controls to indicate the start of the c..." alt="" coords="224,157,336,184"/>
+<area shape="rect" id="node6" href="$structCfg_1_1Controller.html" title="Controller configuration struct. This struct contains all the configuration data for a controller,..." alt="" coords="229,208,331,235"/>
+<area shape="rect" id="node7" href="$structCfg_1_1D200Lidar.html" title="D200 Lidar configuration struct." alt="" coords="227,259,333,285"/>
+<area shape="rect" id="node8" href="$structCfg_1_1Estimator.html" title="The Estimator struct represents the configuration for an estimator, including its type,..." alt="" coords="229,309,331,336"/>
+<area shape="rect" id="node9" href="$structCfg_1_1IcmImu.html" title="ICM IMU configuration struct." alt="" coords="234,360,326,387"/>
+<area shape="rect" id="node10" href="$structCfg_1_1LimitSwitch.html" title="Limit switch configuration struct." alt="" coords="221,411,339,437"/>
+<area shape="rect" id="node11" href="$structCfg_1_1LsmImu.html" title="LSM IMU configuration struct." alt="" coords="232,461,328,488"/>
+<area shape="rect" id="node12" href="$structCfg_1_1Motor.html" title="The Motor struct represents the configuration for a motor, including its controller type,..." alt="" coords="239,512,321,539"/>
+<area shape="rect" id="node13" href="$structCfg_1_1RevEncoder.html" title="Rev encoder configuration struct." alt="" coords="221,563,339,589"/>
+<area shape="rect" id="node14" href="$structCfg_1_1State.html" title="The State struct represents the configuration for a state, including its reference limits,..." alt="" coords="241,613,319,640"/>
+<area shape="rect" id="node15" href="$structCfg_1_1StereoCamTrigger.html" title="Stereo camera trigger configuration struct." alt="" coords="203,664,357,691"/>
+<area shape="rect" id="node16" href="$structCfg_1_1Transmitter.html" title="The Transmitter struct represents the configuration for a transmitter, including its type and any spe..." alt="" coords="223,715,337,741"/>
+<area shape="rect" id="node17" href="$structCommsRefData.html" title="Mega struct fo al of the ref data we want to send over comms." alt="" coords="223,765,337,792"/>
+<area shape="rect" id="node18" href="$structConfigurationStatusData.html" title="Data struct for the configuration status of the robot. This is sent from firmware to indicate the sta..." alt="" coords="199,816,361,843"/>
+<area shape="rect" id="node19" href="$structDR16Data.html" title="data struct for sending DR16 transmitter data to comms" alt="" coords="239,867,321,893"/>
+<area shape="rect" id="node20" href="$structET16SData.html" title="data struct for sending ET16S transmitter data to comms" alt="" coords="236,917,324,944"/>
+<area shape="rect" id="node21" href="$structEstimatedState.html" title="Comms data struct for sending the estimated state." alt="" coords="225,968,335,995"/>
+<area shape="rect" id="node22" href="$structICMSensorData.html" title="Structure for the ICM sensor." alt="" coords="223,1019,337,1045"/>
+<area shape="rect" id="node23" href="$structLidarDataPacketSI.html" title="data for a singular LiDAR packet (SI units)" alt="" coords="214,1069,346,1096"/>
+<area shape="rect" id="node24" href="$structLimitSwitchData.html" title="Limit switch data for comms." alt="" coords="221,1120,339,1147"/>
+<area shape="rect" id="node25" href="$structLsmSensorData.html" title="Structure for the LSM sensor." alt="" coords="222,1171,338,1197"/>
+<area shape="rect" id="node26" href="$structMotorStateData.html" title="Motor state data for comms." alt="" coords="223,1221,337,1248"/>
+<area shape="rect" id="node27" href="$structOverrideState.html" title="Comms data struct for sending the override state. This is used to override firmware&#39;s estimated state..." alt="" coords="229,1272,331,1299"/>
+<area shape="rect" id="node28" href="$structRevSensorData.html" title="Structure for the Rev encoder sensor." alt="" coords="223,1323,337,1349"/>
+<area shape="rect" id="node29" href="$structStereoCamTriggerData.html" title="Structure to send stereo cam trigger data to comms." alt="" coords="203,1373,357,1400"/>
+<area shape="rect" id="node30" href="$structTargetState.html" title="Comms data struct for sending the target reference state." alt="" coords="235,1424,325,1451"/>
+<area shape="rect" id="node31" href="$structTestData.html" title="Data struct for testing purposes." alt="" coords="243,1475,317,1501"/>
+</map>
