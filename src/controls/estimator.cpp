@@ -148,8 +148,6 @@ GimbalAndChassisEstimator::GimbalAndChassisEstimator(const Cfg::Estimator& estim
 
 void GimbalAndChassisEstimator::step_states(RobotStateMap& updated_state_map, const RobotStateMap& previous_state_map, int override) {
     float pitch_enc_angle = (buff_enc_pitch->get_angle() * pitch_encoder_direction) - pitch_encoder_offset;
-    Serial.printf("Raw pitch encoder angle: %f\n", buff_enc_pitch->get_angle());
-    Serial.printf("pitch encoder direction: %f, pitch encoder offset: %f\n", pitch_encoder_direction, pitch_encoder_offset);
     while (pitch_enc_angle >= PI)
         pitch_enc_angle -= 2 * PI;
     while (pitch_enc_angle <= -PI)
@@ -290,7 +288,6 @@ void GimbalAndChassisEstimator::step_states(RobotStateMap& updated_state_map, co
     updated_state_map[yaw_state].set_velocity_no_bound(current_yaw_velocity);
     updated_state_map[yaw_state].set_acceleration_no_bound(roll_angle);
     updated_state_map[pitch_state].set_position_no_bound(pitch_enc_angle);
-    Serial.printf("pitch angle: %f\n", pitch_enc_angle);
     updated_state_map[pitch_state].set_velocity_no_bound(current_pitch_velocity);
     updated_state_map[pitch_state].set_acceleration_no_bound(0);
     updated_state_map[chassis_heading_state].set_position_no_bound(chassis_angle);
