@@ -44,6 +44,7 @@ void ControllerManager::init_controller(const Cfg::Controller& controller_config
 
 void ControllerManager::step(RobotStateMap& reference_map, RobotStateMap& estimate_map) {
     for (const auto& controller : controllers) {
+        controller->validate(reference_map, estimate_map);
         controller->step(reference_map, estimate_map);
     }
 }

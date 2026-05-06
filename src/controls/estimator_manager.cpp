@@ -50,5 +50,6 @@ void EstimatorManager::step(RobotStateMap& current_state_map, int override) {
 
     for (auto& estimator : estimators) {
         estimator->step_states(current_state_map, previous_state_map, override);
+        estimator->validate(current_state_map);
     }
 }
