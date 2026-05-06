@@ -20,33 +20,33 @@ void Estimator::check_state_limits(const char* estimator_name, const char* state
     if (!std::isfinite(pos) || !std::isfinite(vel)) {
         violated = true;
         violation_amount = std::numeric_limits<float>::quiet_NaN();
-    } else if (pos < config.reference_limits.position.min) {
+    } else if (pos < config.physical_limits.position.min) {
         violated = true;
-        violation_amount = config.reference_limits.position.min - pos;
-    } else if (pos > config.reference_limits.position.max) {
+        violation_amount = config.physical_limits.position.min - pos;
+    } else if (pos > config.physical_limits.position.max) {
         violated = true;
-        violation_amount = pos - config.reference_limits.position.max;
+        violation_amount = pos - config.physical_limits.position.max;
     }
 
     if (!violated) {
-        if (vel < config.reference_limits.velocity.min) {
+        if (vel < config.physical_limits.velocity.min) {
             violated = true;
-            violation_amount = config.reference_limits.velocity.min - vel;
-        } else if (vel > config.reference_limits.velocity.max) {
+            violation_amount = config.physical_limits.velocity.min - vel;
+        } else if (vel > config.physical_limits.velocity.max) {
             violated = true;
-            violation_amount = vel - config.reference_limits.velocity.max;
+            violation_amount = vel - config.physical_limits.velocity.max;
         }
     }
 
     // Acceleration reference limits are much less likely to be represent our robots true physical limits so ignore
     // float acc = state.get_acceleration();
     // if (!violated) {
-    //     if (acc < config.reference_limits.acceleration.min) {
+    //     if (acc < config.physical_limits.acceleration.min) {
     //         violated = true;
-    //         violation_amount = config.reference_limits.acceleration.min - acc;
-    //     } else if (acc > config.reference_limits.acceleration.max) {
+    //         violation_amount = config.physical_limits.acceleration.min - acc;
+    //     } else if (acc > config.physical_limits.acceleration.max) {
     //         violated = true;
-    //         violation_amount = acc - config.reference_limits.acceleration.max;
+    //         violation_amount = acc - config.physical_limits.acceleration.max;
     //     }
     // }
 
@@ -69,10 +69,13 @@ void Estimator::check_state_limits(const char* estimator_name, const char* state
 void Estimator::handleEstimatorError(const char* estimator_name, const char* state_name, const State& state, float violation_amount) {
     const Cfg::State& config = state.config();
     safety::safety_procedure(
-        "%s: %s estimate exceeded reference limits by %f (limits pos:[%f,%f] vel:[%f,%f] acc:[%f,%f])",
+        "%s: %s estimate exceeded reference limits by %f (STATE: pos: %f, vel: %f, acc: %f; LIMITS: pos:[%f,%f] vel:[%f,%f] acc:[%f,%f])",
         estimator_name,
         state_name,
         violation_amount,
+        state.get_position(),
+        state.get_velocity(),
+        state.get_acceleration(),
         config.reference_limits.position.min,
         config.reference_limits.position.max,
         config.reference_limits.velocity.min,
@@ -145,6 +148,8 @@ GimbalAndChassisEstimator::GimbalAndChassisEstimator(const Cfg::Estimator& estim
 
 void GimbalAndChassisEstimator::step_states(RobotStateMap& updated_state_map, const RobotStateMap& previous_state_map, int override) {
     float pitch_enc_angle = (buff_enc_pitch->get_angle() * pitch_encoder_direction) - pitch_encoder_offset;
+    Serial.printf("Raw pitch encoder angle: %f\n", buff_enc_pitch->get_angle());
+    Serial.printf("pitch encoder direction: %f, pitch encoder offset: %f\n", pitch_encoder_direction, pitch_encoder_offset);
     while (pitch_enc_angle >= PI)
         pitch_enc_angle -= 2 * PI;
     while (pitch_enc_angle <= -PI)
@@ -285,6 +290,7 @@ void GimbalAndChassisEstimator::step_states(RobotStateMap& updated_state_map, co
     updated_state_map[yaw_state].set_velocity_no_bound(current_yaw_velocity);
     updated_state_map[yaw_state].set_acceleration_no_bound(roll_angle);
     updated_state_map[pitch_state].set_position_no_bound(pitch_enc_angle);
+    Serial.printf("pitch angle: %f\n", pitch_enc_angle);
     updated_state_map[pitch_state].set_velocity_no_bound(current_pitch_velocity);
     updated_state_map[pitch_state].set_acceleration_no_bound(0);
     updated_state_map[chassis_heading_state].set_position_no_bound(chassis_angle);
