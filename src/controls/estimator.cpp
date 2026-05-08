@@ -1,7 +1,97 @@
+#include <cmath>
+#include <limits>
+
 #include "estimator.hpp"
 #include "ICM20649.hpp"
 #include "utils/vector_math.hpp"
 #include "sensors/RefSystem.hpp"
+
+// Estimator shared checking implementation
+void Estimator::check_state_limits(const char* estimator_name, const char* state_name, const State& state, ErrorMonitor& monitor) {
+    const Cfg::State& config = state.config();
+    // Check position, velocity, acceleration against reference limits
+    bool violated = false;
+    float violation_amount = 0.0f;
+
+    float pos = state.get_position();
+    float vel = state.get_velocity();
+
+    // Non-finite values indicate broken estimation and should fail safe immediately.
+    if (!std::isfinite(pos) || !std::isfinite(vel)) {
+        violated = true;
+        violation_amount = std::numeric_limits<float>::quiet_NaN();
+    } else if (pos < config.physical_limits.position.min) {
+        violated = true;
+        violation_amount = config.physical_limits.position.min - pos;
+    } else if (pos > config.physical_limits.position.max) {
+        violated = true;
+        violation_amount = pos - config.physical_limits.position.max;
+    }
+
+    if (!violated) {
+        if (vel < config.physical_limits.velocity.min) {
+            violated = true;
+            violation_amount = config.physical_limits.velocity.min - vel;
+        } else if (vel > config.physical_limits.velocity.max) {
+            violated = true;
+            violation_amount = vel - config.physical_limits.velocity.max;
+        }
+    }
+
+    // Acceleration reference limits are much less likely to be represent our robots true physical limits so ignore
+    // float acc = state.get_acceleration();
+    // if (!violated) {
+    //     if (acc < config.physical_limits.acceleration.min) {
+    //         violated = true;
+    //         violation_amount = config.physical_limits.acceleration.min - acc;
+    //     } else if (acc > config.physical_limits.acceleration.max) {
+    //         violated = true;
+    //         violation_amount = acc - config.physical_limits.acceleration.max;
+    //     }
+    // }
+
+    if (violated) {
+        if (!monitor.exceeding) {
+            monitor.exceeding = true;
+            monitor.exceed_start_us = micros();
+        }
+        const uint32_t elapsed_us = static_cast<uint32_t>(micros() - monitor.exceed_start_us);
+        // If state violation exceeds the configured threshold for too long, trigger the error handler. Setting max_error_exceed_time_us to 0 means immediate escalation.
+        if (elapsed_us >= config.max_error_exceed_time_us) {
+            handleEstimatorError(estimator_name, state_name, state, violation_amount);
+        }
+    } else {
+        monitor.exceeding = false;
+        monitor.exceed_start_us = 0;
+    }
+}
+
+void Estimator::handleEstimatorError(const char* estimator_name, const char* state_name, const State& state, float violation_amount) {
+    const Cfg::State& config = state.config();
+    safety::safety_procedure(
+        "%s: %s estimate exceeded reference limits by %f (STATE: pos: %f, vel: %f, acc: %f; LIMITS: pos:[%f,%f] vel:[%f,%f] acc:[%f,%f])",
+        estimator_name,
+        state_name,
+        violation_amount,
+        state.get_position(),
+        state.get_velocity(),
+        state.get_acceleration(),
+        config.reference_limits.position.min,
+        config.reference_limits.position.max,
+        config.reference_limits.velocity.min,
+        config.reference_limits.velocity.max,
+        config.reference_limits.acceleration.min,
+        config.reference_limits.acceleration.max
+    );
+}
+
+void GimbalAndChassisEstimator::validate(const RobotStateMap& updated_state_map) {
+    check_state_limits("GimbalAndChassisEstimator", "Chassis X", updated_state_map[chassis_x_state], chassis_x_monitor);
+    check_state_limits("GimbalAndChassisEstimator", "Chassis Y", updated_state_map[chassis_y_state], chassis_y_monitor);
+    check_state_limits("GimbalAndChassisEstimator", "Chassis Heading", updated_state_map[chassis_heading_state], chassis_heading_monitor);
+    check_state_limits("GimbalAndChassisEstimator", "Yaw", updated_state_map[yaw_state], yaw_monitor);
+    check_state_limits("GimbalAndChassisEstimator", "Pitch", updated_state_map[pitch_state], pitch_monitor);
+}
 
 GimbalAndChassisEstimator::GimbalAndChassisEstimator(const Cfg::Estimator& estimator_config, SensorManager& sensor_manager, CANManager& can, std::vector<Cfg::StateName> available_states) : 
     buff_enc_yaw(sensor_manager.get_sensor_by_name<BuffEncoder>(estimator_config.get_sensor_name_by_generic_use(Cfg::GenericSensorUse::YawBuffEncoder))), 
@@ -194,13 +284,14 @@ void GimbalAndChassisEstimator::step_states(RobotStateMap& updated_state_map, co
     // output[2][1] = 0;
     // output[2][2] = 0;
     
-    updated_state_map[yaw_state].set_position(yaw_angle);
-    updated_state_map[yaw_state].set_velocity(current_yaw_velocity);
-    updated_state_map[yaw_state].set_acceleration(roll_angle);
-    updated_state_map[pitch_state].set_position(pitch_enc_angle);
-    updated_state_map[pitch_state].set_velocity(current_pitch_velocity);
-    updated_state_map[pitch_state].set_acceleration(0);
-    updated_state_map[chassis_heading_state].set_position(chassis_angle);
+    updated_state_map[yaw_state].set_position_no_bound(yaw_angle);
+    updated_state_map[yaw_state].set_velocity_no_bound(current_yaw_velocity);
+    updated_state_map[yaw_state].set_acceleration_no_bound(roll_angle);
+    updated_state_map[pitch_state].set_position_no_bound(pitch_enc_angle);
+    updated_state_map[pitch_state].set_velocity_no_bound(current_pitch_velocity);
+    updated_state_map[pitch_state].set_acceleration_no_bound(0);
+    updated_state_map[chassis_heading_state].set_position_no_bound(chassis_angle);
+
     
 
     // 3 odom wheel estimation
@@ -266,18 +357,18 @@ void GimbalAndChassisEstimator::step_states(RobotStateMap& updated_state_map, co
     pos_estimate[2] += vel_estimate[2] * dt;
 
 
-    updated_state_map[chassis_x_state].set_position(pos_estimate[0]);
+    updated_state_map[chassis_x_state].set_position_no_bound(pos_estimate[0]);
     // output[0][1] = (pos_estimate[0] - previous_pos[0]) / dt;
-    updated_state_map[chassis_x_state].set_velocity(vel_estimate[0]);
-    updated_state_map[chassis_x_state].set_acceleration(0);
+    updated_state_map[chassis_x_state].set_velocity_no_bound(vel_estimate[0]);
+    updated_state_map[chassis_x_state].set_acceleration_no_bound(0);
 
-    updated_state_map[chassis_y_state].set_position(pos_estimate[1]);
+    updated_state_map[chassis_y_state].set_position_no_bound(pos_estimate[1]);
     // output[1][1] = (pos_estimate[1] - previous_pos[1]) / dt;
-    updated_state_map[chassis_y_state].set_velocity(vel_estimate[1]);
-    updated_state_map[chassis_y_state].set_acceleration(0);
+    updated_state_map[chassis_y_state].set_velocity_no_bound(vel_estimate[1]);
+    updated_state_map[chassis_y_state].set_acceleration_no_bound(0);
 
-    updated_state_map[chassis_heading_state].set_velocity(d_chassis_heading / dt);
-    updated_state_map[chassis_heading_state].set_acceleration(0);
+    updated_state_map[chassis_heading_state].set_velocity_no_bound(d_chassis_heading / dt);
+    updated_state_map[chassis_heading_state].set_acceleration_no_bound(0);
 
 
     previous_pos[0] = pos_estimate[0];
@@ -306,7 +397,11 @@ void FlywheelEstimator::step_states(RobotStateMap& updated_state_map, const Robo
     projectile_speed_ref = ref.ref_data.launching_status.initial_speed;
 
     //weighted average
-    updated_state_map[ball_exit_velocity].set_velocity((projectile_speed_ref * ref_estimate_weight) + (linear_velocity * motor_estimate_weight));
+    updated_state_map[ball_exit_velocity].set_velocity_no_bound((projectile_speed_ref * ref_estimate_weight) + (linear_velocity * motor_estimate_weight));
+}
+
+void FlywheelEstimator::validate(const RobotStateMap& updated_state_map) {
+    check_state_limits("FlywheelEstimator", "Flywheel Velocity", updated_state_map[ball_exit_velocity], flywheel_monitor);
 }
 
 FeederEstimator::FeederEstimator(const Cfg::Estimator& estimator_config, SensorManager& sensor_manager, CANManager& can, std::vector<Cfg::StateName> available_states) :
@@ -336,10 +431,18 @@ void FeederEstimator::step_states(RobotStateMap& updated_state_map, const RobotS
     float feeder_velocity = (dt > 0) ? (diff/(M_PI/feeder_ratio))/dt : 0;
   
     ball_count += diff/(M_PI/feeder_ratio);
-    updated_state_map[feeder_ball_state].set_position(ball_count * feeder_direction); // ball count
-    updated_state_map[feeder_ball_state].set_velocity(feeder_velocity * feeder_direction); // ball velocity
-    updated_state_map[feeder_ball_state].set_acceleration(0); // this is not the acceleration just the encoder value for debugging
+    updated_state_map[feeder_ball_state].set_position_no_bound(ball_count * feeder_direction); // ball count
+    updated_state_map[feeder_ball_state].set_velocity_no_bound(feeder_velocity * feeder_direction); // ball velocity
+    updated_state_map[feeder_ball_state].set_acceleration_no_bound(0); // this is not the acceleration just the encoder value for debugging
 
+}
+
+void FeederEstimator::validate(const RobotStateMap& updated_state_map) {
+    check_state_limits("FeederEstimator", "Feeder", updated_state_map[feeder_ball_state], feeder_monitor);
+}
+
+void LowerFeederEstimator::validate(const RobotStateMap& updated_state_map) {
+    check_state_limits("LowerFeederEstimator", "Lower Feeder", updated_state_map[feeder_ball_state], lower_feeder_monitor);
 }
 
 LowerFeederEstimator::LowerFeederEstimator(const Cfg::Estimator& estimator_config, SensorManager& sensor_manager, CANManager& can, std::vector<Cfg::StateName> available_states) :
@@ -381,8 +484,8 @@ void LowerFeederEstimator::step_states(RobotStateMap& updated_state_map, const R
   
     ball_count += diff/(M_PI/feeder_ratio);
 
-    updated_state_map[feeder_ball_state].set_position(ball_count * feeder_direction); // ball count
-    updated_state_map[feeder_ball_state].set_velocity(feeder_velocity * feeder_direction); // ball velocity
-    updated_state_map[feeder_ball_state].set_acceleration(0); // this is not the acceleration just the encoder value for debugging
+    updated_state_map[feeder_ball_state].set_position_no_bound(ball_count * feeder_direction); // ball count
+    updated_state_map[feeder_ball_state].set_velocity_no_bound(feeder_velocity * feeder_direction); // ball velocity
+    updated_state_map[feeder_ball_state].set_acceleration_no_bound(0); // this is not the acceleration just the encoder value for debugging
 }
 
