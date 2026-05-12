@@ -1,7 +1,6 @@
 #include "ICM20649.hpp"
 #include "safety.hpp"
 #include "comms/data/sendable.hpp"
-
 // initialize ICM
 void ICM20649::init() {
     
@@ -48,33 +47,98 @@ void ICM20649::init() {
     set_offsets(gyro_offset_x, gyro_offset_y, gyro_offset_z);
 
     Serial.printf("ICM CALIBRATION COMPLETE! Offsets: X: %f, Y: %f, Z: %f\n", gyro_offset_x, gyro_offset_y, gyro_offset_z);
+
+	// ICM20649 data starts at register 0x2D (ACCEL_XOUT_H) 0x80 is the SPI read flag.
+    tx_buffer[0] = 0x80 | 0x2D; 
+    for(int i = 1; i < 15; i++) {
+        tx_buffer[i] = 0x00; // Dummy bytes to clock out the other 14 data bytes
+    }
+}
+void ICM20649::request_read() {
+    if (config.communication_protocol != Cfg::CommunicationProtocol::SPI) return;
+	if (transfer_in_progress) return;
+	digitalWrite(config.spi_cs, LOW); // Select the sensor
+    
+    // Non-blocking SPI transfer
+    if(!(SPI.transfer(tx_buffer, rx_buffer, sizeof(tx_buffer), spi_event))){Serial.printf("===SPI TRANSFER FAILED===\n");}
+    
+    transfer_in_progress = true;
 }
 
 void ICM20649::read() {
-    // get the event data from the sensor class
-    sensor.getEvent(&accel, &gyro, &temp);
+	if (config.communication_protocol != Cfg::CommunicationProtocol::SPI){
+		// get the event data from the sensor class
+		sensor.getEvent(&accel, &gyro, &temp);
+		// assign result to this object's members.
+		// could increase efficiency by specifying which values we need, and only assigning values to the object's members from that.
+		// However, getEvent will read all values from the sensor regardless, and assigning these values is very fast
 
-    // assign result to this object's members.
-    // could increase efficiency by specifying which values we need, and only assigning values to the object's members from that.
-    // However, getEvent will read all values from the sensor regardless, and assigning these values is very fast
+		accel_X = accel.acceleration.x;
+		accel_Y = accel.acceleration.y;
+		accel_Z = accel.acceleration.z;
+		gyro_X = gyro.gyro.x;
+		gyro_Y = gyro.gyro.y;
+		gyro_Z = gyro.gyro.z;
 
-    accel_X = accel.acceleration.x;
-    accel_Y = accel.acceleration.y;
-    accel_Z = accel.acceleration.z;
-    gyro_X = gyro.gyro.x;
-    gyro_Y = gyro.gyro.y;
-    gyro_Z = gyro.gyro.z;
+		temperature = temp.temperature;
 
-    temperature = temp.temperature;
+		//copy the values to the data struct
+		comms_data.accel_X = accel_X;
+		comms_data.accel_Y = accel_Y;
+		comms_data.accel_Z = accel_Z;
+		comms_data.gyro_X = gyro_X;
+		comms_data.gyro_Y = gyro_Y;
+		comms_data.gyro_Z = gyro_Z;
+		comms_data.temperature = temperature;
+	}
+	if (transfer_in_progress) {
+        if (spi_event) {
+            digitalWrite(config.spi_cs, HIGH); // Deselect the sensor
 
-    //copy the values to the data struct
-    comms_data.accel_X = accel_X;
-    comms_data.accel_Y = accel_Y;
-    comms_data.accel_Z = accel_Z;
-    comms_data.gyro_X = gyro_X;
-    comms_data.gyro_Y = gyro_Y;
-    comms_data.gyro_Z = gyro_Z;
-    comms_data.temperature = temperature;
+			spi_event.clearEvent();
+				
+            transfer_in_progress = false;
+
+            arm_dcache_delete(rx_buffer, sizeof(rx_buffer));
+
+            // Parse the 14 bytes into the AdafruitIMUSensor protected variables
+			
+            // rx_buffer[0] is metadata
+			// Read (1) or Write (0) operation. The following 7 bits contain the Register Address. (from datasheet)
+
+			// storing theses values MSB-LSB hope thats fine
+            int16_t raw_accel_x = (rx_buffer[1] << 8)  | rx_buffer[2];
+            int16_t raw_accel_y = (rx_buffer[3] << 8)  | rx_buffer[4];
+            int16_t raw_accel_z = (rx_buffer[5] << 8)  | rx_buffer[6];
+            
+            int16_t raw_gyro_x  = (rx_buffer[7] << 8)  | rx_buffer[8];
+            int16_t raw_gyro_y  = (rx_buffer[9] << 8)  | rx_buffer[10];
+            int16_t raw_gyro_z  = (rx_buffer[11] << 8) | rx_buffer[12];
+            
+            int16_t raw_temp = (rx_buffer[13] << 8) | rx_buffer[14];
+
+            // Apply scaling multipliers
+            accel_X = raw_accel_x * accel_multiplier;
+            accel_Y = raw_accel_y * accel_multiplier;
+            accel_Z = raw_accel_z * accel_multiplier;
+
+            gyro_X = raw_gyro_x * gyro_multiplier;
+            gyro_Y = raw_gyro_y * gyro_multiplier;
+            gyro_Z = raw_gyro_z * gyro_multiplier;
+			//copy the values to the data struct
+			comms_data.accel_X = accel_X;
+			comms_data.accel_Y = accel_Y;
+			comms_data.accel_Z = accel_Z;
+			comms_data.gyro_X = gyro_X;
+			comms_data.gyro_Y = gyro_Y;
+			comms_data.gyro_Z = gyro_Z;
+			comms_data.temperature = raw_temp; // STILL NEEDS SCALED (MAYBE)
+
+        } else {
+            // Transfer didn't finish. Retain old state.
+            return; 
+        }
+    }
 }
 
 void ICM20649::send_to_comms() const {
@@ -99,15 +163,19 @@ void ICM20649::set_accel_range(Cfg::ICMImuAccelRange range) {
     switch (range) {
         case Cfg::ICMImuAccelRange::A_4G:
             sensor.setAccelRange(ICM20649_ACCEL_RANGE_4_G);
+			accel_multiplier = 1/8192.0;
             break;
         case Cfg::ICMImuAccelRange::A_8G:
             sensor.setAccelRange(ICM20649_ACCEL_RANGE_8_G);
+			accel_multiplier = 1/4096.0;
             break;
         case Cfg::ICMImuAccelRange::A_16G:
             sensor.setAccelRange(ICM20649_ACCEL_RANGE_16_G);
+			accel_multiplier = 1/2048.0;
             break;
         case Cfg::ICMImuAccelRange::A_30G:
             sensor.setAccelRange(ICM20649_ACCEL_RANGE_30_G);
+			accel_multiplier = 1/1024.0;;
             break;
     }
 }
@@ -116,15 +184,19 @@ void ICM20649::set_gyro_range(Cfg::ICMImuGyroRange range) {
     switch (range) {
         case Cfg::ICMImuGyroRange::DPS500:
             sensor.setGyroRange(ICM20649_GYRO_RANGE_500_DPS);
+			gyro_multiplier = 1/65.5;
             break;
         case Cfg::ICMImuGyroRange::DPS1000:
             sensor.setGyroRange(ICM20649_GYRO_RANGE_1000_DPS);
+			gyro_multiplier = 1/32.8;
             break;
         case Cfg::ICMImuGyroRange::DPS2000:
             sensor.setGyroRange(ICM20649_GYRO_RANGE_2000_DPS);
+			gyro_multiplier = 1/16.4;
             break;
         case Cfg::ICMImuGyroRange::DPS4000:
             sensor.setGyroRange(ICM20649_GYRO_RANGE_4000_DPS);
+			gyro_multiplier = 1/8.2;
             break;
     }
 }

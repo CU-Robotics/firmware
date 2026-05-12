@@ -17,7 +17,8 @@ public:
     ICM20649(const Cfg::IcmImu& config) : config(config), comms_data(config.imu_name) {}
     /// @brief Initialize the sensor with the assigned communication protocol.
     void init() override;
-
+	/// @copydoc AdafruitIMUSensor::request_read()
+	void request_read() override;
     /// @copydoc AdafruitIMUSensor::read()    
     void read() override;
     /// @brief sends the current ICM sensor data to comms
@@ -51,4 +52,16 @@ private:
 
     /// ICM sensor data.
     ICMSensorData comms_data;
+	
+	// DMA requires static memory locations
+    uint8_t tx_buffer[15]; 
+    uint8_t rx_buffer[15];
+
+    /// @brief The Teensy object that tracks DMA completion
+    EventResponder spi_event; 
+    
+    /// @brief Flag to track if there is a pending data transfer
+    bool transfer_in_progress = false;
+	float accel_multiplier = 1.0f;
+    float gyro_multiplier = 1.0f;
 };
