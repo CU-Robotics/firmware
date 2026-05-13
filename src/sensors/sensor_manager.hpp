@@ -30,7 +30,8 @@ public:
     void configure_sensors(const Cfg::RobotConfig& config_data);
     /// @brief Call each sensor's init function
     void initialize_sensors();
-
+	/// @brief call each sensor's requestio_read function
+	void request_read();
     /// @brief Call each sensor's read function to update their data
     void read();
     /// @brief Call each sensor's send_to_comms function to send their data to comms

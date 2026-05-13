@@ -1,6 +1,9 @@
 #pragma once
 #include "comms/config_data/sensor.hpp"
 
+
+
+
 /// @brief Abstract class representing a sensor. All sensors should inherit from this class.
 class Sensor {
 public: 

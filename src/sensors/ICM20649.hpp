@@ -4,7 +4,9 @@
 #include <Adafruit_ICM20649.h> 
 
 #include "sensors/AdafruitIMUSensor.hpp"
-#include "comms/data/icm_sensor_data.hpp" 
+#include "comms/data/icm_sensor_data.hpp"
+
+
 
 /// @brief Sensor access for an ICM20649 IMU Sensor. Child of the abstract IMUSensor class.
 /// @note supports I2C and SPI communication. 

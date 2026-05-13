@@ -65,7 +65,11 @@ void SensorManager::initialize_sensors(){
         sensor->init();
     }
 }
-
+void SensorManager::request_read() {
+	    for(auto& [sensor_name, sensor] : sensors) {
+        sensor->request_read();
+    }
+}
 void SensorManager::read() {
     for(auto& [sensor_name, sensor] : sensors) {
         sensor->read();

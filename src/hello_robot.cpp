@@ -50,7 +50,8 @@ void HelloRobot::init(){
             break;
         }
     }
-
+	// Begin cycle of reading sensor data
+	sensor_manager.request_read();
     // start the main loop watchdog
     watchdog.start();
 	
@@ -58,6 +59,7 @@ void HelloRobot::init(){
 
 void HelloRobot::run(){
     Serial.println("Entering main loop...\n");
+
 	// Main loop
     while (true) {
         // start main loop time timer
@@ -107,6 +109,11 @@ void HelloRobot::crash_report(){
 	}
 }
 void HelloRobot::read_telemetry(){
+	// read sensors and send to comms
+	// this happens in one function call 
+	sensor_manager.read();
+	sensor_manager.send_to_comms();
+	
 	// read CAN and send motor states to comms
 	can.read();
 	can.send_to_comms();
@@ -118,11 +125,9 @@ void HelloRobot::read_telemetry(){
 	// read transmitter and send to comms
 	transmitter_manager.read();
 	transmitter_manager.send_to_comms();
-
-	// read sensors and send to comms
-	// this happens in one function call 
-	sensor_manager.read();
-	sensor_manager.send_to_comms();
+	
+	// Begin Sensor DMA transfer for next loop
+	sensor_manager.request_read();
 		
 
 }

@@ -30,10 +30,23 @@ void ICM20649::init() {
 
     set_accel_range(config.accel_range);
     set_gyro_range(config.gyro_range);
+
+	// ICM20649 data starts at register 0x2D (ACCEL_XOUT_H) 0x80 is the SPI read flag.
+    tx_buffer[0] = 0x80 | 0x2D; 
+    for(int i = 1; i < 15; i++) {
+        tx_buffer[i] = 0x00; // Dummy bytes to clock out the other 14 data bytes
+    }
+	
     Serial.println("ICM CALIBRATING...");
     float gyro_offset_x = 0, gyro_offset_y = 0, gyro_offset_z = 0;
     for (uint32_t i = 0; i < config.num_calibration_reads; i++) {
-        read();
+		if (config.communication_protocol == Cfg::CommunicationProtocol::SPI) {
+            request_read();
+            while (!spi_event) { yield(); }
+            read();
+        } else {
+            read(); // I2C fallback
+        }
         gyro_offset_x += get_gyro_X();
         gyro_offset_y += get_gyro_Y();
         gyro_offset_z += get_gyro_Z();
@@ -48,16 +61,12 @@ void ICM20649::init() {
 
     Serial.printf("ICM CALIBRATION COMPLETE! Offsets: X: %f, Y: %f, Z: %f\n", gyro_offset_x, gyro_offset_y, gyro_offset_z);
 
-	// ICM20649 data starts at register 0x2D (ACCEL_XOUT_H) 0x80 is the SPI read flag.
-    tx_buffer[0] = 0x80 | 0x2D; 
-    for(int i = 1; i < 15; i++) {
-        tx_buffer[i] = 0x00; // Dummy bytes to clock out the other 14 data bytes
-    }
+
 }
 void ICM20649::request_read() {
     if (config.communication_protocol != Cfg::CommunicationProtocol::SPI) return;
 	if (transfer_in_progress) return;
-	digitalWrite(config.spi_cs, LOW); // Select the sensor
+	digitalWrite(config.spi_cs, LOW); // Select the sensor (ICM is low triggerd)
     
     // Non-blocking SPI transfer
     if(!(SPI.transfer(tx_buffer, rx_buffer, sizeof(tx_buffer), spi_event))){Serial.printf("===SPI TRANSFER FAILED===\n");}
@@ -103,10 +112,8 @@ void ICM20649::read() {
 
             // Parse the 14 bytes into the AdafruitIMUSensor protected variables
 			
-            // rx_buffer[0] is metadata
-			// Read (1) or Write (0) operation. The following 7 bits contain the Register Address. (from datasheet)
+            // rx_buffer[0] is garbage response from setting tx_buffer[0] in init
 
-			// storing theses values MSB-LSB hope thats fine
             int16_t raw_accel_x = (rx_buffer[1] << 8)  | rx_buffer[2];
             int16_t raw_accel_y = (rx_buffer[3] << 8)  | rx_buffer[4];
             int16_t raw_accel_z = (rx_buffer[5] << 8)  | rx_buffer[6];
@@ -132,7 +139,7 @@ void ICM20649::read() {
 			comms_data.gyro_X = gyro_X;
 			comms_data.gyro_Y = gyro_Y;
 			comms_data.gyro_Z = gyro_Z;
-			comms_data.temperature = raw_temp; // STILL NEEDS SCALED (MAYBE)
+			comms_data.temperature = (raw_temp/333.87f)+21.0f; //Comfirm scaling is correct
 
         } else {
             // Transfer didn't finish. Retain old state.
@@ -163,19 +170,19 @@ void ICM20649::set_accel_range(Cfg::ICMImuAccelRange range) {
     switch (range) {
         case Cfg::ICMImuAccelRange::A_4G:
             sensor.setAccelRange(ICM20649_ACCEL_RANGE_4_G);
-			accel_multiplier = 1/8192.0;
+			accel_multiplier = GRAVITY_EARTH/8192.0;
             break;
         case Cfg::ICMImuAccelRange::A_8G:
             sensor.setAccelRange(ICM20649_ACCEL_RANGE_8_G);
-			accel_multiplier = 1/4096.0;
+			accel_multiplier = GRAVITY_EARTH/4096.0;
             break;
         case Cfg::ICMImuAccelRange::A_16G:
             sensor.setAccelRange(ICM20649_ACCEL_RANGE_16_G);
-			accel_multiplier = 1/2048.0;
+			accel_multiplier = GRAVITY_EARTH/2048.0;
             break;
         case Cfg::ICMImuAccelRange::A_30G:
             sensor.setAccelRange(ICM20649_ACCEL_RANGE_30_G);
-			accel_multiplier = 1/1024.0;;
+			accel_multiplier = GRAVITY_EARTH/1024.0;;
             break;
     }
 }
@@ -184,19 +191,19 @@ void ICM20649::set_gyro_range(Cfg::ICMImuGyroRange range) {
     switch (range) {
         case Cfg::ICMImuGyroRange::DPS500:
             sensor.setGyroRange(ICM20649_GYRO_RANGE_500_DPS);
-			gyro_multiplier = 1/65.5;
+			gyro_multiplier = DPS_TO_RADS/65.5;
             break;
         case Cfg::ICMImuGyroRange::DPS1000:
             sensor.setGyroRange(ICM20649_GYRO_RANGE_1000_DPS);
-			gyro_multiplier = 1/32.8;
+			gyro_multiplier = DPS_TO_RADS/32.8;
             break;
         case Cfg::ICMImuGyroRange::DPS2000:
             sensor.setGyroRange(ICM20649_GYRO_RANGE_2000_DPS);
-			gyro_multiplier = 1/16.4;
+			gyro_multiplier = DPS_TO_RADS/16.4;
             break;
         case Cfg::ICMImuGyroRange::DPS4000:
             sensor.setGyroRange(ICM20649_GYRO_RANGE_4000_DPS);
-			gyro_multiplier = 1/8.2;
+			gyro_multiplier = DPS_TO_RADS/8.2;
             break;
     }
 }
