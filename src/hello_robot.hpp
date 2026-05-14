@@ -117,6 +117,9 @@ private:
     /// @brief Used to detect multiple slow loops in a row
     bool last_loop_slow = false;
 
+    /// @brief Whether the active robot config contains the lower feeder state.
+    bool has_lower_feeder = false;
+
 	// ==========================================
     // STATE MAPS
     // ==========================================

@@ -3,6 +3,7 @@
 #include "sensors/transmitter/dr16.hpp"
 
 void TransmitterManager::init(const Cfg::Transmitter& transmitter_config) {
+    Serial.printf("Initializing TransmitterManager with transmitter type: %d\n", static_cast<int>(transmitter_config.transmitter_type));
     switch (transmitter_config.transmitter_type) {
         case Cfg::TransmitterType::DR16:
             transmitter = std::make_unique<DR16>(transmitter_config.dr16);
@@ -13,6 +14,8 @@ void TransmitterManager::init(const Cfg::Transmitter& transmitter_config) {
     }
 
     transmitter->init();
+
+    Serial.printf("Transmitter initialized with type: %d\n", static_cast<int>(transmitter_config.transmitter_type));
 }
 
 void TransmitterManager::read() {

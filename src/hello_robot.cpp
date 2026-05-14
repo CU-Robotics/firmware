@@ -12,9 +12,16 @@ void HelloRobot::init(){
 
 	Comms::comms_layer.configure();
 	
-	const Cfg::RobotConfig& config = Comms::comms_layer.get_hive_data().config;
+    const Cfg::RobotConfig& config = Comms::comms_layer.get_hive_data().config;
     
     Serial.println("Configured!");
+    Serial.printf("transmitter type: %d\n", static_cast<int>(config.transmitter.transmitter_type));
+    for (const auto& state_config : config.states) {
+        if (state_config.name == Cfg::StateName::LowerFeeder) {
+            has_lower_feeder = true;
+            break;
+        }
+    }
 	
     governor.emplace(config.states);
 
@@ -145,6 +152,10 @@ void HelloRobot::update_controls(){
 	target_state_map->send_to_comms<TargetState>();
 	estimated_state_map->send_to_comms<EstimatedState>();
 
+    Comms::Sendable<ConfigurationStatusData> config_status_sendable;
+    config_status_sendable.data.is_configured = Comms::comms_layer.is_configured() ? 1 : 0;
+    config_status_sendable.send_to_comms();
+
 	Comms::comms_layer.run();
 }
 void HelloRobot::check_safety(){
@@ -181,6 +192,9 @@ void HelloRobot::check_safety(){
 		(!transmitter_manager.is_safety_mode() &&
 		 Comms::comms_layer.is_configured() && !is_slow_loop && ref.ref_data.robot_performance.gimbal_power_active &&
 		 !gimbal_power_recently_turned_on);
+
+    safety::set_safety_mode(!not_safety_mode);
+
 	//  SAFETY MODE
 	if (not_safety_mode) {
 		// SAFETY OFF
@@ -192,6 +206,11 @@ void HelloRobot::check_safety(){
 		can.issue_safety_mode();
 		float current_feed = (*estimated_state_map)[Cfg::StateName::Feeder].get_position();
 		governor->set_position_reference(Cfg::StateName::Feeder, current_feed);
+        if (has_lower_feeder) {
+            governor->set_position_reference(
+                Cfg::StateName::LowerFeeder,
+                (*estimated_state_map)[Cfg::StateName::LowerFeeder].get_position());
+        }
 		feed = (fmodf(fmodf(current_feed, 1) + 1, 1) > 0.2f)
 			? (int)floor(current_feed) + 1
 			: (int)floor(current_feed); // reset feed to the current state
@@ -216,4 +235,3 @@ void HelloRobot::loop_timing(){
 	// Keep the loop running at the desired rate
 	loop_timer.delay_micros((int)(1E6 / (float)(LOOP_FREQ)));
 }
-
