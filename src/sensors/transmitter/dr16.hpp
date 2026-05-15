@@ -217,14 +217,10 @@ public:
 	Keys keys;
 	
 	// manual controls
-	/// @brief Mouse x axis position
-	float transmitter_pos_x = 0;
+	/// @brief Mouse x axis position 
+	float pos_x = 0;
 	/// @brief Mouse y axis position
-	float transmitter_pos_y = 0;
-	/// @brief Mouse x axis position from ref
-	float vtm_pos_x = 0;
-	/// @brief Mouse y axis position from ref
-	float vtm_pos_y = 0;
+	float pos_y = 0;
 	/// @brief Position offset for chassis x (so the sentry doesn't drive to 0,0)
 	float pos_offset_x = 0;
 	/// @brief Position offset for chassis y (so the sentry doesn't drive to 0,0)

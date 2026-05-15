@@ -218,6 +218,7 @@ int main() {
             // hid_incoming.get_target_state_map(target_state_map);
             target_state_map.from_comms_packet(comms_layer.get_hive_data().target_state_data.state);
             last_feed = target_state_map[Cfg::StateName::Feeder].get_position();            
+
         }
 
         // override temp state if needed. Dont override in teensy mode so the sentry doesnt move during inspection
