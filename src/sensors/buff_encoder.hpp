@@ -68,6 +68,8 @@ public:
  
     /// @brief Print the data for debugging
     void print() const;
+	/// @brief Prints a formatted dashboard of live Buff Encoder values
+    void print_live_data() override;
 
 private:
 

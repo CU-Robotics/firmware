@@ -35,7 +35,8 @@ public:
     void read();
     /// @brief Call each sensor's send_to_comms function to send their data to comms
     void send_to_comms();
-    
+    /// @brief Triggers the live dashboard for any supported sensors
+    void print_sensors_live();
     /// @brief Get a sensor by its name and type. Will trigger safety procedure if the sensor is not found or is not of the requested type.
     /// @param name The name of the sensor to get
     /// @tparam SensorType The type of the sensor to get, must be derived from the Sensor class

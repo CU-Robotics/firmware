@@ -49,3 +49,8 @@ void StereoCamTrigger::send_to_comms() const {
   sendable.data = comms_data;
   sendable.send_to_comms();
 }
+
+void StereoCamTrigger::print_live_data() {
+    Serial.printf(" [Stereo Cam]     Status: %s | Last Exposure (us): %u\n", 
+                  stopped ? "STOPPED" : "RUNNING", latest_exposure_timestamp);
+}

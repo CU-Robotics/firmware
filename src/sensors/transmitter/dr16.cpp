@@ -324,12 +324,15 @@ void DR16::manual_controls(const RobotStateMap& estimated_state_map, RobotStateM
 	bool has_lower_feeder = estimated_state_map.get_state_map().find(Cfg::StateName::LowerFeeder) != estimated_state_map.get_state_map().end();
 
 	float delta = control_input_timer.delta();
-	transmitter_pos_x += mouse_x * 0.05 * delta;
-	transmitter_pos_y += mouse_y * 0.05 * delta;
-
-	vtm_pos_x += ref.ref_data.kbm_interaction.mouse_speed_x * 0.05 * delta;
-	vtm_pos_y += ref.ref_data.kbm_interaction.mouse_speed_y * 0.05 * delta;
-
+	// Used for determing whether we are using vtm or usb to dr16
+	auto merge_input = [](auto primary_val, auto secondary_val) {
+		// If primary isn't zero, use it. Else use secondary.
+		return (primary_val != 0) ? primary_val : secondary_val;
+	};
+	
+	pos_x = merge_input(mouse_x,ref.ref_data.kbm_interaction.mouse_speed_x) * 0.05 * delta;
+	pos_y = merge_input(mouse_y,ref.ref_data.kbm_interaction.mouse_speed_y) * 0.05 * delta;
+	l_mouse_button = merge_input(l_mouse_button,ref.ref_data.kbm_interaction.button_left);
 	float pitch_min = estimated_state_map[Cfg::StateName::GimbalPitch].config().reference_limits.position.min;
     float pitch_max = estimated_state_map[Cfg::StateName::GimbalPitch].config().reference_limits.position.max;
     float pitch_average = 0.5 * (pitch_min + pitch_max);
@@ -337,17 +340,11 @@ void DR16::manual_controls(const RobotStateMap& estimated_state_map, RobotStateM
     pitch_max -= pitch_average;
 
 	// clamp to pitch limits
-	if (transmitter_pos_y < pitch_min) {
-		transmitter_pos_y = pitch_min;
+	if (pos_y < pitch_min) {
+		pos_y = pitch_min;
 	}
-	if (transmitter_pos_y > pitch_max) {
-		transmitter_pos_y = pitch_max;
-	}
-	if (vtm_pos_y < pitch_min) {
-		vtm_pos_y = pitch_min;
-	}
-	if (vtm_pos_y > pitch_max) {
-		vtm_pos_y = pitch_max;
+	if (pos_y > pitch_max) {
+		pos_y = pitch_max;
 	}
 
 	float chassis_vel_x = 0;
@@ -357,15 +354,13 @@ void DR16::manual_controls(const RobotStateMap& estimated_state_map, RobotStateM
 
 	if (estimated_state_map[Cfg::StateName::ChassisX].config().governor_type == Cfg::StateOrder::Velocity) { // if we should be controlling velocity
 
-		chassis_vel_x = get_l_stick_y() * 5.4 +
-						(-ref.ref_data.kbm_interaction.key_w + ref.ref_data.kbm_interaction.key_s) * 2.5;
+		chassis_vel_x = get_l_stick_y() * 5.4;
+					
+		chassis_vel_x += merge_input((-ref.ref_data.kbm_interaction.key_w + ref.ref_data.kbm_interaction.key_s), (-keys.w + keys.s)) * 2.5;
 
-		chassis_vel_x += (-keys.w + keys.s) * 2.5;
-
-		chassis_vel_y = -(get_l_stick_x() * 5.4) +
-						(ref.ref_data.kbm_interaction.key_d - ref.ref_data.kbm_interaction.key_a) * 2.5;
-
-		chassis_vel_y += (keys.d - keys.a) * 2.5;
+		chassis_vel_y = -(get_l_stick_x() * 5.4);
+		
+		chassis_vel_y += merge_input((ref.ref_data.kbm_interaction.key_d - ref.ref_data.kbm_interaction.key_a),(keys.d - keys.a)) * 2.5;
 		
 	} else if (estimated_state_map[Cfg::StateName::ChassisX].config().governor_type == Cfg::StateOrder::Position) { // if we should be controlling position
 		chassis_pos_x = get_l_stick_x() * 2 + pos_offset_x;
@@ -373,14 +368,14 @@ void DR16::manual_controls(const RobotStateMap& estimated_state_map, RobotStateM
 	}
 
 	float chassis_spin = get_wheel() * 25;
-	float pitch_target = 1.57 + -get_r_stick_y() * 0.3 + vtm_pos_y;
-	float yaw_target = -get_r_stick_x() * 1.5 - vtm_pos_x;
+	float pitch_target = 1.57 + -get_r_stick_y() * 0.3 + pos_y;
+	float yaw_target = -get_r_stick_x() * 1.5 - pos_x; // This was setup with vtm_pos before which never functioned so, if bug its here
 
 	float fly_wheel_target =
 		(get_r_switch() == SwitchPos::FORWARD || get_r_switch() == SwitchPos::MIDDLE) ? 18 : 0; // m/s
 	// if the right switch is forward, and either the left mouse button is pressed or the right switch is not
 	// backward, set the feeder to something. Otherwise, set it to 0
-	float feeder_target = (((ref.ref_data.kbm_interaction.button_left) &&
+	float feeder_target = ((l_mouse_button &&
 							get_r_switch() != SwitchPos::BACKWARD) || get_r_switch() == SwitchPos::FORWARD) ? 10 : 0;
 	if (estimated_state_map[Cfg::StateName::Feeder].config().governor_type == Cfg::StateOrder::Position) {
 		float dt2 = timer.delta();
@@ -421,4 +416,45 @@ void DR16::manual_controls(const RobotStateMap& estimated_state_map, RobotStateM
 		pos_offset_y = estimated_state_map[Cfg::StateName::ChassisY].get_position();
 		feed = last_feed;
 	}
+}
+void DR16::print_live_data() {
+    Serial.printf("=== LIVE DR16 TRANSMITTER DATA ===\n");
+    
+    const char* mode_str = "UNKNOWN";
+    if (is_safety_mode()) {
+        mode_str = "SAFETY";
+    } else if (is_teensy_mode()) {
+        mode_str = "TEENSY";
+    } else if (is_hive_mode()) {
+        mode_str = "HIVE";
+    }
+
+    Serial.printf(" Control Mode: %-7s\n", mode_str);
+    
+    Serial.println("----------------------------------");
+    Serial.printf(" L Stick: X: %5.2f | Y: %5.2f\n", get_l_stick_x(), get_l_stick_y());
+    Serial.printf(" R Stick: X: %5.2f | Y: %5.2f\n", get_r_stick_x(), get_r_stick_y());
+    Serial.printf(" Wheel  : %5.2f\n", get_wheel());
+	
+	// Lambda to convert the float value into the SwitchPos string
+    auto sw_str = [](auto val) -> const char* {
+        switch (static_cast<SwitchPos>(static_cast<uint32_t>(val))) {
+            case SwitchPos::FORWARD:  return "FORWARD";
+            case SwitchPos::BACKWARD: return "BACKWARD";
+            case SwitchPos::MIDDLE:   return "MIDDLE";
+            default:                  return "INVALID";
+        }
+    };
+
+    // Print using the lambda and the %-8s padding
+    Serial.printf(" L Switch: %-8s | R Switch: %-8s\n", sw_str(get_l_switch()), sw_str(get_r_switch()));
+	
+    Serial.println("------------- MOUSE --------------");
+    Serial.printf(" X: %5d | Y: %5d | Z: %5d\n", get_mouse_x(), get_mouse_y(), get_mouse_z());
+    Serial.printf(" L_Btn: %d | R_Btn: %d\n", get_l_mouse_button(), get_r_mouse_button());
+    Serial.println("------------ KEYBOARD ------------");
+    
+    Keys k = get_keys();
+    Serial.printf(" W:%d A:%d S:%d D:%d | Q:%d E:%d\n", k.w, k.a, k.s, k.d, k.q, k.e);
+    Serial.printf(" Shift:%d | Ctrl:%d\n", k.shift, k.ctrl);
 }

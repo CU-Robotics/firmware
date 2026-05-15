@@ -47,3 +47,8 @@ void BuffEncoder::print() const{
     Serial.printf("Buff Encoder:\n\t");
     Serial.println(get_angle());
 }
+void BuffEncoder::print_live_data() {
+    // Note: casting get_name() to int so it prints the enum number
+    Serial.printf(" [Buff Encoder %d] Angle (rad): %8.4f\n", 
+                  (int)get_name(), get_angle());
+}

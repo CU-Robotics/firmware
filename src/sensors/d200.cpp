@@ -232,3 +232,7 @@ void D200LD14P::print_latest_packet() {
   Serial.print("timestamp: ");
   Serial.println(p.timestamp);
 }
+void D200LD14P::print_live_data() {
+    Serial.printf(" [D200 Lidar]     Latest Pkt Index: %d | Yaw: %5.2f rad | Yaw Vel: %5.2f rad/s\n", 
+                  get_latest_packet_index(), robot_yaw, robot_yaw_velocity);
+}

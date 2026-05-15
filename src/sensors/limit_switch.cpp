@@ -17,4 +17,8 @@ void LimitSwitch::send_to_comms() const {
     sendable.data = comms_data;
     sendable.send_to_comms();
 }
+void LimitSwitch::print_live_data() {
+    Serial.printf(" [Limit Switch %d] Status: %s\n", 
+                  (int)config.switch_name, get_is_pressed() ? "PRESSED (CLOSED)" : "OPEN");
+}
 
