@@ -7,13 +7,12 @@ int main() {
                           // debug use Serial.println & tycmd)
 	while(!Serial);
     debug.begin(SerialUSB1);
-	
-	//Print Splash Screen
-	Utils::print_logo();
-	
-	static HelloRobot robot;
+
+    Utils::print_logo();
+
+    static HelloRobot robot;
     robot.init();
     robot.run();
-	
+
     return 0;
 }

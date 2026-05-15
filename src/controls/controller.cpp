@@ -2,6 +2,128 @@
 #include "motor.hpp"
 #include "sensors/RefSystem.hpp"
 
+namespace {
+/// @brief Unwrap a potentially wrapped error value to maintain continuity across wrap boundaries.
+/// @param error The current error value.
+/// @param previous_error The previous control loop error value.
+/// @param config The state configuration containing wrap range information.
+/// @return The unwrapped error maintaining continuity from the previous value.
+float unwrap_controller_error(float error, float previous_error, const Cfg::State& config) {
+    if (!config.is_wrapping || config.governor_type != Cfg::StateOrder::Position) {
+        // Wrapping only applies to position control, and only if the state is configured to wrap
+        return error;
+    }
+
+    const float wrap_range = config.reference_limits.position.max - config.reference_limits.position.min;
+    if (wrap_range <= 0.0f) {
+        return error;
+    }
+
+    const float delta = error - previous_error;
+    const float half_wrap_range = wrap_range * 0.5f;
+    if (delta > half_wrap_range) {
+        error -= wrap_range;
+    } else if (delta < -half_wrap_range) {
+        error += wrap_range;
+    }
+
+    return error;
+}
+
+/// @brief Normalize a wrapped error value into its canonical form within the wrap range.
+/// @param error The error value to normalize.
+/// @param config The state configuration containing wrap range information.
+/// @return The normalized error value constrained to the wrapped position range.
+float normalize_wrapped_error(float error, const Cfg::State& config) {
+    if (!config.is_wrapping || config.governor_type != Cfg::StateOrder::Position) {
+        // Wrapping only applies to position control, and only if the state is configured to wrap
+        return error;
+    }
+
+    const float wrap_range = config.reference_limits.position.max - config.reference_limits.position.min;
+    if (wrap_range <= 0.0f) {
+        return error;
+    }
+
+    const float half_wrap_range = wrap_range * 0.5f;
+    while (error > half_wrap_range) {
+        error -= wrap_range;
+    }
+    while (error < -half_wrap_range) {
+        error += wrap_range;
+    }
+
+    return error;
+}
+} // namespace
+
+void Controller::checkControllerError(const char* controller_name, const char* state_name, const State& reference_state, const State& estimate_state, ErrorMonitor& monitor) {
+    // Skip error checking if in safety mode (robot is not actively controlled)
+    if (safety::is_safety_mode_active()) {
+        // Reset monitor to clean slate when safety mode is active
+        monitor.exceeding = false;
+        monitor.exceed_start_us = 0;
+        monitor.initialized = false;
+        monitor.previous_error = 0.0f;
+        return;
+    }
+
+    const Cfg::State& config = reference_state.config();
+    const float reference_value = get_state_error_value(reference_state);
+    const float estimate_value = get_state_error_value(estimate_state);
+
+    // Non-finite values indicate broken sensing/state propagation and should fail safe immediately.
+    if (!std::isfinite(reference_value) || !std::isfinite(estimate_value)) {
+        handleControllerError(controller_name, state_name, reference_state, estimate_state, reference_value - estimate_value);
+        return;
+    }
+
+    float error = reference_value - estimate_value;
+    if (!monitor.initialized) {
+        monitor.initialized = true;
+        monitor.previous_error = normalize_wrapped_error(error, config);
+        error = monitor.previous_error;
+    } else {
+        error = unwrap_controller_error(error, monitor.previous_error, config);
+        monitor.previous_error = error;
+    }
+
+    const float abs_error = fabsf(error);
+    if (abs_error > config.max_controller_error) {
+        if (!monitor.exceeding) {
+            monitor.exceeding = true;
+            monitor.exceed_start_us = micros();
+        }
+
+        // If error exceeds the configured threshold for too long, trigger the error handler
+        const uint32_t elapsed_us = static_cast<uint32_t>(micros() - monitor.exceed_start_us);
+        if (elapsed_us >= config.max_error_exceed_time_us) {
+            handleControllerError(controller_name, state_name, reference_state, estimate_state, error);
+        }
+    } else {
+        monitor.exceeding = false;
+        monitor.exceed_start_us = 0;
+    }
+}
+
+void Controller::handleControllerError(const char* controller_name, const char* state_name, const State& reference_state, const State& estimate_state, float error) {
+    const Cfg::State& config = reference_state.config();
+    safety::safety_procedure(
+        "%s: %s controller error exceeded threshold. error=%f threshold=%f",
+        controller_name,
+        state_name,
+        error,
+        config.max_controller_error
+    );
+}
+
+void XDriveController::validate(const RobotStateMap& reference_map, const RobotStateMap& estimate_map) {
+    // Our estimates of the chassis states are not accurate enough to run checks against their references.
+    // checkControllerError("XDriveController", "Chassis X", reference_map[chassis_x_state], estimate_map[chassis_x_state], chassis_x_error_monitor);
+    // checkControllerError("XDriveController", "Chassis Y", reference_map[chassis_y_state], estimate_map[chassis_y_state], chassis_y_error_monitor);
+    // checkControllerError("XDriveController", "Chassis Heading", reference_map[chassis_heading_state], estimate_map[chassis_heading_state], chassis_heading_error_monitor);
+}
+
 void XDriveController::step(RobotStateMap& reference_map, RobotStateMap& estimate_map) {
     float dt = timer.delta();
 
@@ -88,7 +210,7 @@ void XDriveController::step(RobotStateMap& reference_map, RobotStateMap& estimat
             drive_motors[i]->write_motor_torque(motor_outputs[i]);
         }
 
-    } else {
+    } else if (reference_map[Cfg::StateName::ChassisX].config().governor_type == Cfg::StateOrder::Velocity) {
 
         // High level velocity controller
         for (int i = 0; i < 2; i++) {
@@ -156,9 +278,18 @@ void XDriveController::step(RobotStateMap& reference_map, RobotStateMap& estimat
             pid.kd = low_level_velocity_controller.gains.d;
             motor_outputs[i] = pid.filter(dt, true, false) * power_limit_ratio;
             drive_motors[i]->write_motor_torque(motor_outputs[i]);
-            // Serial.printf("motor %d error: %f output: %f\n", i, -micro_estimate[i][1] + motor_velocity[i], outputs[i]);
         }
+    } else {
+        Serial.printf("governor type not used for xdrive controller");
     }
+}
+
+void XDriveController::handleControllerError(const char* controller_name, const char* state_name, const State& reference_state, const State& estimate_state, float error) {
+    Controller::handleControllerError(controller_name, state_name, reference_state, estimate_state, error);
+}
+
+void YawController::validate(const RobotStateMap& reference_map, const RobotStateMap& estimate_map) {
+    checkControllerError("YawController", "Gimbal Yaw", reference_map[yaw_angle_state], estimate_map[yaw_angle_state], yaw_error_monitor);
 }
 
 void YawController::step(RobotStateMap& reference_map, RobotStateMap& estimate_map) {
@@ -188,11 +319,21 @@ void YawController::step(RobotStateMap& reference_map, RobotStateMap& estimate_m
 
     float motor_outputs[2];
 
+    // output = output * 0.1;
+
     motor_outputs[0] = controller_config.gear_ratios.motor1_direction * output;
     motor_outputs[1] = controller_config.gear_ratios.motor2_direction * output;
 
     yaw_motor_1->write_motor_torque(motor_outputs[0]);
     yaw_motor_2->write_motor_torque(motor_outputs[1]);
+}
+
+void YawController::handleControllerError(const char* controller_name, const char* state_name, const State& reference_state, const State& estimate_state, float error) {
+    Controller::handleControllerError(controller_name, state_name, reference_state, estimate_state, error);
+}
+
+void PitchController::validate(const RobotStateMap& reference_map, const RobotStateMap& estimate_map) {
+    checkControllerError("PitchController", "Gimbal Pitch", reference_map[pitch_angle_state], estimate_map[pitch_angle_state], pitch_error_monitor);
 }
 
 void PitchController::step(RobotStateMap& reference_map, RobotStateMap& estimate_map) {
@@ -228,6 +369,14 @@ void PitchController::step(RobotStateMap& reference_map, RobotStateMap& estimate
     pitch_motor_2->write_motor_torque(motor_outputs[1]);
 }
 
+void PitchController::handleControllerError(const char* controller_name, const char* state_name, const State& reference_state, const State& estimate_state, float error) {
+    Controller::handleControllerError(controller_name, state_name, reference_state, estimate_state, error);
+}
+
+void FlywheelController::validate(const RobotStateMap& reference_map, const RobotStateMap& estimate_map) {
+    // checkControllerError("FlywheelController", "Flywheels", reference_map[flywheel_velocity_state], estimate_map[flywheel_velocity_state], flywheel_error_monitor);
+}
+
 void FlywheelController::step(RobotStateMap& reference_map, RobotStateMap& estimate_map) {
     float dt = timer.delta();
 
@@ -261,6 +410,14 @@ void FlywheelController::step(RobotStateMap& reference_map, RobotStateMap& estim
     flywheel_motor_2->write_motor_torque(motor_outputs[1]);
 }
 
+void FlywheelController::handleControllerError(const char* controller_name, const char* state_name, const State& reference_state, const State& estimate_state, float error) {
+    Controller::handleControllerError(controller_name, state_name, reference_state, estimate_state, error);
+}
+
+void FeederController::validate(const RobotStateMap& reference_map, const RobotStateMap& estimate_map) {
+    // checkControllerError("FeederController", "Feeder", reference_map[feeder_position_state], estimate_map[feeder_position_state], feeder_error_monitor);
+}
+
 void FeederController::step(RobotStateMap& reference_map, RobotStateMap& estimate_map) {
     float dt = timer.delta();
     pidp.kp = full_state_position_controller.gains.p;
@@ -280,6 +437,14 @@ void FeederController::step(RobotStateMap& reference_map, RobotStateMap& estimat
     float output = outputp * controller_config.gear_ratios.feeder_direction;
 
    feeder_motor->write_motor_torque(output);
+}
+
+void FeederController::handleControllerError(const char* controller_name, const char* state_name, const State& reference_state, const State& estimate_state, float error) {
+    Controller::handleControllerError(controller_name, state_name, reference_state, estimate_state, error);
+}
+
+void LowerFeederController::validate(const RobotStateMap& reference_map, const RobotStateMap& estimate_map) {
+    // checkControllerError("LowerFeederController", "Lower Feeder", reference_map[lower_feeder_position_state], estimate_map[lower_feeder_position_state], lower_feeder_error_monitor);
 }
 
 void LowerFeederController::step(RobotStateMap& reference_map, RobotStateMap& estimate_map) {
@@ -310,6 +475,6 @@ void LowerFeederController::step(RobotStateMap& reference_map, RobotStateMap& es
     //                 reference_map[lower_feeder_position_state].get_position(), reference_map[lower_feeder_position_state].get_velocity(),
     //                 estimate_map[lower_feeder_position_state].get_position(), estimate_map[lower_feeder_position_state].get_velocity());
         
-    close_feeder_motor->write_motor_torque(output);
+    near_feeder_motor->write_motor_torque(output);
     far_feeder_motor->write_motor_torque(-output);
 }

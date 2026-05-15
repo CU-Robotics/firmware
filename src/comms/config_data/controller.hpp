@@ -42,7 +42,7 @@ enum class GenericControllerMotorUse : uint32_t {
     FlywheelLeft,
     FlywheelRight,
     Feeder,
-    CloseFeeder,
+    NearFeeder,
     FarFeeder,
 };
 
