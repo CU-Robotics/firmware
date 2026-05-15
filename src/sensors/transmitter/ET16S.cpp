@@ -40,8 +40,8 @@ void ET16S::init() {
 	setup_edma_channel();
 }
 void ET16S::setup_edma_channel() {
-	// Enable DMA on Serial8
-	LPUART5_BAUD |= LPUART_BAUD_RDMAE;
+	// Enable DMA on Serial8 (i.MX RT1060 manual pg 2921)
+	LPUART5_BAUD |= LPUART_BAUD_RDMAE; 
 	
 	// Setup ping-pong buffer pointers
 	dma_target_buffer = dma_buffer_a;
@@ -51,7 +51,7 @@ void ET16S::setup_edma_channel() {
     rx_dma.source(LPUART5_DATA); 
     
     // Destination: Our cache-aligned RAM buffer, major loop of 25 bytes
-    rx_dma.destinationBuffer(dma_target_buffer, 25); 
+    rx_dma.destinationBuffer(dma_target_buffer, ET16S_PACKET_SIZE); 
     
     // Trigger: Map the LPUART5 RX hardware event through the DMAMUX
     rx_dma.triggerAtHardwareEvent(DMAMUX_SOURCE_LPUART5_RX);
@@ -87,7 +87,7 @@ void ET16S::dma_isr(){
     }
     
     // Update the hardware to point to the newly cleared buffer for the next packet
-    rx_dma.destinationBuffer(dma_target_buffer, 25);
+    rx_dma.destinationBuffer(dma_target_buffer, ET16S_PACKET_SIZE);
 	
     // Flag the main loop to process the data
     packet_ready = true; 
@@ -114,7 +114,7 @@ void ET16S::resync_frame(){
     }
     
     // start writing from beginning of buffer
-    rx_dma.destinationBuffer(dma_target_buffer, 25);
+    rx_dma.destinationBuffer(dma_target_buffer, ET16S_PACKET_SIZE);
     
     // next byte should be  0x0F.
     rx_dma.enable();
@@ -123,7 +123,7 @@ void ET16S::read() {
     if (packet_ready) {
         packet_ready = false; // Reset flag
         if (active_buffer[0] == 0x0F && active_buffer[24] == 0x00) {
-			// Data is guaranteed to be fully formed in dma_rx_buffer
+			// Data is complete in active buffer
 			format_raw((uint8_t*)active_buffer);
 			//set flag data
 			channel[16].data = channel[16].raw_format;
