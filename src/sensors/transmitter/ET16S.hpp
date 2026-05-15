@@ -375,7 +375,10 @@ private:
 	/// @brief Ping-pong buffer B 
     static DMAMEM uint8_t dma_buffer_b[32] __attribute__((aligned(32)));
 	
+	/// @brief boolean flag for if we have a complete 25 byte packet from transmitter
 	volatile bool packet_ready = false;
+	
+	/// @brief DMA channel object
 	DMAChannel rx_dma;
 	
 	/// @brief wrapper around DMA ISR so that static instance may be passed
@@ -383,13 +386,13 @@ private:
 	
 	/// @brief Interupt Service Routine (how we should interupt)
 	void dma_isr();
-	
+	/// @brief init for all dma functions and buffers
 	void setup_edma_channel();
 	
 	/// @brief Recovers frame alignment if a packet shift is detected
     void resync_frame();
 
 
-	///@brief  Pointer to the singleton instance of this class
+	/// @brief  Pointer to the singleton instance of this class
 	static ET16S* instance;
 };

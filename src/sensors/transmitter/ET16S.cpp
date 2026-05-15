@@ -96,7 +96,7 @@ void ET16S::resync_frame(){
     rx_dma.disable();
     Serial8.clear();
     
-    // 3. Wait for the frame boundary
+    //  Wait for the frame boundary
     elapsedMillis timeout; 
     
     // We give it 10ms (enough time for ~3 full packets) to find the sync boundary
@@ -139,55 +139,7 @@ void ET16S::read() {
 		}
 	}
 }
-/*
-void ET16S::read() {
-	static uint8_t last_byte = 0xAA;
-	
-	// if we have missed more than 4 packets (for example on startup), clear the buffer and start fresh
-	if (Serial8.available() > ET16S_PACKET_SIZE * 4) {
-		Serial8.clear();
-	}
 
-	// only start the "peeking" process if we have at least 2 packets worth of data, therefore we can afford to skip some bytes
-	if (Serial8.available() < ET16S_PACKET_SIZE * 2) {
-		return;
-	}
-
-	// try to find the start of the frame. This is achieved by seeing if the current byte to read is 0x0f and the previous byte read was 0x00
-	// if this is the case, we have found the start of the frame
-	while (Serial8.peek() != 0x0f) {
-		last_byte = Serial8.read();
-	}
-
-	// if the last byte was not 0x00, we have not found the start of the frame
-	if (last_byte != 0x00) {
-		return;
-	}
-
-	// if we have less than a full packet available, we cannot read the full frame
-	// however we are "aligned" with the start of the frame, so we can wait for the next frame
-	if (Serial8.available() < ET16S_PACKET_SIZE) {
-		return;
-	}
-
-	// read the full frame
-	for (int i = 0; i < ET16S_PACKET_SIZE; i++) {
-		m_inputRaw[i] = Serial8.read();
-	}
-
-	//format raw data
-	format_raw(m_inputRaw);
-	//set flag data
-	channel[16].data = channel[16].raw_format;
-	//set remaining data
-	set_channel_data();
-	//Check flag byte for disconnect
-	test_connection();
-
-	mode_changed_flag = (get_safety_switch() != prev_safety_switch_pos);
-	prev_safety_switch_pos = get_safety_switch();
-}
-*/
 void ET16S::print() {
 	for (int i = 0; i < ET16S_INPUT_VALUE_COUNT; i++) {
 		Serial.printf("%f ", channel[i].data);
