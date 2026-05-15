@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Arduino.h>
+#include "DMAChannel.h"
 #include "transmitter.hpp"
 #include "comms/data/ET16S_data.hpp"
 #include "utils/timing.hpp"
@@ -360,4 +361,35 @@ private:
 	/// @brief getter for transmitter data
 	/// @return Filled Transmitter data struct
 	ET16SData get_ET16S_data();
+
+	
+	/// @brief Points to the complete buffer the CPU should read from
+    static volatile uint8_t* active_buffer;
+	
+    /// @brief Points to the buffer the DMA is currently actively writing to
+    static volatile uint8_t* dma_target_buffer;
+	
+	/// @brief Ping-pong buffer A so we dont pull from a buffer being actively read from
+    static DMAMEM uint8_t dma_buffer_a[32] __attribute__((aligned(32)));
+	
+	/// @brief Ping-pong buffer B 
+    static DMAMEM uint8_t dma_buffer_b[32] __attribute__((aligned(32)));
+	
+	volatile bool packet_ready = false;
+	DMAChannel rx_dma;
+	
+	/// @brief wrapper around DMA ISR so that static instance may be passed
+	static void dma_isr_wrapper();
+	
+	/// @brief Interupt Service Routine (how we should interupt)
+	void dma_isr();
+	
+	void setup_edma_channel();
+	
+	/// @brief Recovers frame alignment if a packet shift is detected
+    void resync_frame();
+
+
+	///@brief  Pointer to the singleton instance of this class
+	static ET16S* instance;
 };
