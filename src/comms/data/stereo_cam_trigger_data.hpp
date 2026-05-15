@@ -16,10 +16,24 @@ struct StereoCamTriggerData : Comms::CommsData {
 
     State::Raw state[static_cast<size_t>(Cfg::StateName::StateNameCount)] = { {0, 0, 0} };
 
-    /// State matching has not been designed yet.
-
     /// @brief Print the stereo camera trigger data to the serial console for debugging purposes.
     void print() const {
         printf("StereoCamTriggerData - camera_trigger_name: %lu\n", static_cast<unsigned long>(camera_trigger_name));
     }
+};
+
+struct StartStereoTrigger : Comms::CommsData {
+    StartStereoTrigger() : CommsData(Comms::TypeLabel::StartStereoTrigger, Comms::PhysicalMedium::Ethernet, Comms::Priority::High, sizeof(StartStereoTrigger)) { }
+    Cfg::SensorName camera_trigger_name = Cfg::SensorName::UnsetSensorName;
+};
+
+struct StopStereoTrigger : Comms::CommsData {
+    StopStereoTrigger() : CommsData(Comms::TypeLabel::StopStereoTrigger, Comms::PhysicalMedium::Ethernet, Comms::Priority::High, sizeof(StopStereoTrigger)) { }
+    Cfg::SensorName camera_trigger_name = Cfg::SensorName::UnsetSensorName;
+};
+
+struct StereoCamStartStop {
+    bool running = false;
+    bool start_received = false;
+    bool stop_received = false;
 };

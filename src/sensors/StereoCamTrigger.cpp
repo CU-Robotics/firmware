@@ -45,10 +45,20 @@ void StereoCamTrigger::init() {
 
   // determine timer resolution from FPS
   float spf = 1.0 / float(config.fps); // seconds per frame
-  int mpf = 1.0e+6 * spf; // micros per frame
-  
-  // start the timer with the calculated resolution
-  start(mpf);
+  mpf = 1.0e+6 * spf; // micros per frame
+}
+
+void StereoCamTrigger::read() {
+  if (comms_layer.get_hive_data().stereo_cam_start_stop.start_received && !comms_layer.get_hive_data().stereo_cam_start_stop.running) {
+    start(mpf);
+    comms_layer.get_hive_data().stereo_cam_start_stop.start_received = false;
+    comms_layer.get_hive_data().stereo_cam_start_stop.running = true;
+  }
+  if (comms_layer.get_hive_data().stereo_cam_start_stop.stop_received && comms_layer.get_hive_data().stereo_cam_start_stop.running) {
+    stop();
+    comms_layer.get_hive_data().stereo_cam_start_stop.stop_received = false;
+    comms_layer.get_hive_data().stereo_cam_start_stop.running = false;
+  }
 }
 
 void StereoCamTrigger::send_to_comms() const {

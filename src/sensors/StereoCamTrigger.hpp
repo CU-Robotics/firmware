@@ -26,6 +26,9 @@ class StereoCamTrigger : public Sensor{
     /// @brief boolean indicating whether the signal has been stopped or not
     bool stopped = true;
     
+    // micros per frame
+    int mpf = 0; 
+
     /// @brief timestamp of the last time an exposure was triggered (last time signal was set to HIGH)
     volatile uint32_t latest_exposure_timestamp = 0;
     
@@ -40,7 +43,7 @@ class StereoCamTrigger : public Sensor{
     /// @brief initialize trigger manager by starting the interval timer
     void init() override;
     /// @brief empty read function since the updates are done in the timer interrupt callback
-    void read() override {};
+    void read() override;
     /// @brief Send exposure timestamp and estimated state at exposure to comms
     /// @note This is not implemented currently
     void send_to_comms() const override;
