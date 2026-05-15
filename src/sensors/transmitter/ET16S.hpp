@@ -107,7 +107,7 @@ class ET16S : public Transmitter {
 	bool mode_changed() override;
 
 	/// @copydoc Transmitter::manual_controls
-	void manual_controls(const RobotStateMap& estimated_state_map, RobotStateMap& target_state_map, bool not_safety_mode, float& feed, float& last_feed, bool has_lower_feeder) override;
+	void manual_controls(const RobotStateMap& estimated_state_map, RobotStateMap& target_state_map, bool not_safety_mode, float& feed, float& last_feed) override;
 	
 	/// @brief prints data in binary for a specific channel
 	/// @param channel_num channel number from 0-16 inclusive
@@ -303,7 +303,7 @@ private:
 	/// @brief right dial index	
 	int r_dial_num = 13;
 	/// @brief left dial index	
-	int l_dial_num=15;
+	int l_dial_num = 15;
 	/// @brief trim one index	
 	int trim_one_num = 16;
 	/// @brief trim two index	

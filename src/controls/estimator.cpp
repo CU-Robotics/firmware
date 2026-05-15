@@ -1,7 +1,97 @@
+#include <cmath>
+#include <limits>
+
 #include "estimator.hpp"
 #include "ICM20649.hpp"
 #include "utils/vector_math.hpp"
 #include "sensors/RefSystem.hpp"
+
+// Estimator shared checking implementation
+void Estimator::check_state_limits(const char* estimator_name, const char* state_name, const State& state, ErrorMonitor& monitor) {
+    const Cfg::State& config = state.config();
+    // Check position, velocity, acceleration against reference limits
+    bool violated = false;
+    float violation_amount = 0.0f;
+
+    float pos = state.get_position();
+    float vel = state.get_velocity();
+
+    // Non-finite values indicate broken estimation and should fail safe immediately.
+    if (!std::isfinite(pos) || !std::isfinite(vel)) {
+        violated = true;
+        violation_amount = std::numeric_limits<float>::quiet_NaN();
+    } else if (pos < config.physical_limits.position.min) {
+        violated = true;
+        violation_amount = config.physical_limits.position.min - pos;
+    } else if (pos > config.physical_limits.position.max) {
+        violated = true;
+        violation_amount = pos - config.physical_limits.position.max;
+    }
+
+    if (!violated) {
+        if (vel < config.physical_limits.velocity.min) {
+            violated = true;
+            violation_amount = config.physical_limits.velocity.min - vel;
+        } else if (vel > config.physical_limits.velocity.max) {
+            violated = true;
+            violation_amount = vel - config.physical_limits.velocity.max;
+        }
+    }
+
+    // Acceleration reference limits are much less likely to be represent our robots true physical limits so ignore
+    // float acc = state.get_acceleration();
+    // if (!violated) {
+    //     if (acc < config.physical_limits.acceleration.min) {
+    //         violated = true;
+    //         violation_amount = config.physical_limits.acceleration.min - acc;
+    //     } else if (acc > config.physical_limits.acceleration.max) {
+    //         violated = true;
+    //         violation_amount = acc - config.physical_limits.acceleration.max;
+    //     }
+    // }
+
+    if (violated) {
+        if (!monitor.exceeding) {
+            monitor.exceeding = true;
+            monitor.exceed_start_us = micros();
+        }
+        const uint32_t elapsed_us = static_cast<uint32_t>(micros() - monitor.exceed_start_us);
+        // If state violation exceeds the configured threshold for too long, trigger the error handler. Setting max_error_exceed_time_us to 0 means immediate escalation.
+        if (elapsed_us >= config.max_error_exceed_time_us) {
+            handleEstimatorError(estimator_name, state_name, state, violation_amount);
+        }
+    } else {
+        monitor.exceeding = false;
+        monitor.exceed_start_us = 0;
+    }
+}
+
+void Estimator::handleEstimatorError(const char* estimator_name, const char* state_name, const State& state, float violation_amount) {
+    const Cfg::State& config = state.config();
+    safety::safety_procedure(
+        "%s: %s estimate exceeded reference limits by %f (STATE: pos: %f, vel: %f, acc: %f; LIMITS: pos:[%f,%f] vel:[%f,%f] acc:[%f,%f])",
+        estimator_name,
+        state_name,
+        violation_amount,
+        state.get_position(),
+        state.get_velocity(),
+        state.get_acceleration(),
+        config.reference_limits.position.min,
+        config.reference_limits.position.max,
+        config.reference_limits.velocity.min,
+        config.reference_limits.velocity.max,
+        config.reference_limits.acceleration.min,
+        config.reference_limits.acceleration.max
+    );
+}
+
+void GimbalAndChassisEstimator::validate(const RobotStateMap& updated_state_map) {
+    check_state_limits("GimbalAndChassisEstimator", "Chassis X", updated_state_map[chassis_x_state], chassis_x_monitor);
+    check_state_limits("GimbalAndChassisEstimator", "Chassis Y", updated_state_map[chassis_y_state], chassis_y_monitor);
+    check_state_limits("GimbalAndChassisEstimator", "Chassis Heading", updated_state_map[chassis_heading_state], chassis_heading_monitor);
+    check_state_limits("GimbalAndChassisEstimator", "Yaw", updated_state_map[yaw_state], yaw_monitor);
+    check_state_limits("GimbalAndChassisEstimator", "Pitch", updated_state_map[pitch_state], pitch_monitor);
+}
 
 GimbalAndChassisEstimator::GimbalAndChassisEstimator(const Cfg::Estimator& estimator_config, SensorManager& sensor_manager, CANManager& can, std::vector<Cfg::StateName> available_states) : 
     buff_enc_yaw(sensor_manager.get_sensor_by_name<BuffEncoder>(estimator_config.get_sensor_name_by_generic_use(Cfg::GenericSensorUse::YawBuffEncoder))), 
@@ -25,6 +115,11 @@ GimbalAndChassisEstimator::GimbalAndChassisEstimator(const Cfg::Estimator& estim
     Serial.println("Gimbal and Chassis Estimator initialized!");
     yaw_encoder_offset = estimator_config.sensor_info.yaw_encoder_offset;
     pitch_encoder_offset = estimator_config.sensor_info.pitch_encoder_offset;
+    
+    pitch_encoder_direction = estimator_config.sensor_info.pitch_encoder_direction;
+    yaw_encoder_direction = estimator_config.sensor_info.yaw_encoder_direction;
+
+    has_pitch_imu = static_cast<bool>(estimator_config.sensor_info.has_pitch_imu);
 
     yaw_angle = estimator_config.sensor_info.yaw_start_angle;
     pitch_angle = estimator_config.sensor_info.pitch_start_angle;
@@ -52,13 +147,13 @@ GimbalAndChassisEstimator::GimbalAndChassisEstimator(const Cfg::Estimator& estim
 }
 
 void GimbalAndChassisEstimator::step_states(RobotStateMap& updated_state_map, const RobotStateMap& previous_state_map, int override) {
-    float pitch_enc_angle = (buff_enc_pitch->get_angle()) - pitch_encoder_offset;
+    float pitch_enc_angle = (buff_enc_pitch->get_angle() * pitch_encoder_direction) - pitch_encoder_offset;
     while (pitch_enc_angle >= PI)
         pitch_enc_angle -= 2 * PI;
     while (pitch_enc_angle <= -PI)
         pitch_enc_angle += 2 * PI;
 
-    float yaw_enc_angle = (buff_enc_yaw->get_angle()) - yaw_encoder_offset;
+    float yaw_enc_angle = (buff_enc_yaw->get_angle() * yaw_encoder_direction) - yaw_encoder_offset;
     while (yaw_enc_angle >= PI)
         yaw_enc_angle -= 2 * PI;
     while (yaw_enc_angle <= -PI)
@@ -66,7 +161,7 @@ void GimbalAndChassisEstimator::step_states(RobotStateMap& updated_state_map, co
 
     // calculates yaw velocity before integrating to find position
     // calculates the difference in initial and current pitch angle
-    // float pitch_diff = starting_pitch_angle - pitch_enc_angle;
+    float pitch_diff = starting_pitch_angle - pitch_enc_angle;
 
     // gimbal rotation axis in spherical coordinates in imu refrence frame
     if (imu_yaw_axis_vector[0] == 0)
@@ -76,7 +171,12 @@ void GimbalAndChassisEstimator::step_states(RobotStateMap& updated_state_map, co
     } else {
         yaw_axis_spherical[1] = atan(imu_yaw_axis_vector[1] / imu_yaw_axis_vector[0]); // theta
     }
-    yaw_axis_spherical[2] = acos(imu_yaw_axis_vector[2] / Utils::magnitude(imu_yaw_axis_vector, 3));// - pitch_diff; // phi
+
+    if (has_pitch_imu) {
+        yaw_axis_spherical[2] = acos(imu_yaw_axis_vector[2] / Utils::magnitude(imu_yaw_axis_vector, 3)) - pitch_diff; // phi
+    } else {
+        yaw_axis_spherical[2] = acos(imu_yaw_axis_vector[2] / Utils::magnitude(imu_yaw_axis_vector, 3)); // phi
+    }
 
     // roll_axis_spherical[1] = yaw_axis_spherical[1]; // theta
     // roll_axis_spherical[2] = yaw_axis_spherical[2]-(PI*0.5); // phi
@@ -136,9 +236,8 @@ void GimbalAndChassisEstimator::step_states(RobotStateMap& updated_state_map, co
 
     float imu_vel_offset = 1;
     // calculate the pitch yaw and roll velocities (Gimbal Relative)
-    // current_pitch_velocity = Utils::vectorProduct(pitch_axis_unitvector, raw_omega_vector, 3) / imu_vel_offset;
-    // current_yaw_velocity = Utils::vectorProduct(yaw_axis_unitvector, raw_omega_vector, 3) / imu_vel_offset;
-    current_yaw_velocity = -raw_omega_vector[1];
+    current_pitch_velocity = Utils::vectorProduct(pitch_axis_unitvector, raw_omega_vector, 3) / imu_vel_offset;
+    current_yaw_velocity = Utils::vectorProduct(yaw_axis_unitvector, raw_omega_vector, 3) / imu_vel_offset;
     current_roll_velocity = -Utils::vectorProduct(roll_axis_unitvector, raw_omega_vector, 3) / imu_vel_offset;
     
     // calculate the pitch yaw and roll velocities (Global Reference)
@@ -185,13 +284,14 @@ void GimbalAndChassisEstimator::step_states(RobotStateMap& updated_state_map, co
     // output[2][1] = 0;
     // output[2][2] = 0;
     
-    updated_state_map[yaw_state].set_position(yaw_angle);
-    updated_state_map[yaw_state].set_velocity(current_yaw_velocity);
-    updated_state_map[yaw_state].set_acceleration(roll_angle);
-    updated_state_map[pitch_state].set_position(pitch_enc_angle);
-    updated_state_map[pitch_state].set_velocity(current_pitch_velocity);
-    updated_state_map[pitch_state].set_acceleration(0);
-    updated_state_map[chassis_heading_state].set_position(chassis_angle);
+    updated_state_map[yaw_state].set_position_no_bound(yaw_angle);
+    updated_state_map[yaw_state].set_velocity_no_bound(current_yaw_velocity);
+    updated_state_map[yaw_state].set_acceleration_no_bound(roll_angle);
+    updated_state_map[pitch_state].set_position_no_bound(pitch_enc_angle);
+    updated_state_map[pitch_state].set_velocity_no_bound(current_pitch_velocity);
+    updated_state_map[pitch_state].set_acceleration_no_bound(0);
+    updated_state_map[chassis_heading_state].set_position_no_bound(chassis_angle);
+
     
 
     // 3 odom wheel estimation
@@ -257,18 +357,18 @@ void GimbalAndChassisEstimator::step_states(RobotStateMap& updated_state_map, co
     pos_estimate[2] += vel_estimate[2] * dt;
 
 
-    updated_state_map[chassis_x_state].set_position(pos_estimate[0]);
+    updated_state_map[chassis_x_state].set_position_no_bound(pos_estimate[0]);
     // output[0][1] = (pos_estimate[0] - previous_pos[0]) / dt;
-    updated_state_map[chassis_x_state].set_velocity(vel_estimate[0]);
-    updated_state_map[chassis_x_state].set_acceleration(0);
+    updated_state_map[chassis_x_state].set_velocity_no_bound(vel_estimate[0]);
+    updated_state_map[chassis_x_state].set_acceleration_no_bound(0);
 
-    updated_state_map[chassis_y_state].set_position(pos_estimate[1]);
+    updated_state_map[chassis_y_state].set_position_no_bound(pos_estimate[1]);
     // output[1][1] = (pos_estimate[1] - previous_pos[1]) / dt;
-    updated_state_map[chassis_y_state].set_velocity(vel_estimate[1]);
-    updated_state_map[chassis_y_state].set_acceleration(0);
+    updated_state_map[chassis_y_state].set_velocity_no_bound(vel_estimate[1]);
+    updated_state_map[chassis_y_state].set_acceleration_no_bound(0);
 
-    updated_state_map[chassis_heading_state].set_velocity(d_chassis_heading / dt);
-    updated_state_map[chassis_heading_state].set_acceleration(0);
+    updated_state_map[chassis_heading_state].set_velocity_no_bound(d_chassis_heading / dt);
+    updated_state_map[chassis_heading_state].set_acceleration_no_bound(0);
 
 
     previous_pos[0] = pos_estimate[0];
@@ -297,7 +397,11 @@ void FlywheelEstimator::step_states(RobotStateMap& updated_state_map, const Robo
     projectile_speed_ref = ref.ref_data.launching_status.initial_speed;
 
     //weighted average
-    updated_state_map[ball_exit_velocity].set_velocity((projectile_speed_ref * ref_estimate_weight) + (linear_velocity * motor_estimate_weight));
+    updated_state_map[ball_exit_velocity].set_velocity_no_bound((projectile_speed_ref * ref_estimate_weight) + (linear_velocity * motor_estimate_weight));
+}
+
+void FlywheelEstimator::validate(const RobotStateMap& updated_state_map) {
+    check_state_limits("FlywheelEstimator", "Flywheel Velocity", updated_state_map[ball_exit_velocity], flywheel_monitor);
 }
 
 FeederEstimator::FeederEstimator(const Cfg::Estimator& estimator_config, SensorManager& sensor_manager, CANManager& can, std::vector<Cfg::StateName> available_states) :
@@ -313,7 +417,6 @@ void FeederEstimator::step_states(RobotStateMap& updated_state_map, const RobotS
     float feeder_angle = feeder_encoder->get_angle();
     float diff;
     if (count == 0) {
-        Serial.printf("prev_feeder_angle %f\n",prev_feeder_angle);
         dt = 0; // first dt loop generates huge time so check for that
         diff = fmod((feeder_angle - feeder_offset), (float)(M_PI / feeder_ratio)) ;
         count++;
@@ -328,10 +431,18 @@ void FeederEstimator::step_states(RobotStateMap& updated_state_map, const RobotS
     float feeder_velocity = (dt > 0) ? (diff/(M_PI/feeder_ratio))/dt : 0;
   
     ball_count += diff/(M_PI/feeder_ratio);
-    updated_state_map[feeder_ball_state].set_position(ball_count * feeder_direction); // ball count
-    updated_state_map[feeder_ball_state].set_velocity(feeder_velocity * feeder_direction); // ball velocity
-    updated_state_map[feeder_ball_state].set_acceleration(0); // this is not the acceleration just the encoder value for debugging
+    updated_state_map[feeder_ball_state].set_position_no_bound(ball_count * feeder_direction); // ball count
+    updated_state_map[feeder_ball_state].set_velocity_no_bound(feeder_velocity * feeder_direction); // ball velocity
+    updated_state_map[feeder_ball_state].set_acceleration_no_bound(0); // this is not the acceleration just the encoder value for debugging
 
+}
+
+void FeederEstimator::validate(const RobotStateMap& updated_state_map) {
+    check_state_limits("FeederEstimator", "Feeder", updated_state_map[feeder_ball_state], feeder_monitor);
+}
+
+void LowerFeederEstimator::validate(const RobotStateMap& updated_state_map) {
+    check_state_limits("LowerFeederEstimator", "Lower Feeder", updated_state_map[feeder_ball_state], lower_feeder_monitor);
 }
 
 LowerFeederEstimator::LowerFeederEstimator(const Cfg::Estimator& estimator_config, SensorManager& sensor_manager, CANManager& can, std::vector<Cfg::StateName> available_states) :
@@ -341,7 +452,7 @@ LowerFeederEstimator::LowerFeederEstimator(const Cfg::Estimator& estimator_confi
     feeder_direction = estimator_config.sensor_info.feeder_direction;
     feeder_ratio = estimator_config.sensor_info.feeder_ratio;
 
-    close_feeder_motor = can.get_motor_by_name(estimator_config.get_motor_name_by_generic_use(Cfg::GenericEstimatorMotorUse::FeederClose));
+    near_feeder_motor = can.get_motor_by_name(estimator_config.get_motor_name_by_generic_use(Cfg::GenericEstimatorMotorUse::FeederClose));
     far_feeder_motor = can.get_motor_by_name(estimator_config.get_motor_name_by_generic_use(Cfg::GenericEstimatorMotorUse::FeederFar));
 }
 
@@ -350,38 +461,31 @@ void LowerFeederEstimator::step_states(RobotStateMap& updated_state_map, const R
     float feeder_angle = feeder_encoder->get_angle();
     float diff;
     if (count == 0) {
-        Serial.printf("prev_feeder_angle %f\n",prev_feeder_angle);
         dt = 0; // first dt loop generates huge time so check for that
         diff = fmod((feeder_angle - feeder_offset), (float)(M_PI / feeder_ratio)) ;
         count++;
     } else {
         diff = feeder_angle - prev_feeder_angle;
     }
-  
-    if (diff < -1 && diff > -5) {
+
+    // code to check if the encoder value is getting reset to near 0. Indicates a problem with the spi bus
+    if (fabs(diff) > 1 && fabs(diff) < 5) {
         num_encoder_resets++;
         reset_value = feeder_angle;
-        // Serial.printf("Feeder angle diff is large: %d, feeder angle: %f, prev feeder angle: %f\n", num_encoder_resets, feeder_angle, prev_feeder_angle);
+        Serial.printf("Feeder angle diff is large: %d, feeder angle: %f, prev feeder angle: %f\n", num_encoder_resets, feeder_angle, prev_feeder_angle);
     }
 
     prev_feeder_angle = feeder_angle;
     if (diff > PI) diff -= 2 * PI;
     else if (diff < -PI) diff += 2 * PI;
 
-    // float feeder_velocity = (dt > 0) ? (diff/(M_PI/feeder_ratio))/dt : 0;
+    // velocity estimation with buff encoder
+    float feeder_velocity = (dt > 0) ? (diff/(M_PI/feeder_ratio))/dt : 0;
   
     ball_count += diff/(M_PI/feeder_ratio);
 
-    float motor_velocity_close = close_feeder_motor->get_state().speed;
-    float motor_velocity_far = far_feeder_motor->get_state().speed;
-    // use the motor velocities because encoder spi is a bit broken rn
-
-    float ball_velocity = (((-motor_velocity_close + motor_velocity_far)/(2.0 * 36.0)) / (M_PI * 2)) * (feeder_ratio * 2.0); // balls/s, convert from rad/s using the feeder ratio and average of the two motors
-
-    // Serial.printf("encoder estimate: %f, motor estimate: %f, resets: %d, reset value: %f\n", feeder_velocity, ball_velocity, num_encoder_resets, reset_value);
-
-    updated_state_map[feeder_ball_state].set_position(ball_count * feeder_direction); // ball count
-    updated_state_map[feeder_ball_state].set_velocity(ball_velocity * feeder_direction); // ball velocity
-    updated_state_map[feeder_ball_state].set_acceleration(0); // this is not the acceleration just the encoder value for debugging
+    updated_state_map[feeder_ball_state].set_position_no_bound(ball_count * feeder_direction); // ball count
+    updated_state_map[feeder_ball_state].set_velocity_no_bound(feeder_velocity * feeder_direction); // ball velocity
+    updated_state_map[feeder_ball_state].set_acceleration_no_bound(0); // this is not the acceleration just the encoder value for debugging
 }
 

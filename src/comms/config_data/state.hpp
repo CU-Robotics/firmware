@@ -14,7 +14,7 @@ enum class StateName : uint32_t {
     Flywheels,
     Feeder,
     LowerFeeder,
-    placeholder,
+    StructPadding, // needed to make the enum size 10 so that rust and cpp structs can work without having padding
 
     StateNameCount
 };
@@ -25,33 +25,41 @@ enum class StateOrder : uint32_t {
     Velocity,
     Acceleration,
 };
-/// @brief ReferenceLimit represents the limits for a state.
-struct ReferenceLimit {
+
+/// @brief Generic Limit type with a min and a max.
+struct Limit {
     /// @brief The minimum value
     float min = 0.0;
     /// @brief The maximum value
     float max = 0.0;
 };
 
-/// @brief ReferenceLimits represents the limits for all orders of a state. States are governed by these values.
-struct ReferenceLimits {
+/// @brief StateLimit represents the limits for all orders of a state. States are governed by these values.
+struct StateLimit {
     /// @brief The limits for the position order
-    ReferenceLimit position;
+    Limit position;
     /// @brief The limits for the velocity order
-    ReferenceLimit velocity;
+    Limit velocity;
     /// @brief The limits for the acceleration order
-    ReferenceLimit acceleration;
+    Limit acceleration;
 };
+
 /// @brief The `State` struct represents the configuration for a state, including its reference limits, governor type, whether it is wrapping, and its name.
 struct State : Comms::CommsData {
     /// @brief The reference limits for this state. The reference governor uses these values to determine how to limit the reference state that the controllers are trying to achieve.
-    ReferenceLimits reference_limits;
+    StateLimit reference_limits;
+    /// @brief The physical limits for this state. 
+    StateLimit physical_limits;
     /// @brief The governor type for this state. This determines whether the reference governor limits the position, velocity, or acceleration reference for this state.
     StateOrder governor_type = StateOrder::Position;
     /// @brief whether this state's position value wraps between the position reference limits.
     uint32_t is_wrapping = 0;
     /// @brief Name of this state
     StateName name = StateName::UnsetStateName;
+    /// @brief The maximum acceptable error between the estimate and target for this state before entering safety mode
+    float max_controller_error = 0.0f;
+    /// @brief The maximum time in microseconds that a check (controller error or estimator state violation) can exceed its limit before entering safety mode
+    uint32_t max_error_exceed_time_us = 0;
 };
 
 };

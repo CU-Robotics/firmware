@@ -33,7 +33,7 @@ public:
     bool mode_changed();
     
     /// @copydoc Transmitter::manual_controls
-    void manual_controls(const RobotStateMap& estimated_state_map, RobotStateMap& target_state_map, bool not_safety_mode, float& feed, float& last_feed, bool has_lower_feeder);
+    void manual_controls(const RobotStateMap& estimated_state_map, RobotStateMap& target_state_map, bool not_safety_mode, float& feed, float& last_feed);
 
 private:
     /// @brief pointer to the transmitter object. This is allocated and assigned upin initialization based on the provided configuration.
