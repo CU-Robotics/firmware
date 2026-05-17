@@ -26,8 +26,11 @@ class StereoCamTrigger : public Sensor{
     /// @brief boolean indicating whether the signal has been stopped or not
     bool stopped = true;
     
-    // micros per frame
+    /// @brief micros per frame
     int mpf = 0; 
+
+    /// @brief boolean to indicate whether the first trigger has been sent since starting the interupt.
+    bool first_trigger = true;
 
     /// @brief timestamp of the last time an exposure was triggered (last time signal was set to HIGH)
     volatile uint32_t latest_exposure_timestamp = 0;
