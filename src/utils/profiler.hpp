@@ -2,7 +2,7 @@
 #define PROFILER_H
 
 // Use this flag to toggle profiling globally.
-// #define PROFILER
+//#define PROFILER
 
 #include <Arduino.h>
 

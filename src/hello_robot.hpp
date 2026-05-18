@@ -38,9 +38,7 @@ extern "C" void reset_teensy(void);
 // Loop constants
 #define LOOP_FREQ 1000
 #define HEARTBEAT_FREQ 2
-#ifdef PROFILER
-Profiler prof;
-#endif
+
 
 /// @brief Coordinates all hardware, networking, and control systems.
 class HelloRobot {

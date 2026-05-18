@@ -1,5 +1,9 @@
 #include "hello_robot.hpp"
 
+#ifdef PROFILER
+Profiler prof;
+#endif
+
 void HelloRobot::init() {
     crash_report();
     // Execute setup functions
