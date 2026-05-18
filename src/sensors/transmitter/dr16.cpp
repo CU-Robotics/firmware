@@ -330,9 +330,9 @@ void DR16::manual_controls(const RobotStateMap& estimated_state_map, RobotStateM
 		return (primary_val != 0) ? primary_val : secondary_val;
 	};
 	
-	pos_x = merge_input(mouse_x,ref.ref_data.kbm_interaction.mouse_speed_x) * 0.05 * delta;
-	pos_y = merge_input(mouse_y,ref.ref_data.kbm_interaction.mouse_speed_y) * 0.05 * delta;
-	l_mouse_button = merge_input(l_mouse_button,ref.ref_data.kbm_interaction.button_left);
+	pos_x += merge_input(mouse_x,ref.ref_data.kbm_interaction.mouse_speed_x) * 0.05 * delta;
+	pos_y += merge_input(mouse_y,ref.ref_data.kbm_interaction.mouse_speed_y) * 0.05 * delta;
+	feed_trigger = merge_input(l_mouse_button,ref.ref_data.kbm_interaction.button_left);
 	float pitch_min = estimated_state_map[Cfg::StateName::GimbalPitch].config().reference_limits.position.min;
     float pitch_max = estimated_state_map[Cfg::StateName::GimbalPitch].config().reference_limits.position.max;
     float pitch_average = 0.5 * (pitch_min + pitch_max);
@@ -375,7 +375,7 @@ void DR16::manual_controls(const RobotStateMap& estimated_state_map, RobotStateM
 		(get_r_switch() == SwitchPos::FORWARD || get_r_switch() == SwitchPos::MIDDLE) ? 18 : 0; // m/s
 	// if the right switch is forward, and either the left mouse button is pressed or the right switch is not
 	// backward, set the feeder to something. Otherwise, set it to 0
-	float feeder_target = ((l_mouse_button &&
+	float feeder_target = ((feed_trigger &&
 							get_r_switch() != SwitchPos::BACKWARD) || get_r_switch() == SwitchPos::FORWARD) ? 10 : 0;
 	if (estimated_state_map[Cfg::StateName::Feeder].config().governor_type == Cfg::StateOrder::Position) {
 		float dt2 = timer.delta();
