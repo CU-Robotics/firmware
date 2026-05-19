@@ -1,7 +1,9 @@
 #include "ICM20649.hpp"
 #include "safety.hpp"
 #include "comms/data/sendable.hpp"
-// initialize ICM
+
+const SPISettings ICM20649::m_settings = SPISettings(1000000, ICM20649_BITORDER, SPI_MODE0);
+
 void ICM20649::init() {
     
     // begin sensor depending on selected protocol
@@ -13,11 +15,7 @@ void ICM20649::init() {
     }
     case Cfg::CommunicationProtocol::SPI:
     {
-        // start SPI communication. Adafruit library will handle setting the SCK, MISO, MOSI pins as outputs/inputs as needed.
-        if (!sensor.begin_SPI(config.spi_cs, config.spi_sck, config.spi_miso, config.spi_mosi))
-        {
-            safety::assert_or_safety_procedure(sensor.begin_SPI(config.spi_cs, config.spi_sck, config.spi_miso, config.spi_mosi), "ICM: Failed to begin SPI. Pins: CS: %u, SCK: %u, MISO: %u, MOSI: %u", config.spi_cs, config.spi_sck, config.spi_miso, config.spi_mosi);
-        }
+            safety::assert_or_safety_procedure(sensor.begin_SPI(config.spi_cs, &SPI1), "ICM: Failed to begin SPI. Pins: CS: %u, SCK: %u, MISO: %u, MOSI: %u", config.spi_cs, config.spi_sck, config.spi_miso, config.spi_mosi);
         break;
     }
     default:
@@ -65,17 +63,21 @@ void ICM20649::init() {
 }
 void ICM20649::request_read() {
     if (config.communication_protocol != Cfg::CommunicationProtocol::SPI) return;
-	if (transfer_in_progress) return;
+    if (transfer_in_progress)
+        return;
+// Configure SPI and lock the bus
+    SPI1.beginTransaction(m_settings);
+	
 	digitalWrite(config.spi_cs, LOW); // Select the sensor (ICM is low triggerd)
     
     // Non-blocking SPI transfer
-    if(!(SPI.transfer(tx_buffer, rx_buffer, sizeof(tx_buffer), spi_event))){Serial.printf("===SPI TRANSFER FAILED===\n");}
-    
+    if(!(SPI1.transfer(tx_buffer, rx_buffer, sizeof(tx_buffer), spi_event))){Serial.printf("=== Error in SPI1 transfer ===\n");}
+	safety::assert_or_safety_procedure(SPI1.transfer(tx_buffer, rx_buffer, sizeof(tx_buffer), spi_event),"=== Error in SPI1 transfer ===\n");
     transfer_in_progress = true;
 }
 
 void ICM20649::read() {
-	if (config.communication_protocol != Cfg::CommunicationProtocol::SPI){
+	if (config.communication_protocol == Cfg::CommunicationProtocol::I2C){
 		// get the event data from the sensor class
 		sensor.getEvent(&accel, &gyro, &temp);
 		// assign result to this object's members.
@@ -104,6 +106,8 @@ void ICM20649::read() {
         if (spi_event) {
             digitalWrite(config.spi_cs, HIGH); // Deselect the sensor
 
+            SPI1.endTransaction();
+			
 			spi_event.clearEvent();
 				
             transfer_in_progress = false;

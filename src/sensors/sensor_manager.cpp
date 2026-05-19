@@ -22,6 +22,7 @@ void SensorManager::init(const Cfg::RobotConfig& config_data) {
     // start SPI
     Serial.println("Starting SPI");
     SPI.begin();
+	SPI1.begin();
     Serial.println("SPI Started");
 
     configure_sensors(config_data);

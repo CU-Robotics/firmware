@@ -1,12 +1,14 @@
 #pragma once
 
 // adafruit library specific to ICM20(...) hardware
-#include <Adafruit_ICM20649.h> 
+#include <Adafruit_ICM20649.h>
+#include <SPI.h>
 
 #include "sensors/AdafruitIMUSensor.hpp"
 #include "comms/data/icm_sensor_data.hpp"
 
 
+constexpr uint32_t ICM20649_BITORDER = MSBFIRST;
 
 /// @brief Sensor access for an ICM20649 IMU Sensor. Child of the abstract IMUSensor class.
 /// @note supports I2C and SPI communication. 
@@ -52,18 +54,23 @@ private:
     /// @brief approximate gyroscope data rate (Hz) calculated from divisor.
     float gyro_rate;
 
-    /// ICM sensor data.
+    /// @brief ICM sensor data.
     ICMSensorData comms_data;
 	
-	// DMA requires static memory locations
-    uint8_t tx_buffer[15]; 
+	/// @brief Buffer of transmitted data to IMU
+    uint8_t tx_buffer[15];
+	/// @brief Buffer of recieved data from IMU
     uint8_t rx_buffer[15];
 
     /// @brief The Teensy object that tracks DMA completion
-    EventResponder spi_event; 
+    EventResponder spi_event;
+	/// @brief The SPI settings of the ICM IMU
+    static const SPISettings m_settings;
     
     /// @brief Flag to track if there is a pending data transfer
     bool transfer_in_progress = false;
-	float accel_multiplier = 1.0f;
+	/// @brief multiplier to adjust acceleration to m/s
+    float accel_multiplier = 1.0f;
+	/// @brief multiplier to adjust acceleration to rads/s
     float gyro_multiplier = 1.0f;
 };
