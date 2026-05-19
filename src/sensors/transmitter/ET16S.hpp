@@ -228,7 +228,7 @@ class ET16S : public Transmitter {
 
 	/// @brief getter for raw data
 	/// @return raw data
-	uint8_t* get_raw() { return m_inputRaw; }
+	//uint8_t* get_raw() { return m_inputRaw; }
 
 	
 private:
@@ -353,7 +353,7 @@ private:
 	int value_indices[ET16S_INPUT_VALUE_COUNT] = { 0 };
 
 	/// @brief raw data packet
-	uint8_t m_inputRaw[ET16S_PACKET_SIZE] = { 0 };
+	//uint8_t m_inputRaw[ET16S_PACKET_SIZE] = { 0 };
 
 	/// @brief Configuration struct for the ET16S transmitter.
 	const Cfg::ET16S& config;
@@ -386,10 +386,11 @@ private:
 	
 	/// @brief Interupt Service Routine (how we should interupt)
 	void dma_isr();
+	
 	/// @brief init for all dma functions and buffers
 	void setup_edma_channel();
 	
-	/// @brief Recovers frame alignment if a packet shift is detected
+	/// @brief Recovers frame alignment if packet does not start with start byte and end with end byte
     void resync_frame();
 
 

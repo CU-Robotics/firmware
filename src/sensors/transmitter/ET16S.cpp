@@ -122,7 +122,7 @@ void ET16S::resync_frame(){
 void ET16S::read() {
     if (packet_ready) {
         packet_ready = false; // Reset flag
-        if (active_buffer[0] == 0x0F && active_buffer[24] == 0x00) {
+		if (active_buffer[0] == 0x0F && active_buffer[24] == 0x00) {
 			// Data is complete in active buffer
 			format_raw((uint8_t*)active_buffer);
 			//set flag data
