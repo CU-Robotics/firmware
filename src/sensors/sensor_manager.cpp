@@ -15,6 +15,7 @@ SensorManager::SensorManager() {}
 SensorManager::~SensorManager() {
     Serial.println("Ending SPI");
     SPI.end();
+	SPI1.end();
     Serial.println("SPI Ended");
 }
 

@@ -50,7 +50,10 @@ public:
 
     /// @brief initialize sensor
     void init() override;
-
+	
+	/// @copydoc AdafruitIMUSensor::request_read()
+    void request_read() override;
+	
     /// @brief Read via SPI the current angle of the encoder
     /// @note Returns and sets m_angle when it reads
     void read() override;
@@ -68,8 +71,13 @@ public:
  
     /// @brief Print the data for debugging
     void print() const;
+	
 	/// @brief Prints a formatted dashboard of live Buff Encoder values
     void print_live_data() override;
+
+    // bool is_transfer_complete() {return spi_event;}
+    void isr_start_transfer(EventResponderRef spi_event);
+	void isr_stop_transfer(EventResponderRef spi_event);
 
 private:
 
@@ -84,4 +92,16 @@ private:
 
     /// @brief The SPI settings of the buff encoders
     static const SPISettings m_settings;
+	
+	/// @brief Buffer of transmitted data to the buff encoders
+    alignas(32) uint8_t tx_buffer[32];
+	
+	/// @brief Buffer of recieved data from the buff encoders
+    alignas(32) uint8_t rx_buffer[32];
+
+    /// @brief The Teensy object that tracks DMA completion
+    //EventResponder spi_event;
+	    
+    /// @brief Flag to track if there is a pending data transfer
+    bool transfer_in_progress = false;
 };

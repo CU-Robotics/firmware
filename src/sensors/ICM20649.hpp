@@ -58,19 +58,23 @@ private:
     ICMSensorData comms_data;
 	
 	/// @brief Buffer of transmitted data to IMU
-    uint8_t tx_buffer[15];
+    alignas(32) uint8_t tx_buffer[32];
+	
 	/// @brief Buffer of recieved data from IMU
-    uint8_t rx_buffer[15];
+    alignas(32)uint8_t rx_buffer[32];
 
     /// @brief The Teensy object that tracks DMA completion
     EventResponder spi_event;
+	
 	/// @brief The SPI settings of the ICM IMU
     static const SPISettings m_settings;
     
     /// @brief Flag to track if there is a pending data transfer
     bool transfer_in_progress = false;
+	
 	/// @brief multiplier to adjust acceleration to m/s
     float accel_multiplier = 1.0f;
+	
 	/// @brief multiplier to adjust acceleration to rads/s
     float gyro_multiplier = 1.0f;
 };

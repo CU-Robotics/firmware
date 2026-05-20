@@ -1,8 +1,10 @@
 #include "ICM20649.hpp"
 #include "safety.hpp"
 #include "comms/data/sendable.hpp"
+#include <Adafruit_ICM20X.h>
 
 const SPISettings ICM20649::m_settings = SPISettings(1000000, ICM20649_BITORDER, SPI_MODE0);
+
 
 void ICM20649::init() {
     
@@ -15,7 +17,8 @@ void ICM20649::init() {
     }
     case Cfg::CommunicationProtocol::SPI:
     {
-            safety::assert_or_safety_procedure(sensor.begin_SPI(config.spi_cs, &SPI1), "ICM: Failed to begin SPI. Pins: CS: %u, SCK: %u, MISO: %u, MOSI: %u", config.spi_cs, config.spi_sck, config.spi_miso, config.spi_mosi);
+        safety::assert_or_safety_procedure(sensor.begin_SPI(config.spi_cs, &SPI1), "ICM: Failed to begin SPI. Pins: CS: %u, SCK: %u, MISO: %u, MOSI: %u", config.spi_cs, config.spi_sck, config.spi_miso, config.spi_mosi);
+		pinMode(config.spi_cs,OUTPUT);
         break;
     }
     default:
@@ -30,7 +33,7 @@ void ICM20649::init() {
     set_gyro_range(config.gyro_range);
 
 	// ICM20649 data starts at register 0x2D (ACCEL_XOUT_H) 0x80 is the SPI read flag.
-    tx_buffer[0] = 0x80 | 0x2D; 
+    tx_buffer[0] = 0x80 | ICM20X_B0_ACCEL_XOUT_H;
     for(int i = 1; i < 15; i++) {
         tx_buffer[i] = 0x00; // Dummy bytes to clock out the other 14 data bytes
     }
@@ -71,8 +74,7 @@ void ICM20649::request_read() {
 	digitalWrite(config.spi_cs, LOW); // Select the sensor (ICM is low triggerd)
     
     // Non-blocking SPI transfer
-    if(!(SPI1.transfer(tx_buffer, rx_buffer, sizeof(tx_buffer), spi_event))){Serial.printf("=== Error in SPI1 transfer ===\n");}
-	safety::assert_or_safety_procedure(SPI1.transfer(tx_buffer, rx_buffer, sizeof(tx_buffer), spi_event),"=== Error in SPI1 transfer ===\n");
+	safety::assert_or_safety_procedure(SPI1.transfer(tx_buffer, rx_buffer, sizeof(tx_buffer), spi_event),"=== Error in SPI1 transfer ===");
     transfer_in_progress = true;
 }
 

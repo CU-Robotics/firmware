@@ -1,5 +1,7 @@
 #include "buff_encoder.hpp"
 #include "comms/data/sendable.hpp"
+#include "safety.hpp"
+#include <SPI.h>
 
 const SPISettings BuffEncoder::m_settings = SPISettings(1000000, MT6835_BITORDER, SPI_MODE3);
 
@@ -8,33 +10,34 @@ void BuffEncoder::init() {
     pinMode(config_data.spi_cs, OUTPUT);
     digitalWrite(config_data.spi_cs, HIGH); // set CS high to start
 }
+void BuffEncoder::isr_start_transfer(EventResponderRef spi_event) {
+	tx_buffer[0] = (MT6835_OP_ANGLE << 4);
+	tx_buffer[1] = MT6835_REG_ANGLE1;
+	SPI1.beginTransaction(m_settings);
+	digitalWrite(config_data.spi_cs, LOW);
 
+	SPI1.transfer(tx_buffer, rx_buffer, sizeof(tx_buffer), spi_event); //after testing make this an assert_or_safety_procedure()
+}
+void BuffEncoder::isr_stop_transfer(EventResponderRef spi_event) {
+	digitalWrite(config_data.spi_cs, HIGH);
+    SPI1.endTransaction();
+    arm_dcache_delete(rx_buffer, 32);
+	
+}
 void BuffEncoder::read() {
+		// Serial.printf("Pin: %u, Sending Buff Encoder read command\n", config_data.spi_cs);
 
-    uint8_t data[6] = { 0 }; // transact 48 bits
+		// convert received angle into radians
+		int raw_angle = (rx_buffer[2] << 13) | (rx_buffer[3] << 5) | (rx_buffer[4] >> 3);
+		float radians = raw_angle / (float)MT6835_CPR * (3.14159265 * 2.0);
 
-    // set the operation
-    data[0] = (MT6835_OP_ANGLE << 4);
-    data[1] = MT6835_REG_ANGLE1;
+		// assign angle
+		m_angle = radians;
 
-    // Serial.printf("Pin: %u, Sending Buff Encoder read command\n", config_data.spi_cs);
-    // do the SPI transfer
-    SPI.beginTransaction(m_settings);
-    digitalWrite(config_data.spi_cs, LOW);
-    SPI.transfer(data, 6);
-    digitalWrite(config_data.spi_cs, HIGH);
-    SPI.endTransaction();
+		// Serial.printf("Buff Encoder %u - angle: %f\n", static_cast<uint32_t>(config_data.encoder_name), m_angle);
 
-    // convert received angle into radians
-    int raw_angle = (data[2] << 13) | (data[3] << 5) | (data[4] >> 3);
-    float radians = raw_angle / (float)MT6835_CPR * (3.14159265 * 2.0);
+		comms_data.m_angle = m_angle;
 
-    // assign angle
-    m_angle = radians;
-
-    // Serial.printf("Buff Encoder %u - angle: %f\n", static_cast<uint32_t>(config_data.encoder_name), m_angle);
-
-    comms_data.m_angle = m_angle;
 }
 
 void BuffEncoder::send_to_comms() const {
