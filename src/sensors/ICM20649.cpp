@@ -34,7 +34,7 @@ void ICM20649::init() {
 
 	// ICM20649 data starts at register 0x2D (ACCEL_XOUT_H) 0x80 is the SPI read flag.
     tx_buffer[0] = 0x80 | ICM20X_B0_ACCEL_XOUT_H;
-    for(int i = 1; i < 15; i++) {
+    for(int i = 1; i < 31; i++) {
         tx_buffer[i] = 0x00; // Dummy bytes to clock out the other 14 data bytes
     }
 	
@@ -68,13 +68,13 @@ void ICM20649::request_read() {
     if (config.communication_protocol != Cfg::CommunicationProtocol::SPI) return;
     if (transfer_in_progress)
         return;
-// Configure SPI and lock the bus
+	// Configure SPI and lock the bus
     SPI1.beginTransaction(m_settings);
 	
 	digitalWrite(config.spi_cs, LOW); // Select the sensor (ICM is low triggerd)
     
     // Non-blocking SPI transfer
-	safety::assert_or_safety_procedure(SPI1.transfer(tx_buffer, rx_buffer, sizeof(tx_buffer), spi_event),"=== Error in SPI1 transfer ===");
+	safety::assert_or_safety_procedure(SPI1.transfer(tx_buffer, rx_buffer, 15, spi_event),"=== Error in SPI1 transfer ===");
     transfer_in_progress = true;
 }
 

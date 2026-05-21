@@ -44,6 +44,7 @@ private:
     /// @brief calculate the approximate acceleration rates in Hz from the divisor.
     /// @return acceleration data rate in Hz
     float get_accel_data_rate();
+	
     /// @brief calculate the approximate gyroscope rates in Hz from the divisor.
     /// @return gyroscope data rate in Hz 
     float get_gyro_data_rate();

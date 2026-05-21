@@ -126,11 +126,6 @@ void HelloRobot::read_telemetry(){
 	// Begin Sensor DMA transfer for next loop
 	sensor_manager.request_read();
 		
-
-    // read sensors and send to comms
-    // this happens in one function call
-    sensor_manager.read();
-    sensor_manager.send_to_comms();
 }
 void HelloRobot::process_behaviors() {
     // manual controls on firmware

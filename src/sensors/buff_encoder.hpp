@@ -52,7 +52,7 @@ public:
     void init() override;
 	
 	/// @copydoc AdafruitIMUSensor::request_read()
-    void request_read() override;
+    //void request_read() override;
 	
     /// @brief Read via SPI the current angle of the encoder
     /// @note Returns and sets m_angle when it reads
@@ -75,7 +75,6 @@ public:
 	/// @brief Prints a formatted dashboard of live Buff Encoder values
     void print_live_data() override;
 
-    // bool is_transfer_complete() {return spi_event;}
     void isr_start_transfer(EventResponderRef spi_event);
 	void isr_stop_transfer(EventResponderRef spi_event);
 
