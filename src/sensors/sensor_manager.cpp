@@ -37,7 +37,10 @@ void SensorManager::init(const Cfg::RobotConfig& config_data) {
 
 void SensorManager::configure_sensors(const Cfg::RobotConfig& config_data) {
     for (const auto &buff_encoder_config : config_data.buff_encoders) {
-		auto encoder_ptr = std::make_shared<BuffEncoder>(buff_encoder_config);
+        auto encoder_ptr = std::make_shared<BuffEncoder>(buff_encoder_config);
+
+        encoder_ptr->bind_dma_flag(&encoder_isr_in_progress);
+		
         sensors.emplace(buff_encoder_config.encoder_name, encoder_ptr);
         
         // Add to the dedicated ISR routing list

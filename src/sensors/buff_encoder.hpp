@@ -76,7 +76,8 @@ public:
     void print_live_data() override;
 
     void isr_start_transfer(EventResponderRef spi_event);
-	void isr_stop_transfer(EventResponderRef spi_event);
+    void isr_stop_transfer(EventResponderRef spi_event);
+	void bind_dma_flag(const volatile bool* flag_ptr);
 
 private:
 
@@ -98,9 +99,7 @@ private:
 	/// @brief Buffer of recieved data from the buff encoders
     alignas(32) uint8_t rx_buffer[32];
 
-    /// @brief The Teensy object that tracks DMA completion
-    //EventResponder spi_event;
-	    
-    /// @brief Flag to track if there is a pending data transfer
-    bool transfer_in_progress = false;
+	/// @brief Pointer to the SensorManager's active cascade flag
+    const volatile bool* shared_dma_flag;
+	// Could this be a shared pointer??
 };

@@ -27,6 +27,9 @@ void BuffEncoder::isr_stop_transfer(EventResponderRef spi_event) {
 	
 }
 void BuffEncoder::read() {
+	if (shared_dma_flag != nullptr && *shared_dma_flag == true) {
+        return; 
+    }
 	// Serial.printf("Pin: %u, Sending Buff Encoder read command\n", config_data.spi_cs);
 
 	// convert received angle into radians
@@ -56,4 +59,8 @@ void BuffEncoder::print_live_data() {
     // Note: casting get_name() to int so it prints the enum number
     Serial.printf(" [Buff Encoder %d] Angle (rad): %8.4f\n", 
                   (int)get_name(), get_angle());
+}
+
+void BuffEncoder::bind_dma_flag(const volatile bool* flag_ptr) {
+        shared_dma_flag = flag_ptr;
 }
