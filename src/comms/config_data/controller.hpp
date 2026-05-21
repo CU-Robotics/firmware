@@ -44,6 +44,7 @@ enum class GenericControllerMotorUse : uint32_t {
     Feeder,
     NearFeeder,
     FarFeeder,
+    UpperFeeder,
 };
 
 
@@ -67,6 +68,7 @@ enum class GenericControllerStateUse : uint32_t {
     ShooterBallVelocity,
     FeederBallPosition,
     LowerFeederBallPosition,
+    UpperFeederBallPosition,
 };
 /// @brief This enum represents the different types of controllers that can be configured in the config.
 enum class ControllerType : uint32_t {
@@ -93,6 +95,11 @@ enum class SubControllerType : uint32_t {
     
     FullStatePositionController,
     FullStateVelocityController,
+
+    UpperFeederPositionController,
+    UpperFeederVelocityController,
+    LowerFeederPositionController,
+    LowerFeederVelocityController,
 };
 /// @brief Gains for a sub controller.
 struct Gains {
@@ -125,6 +132,10 @@ struct GearRatios {
     float ball_to_flywheel_rad = 0.0;
     /// @brief direction of the feeder motor either 1 or -1
     int feeder_direction = 0;
+    /// @brief direction of the upper feeder motor either 1 or -1
+    int upper_feeder_direction = 0;
+    /// @brief direction of the lower feeder motor either 1 or -1
+    int lower_feeder_direction = 0;
 };
 /// @brief Subcontroller configuration for a controller.
 struct SubController {
