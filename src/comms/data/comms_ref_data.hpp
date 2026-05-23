@@ -69,18 +69,10 @@ struct RobotPerformanceData {
 };
 /// @copydoc RobotPowerHeat
 struct RobotPowerHeatData {
-    /// @copydoc RobotPowerHeat::chassis_voltage_output
-    uint32_t chassis_voltage_output = 0;
-    /// @copydoc RobotPowerHeat::chassis_current_output
-    uint32_t chassis_current_output = 0;
-    /// @copydoc RobotPowerHeat::chassis_power
-    float chassis_power = 0.f;
     /// @copydoc RobotPowerHeat::buffer_energy
     uint32_t buffer_energy = 0;
     /// @copydoc RobotPowerHeat::barrel_heat_1_17mm
     uint32_t barrel_heat_1_17mm = 0;
-    /// @copydoc RobotPowerHeat::barrel_heat_2_17mm
-    uint32_t barrel_heat_2_17mm = 0;
     /// @copydoc RobotPowerHeat::barrel_heat_42mm
     uint32_t barrel_heat_42mm = 0;
 };
