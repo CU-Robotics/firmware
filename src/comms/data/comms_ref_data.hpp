@@ -1,7 +1,7 @@
-#pragma once 
+#pragma once
 
-#include "comms/data/comms_data.hpp"            // for CommsData
-#include <stdint.h>                             // uintN_t
+#include "comms/data/comms_data.hpp" // for CommsData
+#include <stdint.h>                  // uintN_t
 
 /// @copydoc GameStatus
 struct GameStatusData {
@@ -109,7 +109,7 @@ struct ProjectileAllowanceData {
 /// @brief Mega struct fo al of the ref data we want to send over comms
 struct CommsRefData : Comms::CommsData {
     /// @brief default constructor that initializes the CommsData base class with the appropriate type label, physical medium, priority, and size for this struct
-    CommsRefData() : CommsData(Comms::TypeLabel::CommsRefData, Comms::PhysicalMedium::Ethernet, Comms::Priority::High, sizeof(CommsRefData)) { }
+    CommsRefData() : CommsData(Comms::TypeLabel::CommsRefData, Comms::PhysicalMedium::Ethernet, Comms::Priority::High, sizeof(CommsRefData)) {}
     /// @brief status of the current game
     GameStatusData game_status_data;
     /// @brief result of the current game

@@ -1,11 +1,11 @@
 #pragma once
 
-#include <Arduino.h>
 #include "comms/data/comms_ref_data.hpp"
+#include <Arduino.h>
 
 /// @brief Maximum size of a Ref System packet in bytes \n
 /// @brief 5 byte header + 2 byte command ID + 300 + 2 byte CRC
-constexpr uint16_t REF_MAX_PACKET_SIZE = 309; 
+constexpr uint16_t REF_MAX_PACKET_SIZE = 309;
 // TODO: This size is only required by 0x0310 and pretty excessive to use for every packet. Maybe we could reduce the raw array length for most packets or rework how the raw bytes are stores in each struct.
 
 /// @brief Maximum valid command ID for Ref System packets
@@ -102,24 +102,22 @@ struct FrameHeader {
 /// @brief Struct for the Frame data portion
 struct FrameData {
     /// @brief Data array to hold the Frame data portion
-    uint8_t data[REF_MAX_PACKET_SIZE] = { 0 };
+    uint8_t data[REF_MAX_PACKET_SIZE] = {0};
 
     /// @brief Helpful index operator. Allows array-like indexing from the object itself
     /// @param index index
     /// @return uint8_t data at index
-    uint8_t operator[](int index) {
-        return data[index];
-    }
+    uint8_t operator[](int index) { return data[index]; }
 };
 
 /// @brief Struct for the entire Frame. Consists of a FrameHeader, Command ID, FrameData, and CRC
 struct Frame {
     /// @brief Header portion of a Frame
-    FrameHeader header {};
+    FrameHeader header{};
     /// @brief Command ID potion of a Frame
     uint16_t commandID = 0;
     /// @brief Data portion of a Frame
-    FrameData data {};
+    FrameData data{};
     /// @brief 16-bit CRC for the entire Frame
     uint16_t CRC = 0;
 
@@ -148,13 +146,13 @@ struct GameStatus {
     /// @brief The raw byte array of data received from ref
     /// @note this is only the FrameData data rather than the whole ref packet
     uint8_t raw[REF_MAX_PACKET_SIZE] = {0};
-    
+
     /// @brief Competition type \n
     /// @brief 1: RMUC. 2: Reserved. 3: Reserved. 4: RMUL 3v3. 5: RUML 1v1.
-    uint8_t competition_type: 4 = 0;
+    uint8_t competition_type : 4 = 0;
     /// @brief Current stage of the competition \n
     /// @brief 0: pre-competition. 1: preparation. 2: 15s Ref System initialization. 3: 5s countdown. 4: In competition. 5: Result calculation.
-    uint8_t current_stage: 4 = 0;
+    uint8_t current_stage : 4 = 0;
     /// @brief Remaining time of the current round in seconds
     uint16_t round_time_remaining = 0;
     /// @brief UNIX time, effective after the robot is correctly connected to the Referee System's NTP server
@@ -337,7 +335,7 @@ struct EventData {
     /// @param data FrameData object to extract data from
     void set_data(FrameData data) {
         memcpy(raw, data.data, packet_size);
-        reload_zone_status = (data[0] >> 2) & 0x01;   // bit 2
+        reload_zone_status = (data[0] >> 2) & 0x01;                               // bit 2
         capture_point_status = ((data[2] >> 7) & 0x01) | ((data[3] & 0x01) << 1); // bits 23 and 24
     }
 
@@ -434,7 +432,7 @@ struct DartStatus {
         num_recent_hits = (dart_info >> 3) & 0x07;
         current_target = (dart_info >> 6) & 0x07;
         reserved = (dart_info >> 9) & 0x7F;
-    }    
+    }
 };
 
 /// @brief Robot performance system data
@@ -565,7 +563,7 @@ struct RobotPowerHeat {
 
         uint32_t reserved_3_raw = (data[7] << 24) | (data[6] << 16) | (data[5] << 8) | data[4];
         memcpy(&reserved_3, &reserved_3_raw, sizeof(reserved_3));
-        
+
         buffer_energy = (data[9] << 8) | data[8];
         barrel_heat_1_17mm = (data[11] << 8) | data[10];
         barrel_heat_42mm = (data[13] << 8) | data[12];
@@ -1072,7 +1070,7 @@ struct GroundRobotPositions {
         memcpy(&reserved_1, &reserved_1_raw, sizeof(reserved_1));
         uint32_t reserved_2_raw = (data[39] << 24) | (data[38] << 16) | (data[37] << 8) | data[36];
         memcpy(&reserved_2, &reserved_2_raw, sizeof(reserved_2));
-    }    
+    }
 };
 
 /// @brief Radar-marked progress data
@@ -1232,7 +1230,7 @@ struct RobotInteraction {
     /// @brief Size (in bytes) of the data array
     uint8_t size = 0;
     /// @brief Actual data array holding our byte reperesentation of whatever were sending
-    uint8_t data[REF_MAX_PACKET_SIZE] = { 0 };
+    uint8_t data[REF_MAX_PACKET_SIZE] = {0};
 
     /// @brief Prints the RobotInteraction packet
     void print() {
@@ -1244,7 +1242,7 @@ struct RobotInteraction {
 
     /// @brief Fills in this struct with the data from a Frame object
     /// @param frame Frame object to extract data from
-    void set_data(Frame& frame) {
+    void set_data(Frame &frame) {
         size = frame.header.data_length - 6;
 
         content_id = (frame.data.data[1] << 8) | frame.data.data[0];
@@ -1269,7 +1267,7 @@ struct CustomControllerRobot {
     uint8_t raw[REF_MAX_PACKET_SIZE] = {0};
 
     /// @brief Custom data
-    uint8_t data[30] = { 0 };
+    uint8_t data[30] = {0};
 
     /// @brief Prints the ControllerRobots packet
     void print() {
@@ -1336,7 +1334,7 @@ struct SmallMapCommand {
         cmd_keyboard = data[8];
         target_robot_id = data[9];
         cmd_source = (data[11] << 8) | data[10];
-    }    
+    }
 };
 
 /// @brief Radar data received by player clients' Small Maps
@@ -1486,7 +1484,7 @@ struct CustomControllerClient {
     uint16_t mouse_right : 4;
     /// @brief Reserved
     uint16_t reserved = 0;
-    
+
     /// @brief Prints the ControllerClient packet
     void print() {
         Serial.println("ControllerClient:");
