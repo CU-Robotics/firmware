@@ -3,10 +3,13 @@
 #include <Arduino.h>
 #include "comms/data/comms_ref_data.hpp"
 
-/// @brief Maximum size of a Ref System packet in bytes
-constexpr uint16_t REF_MAX_PACKET_SIZE = 128;
+/// @brief Maximum size of a Ref System packet in bytes \n
+/// @brief 5 byte header + 2 byte command ID + 300 + 2 byte CRC
+constexpr uint16_t REF_MAX_PACKET_SIZE = 309; 
+// TODO: This size is only required by 0x0310 and pretty excessive to use for every packet. Maybe we could reduce the raw array length for most packets or rework how the raw bytes are stores in each struct.
+
 /// @brief Maximum valid command ID for Ref System packets
-constexpr uint16_t REF_MAX_COMMAND_ID = 0x0308;
+constexpr uint16_t REF_MAX_COMMAND_ID = 0x0311;
 
 /*--- Ref System Frame Structs ---*/
 
@@ -20,8 +23,6 @@ enum FrameType {
     GAME_ROBOT_HP = 0x0003,
     /// @brief Site event data
     EVENT_DATA = 0x0101,
-    /// @brief Action identifier data of the Official Projectile Supplier
-    PROJECTILE_SUPPLIER_STATUS = 0x0102,
     /// @brief Referee warning data
     REFEREE_WARNING = 0x0104,
     /// @brief Dart launching data
@@ -60,8 +61,6 @@ enum FrameType {
     CUSTOM_CONTROLLER_ROBOT = 0x0302,
     /// @brief Player client's small map interaction data
     SMALL_MAP_COMMAND = 0x0303,
-    /// @brief Keyboard, mouse, and remote control data
-    KBM_INTERACTION = 0x0304,
     /// @brief Radar data received by player clients' Small Maps
     SMALL_MAP_RADAR_POSITION = 0x0305,
     /// @brief Data about the interaction between the Custom Controller and player clients
@@ -70,6 +69,12 @@ enum FrameType {
     SMALL_MAP_SENTRY_COMMAND = 0x0307,
     /// @brief Robot data received by player clients' Small Map
     SMALL_MAP_ROBOT_DATA = 0x0308,
+    /// @brief Custom data sent from a robot to the Custom Controller.
+    ROBOT_CUSTOM_CONTROLLER_DATA = 0x0309,
+    /// @brief Custom data sent from a robot to the Custom Client.
+    ROBOT_CUSTOM_CLIENT_DATA = 0x0310,
+    /// @brief Custom command sent from the Custom Client to robots.
+    CUSTOM_CLIENT_ROBOT_COMMAND = 0x0311,
 };
 
 /// @brief Struct for the Frame header portion
@@ -147,11 +152,11 @@ struct GameStatus {
     uint8_t raw[REF_MAX_PACKET_SIZE] = {0};
     
     /// @brief Competition type \n
-    /// @brief 1: RMUC. 2: RMUT. 3: RMUA. 4: RMUL 3v3. 5: RUML 1v1.
-    uint8_t competition_type = 0;
+    /// @brief 1: RMUC. 2: Reserved. 3: Reserved. 4: RMUL 3v3. 5: RUML 1v1.
+    uint8_t competition_type: 4 = 0;
     /// @brief Current stage of the competition \n
     /// @brief 0: pre-competition. 1: preparation. 2: 15s Ref System initialization. 3: 5s countdown. 4: In competition. 5: Result calculation.
-    uint8_t current_stage = 0;
+    uint8_t current_stage: 4 = 0;
     /// @brief Remaining time of the current round in seconds
     uint16_t round_time_remaining = 0;
     /// @brief UNIX time, effective after the robot is correctly connected to the Referee System's NTP server
@@ -173,6 +178,7 @@ struct GameStatus {
         competition_type = data[0] & 0x0F;
         current_stage = (data[0] >> 4) & 0x0F;
         round_time_remaining = (data[2] << 8) | data[1];
+        unix_time = 0;
         unix_time |= data[10];
         unix_time <<= 8;
         unix_time |= data[9];
@@ -244,60 +250,65 @@ struct GameResult {
 /// @note ID: 0x0003
 struct GameRobotHP {
     /// @brief Size of the GameRobotHP packet in bytes
-    static const uint8_t packet_size = 32;
+    static const uint8_t packet_size = 16;
 
     /// @brief The raw byte array of data received from ref
     /// @note this is only the FrameData data rather than the whole ref packet
     uint8_t raw[REF_MAX_PACKET_SIZE] = {0};
 
-    /// @brief Red team's robot HPs
-    /// @brief 0: Robot 1. 1: Robot 2. 2: Robot 3. 3: Robot 4. 4: Robot 5. 5: Robot 7. 6: Outpost. 7: Base.
-    uint16_t red_team_HP[8] = { 0 };
-
-    /// @brief Blue team's robot HPs
-    /// @brief 0: Robot 1. 1: Robot 2. 2: Robot 3. 3: Robot 4. 4: Robot 5. 5: Robot 7. 6: Outpost. 7: Base.
-    uint16_t blue_team_HP[8] = { 0 };
+    /// @brief Health of own side's hero (Robot No. 1)
+    uint16_t hero_health = 0;
+    /// @brief Health of own side's engineer (Robot No. 2)
+    uint16_t engineer_health = 0;
+    /// @brief Health of own side's standard infantry (Robot No. 3)
+    uint16_t standard_3_health = 0;
+    /// @brief Health of own side's standard infantry (Robot No. 4)
+    uint16_t standard_4_health = 0;
+    /// @brief Reserved field
+    uint16_t reserved = 0;
+    /// @brief Health of own side's sentry (Robot No. 7)
+    uint16_t sentry_health = 0;
+    /// @brief Health of own side's outpost (Robot No. 8)
+    uint16_t outpost_health = 0;
+    /// @brief Health of own side's base (Robot No. 9)
+    uint16_t base_health = 0;
 
     /// @brief Prints the GameRobotHP packet
     void print() {
         Serial.println("GameRobotHP:");
-        Serial.println("Red Team:");
-        for (int i = 0; i < 8; i++) {
-            Serial.printf("\tRobot %u: %u\n", i + 1, red_team_HP[i]);
-        }
-        Serial.println("Blue Team:");
-        for (int i = 0; i < 8; i++) {
-            Serial.printf("\tRobot %u: %u\n", i + 1, blue_team_HP[i]);
-        }
+        Serial.printf("\tHero: %u\n", hero_health);
+        Serial.printf("\tEngineer: %u\n", engineer_health);
+        Serial.printf("\tStandard 3: %u\n", standard_3_health);
+        Serial.printf("\tStandard 4: %u\n", standard_4_health);
+        Serial.printf("\tSentry: %u\n", sentry_health);
+        Serial.printf("\tReserved: %u\n", reserved);
+        Serial.printf("\tOutpost: %u\n", outpost_health);
+        Serial.printf("\tBase: %u\n", base_health);
     }
 
     /// @brief Fills in this struct with the data from a FrameData object
     /// @param data FrameData object to extract data from
     void set_data(FrameData data) {
         memcpy(raw, data.data, packet_size);
-        for (int i = 0; i < 8; i++) {
-            red_team_HP[i] = (data[2 * i + 1] << 8) | data[2 * i];
-            blue_team_HP[i] = (data[16 + 2 * i + 1] << 8) | data[16 + 2 * i];
-        }
+        hero_health = (data[1] << 8) | data[0];
+        engineer_health = (data[3] << 8) | data[2];
+        standard_3_health = (data[5] << 8) | data[4];
+        standard_4_health = (data[7] << 8) | data[6];
+        sentry_health = (data[11] << 8) | data[10];
+        reserved = (data[9] << 8) | data[8];
+        outpost_health = (data[13] << 8) | data[12];
+        base_health = (data[15] << 8) | data[14];
     }
 
     /// @brief Converts this GameRobotHP struct to a RobotHealthData struct for comms transmission
     /// @return RobotHealthData struct with the same data as this GameRobotHP struct
     RobotHealthData to_comms_data() {
         RobotHealthData data;
-        data.red_hero_health = red_team_HP[0];
-        data.red_engineer_health = red_team_HP[1];
-        data.red_standard_3_health = red_team_HP[2];
-        data.red_standard_4_health = red_team_HP[3];
-        data.red_standard_5_health = red_team_HP[4];
-        data.red_sentry_health = red_team_HP[5];
-
-        data.blue_hero_health = blue_team_HP[0];
-        data.blue_engineer_health = blue_team_HP[1];
-        data.blue_standard_3_health = blue_team_HP[2];
-        data.blue_standard_4_health = blue_team_HP[3];
-        data.blue_standard_5_health = blue_team_HP[4];
-        data.blue_sentry_health = blue_team_HP[5];
+        data.hero_health = hero_health;
+        data.engineer_health = engineer_health;
+        data.standard_3_health = standard_3_health;
+        data.standard_4_health = standard_4_health;
+        data.sentry_health = sentry_health;
         return data;
     }
 };
@@ -329,7 +340,7 @@ struct EventData {
     void set_data(FrameData data) {
         memcpy(raw, data.data, packet_size);
         reload_zone_status = (data[0] >> 2) & 0x01;   // bit 2
-        capture_point_status = (data[2] >> 5) & 0x03; // bits 21 and 22
+        capture_point_status = ((data[2] >> 7) & 0x01) | ((data[3] & 0x01) << 1); // bits 23 and 24
     }
 
     /// @brief Converts this EventData struct to a GameEventData struct for comms transmission
@@ -339,46 +350,6 @@ struct EventData {
         data.reload_zone_status = reload_zone_status;
         data.capture_point_status = capture_point_status;
         return data;
-    }
-};
-
-/// @brief Action identifier data of the Official Projectile Supplier
-/// @note transmitted when the Official Projectile Supplier releases projectiles to all of our robots
-/// @note ID: 0x0102
-struct ProjectileSupplierStatus {
-    /// @brief Size of the ProjectileSupplierStatus packet in bytes
-    static const uint8_t packet_size = 4;
-
-    /// @brief The raw byte array of data received from ref
-    /// @note this is only the FrameData data rather than the whole ref packet
-    uint8_t raw[REF_MAX_PACKET_SIZE] = {0};
-
-    /// @brief Reserved
-    uint8_t reserved = 0;
-    /// @brief ID of the reloading robot
-    uint8_t reloading_robot_ID = 0;
-    /// @brief Status of the supplier
-    /// @brief 0: Closed. 1: Preparing. 2: Releasing.
-    uint8_t supplier_status = 0;
-    /// @brief Number of projectiles supplied. Max 200. Supplied in 50 ball increments.
-    uint8_t num_projectiles_supplied = 0;
-
-    /// @brief Prints the ProjectileSupplierStatus packet
-    void print() {
-        Serial.println("ProjectileSupplierStatus:");
-        Serial.printf("\tReloading Robot ID: %u\n", reloading_robot_ID);
-        Serial.printf("\tSupplier Status: %u\n", supplier_status);
-        Serial.printf("\tNum Projectiles Supplied: %u\n", num_projectiles_supplied);
-    }
-
-    /// @brief Fills in this struct with the data from a FrameData object
-    /// @param data FrameData object to extract data from
-    void set_data(FrameData data) {
-        memcpy(raw, data.data, packet_size);
-        reserved = data[0];
-        reloading_robot_ID = data[1];
-        supplier_status = data[2];
-        num_projectiles_supplied = data[3];
     }
 };
 
@@ -701,40 +672,6 @@ struct RobotBuff {
         defence = data[2];
         negative_defence = data[3];
         attack = (data[5] << 8) | data[4];
-    }
-};
-
-/// @brief Air support time data
-/// @note transmitted at a fixed frequency of 1 Hz to our aerial robots
-/// @note ID: 0x0205
-struct AirSupportStatus {
-    /// @brief Size of the AirSupportStatus packet in bytes
-    static const uint8_t packet_size = 2;
-
-    /// @brief The raw byte array of data received from ref
-    /// @note this is only the FrameData data rather than the whole ref packet
-    uint8_t raw[REF_MAX_PACKET_SIZE] = {0};
-
-    /// @brief Aerial Robot's status
-    /// @brief 0: Cooling. 1: Cooling finished. 2: Active.
-    uint8_t status = 0;
-    /// @brief Remainint time of the current status in seconds
-    /// @note Rounded down to the nearest integer by Ref.
-    uint8_t time_remaining = 0;
-
-    /// @brief Prints the AirSupportStatus packet
-    void print() {
-        Serial.println("AirSupportStatus:");
-        Serial.printf("\tStatus: %u\n", status);
-        Serial.printf("\tTime Remaining: %u\n", time_remaining);
-    }
-
-    /// @brief Fills in this struct with the data from a FrameData object
-    /// @param data FrameData object to extract data from
-    void set_data(FrameData data) {
-        memcpy(raw, data.data, packet_size);
-        status = data[0];
-        time_remaining = data[1];
     }
 };
 
@@ -1316,118 +1253,6 @@ struct SmallMapCommand {
     }    
 };
 
-/// @brief Keyboard, mouse, and remote control data
-/// @note transmitted at a fixed frequency of 30 Hz to a robot with a VTM link
-/// @note ID: 0x0304
-struct KBMInteraction {
-    /// @brief Size of the KBMInteraction packet in bytes
-    static const uint8_t packet_size = 12;
-
-    /// @brief The raw byte array of data received from ref
-    /// @note this is only the FrameData data rather than the whole ref packet
-    uint8_t raw[REF_MAX_PACKET_SIZE] = {0};
-
-    /// @brief x-axis moving speed of the mouse. A negative value indicates a left movement.
-    int16_t mouse_speed_x = 0;
-    /// @brief y-axis moving speed of the mouse. A negative value indicates an downward movement.
-    int16_t mouse_speed_y = 0;
-    /// @brief Scroll wheel's moving speed of the mouse. A negative value indicates a backward movement.
-    int16_t scroll_speed = 0;
-    /// @brief Whether the mouse's left button is pressed. A value of 0 indicates that it is not pressed, and a value of 1 indicates that it is pressed.
-    uint8_t button_left = 0;
-    /// @brief Whether the mouse's right button is pressed. A value of 0 indicates that it is not pressed, and a value of 1 indicates that it is pressed
-    uint8_t button_right = 0;
-    /// @brief Whether the keyboard's W key is pressed.
-    uint16_t key_w : 1;
-    /// @brief Whether the keyboard's S key is pressed.
-    uint16_t key_s : 1;
-    /// @brief Whether the keyboard's A key is pressed.
-    uint16_t key_a : 1;
-    /// @brief Whether the keyboard's D key is pressed.
-    uint16_t key_d : 1;
-    /// @brief Whether the keyboard's Shift key is pressed.
-    uint16_t key_shift : 1;
-    /// @brief Whether the keyboard's Ctrl key is pressed.
-    uint16_t key_ctrl : 1;
-    /// @brief Whether the keyboard's Q key is pressed.
-    uint16_t key_q : 1;
-    /// @brief Whether the keyboard's E key is pressed.
-    uint16_t key_e : 1;
-    /// @brief Whether the keyboard's R key is pressed.
-    uint16_t key_r : 1;
-    /// @brief Whether the keyboard's F key is pressed.
-    uint16_t key_f : 1;
-    /// @brief Whether the keyboard's G key is pressed.
-    uint16_t key_g : 1;
-    /// @brief Whether the keyboard's Z key is pressed.
-    uint16_t key_z : 1;
-    /// @brief Whether the keyboard's X key is pressed.
-    uint16_t key_x : 1;
-    /// @brief Whether the keyboard's C key is pressed.
-    uint16_t key_c : 1;
-    /// @brief Whether the keyboard's V key is pressed.
-    uint16_t key_v : 1;
-    /// @brief Whether the keyboard's B key is pressed.
-    uint16_t key_b : 1;
-    /// @brief Reserved.
-    uint16_t reserved = 0;
-
-    /// @brief Prints the KBMInteraction packet
-    void print() {
-        Serial.println("KBMInteraction:");
-        Serial.printf("\tMouse Speed X: %d\n", mouse_speed_x);
-        Serial.printf("\tMouse Speed Y: %d\n", mouse_speed_y);
-        Serial.printf("\tScroll Speed: %d\n", scroll_speed);
-        Serial.printf("\tButton Left: %u\n", button_left);
-        Serial.printf("\tButton Right: %u\n", button_right);
-        Serial.printf("\tKey W: %u\n", key_w);
-        Serial.printf("\tKey S: %u\n", key_s);
-        Serial.printf("\tKey A: %u\n", key_a);
-        Serial.printf("\tKey D: %u\n", key_d);
-        Serial.printf("\tKey Shift: %u\n", key_shift);
-        Serial.printf("\tKey Ctrl: %u\n", key_ctrl);
-        Serial.printf("\tKey Q: %u\n", key_q);
-        Serial.printf("\tKey E: %u\n", key_e);
-        Serial.printf("\tKey R: %u\n", key_r);
-        Serial.printf("\tKey F: %u\n", key_f);
-        Serial.printf("\tKey G: %u\n", key_g);
-        Serial.printf("\tKey Z: %u\n", key_z);
-        Serial.printf("\tKey X: %u\n", key_x);
-        Serial.printf("\tKey C: %u\n", key_c);
-        Serial.printf("\tKey V: %u\n", key_v);
-        Serial.printf("\tKey B: %u\n", key_b);
-        Serial.printf("\tReserved: %u\n", reserved);
-    }
-
-    /// @brief Fills in this struct with the data from a FrameData object
-    /// @param data FrameData object to extract data from
-    void set_data(FrameData data) {
-        memcpy(raw, data.data, packet_size);
-        mouse_speed_x = (data[1] << 8) | data[0];
-        mouse_speed_y = (data[3] << 8) | data[2];
-        scroll_speed = (data[5] << 8) | data[4];
-        button_left = data[6];
-        button_right = data[7];
-        key_w = data[8] & 0x01;
-        key_s = (data[8] >> 1) & 0x01;
-        key_a = (data[8] >> 2) & 0x01;
-        key_d = (data[8] >> 3) & 0x01;
-        key_shift = (data[8] >> 4) & 0x01;
-        key_ctrl = (data[8] >> 5) & 0x01;
-        key_q = (data[8] >> 6) & 0x01;
-        key_e = (data[8] >> 7) & 0x01;
-        key_r = data[9] & 0x01;
-        key_f = (data[9] >> 1) & 0x01;
-        key_g = (data[9] >> 2) & 0x01;
-        key_z = (data[9] >> 3) & 0x01;
-        key_x = (data[9] >> 4) & 0x01;
-        key_c = (data[9] >> 5) & 0x01;
-        key_v = (data[9] >> 6) & 0x01;
-        key_b = (data[9] >> 7) & 0x01;
-        reserved = (data[11] << 8) | data[10];
-    }
-};
-
 /// @brief Radar data received by player clients' Small Maps
 /// @note transmitted at a maximum frequency of 10 Hz to all of our player clients
 /// @note ID: 0x0305
@@ -1630,8 +1455,6 @@ struct RefData {
     GameRobotHP game_robot_hp{};
     /// @brief Site event data
     EventData event_data{};
-    /// @brief Action identifier data of the Official Projectile Supplier
-    ProjectileSupplierStatus projectile_supplier_status{};
     /// @brief Referee warning data
     RefereeWarning referee_warning{};
     /// @brief Dart launching data
@@ -1644,8 +1467,6 @@ struct RefData {
     RobotPosition robot_position{};
     /// @brief Robot buff data
     RobotBuff robot_buff{};
-    /// @brief Air support time data
-    AirSupportStatus air_support_status{};
     /// @brief Damage status data
     DamageStatus damage_status{};
     /// @brief Real-time launching data
@@ -1670,8 +1491,6 @@ struct RefData {
     CustomControllerRobot custom_controller_robot{};
     /// @brief Player client's small map interaction data
     SmallMapCommand small_map_command{};
-    /// @brief Keyboard, mouse, and remote control data
-    KBMInteraction kbm_interaction{};
     /// @brief Radar data received by player clients' Small Maps
     SmallMapRadarPosition small_map_radar_position{};
     /// @brief Data about the interaction between the Custom Controller and player clients

@@ -24,31 +24,18 @@ struct GameResultData {
 
 /// @copydoc GameRobotHP
 struct RobotHealthData {
-    /// @brief health of the red hero robot
-    uint32_t red_hero_health = 0;
-    /// @brief health of the red engineer robot
-    uint32_t red_engineer_health = 0;
-    /// @brief health of the red standard 3 robot 
-    uint32_t red_standard_3_health = 0;
-    /// @brief health of the red standard 4 robot 
-    uint32_t red_standard_4_health = 0;
-    /// @brief health of the red standard 5 robot
-    uint32_t red_standard_5_health = 0;
-    /// @brief health of the red sentry robot
-    uint32_t red_sentry_health = 0;
-    
-    /// @brief health of the blue hero robot
-    uint32_t blue_hero_health = 0;
-    /// @brief health of the blue engineer robot
-    uint32_t blue_engineer_health = 0;
-    /// @brief health of the blue standard 3 robot
-    uint32_t blue_standard_3_health = 0;
-    /// @brief health of the blue standard 4 robot
-    uint32_t blue_standard_4_health = 0;
-    /// @brief health of the blue standard 5 robot
-    uint32_t blue_standard_5_health = 0;
-    /// @brief health of the blue sentry robot
-    uint32_t blue_sentry_health = 0;
+    /// @copydoc RobotHealthData::hero_health
+    uint32_t hero_health = 0;
+    /// @copydoc RobotHealthData::engineer_health
+    uint32_t engineer_health = 0;
+    /// @copydoc RobotHealthData::standard_3_health
+    uint32_t standard_3_health = 0;
+    /// @copydoc RobotHealthData::standard_4_health
+    uint32_t standard_4_health = 0;
+    /// @copydoc RobotHealthData::standard_5_health
+    uint32_t standard_5_health = 0;
+    /// @copydoc RobotHealthData::sentry_health
+    uint32_t sentry_health = 0;
 };
 /// @copydoc EventData
 struct GameEventData {
