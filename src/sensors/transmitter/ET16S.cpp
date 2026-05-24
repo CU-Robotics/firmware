@@ -47,16 +47,15 @@ void ET16S::setup_edma_channel() {
 	dma_target_buffer = dma_buffer_a;
     active_buffer = dma_buffer_b;
 	
-    // Source: The physical memory address of LPUART5's Data Register
+    // The physical memory address of LPUART5's Data Register
     rx_dma.source(LPUART5_DATA); 
     
-    // Destination: Our cache-aligned RAM buffer, major loop of 25 bytes
+    // Our cache-aligned RAM buffer, major loop of 25 bytes
     rx_dma.destinationBuffer(dma_target_buffer, ET16S_PACKET_SIZE); 
     
-    // Trigger: Map the LPUART5 RX hardware event through the DMAMUX
+    // Map the LPUART5 RX hardware event through the DMAMUX
     rx_dma.triggerAtHardwareEvent(DMAMUX_SOURCE_LPUART5_RX);
     
-    // Interrupts: Fire an ISR only when the major loop (25 bytes) completes
     rx_dma.attachInterrupt(dma_isr_wrapper);
     rx_dma.interruptAtCompletion();
     

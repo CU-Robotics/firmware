@@ -78,5 +78,6 @@ private:
 	volatile bool encoder_isr_in_progress = false;
 	/// @brief Pointer to the singleton instance of this class
 	static SensorManager *instance;
-	EventResponder spi_event;
+        EventResponder spi_event;
+	uint8_t num_encoders;
 };

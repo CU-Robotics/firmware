@@ -51,7 +51,7 @@ void BuffEncoder::send_to_comms() const {
     sendable.send_to_comms();
 }
 
-void BuffEncoder::print() const{
+void BuffEncoder::print() const {
     Serial.printf("Buff Encoder:\n\t");
     Serial.println(get_angle());
 }

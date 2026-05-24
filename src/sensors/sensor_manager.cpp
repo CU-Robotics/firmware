@@ -28,11 +28,14 @@ void SensorManager::init(const Cfg::RobotConfig& config_data) {
     SPI.begin();
 	SPI1.begin();
 	Serial.println("SPI Started");
-	spi_event.attachInterrupt(encoder_isr_wrapper);
+	// Attach Interupt for buff encoders
+	spi_event.attachInterrupt(&encoder_isr_wrapper);
 
     configure_sensors(config_data);
 
     initialize_sensors();
+
+	num_encoders = encoders.size();
 }
 
 void SensorManager::configure_sensors(const Cfg::RobotConfig& config_data) {
@@ -115,7 +118,7 @@ void SensorManager::encoder_isr() {
     encoder_index = encoder_index + 1;
 
     // Tell the next encoder to start using its own private variables
-    if (encoder_index < encoders.size()) {
+    if (encoder_index < num_encoders) {
         encoders[encoder_index]->isr_start_transfer(spi_event);
     } else {
 		encoder_isr_in_progress = false;
