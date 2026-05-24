@@ -74,9 +74,17 @@ public:
 	
 	/// @brief Prints a formatted dashboard of live Buff Encoder values
     void print_live_data() override;
-
+	
+    /// @brief Enables this encoder and start transfer
+	/// @param spi_event is global event handler from sensor_manager
     void isr_start_transfer(EventResponderRef spi_event);
+	
+    /// @brief Disable this encoder and send DMA cache to memory
+	/// @param spi_event is global event handler from sensor_manager
     void isr_stop_transfer(EventResponderRef spi_event);
+	
+    /// @brief Binds local dma flag with global sensor_manager flag
+	/// @param flag_ptr is shared dma flag from sensor_manager
 	void bind_dma_flag(const volatile bool* flag_ptr);
 
 private:
@@ -99,7 +107,7 @@ private:
 	/// @brief Buffer of recieved data from the buff encoders
     alignas(32) uint8_t rx_buffer[32];
 
-	/// @brief Pointer to the SensorManager's active cascade flag
+	/// @brief Pointer to the SensorManager's active transfer flag
     const volatile bool* shared_dma_flag;
-	// Could this be a shared pointer??
+	// Could/should this be a shared pointer??
 };

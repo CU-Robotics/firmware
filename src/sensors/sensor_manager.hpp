@@ -34,7 +34,7 @@ public:
     void configure_sensors(const Cfg::RobotConfig& config_data);
     /// @brief Call each sensor's init function
     void initialize_sensors();
-	/// @brief call each sensor's request_read function
+	/// @brief calls IMU's request_read function and start first encoder's dma transfer
 	void request_read();
     /// @brief Call each sensor's read function to update their data
     void read();
@@ -72,12 +72,16 @@ private:
 	/// @brief vector  Dedicated routing list strictly for the SPI1 daisy-chain
 	std::vector<std::shared_ptr<BuffEncoder>> encoders;
 	/// @brief Pointer for the ICM IMU
-    std::shared_ptr<ICM20649> icm_imu = nullptr;
+	std::shared_ptr<ICM20649> icm_imu = nullptr;
+	/// @brief Index of which buff encoder we are currently reading from
 	volatile uint8_t encoder_index = 0;
-	/// @brief ture if we are currently performing DMA reads on the buff encoders
+	/// @brief true if we are currently performing DMA reads on the buff encoders
 	volatile bool encoder_isr_in_progress = false;
+	/// @brief event responder for handling buff encoder SPI reads and interupts
+	EventResponder spi_event;
+	/// @brief number of buff encoders in the config
+	uint8_t num_encoders;
+
 	/// @brief Pointer to the singleton instance of this class
 	static SensorManager *instance;
-        EventResponder spi_event;
-	uint8_t num_encoders;
 };
