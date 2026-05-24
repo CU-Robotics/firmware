@@ -248,9 +248,6 @@ void RefSystem::set_ref_data(Frame& frame, uint8_t raw_buffer[REF_MAX_PACKET_SIZ
     case FrameType::EVENT_DATA:
         ref_data.event_data.set_data(frame.data);
         break;
-    case FrameType::PROJECTILE_SUPPLIER_STATUS:
-        ref_data.projectile_supplier_status.set_data(frame.data);
-        break;
     case FrameType::REFEREE_WARNING:
         ref_data.referee_warning.set_data(frame.data);
         break;
@@ -268,9 +265,6 @@ void RefSystem::set_ref_data(Frame& frame, uint8_t raw_buffer[REF_MAX_PACKET_SIZ
         break;
     case FrameType::ROBOT_BUFF:
         ref_data.robot_buff.set_data(frame.data);
-        break;
-    case FrameType::AIR_SUPPORT_STATUS:
-        ref_data.air_support_status.set_data(frame.data);
         break;
     case FrameType::DAMAGE_STATUS:
         ref_data.damage_status.set_data(frame.data);
@@ -310,9 +304,6 @@ void RefSystem::set_ref_data(Frame& frame, uint8_t raw_buffer[REF_MAX_PACKET_SIZ
     case FrameType::SMALL_MAP_COMMAND:
         ref_data.small_map_command.set_data(frame.data);
         break;
-    case FrameType::KBM_INTERACTION:
-        ref_data.kbm_interaction.set_data(frame.data);
-        break;
     case FrameType::SMALL_MAP_RADAR_POSITION:
         ref_data.small_map_radar_position.set_data(frame.data);
         break;
@@ -324,6 +315,16 @@ void RefSystem::set_ref_data(Frame& frame, uint8_t raw_buffer[REF_MAX_PACKET_SIZ
         break;
     case FrameType::SMALL_MAP_ROBOT_DATA:
         ref_data.small_map_robot_data.set_data(frame.data);
+        break;
+    case FrameType::ROBOT_CUSTOM_CONTROLLER_DATA:
+        ref_data.robot_custom_controller_data.set_data(frame.data);
+        break;
+    case FrameType::ROBOT_CUSTOM_CLIENT_DATA:
+        ref_data.robot_custom_client_data.set_data(frame.data);
+        break;
+    case FrameType::CUSTOM_CLIENT_ROBOT_COMMAND:
+        ref_data.custom_client_robot_command.set_data(frame.data);
+        ref_data.keyboard_mouse_control.set_data(frame.data, frame.header.data_length);
         break;
     default:
         Serial.println("Ref System::set_ref_data: Unknown Frame Type");

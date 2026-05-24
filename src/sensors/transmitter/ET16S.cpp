@@ -612,9 +612,13 @@ void ET16S::manual_controls(const RobotStateMap& estimated_state_map, RobotState
 	bool has_lower_feeder = estimated_state_map.get_state_map().find(Cfg::StateName::LowerFeeder) != estimated_state_map.get_state_map().end();
 	
 	float delta = control_input_timer.delta();
+	KeyboardMouseControl vtm_input = ref.ref_data.keyboard_mouse_control;
+	if (!vtm_input.is_fresh()) {
+		vtm_input.clear();
+	}
 	
-	vtm_pos_x += ref.ref_data.kbm_interaction.mouse_speed_x * 0.05 * delta;
-	vtm_pos_y += ref.ref_data.kbm_interaction.mouse_speed_y * 0.05 * delta;
+	vtm_pos_x += vtm_input.mouse_speed_x * 0.05 * delta;
+	vtm_pos_y += vtm_input.mouse_speed_y * 0.05 * delta;
 
 	float pitch_min = estimated_state_map[Cfg::StateName::GimbalPitch].config().reference_limits.position.min;
     float pitch_max = estimated_state_map[Cfg::StateName::GimbalPitch].config().reference_limits.position.max;
@@ -637,9 +641,9 @@ void ET16S::manual_controls(const RobotStateMap& estimated_state_map, RobotState
 	if (estimated_state_map[Cfg::StateName::ChassisX].config().governor_type == Cfg::StateOrder::Velocity) { // if we should be controlling velocity
 
 		chassis_vel_x = get_l_stick_y() * 5.4 +
-						(-ref.ref_data.kbm_interaction.key_w + ref.ref_data.kbm_interaction.key_s) * 2.5;
+						(-vtm_input.key_w + vtm_input.key_s) * 2.5;
 		chassis_vel_y = -(get_l_stick_x() * 5.4) +
-						(ref.ref_data.kbm_interaction.key_d - ref.ref_data.kbm_interaction.key_a) * 2.5;
+						(vtm_input.key_d - vtm_input.key_a) * 2.5;
 		
 	} else if (estimated_state_map[Cfg::StateName::ChassisX].config().governor_type == Cfg::StateOrder::Position) { // if we should be controlling position
 		chassis_pos_x = get_l_stick_x() * 2 + pos_offset_x;
@@ -654,7 +658,7 @@ void ET16S::manual_controls(const RobotStateMap& estimated_state_map, RobotState
 		(get_switch_b() == SwitchPos::FORWARD || get_switch_b() == SwitchPos::MIDDLE) ? 18 : 0; // m/s
 	// if the right switch is forward, and either the left mouse button is pressed or the right switch is not
 	// backward, set the feeder to something. Otherwise, set it to 0
-	float feeder_target = (((ref.ref_data.kbm_interaction.button_left) &&
+	float feeder_target = (((vtm_input.button_left) &&
 							get_switch_b() != SwitchPos::BACKWARD) || get_switch_b() == SwitchPos::FORWARD) ? 12 : 0;
 	if (estimated_state_map[Cfg::StateName::Feeder].config().governor_type == Cfg::StateOrder::Position) {
 		float dt2 = timer.delta();

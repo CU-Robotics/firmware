@@ -1709,6 +1709,223 @@ struct CustomClientRobotCommand {
     }
 };
 
+/// @brief Keyboard and mouse control data received from the official Player's Client through VTM.
+/// @note Parsed from the 0x0311 custom client to robot command using the 2026 KeyboardMouseControl protobuf layout.
+struct KeyboardMouseControl {
+    /// @brief Maximum size of the keyboard/mouse payload in bytes
+    static const uint8_t packet_size = 30;
+    /// @brief Maximum age before the control input is treated as stale
+    static const uint32_t timeout_ms = 250;
+
+    /// @brief x-axis moving speed of the mouse. A negative value indicates a left movement.
+    int32_t mouse_speed_x = 0;
+    /// @brief y-axis moving speed of the mouse. A negative value indicates a downward movement.
+    int32_t mouse_speed_y = 0;
+    /// @brief Scroll wheel's moving speed of the mouse. A negative value indicates a backward movement.
+    int32_t scroll_speed = 0;
+    /// @brief Whether the mouse's left button is pressed.
+    uint8_t button_left = 0;
+    /// @brief Whether the mouse's right button is pressed.
+    uint8_t button_right = 0;
+    /// @brief Whether the mouse's middle button is pressed.
+    uint8_t button_middle = 0;
+    /// @brief Keyboard key bitmask.
+    uint32_t keyboard_value = 0;
+    /// @brief Whether the keyboard's W key is pressed.
+    uint16_t key_w : 1;
+    /// @brief Whether the keyboard's S key is pressed.
+    uint16_t key_s : 1;
+    /// @brief Whether the keyboard's A key is pressed.
+    uint16_t key_a : 1;
+    /// @brief Whether the keyboard's D key is pressed.
+    uint16_t key_d : 1;
+    /// @brief Whether the keyboard's Shift key is pressed.
+    uint16_t key_shift : 1;
+    /// @brief Whether the keyboard's Ctrl key is pressed.
+    uint16_t key_ctrl : 1;
+    /// @brief Whether the keyboard's Q key is pressed.
+    uint16_t key_q : 1;
+    /// @brief Whether the keyboard's E key is pressed.
+    uint16_t key_e : 1;
+    /// @brief Whether the keyboard's R key is pressed.
+    uint16_t key_r : 1;
+    /// @brief Whether the keyboard's F key is pressed.
+    uint16_t key_f : 1;
+    /// @brief Whether the keyboard's G key is pressed.
+    uint16_t key_g : 1;
+    /// @brief Whether the keyboard's Z key is pressed.
+    uint16_t key_z : 1;
+    /// @brief Whether the keyboard's X key is pressed.
+    uint16_t key_x : 1;
+    /// @brief Whether the keyboard's C key is pressed.
+    uint16_t key_c : 1;
+    /// @brief Whether the keyboard's V key is pressed.
+    uint16_t key_v : 1;
+    /// @brief Whether the keyboard's B key is pressed.
+    uint16_t key_b : 1;
+    /// @brief Time of the last valid packet update.
+    uint32_t last_update_ms = 0;
+
+    /// @brief Clears control inputs while preserving packet timing metadata.
+    void clear() {
+        mouse_speed_x = 0;
+        mouse_speed_y = 0;
+        scroll_speed = 0;
+        button_left = 0;
+        button_right = 0;
+        button_middle = 0;
+        keyboard_value = 0;
+        key_w = 0;
+        key_s = 0;
+        key_a = 0;
+        key_d = 0;
+        key_shift = 0;
+        key_ctrl = 0;
+        key_q = 0;
+        key_e = 0;
+        key_r = 0;
+        key_f = 0;
+        key_g = 0;
+        key_z = 0;
+        key_x = 0;
+        key_c = 0;
+        key_v = 0;
+        key_b = 0;
+    }
+
+    /// @brief Whether this input was updated recently enough to consume.
+    bool is_fresh() const { return last_update_ms != 0 && millis() - last_update_ms <= timeout_ms; }
+
+    /// @brief Fills in this struct with keyboard/mouse data from a FrameData object.
+    /// @param data FrameData object to extract data from
+    /// @param data_length Number of payload bytes available in the frame
+    /// @return True if the payload matched the KeyboardMouseControl protobuf layout
+    bool set_data(FrameData data, uint16_t data_length) {
+        if (data_length == 0 || data_length > packet_size) {
+            return false;
+        }
+
+        KeyboardMouseControl decoded{};
+        uint8_t index = 0;
+        uint8_t payload_length = static_cast<uint8_t>(data_length);
+        while (index < payload_length) {
+            if (data[index] == 0) {
+                for (uint8_t padding_index = index; padding_index < payload_length; padding_index++) {
+                    if (data[padding_index] != 0) {
+                        return false;
+                    }
+                }
+                break;
+            }
+
+            uint64_t key = 0;
+            if (!read_keyboard_mouse_varint(data, index, payload_length, key)) {
+                return false;
+            }
+
+            uint64_t field_number = key >> 3;
+            uint8_t wire_type = key & 0x07;
+            if (wire_type != 0 || field_number < 1 || field_number > 7) {
+                return false;
+            }
+
+            uint64_t value = 0;
+            if (!read_keyboard_mouse_varint(data, index, payload_length, value)) {
+                return false;
+            }
+
+            switch (field_number) {
+            case 1:
+                decoded.mouse_speed_x = protobuf_int32(value);
+                break;
+            case 2:
+                decoded.mouse_speed_y = protobuf_int32(value);
+                break;
+            case 3:
+                decoded.scroll_speed = protobuf_int32(value);
+                break;
+            case 4:
+                if (value > 1) {
+                    return false;
+                }
+                decoded.button_left = value;
+                break;
+            case 5:
+                if (value > 1) {
+                    return false;
+                }
+                decoded.button_right = value;
+                break;
+            case 6:
+                if ((value & ~0xffffULL) != 0) {
+                    return false;
+                }
+                decoded.set_keyboard_value(static_cast<uint32_t>(value));
+                break;
+            case 7:
+                if (value > 1) {
+                    return false;
+                }
+                decoded.button_middle = value;
+                break;
+            }
+        }
+
+        decoded.last_update_ms = millis();
+        *this = decoded;
+        return true;
+    }
+
+  private:
+    /// @brief Reads one protobuf varint from a KeyboardMouseControl payload.
+    /// @param data FrameData object to extract data from
+    /// @param index Current index into the payload. Updated to the first unread byte on success.
+    /// @param payload_length Number of valid payload bytes available in the frame
+    /// @param value Destination for the decoded varint value
+    /// @return True if a complete varint was decoded, false otherwise
+    /// @note KeyboardMouseControl only uses protobuf wire type 0 fields.
+    static bool read_keyboard_mouse_varint(FrameData &data, uint8_t &index, uint8_t payload_length, uint64_t &value) {
+        value = 0;
+        uint8_t shift = 0;
+        while (index < payload_length && shift < 64) {
+            uint8_t byte = data[index++];
+            value |= static_cast<uint64_t>(byte & 0x7F) << shift;
+            if ((byte & 0x80) == 0) {
+                return true;
+            }
+            shift += 7;
+        }
+        return false;
+    }
+
+    /// @brief Converts a decoded protobuf int32 varint value to a signed 32-bit integer.
+    /// @param value Decoded protobuf varint value
+    /// @return Signed 32-bit value represented by the low 32 bits
+    static int32_t protobuf_int32(uint64_t value) { return static_cast<int32_t>(static_cast<uint32_t>(value)); }
+
+    /// @brief Stores the keyboard bitmask and expands it into individual key fields.
+    /// @param value Keyboard key bitmask from the KeyboardMouseControl payload
+    void set_keyboard_value(uint32_t value) {
+        keyboard_value = value;
+        key_w = value & 0x01;
+        key_s = (value >> 1) & 0x01;
+        key_a = (value >> 2) & 0x01;
+        key_d = (value >> 3) & 0x01;
+        key_shift = (value >> 4) & 0x01;
+        key_ctrl = (value >> 5) & 0x01;
+        key_q = (value >> 6) & 0x01;
+        key_e = (value >> 7) & 0x01;
+        key_r = (value >> 8) & 0x01;
+        key_f = (value >> 9) & 0x01;
+        key_g = (value >> 10) & 0x01;
+        key_z = (value >> 11) & 0x01;
+        key_x = (value >> 12) & 0x01;
+        key_c = (value >> 13) & 0x01;
+        key_v = (value >> 14) & 0x01;
+        key_b = (value >> 15) & 0x01;
+    }
+};
+
 /// @brief Encompassing all read-able packet structs of the Ref System
 struct RefData {
     /// @brief Competition status data
@@ -1769,6 +1986,8 @@ struct RefData {
     RobotCustomClientData robot_custom_client_data{};
     /// @brief Custom command sent from the Custom Client to robots.
     CustomClientRobotCommand custom_client_robot_command{};
+    /// @brief Keyboard and mouse control data received from the official Player's Client through VTM.
+    KeyboardMouseControl keyboard_mouse_control{};
 };
 
 /// @brief Game Staus packet offset for comms
