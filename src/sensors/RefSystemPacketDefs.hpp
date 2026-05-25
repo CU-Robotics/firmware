@@ -111,6 +111,9 @@ struct FrameData {
     /// @param index index
     /// @return uint8_t data at index
     uint8_t operator[](int index) { return data[index]; }
+    /// @brief Helpful index operator. Allows const array-like indexing from the object itself
+    /// @param index index
+    /// @return uint8_t data at index
     uint8_t operator[](int index) const { return data[index]; }
 };
 
