@@ -3,9 +3,12 @@
 #include "comms/data/comms_ref_data.hpp"
 #include <Arduino.h>
 
+/// @brief Maximum size of the data segment in a Ref System packet. The record is currently held by 0x0301
+constexpr uint16_t REF_MAX_DATA_SIZE = 300;
+
 /// @brief Maximum size of a Ref System packet in bytes \n
 /// @brief 5 byte header + 2 byte command ID + 300 + 2 byte CRC
-constexpr uint16_t REF_MAX_PACKET_SIZE = 309;
+constexpr uint16_t REF_MAX_PACKET_SIZE = 5 + 2 + REF_MAX_DATA_SIZE + 2;
 // TODO: This size is only required by 0x0310 and pretty excessive to use for every packet. Maybe we could reduce the raw array length for most packets or rework how the raw bytes are stores in each struct.
 
 /// @brief Maximum valid command ID for Ref System packets
@@ -91,7 +94,7 @@ struct FrameHeader {
     uint8_t CRC = 0;
 
     /// @brief Prints the FrameHeader
-    void print() {
+    void print() const {
         Serial.printf("\tSOF: %x\n", SOF);
         Serial.printf("\tLength: %u\n", data_length);
         Serial.printf("\tSequence: %u\n", sequence);
@@ -108,6 +111,7 @@ struct FrameData {
     /// @param index index
     /// @return uint8_t data at index
     uint8_t operator[](int index) { return data[index]; }
+    uint8_t operator[](int index) const { return data[index]; }
 };
 
 /// @brief Struct for the entire Frame. Consists of a FrameHeader, Command ID, FrameData, and CRC
@@ -122,7 +126,7 @@ struct Frame {
     uint16_t CRC = 0;
 
     /// @brief Prints the Frame
-    void print() {
+    void print() const {
         Serial.println("Read Frame:");
         header.print();
         Serial.printf("Command ID: %.2x\n", commandID);
@@ -159,7 +163,7 @@ struct GameStatus {
     uint64_t unix_time = 0;
 
     /// @brief Prints the GameStatus packet
-    void print() {
+    void print() const {
         Serial.println("GameStatus:");
         Serial.printf("\tCompetition Type: %u\n", competition_type);
         Serial.printf("\tCurrent Stage: %u\n", current_stage);
@@ -220,7 +224,7 @@ struct GameResult {
     uint8_t winner = 0;
 
     /// @brief Prints the GameResult packet
-    void print() {
+    void print() const {
         Serial.println("GameResult:");
         Serial.printf("\tWinner: %u\n", winner);
     }
@@ -270,7 +274,7 @@ struct GameRobotHP {
     uint16_t base_health = 0;
 
     /// @brief Prints the GameRobotHP packet
-    void print() {
+    void print() const {
         Serial.println("GameRobotHP:");
         Serial.printf("\tHero: %u\n", hero_health);
         Serial.printf("\tEngineer: %u\n", engineer_health);
@@ -325,7 +329,7 @@ struct EventData {
     uint16_t capture_point_status = 0;
 
     /// @brief Prints the EventData packet
-    void print() {
+    void print() const {
         Serial.println("EventData:");
         Serial.printf("\tReload Zone Status: %u\n", reload_zone_status);
         Serial.printf("\tCapture Point Status: %u\n", capture_point_status);
@@ -371,7 +375,7 @@ struct RefereeWarning {
     uint8_t last_num_violations = 0;
 
     /// @brief Prints the RefereeWarning packet
-    void print() {
+    void print() const {
         Serial.println("RefereeWarning:");
         Serial.printf("\tLast Received Severity: %u\n", last_received_severity);
         Serial.printf("\tLast Received Robot ID: %u\n", last_received_robot_ID);
@@ -414,7 +418,7 @@ struct DartStatus {
     uint16_t reserved : 7;
 
     /// @brief Prints the DartStatus packet
-    void print() {
+    void print() const {
         Serial.println("DartStatus:");
         Serial.printf("\tTime Remaining: %u\n", time_remaining);
         Serial.printf("\tTarget Last Hit: %u\n", target_last_hit);
@@ -470,7 +474,7 @@ struct RobotPerformance {
     uint8_t reserved : 5;
 
     /// @brief Prints the RobotPerformance packet
-    void print() {
+    void print() const {
         Serial.println("RobotPerformance:");
         Serial.printf("\tRobot ID: %u\n", robot_ID);
         Serial.printf("\tRobot Level: %u\n", robot_level);
@@ -544,7 +548,7 @@ struct RobotPowerHeat {
     uint16_t barrel_heat_42mm = 0;
 
     /// @brief Prints the RobotPowerHeat packet
-    void print() {
+    void print() const {
         Serial.println("RobotPowerHeat:");
         Serial.printf("\tReserved 1: %u\n", reserved_1);
         Serial.printf("\tReserved 2: %u\n", reserved_2);
@@ -599,7 +603,7 @@ struct RobotPosition {
     float angle = 0.f;
 
     /// @brief Prints the RobotPosition packet
-    void print() {
+    void print() const {
         Serial.println("RobotPosition:");
         Serial.printf("\tX: %f\n", x);
         Serial.printf("\tY: %f\n", y);
@@ -645,7 +649,7 @@ struct RobotBuff {
     uint8_t remaining_energy = 0;
 
     /// @brief Prints the RobotBuff packet
-    void print() {
+    void print() const {
         Serial.println("RobotBuff:");
         Serial.printf("\tHP Recovery: %u\n", hp_recovery);
         Serial.printf("\tHeat Cooling: %u\n", heat_cooling);
@@ -687,7 +691,7 @@ struct DamageStatus {
     uint8_t damage_type : 4;
 
     /// @brief Prints the DamageStatus packet
-    void print() {
+    void print() const {
         Serial.println("DamageStatus:");
         Serial.printf("\tArmor Plate ID: %u\n", armor_plate_ID);
         Serial.printf("\tDamage Type: %u\n", damage_type);
@@ -733,7 +737,7 @@ struct LaunchingStatus {
     float initial_speed = 0.f;
 
     /// @brief Prints the LaunchingStatus packet
-    void print() {
+    void print() const {
         Serial.println("LaunchingStatus:");
         Serial.printf("\tProjectile Type: %u\n", projectile_type);
         Serial.printf("\tLaunching Mechanism: %u\n", launching_mechanism);
@@ -785,7 +789,7 @@ struct ProjectileAllowance {
     uint16_t num_17mm_fortress = 0;
 
     /// @brief Prints the ProjectileAllowance packet
-    void print() {
+    void print() const {
         Serial.println("ProjectileAllowance:");
         Serial.printf("\tNum 17mm: %u\n", num_17mm);
         Serial.printf("\tNum 42mm: %u\n", num_42mm);
@@ -908,7 +912,7 @@ struct RFIDStatus {
 
     /// @brief Prints the RFIDStatus packet
     /// @todo Implement this before china
-    void print() {}
+    void print() const {}
 
     /// @brief Fills in this struct with the data from a FrameData object
     /// @param data FrameData object to extract data from
@@ -979,7 +983,7 @@ struct DartCommand {
     uint16_t time_remaining_on_launch_confirm = 0;
 
     /// @brief Prints the DartCommand packet
-    void print() {
+    void print() const {
         Serial.println("DartCommand:");
         Serial.printf("\tStatus: %u\n", status);
         Serial.printf("\tReserved: %u\n", reserved);
@@ -1031,7 +1035,7 @@ struct GroundRobotPositions {
     float reserved_2 = 0.f;
 
     /// @brief Prints the RobotPosition packet
-    void print() {
+    void print() const {
         Serial.println("RobotPosition:");
         Serial.printf("\tHero X: %f\n", hero_x);
         Serial.printf("\tHero Y: %f\n", hero_y);
@@ -1112,7 +1116,7 @@ struct RadarProgress {
     uint16_t reserved : 4;
 
     /// @brief Prints the RadarProgress packet
-    void print() {
+    void print() const {
         Serial.println("RadarProgress:");
         Serial.printf("\tOpponent Hero: %u\n", opponent_hero);
         Serial.printf("\tOpponent Engineer: %u\n", opponent_engineer);
@@ -1166,7 +1170,7 @@ struct SentryDecision {
     uint16_t sentry_info_2 = 0;
 
     /// @brief Prints the SentryDecision packet
-    void print() {
+    void print() const {
         Serial.println("SentryDecision:");
         Serial.printf("\tSentry Info: %u\n", sentry_info);
         Serial.printf("\tSentry Info 2: %u\n", sentry_info_2);
@@ -1196,7 +1200,7 @@ struct RadarDecision {
     uint8_t radar_info = 0;
 
     /// @brief Prints the RadarDecision packet
-    void print() {
+    void print() const {
         Serial.println("RadarDecision:");
         Serial.printf("\tRadar Info: %u\n", radar_info);
     }
@@ -1233,7 +1237,7 @@ struct RobotInteraction {
     uint8_t data[REF_MAX_PACKET_SIZE] = {0};
 
     /// @brief Prints the RobotInteraction packet
-    void print() {
+    void print() const {
         for (int i = 0; i < size; i++) {
             Serial.printf("%x ", data[i]);
         }
@@ -1270,7 +1274,7 @@ struct CustomControllerRobot {
     uint8_t data[30] = {0};
 
     /// @brief Prints the ControllerRobots packet
-    void print() {
+    void print() const {
         Serial.println("ControllerRobots:");
         for (uint8_t i = 0; i < 30; i++) {
             Serial.printf("\tData[%u]: %u\n", i, data[i]);
@@ -1314,7 +1318,7 @@ struct SmallMapCommand {
     uint16_t cmd_source = 0;
 
     /// @brief Prints the SmallMapCommand packet
-    void print() {
+    void print() const {
         Serial.println("SmallMapCommand:");
         Serial.printf("\tTarget Position X: %f\n", target_position_x);
         Serial.printf("\tTarget Position Y: %f\n", target_position_y);
@@ -1398,7 +1402,7 @@ struct SmallMapRadarPosition {
     uint16_t own_sentry_y = 0;
 
     /// @brief Prints the SmallMapRadarPosition packet
-    void print() {
+    void print() const {
         Serial.println("SmallMapRadarPosition:");
         Serial.printf("\tOpponent Hero X: %u\n", opponent_hero_x);
         Serial.printf("\tOpponent Hero Y: %u\n", opponent_hero_y);
@@ -1486,7 +1490,7 @@ struct CustomControllerClient {
     uint16_t reserved = 0;
 
     /// @brief Prints the ControllerClient packet
-    void print() {
+    void print() const {
         Serial.println("ControllerClient:");
         Serial.printf("\tKey 1: %u\n", key_1);
         Serial.printf("\tKey 2: %u\n", key_2);
@@ -1539,7 +1543,7 @@ struct SmallMapSentryCommand {
     uint16_t sender_ID = 0;
 
     /// @brief Prints the SmallMapSentryPosition packet
-    void print() {
+    void print() const {
         Serial.println("SmallMapSentryPosition:");
         Serial.printf("\tCommand: %u\n", command);
         Serial.printf("\tStart X: %u\n", start_x);
@@ -1591,7 +1595,7 @@ struct SmallMapRobotData {
     uint8_t data[30] = {0};
 
     /// @brief Prints the SmallMapRobotPosition packet
-    void print() {
+    void print() const {
         Serial.println("SmallMapRobotPosition:");
         Serial.printf("\tSender ID: %u\n", sender_ID);
         Serial.printf("\tReceiver ID: %u\n", receiver_ID);
@@ -1628,7 +1632,7 @@ struct RobotCustomControllerData {
     uint8_t data[30] = {0};
 
     /// @brief Prints the RobotCustomControllerData packet
-    void print() {
+    void print() const {
         Serial.println("RobotCustomControllerData:");
         for (uint16_t i = 0; i < packet_size; i++) {
             Serial.printf("\tData[%u]: %u\n", i, data[i]);
@@ -1660,7 +1664,7 @@ struct RobotCustomClientData {
     uint8_t data[300] = {0};
 
     /// @brief Prints the RobotCustomClientData packet
-    void print() {
+    void print() const {
         Serial.println("RobotCustomClientData:");
         for (uint16_t i = 0; i < packet_size; i++) {
             Serial.printf("\tData[%u]: %u\n", i, data[i]);
@@ -1692,7 +1696,7 @@ struct CustomClientRobotCommand {
     uint8_t data[30] = {0};
 
     /// @brief Prints the CustomClientRobotCommand packet
-    void print() {
+    void print() const {
         Serial.println("CustomClientRobotCommand:");
         for (uint16_t i = 0; i < packet_size; i++) {
             Serial.printf("\tData[%u]: %u\n", i, data[i]);
