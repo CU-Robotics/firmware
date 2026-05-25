@@ -24,17 +24,17 @@ struct GameResultData {
 
 /// @copydoc GameRobotHP
 struct RobotHealthData {
-    /// @copydoc RobotHealthData::hero_health
+    /// @copydoc GameRobotHP::hero_health
     uint32_t hero_health = 0;
-    /// @copydoc RobotHealthData::engineer_health
+    /// @copydoc GameRobotHP::engineer_health
     uint32_t engineer_health = 0;
-    /// @copydoc RobotHealthData::standard_3_health
+    /// @copydoc GameRobotHP::standard_3_health
     uint32_t standard_3_health = 0;
-    /// @copydoc RobotHealthData::standard_4_health
+    /// @copydoc GameRobotHP::standard_4_health
     uint32_t standard_4_health = 0;
-    /// @copydoc RobotHealthData::standard_5_health
+    /// @copydoc GameRobotHP::standard_5_health
     uint32_t standard_5_health = 0;
-    /// @copydoc RobotHealthData::sentry_health
+    /// @copydoc GameRobotHP::sentry_health
     uint32_t sentry_health = 0;
 };
 /// @copydoc EventData

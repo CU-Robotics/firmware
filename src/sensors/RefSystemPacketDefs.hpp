@@ -1794,6 +1794,7 @@ struct KeyboardMouseControl {
     }
 
     /// @brief Whether this input was updated recently enough to consume.
+    /// @return True if this input has a nonzero update timestamp within the timeout.
     bool is_fresh() const { return last_update_ms != 0 && millis() - last_update_ms <= timeout_ms; }
 
     /// @brief Fills in this struct with keyboard/mouse data from a FrameData object.
