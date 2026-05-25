@@ -32,8 +32,6 @@ struct RobotHealthData {
     uint32_t standard_3_health = 0;
     /// @copydoc GameRobotHP::standard_4_health
     uint32_t standard_4_health = 0;
-    /// @copydoc GameRobotHP::standard_5_health
-    uint32_t standard_5_health = 0;
     /// @copydoc GameRobotHP::sentry_health
     uint32_t sentry_health = 0;
 };
