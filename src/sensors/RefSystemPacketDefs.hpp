@@ -1687,7 +1687,7 @@ struct RobotCustomClientData {
 /// @note ID: 0x0311
 struct CustomClientRobotCommand {
     /// @brief Size of the CustomClientRobotCommand packet in bytes
-    static const uint16_t packet_size = 30;
+    static const uint8_t packet_size = 30;
 
     /// @brief The raw byte array of data received from ref
     /// @note this is only the FrameData data rather than the whole ref packet
