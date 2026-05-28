@@ -69,8 +69,8 @@ struct RobotPerformanceData {
 struct RobotPowerHeatData {
     /// @copydoc RobotPowerHeat::buffer_energy
     uint32_t buffer_energy = 0;
-    /// @copydoc RobotPowerHeat::barrel_heat_1_17mm
-    uint32_t barrel_heat_1_17mm = 0;
+    /// @copydoc RobotPowerHeat::barrel_heat_17mm
+    uint32_t barrel_heat_17mm = 0;
     /// @copydoc RobotPowerHeat::barrel_heat_42mm
     uint32_t barrel_heat_42mm = 0;
 };

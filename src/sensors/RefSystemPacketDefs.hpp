@@ -546,7 +546,7 @@ struct RobotPowerHeat {
     /// @brief Buffer energy; unit: J
     uint16_t buffer_energy = 0;
     /// @brief Barrel heat of the 1st 17mm Launching Mechanism
-    uint16_t barrel_heat_1_17mm = 0;
+    uint16_t barrel_heat_17mm = 0;
     /// @brief Barrel heat of the 42mm Launching Mechanism
     uint16_t barrel_heat_42mm = 0;
 
@@ -557,7 +557,7 @@ struct RobotPowerHeat {
         Serial.printf("\tReserved 2: %u\n", reserved_2);
         Serial.printf("\tReserved 3: %f\n", reserved_3);
         Serial.printf("\tBuffer Energy: %u\n", buffer_energy);
-        Serial.printf("\tBarrel Heat 1 17mm: %u\n", barrel_heat_1_17mm);
+        Serial.printf("\tBarrel Heat 1 17mm: %u\n", barrel_heat_17mm);
         Serial.printf("\tBarrel Heat 42mm: %u\n", barrel_heat_42mm);
     }
 
@@ -572,7 +572,7 @@ struct RobotPowerHeat {
         memcpy(&reserved_3, &reserved_3_raw, sizeof(reserved_3));
 
         buffer_energy = (data[9] << 8) | data[8];
-        barrel_heat_1_17mm = (data[11] << 8) | data[10];
+        barrel_heat_17mm = (data[11] << 8) | data[10];
         barrel_heat_42mm = (data[13] << 8) | data[12];
     }
 
@@ -581,7 +581,7 @@ struct RobotPowerHeat {
     RobotPowerHeatData to_comms_data() {
         RobotPowerHeatData data;
         data.buffer_energy = buffer_energy;
-        data.barrel_heat_1_17mm = barrel_heat_1_17mm;
+        data.barrel_heat_17mm = barrel_heat_17mm;
         data.barrel_heat_42mm = barrel_heat_42mm;
         return data;
     }
