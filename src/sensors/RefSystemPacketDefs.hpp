@@ -473,8 +473,6 @@ struct RobotPerformance {
     uint8_t chassis_power_active : 1;
     /// @brief Whether shooter line is powered
     uint8_t shooter_power_active : 1;
-    /// @brief Reserved
-    uint8_t reserved : 5;
 
     /// @brief Prints the RobotPerformance packet
     void print() const {
@@ -505,7 +503,6 @@ struct RobotPerformance {
         gimbal_power_active = data[12] & 0x01;
         chassis_power_active = (data[12] >> 1) & 0x01;
         shooter_power_active = (data[12] >> 2) & 0x01;
-        reserved = (data[12] >> 3) & 0x1F;
     }
 
     /// @brief Converts this RobotPerformance struct to a RobotPerformanceData struct for comms transmission
