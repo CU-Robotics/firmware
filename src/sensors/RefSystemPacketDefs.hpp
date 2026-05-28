@@ -1299,6 +1299,7 @@ struct CustomControllerRobot {
 /// @note ID: 0x0303
 struct SmallMapCommand {
     /// @brief Size of the SmallMapCommand packet in bytes
+    /// @note The 2026, version 1.3.1 spec says this packet is 15 bytes, but its members sum to 12 bytes. This is likely a typo, but keep an eye out for issues with this packet size.
     static const uint8_t packet_size = 12;
 
     /// @brief The raw byte array of data received from ref
