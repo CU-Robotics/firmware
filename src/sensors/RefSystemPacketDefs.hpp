@@ -3,7 +3,7 @@
 #include "comms/data/comms_ref_data.hpp"
 #include <Arduino.h>
 
-/// @brief Maximum size of the data segment in a Ref System packet. The record is currently held by 0x0301
+/// @brief Maximum size of the data segment in a Ref System packet. The largest is currently 0x0310.
 constexpr uint16_t REF_MAX_DATA_SIZE = 300;
 
 /// @brief Maximum size of a Ref System packet in bytes \n
