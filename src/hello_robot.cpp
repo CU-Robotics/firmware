@@ -274,40 +274,40 @@ void HelloRobot::process_cli() {
             
             // Loop through the array and draw the views in the exact order the user typed them
             for (int i = 0; i < num_active_views; i++) {
-                switch (active_views[i]) {
-				case LiveMode::PROFILE_VIEW:
+              switch (active_views[i]) {
+			  case LiveMode::PROFILE_VIEW:
 #ifdef PROFILER
-					prof.print_summary();
+				prof.print_summary();
 #endif
-					break;
+				break;
                         
-				case LiveMode::TRANSMITTER:
-					transmitter_manager.print_live_data();
-					break;
+			  case LiveMode::TRANSMITTER:
+				transmitter_manager.print_live_data();
+				break;
                         
-				case LiveMode::SENSORS:
-					Serial.printf("=== LIVE SENSOR READOUT ===\n");
-					sensor_manager.print_sensors_live(); 
-					break;
+			  case LiveMode::SENSORS:
+				Serial.printf("=== LIVE SENSOR READOUT ===\n");
+				sensor_manager.print_sensors_live(); 
+				break;
                         
-				case LiveMode::ESTIMATED_STATE:
-					Serial.printf("=== LIVE ESTIMATED STATE ===\n");
-					estimated_state_map->print();
-					break;
+			  case LiveMode::ESTIMATED_STATE:
+				Serial.printf("=== LIVE ESTIMATED STATE ===\n");
+				estimated_state_map->print();
+				break;
 				
-				case LiveMode::TARGET_STATE:
-					Serial.printf("=== LIVE TARGET STATE ===\n");
-					target_state_map->print();
-					break;
+			  case LiveMode::TARGET_STATE:
+				Serial.printf("=== LIVE TARGET STATE ===\n");
+				target_state_map->print();
+				break;
 
-				case LiveMode::HEARTBEAT:
-					Serial.printf("=== LIVE HEARTBEAT  ===\n");
-					Serial.println(loopc);
-					break;
+			  case LiveMode::HEARTBEAT:
+				Serial.printf("=== LIVE HEARTBEAT  ===\n");
+				Serial.println(loopc);
+				break;
                         
-				default:
-					break;
-                }
+			  default:
+				break;
+              }
                 Serial.println(); // Add a blank line between stacked views
             }
 			SystemLog.draw_dashboard_box(); // puts all non-CLI prints in neat box
