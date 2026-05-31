@@ -58,7 +58,7 @@ void SystemLogger::push_message() {
     strncpy(messages[head].text, current_line, MAX_LINE_LEN);
 
     // 2. If CLI is closed, print immediately with colors!
-    if (!is_live_view_active) {
+    if (!is_live_view_active && should_show(messages[head].level, messages[head].sys)) {
         Serial.printf("[%7.2fs] %s[%s] %s\033[0m\n", 
             messages[head].timestamp, 
             level_to_color(messages[head].level),
@@ -121,6 +121,22 @@ void SystemLogger::error(Subsystem sys, const char* format, ...) {
     line_length = len;
     push_message();
 }
+
+bool SystemLogger::should_show(LogLevel lvl, Subsystem sys) {
+    // Only evaluate if the message meets the minimum requested priority level
+    if (lvl >= view_filter_level) {
+        // Rule 1: High priority (Warnings & Errors) ALWAYS pierce the subsystem filter
+        if (lvl >= LogLevel::WARN) {
+            return true; 
+        } 
+        // Rule 2: Standard INFO messages only show if they match the active subsystem
+        else if (view_filter_sys == Subsystem::ALL || sys == view_filter_sys) {
+            return true;
+        }
+    }
+    return false;
+}
+
 void SystemLogger::draw_dashboard_box() {
     Serial.println("============= SYSTEM EVENT LOG =============");
     if (count == 0) {
@@ -131,22 +147,7 @@ void SystemLogger::draw_dashboard_box() {
             uint8_t idx = (start + i) % LOG_HISTORY;
             LogEvent& ev = messages[idx];
 
-            bool show = false;
-            
-            // FILTER LOGIC
-            // Only evaluate if the message meets the minimum requested priority level
-            if (ev.level >= view_filter_level) {
-                // Rule 1: High priority (Warnings & Errors) ALWAYS pierce the subsystem filter
-                if (ev.level >= LogLevel::WARN) {
-                    show = true; 
-                } 
-                // Rule 2: Standard INFO messages only show if they match the active subsystem
-                else if (view_filter_sys == Subsystem::ALL || ev.sys == view_filter_sys) {
-                    show = true;
-                }
-            }
-
-            if (show) {
+            if (should_show(ev.level, ev.sys)) {
                 Serial.printf(" [%7.2fs] %s[%s] %s\033[0m\n", 
                     ev.timestamp, 
                     level_to_color(ev.level),

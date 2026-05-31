@@ -66,8 +66,8 @@ public:
     void info(Subsystem sys, const char* format, ...);
     void warn(Subsystem sys, const char* format, ...);
     void error(Subsystem sys, const char* format, ...);
-
-  
+    bool should_show(LogLevel lvl, Subsystem sys);
+    
 	/// @brief draws dashboard for live prints from CLI
     void draw_dashboard_box();
 };

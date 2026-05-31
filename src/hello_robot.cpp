@@ -12,7 +12,7 @@ void HelloRobot::init() {
 
     // Configure the robot from comms data, which is filled on Hive.
     Serial.println("Configuring...");
-
+/*
     Comms::comms_layer.configure();
 
     const Cfg::RobotConfig &config = Comms::comms_layer.get_hive_data().config;
@@ -48,7 +48,7 @@ void HelloRobot::init() {
     reference_map.emplace(config.states);
     target_state_map.emplace(config.states);      // Temp ungoverned state
     hive_state_map_offset.emplace(config.states); // Hive offset state
-
+*/
     // start the main loop watchdog
     watchdog.start();
 }
@@ -61,7 +61,7 @@ void HelloRobot::run() {
         stall_timer.start();
 
 #ifdef PROFILER
-
+/*
         prof.begin("Telemetry");
         read_telemetry();
         prof.end("Telemetry");
@@ -77,7 +77,7 @@ void HelloRobot::run() {
         prof.begin("Safety");
         check_safety();
         prof.end("Safety");
-
+*/
         prof.begin("CLI");
         process_cli();
         prof.end("CLI");
@@ -87,8 +87,10 @@ void HelloRobot::run() {
 		update_controls();
 		check_safety();
 		process_cli();
-		#endif
-		loop_timing();
+#endif
+        prof.begin("loop_timing");
+        loop_timing();
+        prof.end("loop_timing");
 
 		
 	}
@@ -379,6 +381,9 @@ void HelloRobot::process_cli() {
 }
 void HelloRobot::cmd_ping() {
     Serial.println("pong! Robot is alive.");
+    prof.begin("Logging");
+    SystemLog.error(Subsystem::MOTORS, "Overcurrent fault ");
+    prof.end("Logging");
 }
 
 void HelloRobot::cmd_help() {
@@ -463,21 +468,76 @@ void HelloRobot::cmd_log() {
     char* sys_tok = strtok(NULL, " ");
     char* lvl_tok = strtok(NULL, " ");
 
+    // --- DATA DICTIONARIES ---
+    struct SysMap {
+        const char* name;
+        Subsystem sys;
+    };
+    static const SysMap sys_dict[] = {
+        {"all",     Subsystem::ALL},
+        {"can",     Subsystem::CAN},
+        {"motors",  Subsystem::MOTORS},
+        {"sensors", Subsystem::SENSORS},
+        {"est",     Subsystem::ESTIMATOR},
+        {"comms",   Subsystem::COMMS}
+    };
+
+    struct LvlMap {
+        const char* name;
+        LogLevel lvl;
+    };
+    static const LvlMap lvl_dict[] = {
+        {"info",  LogLevel::INFO},
+        {"warn",  LogLevel::WARN},
+        {"error", LogLevel::ERROR}
+    };
+
+    bool error_found = false;
+
+    // 1. Validate Subsystem (if provided)
     if (sys_tok) {
-        if (strcmp(sys_tok, "all") == 0) SystemLog.view_filter_sys = Subsystem::ALL;
-        else if (strcmp(sys_tok, "can") == 0) SystemLog.view_filter_sys = Subsystem::CAN;
-        else if (strcmp(sys_tok, "motors") == 0) SystemLog.view_filter_sys = Subsystem::MOTORS;
-        else if (strcmp(sys_tok, "sensors") == 0) SystemLog.view_filter_sys = Subsystem::SENSORS;
-        else if (strcmp(sys_tok, "est") == 0) SystemLog.view_filter_sys = Subsystem::ESTIMATOR;
-        else if (strcmp(sys_tok, "comms") == 0) SystemLog.view_filter_sys = Subsystem::COMMS;
-    }
-    
-    if (lvl_tok) {
-        if (strcmp(lvl_tok, "info") == 0) SystemLog.view_filter_level = LogLevel::INFO;
-        else if (strcmp(lvl_tok, "warn") == 0) SystemLog.view_filter_level = LogLevel::WARN;
-        else if (strcmp(lvl_tok, "error") == 0) SystemLog.view_filter_level = LogLevel::ERROR;
+        bool found = false;
+        for (const auto& entry : sys_dict) {
+            if (strcmp(sys_tok, entry.name) == 0) {
+                SystemLog.view_filter_sys = entry.sys;
+                found = true;
+                break;
+            }
+        }
+        
+        if (!found) {
+            Serial.printf("Error: Unknown subsystem '%s'\n", sys_tok);
+            error_found = true;
+        }
     }
 
+    // 2. Validate Level (if provided and we haven't already failed)
+    if (lvl_tok && !error_found) {
+        bool found = false;
+        for (const auto& entry : lvl_dict) {
+            if (strcmp(lvl_tok, entry.name) == 0) {
+                SystemLog.view_filter_level = entry.lvl;
+                found = true;
+                break;
+            }
+        }
+        
+        if (!found) {
+            Serial.printf("Error: Unknown priority level '%s'\n", lvl_tok);
+            error_found = true;
+        }
+    }
+
+    // 3. Check if an error occurred OR if the user just typed "log" with no arguments
+    if (error_found || (!sys_tok && !lvl_tok)) {
+        Serial.println("Usage: log [subsystem] [priority]");
+        Serial.println("  Subsystems: all, can, motors, sensors, est, comms");
+        Serial.println("  Priorities: info, warn, error");
+        Serial.println("  Example:    log motors warn");
+        return; 
+    }
+
+    // 4. Success Output
     Serial.printf("Log filter updated. Sys: %s | Level: %s\n", 
         sys_tok ? sys_tok : "UNCHANGED", 
         lvl_tok ? lvl_tok : "UNCHANGED");
