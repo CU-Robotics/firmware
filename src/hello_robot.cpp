@@ -12,7 +12,7 @@ void HelloRobot::init() {
 
     // Configure the robot from comms data, which is filled on Hive.
     Serial.println("Configuring...");
-/*
+
     Comms::comms_layer.configure();
 
     const Cfg::RobotConfig &config = Comms::comms_layer.get_hive_data().config;
@@ -48,7 +48,7 @@ void HelloRobot::init() {
     reference_map.emplace(config.states);
     target_state_map.emplace(config.states);      // Temp ungoverned state
     hive_state_map_offset.emplace(config.states); // Hive offset state
-*/
+
     // start the main loop watchdog
     watchdog.start();
 }
@@ -61,8 +61,8 @@ void HelloRobot::run() {
         stall_timer.start();
 
 #ifdef PROFILER
-        /*
-                prof.begin("Telemetry");
+
+        prof.begin("Telemetry");
         read_telemetry();
         prof.end("Telemetry");
 
@@ -77,7 +77,7 @@ void HelloRobot::run() {
         prof.begin("Safety");
         check_safety();
         prof.end("Safety");
-		*/
+
         prof.begin("CLI");
         process_cli();
         prof.end("CLI");
