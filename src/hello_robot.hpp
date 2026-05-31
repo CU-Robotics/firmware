@@ -140,7 +140,7 @@ class HelloRobot {
 	// ==========================================
     // CLI  Variables
     // ==========================================
-    /// @breif Collection of Live viewmodes
+    /// @brief Collection of Live viewmodes
     enum class LiveMode { NONE, PROFILE_VIEW, TRANSMITTER, ESTIMATED_STATE, TARGET_STATE, SENSORS, HEARTBEAT };
     /// @brief number of live views allowed at once
     static const uint8_t MAX_LIVE_VIEWS = 4;
@@ -148,7 +148,7 @@ class HelloRobot {
     LiveMode active_views[MAX_LIVE_VIEWS];
     /// @brief number of active live views
     uint8_t num_active_views = 0;
-    /// @breif time since the live view was refreshed
+    /// @brief time since the live view was refreshed
     uint32_t last_redraw_time = 0;
     /// @brief refresh rate in milliseconds
     uint32_t redraw_interval = 1000; 
