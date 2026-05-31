@@ -1729,11 +1729,11 @@ struct KeyboardMouseControl {
     /// @brief Scroll wheel's moving speed of the mouse. A negative value indicates a backward movement.
     int32_t scroll_speed = 0;
     /// @brief Whether the mouse's left button is pressed.
-    uint8_t button_left = 0;
+    bool button_left = 0;
     /// @brief Whether the mouse's right button is pressed.
-    uint8_t button_right = 0;
+    bool button_right = 0;
     /// @brief Whether the mouse's middle button is pressed.
-    uint8_t button_middle = 0;
+    bool button_middle = 0;
     /// @brief Keyboard key bitmask.
     uint32_t keyboard_value = 0;
     /// @brief Whether the keyboard's W key is pressed.
@@ -1776,9 +1776,9 @@ struct KeyboardMouseControl {
         mouse_speed_x = 0;
         mouse_speed_y = 0;
         scroll_speed = 0;
-        button_left = 0;
-        button_right = 0;
-        button_middle = 0;
+        button_left = false;
+        button_right = false;
+        button_middle = false;
         keyboard_value = 0;
         key_w = 0;
         key_s = 0;
@@ -1854,13 +1854,13 @@ struct KeyboardMouseControl {
                 if (value > 1) {
                     return false;
                 }
-                decoded.button_left = value;
+                decoded.button_left = (value != 0);
                 break;
             case 5:
                 if (value > 1) {
                     return false;
                 }
-                decoded.button_right = value;
+                decoded.button_right = (value != 0);
                 break;
             case 6:
                 if ((value & ~0xffffULL) != 0) {
@@ -1872,7 +1872,7 @@ struct KeyboardMouseControl {
                 if (value > 1) {
                     return false;
                 }
-                decoded.button_middle = value;
+                decoded.button_middle = (value != 0);
                 break;
             }
         }
