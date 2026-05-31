@@ -12,7 +12,7 @@ void HelloRobot::init() {
 
     // Configure the robot from comms data, which is filled on Hive.
     Serial.println("Configuring...");
-
+/*
     Comms::comms_layer.configure();
 
     const Cfg::RobotConfig &config = Comms::comms_layer.get_hive_data().config;
@@ -48,7 +48,7 @@ void HelloRobot::init() {
     reference_map.emplace(config.states);
     target_state_map.emplace(config.states);      // Temp ungoverned state
     hive_state_map_offset.emplace(config.states); // Hive offset state
-
+*/
     // start the main loop watchdog
     watchdog.start();
 }
@@ -60,8 +60,9 @@ void HelloRobot::run() {
         // start main loop time timer
         stall_timer.start();
 
-		#ifdef PROFILER
-		prof.begin("Telemetry");
+#ifdef PROFILER
+        /*
+                prof.begin("Telemetry");
         read_telemetry();
         prof.end("Telemetry");
 
@@ -76,6 +77,7 @@ void HelloRobot::run() {
         prof.begin("Safety");
         check_safety();
         prof.end("Safety");
+		*/
         prof.begin("CLI");
         process_cli();
         prof.end("CLI");
@@ -237,7 +239,7 @@ void HelloRobot::check_safety() {
 void HelloRobot::loop_timing() {
     // print loopc every second to verify it is still alive
     if (loopc % 1000 == 0) {
-        Serial.println(loopc);
+        //Serial.println(loopc);
     }
     // LED heartbeat -- linked to loop count to reveal slowdowns and
     // freezes.
@@ -252,18 +254,6 @@ void HelloRobot::loop_timing() {
 }
 
 void HelloRobot::process_cli() {
-    // ==========================================
-    // 1. LIVE VIEW DEFINITIONS
-    // ==========================================
-    enum class LiveMode { NONE, PROFILE_VIEW, TRANSMITTER, ESTIMATED_STATE, TARGET_STATE, SENSORS, HEARTBEAT };
-    
-    const uint8_t MAX_LIVE_VIEWS = 4;
-    static LiveMode active_views[MAX_LIVE_VIEWS];
-    static uint8_t num_active_views = 0;
-    
-    static uint32_t last_redraw_time = 0;
-    static uint32_t redraw_interval = 1000; 
-
     // ==========================================
     // 2. LIVE VIEW RENDERER
     // ==========================================
@@ -340,18 +330,57 @@ void HelloRobot::process_cli() {
 	   as well as to cmd elseif block below
 	*/
     while (Serial.available() > 0) {
-		char c = Serial.read();
-		
-        cli_buffer[cli_index] = '\0';
+        char c = Serial.read();
+        
         if (c == '\n' || c == '\r') {
             if (cli_index == 0) continue; 
 
             cli_buffer[cli_index] = '\0'; 
 
-			if (strncmp(cli_buffer, "ping", 4) == 0) {
-                Serial.println("pong! Robot is alive.");
+            // --- THE COMMAND DICTIONARY ---
+            static const struct {
+                const char* name;
+                void (HelloRobot::*execute)();
+            } commands[] = {
+                {"ping", &HelloRobot::cmd_ping},
+                {"help", &HelloRobot::cmd_help},
+                {"live", &HelloRobot::cmd_live}
+            };
+
+            // --- THE PARSER ---
+            // 1. Extract the very first word
+            char* cmd_str = strtok(cli_buffer, " ");
+            
+            if (cmd_str != nullptr) {
+                bool found = false;
+                
+                // 2. Scan the dictionary for a match
+                for (const auto& cmd : commands) {
+                    if (strcmp(cmd_str, cmd.name) == 0) {
+                        // 3. Execute the matched member function
+                        (this->*(cmd.execute))();
+                        found = true;
+                        break;
+                    }
+                }
+                
+                if (!found) {
+                    Serial.println("Unknown command. Try: help");
+                }
             }
-			if (strncmp(cli_buffer, "help", 4) == 0) {
+
+            cli_index = 0; 
+        } 
+        else if (cli_index < 63) {
+            cli_buffer[cli_index++] = c;
+        }
+    }
+}
+void HelloRobot::cmd_ping() {
+    Serial.println("pong! Robot is alive.");
+}
+
+void HelloRobot::cmd_help() {
                 Serial.println("NAME");
                 Serial.println("       Robot CLI - Control and monitor firmware");
                 Serial.println();
@@ -381,57 +410,50 @@ void HelloRobot::process_cli() {
                 Serial.println();
                 Serial.println("       help");
                 Serial.println("              Displays this manual.");
-            }            // --- THE PARSER ---
-			else if (strncmp(cli_buffer, "live ", 5) == 0) {
-                num_active_views = 0;
-				SystemLog.is_live_view_active = true;
-                redraw_interval = 1000;  // Default to slow refresh
+}
+void HelloRobot::cmd_live() {
+    num_active_views = 0;
+    SystemLog.is_live_view_active = true;
+    redraw_interval = 1000;
+    
+    struct LiveViewMap {
+        const char* name;
+        LiveMode mode;
+        uint32_t interval;
+    };
+    
+    static const LiveViewMap view_dict[] = {
+        {"prof",            LiveMode::PROFILE_VIEW,    1000}, 
+        {"tx",              LiveMode::TRANSMITTER,     100},
+        {"sensors",         LiveMode::SENSORS,         100},
+        {"target_state",    LiveMode::TARGET_STATE,    100},
+        {"estimated_state", LiveMode::ESTIMATED_STATE, 100},
+        {"heartbeat",       LiveMode::HEARTBEAT,       100}
+    };
+
+	// --- THE PARSER ---
+    char* token;
+    while ((token = strtok(NULL, " ")) != NULL && num_active_views < MAX_LIVE_VIEWS) {
+        
+        // Scan the dictionary for a matching view
+        for (const auto& view : view_dict) {
+            if (strcmp(token, view.name) == 0) {
+                // Add the view to the active stack
+                active_views[num_active_views++] = view.mode;
                 
-                // The first token will be "live", which we ignore
-                char* token = strtok(cli_buffer, " ");
-                // Parse the command word by word
-				while ((token = strtok(NULL, " ")) != NULL && num_active_views < MAX_LIVE_VIEWS) {
-                    
-                    // Check the word and push the corresponding view to the stack
-					if (strcmp(token, "prof") == 0) {
-                        active_views[num_active_views++] = LiveMode::PROFILE_VIEW;
-                    } 
-					else if (strcmp(token, "tx") == 0) {
-                        active_views[num_active_views++] = LiveMode::TRANSMITTER;
-                        redraw_interval = 100;
-					} 
-					else if (strcmp(token, "sensors") == 0) {
-                        active_views[num_active_views++] = LiveMode::SENSORS;
-                        redraw_interval = 100;                     }
-					else if (strcmp(token, "target_state") == 0) {
-                        active_views[num_active_views++] = LiveMode::TARGET_STATE;
-                        redraw_interval = 100;
-                    }
-					else if (strcmp(token, "estimated_state") == 0) {
-                        active_views[num_active_views++] = LiveMode::ESTIMATED_STATE;
-                        redraw_interval = 100;
-                    }
-					else if (strcmp(token, "heartbeat") == 0) {
-                        active_views[num_active_views++] = LiveMode::HEARTBEAT;
-                        redraw_interval = 100;
-                    }
+                // If this view requires a faster refresh rate, upgrade the global interval
+                if (view.interval < redraw_interval) {
+                    redraw_interval = view.interval;
                 }
-
-                if (num_active_views > 0) {
-                    last_redraw_time = 0;    // Force immediate redraw
-                    Serial.print("\033[2J"); // Clear screen to prep the canvas
-                } else {
-                    Serial.println("Usage: live [prof] [tx] [sensors]");
-                }
+                break; // Found a match, break the inner loop to grab the next word
             }
-            else {
-                Serial.println("Unknown command. Try: ping, live prof tx");
-            }
-
-            cli_index = 0; 
-        } 
-        else if (cli_index < 63) {
-            cli_buffer[cli_index++] = c;
         }
+    }
+
+    if (num_active_views > 0) {
+        last_redraw_time = 0;    
+        Serial.print("\033[2J"); 
+    } else {
+        Serial.println("Usage: live [prof] [tx] [sensors] [estimated_state] [target_state] [heartbeat]");
     }
 }

@@ -137,14 +137,27 @@ class HelloRobot {
 
     /// @brief Hive offset state
     std::optional<RobotStateMap> hive_state_map_offset;
-	
+	// ==========================================
+    // CLI  Variables
+    // ==========================================
+    enum class LiveMode { NONE, PROFILE_VIEW, TRANSMITTER, ESTIMATED_STATE, TARGET_STATE, SENSORS, HEARTBEAT };
+    
+    static const uint8_t MAX_LIVE_VIEWS = 4;
+    LiveMode active_views[MAX_LIVE_VIEWS];
+    uint8_t num_active_views = 0;
+    
+    uint32_t last_redraw_time = 0;
+    uint32_t redraw_interval = 1000; 
 	/// @brief CLI Buffer
     char cli_buffer[64] = {0};
 	/// @brief index for cli_buffer
     uint8_t cli_index = 0;
 	/// @brief flag for live CLI printing
-	bool live_profiler_active = false;
-	
+    bool live_profiler_active = false;
+    
+	// ==========================================
+    // Major Loop functions
+    // ==========================================
 	/// @brief check to see if there is a crash report, and if so, print it repeatedly
 	void crash_report();
 	
@@ -165,6 +178,9 @@ class HelloRobot {
 
 	/// @brief Command line interface for live printing
     void process_cli();
+    void cmd_ping();
+    void cmd_help();
+    void cmd_live();
 
 public:
     /**
