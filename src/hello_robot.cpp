@@ -262,7 +262,7 @@ void HelloRobot::process_cli() {
         if (millis() - last_redraw_time >= redraw_interval) {
             Serial.print("\033[H"); // Move cursor to top-left
             
-            // Loop through the array and draw the views in the exact order the user typed them
+            // Loop through the array and draw the views in the order the user typed them
             for (int i = 0; i < num_active_views; i++) {
                 switch (active_views[i]) {
 				case LiveMode::PROFILE_VIEW:
@@ -325,9 +325,9 @@ void HelloRobot::process_cli() {
     // 3. NORMAL CLI PARSING
     // ==========================================
 	/* Adding new commands is simple.
-	   add if statement to cmd elseif block below
+	   add command to command dictionary block below
 	   If it is live add to live mode enum and switch statement above
-	   as well as to cmd elseif block below
+	   as well as to view_dict lookup table in cmd_live function
 	*/
     while (Serial.available() > 0) {
         char c = Serial.read();
