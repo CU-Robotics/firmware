@@ -140,13 +140,17 @@ class HelloRobot {
 	// ==========================================
     // CLI  Variables
     // ==========================================
+    /// @breif Collection of Live viewmodes
     enum class LiveMode { NONE, PROFILE_VIEW, TRANSMITTER, ESTIMATED_STATE, TARGET_STATE, SENSORS, HEARTBEAT };
-    
+    /// @brief number of live views allowed at once
     static const uint8_t MAX_LIVE_VIEWS = 4;
+    /// @brief array of current live views
     LiveMode active_views[MAX_LIVE_VIEWS];
+    /// @brief number of active live views
     uint8_t num_active_views = 0;
-    
+    /// @breif time since the live view was refreshed
     uint32_t last_redraw_time = 0;
+    /// @brief refresh rate in milliseconds
     uint32_t redraw_interval = 1000; 
 	/// @brief CLI Buffer
     char cli_buffer[64] = {0};
@@ -154,6 +158,13 @@ class HelloRobot {
     uint8_t cli_index = 0;
 	/// @brief flag for live CLI printing
     bool live_profiler_active = false;
+    
+    /// @brief CLI ping function
+    void cmd_ping();
+    /// @brief CLI help function
+    void cmd_help();
+    /// @brief CLI live view function
+    void cmd_live();
     
 	// ==========================================
     // Major Loop functions
@@ -172,15 +183,13 @@ class HelloRobot {
 	
 	/// @brief Checks loop timing/safety constraints and writes to the CAN bus.
     void check_safety();
+    
+    /// @brief Command line interface for live printing
+    void process_cli();
 	
 	/// @brief LED hearbeat, feeds the watchdog, and ensures consistent loop time.
 	void loop_timing();
 
-	/// @brief Command line interface for live printing
-    void process_cli();
-    void cmd_ping();
-    void cmd_help();
-    void cmd_live();
 
 public:
     /**
