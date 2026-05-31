@@ -344,7 +344,8 @@ void HelloRobot::process_cli() {
             } commands[] = {
                 {"ping", &HelloRobot::cmd_ping},
                 {"help", &HelloRobot::cmd_help},
-                {"live", &HelloRobot::cmd_live}
+                {"live", &HelloRobot::cmd_live},
+                {"log", &HelloRobot::cmd_log}
             };
 
             // --- THE PARSER ---
@@ -456,4 +457,28 @@ void HelloRobot::cmd_live() {
     } else {
         Serial.println("Usage: live [prof] [tx] [sensors] [estimated_state] [target_state] [heartbeat]");
     }
+}
+
+void HelloRobot::cmd_log() {
+    char* sys_tok = strtok(NULL, " ");
+    char* lvl_tok = strtok(NULL, " ");
+
+    if (sys_tok) {
+        if (strcmp(sys_tok, "all") == 0) SystemLog.view_filter_sys = Subsystem::ALL;
+        else if (strcmp(sys_tok, "can") == 0) SystemLog.view_filter_sys = Subsystem::CAN;
+        else if (strcmp(sys_tok, "motors") == 0) SystemLog.view_filter_sys = Subsystem::MOTORS;
+        else if (strcmp(sys_tok, "sensors") == 0) SystemLog.view_filter_sys = Subsystem::SENSORS;
+        else if (strcmp(sys_tok, "est") == 0) SystemLog.view_filter_sys = Subsystem::ESTIMATOR;
+        else if (strcmp(sys_tok, "comms") == 0) SystemLog.view_filter_sys = Subsystem::COMMS;
+    }
+    
+    if (lvl_tok) {
+        if (strcmp(lvl_tok, "info") == 0) SystemLog.view_filter_level = LogLevel::INFO;
+        else if (strcmp(lvl_tok, "warn") == 0) SystemLog.view_filter_level = LogLevel::WARN;
+        else if (strcmp(lvl_tok, "error") == 0) SystemLog.view_filter_level = LogLevel::ERROR;
+    }
+
+    Serial.printf("Log filter updated. Sys: %s | Level: %s\n", 
+        sys_tok ? sys_tok : "UNCHANGED", 
+        lvl_tok ? lvl_tok : "UNCHANGED");
 }

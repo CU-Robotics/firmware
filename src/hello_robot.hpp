@@ -165,7 +165,8 @@ class HelloRobot {
     void cmd_help();
     /// @brief CLI live view function
     void cmd_live();
-    
+    /// @brief CLI function to handle logging
+    void cmd_log();
 	// ==========================================
     // Major Loop functions
     // ==========================================
