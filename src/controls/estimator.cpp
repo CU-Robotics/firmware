@@ -270,9 +270,9 @@ void GimbalAndChassisEstimator::step_states(RobotStateMap& updated_state_map, co
         count1++;
     }
     
-    if (override == 1 && previous_state_map[Cfg::StateName::GimbalYaw].get_position() != 0){
-        yaw_angle += 0.02 * previous_state_map[Cfg::StateName::GimbalYaw].get_position() ; //config shit here
-	Serial.printf("new yaw %f, curr yaw %f", previous_state_map[Cfg::StateName::GimbalYaw].get_position(), yaw_angle);
+    if (override == 1) {
+        yaw_angle = previous_state_map[Cfg::StateName::GimbalYaw].get_position();
+        Serial.printf("Overriding gimbal yaw estimate to %f\n", yaw_angle);
     }
 
     while (yaw_angle >= PI)
@@ -319,6 +319,9 @@ void GimbalAndChassisEstimator::step_states(RobotStateMap& updated_state_map, co
     float d_chassis_heading = (global_chassis_angle - prev_global_chassis_angle);
     if (d_chassis_heading > PI) d_chassis_heading -= 2 * PI;
     else if (d_chassis_heading < -PI) d_chassis_heading += 2 * PI;
+    if (override == 1) {
+        d_chassis_heading = 0;
+    }
     prev_global_chassis_angle = global_chassis_angle;
     if (override == 1) {
         pos_estimate[0] = previous_state_map[chassis_x_state].get_position();
@@ -493,4 +496,3 @@ void LowerFeederEstimator::step_states(RobotStateMap& updated_state_map, const R
     updated_state_map[feeder_ball_state].set_velocity_no_bound(feeder_velocity * feeder_direction); // ball velocity
     updated_state_map[feeder_ball_state].set_acceleration_no_bound(0); // this is not the acceleration just the encoder value for debugging
 }
-
