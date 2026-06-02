@@ -74,52 +74,60 @@ void SystemLogger::push_message() {
     current_level = LogLevel::INFO;    // Reset to default
     current_sys = Subsystem::GENERAL;  // Reset to default
 }
-// This bypasses the write() character loop and instantly builds a struct
-void SystemLogger::info(Subsystem sys, const char* format, ...) {
+void SystemLogger::log_format(LogLevel lvl, Subsystem sys, const char* format, va_list args) {
     char temp[MAX_LINE_LEN];
-    va_list args;
-    va_start(args, format);
     vsnprintf(temp, MAX_LINE_LEN, format, args);
-    va_end(args);
     
     // Strip trailing newlines so it formats perfectly
     size_t len = strlen(temp);
     while(len > 0 && (temp[len-1] == '\n' || temp[len-1] == '\r')) temp[--len] = '\0';
 
-    set_context(LogLevel::INFO, sys);
+    set_context(lvl, sys);
     strncpy(current_line, temp, MAX_LINE_LEN);
     line_length = len;
     push_message();
 }
 
+// --- Info Overloads ---
+void SystemLogger::info(Subsystem sys, const char* format, ...) {
+    va_list args;
+    va_start(args, format);
+    log_format(LogLevel::INFO, sys, format, args);
+    va_end(args);
+}
+void SystemLogger::info(const char* format, ...) {
+    va_list args;
+    va_start(args, format);
+    log_format(LogLevel::INFO, Subsystem::GENERAL, format, args);
+    va_end(args);
+}
+
+// --- Warn Overloads ---
 void SystemLogger::warn(Subsystem sys, const char* format, ...) {
-    char temp[MAX_LINE_LEN];
     va_list args;
     va_start(args, format);
-    vsnprintf(temp, MAX_LINE_LEN, format, args);
+    log_format(LogLevel::WARN, sys, format, args);
     va_end(args);
-    size_t len = strlen(temp);
-    while(len > 0 && (temp[len-1] == '\n' || temp[len-1] == '\r')) temp[--len] = '\0';
-
-    set_context(LogLevel::WARN, sys);
-    strncpy(current_line, temp, MAX_LINE_LEN);
-    line_length = len;
-    push_message();
+}
+void SystemLogger::warn(const char* format, ...) {
+    va_list args;
+    va_start(args, format);
+    log_format(LogLevel::WARN, Subsystem::GENERAL, format, args);
+    va_end(args);
 }
 
+// --- Error Overloads ---
 void SystemLogger::error(Subsystem sys, const char* format, ...) {
-    char temp[MAX_LINE_LEN];
     va_list args;
     va_start(args, format);
-    vsnprintf(temp, MAX_LINE_LEN, format, args);
+    log_format(LogLevel::ERROR, sys, format, args);
     va_end(args);
-    size_t len = strlen(temp);
-    while(len > 0 && (temp[len-1] == '\n' || temp[len-1] == '\r')) temp[--len] = '\0';
-
-    set_context(LogLevel::ERROR, sys);
-    strncpy(current_line, temp, MAX_LINE_LEN);
-    line_length = len;
-    push_message();
+}
+void SystemLogger::error(const char* format, ...) {
+    va_list args;
+    va_start(args, format);
+    log_format(LogLevel::ERROR, Subsystem::GENERAL, format, args);
+    va_end(args);
 }
 
 bool SystemLogger::should_show(LogLevel lvl, Subsystem sys) {

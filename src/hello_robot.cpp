@@ -1,4 +1,5 @@
 #include "hello_robot.hpp"
+#include "system_log.hpp"
 #ifdef PROFILER
 Profiler prof; 
 #endif
@@ -12,7 +13,7 @@ void HelloRobot::init() {
 
     // Configure the robot from comms data, which is filled on Hive.
     Serial.println("Configuring...");
-/*
+
     Comms::comms_layer.configure();
 
     const Cfg::RobotConfig &config = Comms::comms_layer.get_hive_data().config;
@@ -48,7 +49,7 @@ void HelloRobot::init() {
     reference_map.emplace(config.states);
     target_state_map.emplace(config.states);      // Temp ungoverned state
     hive_state_map_offset.emplace(config.states); // Hive offset state
-*/
+
     // start the main loop watchdog
     watchdog.start();
 }
@@ -61,7 +62,7 @@ void HelloRobot::run() {
         stall_timer.start();
 
 #ifdef PROFILER
-/*
+
         prof.begin("Telemetry");
         read_telemetry();
         prof.end("Telemetry");
@@ -77,7 +78,7 @@ void HelloRobot::run() {
         prof.begin("Safety");
         check_safety();
         prof.end("Safety");
-*/
+
         prof.begin("CLI");
         process_cli();
         prof.end("CLI");
@@ -88,11 +89,7 @@ void HelloRobot::run() {
 		check_safety();
 		process_cli();
 #endif
-        prof.begin("loop_timing");
-        loop_timing();
-        prof.end("loop_timing");
-
-		
+        loop_timing();		
 	}
 }
 
@@ -141,7 +138,7 @@ void HelloRobot::process_behaviors() {
         // clear the request
         Comms::comms_layer.get_hive_data().override_state_data.active = false;
 
-		SystemLog.printf("Overriding state with hive state\n");
+		SystemLog.info(Subsystem::GENERAL,"Overriding state with hive state\n");
 		hive_state_map_offset->from_comms_packet(Comms::comms_layer.get_hive_data().override_state_data.state);
 
         *estimated_state_map = *hive_state_map_offset;
@@ -156,7 +153,7 @@ void HelloRobot::update_controls() {
     float current_feed = (*estimated_state_map)[Cfg::StateName::Feeder].get_position();
     float target_feed = (*target_state_map)[Cfg::StateName::Feeder].get_position();
     if ((feed - current_feed > 2 && transmitter_manager.is_teensy_mode()) || (target_feed - current_feed > 2 && transmitter_manager.is_hive_mode())) {
-        SystemLog.printf("Feeder is lowkey jammed. current ball count: %f, feed: %f, hive target: %f\n", (*estimated_state_map)[Cfg::StateName::Feeder].get_position(), feed, (*target_state_map)[Cfg::StateName::Feeder].get_position());
+        SystemLog.error(Subsystem::GENERAL,"Feeder is lowkey jammed. current ball count: %f, feed: %f, hive target: %f\n", (*estimated_state_map)[Cfg::StateName::Feeder].get_position(), feed, (*target_state_map)[Cfg::StateName::Feeder].get_position());
         feed = current_feed + 1;
         governor->set_position_reference(Cfg::StateName::Feeder, feed);
     }
@@ -194,13 +191,13 @@ void HelloRobot::check_safety() {
         // zero the can bus just in case
         can.issue_safety_mode();
 
-		SystemLog.printf("Slow loop with dt: %f, slow loop count %d\n", dt, slow_loop_counter);
+		SystemLog.error(Subsystem::GENERAL,"Slow loop with dt: %f, slow loop count %d\n", dt, slow_loop_counter);
 		// mark this as a slow loop to trigger safety mode
 		is_slow_loop = true;
 		if (last_loop_slow) {
 			slow_loop_counter++;
 			if (slow_loop_counter > 10) {
-				SystemLog.printf("Kowabunga bitches\n");
+				SystemLog.error("Kowabunga bitches\n");
 				reset_teensy();
 			}
 		} else {
@@ -223,7 +220,7 @@ void HelloRobot::check_safety() {
     if (not_safety_mode) {
         // SAFETY OFF
         can.write();
-        // Serial.printf("Can write\n");
+        SystemLog.info(Subsystem::CAN,"Can write\n");
     } else {
         // SAFETY ON
         // TODO: Reset all controller integrators here
@@ -381,9 +378,6 @@ void HelloRobot::process_cli() {
 }
 void HelloRobot::cmd_ping() {
     Serial.println("pong! Robot is alive.");
-    prof.begin("Logging");
-    SystemLog.error(Subsystem::MOTORS, "Overcurrent fault ");
-    prof.end("Logging");
 }
 
 void HelloRobot::cmd_help() {
@@ -413,6 +407,21 @@ void HelloRobot::cmd_help() {
                 Serial.println("                estimated_state : The robot's current estimated state map");
                 Serial.println("                target_state    : The robot's current target state map");
                 Serial.println("                heartbeat       : The main loop counter (loopc)");
+				Serial.println();
+				Serial.println("       log [subsystem] [priority]");
+				Serial.println("              Filters the system event log.");
+				Serial.println("              High-priority messages (Errors) will always bypass the subsystem filter.");
+				Serial.println("              Typing 'log' with no arguments displays the syntax menu.");
+				Serial.println();
+				Serial.println("              Available subsystems:");
+				Serial.println("                all, can, motors, sensors, est, comms");
+				Serial.println();
+				Serial.println("              Available priorities (minimum level to show):");
+				Serial.println("                info, warn, error");
+				Serial.println();
+				Serial.println("              Examples:");
+				Serial.println("                log motors warn  : Shows motor warnings/errors, and all other system errors");
+				Serial.println("                log all info     : Resets the filter to show absolutely everything");
                 Serial.println();
                 Serial.println("       help");
                 Serial.println("              Displays this manual.");
@@ -494,7 +503,7 @@ void HelloRobot::cmd_log() {
 
     bool error_found = false;
 
-    // 1. Validate Subsystem (if provided)
+    // Check Subsystem (if provided)
     if (sys_tok) {
         bool found = false;
         for (const auto& entry : sys_dict) {
@@ -511,7 +520,7 @@ void HelloRobot::cmd_log() {
         }
     }
 
-    // 2. Validate Level (if provided and we haven't already failed)
+    // Check Priority Level (if provided)
     if (lvl_tok && !error_found) {
         bool found = false;
         for (const auto& entry : lvl_dict) {
@@ -528,7 +537,7 @@ void HelloRobot::cmd_log() {
         }
     }
 
-    // 3. Check if an error occurred OR if the user just typed "log" with no arguments
+    // Check if log statement was written correctly
     if (error_found || (!sys_tok && !lvl_tok)) {
         Serial.println("Usage: log [subsystem] [priority]");
         Serial.println("  Subsystems: all, can, motors, sensors, est, comms");
@@ -537,7 +546,6 @@ void HelloRobot::cmd_log() {
         return; 
     }
 
-    // 4. Success Output
     Serial.printf("Log filter updated. Sys: %s | Level: %s\n", 
         sys_tok ? sys_tok : "UNCHANGED", 
         lvl_tok ? lvl_tok : "UNCHANGED");

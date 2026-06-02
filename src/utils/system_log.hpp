@@ -39,7 +39,9 @@ private:
     Subsystem current_sys = Subsystem::GENERAL;
     /// @brief handles whether we print to dashboard or direct to serial
     void push_message();
-
+    /// @brief string formatter so we don't repeat code
+    void log_format(LogLevel lvl, Subsystem sys, const char* format, va_list args);
+    bool should_show(LogLevel lvl, Subsystem sys);
 public:
     /// @brief flag for live printing from CLI
     bool is_live_view_active = false;
@@ -59,15 +61,16 @@ public:
 	/// @return the message
     size_t write(const uint8_t *buffer, size_t size) override;
   
-    // --- NEW: Context setter for multiline Print() blocks ---
+
     void set_context(LogLevel lvl, Subsystem sys);
 
-    // --- NEW: Fast, formatted logger helpers ---
     void info(Subsystem sys, const char* format, ...);
     void warn(Subsystem sys, const char* format, ...);
     void error(Subsystem sys, const char* format, ...);
-    bool should_show(LogLevel lvl, Subsystem sys);
-    
+
+    void info(const char* format, ...);
+    void warn(const char* format, ...);
+    void error(const char* format, ...);
 	/// @brief draws dashboard for live prints from CLI
     void draw_dashboard_box();
 };
