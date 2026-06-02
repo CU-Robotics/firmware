@@ -32,6 +32,7 @@ void HiveData::set_data(CommsData* data) {
     }
     case TypeLabel::OverrideState: {
         OverrideState* o_state = static_cast<OverrideState*>(data);
+        Serial.printf("Received override state\n");
         memcpy(&override_state_data, o_state, sizeof(OverrideState));
         // override_state = *static_cast<OverrideState*>(data);
         break;

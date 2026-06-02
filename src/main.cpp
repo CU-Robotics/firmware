@@ -230,7 +230,6 @@ int main() {
             // clear the request
             comms_layer.get_hive_data().override_state_data.active = false;
 
-        Serial.printf("Overriding state with hive state\n");
             hive_state_map_offset.from_comms_packet(comms_layer.get_hive_data().override_state_data.state);
 
             estimated_state_map = hive_state_map_offset;

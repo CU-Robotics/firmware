@@ -269,6 +269,11 @@ void GimbalAndChassisEstimator::step_states(RobotStateMap& updated_state_map, co
         prev_global_chassis_angle = chassis_angle;
         count1++;
     }
+    
+    if (override == 1 && previous_state_map[Cfg::StateName::GimbalYaw].get_position() != 0){
+        yaw_angle += 0.02 * previous_state_map[Cfg::StateName::GimbalYaw].get_position() ; //config shit here
+	Serial.printf("new yaw %f, curr yaw %f", previous_state_map[Cfg::StateName::GimbalYaw].get_position(), yaw_angle);
+    }
 
     while (yaw_angle >= PI)
         yaw_angle -= 2 * PI;
