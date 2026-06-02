@@ -158,6 +158,14 @@ struct StereoCamTrigger : Comms::CommsData{
     uint32_t digital_trigger_pin_1 = 0;
     /// @brief The digital pin connected to the frame trigger input on the second stereo camera.
     uint32_t digital_trigger_pin_2 = 0;
+    /// @brief The digital pin connected to line1 on the first stereo camera. 
+    uint32_t camera_1_line_1_pin = 0;
+    /// @brief The digital pin connected to line2 on the first stereo camera. 
+    uint32_t camera_1_line_2_pin = 0;
+    /// @brief The digital pin connected to line1 on the second stereo camera.
+    uint32_t camera_2_line_1_pin = 0;
+    /// @brief The digital pin connected to line2 on the second stereo camera.
+    uint32_t camera_2_line_2_pin = 0;
     /// @brief The frames per second that the cameras should be triggered at. This is used to calculate the frequency of the interrupt timers for the camera trigger.
     uint32_t fps = 0;
     /// @brief The width of the trigger pulse, in microseconds. This is used to define the square wave that triggers the camera frame exposures.

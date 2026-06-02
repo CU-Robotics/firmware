@@ -449,32 +449,52 @@ void LowerFeederController::validate(const RobotStateMap& reference_map, const R
 
 void LowerFeederController::step(RobotStateMap& reference_map, RobotStateMap& estimate_map) {
     float dt = timer.delta();
-    pidp.kp = full_state_position_controller.gains.p;
-    pidp.ki = full_state_position_controller.gains.i;
-    pidp.kd = full_state_position_controller.gains.d;
-    pidp.kf = full_state_position_controller.gains.f;
+    upper_pidp.kp = upper_position_controller.gains.p;
+    upper_pidp.ki = upper_position_controller.gains.i;
+    upper_pidp.kd = upper_position_controller.gains.d;
+    upper_pidp.kf = upper_position_controller.gains.f;
 
-    pidv.kp = full_state_velocity_controller.gains.p;
-    pidv.ki = full_state_velocity_controller.gains.i;
-    pidv.kd = full_state_velocity_controller.gains.d;
-    pidv.kf = full_state_velocity_controller.gains.f;
-    
+    upper_pidv.kp = upper_velocity_controller.gains.p;
+    upper_pidv.ki = upper_velocity_controller.gains.i;
+    upper_pidv.kd = upper_velocity_controller.gains.d;
+    upper_pidv.kf = upper_velocity_controller.gains.f;
 
-    pidp.setpoint = reference_map[lower_feeder_position_state].get_position();
-    pidp.measurement = estimate_map[lower_feeder_position_state].get_position();
+    lower_pidp.kp = lower_position_controller.gains.p;
+    lower_pidp.ki = lower_position_controller.gains.i;
+    lower_pidp.kd = lower_position_controller.gains.d;
+    lower_pidp.kf = lower_position_controller.gains.f;
 
-    pidv.setpoint = reference_map[lower_feeder_position_state].get_velocity();
-    pidv.measurement = estimate_map[lower_feeder_position_state].get_velocity();
+    lower_pidv.kp = lower_velocity_controller.gains.p;
+    lower_pidv.ki = lower_velocity_controller.gains.i;
+    lower_pidv.kd = lower_velocity_controller.gains.d;
+    lower_pidv.kf = lower_velocity_controller.gains.f;
     
-    float outputp = pidp.filter(dt, true, true);
-    float outputv = pidv.filter(dt, true, false);
-    float output = (outputp + outputv) * controller_config.gear_ratios.feeder_direction;
+    upper_pidp.setpoint = estimate_map[lower_feeder_position_state].get_position();
+    upper_pidp.measurement = estimate_map[upper_feeder_position_state].get_position();
+
+    upper_pidv.setpoint = reference_map[upper_feeder_position_state].get_velocity();
+    upper_pidv.measurement = estimate_map[upper_feeder_position_state].get_velocity();
+
+    lower_pidp.setpoint = reference_map[upper_feeder_position_state].get_position();
+    lower_pidp.measurement = estimate_map[lower_feeder_position_state].get_position();
+
+    lower_pidv.setpoint = reference_map[lower_feeder_position_state].get_velocity();
+    lower_pidv.measurement = estimate_map[lower_feeder_position_state].get_velocity();
     
-    // Serial.printf("Feeder Velocity Setpoint: %f, Measurement: %f, output: %f\n", pidv.setpoint, pidv.measurement, output);
+    float upper_outputp = upper_pidp.filter(dt, true, true);
+    float upper_outputv = upper_pidv.filter(dt, true, false);
+    float upper_output = (upper_outputp + upper_outputv) * controller_config.gear_ratios.upper_feeder_direction;
+
+    float lower_outputp = lower_pidp.filter(dt, true, true);
+    float lower_outputv = lower_pidv.filter(dt, true, false);
+    float lower_output = (lower_outputp + lower_outputv) * controller_config.gear_ratios.lower_feeder_direction;
+    
+    // Serial.printf("Feeder Velocity Setpoint: %f, Measurement: %f, output: %f\n", lower_pidv.setpoint, lower_pidv.measurement, output);
     // Serial.printf("lower feeder reference position: %f, reference velocity: %f, estimate position: %f, estimate velocity: %f\n", 
     //                 reference_map[lower_feeder_position_state].get_position(), reference_map[lower_feeder_position_state].get_velocity(),
     //                 estimate_map[lower_feeder_position_state].get_position(), estimate_map[lower_feeder_position_state].get_velocity());
-        
-    near_feeder_motor->write_motor_torque(output);
-    far_feeder_motor->write_motor_torque(-output);
+    upper_feeder_motor->write_motor_torque(upper_output);    
+
+    near_feeder_motor->write_motor_torque(lower_output);
+    far_feeder_motor->write_motor_torque(-lower_output);
 }
