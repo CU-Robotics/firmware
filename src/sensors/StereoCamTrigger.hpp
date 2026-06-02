@@ -40,7 +40,6 @@ class StereoCamTrigger : public Sensor{
   public:
     /// @brief constructor for StereoCamTrigger
     /// @param config configuration data for the stereo cam trigger
-    /// @param _state_configurations the state configurations used to set up the estimated state map
     StereoCamTrigger(const Cfg::StereoCamTrigger& config);
     
     /// @brief initialize trigger manager by starting the interval timer

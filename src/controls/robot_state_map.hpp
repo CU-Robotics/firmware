@@ -48,6 +48,8 @@ public:
         sendable.send_to_comms();
     }
 
+    /// @brief copies the input state map into this state map
+    /// @param states the robot state map that will be copied from
     void fill_state_array(State::Raw states[static_cast<size_t>(Cfg::StateName::StateNameCount)]) const {
         for (const auto& [state_name, state] : robot_state) {
             states[static_cast<size_t>(state_name)] = state.get_raw();
