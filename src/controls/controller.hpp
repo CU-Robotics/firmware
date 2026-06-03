@@ -452,20 +452,30 @@ struct FeederController : public Controller {
 /// @brief Controller for the lower ball feeder on bottom fed
 struct LowerFeederController : public Controller {
     private:
-        /// @brief control position of the feeder
-        Cfg::SubController full_state_position_controller;
-        /// @brief control velocity of the feeder
-        Cfg::SubController full_state_velocity_controller;
+        /// @brief control position of the upper feeder
+        Cfg::SubController upper_position_controller;
+        /// @brief control velocity of the upper feeder
+        Cfg::SubController upper_velocity_controller;
+        /// @brief control position of the lower feeder
+        Cfg::SubController lower_position_controller;
+        /// @brief control velocity of the lower feeder
+        Cfg::SubController lower_velocity_controller;
         /// @brief filter for calculating pid position controller outputs
-        PIDFilter pidp;
+        PIDFilter upper_pidp;
         /// @brief filter for calculating pid velocity controller outputs
-        PIDFilter pidv;
+        PIDFilter upper_pidv;
+        /// @brief filter for calculating pid position controller outputs
+        PIDFilter lower_pidp;
+        /// @brief filter for calculating pid velocity controller outputs
+        PIDFilter lower_pidv;
         /// @brief motor attached to the feeder
         std::shared_ptr<Motor> near_feeder_motor;
         /// @brief motor attached to the feeder
         std::shared_ptr<Motor> far_feeder_motor;
-        /// @brief state name for the feeder position
-        const Cfg::StateName& feeder_position_state;
+        /// @brief motor attached to the upper feeder
+        std::shared_ptr<Motor> upper_feeder_motor;
+        /// @brief state name for the upper feeder position
+        const Cfg::StateName& upper_feeder_position_state;
         /// @brief state name for the lower feeder position
         const Cfg::StateName& lower_feeder_position_state;
 
@@ -477,13 +487,16 @@ struct LowerFeederController : public Controller {
         /// @param can reference to the CAN manager to get motor objects so we can write directly to motors
         /// @param available_motors list of motor names that are available to be used; this is to prevent multiple controllers from trying to control the same motor
         LowerFeederController(const Cfg::Controller& controller_config, CANManager& can, std::vector<Cfg::MotorName>& available_motors) : Controller(controller_config),
-            feeder_position_state(controller_config.get_state_name_by_generic_use(Cfg::GenericControllerStateUse::FeederBallPosition)),
+            upper_feeder_position_state(controller_config.get_state_name_by_generic_use(Cfg::GenericControllerStateUse::UpperFeederBallPosition)),
             lower_feeder_position_state(controller_config.get_state_name_by_generic_use(Cfg::GenericControllerStateUse::LowerFeederBallPosition)) {
-            full_state_position_controller = controller_config.get_sub_controller_by_type(Cfg::SubControllerType::FullStatePositionController);
-            full_state_velocity_controller = controller_config.get_sub_controller_by_type(Cfg::SubControllerType::FullStateVelocityController);
-                
+            lower_position_controller = controller_config.get_sub_controller_by_type(Cfg::SubControllerType::LowerFeederPositionController);
+            lower_velocity_controller = controller_config.get_sub_controller_by_type(Cfg::SubControllerType::LowerFeederVelocityController);
+            upper_position_controller = controller_config.get_sub_controller_by_type(Cfg::SubControllerType::UpperFeederPositionController);
+            upper_velocity_controller = controller_config.get_sub_controller_by_type(Cfg::SubControllerType::UpperFeederVelocityController);
+
             near_feeder_motor = get_motor_by_generic_use(Cfg::GenericControllerMotorUse::NearFeeder, can, available_motors);
             far_feeder_motor = get_motor_by_generic_use(Cfg::GenericControllerMotorUse::FarFeeder, can, available_motors);
+            upper_feeder_motor = get_motor_by_generic_use(Cfg::GenericControllerMotorUse::UpperFeeder, can, available_motors);
         }
 
         /// @brief sends motor commands based on a reference and estimated state
@@ -497,8 +510,10 @@ struct LowerFeederController : public Controller {
         /// @brief reset the controller
         inline void reset() {
             Controller::reset();
-            pidp.sumError = 0.0;
-            pidv.sumError = 0.0;
+            upper_pidp.sumError = 0.0;
+            upper_pidv.sumError = 0.0;
+            lower_pidp.sumError = 0.0;
+            lower_pidv.sumError = 0.0;
             lower_feeder_error_monitor = ErrorMonitor{};
         }
 };

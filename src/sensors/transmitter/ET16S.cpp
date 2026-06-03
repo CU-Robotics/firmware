@@ -608,9 +608,7 @@ ET16SData ET16S::get_ET16S_data(){
 	return ET16S_data;
 }
 
-void ET16S::manual_controls(const RobotStateMap& estimated_state_map, RobotStateMap& target_state_map, bool not_safety_mode, float& feed, float& last_feed) {
-	bool has_lower_feeder = estimated_state_map.get_state_map().find(Cfg::StateName::LowerFeeder) != estimated_state_map.get_state_map().end();
-	
+void ET16S::manual_controls(const RobotStateMap& estimated_state_map, RobotStateMap& target_state_map, bool not_safety_mode, float& feed, float& last_feed) {	
 	float delta = control_input_timer.delta();
 	KeyboardMouseControl vtm_input = ref.ref_data.keyboard_mouse_control;
 	if (!vtm_input.is_fresh()) {
@@ -658,8 +656,7 @@ void ET16S::manual_controls(const RobotStateMap& estimated_state_map, RobotState
 		(get_switch_b() == SwitchPos::FORWARD || get_switch_b() == SwitchPos::MIDDLE) ? 18 : 0; // m/s
 	// if the right switch is forward, and either the left mouse button is pressed or the right switch is not
 	// backward, set the feeder to something. Otherwise, set it to 0
-	float feeder_target = (((vtm_input.button_left) &&
-							get_switch_b() != SwitchPos::BACKWARD) || get_switch_b() == SwitchPos::FORWARD) ? 12 : 0;
+	float feeder_target = ((vtm_input.button_left || get_switch_h() == SwitchPos::BACKWARD) && fly_wheel_target > 0) ? 12 : 0;
 	if (estimated_state_map[Cfg::StateName::Feeder].config().governor_type == Cfg::StateOrder::Position) {
 		float dt2 = timer.delta();
 		if (dt2 > 0.1) dt2 = 0;
@@ -668,12 +665,7 @@ void ET16S::manual_controls(const RobotStateMap& estimated_state_map, RobotState
 			feed += feeder_target * dt2;
 		}
 		
-		if (has_lower_feeder) {
-			target_state_map[Cfg::StateName::Feeder].set_position(estimated_state_map[Cfg::StateName::LowerFeeder].get_position());
-			target_state_map[Cfg::StateName::LowerFeeder].set_position((int)feed);
-		} else {
-			target_state_map[Cfg::StateName::Feeder].set_position((int)feed);
-		}
+		target_state_map[Cfg::StateName::Feeder].set_position((int)feed);
 	} else { 
 		target_state_map[Cfg::StateName::Feeder].set_velocity(feeder_target);
 	}

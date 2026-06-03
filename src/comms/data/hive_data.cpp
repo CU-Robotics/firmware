@@ -9,7 +9,7 @@ extern "C" void reset_teensy(void);
 namespace Comms {
 
 void HiveData::set_data(CommsData* data) {
-    Serial.printf("HiveData::set_data received type label %d\n", static_cast<uint8_t>(data->type_label));
+    // Serial.printf("HiveData::set_data received type label %d\n", static_cast<uint8_t>(data->type_label));
     // place the data in the mega struct
     switch (data->type_label) {
     case TypeLabel::TestData: {
@@ -108,6 +108,18 @@ void HiveData::set_data(CommsData* data) {
         config.transmitter = *transmitter;
         config.num_sections_received++;
         Serial.printf("Transmitter %u received\n", static_cast<uint32_t>(transmitter->transmitter_type));
+        break;
+    }
+    case TypeLabel::StartStereoTrigger: {
+        StartStereoTrigger* start_trigger = static_cast<StartStereoTrigger*>(data);
+        stereo_cam_start_stop.start_received = true;
+        Serial.printf("Start stereo trigger for %u received\n", static_cast<uint32_t>(start_trigger->camera_trigger_name));
+        break;
+    }
+    case TypeLabel::StopStereoTrigger: {
+        StopStereoTrigger* stop_trigger = static_cast<StopStereoTrigger*>(data);
+        stereo_cam_start_stop.stop_received = true;
+        Serial.printf("Stop stereo trigger for %u received\n", static_cast<uint32_t>(stop_trigger->camera_trigger_name));
         break;
     }
     default:

@@ -25,4 +25,6 @@
 
 #include "comms_ref_data.hpp"
 
+#include "stereo_cam_trigger_data.hpp"
+
 #endif // DATA_STRUCTS_HPP
