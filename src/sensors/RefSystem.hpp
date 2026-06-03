@@ -85,7 +85,7 @@ public:
     /// @param packet Byte array of the packet to be sent
     /// @param length The total size of the packet, including header/tail
     /// @note Re-computes the CRC, so no need to do it yourself
-    void write(uint8_t* packet, uint8_t length);
+    void write(uint8_t* packet, uint16_t length);
 
     /// @brief Generate a byte array for all ref data to be sent over comms
     /// @note Only sends some packets, not all

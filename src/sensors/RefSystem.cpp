@@ -41,7 +41,7 @@ void RefSystem::read() {
     read_mcm();
 }
 
-void RefSystem::write(uint8_t* packet, uint8_t length) {
+void RefSystem::write(uint8_t* packet, uint16_t length) {
     // return if over baud rate
     if (bytes_sent >= REF_MAX_BAUD_RATE) {
         Serial.println("Too many bytes");
@@ -54,8 +54,33 @@ void RefSystem::write(uint8_t* packet, uint8_t length) {
         return;
     }
 
-    // length of actual sendable data (without the IDs)
-    uint8_t data_length = packet[1] - 6;
+    constexpr uint16_t frame_header_size = FrameHeader::packet_size;
+    constexpr uint16_t command_ID_size = 2;
+    constexpr uint16_t frame_tail_size = 2;
+    constexpr uint16_t interaction_header_size = 6;
+    constexpr uint16_t packet_overhead = frame_header_size + command_ID_size + frame_tail_size;
+
+    if (length < frame_header_size) {
+        Serial.println("Packet Too Short to Send!");
+        return;
+    }
+
+    uint16_t frame_data_length = (static_cast<uint16_t>(packet[2]) << 8) | packet[1];
+    if (frame_data_length > REF_MAX_DATA_SIZE) {
+        Serial.println("Packet Data Too Long to Send!");
+        return;
+    }
+
+    uint16_t expected_length = packet_overhead + frame_data_length;
+    if (length != expected_length) {
+        Serial.println("Packet Length Mismatch!");
+        return;
+    }
+
+    if (frame_data_length < interaction_header_size) {
+        Serial.println("Packet Data Too Short to Send!");
+        return;
+    }
 
     // update header
     packet[0] = 0xA5;                       // set SOF
@@ -67,9 +92,10 @@ void RefSystem::write(uint8_t* packet, uint8_t length) {
     packet[10] = ref_data.robot_performance.robot_ID >> 8;
 
     // update tail
-    uint16_t footerCRC = generateCRC16(packet, 13 + data_length);
-    packet[13 + data_length] = (footerCRC & 0x00FF);    // set CRC
-    packet[14 + data_length] = (footerCRC >> 8);        // set CRC
+    uint16_t footer_index = packet_overhead + frame_data_length - frame_tail_size;
+    uint16_t footerCRC = generateCRC16(packet, footer_index);
+    packet[footer_index] = (footerCRC & 0x00FF);    // set CRC
+    packet[footer_index + 1] = (footerCRC >> 8);    // set CRC
 
     if (Serial7.write(packet, length) == length) {
         packets_sent++;
