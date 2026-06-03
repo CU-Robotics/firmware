@@ -907,7 +907,7 @@ struct RFIDStatus {
     uint8_t their_tunnel_trapezoid_middle : 1;
     /// @brief Opponent tunnel upper trapezoid crossing
     uint8_t their_tunnel_trapezoid_upper : 1;
-    /// @brief Reserved
+    /// @brief Unused bits in the RFIDStatus packet
     uint8_t reserved : 2;
 
     /// @brief Prints the RFIDStatus packet
