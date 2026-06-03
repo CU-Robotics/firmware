@@ -565,7 +565,7 @@ struct RobotPowerHeat {
         reserved_1 = (data[1] << 8) | data[0];
         reserved_2 = (data[3] << 8) | data[2];
 
-        uint32_t reserved_3_raw = (data[7] << 24) | (data[6] << 16) | (data[5] << 8) | data[4];
+        uint32_t reserved_3_raw = (static_cast<uint32_t>(data[7]) << 24) | (static_cast<uint32_t>(data[6]) << 16) | (static_cast<uint32_t>(data[5]) << 8) | static_cast<uint32_t>(data[4]);
         memcpy(&reserved_3, &reserved_3_raw, sizeof(reserved_3));
 
         buffer_energy = (data[9] << 8) | data[8];
@@ -615,11 +615,11 @@ struct RobotPosition {
     void set_data(FrameData data) {
         memcpy(raw, data.data, packet_size);
 
-        uint32_t x_raw = (data[3] << 24) | (data[2] << 16) | (data[1] << 8) | data[0];
+        uint32_t x_raw = (static_cast<uint32_t>(data[3]) << 24) | (static_cast<uint32_t>(data[2]) << 16) | (static_cast<uint32_t>(data[1]) << 8) | static_cast<uint32_t>(data[0]);
         memcpy(&x, &x_raw, sizeof(x));
-        uint32_t y_raw = (data[7] << 24) | (data[6] << 16) | (data[5] << 8) | data[4];
+        uint32_t y_raw = (static_cast<uint32_t>(data[7]) << 24) | (static_cast<uint32_t>(data[6]) << 16) | (static_cast<uint32_t>(data[5]) << 8) | static_cast<uint32_t>(data[4]);
         memcpy(&y, &y_raw, sizeof(y));
-        uint32_t angle_raw = (data[11] << 24) | (data[10] << 16) | (data[9] << 8) | data[8];
+        uint32_t angle_raw = (static_cast<uint32_t>(data[11]) << 24) | (static_cast<uint32_t>(data[10]) << 16) | (static_cast<uint32_t>(data[9]) << 8) | static_cast<uint32_t>(data[8]);
         memcpy(&angle, &angle_raw, sizeof(angle));
     }
 };
@@ -752,7 +752,7 @@ struct LaunchingStatus {
         projectile_type = data[0];
         launching_mechanism = data[1];
         launching_frequency = data[2];
-        uint32_t initial_speed_raw = (data[6] << 24) | (data[5] << 16) | (data[4] << 8) | data[3];
+        uint32_t initial_speed_raw = (static_cast<uint32_t>(data[6]) << 24) | (static_cast<uint32_t>(data[5]) << 16) | (static_cast<uint32_t>(data[4]) << 8) | static_cast<uint32_t>(data[3]);
         memcpy(&initial_speed, &initial_speed_raw, sizeof(initial_speed));
     }
 
@@ -918,7 +918,7 @@ struct RFIDStatus {
     /// @param data FrameData object to extract data from
     void set_data(FrameData data) {
         memcpy(raw, data.data, packet_size);
-        uint32_t rfid_status = (data[3] << 24) | (data[2] << 16) | (data[1] << 8) | data[0];
+        uint32_t rfid_status = (static_cast<uint32_t>(data[3]) << 24) | (static_cast<uint32_t>(data[2]) << 16) | (static_cast<uint32_t>(data[1]) << 8) | static_cast<uint32_t>(data[0]);
         our_base_buff_point = rfid_status & 0x01;
         our_central_elevated_ground = (rfid_status >> 1) & 0x01;
         their_central_elevated_ground = (rfid_status >> 2) & 0x01;
@@ -1054,25 +1054,25 @@ struct GroundRobotPositions {
     void set_data(FrameData data) {
         memcpy(raw, data.data, packet_size);
 
-        uint32_t hero_x_raw = (data[3] << 24) | (data[2] << 16) | (data[1] << 8) | data[0];
+        uint32_t hero_x_raw = (static_cast<uint32_t>(data[3]) << 24) | (static_cast<uint32_t>(data[2]) << 16) | (static_cast<uint32_t>(data[1]) << 8) | static_cast<uint32_t>(data[0]);
         memcpy(&hero_x, &hero_x_raw, sizeof(hero_x));
-        uint32_t hero_y_raw = (data[7] << 24) | (data[6] << 16) | (data[5] << 8) | data[4];
+        uint32_t hero_y_raw = (static_cast<uint32_t>(data[7]) << 24) | (static_cast<uint32_t>(data[6]) << 16) | (static_cast<uint32_t>(data[5]) << 8) | static_cast<uint32_t>(data[4]);
         memcpy(&hero_y, &hero_y_raw, sizeof(hero_y));
-        uint32_t engineer_x_raw = (data[11] << 24) | (data[10] << 16) | (data[9] << 8) | data[8];
+        uint32_t engineer_x_raw = (static_cast<uint32_t>(data[11]) << 24) | (static_cast<uint32_t>(data[10]) << 16) | (static_cast<uint32_t>(data[9]) << 8) | static_cast<uint32_t>(data[8]);
         memcpy(&engineer_x, &engineer_x_raw, sizeof(engineer_x));
-        uint32_t engineer_y_raw = (data[15] << 24) | (data[14] << 16) | (data[13] << 8) | data[12];
+        uint32_t engineer_y_raw = (static_cast<uint32_t>(data[15]) << 24) | (static_cast<uint32_t>(data[14]) << 16) | (static_cast<uint32_t>(data[13]) << 8) | static_cast<uint32_t>(data[12]);
         memcpy(&engineer_y, &engineer_y_raw, sizeof(engineer_y));
-        uint32_t standard_3_x_raw = (data[19] << 24) | (data[18] << 16) | (data[17] << 8) | data[16];
+        uint32_t standard_3_x_raw = (static_cast<uint32_t>(data[19]) << 24) | (static_cast<uint32_t>(data[18]) << 16) | (static_cast<uint32_t>(data[17]) << 8) | static_cast<uint32_t>(data[16]);
         memcpy(&standard_3_x, &standard_3_x_raw, sizeof(standard_3_x));
-        uint32_t standard_3_y_raw = (data[23] << 24) | (data[22] << 16) | (data[21] << 8) | data[20];
+        uint32_t standard_3_y_raw = (static_cast<uint32_t>(data[23]) << 24) | (static_cast<uint32_t>(data[22]) << 16) | (static_cast<uint32_t>(data[21]) << 8) | static_cast<uint32_t>(data[20]);
         memcpy(&standard_3_y, &standard_3_y_raw, sizeof(standard_3_y));
-        uint32_t standard_4_x_raw = (data[27] << 24) | (data[26] << 16) | (data[25] << 8) | data[24];
+        uint32_t standard_4_x_raw = (static_cast<uint32_t>(data[27]) << 24) | (static_cast<uint32_t>(data[26]) << 16) | (static_cast<uint32_t>(data[25]) << 8) | static_cast<uint32_t>(data[24]);
         memcpy(&standard_4_x, &standard_4_x_raw, sizeof(standard_4_x));
-        uint32_t standard_4_y_raw = (data[31] << 24) | (data[30] << 16) | (data[29] << 8) | data[28];
+        uint32_t standard_4_y_raw = (static_cast<uint32_t>(data[31]) << 24) | (static_cast<uint32_t>(data[30]) << 16) | (static_cast<uint32_t>(data[29]) << 8) | static_cast<uint32_t>(data[28]);
         memcpy(&standard_4_y, &standard_4_y_raw, sizeof(standard_4_y));
-        uint32_t reserved_1_raw = (data[35] << 24) | (data[34] << 16) | (data[33] << 8) | data[32];
+        uint32_t reserved_1_raw = (static_cast<uint32_t>(data[35]) << 24) | (static_cast<uint32_t>(data[34]) << 16) | (static_cast<uint32_t>(data[33]) << 8) | static_cast<uint32_t>(data[32]);
         memcpy(&reserved_1, &reserved_1_raw, sizeof(reserved_1));
-        uint32_t reserved_2_raw = (data[39] << 24) | (data[38] << 16) | (data[37] << 8) | data[36];
+        uint32_t reserved_2_raw = (static_cast<uint32_t>(data[39]) << 24) | (static_cast<uint32_t>(data[38]) << 16) | (static_cast<uint32_t>(data[37]) << 8) | static_cast<uint32_t>(data[36]);
         memcpy(&reserved_2, &reserved_2_raw, sizeof(reserved_2));
     }
 };
@@ -1180,8 +1180,8 @@ struct SentryDecision {
     /// @param data FrameData object to extract data from
     void set_data(FrameData data) {
         memcpy(raw, data.data, packet_size);
-        sentry_info = (data[3] << 24) | (data[2] << 16) | (data[1] << 8) | data[0];
-        sentry_info_2 = (data[5] << 8) | data[4];
+        sentry_info = (static_cast<uint32_t>(data[3]) << 24) | (static_cast<uint32_t>(data[2]) << 16) | (static_cast<uint32_t>(data[1]) << 8) | static_cast<uint32_t>(data[0]);
+        sentry_info_2 = (static_cast<uint32_t>(data[5]) << 8) | static_cast<uint32_t>(data[4]);
     }
 };
 
@@ -1332,9 +1332,9 @@ struct SmallMapCommand {
     /// @param data FrameData object to extract data from
     void set_data(FrameData data) {
         memcpy(raw, data.data, packet_size);
-        uint32_t target_position_x_raw = (data[3] << 24) | (data[2] << 16) | (data[1] << 8) | data[0];
+        uint32_t target_position_x_raw = (static_cast<uint32_t>(data[3]) << 24) | (static_cast<uint32_t>(data[2]) << 16) | (static_cast<uint32_t>(data[1]) << 8) | static_cast<uint32_t>(data[0]);
         memcpy(&target_position_x, &target_position_x_raw, sizeof(target_position_x));
-        uint32_t target_position_y_raw = (data[7] << 24) | (data[6] << 16) | (data[5] << 8) | data[4];
+        uint32_t target_position_y_raw = (static_cast<uint32_t>(data[7]) << 24) | (static_cast<uint32_t>(data[6]) << 16) | (static_cast<uint32_t>(data[5]) << 8) | static_cast<uint32_t>(data[4]);
         memcpy(&target_position_y, &target_position_y_raw, sizeof(target_position_y));
         cmd_keyboard = data[8];
         target_robot_id = data[9];
