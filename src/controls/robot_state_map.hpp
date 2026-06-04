@@ -47,6 +47,15 @@ public:
         sendable.data.time = millis();
         sendable.send_to_comms();
     }
+
+    /// @brief copies the input state map into this state map
+    /// @param states the robot state map that will be copied from
+    void fill_state_array(State::Raw states[static_cast<size_t>(Cfg::StateName::StateNameCount)]) const {
+        for (const auto& [state_name, state] : robot_state) {
+            states[static_cast<size_t>(state_name)] = state.get_raw();
+        }
+    }
+
     /// @brief Print the state map to the serial monitor
     void print();
     /// @brief Update the state map from a comms packet. This will convert the comms packet to the state map format and then update the state map values
