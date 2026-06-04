@@ -36,7 +36,7 @@ class StereoCamTrigger : public Sensor{
     volatile uint32_t latest_exposure_timestamp = 0;
 
     /// @brief the number of frames that have been triggered since the last counter reset.
-    int counter = 0;
+    int counter = -1;
     
     /// @brief callback to pass to timer to update latest exposure timestamp
     void track_exposures();

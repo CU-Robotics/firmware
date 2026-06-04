@@ -70,7 +70,7 @@ void StereoCamTrigger::read() {
     digitalWrite(config.camera_1_line_2_pin, LOW);
     digitalWrite(config.camera_2_line_2_pin, LOW);
 
-    counter = 0;
+    counter = -1;
 
     Serial.printf("counter reset pin: %u triggered\n", config.camera_1_line_2_pin);
   }
