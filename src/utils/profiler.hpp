@@ -1,7 +1,7 @@
 #ifndef PROFILER_H
 #define PROFILER_H
 
-// Use this flag to toggle profiling globally.
+// Dont use this flag to toggle profiling globally.
 //#define PROFILER
 //JUST USE make debug
 

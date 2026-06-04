@@ -27,15 +27,19 @@ public:
 
     /// @brief Initialize the sensor manager with configuration data. This will configure and initialize all sensors.
     /// @param config_data The configuration data to use to initialize the sensor manager and all sensors
-    void init(const Cfg::RobotConfig& config_data);
+    /// @param isr_safe_map to bind local state map with estimated state map
+    void init(const Cfg::RobotConfig& config_data, std::optional<RobotStateMap>* isr_safe_map);
 
     /// @brief Configure the sensors based on the configuration data
     /// @param config_data The configuration data to use to configure the sensors
     void configure_sensors(const Cfg::RobotConfig& config_data);
     /// @brief Call each sensor's init function
-    void initialize_sensors();
+    /// @param isr_safe_map for binding to estimated state
+    void initialize_sensors(std::optional<RobotStateMap> *isr_safe_map);
+    
 	/// @brief calls IMU's request_read function and start first encoder's dma transfer
 	void request_read();
+
     /// @brief Call each sensor's read function to update their data
     void read();
     /// @brief Call each sensor's send_to_comms function to send their data to comms
@@ -47,6 +51,7 @@ public:
     /// @brief static Wrapper for buff encoder ISR
 	/// @param spi_event is required to pass encoder_isr into attach_intterupt();
     static void encoder_isr_wrapper(EventResponderRef spi_event);
+    
     /// @brief Get a sensor by its name and type. Will trigger safety procedure if the sensor is not found or is not of the requested type.
     /// @param name The name of the sensor to get
     /// @tparam SensorType The type of the sensor to get, must be derived from the Sensor class

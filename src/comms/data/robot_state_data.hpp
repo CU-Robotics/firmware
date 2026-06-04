@@ -34,4 +34,3 @@ struct OverrideState : Comms::CommsData {
     /// @brief Whether to actively override firmware's estimated state with this incoming state.
     uint64_t active = false;
 };
-

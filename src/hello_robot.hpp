@@ -8,6 +8,7 @@
 #include "controls/state.hpp"
 #include "git_info.h"
 
+#include "robot_state_map.hpp"
 #include "safety.hpp"
 #include "sensors/buff_encoder.hpp"
 #include "state.hpp"
@@ -26,6 +27,7 @@
 #include <TeensyDebug.h>
 #include "utils/profiler.hpp"
 #include "utils/system_log.hpp"
+#include <wiring.h>
 
 #include "comms/data/hive_data.hpp"
 #include "comms/data/robot_state_data.hpp"
@@ -128,6 +130,9 @@ class HelloRobot {
 
     /// @brief Map containing the current estimated state of the robot.
     std::optional<RobotStateMap> estimated_state_map;
+    
+    /// @brief Interrupt safe estimated state map
+	std::optional<RobotStateMap> estimated_state_map_interrupt_safe; 
 
     /// @brief Map containing the immediate reference values handed to controllers.
     std::optional<RobotStateMap> reference_map;
@@ -137,14 +142,38 @@ class HelloRobot {
 
     /// @brief Hive offset state
     std::optional<RobotStateMap> hive_state_map_offset;
-	
+	// ==========================================
+    // CLI  Variables
+    // ==========================================
+    /// @brief Collection of Live viewmodes
+    enum class LiveMode { NONE, PROFILE_VIEW, TRANSMITTER, ESTIMATED_STATE, TARGET_STATE, SENSORS, HEARTBEAT };
+    /// @brief number of live views allowed at once
+    static const uint8_t MAX_LIVE_VIEWS = 4;
+    /// @brief array of current live views
+    LiveMode active_views[MAX_LIVE_VIEWS];
+    /// @brief number of active live views
+    uint8_t num_active_views = 0;
+    /// @brief time since the live view was refreshed
+    uint32_t last_redraw_time = 0;
+    /// @brief refresh rate in milliseconds
+    uint32_t redraw_interval = 1000; 
 	/// @brief CLI Buffer
     char cli_buffer[64] = {0};
 	/// @brief index for cli_buffer
     uint8_t cli_index = 0;
 	/// @brief flag for live CLI printing
-	bool live_profiler_active = false;
-	
+    bool live_profiler_active = false;
+    
+    /// @brief CLI ping function
+    void cmd_ping();
+    /// @brief CLI help function
+    void cmd_help();
+    /// @brief CLI live view function
+    void cmd_live();
+    
+	// ==========================================
+    // Major Loop functions
+    // ==========================================
 	/// @brief check to see if there is a crash report, and if so, print it repeatedly
 	void crash_report();
 	
@@ -159,12 +188,13 @@ class HelloRobot {
 	
 	/// @brief Checks loop timing/safety constraints and writes to the CAN bus.
     void check_safety();
+    
+    /// @brief Command line interface for live printing
+    void process_cli();
 	
 	/// @brief LED hearbeat, feeds the watchdog, and ensures consistent loop time.
 	void loop_timing();
 
-	/// @brief Command line interface for live printing
-    void process_cli();
 
 public:
     /**
