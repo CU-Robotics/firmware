@@ -37,7 +37,7 @@ void HelloRobot::init() {
     transmitter_manager.init(config.transmitter);
 
     // initialize sensors
-    sensor_manager.init(config);
+    sensor_manager.init(config, &estimated_state_map_interrupt_safe);
 
     estimator_manager.init(config.estimators, sensor_manager, can);
 
@@ -46,6 +46,7 @@ void HelloRobot::init() {
     controller_manager.init(config.controllers, can);
 
     estimated_state_map.emplace(config.states);
+    estimated_state_map_interrupt_safe.emplace(config.states);
     reference_map.emplace(config.states);
     target_state_map.emplace(config.states);      // Temp ungoverned state
     hive_state_map_offset.emplace(config.states); // Hive offset state
@@ -124,6 +125,11 @@ void HelloRobot::update_controls() {
     // step estimates and construct estimated state
     estimator_manager.step(*estimated_state_map, override_request);
     // estimated_state_map.print();
+
+    noInterrupts();
+    *estimated_state_map_interrupt_safe = *estimated_state_map;
+    interrupts();
+    
     override_request = false;
     float current_feed = (*estimated_state_map)[Cfg::StateName::Feeder].get_position();
     float target_feed = (*target_state_map)[Cfg::StateName::Feeder].get_position();

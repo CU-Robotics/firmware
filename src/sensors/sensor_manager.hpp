@@ -23,13 +23,13 @@ public:
 
     /// @brief Initialize the sensor manager with configuration data. This will configure and initialize all sensors.
     /// @param config_data The configuration data to use to initialize the sensor manager and all sensors
-    void init(const Cfg::RobotConfig& config_data);
+    void init(const Cfg::RobotConfig& config_data, std::optional<RobotStateMap>* isr_safe_map);
 
     /// @brief Configure the sensors based on the configuration data
     /// @param config_data The configuration data to use to configure the sensors
     void configure_sensors(const Cfg::RobotConfig& config_data);
     /// @brief Call each sensor's init function
-    void initialize_sensors();
+    void initialize_sensors(std::optional<RobotStateMap>* isr_safe_map);
 
     /// @brief Call each sensor's read function to update their data
     void read();

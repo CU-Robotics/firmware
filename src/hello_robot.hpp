@@ -8,6 +8,7 @@
 #include "controls/state.hpp"
 #include "git_info.h"
 
+#include "robot_state_map.hpp"
 #include "safety.hpp"
 #include "sensors/buff_encoder.hpp"
 #include "state.hpp"
@@ -26,6 +27,7 @@
 
 #include "sensor_manager.hpp"
 #include <TeensyDebug.h>
+#include <wiring.h>
 
 #include "comms/data/hive_data.hpp"
 #include "comms/data/robot_state_data.hpp"
@@ -125,6 +127,9 @@ class HelloRobot {
 
     /// @brief Map containing the current estimated state of the robot.
     std::optional<RobotStateMap> estimated_state_map;
+    
+    /// @brief Interrupt safe estimated state map
+	std::optional<RobotStateMap> estimated_state_map_interrupt_safe; 
 
     /// @brief Map containing the immediate reference values handed to controllers.
     std::optional<RobotStateMap> reference_map;
