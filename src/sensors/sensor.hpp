@@ -14,6 +14,8 @@ virtual void init() = 0;
 /// @brief Read data from the sensor and update internal state accordingly.
 virtual void read() = 0;
 
+/// @brief Bind local state map with estimated state map
+/// @param Bind local state map with global estimated state map	
 virtual void provide_isr_map(std::optional<RobotStateMap> *map) {}
 	
 /// @brief Send the current sensor data to the comms layer.
