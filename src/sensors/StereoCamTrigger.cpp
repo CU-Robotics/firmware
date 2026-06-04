@@ -17,9 +17,12 @@ void StereoCamTrigger::track_exposures() {
   digitalWrite(config.digital_trigger_pin_1, LOW);
   digitalWrite(config.digital_trigger_pin_2, LOW);
   
+  counter += 1;
+
   if(estimated_state_map_interrupt_safe != nullptr) {
     // copy the estimated state map to the local estimated state map
     estimated_state_map_interrupt_safe->fill_state_array(comms_data.state);
+    comms_data.frame_count = counter;
   }
 }
 
@@ -66,6 +69,8 @@ void StereoCamTrigger::read() {
     
     digitalWrite(config.camera_1_line_2_pin, LOW);
     digitalWrite(config.camera_2_line_2_pin, LOW);
+
+    counter = 0;
 
     Serial.printf("counter reset pin: %u triggered\n", config.camera_1_line_2_pin);
   }
