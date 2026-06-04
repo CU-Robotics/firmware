@@ -3,7 +3,7 @@
 #include "transmitter_utils.hpp"
 #include <core_pins.h>
 
-extern std::unique_ptr<RobotStateMap> estimated_state_map_interrupt_safe;
+std::optional<RobotStateMap>* StereoCamTrigger::estimated_state_map_interrupt_safe = nullptr;
 
 StereoCamTrigger::StereoCamTrigger(const Cfg::StereoCamTrigger& config): Sensor(), config(config), comms_data(config.camera_trigger_name) {}
 
@@ -17,9 +17,9 @@ void StereoCamTrigger::track_exposures() {
   digitalWrite(config.digital_trigger_pin_1, LOW);
   digitalWrite(config.digital_trigger_pin_2, LOW);
   
-  if(estimated_state_map_interrupt_safe != nullptr) {
+  if(estimated_state_map_interrupt_safe != nullptr && estimated_state_map_interrupt_safe->has_value()) {
     // copy the estimated state map to the local estimated state map
-    estimated_state_map_interrupt_safe->fill_state_array(comms_data.state);
+    (*estimated_state_map_interrupt_safe)->fill_state_array(comms_data.state);
   }
 }
 
@@ -57,20 +57,24 @@ void StereoCamTrigger::init() {
   start(mpf);
 }
 
+void StereoCamTrigger::bind_isr_map(std::optional<RobotStateMap> *safe_map) {
+    estimated_state_map_interrupt_safe = safe_map;
+}
+
 void StereoCamTrigger::read() {
-  if (comms_layer.get_hive_data().stereo_cam_start_stop.start_received) {
-    digitalWrite(config.camera_1_line_2_pin, HIGH);
-    digitalWrite(config.camera_2_line_2_pin, HIGH);
-
-    delayMicroseconds(config.trigger_pulse_width);
+	if (Comms::comms_layer.get_hive_data().stereo_cam_start_stop.start_received) {
+		digitalWrite(config.camera_1_line_2_pin, HIGH);
+		digitalWrite(config.camera_2_line_2_pin, HIGH);
+		
+		delayMicroseconds(config.trigger_pulse_width);
     
-    digitalWrite(config.camera_1_line_2_pin, LOW);
-    digitalWrite(config.camera_2_line_2_pin, LOW);
-
-    Serial.printf("counter reset pin: %u triggered\n", config.camera_1_line_2_pin);
-  }
-  comms_layer.get_hive_data().stereo_cam_start_stop.stop_received = false;
-  comms_layer.get_hive_data().stereo_cam_start_stop.start_received = false;
+		digitalWrite(config.camera_1_line_2_pin, LOW);
+		digitalWrite(config.camera_2_line_2_pin, LOW);
+		
+		Serial.printf("counter reset pin: %u triggered\n", config.camera_1_line_2_pin);
+	}
+	Comms::comms_layer.get_hive_data().stereo_cam_start_stop.stop_received = false;
+	Comms::comms_layer.get_hive_data().stereo_cam_start_stop.start_received = false;
 }
 
 void StereoCamTrigger::send_to_comms() const {
