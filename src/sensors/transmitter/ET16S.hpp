@@ -226,10 +226,6 @@ class ET16S : public Transmitter {
 	/// @return back left spin wheel value
 	float get_wheel();
 
-	/// @brief getter for raw data
-	/// @return raw data
-	//uint8_t* get_raw() { return m_inputRaw; }
-
 	
 private:
 	/// @brief prints the entire raw binary data packet exactly as it is recieved
@@ -348,12 +344,11 @@ private:
 	const static int AVERAGE_SAMPLE_COUNT = 2;
 
 	/// @brief circular buffer for storing the last few samples of each channel
-	float channel_values_circular_buf[ET16S_INPUT_VALUE_COUNT][AVERAGE_SAMPLE_COUNT] = { 0 };
+	float channel_values_circular_buf[ET16S_INPUT_VALUE_COUNT][AVERAGE_SAMPLE_COUNT] = {{ 0 }};
 	/// @brief the index of the next sample to be stored in the circular buffer
 	int value_indices[ET16S_INPUT_VALUE_COUNT] = { 0 };
 
-	/// @brief raw data packet
-	//uint8_t m_inputRaw[ET16S_PACKET_SIZE] = { 0 };
+
 
 	/// @brief Configuration struct for the ET16S transmitter.
 	const Cfg::ET16S& config;
@@ -370,10 +365,10 @@ private:
     static volatile uint8_t* dma_target_buffer;
 	
 	/// @brief Ping-pong buffer A so we dont pull from a buffer being actively read from
-    static DMAMEM uint8_t dma_buffer_a[32] __attribute__((aligned(32)));
+    alignas(32) static DMAMEM uint8_t dma_buffer_a[32];
 	
 	/// @brief Ping-pong buffer B 
-    static DMAMEM uint8_t dma_buffer_b[32] __attribute__((aligned(32)));
+	alignas(32) static DMAMEM uint8_t dma_buffer_b[32];
 	
 	/// @brief boolean flag for if we have a complete 25 byte packet from transmitter
 	volatile bool packet_ready = false;

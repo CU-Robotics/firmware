@@ -5,8 +5,8 @@
 
 // Allocate the static variables in memory
 ET16S* ET16S::instance = nullptr;
-DMAMEM uint8_t ET16S::dma_buffer_a[32] __attribute__((aligned(32)));
-DMAMEM uint8_t ET16S::dma_buffer_b[32] __attribute__((aligned(32)));
+alignas(32) DMAMEM uint8_t ET16S::dma_buffer_a[32];
+alignas(32) DMAMEM uint8_t ET16S::dma_buffer_b[32];
 volatile uint8_t* ET16S::active_buffer = nullptr;
 volatile uint8_t* ET16S::dma_target_buffer = nullptr;
 
