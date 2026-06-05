@@ -50,7 +50,10 @@ public:
 
     /// @brief initialize sensor
     void init() override;
-
+	
+	/// @copydoc AdafruitIMUSensor::request_read()
+    //void request_read() override;
+	
     /// @brief Read via SPI the current angle of the encoder
     /// @note Returns and sets m_angle when it reads
     void read() override;
@@ -68,6 +71,21 @@ public:
  
     /// @brief Print the data for debugging
     void print() const;
+	
+	/// @brief Prints a formatted dashboard of live Buff Encoder values
+    void print_live_data() override;
+	
+    /// @brief Enables this encoder and start transfer
+	/// @param spi_event is global event handler from sensor_manager
+    void isr_start_transfer(EventResponderRef spi_event);
+	
+    /// @brief Disable this encoder and send DMA cache to memory
+	/// @param spi_event is global event handler from sensor_manager
+    void isr_stop_transfer(EventResponderRef spi_event);
+	
+    /// @brief Binds local dma flag with global sensor_manager flag
+	/// @param flag_ptr is shared dma flag from sensor_manager
+	void bind_dma_flag(const volatile bool* flag_ptr);
 
 private:
 
@@ -82,4 +100,14 @@ private:
 
     /// @brief The SPI settings of the buff encoders
     static const SPISettings m_settings;
+	
+	/// @brief Buffer of transmitted data to the buff encoders
+    alignas(32) uint8_t tx_buffer[32];
+	
+	/// @brief Buffer of recieved data from the buff encoders
+    alignas(32) uint8_t rx_buffer[32];
+
+	/// @brief Pointer to the SensorManager's active transfer flag
+    const volatile bool* shared_dma_flag;
+	// Could/should this be a shared pointer??
 };

@@ -3,9 +3,20 @@
 #include "comms/data/sendable.hpp"
 #include "state.hpp"
 
+// Allocate the static variables in memory
+ET16S* ET16S::instance = nullptr;
+alignas(32) DMAMEM uint8_t ET16S::dma_buffer_a[32];
+alignas(32) DMAMEM uint8_t ET16S::dma_buffer_b[32];
+volatile uint8_t* ET16S::active_buffer = nullptr;
+volatile uint8_t* ET16S::dma_target_buffer = nullptr;
+
 ET16S::ET16S(const Cfg::ET16S& config) : config(config) { }
 
 void ET16S::init() {
+
+	//  Hook the instance pointer to THIS object
+    instance = this;
+	
 	Serial8.begin(100000, SERIAL_8E1_RXINV_TXINV);
 	Serial8.flush();
 	Serial8.clear();
@@ -26,54 +37,107 @@ void ET16S::init() {
 	channel[3].kind = InputKind::STICK;
 	//configure remaining channels
 	set_config();
+	setup_edma_channel();
+}
+void ET16S::setup_edma_channel() {
+	// Enable DMA on Serial8 (i.MX RT1060 manual pg 2921)
+	LPUART5_BAUD |= LPUART_BAUD_RDMAE; 
+	
+	// Setup ping-pong buffer pointers
+	dma_target_buffer = dma_buffer_a;
+    active_buffer = dma_buffer_b;
+	
+    // The physical memory address of LPUART5's Data Register
+    rx_dma.source(LPUART5_DATA); 
+    
+    // Our cache-aligned RAM buffer, major loop of 25 bytes
+    rx_dma.destinationBuffer(dma_target_buffer, ET16S_PACKET_SIZE); 
+    
+    // Map the LPUART5 RX hardware event through the DMAMUX
+    rx_dma.triggerAtHardwareEvent(DMAMUX_SOURCE_LPUART5_RX);
+    
+    rx_dma.attachInterrupt(dma_isr_wrapper);
+    rx_dma.interruptAtCompletion();
+    
+    // Arm the DMA channel
+    rx_dma.enable();
+}
+void ET16S::dma_isr_wrapper() {
+    if (instance != nullptr) {
+        // Route the execution back into the specific object instance
+        instance->dma_isr();
+    }
 }
 
-void ET16S::read() {
-	static uint8_t last_byte = 0xAA;
+void ET16S::dma_isr(){
+    // Clear the hardware interrupt flag
+    rx_dma.clearInterrupt();
+
+    active_buffer = dma_target_buffer;
+    // Invalidate the cache for this buffer so the CPU fetches the fresh RAM
+    arm_dcache_delete((void*)active_buffer, 32);
 	
-	// if we have missed more than 4 packets (for example on startup), clear the buffer and start fresh
-	if (Serial8.available() > ET16S_PACKET_SIZE * 4) {
-		Serial8.clear();
+	// Determine target buffer to read from
+	if (dma_target_buffer == dma_buffer_a) {
+        dma_target_buffer = dma_buffer_b;
+    }
+	else {
+        dma_target_buffer = dma_buffer_a;
+    }
+    
+    // Update the hardware to point to the newly cleared buffer for the next packet
+    rx_dma.destinationBuffer(dma_target_buffer, ET16S_PACKET_SIZE);
+	
+    // Flag the main loop to process the data
+    packet_ready = true; 
+}
+void ET16S::resync_frame(){
+	Serial.print("ET16S reframing (should only be called on startup)");
+    rx_dma.disable();
+    Serial8.clear();
+    
+    //  Wait for the frame boundary
+    elapsedMillis timeout; 
+    
+    // We give it 10ms (enough time for ~3 full packets) to find the sync boundary
+    while (timeout < 10) {
+        if (Serial8.available() > 0) {
+            uint8_t c = Serial8.read();
+            
+            // If the byte we just read was the 0x00 footer, AND the next byte 
+            // sitting in the buffer is the 0x0F header, we are perfectly aligned!
+            if (c == 0x00 && Serial8.peek() == 0x0F) {
+                break; 
+            }
+        }
+    }
+    
+    // start writing from beginning of buffer
+    rx_dma.destinationBuffer(dma_target_buffer, ET16S_PACKET_SIZE);
+    
+    // next byte should be  0x0F.
+    rx_dma.enable();
+}
+void ET16S::read() {
+    if (packet_ready) {
+        packet_ready = false; // Reset flag
+		if (active_buffer[0] == 0x0F && active_buffer[24] == 0x00) {
+			// Data is complete in active buffer
+			format_raw((uint8_t*)active_buffer);
+			//set flag data
+			channel[16].data = channel[16].raw_format;
+			//set remaining data
+			set_channel_data();
+			//Check flag byte for disconnect
+			test_connection();
+
+			mode_changed_flag = (get_safety_switch() != prev_safety_switch_pos);
+			prev_safety_switch_pos = get_safety_switch();
+		}
+		else {
+			resync_frame();
+		}
 	}
-
-	// only start the "peeking" process if we have at least 2 packets worth of data, therefore we can afford to skip some bytes
-	if (Serial8.available() < ET16S_PACKET_SIZE * 2) {
-		return;
-	}
-
-	// try to find the start of the frame. This is achieved by seeing if the current byte to read is 0x0f and the previous byte read was 0x00
-	// if this is the case, we have found the start of the frame
-	while (Serial8.peek() != 0x0f) {
-		last_byte = Serial8.read();
-	}
-
-	// if the last byte was not 0x00, we have not found the start of the frame
-	if (last_byte != 0x00) {
-		return;
-	}
-
-	// if we have less than a full packet available, we cannot read the full frame
-	// however we are "aligned" with the start of the frame, so we can wait for the next frame
-	if (Serial8.available() < ET16S_PACKET_SIZE) {
-		return;
-	}
-
-	// read the full frame
-	for (int i = 0; i < ET16S_PACKET_SIZE; i++) {
-		m_inputRaw[i] = Serial8.read();
-	}
-
-	//format raw data
-	format_raw(m_inputRaw);
-	//set flag data
-	channel[16].data = channel[16].raw_format;
-	//set remaining data
-	set_channel_data();
-	//Check flag byte for disconnect
-	test_connection();
-
-	mode_changed_flag = (get_safety_switch() != prev_safety_switch_pos);
-	prev_safety_switch_pos = get_safety_switch();
 }
 
 void ET16S::print() {
@@ -107,7 +171,43 @@ void ET16S::print_raw_bin(uint8_t m_inputRaw[ET16S_PACKET_SIZE]) {
 
 	Serial.println();
 }
+void ET16S::print_live_data() {
+    Serial.printf("=== LIVE ET16S TRANSMITTER DATA ===\n");
+    
+    const char* mode_str = "UNKNOWN";
+    if (is_safety_mode()) {
+        mode_str = "SAFETY";
+    } else if (is_teensy_mode()) {
+        mode_str = "TEENSY";
+    } else if (is_hive_mode()) {
+        mode_str = "HIVE";
+    }
 
+    Serial.printf(" Control Mode: %-7s\n", mode_str);
+    
+    Serial.println("---------------------------------------");
+    Serial.printf(" L Stick : X: %5.2f | Y: %5.2f\n", get_l_stick_x(), get_l_stick_y());
+    Serial.printf(" R Stick : X: %5.2f | Y: %5.2f\n", get_r_stick_x(), get_r_stick_y());
+    Serial.printf(" L Dial  :    %5.2f | R Dial  :    %5.2f\n", get_l_dial(), get_r_dial());
+    Serial.printf(" L Slider:    %5.2f | R Slider:    %5.2f\n", get_l_slider(), get_r_slider());
+    Serial.println("---------------------------------------");
+
+    // Lambda to convert the float value into the SwitchPos string
+    auto sw_str = [](auto val) -> const char* {
+        switch (static_cast<SwitchPos>(static_cast<uint32_t>(val))) {
+            case SwitchPos::FORWARD:  return "FORWARD";
+            case SwitchPos::BACKWARD: return "BACKWARD";
+            case SwitchPos::MIDDLE:   return "MIDDLE";
+            default:                  return "INVALID";
+        }
+    };
+
+    // Print using the lambda and the %-8s padding to prevent text ghosting
+    Serial.printf(" SW_B: %-8s | SW_C: %-8s\n", sw_str(get_switch_b()), sw_str(get_switch_c()));
+    Serial.printf(" SW_D: %-8s | SW_E: %-8s\n", sw_str(get_switch_d()), sw_str(get_switch_e()));
+    Serial.printf(" SW_F: %-8s | SW_G: %-8s\n", sw_str(get_switch_f()), sw_str(get_switch_g()));
+    Serial.printf(" SW_H: %-8s |\n", sw_str(get_switch_h()));
+}
 void ET16S::print_format_bin(int channel_num) {
 	if (channel_num > ET16S_INPUT_VALUE_COUNT || channel_num < 0) {
 		Serial.print("Invalid channel used for print_format_bin. Must be 0-16");
