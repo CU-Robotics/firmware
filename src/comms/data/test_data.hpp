@@ -29,6 +29,7 @@ struct BigTestData : Comms::CommsData {
     float blah[128] = { 0 };
 };
 
+/// @brief Struct used to measure the round trip latency of the comms system
 struct TestLatencyData : Comms::CommsData {
     TestLatencyData() : Comms::CommsData(Comms::TypeLabel::TestLatencyData, Comms::PhysicalMedium::Ethernet, Comms::Priority::High, sizeof(TestData)) {}
     /// @brief The time in micros when the packet was sent
