@@ -38,6 +38,7 @@ enum class TypeLabel : uint16_t {
     TransmitterConfig,
     StartStereoTrigger,
     StopStereoTrigger,
+    TestLatencyData,
 };
 
 /// @brief Converts a TypeLabel to a string.
@@ -108,6 +109,8 @@ inline std::string to_string(TypeLabel type_label) {
         return "StartStereoTrigger";
     case TypeLabel::StopStereoTrigger:
         return "StopStereoTrigger";
+    case TypeLabel::TestLatencyData:
+	return "TestLatencyData";
     // no default case, so the compiler will warn us if we forget a case
     }
 

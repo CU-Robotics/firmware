@@ -16,6 +16,8 @@ struct HiveData {
     TestData test_data;
     /// @brief Big test data
     BigTestData big_test_data;
+	/// @brief data for measuring 2 way latency
+    TestLatencyData latency_data;
 
     /// @brief Target state received from Hive; This is used as a reference for firmware to follow using its reference governor, state estimator and controllers.
     TargetState target_state_data;

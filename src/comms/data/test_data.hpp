@@ -28,3 +28,11 @@ struct BigTestData : Comms::CommsData {
     /// @brief a bunch of data
     float blah[128] = { 0 };
 };
+
+struct TestLatencyData : Comms::CommsData {
+    TestLatencyData() : Comms::CommsData(Comms::TypeLabel::TestLatencyData, Comms::PhysicalMedium::Ethernet, Comms::Priority::High, sizeof(TestData)) {}
+    /// @brief The time in micros when the packet was sent
+    uint64_t current_time = 0;
+    /// @brief the difference in time between the current time and the time that was contained in the last received packet
+    uint64_t time_since_last_received = 0;
+};
