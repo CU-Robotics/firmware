@@ -127,7 +127,7 @@ private:
     /// @brief Timer for use in the configuration process
     Timer config_loop_timer;
 };
-
+	extern CommsLayer comms_layer;
 }   // namespace Comms
 
-extern Comms::CommsLayer comms_layer;
+//extern Comms::CommsLayer comms_layer;

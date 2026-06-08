@@ -10,6 +10,15 @@ TARGET_EXEC := firmware
 # Directory where build outputs will be placed
 BUILD_DIR := ./build
 
+ifneq ($(filter debug,$(MAKECMDGOALS)),)
+    BUILD_DIR := ./build/debug
+    PROFILER_FLAG := -DPROFILER
+endif
+
+ifneq ($(filter release,$(MAKECMDGOALS)),)
+    BUILD_DIR := ./build/release
+endif
+
 # Tools directory
 TOOLS_DIR := ./tools
 
@@ -54,7 +63,7 @@ TEENSY4_FLAGS = -DF_CPU=600000000 -DUSB_CUSTOM -DLAYOUT_US_ENGLISH -D__IMXRT1062
 # CPU flags to optimize code for the Teensy processor
 CPU_CFLAGS = -mcpu=cortex-m7 -mfloat-abi=hard -mfpu=fpv5-d16 -mthumb
 
-DEFINES := $(TEENSY4_FLAGS)
+DEFINES := $(TEENSY4_FLAGS) $(PROFILER_FLAG)
 
 # Preprocessor flags for both C and C++ files
 # -MMD: Generate dependency files for each source file
@@ -116,7 +125,8 @@ MAKEFLAGS += -j$(nproc)
 
 # Phony target to force a build every time
 .PHONY: build
-
+debug:  clangd $(BUILD_DIR)/$(TARGET_EXEC)
+release:  clangd $(BUILD_DIR)/$(TARGET_EXEC)
 
 # Main build target; depends on the target executable and git scraper
 build: clangd $(BUILD_DIR)/$(TARGET_EXEC)
@@ -222,7 +232,8 @@ upload: build
     # Teensy serial isn't immediately available after upload, so we wait a bit
     # The Teensy waits for 20 + 280 + 20 ms after power up/boot
 	@sleep 0.4s
-	@bash $(TOOLS_DIR)/monitor.sh
+#@bash $(TOOLS_DIR)/monitor.sh
+	@tycmd monitor
 
 
 # Install required tools for building and uploading firmware
@@ -242,7 +253,7 @@ gdb:
 # monitors currently running firmware on robot
 monitor:
 	@echo [Monitoring]
-	@bash $(TOOLS_DIR)/monitor.sh
+	@tycmd monitor
 
 
 # resets teensy and switches it into boot-loader mode, effectively stopping any execution
