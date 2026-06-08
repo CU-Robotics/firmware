@@ -31,7 +31,7 @@ struct BigTestData : Comms::CommsData {
 
 /// @brief Struct used to measure the round trip latency of the comms system
 struct TestLatencyData : Comms::CommsData {
-    TestLatencyData() : Comms::CommsData(Comms::TypeLabel::TestLatencyData, Comms::PhysicalMedium::Ethernet, Comms::Priority::High, sizeof(TestData)) {}
+    TestLatencyData() : Comms::CommsData(Comms::TypeLabel::TestLatencyData, Comms::PhysicalMedium::Ethernet, Comms::Priority::High, sizeof(TestLatencyData)) {}
     /// @brief The time in micros when the packet was sent
     uint64_t current_time = 0;
     /// @brief the difference in time between the current time and the time that was contained in the last received packet
