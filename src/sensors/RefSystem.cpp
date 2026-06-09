@@ -2,6 +2,11 @@
 #include "RefSystemPacketDefs.hpp"
 #include "comms/data/sendable.hpp"
 
+// Uncomment to enable debug prints
+#define REF_SYSTEM_DEBUG
+// Uncomment to debug even harder
+// #define REF_SYSTEM_DEBUG_ALL_FRAMES
+
 uint8_t generateCRC8(uint8_t* data, uint32_t len) {
     uint8_t CRC8 = 0xFF;
     while (len-- > 0) {
@@ -153,8 +158,9 @@ bool RefSystem::read_frame_header(HardwareSerial* serial, uint8_t raw_buffer[REF
     frame.header.CRC = raw_buffer[buffer_index + 4];
 
     // verify the CRC is correct
-    if (frame.header.CRC != generateCRC8(raw_buffer, 4)) {
-        Serial.println("Header failed CRC");
+    uint8_t expected_CRC = generateCRC8(raw_buffer, 4);
+    if (frame.header.CRC != expected_CRC) {
+        Serial.printf("[Ref] Header CRC failed: received=0x%02x expected=0x%02x\n", frame.header.CRC, expected_CRC);
         packets_failed++;
         return false;
     }
@@ -183,7 +189,7 @@ bool RefSystem::read_frame_command_ID(HardwareSerial* serial, uint8_t raw_buffer
 
     // sanity check, verify the ID is valid
     if (frame.commandID > REF_MAX_COMMAND_ID) {
-        Serial.println("Invalid Command ID");
+        Serial.printf("[Ref] Invalid command ID: 0x%04x\n", frame.commandID);
         packets_failed++;
         return false;
     }
@@ -232,8 +238,10 @@ int RefSystem::read_frame_tail(HardwareSerial* serial, uint8_t raw_buffer[REF_MA
     // store CRC
     frame.CRC = (raw_buffer[buffer_index + 1] << 8) | raw_buffer[buffer_index + 0];
 
-    if (frame.CRC != generateCRC16(raw_buffer, buffer_index)) {
-        Serial.println("Tail failed CRC");
+    uint16_t expected_CRC = generateCRC16(raw_buffer, buffer_index);
+    if (frame.CRC != expected_CRC) {
+        Serial.printf("[Ref] Tail CRC failed: command=0x%04x length=%u received=0x%04x expected=0x%04x\n",
+                      frame.commandID, frame.header.data_length, frame.CRC, expected_CRC);
         packets_failed++;
         return -1;
     }
@@ -261,6 +269,11 @@ void RefSystem::set_ref_data(Frame& frame, uint8_t raw_buffer[REF_MAX_PACKET_SIZ
     // grab the type
     FrameType type = static_cast<FrameType>(frame.commandID);
 
+#if defined(REF_SYSTEM_DEBUG) && defined(REF_SYSTEM_DEBUG_ALL_FRAMES)
+    Serial.printf("[Ref] command=0x%04x length=%u sequence=%u\n",
+                  frame.commandID, frame.header.data_length, frame.header.sequence);
+#endif
+
     switch (type) {
     case FrameType::GAME_STATUS:
         ref_data.game_status.set_data(frame.data);
@@ -273,6 +286,11 @@ void RefSystem::set_ref_data(Frame& frame, uint8_t raw_buffer[REF_MAX_PACKET_SIZ
         break;
     case FrameType::EVENT_DATA:
         ref_data.event_data.set_data(frame.data);
+#ifdef REF_SYSTEM_DEBUG
+        Serial.printf("[Ref][0x0101] reload_zone=%u capture_point=%u raw=0x%02x%02x%02x%02x\n",
+                      ref_data.event_data.reload_zone_status, ref_data.event_data.capture_point_status,
+                      frame.data[3], frame.data[2], frame.data[1], frame.data[0]);
+#endif
         break;
     case FrameType::REFEREE_WARNING:
         ref_data.referee_warning.set_data(frame.data);
@@ -344,16 +362,36 @@ void RefSystem::set_ref_data(Frame& frame, uint8_t raw_buffer[REF_MAX_PACKET_SIZ
         break;
     case FrameType::ROBOT_CUSTOM_CONTROLLER_DATA:
         ref_data.robot_custom_controller_data.set_data(frame.data);
+#ifdef REF_SYSTEM_DEBUG
+        Serial.printf("[Ref][0x0309] custom-controller payload received (%u bytes)\n", frame.header.data_length);
+#endif
         break;
     case FrameType::ROBOT_CUSTOM_CLIENT_DATA:
         ref_data.robot_custom_client_data.set_data(frame.data);
+#ifdef REF_SYSTEM_DEBUG
+        Serial.printf("[Ref][0x0310] custom-client payload received (%u bytes)\n", frame.header.data_length);
+#endif
         break;
-    case FrameType::CUSTOM_CLIENT_ROBOT_COMMAND:
+    case FrameType::CUSTOM_CLIENT_ROBOT_COMMAND: {
         ref_data.custom_client_robot_command.set_data(frame.data);
-        ref_data.keyboard_mouse_control.set_data(frame.data, frame.header.data_length);
+        bool keyboard_mouse_decoded = ref_data.keyboard_mouse_control.set_data(frame.data, frame.header.data_length);
+        if (keyboard_mouse_decoded) {
+#ifdef REF_SYSTEM_DEBUG
+            const KeyboardMouseControl& input = ref_data.keyboard_mouse_control;
+            Serial.printf("[Ref][0x0311] mouse=(%ld,%ld) scroll=%ld buttons=%u/%u/%u keys=0x%04lx\n",
+                          static_cast<long>(input.mouse_speed_x), static_cast<long>(input.mouse_speed_y),
+                          static_cast<long>(input.scroll_speed), static_cast<uint32_t>(input.button_left),
+                          static_cast<uint32_t>(input.button_right), static_cast<uint32_t>(input.button_middle),
+                          static_cast<unsigned long>(input.keyboard_value));
+#endif
+        } else {
+            Serial.printf("[Ref][0x0311] keyboard/mouse protobuf decode failed (length=%u)\n",
+                          frame.header.data_length);
+        }
         break;
+    }
     default:
-        Serial.println("Ref System::set_ref_data: Unknown Frame Type");
+        Serial.printf("Ref System::set_ref_data: Unknown Frame Type 0x%04x\n", frame.commandID);
         break;
     }
 }
