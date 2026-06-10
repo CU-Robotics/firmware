@@ -124,7 +124,7 @@ void XDriveController::validate(const RobotStateMap& reference_map, const RobotS
     // checkControllerError("XDriveController", "Chassis Heading", reference_map[chassis_heading_state], estimate_map[chassis_heading_state], chassis_heading_error_monitor);
 }
 
-void XDriveController::step(RobotStateMap& reference_map, RobotStateMap& estimate_map) {
+void XDriveController::step(RobotStateMap& reference_map, RobotStateMap& estimate_map, RobotStateMap& target_map) {
     float dt = timer.delta();
 
     Cfg::StateName drive_states[3]  = { chassis_x_state, chassis_y_state, chassis_heading_state };
@@ -292,7 +292,7 @@ void YawController::validate(const RobotStateMap& reference_map, const RobotStat
     checkControllerError("YawController", "Gimbal Yaw", reference_map[yaw_angle_state], estimate_map[yaw_angle_state], yaw_error_monitor);
 }
 
-void YawController::step(RobotStateMap& reference_map, RobotStateMap& estimate_map) {
+void YawController::step(RobotStateMap& reference_map, RobotStateMap& estimate_map, RobotStateMap& target_map) {
     float dt = timer.delta();
     float output = 0.0;
 
@@ -336,7 +336,7 @@ void PitchController::validate(const RobotStateMap& reference_map, const RobotSt
     checkControllerError("PitchController", "Gimbal Pitch", reference_map[pitch_angle_state], estimate_map[pitch_angle_state], pitch_error_monitor);
 }
 
-void PitchController::step(RobotStateMap& reference_map, RobotStateMap& estimate_map) {
+void PitchController::step(RobotStateMap& reference_map, RobotStateMap& estimate_map, RobotStateMap& target_map) {
     float dt = timer.delta();
     float output = 0.0;
 
@@ -377,7 +377,7 @@ void FlywheelController::validate(const RobotStateMap& reference_map, const Robo
     // checkControllerError("FlywheelController", "Flywheels", reference_map[flywheel_velocity_state], estimate_map[flywheel_velocity_state], flywheel_error_monitor);
 }
 
-void FlywheelController::step(RobotStateMap& reference_map, RobotStateMap& estimate_map) {
+void FlywheelController::step(RobotStateMap& reference_map, RobotStateMap& estimate_map, RobotStateMap& target_map) {
     float dt = timer.delta();
 
     pid_high.kp = high_level_velocity_controller.gains.p;
@@ -418,7 +418,7 @@ void FeederController::validate(const RobotStateMap& reference_map, const RobotS
     // checkControllerError("FeederController", "Feeder", reference_map[feeder_position_state], estimate_map[feeder_position_state], feeder_error_monitor);
 }
 
-void FeederController::step(RobotStateMap& reference_map, RobotStateMap& estimate_map) {
+void FeederController::step(RobotStateMap& reference_map, RobotStateMap& estimate_map, RobotStateMap& target_map) {
     float dt = timer.delta();
     pidp.kp = full_state_position_controller.gains.p;
     pidp.ki = full_state_position_controller.gains.i;
@@ -447,7 +447,7 @@ void LowerFeederController::validate(const RobotStateMap& reference_map, const R
     // checkControllerError("LowerFeederController", "Lower Feeder", reference_map[lower_feeder_position_state], estimate_map[lower_feeder_position_state], lower_feeder_error_monitor);
 }
 
-void LowerFeederController::step(RobotStateMap& reference_map, RobotStateMap& estimate_map) {
+void LowerFeederController::step(RobotStateMap& reference_map, RobotStateMap& estimate_map, RobotStateMap& target_map) {
     float dt = timer.delta();
     upper_pidp.kp = upper_position_controller.gains.p;
     upper_pidp.ki = upper_position_controller.gains.i;
@@ -468,15 +468,29 @@ void LowerFeederController::step(RobotStateMap& reference_map, RobotStateMap& es
     lower_pidv.ki = lower_velocity_controller.gains.i;
     lower_pidv.kd = lower_velocity_controller.gains.d;
     lower_pidv.kf = lower_velocity_controller.gains.f;
+
+    float sync_threshold = 0.2; // balls
+
+    float upper_pos = estimate_map[upper_feeder_position_state].get_position();
+    float lower_pos = estimate_map[lower_feeder_position_state].get_position();
+
+    float upper_target_pos = upper_target[upper_feeder_position_state].get_position();
+    float lower_target_pos = target_map[lower_feeder_position_state].get_position();
+
+    if ((lower_target_pos - upper_target_pos > 0.5) && (lower_pos > upper_pos - sync_threshold)) {
+        upper_target_pos++;
+        upper_target[upper_feeder_position_state].set_position(upper_target_pos);
+        upper_feeder_reference_state = upper_feeder_reference_governor.step_reference_map(upper_target);
+    }
     
-    upper_pidp.setpoint = estimate_map[lower_feeder_position_state].get_position();
-    upper_pidp.measurement = estimate_map[upper_feeder_position_state].get_position();
+    upper_pidp.setpoint = upper_feeder_reference_state[upper_feeder_position_state].get_position();
+    upper_pidp.measurement = upper_pos;
 
     upper_pidv.setpoint = reference_map[upper_feeder_position_state].get_velocity();
     upper_pidv.measurement = estimate_map[upper_feeder_position_state].get_velocity();
 
     lower_pidp.setpoint = reference_map[upper_feeder_position_state].get_position();
-    lower_pidp.measurement = estimate_map[lower_feeder_position_state].get_position();
+    lower_pidp.measurement = lower_pos;
 
     lower_pidv.setpoint = reference_map[lower_feeder_position_state].get_velocity();
     lower_pidv.measurement = estimate_map[lower_feeder_position_state].get_velocity();

@@ -7,6 +7,7 @@
 #include "utils/timing.hpp"
 #include "sensors/can/can_manager.hpp"
 #include "robot_state_map.hpp"
+#include "reference_governor.hpp"
 
 #include "comms/config_data/controller.hpp"
 #include <memory>
@@ -44,7 +45,8 @@ public:
     /// @brief sends motor commands based on a reference and estimated state
     /// @param reference_map current target robot state map
     /// @param estimate_map current estimate robot state map
-    virtual void step(RobotStateMap& reference_map, RobotStateMap& estimate_map) = 0;
+    /// @param target_map current target robot state map
+    virtual void step(RobotStateMap& reference_map, RobotStateMap& estimate_map, RobotStateMap& target_map) = 0;
 
     /// @brief Validate controller state before stepping.
     /// Managers call this so controller-specific checks live outside the control loop itself.
@@ -187,7 +189,8 @@ public:
     /// @brief sends motor commands based on a reference and estimated state
     /// @param reference_map current target robot state map
     /// @param estimate_map current estimate robot state map
-    void step(RobotStateMap& reference_map, RobotStateMap& estimate_map);
+    /// @param target_map current target robot state map
+    void step(RobotStateMap& reference_map, RobotStateMap& estimate_map, RobotStateMap& target_map);
 
     /// @copydoc Controller::validate
     void validate(const RobotStateMap& reference_map, const RobotStateMap& estimate_map) override;
@@ -251,7 +254,8 @@ public:
     /// @brief sends motor commands based on a reference and estimated state
     /// @param reference_map current target robot state map
     /// @param estimate_map current estimate robot state map
-    void step(RobotStateMap& reference_map, RobotStateMap& estimate_map);
+    /// @param target_map current target robot state map
+    void step(RobotStateMap& reference_map, RobotStateMap& estimate_map, RobotStateMap& target_map);
 
     /// @copydoc Controller::validate
     void validate(const RobotStateMap& reference_map, const RobotStateMap& estimate_map) override;
@@ -310,7 +314,8 @@ public:
     /// @brief sends motor commands based on a reference and estimated state
     /// @param reference_map current target robot state map
     /// @param estimate_map current estimate robot state map
-    void step(RobotStateMap& reference_map, RobotStateMap& estimate_map);
+    /// @param target_map current target robot state map
+    void step(RobotStateMap& reference_map, RobotStateMap& estimate_map, RobotStateMap& target_map);
 
     /// @copydoc Controller::validate
     void validate(const RobotStateMap& reference_map, const RobotStateMap& estimate_map) override;
@@ -371,7 +376,8 @@ public:
     /// @brief sends motor commands based on a reference and estimated state
     /// @param reference_map current target robot state map
     /// @param estimate_map current estimate robot state map
-    void step(RobotStateMap& reference_map, RobotStateMap& estimate_map);
+    /// @param target_map current target robot state map
+    void step(RobotStateMap& reference_map, RobotStateMap& estimate_map, RobotStateMap& target_map);
 
     /// @copydoc Controller::validate
     void validate(const RobotStateMap& reference_map, const RobotStateMap& estimate_map) override;
@@ -427,7 +433,8 @@ struct FeederController : public Controller {
         /// @brief sends motor commands based on a reference and estimated state
         /// @param reference_map current target robot state map
         /// @param estimate_map current estimate robot state map
-        void step(RobotStateMap& reference_map, RobotStateMap& estimate_map);
+        /// @param target_map current target robot state map
+        void step(RobotStateMap& reference_map, RobotStateMap& estimate_map, RobotStateMap& target_map);
 
         /// @copydoc Controller::validate
         void validate(const RobotStateMap& reference_map, const RobotStateMap& estimate_map) override;
@@ -481,14 +488,22 @@ struct LowerFeederController : public Controller {
 
         /// @brief error tracking for the lower feeder state
         ErrorMonitor lower_feeder_error_monitor;
+
+        /// @brief A reference kept internal to the controller which can update the upper feeder position independently of the main reference map.
+        RobotStateMap upper_feeder_reference_state;
+        /// @brief Governor for the upper feeder reference state
+        Governor upper_feeder_reference_governor;
+        /// @brief for internally tracking the target position of the upper feeder
+        RobotStateMap upper_target;
     public:
         /// @brief Construct the controller and get the subcontroller configs and motor objects from the config data
         /// @param controller_config config data for this controller
         /// @param can reference to the CAN manager to get motor objects so we can write directly to motors
         /// @param available_motors list of motor names that are available to be used; this is to prevent multiple controllers from trying to control the same motor
-        LowerFeederController(const Cfg::Controller& controller_config, CANManager& can, std::vector<Cfg::MotorName>& available_motors) : Controller(controller_config),
+        LowerFeederController(const Cfg::Controller& controller_config, CANManager& can, std::vector<Cfg::MotorName>& available_motors, const std::vector<Cfg::State>& state_config) : Controller(controller_config),
             upper_feeder_position_state(controller_config.get_state_name_by_generic_use(Cfg::GenericControllerStateUse::UpperFeederBallPosition)),
-            lower_feeder_position_state(controller_config.get_state_name_by_generic_use(Cfg::GenericControllerStateUse::LowerFeederBallPosition)) {
+            lower_feeder_position_state(controller_config.get_state_name_by_generic_use(Cfg::GenericControllerStateUse::LowerFeederBallPosition)),
+            upper_feeder_reference_state({}), upper_feeder_reference_governor({}), upper_target({}) {
             lower_position_controller = controller_config.get_sub_controller_by_type(Cfg::SubControllerType::LowerFeederPositionController);
             lower_velocity_controller = controller_config.get_sub_controller_by_type(Cfg::SubControllerType::LowerFeederVelocityController);
             upper_position_controller = controller_config.get_sub_controller_by_type(Cfg::SubControllerType::UpperFeederPositionController);
@@ -497,12 +512,28 @@ struct LowerFeederController : public Controller {
             near_feeder_motor = get_motor_by_generic_use(Cfg::GenericControllerMotorUse::NearFeeder, can, available_motors);
             far_feeder_motor = get_motor_by_generic_use(Cfg::GenericControllerMotorUse::FarFeeder, can, available_motors);
             upper_feeder_motor = get_motor_by_generic_use(Cfg::GenericControllerMotorUse::UpperFeeder, can, available_motors);
+
+            bool found = false;
+            for (auto& state: state_config) {
+                if (state.name == upper_feeder_position_state) {
+                    upper_feeder_reference_state.get_state_map().emplace(upper_feeder_position_state, State(state));
+                    upper_target.get_state_map().emplace(upper_feeder_position_state, State(state));
+                    std::vector<Cfg::State> state_config_vec = {};
+                    state_config_vec.push_back(state);
+                    upper_feeder_reference_governor = Governor(state_config_vec);
+                    found = true;
+                }
+            }
+            if (!found) {
+                safety::safety_procedure("Upper Feeder state config not found in config");
+            }
         }
 
         /// @brief sends motor commands based on a reference and estimated state
         /// @param reference_map current target robot state map
         /// @param estimate_map current estimate robot state map
-        void step(RobotStateMap& reference_map, RobotStateMap& estimate_map);
+        /// @param target_map current target robot state map
+        void step(RobotStateMap& reference_map, RobotStateMap& estimate_map, RobotStateMap& target_map);
 
         /// @copydoc Controller::validate
         void validate(const RobotStateMap& reference_map, const RobotStateMap& estimate_map) override;
