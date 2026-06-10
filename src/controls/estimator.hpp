@@ -345,8 +345,12 @@ struct LowerFeederEstimator : public Estimator {
         float dt = 0;
         /// @brief previous feeder angle
         float prev_feeder_angle = 0;
-        /// @brief previous ball count
+        /// @brief previous lower feeder angle
+        float prev_lower_feeder_angle = 0;
+        /// @brief ball count
         float ball_count = 0;
+        /// @brief lower ball count
+        float lower_ball_count = 0;
         /// @brief first loop counter
         int count = 0;
         /// @brief feeder encoder offset for improving feeder delay
@@ -357,6 +361,15 @@ struct LowerFeederEstimator : public Estimator {
         /// @brief gear ratio of the feeder
         float feeder_ratio = 1;
 
+        /// @brief lower feeder encoder offset for improving feeder delay
+        float lower_feeder_offset = 0;
+        /// @brief lower feeder direction multiplier
+        /// @note 1 for normal direction, -1 for reverse direction
+        float lower_feeder_direction = 1;
+        /// @brief gear ratio of the lower feeder
+        float lower_feeder_ratio = 1;
+
+
         /// @brief value for checking if the buff encoder spi is failing
         float reset_value = 0;
         /// @brief counts the number of time the buff encoder has reset from an spi issue
@@ -364,12 +377,18 @@ struct LowerFeederEstimator : public Estimator {
 
         /// @brief state name for the feeder ball velocity
         const Cfg::StateName& feeder_ball_state;
+        /// @brief state name for the lower feeder ball velocity
+        const Cfg::StateName& lower_feeder_ball_state;
         /// @brief BuffEncoder on the feeder
         std::shared_ptr<BuffEncoder> feeder_encoder;
+        /// @brief BuffEncoder on the lower feeder
+        std::shared_ptr<BuffEncoder> lower_feeder_encoder;
 
         /// @brief monitor for lower feeder estimate limits
         ErrorMonitor lower_feeder_monitor;
 
+        /// @brief feeder motor closer to the indexer
+        std::shared_ptr<Motor> upper_feeder_motor;
         /// @brief feeder motor closer to the indexer
         std::shared_ptr<Motor> near_feeder_motor;
         /// @brief feeder motor farther from the indexer

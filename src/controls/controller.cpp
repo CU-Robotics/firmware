@@ -475,13 +475,16 @@ void LowerFeederController::step(RobotStateMap& reference_map, RobotStateMap& es
     float lower_pos = estimate_map[lower_feeder_position_state].get_position();
 
     float upper_target_pos = upper_target[upper_feeder_position_state].get_position();
-    float lower_target_pos = target_map[lower_feeder_position_state].get_position();
+    float lower_target_pos = target_map[upper_feeder_position_state].get_position();
+
+    // Serial.printf("upper target: %f, lower target: %f, upper pos: %f, lower pos: %f, upper reference: %f, lower reference: %f\n", upper_target_pos, lower_target_pos, upper_pos, lower_pos, upper_feeder_reference_state[upper_feeder_position_state].get_position(), reference_map[lower_feeder_position_state].get_position());
 
     if ((lower_target_pos - upper_target_pos > 0.5) && (lower_pos > upper_pos - sync_threshold)) {
         upper_target_pos++;
         upper_target[upper_feeder_position_state].set_position(upper_target_pos);
-        upper_feeder_reference_state = upper_feeder_reference_governor.step_reference_map(upper_target);
     }
+    
+    upper_feeder_reference_state = upper_feeder_reference_governor.step_reference_map(upper_target);
     
     upper_pidp.setpoint = upper_feeder_reference_state[upper_feeder_position_state].get_position();
     upper_pidp.measurement = upper_pos;
