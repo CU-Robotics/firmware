@@ -487,6 +487,13 @@ void LowerFeederController::step(RobotStateMap& reference_map, RobotStateMap& es
     if ((lower_target_pos - upper_target_pos > 0.5) && (lower_pos > upper_pos - sync_threshold)) {
         upper_target_pos++;
         upper_target[upper_feeder_position_state].set_position(upper_target_pos);
+        target_increase_time = micros();
+        timer_active = true;
+    }
+
+    if (upper_pos > upper_target_pos - 0.7 && timer_active) {
+        Serial.printf("upper feeder shot, time: %f \n", (micros() - target_increase_time) / 1000.0);
+        timer_active = false;
     }
     
     upper_feeder_reference_state = upper_feeder_reference_governor.step_reference_map(upper_target);

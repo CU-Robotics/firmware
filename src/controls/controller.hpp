@@ -495,6 +495,10 @@ struct LowerFeederController : public Controller {
         Governor upper_feeder_reference_governor;
         /// @brief for internally tracking the target position of the upper feeder
         RobotStateMap upper_target;
+
+        float target_increase_time = 0.0;
+
+        bool timer_active = false;
     public:
         /// @brief Construct the controller and get the subcontroller configs and motor objects from the config data
         /// @param controller_config config data for this controller
