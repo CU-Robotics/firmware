@@ -487,15 +487,17 @@ void LowerFeederEstimator::step_states(RobotStateMap& updated_state_map, const R
     }
 
     // code to check if the encoder value is getting reset to near 0. Indicates a problem with the spi bus
-    if (fabs(diff) > 1 && fabs(diff) < 5) {
+    if (fabs(diff) > 0.5 && fabs(diff) < 2*PI - 0.5 && count > 0) {
         num_encoder_resets++;
         reset_value = feeder_angle;
         Serial.printf("Feeder angle diff is large: %d, feeder angle: %f, prev feeder angle: %f\n", num_encoder_resets, feeder_angle, prev_feeder_angle);
+        diff = 0; // set diff to 0 to avoid large jumps in ball count
     }
-    if (fabs(lower_diff) > 1 && fabs(lower_diff) < 5) {
+    if (fabs(lower_diff) > 0.5 && fabs(lower_diff) < 2*PI - 0.5 && count > 0) {
         num_encoder_resets++;
         reset_value = lower_feeder_angle;
         Serial.printf("Lower feeder angle diff is large: %d, lower feeder angle: %f, prev lower feeder angle: %f\n", num_encoder_resets, lower_feeder_angle, prev_lower_feeder_angle);
+        lower_diff = 0; // set lower_diff to 0 to avoid large jumps in ball count
     }
 
     prev_feeder_angle = feeder_angle;
