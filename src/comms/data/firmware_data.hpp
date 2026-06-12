@@ -29,6 +29,8 @@ struct FirmwareData {
     TestData test_data;
     /// @brief Big test data
     BigTestData big_test_data;
+    /// @brief Test Latency Data
+    TestLatencyData latency_data;
     
     /// @brief TargetState data
     TargetState temp_reference;

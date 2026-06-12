@@ -94,6 +94,11 @@ void FirmwareData::set_data(CommsData* data) {
         this->config_status_data = config_status_data;
         break;
     }
+ case TypeLabel::TestLatencyData: {
+        // place the data in the mega struct
+        latency_data = *static_cast<TestLatencyData*>(data);
+        break;
+    }
     default:
         safety::safety_procedure("FirmwareData::set_data: Invalid type label given to place in mega struct: %u", static_cast<uint16_t>(data->type_label));
     }

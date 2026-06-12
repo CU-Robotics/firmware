@@ -123,6 +123,11 @@ void HiveData::set_data(CommsData* data) {
         Serial.printf("Stop stereo trigger for %u received\n", static_cast<uint32_t>(stop_trigger->camera_trigger_name));
         break;
     }
+    case TypeLabel::TestLatencyData: {
+	     TestLatencyData* latency_data_ = static_cast<TestLatencyData*>(data);
+	     memcpy(&latency_data, latency_data_, sizeof(TestLatencyData));
+	     break;
+     }
     default:
         safety::safety_procedure("HiveData::set_data: Invalid type label given to place in mega struct: %u\n", static_cast<uint32_t>(data->type_label));
     }
