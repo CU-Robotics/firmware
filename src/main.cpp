@@ -277,6 +277,13 @@ int main() {
         config_status_sendable.data.is_configured = comms_layer.is_configured() ? 1 : 0;
         config_status_sendable.send_to_comms();
 
+	if (false) { // Tests roundtrip comms latency. also needs to be set to true in hive.
+	    Comms::Sendable<TestLatencyData> latency_data;
+	    latency_data.data.current_time = micros();
+	    latency_data.data.time_since_last_received = micros() - comms_layer.get_hive_data().latency_data.current_time;
+	    latency_data.send_to_comms();
+	}
+
         comms_layer.run();
 
         bool is_slow_loop = false;

@@ -15,6 +15,8 @@ struct StereoCamTriggerData : Comms::CommsData {
     Cfg::SensorName camera_trigger_name = Cfg::SensorName::UnsetSensorName;
     /// @brief the state of the robot at the time of stereo trigger
     State::Raw state[static_cast<size_t>(Cfg::StateName::StateNameCount)] = { {0, 0, 0} };
+    /// @brief the frame count of the camera frames that match with this state
+    int frame_count = 0;
 
     /// @brief Print the stereo camera trigger data to the serial console for debugging purposes.
     void print() const {
