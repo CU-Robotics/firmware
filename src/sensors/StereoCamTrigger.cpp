@@ -81,6 +81,8 @@ void StereoCamTrigger::read() {
 void StereoCamTrigger::send_to_comms() const {
   Comms::Sendable<StereoCamTriggerData> sendable;
 
+  noInterrupts();
   sendable.data = comms_data;
+  interrupts();
   sendable.send_to_comms();
 }
