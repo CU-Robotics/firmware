@@ -271,6 +271,7 @@ int main() {
         controller_manager.step(reference_map, estimated_state_map, target_state_map);
 
         target_state_map.send_to_comms<TargetState>();
+        reference_map.send_to_comms<ReferenceState>();
         estimated_state_map.send_to_comms<EstimatedState>();
 
         Comms::Sendable<ConfigurationStatusData> config_status_sendable;

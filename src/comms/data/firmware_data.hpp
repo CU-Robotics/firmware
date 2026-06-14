@@ -34,6 +34,8 @@ struct FirmwareData {
     
     /// @brief TargetState data
     TargetState temp_reference;
+    /// @brief Reference state output by the reference governor. This is what controllers should be trying to track.
+    ReferenceState reference_state;
 
     /// @brief Estimated state
     EstimatedState estimated_state;

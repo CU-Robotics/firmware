@@ -299,7 +299,9 @@ void YawController::step(RobotStateMap& reference_map, RobotStateMap& estimate_m
     pidp.kp = full_state_position_controller.gains.p;
     pidp.ki = full_state_position_controller.gains.i;
     pidp.kd = full_state_position_controller.gains.d;
-    pidp.kf = full_state_position_controller.gains.f;
+    // pidp.kf = full_state_position_controller.gains.f;
+    pidp.kf = full_state_position_controller.gains.f * reference_map[yaw_angle_state].get_acceleration() * 0.05 * 0.5;
+
     pidv.kp = full_state_velocity_controller.gains.p;
     pidv.ki = full_state_velocity_controller.gains.i;
     pidv.kd = full_state_velocity_controller.gains.d;
@@ -318,8 +320,6 @@ void YawController::step(RobotStateMap& reference_map, RobotStateMap& estimate_m
 
 
     float motor_outputs[2];
-
-    // output = output * 0.1;
 
     motor_outputs[0] = controller_config.gear_ratios.motor1_direction * output;
     motor_outputs[1] = controller_config.gear_ratios.motor2_direction * output;
@@ -477,7 +477,7 @@ void LowerFeederController::step(RobotStateMap& reference_map, RobotStateMap& es
     float upper_target_pos = upper_target[upper_feeder_position_state].get_position();
     float lower_target_pos = target_map[upper_feeder_position_state].get_position();
 
-    Serial.printf("upper target: %f, lower target: %f, upper pos: %f, lower pos: %f, upper reference: %f, lower reference: %f\n", upper_target_pos, lower_target_pos, upper_pos, lower_pos, upper_feeder_reference_state[upper_feeder_position_state].get_position(), reference_map[lower_feeder_position_state].get_position());
+    // Serial.printf("upper target: %f, lower target: %f, upper pos: %f, lower pos: %f, upper reference: %f, lower reference: %f\n", upper_target_pos, lower_target_pos, upper_pos, lower_pos, upper_feeder_reference_state[upper_feeder_position_state].get_position(), reference_map[lower_feeder_position_state].get_position());
 
     if (upper_target_pos > lower_target_pos) {
         upper_target_pos--;
