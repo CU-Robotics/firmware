@@ -17,9 +17,12 @@ void StereoCamTrigger::track_exposures() {
   digitalWrite(config.digital_trigger_pin_1, LOW);
   digitalWrite(config.digital_trigger_pin_2, LOW);
   
+  counter += 1;
+
   if(estimated_state_map_interrupt_safe != nullptr) {
     // copy the estimated state map to the local estimated state map
     estimated_state_map_interrupt_safe->fill_state_array(comms_data.state);
+    comms_data.frame_count = counter;
   }
 }
 
@@ -67,6 +70,8 @@ void StereoCamTrigger::read() {
     digitalWrite(config.camera_1_line_2_pin, LOW);
     digitalWrite(config.camera_2_line_2_pin, LOW);
 
+    counter = -1;
+
     Serial.printf("counter reset pin: %u triggered\n", config.camera_1_line_2_pin);
   }
   comms_layer.get_hive_data().stereo_cam_start_stop.stop_received = false;
@@ -76,6 +81,8 @@ void StereoCamTrigger::read() {
 void StereoCamTrigger::send_to_comms() const {
   Comms::Sendable<StereoCamTriggerData> sendable;
 
+  noInterrupts();
   sendable.data = comms_data;
+  interrupts();
   sendable.send_to_comms();
 }
