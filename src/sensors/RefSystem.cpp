@@ -36,7 +36,7 @@ void RefSystem::init() {
 
     // clear and start the VTM serial
     VTM_SERIAL.clear();
-    VTM_SERIAL.begin(112500);
+    VTM_SERIAL.begin(921600);
     VTM_SERIAL.flush();
     VTM_SERIAL.clear();
 }
