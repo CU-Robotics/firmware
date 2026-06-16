@@ -3,13 +3,13 @@
 #include "comms/data/comms_ref_data.hpp"
 #include <Arduino.h>
 
-/// @brief Maximum size of the data segment in a Ref System packet. The largest is currently 0x0310.
-constexpr uint16_t REF_MAX_DATA_SIZE = 300;
+/// @brief Maximum supported Ref System frame data length.
+/// @note Command ID 0x0301 is the largest packet that we use (118 bytes).
+constexpr uint16_t REF_MAX_DATA_SIZE = 118;
 
 /// @brief Maximum size of a Ref System packet in bytes \n
-/// @brief 5 byte header + 2 byte command ID + 300 + 2 byte CRC
+/// @brief 5 byte header + 2 byte command ID + max supported data segment + 2 byte CRC
 constexpr uint16_t REF_MAX_PACKET_SIZE = 5 + 2 + REF_MAX_DATA_SIZE + 2;
-// TODO: This size is only required by 0x0310 and pretty excessive to use for every packet. Maybe we could reduce the raw array length for most packets or rework how the raw bytes are stores in each struct.
 
 /// @brief Maximum valid command ID for Ref System packets
 constexpr uint16_t REF_MAX_COMMAND_ID = 0x0311;
@@ -1659,38 +1659,6 @@ struct RobotCustomControllerData {
     }
 };
 
-/// @brief Custom data sent from a robot to the Custom Client.
-/// @note transmitted at a maximum frequency of 50 Hz via VTM link
-/// @note ID: 0x0310
-struct RobotCustomClientData {
-    /// @brief Size of the RobotCustomClientData packet in bytes
-    static const uint16_t packet_size = 300;
-
-    /// @brief The raw byte array of data received from ref
-    /// @note this is only the FrameData data rather than the whole ref packet
-    uint8_t raw[REF_MAX_PACKET_SIZE] = {0};
-
-    /// @brief Custom data
-    uint8_t data[300] = {0};
-
-    /// @brief Prints the RobotCustomClientData packet
-    void print() const {
-        Serial.println("RobotCustomClientData:");
-        for (uint16_t i = 0; i < packet_size; i++) {
-            Serial.printf("\tData[%u]: %u\n", i, data[i]);
-        }
-    }
-
-    /// @brief Fills in this struct with the data from a FrameData object
-    /// @param data FrameData object to extract data from
-    void set_data(FrameData data) {
-        memcpy(raw, data.data, packet_size);
-        for (uint16_t i = 0; i < packet_size; i++) {
-            this->data[i] = data[i];
-        }
-    }
-};
-
 /// @brief Custom command sent from the Custom Client to robots.
 /// @note transmitted at a maximum frequency of 75 Hz via VTM link
 /// @note ID: 0x0311
@@ -1941,8 +1909,6 @@ struct RefData {
     SmallMapRobotData small_map_robot_data{};
     /// @brief Custom data sent from a robot to the Custom Controller.
     RobotCustomControllerData robot_custom_controller_data{};
-    /// @brief Custom data sent from a robot to the Custom Client.
-    RobotCustomClientData robot_custom_client_data{};
     /// @brief Custom command sent from the Custom Client to robots.
     CustomClientRobotCommand custom_client_robot_command{};
     /// @brief Keyboard and mouse control data received from the official Player's Client through VTM.

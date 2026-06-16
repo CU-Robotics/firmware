@@ -165,6 +165,12 @@ bool RefSystem::read_frame_header(HardwareSerial* serial, uint8_t raw_buffer[REF
         return false;
     }
 
+    if (frame.header.data_length > REF_MAX_DATA_SIZE) {
+        Serial.printf("[Ref] Data length too large: %u (max %u)\n", frame.header.data_length, REF_MAX_DATA_SIZE);
+        packets_failed++;
+        return false;
+    }
+
     // increment buffer index
     buffer_index = bytes_read;
 
@@ -367,9 +373,8 @@ void RefSystem::set_ref_data(Frame& frame, uint8_t raw_buffer[REF_MAX_PACKET_SIZ
 #endif
         break;
     case FrameType::ROBOT_CUSTOM_CLIENT_DATA:
-        ref_data.robot_custom_client_data.set_data(frame.data);
 #ifdef REF_SYSTEM_DEBUG
-        Serial.printf("[Ref][0x0310] custom-client payload received (%u bytes)\n", frame.header.data_length);
+        Serial.printf("[Ref][0x0310] custom-client payload ignored (%u bytes)\n", frame.header.data_length);
 #endif
         break;
     case FrameType::CUSTOM_CLIENT_ROBOT_COMMAND: {
