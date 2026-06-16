@@ -3,7 +3,7 @@
 #include "comms/data/sendable.hpp"
 
 // Uncomment to enable debug prints
-#define REF_SYSTEM_DEBUG
+// #define REF_SYSTEM_DEBUG
 // Uncomment to debug even harder
 // #define REF_SYSTEM_DEBUG_ALL_FRAMES
 
