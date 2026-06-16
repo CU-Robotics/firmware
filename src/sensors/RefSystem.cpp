@@ -30,7 +30,7 @@ RefSystem::RefSystem() { }
 void RefSystem::init() {
     // clear and start the MCM serial
     MCM_SERIAL.clear();
-    MCM_SERIAL.begin(112500);
+    MCM_SERIAL.begin(115200);
     MCM_SERIAL.flush();
     MCM_SERIAL.clear();
 
