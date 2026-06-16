@@ -324,7 +324,7 @@ void DR16::manual_controls(const RobotStateMap& estimated_state_map, RobotStateM
 	bool has_lower_feeder = estimated_state_map.get_state_map().find(Cfg::StateName::LowerFeeder) != estimated_state_map.get_state_map().end();
 
 	float delta = control_input_timer.delta();
-	KeyboardMouseControl vtm_input = ref.ref_data.keyboard_mouse_control;
+	VTMRemoteControl vtm_input = ref.ref_data.vtm_remote_control;
 	if (!vtm_input.is_fresh()) {
 		vtm_input.clear();
 	}

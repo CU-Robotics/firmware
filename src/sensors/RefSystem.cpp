@@ -7,7 +7,7 @@
 // Uncomment to debug even harder
 // #define REF_SYSTEM_DEBUG_ALL_FRAMES
 
-uint8_t generateCRC8(uint8_t* data, uint32_t len) {
+uint8_t generateCRC8(const uint8_t *data, uint32_t len) {
     uint8_t CRC8 = 0xFF;
     while (len-- > 0) {
         uint8_t curr = CRC8 ^ (*data++);
@@ -16,7 +16,7 @@ uint8_t generateCRC8(uint8_t* data, uint32_t len) {
     return CRC8;
 }
 
-uint16_t generateCRC16(uint8_t* data, uint32_t len) {
+uint16_t generateCRC16(const uint8_t *data, uint32_t len) {
     uint16_t CRC16 = 0xFFFF;
     while (len-- > 0) {
         uint8_t curr = *data++;
@@ -374,20 +374,9 @@ void RefSystem::set_ref_data(Frame& frame, uint8_t raw_buffer[REF_MAX_PACKET_SIZ
         break;
     case FrameType::CUSTOM_CLIENT_ROBOT_COMMAND: {
         ref_data.custom_client_robot_command.set_data(frame.data);
-        bool keyboard_mouse_decoded = ref_data.keyboard_mouse_control.set_data(frame.data, frame.header.data_length);
-        if (keyboard_mouse_decoded) {
 #ifdef REF_SYSTEM_DEBUG
-            const KeyboardMouseControl& input = ref_data.keyboard_mouse_control;
-            Serial.printf("[Ref][0x0311] mouse=(%ld,%ld) scroll=%ld buttons=%u/%u/%u keys=0x%04lx\n",
-                          static_cast<long>(input.mouse_speed_x), static_cast<long>(input.mouse_speed_y),
-                          static_cast<long>(input.scroll_speed), static_cast<uint32_t>(input.button_left),
-                          static_cast<uint32_t>(input.button_right), static_cast<uint32_t>(input.button_middle),
-                          static_cast<unsigned long>(input.keyboard_value));
+        Serial.printf("[Ref][0x0311] custom-client command received (%u bytes)\n", frame.header.data_length);
 #endif
-        } else {
-            Serial.printf("[Ref][0x0311] keyboard/mouse protobuf decode failed (length=%u)\n",
-                          frame.header.data_length);
-        }
         break;
     }
     default:
@@ -397,59 +386,42 @@ void RefSystem::set_ref_data(Frame& frame, uint8_t raw_buffer[REF_MAX_PACKET_SIZ
 }
 
 void RefSystem::read_vtm() {
-    bool success = true;
-
-    // try to read the header
-    if (success && !vtm_data.header_read) {
-        success = read_frame_header(&VTM_SERIAL, vtm_data.raw_buffer, vtm_data.buffer_index, vtm_data.curr_frame);
-        vtm_data.header_read = success;
-    }
-
-    // try to read the ID
-    if (success && !vtm_data.command_ID_read) {
-        success = read_frame_command_ID(&VTM_SERIAL, vtm_data.raw_buffer, vtm_data.buffer_index, vtm_data.curr_frame);
-        vtm_data.command_ID_read = success;
-    }
-
-    // try to read the data
-    if (success && !vtm_data.data_read) {
-        success = read_frame_data(&VTM_SERIAL, vtm_data.raw_buffer, vtm_data.buffer_index, vtm_data.curr_frame);
-        vtm_data.data_read = success;
-    }
-
-    // try to read the tail
-    if (success && !vtm_data.tail_read) {
-        int tail_ret = read_frame_tail(&VTM_SERIAL, vtm_data.raw_buffer, vtm_data.buffer_index, vtm_data.curr_frame);
-
-        if (tail_ret == 1) {
-            success = true;
-            vtm_data.tail_read = true;
-        } else if (tail_ret == -1) {
-            success = false;
-
-            // crc failed so reset the frame
-            vtm_data.header_read = false;
-            vtm_data.command_ID_read = false;
-            vtm_data.data_read = false;
-            vtm_data.tail_read = false;
-            vtm_data.buffer_index = 0;
-            memset(vtm_data.raw_buffer, 0, REF_MAX_PACKET_SIZE * 2);
-        } else {
-            success = false;
+    while (VTM_SERIAL.available() >= VTM_REMOTE_CONTROL_PACKET_SIZE) {
+        while (VTM_SERIAL.available() >= VTM_REMOTE_CONTROL_PACKET_SIZE && VTM_SERIAL.peek() != VTM_REMOTE_CONTROL_HEADER_1) {
+            VTM_SERIAL.read();
         }
-    }
 
-    // process the data
-    if (success) {
-        set_ref_data(vtm_data.curr_frame, vtm_data.raw_buffer);
+        if (VTM_SERIAL.available() < VTM_REMOTE_CONTROL_PACKET_SIZE) {
+            return;
+        }
 
-        // reset flags
-        vtm_data.header_read = false;
-        vtm_data.command_ID_read = false;
-        vtm_data.data_read = false;
-        vtm_data.tail_read = false;
-        vtm_data.buffer_index = 0;
-        memset(vtm_data.raw_buffer, 0, REF_MAX_PACKET_SIZE * 2);
+        uint8_t packet[VTM_REMOTE_CONTROL_PACKET_SIZE] = {0};
+        int bytes_read = VTM_SERIAL.readBytes(packet, VTM_REMOTE_CONTROL_PACKET_SIZE);
+        if (bytes_read != VTM_REMOTE_CONTROL_PACKET_SIZE) {
+            return;
+        }
+
+        if (packet[1] != VTM_REMOTE_CONTROL_HEADER_2) {
+            packets_failed++;
+            continue;
+        }
+
+        uint16_t received_crc = packet[19] | (static_cast<uint16_t>(packet[20]) << 8);
+        uint16_t expected_crc = generateCRC16(packet, VTM_REMOTE_CONTROL_PACKET_SIZE - 2);
+        if (received_crc != expected_crc) {
+            Serial.printf("[VTM] CRC failed: received=0x%04x expected=0x%04x\n", received_crc, expected_crc);
+            packets_failed++;
+            continue;
+        }
+
+        ref_data.vtm_remote_control.set_data(packet);
+        packets_received++;
+
+#ifdef REF_SYSTEM_DEBUG
+        const VTMRemoteControl &input = ref_data.vtm_remote_control;
+        Serial.printf("[VTM] mouse=(%d,%d) scroll=%d buttons=%u/%u/%u keys=0x%04x\n", input.mouse_speed_x, input.mouse_speed_y, input.scroll_speed, static_cast<uint32_t>(input.button_left), static_cast<uint32_t>(input.button_right), static_cast<uint32_t>(input.button_middle), input.keyboard_value);
+#endif
+        return;
     }
 }
 

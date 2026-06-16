@@ -610,7 +610,7 @@ ET16SData ET16S::get_ET16S_data(){
 
 void ET16S::manual_controls(const RobotStateMap& estimated_state_map, RobotStateMap& target_state_map, bool not_safety_mode, float& feed, float& last_feed) {	
 	float delta = control_input_timer.delta();
-	KeyboardMouseControl vtm_input = ref.ref_data.keyboard_mouse_control;
+	VTMRemoteControl vtm_input = ref.ref_data.vtm_remote_control;
 	if (!vtm_input.is_fresh()) {
 		vtm_input.clear();
 	}

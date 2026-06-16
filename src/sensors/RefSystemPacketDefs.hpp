@@ -14,6 +14,15 @@ constexpr uint16_t REF_MAX_PACKET_SIZE = 5 + 2 + REF_MAX_DATA_SIZE + 2;
 /// @brief Maximum valid command ID for Ref System packets
 constexpr uint16_t REF_MAX_COMMAND_ID = 0x0311;
 
+/// @brief Size of a VT03/VT13 remote-control data frame in bytes
+constexpr uint8_t VTM_REMOTE_CONTROL_PACKET_SIZE = 21;
+/// @brief First fixed byte of a VT03/VT13 remote-control data frame
+constexpr uint8_t VTM_REMOTE_CONTROL_HEADER_1 = 0xA9;
+/// @brief Second fixed byte of a VT03/VT13 remote-control data frame
+constexpr uint8_t VTM_REMOTE_CONTROL_HEADER_2 = 0x53;
+/// @brief Maximum age before VTM control input is treated as stale
+constexpr uint32_t VTM_REMOTE_CONTROL_TIMEOUT_MS = 250;
+
 /*--- Ref System Frame Structs ---*/
 
 /// @brief Base enum maping the ref structs to their ID
@@ -1714,28 +1723,45 @@ struct CustomClientRobotCommand {
     }
 };
 
-/// @brief Keyboard and mouse control data received from the official Player's Client through VTM.
-/// @note Parsed from the 0x0311 custom client to robot command using the 2026 KeyboardMouseControl protobuf layout.
-struct KeyboardMouseControl {
-    /// @brief Maximum size of the keyboard/mouse payload in bytes
-    static const uint8_t packet_size = 30;
-    /// @brief Maximum age before the control input is treated as stale
-    static const uint32_t timeout_ms = 250;
+/// @brief Remote-control data received from the VT03/VT13 receiver.
+struct VTMRemoteControl {
+    /// @brief The raw 21-byte VT03/VT13 remote-control frame
+    uint8_t raw[VTM_REMOTE_CONTROL_PACKET_SIZE] = {0};
 
+    /// @brief The horizontal position of the receiver's right control stick
+    uint16_t channel_0 = 1024;
+    /// @brief The vertical position of the receiver's right control stick
+    uint16_t channel_1 = 1024;
+    /// @brief The vertical position of the receiver's left control stick
+    uint16_t channel_2 = 1024;
+    /// @brief The horizontal position of the receiver's left control stick
+    uint16_t channel_3 = 1024;
+    /// @brief Receiver mode switch. C: 0, N: 1, S: 2.
+    uint8_t mode_switch = 0;
+    /// @brief Whether the receiver's pause button is pressed
+    bool pause_button = false;
+    /// @brief Whether the receiver's left customizable button is pressed
+    bool custom_button_left = false;
+    /// @brief Whether the receiver's right customizable button is pressed
+    bool custom_button_right = false;
+    /// @brief The position of the receiver's dial
+    uint16_t dial = 1024;
+    /// @brief Whether the receiver's trigger is pressed
+    bool trigger = false;
     /// @brief x-axis moving speed of the mouse. A negative value indicates a left movement.
-    int32_t mouse_speed_x = 0;
-    /// @brief y-axis moving speed of the mouse. A negative value indicates a downward movement.
-    int32_t mouse_speed_y = 0;
+    int16_t mouse_speed_x = 0;
+    /// @brief y-axis moving speed of the mouse. A negative value indicates a backward movement.
+    int16_t mouse_speed_y = 0;
     /// @brief Scroll wheel's moving speed of the mouse. A negative value indicates a backward movement.
-    int32_t scroll_speed = 0;
+    int16_t scroll_speed = 0;
     /// @brief Whether the mouse's left button is pressed.
-    bool button_left = 0;
+    bool button_left = false;
     /// @brief Whether the mouse's right button is pressed.
-    bool button_right = 0;
+    bool button_right = false;
     /// @brief Whether the mouse's middle button is pressed.
-    bool button_middle = 0;
+    bool button_middle = false;
     /// @brief Keyboard key bitmask.
-    uint32_t keyboard_value = 0;
+    uint16_t keyboard_value = 0;
     /// @brief Whether the keyboard's W key is pressed.
     uint16_t key_w : 1;
     /// @brief Whether the keyboard's S key is pressed.
@@ -1773,145 +1799,72 @@ struct KeyboardMouseControl {
 
     /// @brief Clears control inputs while preserving packet timing metadata.
     void clear() {
+        channel_0 = 1024; // 1024 is center
+        channel_1 = 1024;
+        channel_2 = 1024;
+        channel_3 = 1024;
+        mode_switch = 0;
+        pause_button = false;
+        custom_button_left = false;
+        custom_button_right = false;
+        dial = 1024;
+        trigger = false;
         mouse_speed_x = 0;
         mouse_speed_y = 0;
         scroll_speed = 0;
         button_left = false;
         button_right = false;
         button_middle = false;
-        keyboard_value = 0;
-        key_w = 0;
-        key_s = 0;
-        key_a = 0;
-        key_d = 0;
-        key_shift = 0;
-        key_ctrl = 0;
-        key_q = 0;
-        key_e = 0;
-        key_r = 0;
-        key_f = 0;
-        key_g = 0;
-        key_z = 0;
-        key_x = 0;
-        key_c = 0;
-        key_v = 0;
-        key_b = 0;
+        set_keyboard_value(0);
     }
 
     /// @brief Whether this input was updated recently enough to consume.
     /// @return True if this input has a nonzero update timestamp within the timeout.
-    bool is_fresh() const { return last_update_ms != 0 && millis() - last_update_ms <= timeout_ms; }
+    bool is_fresh() const { return last_update_ms != 0 && millis() - last_update_ms <= VTM_REMOTE_CONTROL_TIMEOUT_MS; }
 
-    /// @brief Fills in this struct with keyboard/mouse data from a FrameData object.
-    /// @param data FrameData object to extract data from
-    /// @param data_length Number of payload bytes available in the frame
-    /// @return True if the payload matched the KeyboardMouseControl protobuf layout
-    bool set_data(FrameData data, uint16_t data_length) {
-        if (data_length == 0 || data_length > packet_size) {
-            return false;
-        }
+    /// @brief Fills in this struct with data from a VT03/VT13 remote-control frame.
+    /// @param packet Raw 21-byte frame
+    void set_data(const uint8_t packet[VTM_REMOTE_CONTROL_PACKET_SIZE]) {
+        memcpy(raw, packet, VTM_REMOTE_CONTROL_PACKET_SIZE);
 
-        KeyboardMouseControl decoded{};
-        uint8_t index = 0;
-        uint8_t payload_length = static_cast<uint8_t>(data_length);
-        while (index < payload_length) {
-            if (data[index] == 0) {
-                for (uint8_t padding_index = index; padding_index < payload_length; padding_index++) {
-                    if (data[padding_index] != 0) {
-                        return false;
-                    }
-                }
-                break;
-            }
-
-            uint64_t key = 0;
-            if (!read_keyboard_mouse_varint(data, index, payload_length, key)) {
-                return false;
-            }
-
-            uint64_t field_number = key >> 3;
-            uint8_t wire_type = key & 0x07;
-            if (wire_type != 0 || field_number < 1 || field_number > 7) {
-                return false;
-            }
-
-            uint64_t value = 0;
-            if (!read_keyboard_mouse_varint(data, index, payload_length, value)) {
-                return false;
-            }
-
-            switch (field_number) {
-            case 1:
-                decoded.mouse_speed_x = protobuf_int32(value);
-                break;
-            case 2:
-                decoded.mouse_speed_y = protobuf_int32(value);
-                break;
-            case 3:
-                decoded.scroll_speed = protobuf_int32(value);
-                break;
-            case 4:
-                if (value > 1) {
-                    return false;
-                }
-                decoded.button_left = (value != 0);
-                break;
-            case 5:
-                if (value > 1) {
-                    return false;
-                }
-                decoded.button_right = (value != 0);
-                break;
-            case 6:
-                if ((value & ~0xffffULL) != 0) {
-                    return false;
-                }
-                decoded.set_keyboard_value(static_cast<uint32_t>(value));
-                break;
-            case 7:
-                if (value > 1) {
-                    return false;
-                }
-                decoded.button_middle = (value != 0);
-                break;
-            }
-        }
-
-        decoded.last_update_ms = millis();
-        *this = decoded;
-        return true;
+        channel_0 = read_bits(packet, 16, 11);
+        channel_1 = read_bits(packet, 27, 11);
+        channel_2 = read_bits(packet, 38, 11);
+        channel_3 = read_bits(packet, 49, 11);
+        mode_switch = read_bits(packet, 60, 2);
+        pause_button = read_bits(packet, 62, 1);
+        custom_button_left = read_bits(packet, 63, 1);
+        custom_button_right = read_bits(packet, 64, 1);
+        dial = read_bits(packet, 65, 11);
+        trigger = read_bits(packet, 76, 1);
+        mouse_speed_x = static_cast<int16_t>(read_bits(packet, 80, 16));
+        mouse_speed_y = static_cast<int16_t>(read_bits(packet, 96, 16));
+        scroll_speed = static_cast<int16_t>(read_bits(packet, 112, 16));
+        button_left = read_bits(packet, 128, 2);
+        button_right = read_bits(packet, 130, 2);
+        button_middle = read_bits(packet, 132, 2);
+        set_keyboard_value(read_bits(packet, 136, 16));
+        last_update_ms = millis();
     }
 
   private:
-    /// @brief Reads one protobuf varint from a KeyboardMouseControl payload.
-    /// @param data FrameData object to extract data from
-    /// @param index Current index into the payload. Updated to the first unread byte on success.
-    /// @param payload_length Number of valid payload bytes available in the frame
-    /// @param value Destination for the decoded varint value
-    /// @return True if a complete varint was decoded, false otherwise
-    /// @note KeyboardMouseControl only uses protobuf wire type 0 fields.
-    static bool read_keyboard_mouse_varint(FrameData &data, uint8_t &index, uint8_t payload_length, uint64_t &value) {
-        value = 0;
-        uint8_t shift = 0;
-        while (index < payload_length && shift < 64) {
-            uint8_t byte = data[index++];
-            value |= static_cast<uint64_t>(byte & 0x7F) << shift;
-            if ((byte & 0x80) == 0) {
-                return true;
-            }
-            shift += 7;
+    /// @brief Reads a little-endian bit field from a VT03/VT13 remote-control frame.
+    /// @param packet Raw 21-byte frame
+    /// @param bit_offset Offset of the first bit to read
+    /// @param bit_length Number of bits to read
+    /// @return Extracted bit-field value
+    static uint16_t read_bits(const uint8_t packet[VTM_REMOTE_CONTROL_PACKET_SIZE], uint16_t bit_offset, uint8_t bit_length) {
+        uint16_t value = 0;
+        for (uint8_t i = 0; i < bit_length; i++) {
+            uint16_t source_bit = bit_offset + i;
+            value |= static_cast<uint16_t>((packet[source_bit / 8] >> (source_bit % 8)) & 0x01) << i;
         }
-        return false;
+        return value;
     }
 
-    /// @brief Converts a decoded protobuf int32 varint value to a signed 32-bit integer.
-    /// @param value Decoded protobuf varint value
-    /// @return Signed 32-bit value represented by the low 32 bits
-    static int32_t protobuf_int32(uint64_t value) { return static_cast<int32_t>(static_cast<uint32_t>(value)); }
-
     /// @brief Stores the keyboard bitmask and expands it into individual key fields.
-    /// @param value Keyboard key bitmask from the KeyboardMouseControl payload
-    void set_keyboard_value(uint32_t value) {
+    /// @param value Keyboard key bitmask from the VT03/VT13 remote-control frame
+    void set_keyboard_value(uint16_t value) {
         keyboard_value = value;
         key_w = value & 0x01;
         key_s = (value >> 1) & 0x01;
@@ -1993,7 +1946,7 @@ struct RefData {
     /// @brief Custom command sent from the Custom Client to robots.
     CustomClientRobotCommand custom_client_robot_command{};
     /// @brief Keyboard and mouse control data received from the official Player's Client through VTM.
-    KeyboardMouseControl keyboard_mouse_control{};
+    VTMRemoteControl vtm_remote_control{};
 };
 
 /// @brief Game Staus packet offset for comms

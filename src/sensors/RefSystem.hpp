@@ -164,8 +164,6 @@ private:
         Frame curr_frame {};
     };
 
-    /// @brief Internal data for the VTM
-    RefInternalData vtm_data {};
     /// @brief Internal data for the MCM
     RefInternalData mcm_data {};
 
