@@ -367,9 +367,8 @@ void RefSystem::set_ref_data(Frame& frame, uint8_t raw_buffer[REF_MAX_PACKET_SIZ
         ref_data.small_map_robot_data.set_data(frame.data);
         break;
     case FrameType::ROBOT_CUSTOM_CONTROLLER_DATA:
-        ref_data.robot_custom_controller_data.set_data(frame.data);
 #ifdef REF_SYSTEM_DEBUG
-        Serial.printf("[Ref][0x0309] custom-controller payload received (%u bytes)\n", frame.header.data_length);
+        Serial.printf("[Ref][0x0309] custom-controller payload ignored (%u bytes)\n", frame.header.data_length);
 #endif
         break;
     case FrameType::ROBOT_CUSTOM_CLIENT_DATA:
@@ -377,13 +376,11 @@ void RefSystem::set_ref_data(Frame& frame, uint8_t raw_buffer[REF_MAX_PACKET_SIZ
         Serial.printf("[Ref][0x0310] custom-client payload ignored (%u bytes)\n", frame.header.data_length);
 #endif
         break;
-    case FrameType::CUSTOM_CLIENT_ROBOT_COMMAND: {
-        ref_data.custom_client_robot_command.set_data(frame.data);
+    case FrameType::CUSTOM_CLIENT_ROBOT_COMMAND:
 #ifdef REF_SYSTEM_DEBUG
-        Serial.printf("[Ref][0x0311] custom-client command received (%u bytes)\n", frame.header.data_length);
+        Serial.printf("[Ref][0x0311] custom-client robot command ignored (%u bytes)\n", frame.header.data_length);
 #endif
         break;
-    }
     default:
         Serial.printf("Ref System::set_ref_data: Unknown Frame Type 0x%04x\n", frame.commandID);
         break;

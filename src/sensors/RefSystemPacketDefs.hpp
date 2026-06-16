@@ -79,11 +79,11 @@ enum FrameType {
     SMALL_MAP_SENTRY_COMMAND = 0x0307,
     /// @brief Robot data received by player clients' Small Map
     SMALL_MAP_ROBOT_DATA = 0x0308,
-    /// @brief Custom data sent from a robot to the Custom Controller.
+    /// @brief Unsupported custom data sent from a robot to the Custom Controller.
     ROBOT_CUSTOM_CONTROLLER_DATA = 0x0309,
-    /// @brief Custom data sent from a robot to the Custom Client.
+    /// @brief Unsupported custom data sent from a robot to the Custom Client.
     ROBOT_CUSTOM_CLIENT_DATA = 0x0310,
-    /// @brief Custom command sent from the Custom Client to robots.
+    /// @brief Unsupported custom command sent from the Custom Client to robots.
     CUSTOM_CLIENT_ROBOT_COMMAND = 0x0311,
 };
 
@@ -1627,70 +1627,6 @@ struct SmallMapRobotData {
     }
 };
 
-/// @brief Custom data sent from a robot to the Custom Controller.
-/// @note transmitted at a maximum frequency of 10 Hz via VTM link
-/// @note ID: 0x0309
-struct RobotCustomControllerData {
-    /// @brief Size of the RobotCustomControllerData packet in bytes
-    static const uint16_t packet_size = 30;
-
-    /// @brief The raw byte array of data received from ref
-    /// @note this is only the FrameData data rather than the whole ref packet
-    uint8_t raw[REF_MAX_PACKET_SIZE] = {0};
-
-    /// @brief Custom data
-    uint8_t data[30] = {0};
-
-    /// @brief Prints the RobotCustomControllerData packet
-    void print() const {
-        Serial.println("RobotCustomControllerData:");
-        for (uint16_t i = 0; i < packet_size; i++) {
-            Serial.printf("\tData[%u]: %u\n", i, data[i]);
-        }
-    }
-
-    /// @brief Fills in this struct with the data from a FrameData object
-    /// @param data FrameData object to extract data from
-    void set_data(FrameData data) {
-        memcpy(raw, data.data, packet_size);
-        for (uint16_t i = 0; i < packet_size; i++) {
-            this->data[i] = data[i];
-        }
-    }
-};
-
-/// @brief Custom command sent from the Custom Client to robots.
-/// @note transmitted at a maximum frequency of 75 Hz via VTM link
-/// @note ID: 0x0311
-struct CustomClientRobotCommand {
-    /// @brief Size of the CustomClientRobotCommand packet in bytes
-    static const uint8_t packet_size = 30;
-
-    /// @brief The raw byte array of data received from ref
-    /// @note this is only the FrameData data rather than the whole ref packet
-    uint8_t raw[REF_MAX_PACKET_SIZE] = {0};
-
-    /// @brief Custom data
-    uint8_t data[30] = {0};
-
-    /// @brief Prints the CustomClientRobotCommand packet
-    void print() const {
-        Serial.println("CustomClientRobotCommand:");
-        for (uint16_t i = 0; i < packet_size; i++) {
-            Serial.printf("\tData[%u]: %u\n", i, data[i]);
-        }
-    }
-
-    /// @brief Fills in this struct with the data from a FrameData object
-    /// @param data FrameData object to extract data from
-    void set_data(FrameData data) {
-        memcpy(raw, data.data, packet_size);
-        for (uint16_t i = 0; i < packet_size; i++) {
-            this->data[i] = data[i];
-        }
-    }
-};
-
 /// @brief Remote-control data received from the VT03/VT13 receiver.
 struct VTMRemoteControl {
     /// @brief The raw 21-byte VT03/VT13 remote-control frame
@@ -1907,10 +1843,6 @@ struct RefData {
     SmallMapSentryCommand small_map_sentry_command{};
     /// @brief Robot data received by player clients' Small Map
     SmallMapRobotData small_map_robot_data{};
-    /// @brief Custom data sent from a robot to the Custom Controller.
-    RobotCustomControllerData robot_custom_controller_data{};
-    /// @brief Custom command sent from the Custom Client to robots.
-    CustomClientRobotCommand custom_client_robot_command{};
     /// @brief Keyboard and mouse control data received from the official Player's Client through VTM.
     VTMRemoteControl vtm_remote_control{};
 };
