@@ -1242,11 +1242,17 @@ struct RobotInteraction {
     /// @brief Maximum content bytes after the 0x0301 content/sender/receiver header.
     static constexpr uint8_t max_content_size = packet_size - header_size;
 
+    /// @brief Sub-content ID for deleting one or all Player's Client drawing layers.
     static constexpr uint16_t DELETE_CLIENT_LAYER = 0x0100;
+    /// @brief Sub-content ID for drawing one Player's Client figure.
     static constexpr uint16_t DRAW_CLIENT_GRAPHIC_1 = 0x0101;
+    /// @brief Sub-content ID for drawing two Player's Client figures.
     static constexpr uint16_t DRAW_CLIENT_GRAPHIC_2 = 0x0102;
+    /// @brief Sub-content ID for drawing five Player's Client figures.
     static constexpr uint16_t DRAW_CLIENT_GRAPHIC_5 = 0x0103;
+    /// @brief Sub-content ID for drawing seven Player's Client figures.
     static constexpr uint16_t DRAW_CLIENT_GRAPHIC_7 = 0x0104;
+    /// @brief Sub-content ID for drawing Player's Client character data.
     static constexpr uint16_t DRAW_CLIENT_CHARACTER = 0x0110;
 
     /// @brief The raw byte array of data received from ref

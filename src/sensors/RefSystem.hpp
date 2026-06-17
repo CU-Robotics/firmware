@@ -88,10 +88,16 @@ public:
     void write(uint8_t* packet, uint16_t length);
 
     /// @brief Convert a robot ID to its corresponding player-client ID.
+    /// @param robot_id Referee System robot ID.
     /// @return 0 when the robot does not have a corresponding player client.
     static uint16_t get_client_id_for_robot(uint16_t robot_id);
 
     /// @brief Build and send a 0x0301 robot-interaction frame.
+    /// @param content_id Robot-interaction sub-content ID.
+    /// @param payload Content data segment to send after the content/sender/receiver header.
+    /// @param payload_length Number of payload bytes to send.
+    /// @param receiver_id Receiver robot or player-client ID, or 0 to use the sender robot's corresponding client.
+    /// @return true when the interaction frame is accepted for transmission.
     bool write_robot_interaction(uint16_t content_id, const uint8_t* payload, uint16_t payload_length, uint16_t receiver_id = 0);
 
 
@@ -138,6 +144,10 @@ private:
     void set_ref_data(Frame& frame, uint8_t raw_buffer[REF_MAX_PACKET_SIZE * 2]);
 
     /// @brief Write a complete Ref System frame on a specific serial link.
+    /// @param serial Serial link to write the frame to.
+    /// @param packet Complete Referee System packet buffer, including header, command ID, payload, and tail space.
+    /// @param length Total packet length in bytes.
+    /// @return true when validation passes and the full packet is written to the serial link.
     bool write_frame(HardwareSerial& serial, uint8_t* packet, uint16_t length);
 
     /// @brief Get the current outgoing sequence. Used in sending frames
