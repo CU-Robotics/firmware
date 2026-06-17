@@ -7,9 +7,15 @@
 /// @note Command ID 0x0301 is the largest packet that we use (118 bytes).
 constexpr uint16_t REF_MAX_DATA_SIZE = 118;
 
+/// @brief Size of the command ID field in a Ref System frame.
+constexpr uint16_t REF_COMMAND_ID_SIZE = 2;
+
+/// @brief Size of the frame tail CRC field in a Ref System frame.
+constexpr uint16_t REF_FRAME_TAIL_SIZE = 2;
+
 /// @brief Maximum size of a Ref System packet in bytes \n
 /// @brief 5 byte header + 2 byte command ID + max supported data segment + 2 byte CRC
-constexpr uint16_t REF_MAX_PACKET_SIZE = 5 + 2 + REF_MAX_DATA_SIZE + 2;
+constexpr uint16_t REF_MAX_PACKET_SIZE = 5 + REF_COMMAND_ID_SIZE + REF_MAX_DATA_SIZE + REF_FRAME_TAIL_SIZE;
 
 /// @brief Maximum valid command ID for Ref System packets
 constexpr uint16_t REF_MAX_COMMAND_ID = 0x0311;
@@ -110,6 +116,9 @@ struct FrameHeader {
         Serial.printf("\tCRC: %x\n", CRC);
     }
 };
+
+/// @brief Size of the Ref System frame fields outside the data segment.
+constexpr uint16_t REF_FRAME_OVERHEAD = FrameHeader::packet_size + REF_COMMAND_ID_SIZE + REF_FRAME_TAIL_SIZE;
 
 /// @brief Struct for the Frame data portion
 struct FrameData {
@@ -1228,6 +1237,17 @@ struct RadarDecision {
 struct RobotInteraction {
     /// @brief Size of the RobotInteraction packet in bytes
     static const uint8_t packet_size = 118;
+    /// @brief Size of the content/sender/receiver header inside the 0x0301 frame data.
+    static constexpr uint8_t header_size = 6;
+    /// @brief Maximum content bytes after the 0x0301 content/sender/receiver header.
+    static constexpr uint8_t max_content_size = packet_size - header_size;
+
+    static constexpr uint16_t DELETE_CLIENT_LAYER = 0x0100;
+    static constexpr uint16_t DRAW_CLIENT_GRAPHIC_1 = 0x0101;
+    static constexpr uint16_t DRAW_CLIENT_GRAPHIC_2 = 0x0102;
+    static constexpr uint16_t DRAW_CLIENT_GRAPHIC_5 = 0x0103;
+    static constexpr uint16_t DRAW_CLIENT_GRAPHIC_7 = 0x0104;
+    static constexpr uint16_t DRAW_CLIENT_CHARACTER = 0x0110;
 
     /// @brief The raw byte array of data received from ref
     /// @note this is only the FrameData data rather than the whole ref packet
@@ -1256,14 +1276,14 @@ struct RobotInteraction {
     /// @brief Fills in this struct with the data from a Frame object
     /// @param frame Frame object to extract data from
     void set_data(Frame &frame) {
-        size = frame.header.data_length - 6;
+        size = frame.header.data_length - header_size;
 
         content_id = (frame.data.data[1] << 8) | frame.data.data[0];
         sender_id = (frame.data.data[3] << 8) | frame.data.data[2];
         receiver_id = (frame.data.data[5] << 8) | frame.data.data[4];
 
         for (int i = 0; i < size; i++) {
-            data[i] = frame.data.data[i + 6];
+            data[i] = frame.data.data[i + header_size];
         }
     }
 };

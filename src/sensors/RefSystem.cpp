@@ -25,6 +25,15 @@ uint16_t generateCRC16(const uint8_t *data, uint32_t len) {
     return CRC16;
 }
 
+static void put_u16(uint8_t* data, uint16_t value) {
+    data[0] = value & 0x00FF;
+    data[1] = value >> 8;
+}
+
+static uint16_t get_u16(const uint8_t* data) {
+    return static_cast<uint16_t>(data[0]) | (static_cast<uint16_t>(data[1]) << 8);
+}
+
 RefSystem::RefSystem() { }
 
 void RefSystem::init() {
@@ -47,66 +56,154 @@ void RefSystem::read() {
 }
 
 void RefSystem::write(uint8_t* packet, uint16_t length) {
-    // return if over baud rate
-    if (bytes_sent >= REF_MAX_BAUD_RATE) {
-        Serial.println("Too many bytes");
-        return;
+    write_frame(MCM_SERIAL, packet, length);
+}
+
+uint16_t RefSystem::get_client_id_for_robot(uint16_t robot_id) {
+    switch (robot_id) {
+    case 1:
+        return 0x0101;
+    case 2:
+        return 0x0102;
+    case 3:
+        return 0x0103;
+    case 4:
+        return 0x0104;
+    case 5:
+        return 0x0105;
+    case 6:
+        return 0x0106;
+    case 101:
+        return 0x0165;
+    case 102:
+        return 0x0166;
+    case 103:
+        return 0x0167;
+    case 104:
+        return 0x0168;
+    case 105:
+        return 0x0169;
+    case 106:
+        return 0x016A;
+    default:
+        return 0;
+    }
+}
+
+bool RefSystem::write_frame(HardwareSerial& serial, uint8_t* packet, uint16_t length) {
+    if (packet == nullptr) {
+        Serial.println("No Ref packet to send");
+        return false;
     }
 
-    // return if writing too many bytes
     if (length > REF_MAX_PACKET_SIZE) {
         Serial.println("Packet Too Long to Send!");
-        return;
+        return false;
     }
 
-    constexpr uint16_t frame_header_size = FrameHeader::packet_size;
-    constexpr uint16_t command_ID_size = 2;
-    constexpr uint16_t frame_tail_size = 2;
-    constexpr uint16_t interaction_header_size = 6;
-    constexpr uint16_t packet_overhead = frame_header_size + command_ID_size + frame_tail_size;
-
-    if (length < frame_header_size) {
+    if (length < REF_FRAME_OVERHEAD) {
         Serial.println("Packet Too Short to Send!");
-        return;
+        return false;
     }
 
-    uint16_t frame_data_length = (static_cast<uint16_t>(packet[2]) << 8) | packet[1];
+    uint16_t frame_data_length = get_u16(packet + 1);
     if (frame_data_length > REF_MAX_DATA_SIZE) {
         Serial.println("Packet Data Too Long to Send!");
-        return;
+        return false;
     }
 
-    uint16_t expected_length = packet_overhead + frame_data_length;
+    uint16_t expected_length = REF_FRAME_OVERHEAD + frame_data_length;
     if (length != expected_length) {
         Serial.println("Packet Length Mismatch!");
-        return;
+        return false;
     }
 
-    if (frame_data_length < interaction_header_size) {
-        Serial.println("Packet Data Too Short to Send!");
-        return;
+    uint16_t command_id = get_u16(packet + FrameHeader::packet_size);
+    if (command_id > REF_MAX_COMMAND_ID) {
+        Serial.println("Invalid Ref command ID");
+        return false;
     }
 
-    // update header
-    packet[0] = 0xA5;                       // set SOF
-    packet[3] = get_seq();                  // set SEQ
-    packet[4] = generateCRC8(packet, 4);    // set CRC
+    uint32_t now_ms = millis();
+    if (byte_window_start_ms == 0 || now_ms - byte_window_start_ms >= 1000) {
+        byte_window_start_ms = now_ms;
+        bytes_sent = 0;
+    }
 
-    // update sender ID
-    packet[9] = ref_data.robot_performance.robot_ID;
-    packet[10] = ref_data.robot_performance.robot_ID >> 8;
+    if (bytes_sent + length > REF_MAX_BAUD_RATE) {
+        Serial.println("Too many bytes");
+        return false;
+    }
 
-    // update tail
-    uint16_t footer_index = packet_overhead + frame_data_length - frame_tail_size;
+    uint32_t now_us = micros();
+    if (last_ref_packet_write_us != 0 && now_us - last_ref_packet_write_us < REF_MAX_PACKET_DELAY) {
+#ifdef REF_SYSTEM_DEBUG
+        Serial.println("Ref packet rate limited");
+#endif
+        return false;
+    }
+
+    packet[0] = 0xA5;
+    packet[3] = get_seq();
+    packet[4] = generateCRC8(packet, 4);
+
+    uint16_t footer_index = FrameHeader::packet_size + REF_COMMAND_ID_SIZE + frame_data_length;
     uint16_t footerCRC = generateCRC16(packet, footer_index);
-    packet[footer_index] = (footerCRC & 0x00FF);    // set CRC
-    packet[footer_index + 1] = (footerCRC >> 8);    // set CRC
+    packet[footer_index] = footerCRC & 0x00FF;
+    packet[footer_index + 1] = footerCRC >> 8;
 
-    if (Serial7.write(packet, length) == length) {
+    if (serial.write(packet, length) == length) {
         packets_sent++;
         bytes_sent += length;
-    } else
-        Serial.println("Failed to write");
+        last_ref_packet_write_us = now_us;
+        return true;
+    }
+
+    Serial.println("Failed to write");
+    return false;
+}
+
+bool RefSystem::write_robot_interaction(uint16_t content_id, const uint8_t* payload, uint16_t payload_length, uint16_t receiver_id) {
+    if (payload_length > RobotInteraction::max_content_size) {
+        Serial.println("Robot interaction payload too long");
+        return false;
+    }
+
+    if (payload_length > 0 && payload == nullptr) {
+        Serial.println("No robot interaction payload");
+        return false;
+    }
+
+    uint16_t sender_id = ref_data.robot_performance.robot_ID;
+    if (sender_id == 0) {
+        Serial.println("No robot ID for client drawing");
+        return false;
+    }
+
+    if (receiver_id == 0) {
+        receiver_id = get_client_id_for_robot(sender_id);
+    }
+
+    if (receiver_id == 0) {
+        Serial.println("No player client ID for this robot");
+        return false;
+    }
+
+    uint16_t frame_data_length = RobotInteraction::header_size + payload_length;
+    uint16_t packet_length = REF_FRAME_OVERHEAD + frame_data_length;
+    uint8_t packet[REF_MAX_PACKET_SIZE] = {0};
+
+    put_u16(packet + 1, frame_data_length);
+    put_u16(packet + FrameHeader::packet_size, static_cast<uint16_t>(FrameType::ROBOT_INTERACTION));
+    put_u16(packet + 7, content_id);
+    put_u16(packet + 9, sender_id);
+    put_u16(packet + 11, receiver_id);
+
+    if (payload_length > 0) {
+        memcpy(packet + 7 + RobotInteraction::header_size, payload, payload_length);
+    }
+
+    return write_frame(MCM_SERIAL, packet, packet_length);
 }
 
 void RefSystem::send_to_comms() {
@@ -179,12 +276,12 @@ bool RefSystem::read_frame_header(HardwareSerial* serial, uint8_t raw_buffer[REF
 
 bool RefSystem::read_frame_command_ID(HardwareSerial* serial, uint8_t raw_buffer[REF_MAX_PACKET_SIZE * 2], uint16_t& buffer_index, Frame& frame) {
     // early return if serial is empty or not full enough
-    if (serial->available() < 2)
+    if (serial->available() < REF_COMMAND_ID_SIZE)
         return false;
 
     // read and verify command ID
-    int bytes_read = serial->readBytes(raw_buffer + buffer_index, 2);
-    if (bytes_read != 2) {
+    int bytes_read = serial->readBytes(raw_buffer + buffer_index, REF_COMMAND_ID_SIZE);
+    if (bytes_read != REF_COMMAND_ID_SIZE) {
         Serial.println("Couldnt read enough bytes for ID");
         packets_failed++;
         return false;
@@ -230,12 +327,12 @@ bool RefSystem::read_frame_data(HardwareSerial* serial, uint8_t raw_buffer[REF_M
 
 int RefSystem::read_frame_tail(HardwareSerial* serial, uint8_t raw_buffer[REF_MAX_PACKET_SIZE * 2], uint16_t& buffer_index, Frame& frame) {
     // early return if serial is empty or not full enough
-    if (serial->available() < 2)
+    if (serial->available() < REF_FRAME_TAIL_SIZE)
         return 0;
 
     // read and verify tail
-    int bytes_read = serial->readBytes(raw_buffer + buffer_index, 2);
-    if (bytes_read != 2) {
+    int bytes_read = serial->readBytes(raw_buffer + buffer_index, REF_FRAME_TAIL_SIZE);
+    if (bytes_read != REF_FRAME_TAIL_SIZE) {
         Serial.println("Couldnt read enough bytes for CRC");
         packets_failed++;
         return 0;
