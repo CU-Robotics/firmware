@@ -13,7 +13,7 @@ constexpr uint32_t REF_MAX_COMM_BUFFER_SIZE = 5;
 /// @brief The serial line for the MCM
 #define MCM_SERIAL (Serial2)
 /// @brief The serial line for the VTM
-#define VTM_SERIAL (Serial7)
+#define VTM_SERIAL (Serial4)
 
 /// @brief Generates a 1-byte CRC
 /// @param data data array
