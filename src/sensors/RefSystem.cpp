@@ -467,10 +467,37 @@ void RefSystem::set_ref_data(Frame& frame, uint8_t raw_buffer[REF_MAX_PACKET_SIZ
 }
 
 void RefSystem::read_vtm() {
+#ifdef REF_SYSTEM_DEBUG
+    static uint32_t last_vtm_status_print_ms = 0;
+    uint32_t now_ms = millis();
+    if (now_ms - last_vtm_status_print_ms >= 1000) {
+        int available = VTM_SERIAL.available();
+        if (available > 0) {
+            Serial.printf("[VTM] waiting: available=%d peek=0x%02x\n", available, VTM_SERIAL.peek());
+        } else {
+            Serial.printf("[VTM] waiting: available=0\n");
+        }
+        last_vtm_status_print_ms = now_ms;
+    }
+#endif
+
     while (VTM_SERIAL.available() >= VTM_REMOTE_CONTROL_PACKET_SIZE) {
+        uint16_t skipped_bytes = 0;
         while (VTM_SERIAL.available() >= VTM_REMOTE_CONTROL_PACKET_SIZE && VTM_SERIAL.peek() != VTM_REMOTE_CONTROL_HEADER_1) {
             VTM_SERIAL.read();
+            skipped_bytes++;
         }
+
+#ifdef REF_SYSTEM_DEBUG
+        if (skipped_bytes > 0) {
+            int available = VTM_SERIAL.available();
+            if (available > 0) {
+                Serial.printf("[VTM] skipped %u byte(s) before header: available=%d peek=0x%02x\n", skipped_bytes, available, VTM_SERIAL.peek());
+            } else {
+                Serial.printf("[VTM] skipped %u byte(s) before header: available=0\n", skipped_bytes);
+            }
+        }
+#endif
 
         if (VTM_SERIAL.available() < VTM_REMOTE_CONTROL_PACKET_SIZE) {
             return;
@@ -482,7 +509,18 @@ void RefSystem::read_vtm() {
             return;
         }
 
+#ifdef REF_SYSTEM_DEBUG
+        Serial.printf("[VTM] raw:");
+        for (uint8_t i = 0; i < VTM_REMOTE_CONTROL_PACKET_SIZE; i++) {
+            Serial.printf(" %02x", packet[i]);
+        }
+        Serial.printf("\n");
+#endif
+
         if (packet[1] != VTM_REMOTE_CONTROL_HEADER_2) {
+#ifdef REF_SYSTEM_DEBUG
+            Serial.printf("[VTM] bad second header: received=0x%02x expected=0x%02x\n", packet[1], VTM_REMOTE_CONTROL_HEADER_2);
+#endif
             packets_failed++;
             continue;
         }
