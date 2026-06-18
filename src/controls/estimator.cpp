@@ -450,16 +450,23 @@ void FeederEstimator::validate(const RobotStateMap& updated_state_map) {
 }
 
 void LowerFeederEstimator::validate(const RobotStateMap& updated_state_map) {
-    check_state_limits("LowerFeederEstimator", "Lower Feeder", updated_state_map[feeder_ball_state], lower_feeder_monitor);
+    check_state_limits("LowerFeederEstimator", "Lower Feeder", updated_state_map[lower_feeder_ball_state], lower_feeder_monitor);
 }
 
 LowerFeederEstimator::LowerFeederEstimator(const Cfg::Estimator& estimator_config, SensorManager& sensor_manager, CANManager& can, std::vector<Cfg::StateName> available_states) :
-    feeder_ball_state(get_state_name_by_generic_use(Cfg::GenericEstimatorStateUse::LowerFeederBallPosition, estimator_config, available_states)),
-    feeder_encoder(sensor_manager.get_sensor_by_name<BuffEncoder>(estimator_config.get_sensor_name_by_generic_use(Cfg::GenericSensorUse::FeederBuffEncoder))) {
+    feeder_ball_state(get_state_name_by_generic_use(Cfg::GenericEstimatorStateUse::FeederBallPosition, estimator_config, available_states)),
+    lower_feeder_ball_state(get_state_name_by_generic_use(Cfg::GenericEstimatorStateUse::LowerFeederBallPosition, estimator_config, available_states)),
+    feeder_encoder(sensor_manager.get_sensor_by_name<BuffEncoder>(estimator_config.get_sensor_name_by_generic_use(Cfg::GenericSensorUse::FeederBuffEncoder))),
+    lower_feeder_encoder(sensor_manager.get_sensor_by_name<BuffEncoder>(estimator_config.get_sensor_name_by_generic_use(Cfg::GenericSensorUse::LowerFeederBuffEncoder))) {
     feeder_offset = estimator_config.sensor_info.feeder_encoder_offset;
     feeder_direction = estimator_config.sensor_info.feeder_direction;
     feeder_ratio = estimator_config.sensor_info.feeder_ratio;
 
+    lower_feeder_offset = estimator_config.sensor_info.lower_feeder_encoder_offset;
+    lower_feeder_direction = estimator_config.sensor_info.lower_feeder_direction;
+    lower_feeder_ratio = estimator_config.sensor_info.lower_feeder_ratio;
+
+    upper_feeder_motor = can.get_motor_by_name(estimator_config.get_motor_name_by_generic_use(Cfg::GenericEstimatorMotorUse::Feeder));
     near_feeder_motor = can.get_motor_by_name(estimator_config.get_motor_name_by_generic_use(Cfg::GenericEstimatorMotorUse::FeederClose));
     far_feeder_motor = can.get_motor_by_name(estimator_config.get_motor_name_by_generic_use(Cfg::GenericEstimatorMotorUse::FeederFar));
 }
@@ -467,32 +474,58 @@ LowerFeederEstimator::LowerFeederEstimator(const Cfg::Estimator& estimator_confi
 void LowerFeederEstimator::step_states(RobotStateMap& updated_state_map, const RobotStateMap& previous_state_map, int override) {
     dt = time.delta();
     float feeder_angle = feeder_encoder->get_angle();
+    float lower_feeder_angle = lower_feeder_encoder->get_angle();
     float diff;
+    float lower_diff;
     if (count == 0) {
         dt = 0; // first dt loop generates huge time so check for that
         diff = fmod((feeder_angle - feeder_offset), (float)(M_PI / feeder_ratio)) ;
-        count++;
+        lower_diff = fmod((lower_feeder_angle - lower_feeder_offset), (float)(M_PI / lower_feeder_ratio)) ;
     } else {
         diff = feeder_angle - prev_feeder_angle;
+        lower_diff = lower_feeder_angle - prev_lower_feeder_angle;
     }
 
     // code to check if the encoder value is getting reset to near 0. Indicates a problem with the spi bus
-    if (fabs(diff) > 1 && fabs(diff) < 5) {
+    if (fabs(diff) > 0.5 && fabs(diff) < 2*PI - 0.5 && count > 0) {
         num_encoder_resets++;
         reset_value = feeder_angle;
         Serial.printf("Feeder angle diff is large: %d, feeder angle: %f, prev feeder angle: %f\n", num_encoder_resets, feeder_angle, prev_feeder_angle);
+        diff = 0; // set diff to 0 to avoid large jumps in ball count
+    }
+    if (fabs(lower_diff) > 0.5 && fabs(lower_diff) < 2*PI - 0.5 && count > 0) {
+        num_encoder_resets++;
+        reset_value = lower_feeder_angle;
+        Serial.printf("Lower feeder angle diff is large: %d, lower feeder angle: %f, prev lower feeder angle: %f\n", num_encoder_resets, lower_feeder_angle, prev_lower_feeder_angle);
+        lower_diff = 0; // set lower_diff to 0 to avoid large jumps in ball count
     }
 
     prev_feeder_angle = feeder_angle;
+    prev_lower_feeder_angle = lower_feeder_angle;
     if (diff > PI) diff -= 2 * PI;
     else if (diff < -PI) diff += 2 * PI;
-
+    if (lower_diff > PI) lower_diff -= 2 * PI;
+    else if (lower_diff < -PI) lower_diff += 2 * PI;
+    
     // velocity estimation with buff encoder
-    float feeder_velocity = (dt > 0) ? (diff/(M_PI/feeder_ratio))/dt : 0;
+    float feeder_velocity = (dt > 0) ? ((diff/(M_PI/feeder_ratio))/dt) * feeder_direction : 0;
+    float lower_feeder_velocity = (dt > 0) ? ((lower_diff/(M_PI/lower_feeder_ratio))/dt) * lower_feeder_direction : 0;
   
-    ball_count += diff/(M_PI/feeder_ratio);
+    ball_count += (diff/(M_PI/feeder_ratio)) * feeder_direction;
+    lower_ball_count += (lower_diff/(M_PI/lower_feeder_ratio)) * lower_feeder_direction;
 
-    updated_state_map[feeder_ball_state].set_position_no_bound(ball_count * feeder_direction); // ball count
-    updated_state_map[feeder_ball_state].set_velocity_no_bound(feeder_velocity * feeder_direction); // ball velocity
+    if (count == 0) {
+        Serial.printf("Initial feeder ball count: %f, lower feeder ball count: %f\n", ball_count, lower_ball_count);
+        while (ball_count - lower_ball_count > 0.5) lower_ball_count += 1.0;
+        while (lower_ball_count - ball_count > 0.5) ball_count += 1.0;
+        Serial.printf("Adjusted feeder ball count: %f, lower feeder ball count: %f\n", ball_count, lower_ball_count);
+        count++;
+    }
+
+    updated_state_map[feeder_ball_state].set_position_no_bound(ball_count); // ball count
+    updated_state_map[feeder_ball_state].set_velocity_no_bound(feeder_velocity); // ball velocity
     updated_state_map[feeder_ball_state].set_acceleration_no_bound(0); // this is not the acceleration just the encoder value for debugging
+    updated_state_map[lower_feeder_ball_state].set_position_no_bound(lower_ball_count); // ball count
+    updated_state_map[lower_feeder_ball_state].set_velocity_no_bound(lower_feeder_velocity); // ball velocity
+    updated_state_map[lower_feeder_ball_state].set_acceleration_no_bound(0); // this is not the acceleration just the encoder value for debugging
 }
