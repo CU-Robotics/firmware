@@ -201,6 +201,9 @@ int main() {
         // read ref and send to comms
         ref.read();
         ref.send_to_comms();
+        if (loopc % 1000 == 0) {
+            ref_drawing.draw_rectangle("BOX", 860, 490, 1060, 590, 3, 0, ClientGraphicColor::GREEN);
+        }
 
         // read transmitter and send to comms
         transmitter_manager.read();
