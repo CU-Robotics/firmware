@@ -4,8 +4,6 @@
 
 // Uncomment to enable debug prints
 // #define REF_SYSTEM_DEBUG
-// Uncomment to debug even harder
-// #define REF_SYSTEM_DEBUG_ALL_FRAMES
 
 uint8_t generateCRC8(const uint8_t *data, uint32_t len) {
     uint8_t CRC8 = 0xFF;
@@ -137,9 +135,7 @@ bool RefSystem::write_frame(HardwareSerial& serial, uint8_t* packet, uint16_t le
 
     uint32_t now_us = micros();
     if (last_ref_packet_write_us != 0 && now_us - last_ref_packet_write_us < REF_MAX_PACKET_DELAY) {
-#ifdef REF_SYSTEM_DEBUG
         Serial.println("Ref packet rate limited");
-#endif
         return false;
     }
 
@@ -372,7 +368,7 @@ void RefSystem::set_ref_data(Frame& frame, uint8_t raw_buffer[REF_MAX_PACKET_SIZ
     // grab the type
     FrameType type = static_cast<FrameType>(frame.commandID);
 
-#if defined(REF_SYSTEM_DEBUG) && defined(REF_SYSTEM_DEBUG_ALL_FRAMES)
+#ifdef REF_SYSTEM_DEBUG
     Serial.printf("[Ref] command=0x%04x length=%u sequence=%u\n",
                   frame.commandID, frame.header.data_length, frame.header.sequence);
 #endif
@@ -389,11 +385,6 @@ void RefSystem::set_ref_data(Frame& frame, uint8_t raw_buffer[REF_MAX_PACKET_SIZ
         break;
     case FrameType::EVENT_DATA:
         ref_data.event_data.set_data(frame.data);
-#ifdef REF_SYSTEM_DEBUG
-        Serial.printf("[Ref][0x0101] reload_zone=%u capture_point=%u raw=0x%02x%02x%02x%02x\n",
-                      ref_data.event_data.reload_zone_status, ref_data.event_data.capture_point_status,
-                      frame.data[3], frame.data[2], frame.data[1], frame.data[0]);
-#endif
         break;
     case FrameType::REFEREE_WARNING:
         ref_data.referee_warning.set_data(frame.data);
@@ -464,19 +455,10 @@ void RefSystem::set_ref_data(Frame& frame, uint8_t raw_buffer[REF_MAX_PACKET_SIZ
         ref_data.small_map_robot_data.set_data(frame.data);
         break;
     case FrameType::ROBOT_CUSTOM_CONTROLLER_DATA:
-#ifdef REF_SYSTEM_DEBUG
-        Serial.printf("[Ref][0x0309] custom-controller payload ignored (%u bytes)\n", frame.header.data_length);
-#endif
         break;
     case FrameType::ROBOT_CUSTOM_CLIENT_DATA:
-#ifdef REF_SYSTEM_DEBUG
-        Serial.printf("[Ref][0x0310] custom-client payload ignored (%u bytes)\n", frame.header.data_length);
-#endif
         break;
     case FrameType::CUSTOM_CLIENT_ROBOT_COMMAND:
-#ifdef REF_SYSTEM_DEBUG
-        Serial.printf("[Ref][0x0311] custom-client robot command ignored (%u bytes)\n", frame.header.data_length);
-#endif
         break;
     default:
         Serial.printf("Ref System::set_ref_data: Unknown Frame Type 0x%04x\n", frame.commandID);
