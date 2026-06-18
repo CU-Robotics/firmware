@@ -496,14 +496,16 @@ struct LowerFeederController : public Controller {
         /// @brief for internally tracking the target position of the upper feeder
         RobotStateMap upper_target;
 
+        /// @brief timer for measuring feeder delay in the controls side
         float target_increase_time = 0.0;
-
+        /// @brief used for tracking whether the feeder delay timer is active
         bool timer_active = false;
     public:
         /// @brief Construct the controller and get the subcontroller configs and motor objects from the config data
         /// @param controller_config config data for this controller
         /// @param can reference to the CAN manager to get motor objects so we can write directly to motors
         /// @param available_motors list of motor names that are available to be used; this is to prevent multiple controllers from trying to control the same motor
+        /// @param state_config list of all state configs so we can find governor limits for the upper feeder reference state
         LowerFeederController(const Cfg::Controller& controller_config, CANManager& can, std::vector<Cfg::MotorName>& available_motors, const std::vector<Cfg::State>& state_config) : Controller(controller_config),
             upper_feeder_position_state(controller_config.get_state_name_by_generic_use(Cfg::GenericControllerStateUse::UpperFeederBallPosition)),
             lower_feeder_position_state(controller_config.get_state_name_by_generic_use(Cfg::GenericControllerStateUse::LowerFeederBallPosition)),

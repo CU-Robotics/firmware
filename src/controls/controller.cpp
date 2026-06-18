@@ -300,7 +300,7 @@ void YawController::step(RobotStateMap& reference_map, RobotStateMap& estimate_m
     pidp.ki = full_state_position_controller.gains.i;
     pidp.kd = full_state_position_controller.gains.d;
     // pidp.kf = full_state_position_controller.gains.f;
-    pidp.kf = full_state_position_controller.gains.f * (reference_map[yaw_angle_state].get_acceleration() * 0.05 * 0.5) / 4.5;
+    pidp.kf = full_state_position_controller.gains.f * reference_map[yaw_angle_state].get_acceleration() * controller_config.gear_ratios.accel_to_normalized_torque;
 
     pidv.kp = full_state_velocity_controller.gains.p;
     pidv.ki = full_state_velocity_controller.gains.i;
@@ -452,7 +452,7 @@ void LowerFeederController::step(RobotStateMap& reference_map, RobotStateMap& es
     upper_pidp.kp = upper_position_controller.gains.p;
     upper_pidp.ki = upper_position_controller.gains.i;
     upper_pidp.kd = upper_position_controller.gains.d;
-    upper_pidp.kf = upper_position_controller.gains.f * upper_feeder_reference_state[upper_feeder_position_state].get_acceleration() * 0.00125;
+    upper_pidp.kf = upper_position_controller.gains.f * upper_feeder_reference_state[upper_feeder_position_state].get_acceleration() * controller_config.gear_ratios.upper_accel_to_normalized_torque;
 
     upper_pidv.kp = upper_velocity_controller.gains.p;
     upper_pidv.ki = upper_velocity_controller.gains.i;
@@ -462,14 +462,14 @@ void LowerFeederController::step(RobotStateMap& reference_map, RobotStateMap& es
     lower_pidp.kp = lower_position_controller.gains.p;
     lower_pidp.ki = lower_position_controller.gains.i;
     lower_pidp.kd = lower_position_controller.gains.d;
-    lower_pidp.kf = lower_position_controller.gains.f * reference_map[upper_feeder_position_state].get_acceleration() * 0.00125;
+    lower_pidp.kf = lower_position_controller.gains.f * reference_map[upper_feeder_position_state].get_acceleration() * controller_config.gear_ratios.lower_accel_to_normalized_torque;
 
     lower_pidv.kp = lower_velocity_controller.gains.p;
     lower_pidv.ki = lower_velocity_controller.gains.i;
     lower_pidv.kd = lower_velocity_controller.gains.d;
     lower_pidv.kf = lower_velocity_controller.gains.f;
 
-    float sync_threshold = 0.2; // balls
+    float sync_threshold = controller_config.gear_ratios.sync_threshold; // balls
 
     float upper_pos = estimate_map[upper_feeder_position_state].get_position();
     float lower_pos = estimate_map[lower_feeder_position_state].get_position();
@@ -492,7 +492,7 @@ void LowerFeederController::step(RobotStateMap& reference_map, RobotStateMap& es
     }
 
     if (upper_pos > upper_target_pos - 0.7 && timer_active) {
-        Serial.printf("upper feeder shot, time: %f \n", (micros() - target_increase_time) / 1000.0);
+        // Serial.printf("upper feeder shot, time: %f \n", (micros() - target_increase_time) / 1000.0);
         timer_active = false;
     }
     
