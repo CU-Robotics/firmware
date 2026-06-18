@@ -21,6 +21,11 @@ void FirmwareData::set_data(CommsData* data) {
         temp_reference = *static_cast<TargetState*>(data);
         break;
     }
+    case TypeLabel::ReferenceState: {
+        // place the data in the mega struct
+        reference_state = *static_cast<ReferenceState*>(data);
+        break;
+    }
     case TypeLabel::EstimatedState: {
         // place the data in the mega struct
         estimated_state = *static_cast<EstimatedState*>(data);

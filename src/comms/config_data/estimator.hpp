@@ -33,6 +33,7 @@ enum class GenericSensorUse: uint32_t {
     YawBuffEncoder,
     PitchBuffEncoder,
     FeederBuffEncoder,
+    LowerFeederBuffEncoder,
     YawIcmImu,
 };
 
@@ -102,6 +103,12 @@ struct SensorInfo {
     float feeder_ratio = 0.0;
     /// @brief the direction for the feeder, used to determine the sign of the encoder values.
     float feeder_direction = 0.0;
+    /// @brief The feeder encoder offset used in the lower feeder position estimator, in radians. This is used to convert the raw encoder values to the actual angle of the feeder spindexer
+    float lower_feeder_encoder_offset = 0.0;
+    /// @brief The ratio between the lower feeder spindexer angle and the amount of balls fed. This is typically calculated as (number of balls fed per revolution of the spindexer) / (2 * PI)
+    float lower_feeder_ratio = 0.0;
+    /// @brief the direction for the lower feeder, used to determine the sign of the encoder values.
+    float lower_feeder_direction = 0.0;
     /// @brief the pitch angle at IMU calibration, in radians.
     float pitch_angle_at_imu_calibration = 0.0;
     /// @brief the start angle for the yaw, in radians

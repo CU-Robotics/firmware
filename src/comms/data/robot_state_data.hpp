@@ -13,6 +13,17 @@ struct TargetState : Comms::CommsData {
     /// @brief The array of raw state values for each state, indexed by the StateName enum values.
     State::Raw state[static_cast<size_t>(Cfg::StateName::StateNameCount)] = { {0, 0, 0} };
 };
+
+/// @brief Comms data struct for sending the reference state output by the reference governor. 
+struct ReferenceState : Comms::CommsData {
+    /// @brief default constructor that initializes the CommsData with the correct type label, physical medium, priority, and data size for the ReferenceState struct.
+    ReferenceState() : CommsData(Comms::TypeLabel::ReferenceState, Comms::PhysicalMedium::Ethernet, Comms::Priority::High, sizeof(ReferenceState)) {}
+    /// @brief The time at which the reference state was generated
+    double time = 0.0;
+    /// @brief The array of raw state values for each state, indexed by the StateName enum values.
+    State::Raw state[static_cast<size_t>(Cfg::StateName::StateNameCount)] = { {0, 0, 0} };
+};
+
 /// @brief Comms data struct for sending the estimated state.
 struct EstimatedState : Comms::CommsData {
     /// @brief default constructor that initializes the CommsData with the correct type label, physical medium, priority, and data size for the EstimatedState struct.
