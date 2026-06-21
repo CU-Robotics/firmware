@@ -149,7 +149,7 @@ int main() {
     
     // generate controller outputs based on governed references and estimated
     // state
-    controller_manager.init(config.controllers, can);
+    controller_manager.init(config.controllers, can, config.states);
     
     // variables for use in main
     RobotStateMap estimated_state_map(config.states);
@@ -270,9 +270,10 @@ int main() {
         reference_map = governor.step_reference_map(target_state_map);
 
         // generate motor outputs from controls
-        controller_manager.step(reference_map, estimated_state_map);
+        controller_manager.step(reference_map, estimated_state_map, target_state_map);
 
         target_state_map.send_to_comms<TargetState>();
+        reference_map.send_to_comms<ReferenceState>();
         estimated_state_map.send_to_comms<EstimatedState>();
 
         Comms::Sendable<ConfigurationStatusData> config_status_sendable;

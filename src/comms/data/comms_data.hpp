@@ -21,6 +21,7 @@ enum class TypeLabel : uint16_t {
     ET16SData,
     MotorStateData,
     TargetState,
+    ReferenceState,
     EstimatedState,
     OverrideState,
     CommsRefData,
@@ -74,6 +75,8 @@ inline std::string to_string(TypeLabel type_label) {
         return "MotorStateData";
     case TypeLabel::TargetState:
         return "TargetState";
+    case TypeLabel::ReferenceState:
+        return "ReferenceState";
     case TypeLabel::EstimatedState:
         return "EstimatedState";
     case TypeLabel::OverrideState:
