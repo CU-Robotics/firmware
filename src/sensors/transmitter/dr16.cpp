@@ -333,7 +333,7 @@ void DR16::manual_controls(const RobotStateMap& estimated_state_map, RobotStateM
 	transmitter_pos_y += mouse_y * 0.05 * delta;
 
 	vtm_pos_x += vtm_input.mouse_speed_x * 0.05 * delta;
-	vtm_pos_y += vtm_input.mouse_speed_y * 0.05 * delta;
+	vtm_pos_y += -vtm_input.mouse_speed_y * 0.05 * delta;
 
 	float pitch_min = estimated_state_map[Cfg::StateName::GimbalPitch].config().reference_limits.position.min;
     float pitch_max = estimated_state_map[Cfg::StateName::GimbalPitch].config().reference_limits.position.max;
@@ -363,12 +363,12 @@ void DR16::manual_controls(const RobotStateMap& estimated_state_map, RobotStateM
 	if (estimated_state_map[Cfg::StateName::ChassisX].config().governor_type == Cfg::StateOrder::Velocity) { // if we should be controlling velocity
 
 		chassis_vel_x = get_l_stick_y() * 5.4 +
-						(-vtm_input.key_w + vtm_input.key_s) * 2.5;
+						(vtm_input.key_w - vtm_input.key_s) * 2.5;
 
 		chassis_vel_x += (-keys.w + keys.s) * 2.5;
 
 		chassis_vel_y = -(get_l_stick_x() * 5.4) +
-						(vtm_input.key_d - vtm_input.key_a) * 2.5;
+						(vtm_input.key_a - vtm_input.key_d) * 2.5;
 
 		chassis_vel_y += (keys.d - keys.a) * 2.5;
 		
