@@ -7,6 +7,11 @@ void BuffEncoder::init() {
     // set the SPI pins to the correct mode
     pinMode(config_data.spi_cs, OUTPUT);
     digitalWrite(config_data.spi_cs, HIGH); // set CS high to start
+
+    for (int i = 0; i < 5 && !m_has_valid_read; i++) {
+        delayMicroseconds(100);
+        read();
+    }
 }
 
 void BuffEncoder::read() {
@@ -25,12 +30,18 @@ void BuffEncoder::read() {
     digitalWrite(config_data.spi_cs, HIGH);
     SPI.endTransaction();
 
+    const bool empty_response = data[2] == 0 && data[3] == 0 && data[4] == 0 && data[5] == 0;
+    if (!m_has_valid_read && empty_response) {
+        return;
+    }
+
     // convert received angle into radians
     int raw_angle = (data[2] << 13) | (data[3] << 5) | (data[4] >> 3);
     float radians = raw_angle / (float)MT6835_CPR * (3.14159265 * 2.0);
 
     // assign angle
     m_angle = radians;
+    m_has_valid_read = true;
 
     // Serial.printf("Buff Encoder %u - angle: %f\n", static_cast<uint32_t>(config_data.encoder_name), m_angle);
 
@@ -38,6 +49,10 @@ void BuffEncoder::read() {
 }
 
 void BuffEncoder::send_to_comms() const {
+    if (!m_has_valid_read) {
+        return;
+    }
+
     Comms::Sendable<BuffEncoderData> sendable;
     sendable.data = comms_data;
     sendable.send_to_comms();
