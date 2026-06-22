@@ -56,8 +56,11 @@ public:
     /// @note Returns and sets m_angle when it reads
     void read() override;
 
+    /// @brief Read the ZERO_POS registers from the encoder
     float read_zero_pos();
 
+    /// @brief Write the ZERO_POS registers to the encoder
+    /// @param zero_pos_raw 12-bit value (0-4095) to write
     void write_zero_pos(uint16_t zero_pos_raw);
 
     /// @brief Send the current data to comms
