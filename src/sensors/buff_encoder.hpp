@@ -55,6 +55,10 @@ public:
     /// @note Returns and sets m_angle when it reads
     void read() override;
 
+    float read_zero_pos();
+
+    void write_zero_pos(uint16_t zero_pos_raw);
+
     /// @brief Send the current data to comms
     void send_to_comms() const override;
 
@@ -68,6 +72,12 @@ public:
  
     /// @brief Print the data for debugging
     void print() const;
+
+    /// @brief Compute CRC8 per MT6835 datasheet spec (poly = X^8 + X^2 + X + 1, MSB first)
+    /// @param data Pointer to the 3 bytes covering ANGLE[20:0] + STATUS[2:0] (i.e. data[2], data[3], data[4] from the angle burst read)
+    /// @param len Number of bytes (should be 3 for this chip)
+    /// @return Computed 8-bit CRC
+    uint8_t mt6835_crc8(const uint8_t* data, size_t len) const;
 
 private:
 
