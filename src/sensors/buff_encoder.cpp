@@ -4,24 +4,26 @@
 const SPISettings BuffEncoder::m_settings = SPISettings(1000000, MT6835_BITORDER, SPI_MODE3);
 
 
-int read_count = 0;
+uint32_t read_count = 0;
 void BuffEncoder::init() {
     // set the SPI pins to the correct mode
     pinMode(config_data.spi_cs, OUTPUT);
     digitalWrite(config_data.spi_cs, HIGH); // set CS high to start
 
-    // for (int i = 0; i < 5 && !m_has_valid_read; i++) {
-    //     delayMicroseconds(100);
-    //     read();
-    //     read_count++;
-    // }
-
-    while (read_zero_pos() != 0.0f) {
+    while (read_zero_pos() != 0.0f && read_count < read_zero_pos_max_attempts) {
         write_zero_pos(0);
+        read_count++;
     }
+    read_count = 0;
 }
 
 void BuffEncoder::read() {
+    while (read_zero_pos() != 0.0f && read_count < read_zero_pos_max_attempts) {
+        write_zero_pos(0);
+        read_count++;
+    }
+    read_count = 0; 
+
     uint8_t data[6] = { 0 }; // transact 48 bits
 
     // set the operation
@@ -157,9 +159,11 @@ float BuffEncoder::read_zero_pos() {
 
     uint16_t zero_pos_raw = (static_cast<uint16_t>(zero_pos_high) << 4) | zero_pos_low; // 12-bit value, 0-4095
 
-    Serial.printf("Pin: %u, ZERO_POS raw = 0x%03X (%u), degrees = %.3f\n",
+    if (zero_pos_raw != 0) {
+        Serial.printf("Pin: %u, ZERO_POS raw = 0x%03X (%u), degrees = %.3f\n",
                   config_data.spi_cs, zero_pos_raw, zero_pos_raw,
                   zero_pos_raw * (360.0f / 4096.0f));
+    }
 
     return zero_pos_raw * (360.0f / 4096.0f);
 }

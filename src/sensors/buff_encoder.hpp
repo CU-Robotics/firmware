@@ -6,6 +6,7 @@
 #include "sensors/sensor.hpp"
 #include "comms/data/buff_encoder_data.hpp"
 
+constexpr uint32_t read_zero_pos_max_attempts = 10;
 
 // Encoder Registers and Config
 constexpr uint32_t MT6835_OP_READ = 0b0011;
