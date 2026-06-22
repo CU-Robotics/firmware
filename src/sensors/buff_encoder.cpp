@@ -10,11 +10,11 @@ void BuffEncoder::init() {
     pinMode(config_data.spi_cs, OUTPUT);
     digitalWrite(config_data.spi_cs, HIGH); // set CS high to start
 
-    for (int i = 0; i < 5 && !m_has_valid_read; i++) {
-        delayMicroseconds(100);
-        read();
-        read_count++;
-    }
+    // for (int i = 0; i < 5 && !m_has_valid_read; i++) {
+    //     delayMicroseconds(100);
+    //     read();
+    //     read_count++;
+    // }
 
     while (read_zero_pos() != 0.0f) {
         write_zero_pos(0);
