@@ -61,7 +61,6 @@ void BuffEncoder::read() {
 
     // assign angle
     m_angle = radians;
-    m_has_valid_read = true;
 
     // Serial.printf("Buff Encoder %u - angle: %f\n", static_cast<uint32_t>(config_data.encoder_name), m_angle);
 
@@ -170,10 +169,6 @@ float BuffEncoder::read_zero_pos() {
 }
 
 void BuffEncoder::send_to_comms() const {
-    if (!m_has_valid_read) {
-        return;
-    }
-
     Comms::Sendable<BuffEncoderData> sendable;
     sendable.data = comms_data;
     sendable.send_to_comms();

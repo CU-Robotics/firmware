@@ -89,9 +89,6 @@ private:
     /// @brief Read angle from the encoder
     float m_angle = 0.f;
 
-    /// @brief True after the first non-empty SPI response has been decoded.
-    bool m_has_valid_read = false;
-
     /// @brief Configuration data for the encoder
     const Cfg::BuffEncoder& config_data;
 
