@@ -391,7 +391,6 @@ void FlywheelController::step(RobotStateMap& reference_map, RobotStateMap& estim
     float target_motor_velocity = pid_high.filter(dt, false, false) * controller_config.gear_ratios.ball_to_flywheel_rad;
     
     std::shared_ptr<Motor> flywheel_motors[3] = { flywheel_motor_1, flywheel_motor_2, flywheel_motor_3 };
-    float motor_outputs[3];
 
     for (int i = 0; i < num_flywheel_motors; i++) {
         pid_low.kp = low_level_velocity_controller.gains.p;
@@ -399,20 +398,14 @@ void FlywheelController::step(RobotStateMap& reference_map, RobotStateMap& estim
         pid_low.kd = low_level_velocity_controller.gains.d;
         pid_low.kf = low_level_velocity_controller.gains.f;
 
-        pid_low.setpoint = target_motor_velocity * flywheel_directions[i];
-
-        if (flywheel_motors[i] != nullptr) {
-            pid_low.measurement = flywheel_motors[i]->get_state().speed;
-        } else {
-            pid_low.measurement = 0.0f;
+        if (!flywheel_motors[i]) {
+            continue; // Skip if the motor is not initialized
         }
-        motor_outputs[i] = pid_low.filter(dt, true, false);
-    }
 
-    flywheel_motor_1->write_motor_torque(motor_outputs[0]);
-    flywheel_motor_2->write_motor_torque(motor_outputs[1]);
-    if (flywheel_motor_3 != nullptr) {
-        flywheel_motor_3->write_motor_torque(motor_outputs[2]);
+        pid_low.setpoint = target_motor_velocity * flywheel_directions[i];
+        pid_low.measurement = flywheel_motors[i]->get_state().speed;
+        
+        flywheel_motors[i]->write_motor_torque(pid_low.filter(dt, true, false));
     }
 }
 
