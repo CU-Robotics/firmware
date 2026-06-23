@@ -88,7 +88,6 @@ void BuffEncoder::write_zero_pos(uint16_t zero_pos_raw) {
     digitalWrite(config_data.spi_cs, LOW);
     SPI.transfer(tx_read, 3);
     digitalWrite(config_data.spi_cs, HIGH);
-    SPI.endTransaction();
 
     uint8_t current_00A = tx_read[2];
     uint8_t z_edge_and_pulwid = current_00A & 0x0F; // preserve Z_EDGE (bit3) + Z_PUL_WID[2:0] (bits2:0)
@@ -100,12 +99,10 @@ void BuffEncoder::write_zero_pos(uint16_t zero_pos_raw) {
     tx009[0] = (MT6835_OP_WRITE << 4) | ((MT6835_REG_ZERO1 >> 8) & 0x0F);
     tx009[1] = MT6835_REG_ZERO1 & 0xFF;
     tx009[2] = zero_pos_high;
-
-    SPI.beginTransaction(m_settings);
+    
     digitalWrite(config_data.spi_cs, LOW);
     SPI.transfer(tx009, 3);
     digitalWrite(config_data.spi_cs, HIGH);
-    SPI.endTransaction();
 
     delayMicroseconds(1);
 
@@ -115,10 +112,10 @@ void BuffEncoder::write_zero_pos(uint16_t zero_pos_raw) {
     tx00A[1] = MT6835_REG_ZERO2 & 0xFF;
     tx00A[2] = (zero_pos_low << 4) | z_edge_and_pulwid;
 
-    SPI.beginTransaction(m_settings);
     digitalWrite(config_data.spi_cs, LOW);
     SPI.transfer(tx00A, 3);
     digitalWrite(config_data.spi_cs, HIGH);
+    
     SPI.endTransaction();
 
     Serial.printf("Pin: %u, wrote ZERO_POS = 0x%03X (%u)\n",
@@ -133,10 +130,10 @@ float BuffEncoder::read_zero_pos() {
     tx009[2] = 0x00;                                                     // dummy byte to clock out data
 
     SPI.beginTransaction(m_settings);
+    
     digitalWrite(config_data.spi_cs, LOW);
     SPI.transfer(tx009, 3);
     digitalWrite(config_data.spi_cs, HIGH);
-    SPI.endTransaction();
 
     uint8_t zero_pos_high = tx009[2]; // ZERO_POS[11:4]
 
@@ -148,10 +145,10 @@ float BuffEncoder::read_zero_pos() {
     tx00A[1] = MT6835_REG_ZERO2 & 0xFF;
     tx00A[2] = 0x00;
 
-    SPI.beginTransaction(m_settings);
     digitalWrite(config_data.spi_cs, LOW);
     SPI.transfer(tx00A, 3);
     digitalWrite(config_data.spi_cs, HIGH);
+    
     SPI.endTransaction();
 
     uint8_t reg00A = tx00A[2];
