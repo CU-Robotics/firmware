@@ -44,14 +44,15 @@ void BuffEncoder::read() {
 
     if (crc_received != crc_computed) {
         Serial.printf("Pin: %u, MT6835 CRC mismatch\n", config_data.spi_cs);
-    }
-    if (status & MT6835_STATUS_UNDERVOLT) { Serial.printf("Pin: %u, MT6835 undervoltage detected\n", config_data.spi_cs); }
-    if (status & MT6835_STATUS_WEAKFIELD) { Serial.printf("Pin: %u, MT6835 weak field detected\n", config_data.spi_cs); }
-
-    const bool empty_response = data[2] == 0 && data[3] == 0 && data[4] == 0 && data[5] == 0;
-    if (!m_has_valid_read && empty_response) {
-        Serial.printf("Pin: %u, MT6835 empty response, likely not ready yet\n", config_data.spi_cs);
         return;
+    }
+    if (status & MT6835_STATUS_UNDERVOLT) { 
+        Serial.printf("Pin: %u, MT6835 undervoltage detected\n", config_data.spi_cs); 
+        return;
+    }
+    if (status & MT6835_STATUS_WEAKFIELD) { 
+        Serial.printf("Pin: %u, MT6835 weak field detected\n", config_data.spi_cs); 
+        return; 
     }
 
     // convert received angle into radians

@@ -57,6 +57,7 @@ public:
     void read() override;
 
     /// @brief Read the ZERO_POS registers from the encoder
+    /// @return The ZERO_POS value in degrees (0-360)
     float read_zero_pos();
 
     /// @brief Write the ZERO_POS registers to the encoder
