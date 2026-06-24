@@ -41,6 +41,7 @@ enum class GenericControllerMotorUse : uint32_t {
     PitchRight,
     FlywheelLeft,
     FlywheelRight,
+    FlywheelBottom,
     Feeder,
     NearFeeder,
     FarFeeder,
@@ -128,6 +129,8 @@ struct GearRatios {
     int motor1_direction = 0;
     /// @brief direction of motor 2 either 1 or -1
     int motor2_direction = 0;
+    /// @brief direction of motor 3 either 1 or -1
+    int motor3_direction = 0;
     /// @brief the ratio between ball velocity in m/s and flywheel velocity in rad/s for the flywheel motors.
     float ball_to_flywheel_rad = 0.0;
     /// @brief direction of the feeder motor either 1 or -1
