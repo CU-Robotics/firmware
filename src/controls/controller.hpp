@@ -354,6 +354,14 @@ private:
     std::shared_ptr<Motor> flywheel_motor_1;
     /// @brief flywheel motor 2
     std::shared_ptr<Motor> flywheel_motor_2;
+    /// @brief flywheel motor 3 (if it exists, otherwise nullptr)
+    std::shared_ptr<Motor> flywheel_motor_3;
+
+    /// @brief number of flywheel motors (2 or 3 depending on config)
+    int num_flywheel_motors;
+
+    /// @brief the directions of the flywheel motors, stored in an array for easy access in the control loop
+    int flywheel_directions[3];
 
     /// @brief state name for the flywheel velocity
     const Cfg::StateName& flywheel_velocity_state;
@@ -371,6 +379,16 @@ public:
 
         flywheel_motor_1 = get_motor_by_generic_use(Cfg::GenericControllerMotorUse::FlywheelLeft, can, available_motors);
         flywheel_motor_2 = get_motor_by_generic_use(Cfg::GenericControllerMotorUse::FlywheelRight, can, available_motors);
+        if (controller_config.gear_ratios.motor3_direction != 0) { // if a third flywheel motor is specified, get it. Otherwise leave as nullptr and skip in control loop
+            flywheel_motor_3 = get_motor_by_generic_use(Cfg::GenericControllerMotorUse::FlywheelBottom, can, available_motors);
+            num_flywheel_motors = 3;
+        } else {
+            flywheel_motor_3 = nullptr;
+            num_flywheel_motors = 2;
+        }
+        flywheel_directions[0] = controller_config.gear_ratios.motor1_direction;
+        flywheel_directions[1] = controller_config.gear_ratios.motor2_direction;
+        flywheel_directions[2] = controller_config.gear_ratios.motor3_direction;
     }
 
     /// @brief sends motor commands based on a reference and estimated state
