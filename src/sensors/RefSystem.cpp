@@ -2,7 +2,10 @@
 #include "RefSystemPacketDefs.hpp"
 #include "comms/data/sendable.hpp"
 
-uint8_t generateCRC8(uint8_t* data, uint32_t len) {
+// Uncomment to enable debug prints
+// #define REF_SYSTEM_DEBUG
+
+uint8_t generateCRC8(const uint8_t *data, uint32_t len) {
     uint8_t CRC8 = 0xFF;
     while (len-- > 0) {
         uint8_t curr = CRC8 ^ (*data++);
@@ -11,7 +14,7 @@ uint8_t generateCRC8(uint8_t* data, uint32_t len) {
     return CRC8;
 }
 
-uint16_t generateCRC16(uint8_t* data, uint32_t len) {
+uint16_t generateCRC16(const uint8_t *data, uint32_t len) {
     uint16_t CRC16 = 0xFFFF;
     while (len-- > 0) {
         uint8_t curr = *data++;
@@ -20,18 +23,27 @@ uint16_t generateCRC16(uint8_t* data, uint32_t len) {
     return CRC16;
 }
 
+static void put_u16(uint8_t* data, uint16_t value) {
+    data[0] = value & 0x00FF;
+    data[1] = value >> 8;
+}
+
+static uint16_t get_u16(const uint8_t* data) {
+    return static_cast<uint16_t>(data[0]) | (static_cast<uint16_t>(data[1]) << 8);
+}
+
 RefSystem::RefSystem() { }
 
 void RefSystem::init() {
     // clear and start the MCM serial
     MCM_SERIAL.clear();
-    MCM_SERIAL.begin(112500);
+    MCM_SERIAL.begin(115200);
     MCM_SERIAL.flush();
     MCM_SERIAL.clear();
 
     // clear and start the VTM serial
     VTM_SERIAL.clear();
-    VTM_SERIAL.begin(112500);
+    VTM_SERIAL.begin(921600);
     VTM_SERIAL.flush();
     VTM_SERIAL.clear();
 }
@@ -41,41 +53,153 @@ void RefSystem::read() {
     read_mcm();
 }
 
-void RefSystem::write(uint8_t* packet, uint8_t length) {
-    // return if over baud rate
-    if (bytes_sent >= REF_MAX_BAUD_RATE) {
-        Serial.println("Too many bytes");
-        return;
+void RefSystem::write(uint8_t* packet, uint16_t length) {
+    write_frame(MCM_SERIAL, packet, length);
+}
+
+uint16_t RefSystem::get_client_id_for_robot(uint16_t robot_id) {
+    switch (robot_id) {
+    case 1:
+        return 0x0101;
+    case 2:
+        return 0x0102;
+    case 3:
+        return 0x0103;
+    case 4:
+        return 0x0104;
+    case 5:
+        return 0x0105;
+    case 6:
+        return 0x0106;
+    case 101:
+        return 0x0165;
+    case 102:
+        return 0x0166;
+    case 103:
+        return 0x0167;
+    case 104:
+        return 0x0168;
+    case 105:
+        return 0x0169;
+    case 106:
+        return 0x016A;
+    default:
+        return 0;
+    }
+}
+
+bool RefSystem::write_frame(HardwareSerial& serial, uint8_t* packet, uint16_t length) {
+    if (packet == nullptr) {
+        Serial.println("No Ref packet to send");
+        return false;
     }
 
-    // return if writing too many bytes
     if (length > REF_MAX_PACKET_SIZE) {
         Serial.println("Packet Too Long to Send!");
-        return;
+        return false;
     }
 
-    // length of actual sendable data (without the IDs)
-    uint8_t data_length = packet[1] - 6;
+    if (length < REF_FRAME_OVERHEAD) {
+        Serial.println("Packet Too Short to Send!");
+        return false;
+    }
 
-    // update header
-    packet[0] = 0xA5;                       // set SOF
-    packet[3] = get_seq();                  // set SEQ
-    packet[4] = generateCRC8(packet, 4);    // set CRC
+    uint16_t frame_data_length = get_u16(packet + 1);
+    if (frame_data_length > REF_MAX_DATA_SIZE) {
+        Serial.println("Packet Data Too Long to Send!");
+        return false;
+    }
 
-    // update sender ID
-    packet[9] = ref_data.robot_performance.robot_ID;
-    packet[10] = ref_data.robot_performance.robot_ID >> 8;
+    uint16_t expected_length = REF_FRAME_OVERHEAD + frame_data_length;
+    if (length != expected_length) {
+        Serial.println("Packet Length Mismatch!");
+        return false;
+    }
 
-    // update tail
-    uint16_t footerCRC = generateCRC16(packet, 13 + data_length);
-    packet[13 + data_length] = (footerCRC & 0x00FF);    // set CRC
-    packet[14 + data_length] = (footerCRC >> 8);        // set CRC
+    uint16_t command_id = get_u16(packet + FrameHeader::packet_size);
+    if (command_id > REF_MAX_COMMAND_ID) {
+        Serial.println("Invalid Ref command ID");
+        return false;
+    }
 
-    if (Serial7.write(packet, length) == length) {
+    uint32_t now_ms = millis();
+    if (byte_window_start_ms == 0 || now_ms - byte_window_start_ms >= 1000) {
+        byte_window_start_ms = now_ms;
+        bytes_sent = 0;
+    }
+
+    if (bytes_sent + length > REF_MAX_BAUD_RATE) {
+        Serial.println("Too many bytes");
+        return false;
+    }
+
+    uint32_t now_us = micros();
+    if (last_ref_packet_write_us != 0 && now_us - last_ref_packet_write_us < REF_MAX_PACKET_DELAY) {
+        Serial.println("Ref packet rate limited");
+        return false;
+    }
+
+    packet[0] = 0xA5;
+    packet[3] = get_seq();
+    packet[4] = generateCRC8(packet, 4);
+
+    uint16_t footer_index = FrameHeader::packet_size + REF_COMMAND_ID_SIZE + frame_data_length;
+    uint16_t footerCRC = generateCRC16(packet, footer_index);
+    packet[footer_index] = footerCRC & 0x00FF;
+    packet[footer_index + 1] = footerCRC >> 8;
+
+    if (serial.write(packet, length) == length) {
         packets_sent++;
         bytes_sent += length;
-    } else
-        Serial.println("Failed to write");
+        last_ref_packet_write_us = now_us;
+        return true;
+    }
+
+    Serial.println("Failed to write");
+    return false;
+}
+
+bool RefSystem::write_robot_interaction(uint16_t content_id, const uint8_t* payload, uint16_t payload_length, uint16_t receiver_id) {
+    if (payload_length > RobotInteraction::max_content_size) {
+        Serial.println("Robot interaction payload too long");
+        return false;
+    }
+
+    if (payload_length > 0 && payload == nullptr) {
+        Serial.println("No robot interaction payload");
+        return false;
+    }
+
+    uint16_t sender_id = ref_data.robot_performance.robot_ID;
+    if (sender_id == 0) {
+        Serial.println("No robot ID for client drawing");
+        return false;
+    }
+
+    if (receiver_id == 0) {
+        receiver_id = get_client_id_for_robot(sender_id);
+    }
+
+    if (receiver_id == 0) {
+        Serial.println("No player client ID for this robot");
+        return false;
+    }
+
+    uint16_t frame_data_length = RobotInteraction::header_size + payload_length;
+    uint16_t packet_length = REF_FRAME_OVERHEAD + frame_data_length;
+    uint8_t packet[REF_MAX_PACKET_SIZE] = {0};
+
+    put_u16(packet + 1, frame_data_length);
+    put_u16(packet + FrameHeader::packet_size, static_cast<uint16_t>(FrameType::ROBOT_INTERACTION));
+    put_u16(packet + 7, content_id);
+    put_u16(packet + 9, sender_id);
+    put_u16(packet + 11, receiver_id);
+
+    if (payload_length > 0) {
+        memcpy(packet + 7 + RobotInteraction::header_size, payload, payload_length);
+    }
+
+    return write_frame(MCM_SERIAL, packet, packet_length);
 }
 
 void RefSystem::send_to_comms() {
@@ -127,8 +251,15 @@ bool RefSystem::read_frame_header(HardwareSerial* serial, uint8_t raw_buffer[REF
     frame.header.CRC = raw_buffer[buffer_index + 4];
 
     // verify the CRC is correct
-    if (frame.header.CRC != generateCRC8(raw_buffer, 4)) {
-        Serial.println("Header failed CRC");
+    uint8_t expected_CRC = generateCRC8(raw_buffer, 4);
+    if (frame.header.CRC != expected_CRC) {
+        Serial.printf("[Ref] Header CRC failed: received=0x%02x expected=0x%02x\n", frame.header.CRC, expected_CRC);
+        packets_failed++;
+        return false;
+    }
+
+    if (frame.header.data_length > REF_MAX_DATA_SIZE) {
+        Serial.printf("[Ref] Data length too large: %u (max %u)\n", frame.header.data_length, REF_MAX_DATA_SIZE);
         packets_failed++;
         return false;
     }
@@ -141,12 +272,12 @@ bool RefSystem::read_frame_header(HardwareSerial* serial, uint8_t raw_buffer[REF
 
 bool RefSystem::read_frame_command_ID(HardwareSerial* serial, uint8_t raw_buffer[REF_MAX_PACKET_SIZE * 2], uint16_t& buffer_index, Frame& frame) {
     // early return if serial is empty or not full enough
-    if (serial->available() < 2)
+    if (serial->available() < REF_COMMAND_ID_SIZE)
         return false;
 
     // read and verify command ID
-    int bytes_read = serial->readBytes(raw_buffer + buffer_index, 2);
-    if (bytes_read != 2) {
+    int bytes_read = serial->readBytes(raw_buffer + buffer_index, REF_COMMAND_ID_SIZE);
+    if (bytes_read != REF_COMMAND_ID_SIZE) {
         Serial.println("Couldnt read enough bytes for ID");
         packets_failed++;
         return false;
@@ -157,7 +288,7 @@ bool RefSystem::read_frame_command_ID(HardwareSerial* serial, uint8_t raw_buffer
 
     // sanity check, verify the ID is valid
     if (frame.commandID > REF_MAX_COMMAND_ID) {
-        Serial.println("Invalid Command ID");
+        Serial.printf("[Ref] Invalid command ID: 0x%04x\n", frame.commandID);
         packets_failed++;
         return false;
     }
@@ -192,12 +323,12 @@ bool RefSystem::read_frame_data(HardwareSerial* serial, uint8_t raw_buffer[REF_M
 
 int RefSystem::read_frame_tail(HardwareSerial* serial, uint8_t raw_buffer[REF_MAX_PACKET_SIZE * 2], uint16_t& buffer_index, Frame& frame) {
     // early return if serial is empty or not full enough
-    if (serial->available() < 2)
+    if (serial->available() < REF_FRAME_TAIL_SIZE)
         return 0;
 
     // read and verify tail
-    int bytes_read = serial->readBytes(raw_buffer + buffer_index, 2);
-    if (bytes_read != 2) {
+    int bytes_read = serial->readBytes(raw_buffer + buffer_index, REF_FRAME_TAIL_SIZE);
+    if (bytes_read != REF_FRAME_TAIL_SIZE) {
         Serial.println("Couldnt read enough bytes for CRC");
         packets_failed++;
         return 0;
@@ -206,8 +337,10 @@ int RefSystem::read_frame_tail(HardwareSerial* serial, uint8_t raw_buffer[REF_MA
     // store CRC
     frame.CRC = (raw_buffer[buffer_index + 1] << 8) | raw_buffer[buffer_index + 0];
 
-    if (frame.CRC != generateCRC16(raw_buffer, buffer_index)) {
-        Serial.println("Tail failed CRC");
+    uint16_t expected_CRC = generateCRC16(raw_buffer, buffer_index);
+    if (frame.CRC != expected_CRC) {
+        Serial.printf("[Ref] Tail CRC failed: command=0x%04x length=%u received=0x%04x expected=0x%04x\n",
+                      frame.commandID, frame.header.data_length, frame.CRC, expected_CRC);
         packets_failed++;
         return -1;
     }
@@ -235,6 +368,11 @@ void RefSystem::set_ref_data(Frame& frame, uint8_t raw_buffer[REF_MAX_PACKET_SIZ
     // grab the type
     FrameType type = static_cast<FrameType>(frame.commandID);
 
+#ifdef REF_SYSTEM_DEBUG
+    Serial.printf("[Ref] command=0x%04x length=%u sequence=%u\n",
+                  frame.commandID, frame.header.data_length, frame.header.sequence);
+#endif
+
     switch (type) {
     case FrameType::GAME_STATUS:
         ref_data.game_status.set_data(frame.data);
@@ -247,9 +385,6 @@ void RefSystem::set_ref_data(Frame& frame, uint8_t raw_buffer[REF_MAX_PACKET_SIZ
         break;
     case FrameType::EVENT_DATA:
         ref_data.event_data.set_data(frame.data);
-        break;
-    case FrameType::PROJECTILE_SUPPLIER_STATUS:
-        ref_data.projectile_supplier_status.set_data(frame.data);
         break;
     case FrameType::REFEREE_WARNING:
         ref_data.referee_warning.set_data(frame.data);
@@ -268,9 +403,6 @@ void RefSystem::set_ref_data(Frame& frame, uint8_t raw_buffer[REF_MAX_PACKET_SIZ
         break;
     case FrameType::ROBOT_BUFF:
         ref_data.robot_buff.set_data(frame.data);
-        break;
-    case FrameType::AIR_SUPPORT_STATUS:
-        ref_data.air_support_status.set_data(frame.data);
         break;
     case FrameType::DAMAGE_STATUS:
         ref_data.damage_status.set_data(frame.data);
@@ -310,9 +442,6 @@ void RefSystem::set_ref_data(Frame& frame, uint8_t raw_buffer[REF_MAX_PACKET_SIZ
     case FrameType::SMALL_MAP_COMMAND:
         ref_data.small_map_command.set_data(frame.data);
         break;
-    case FrameType::KBM_INTERACTION:
-        ref_data.kbm_interaction.set_data(frame.data);
-        break;
     case FrameType::SMALL_MAP_RADAR_POSITION:
         ref_data.small_map_radar_position.set_data(frame.data);
         break;
@@ -325,66 +454,93 @@ void RefSystem::set_ref_data(Frame& frame, uint8_t raw_buffer[REF_MAX_PACKET_SIZ
     case FrameType::SMALL_MAP_ROBOT_DATA:
         ref_data.small_map_robot_data.set_data(frame.data);
         break;
+    case FrameType::ROBOT_CUSTOM_CONTROLLER_DATA:
+        break;
+    case FrameType::ROBOT_CUSTOM_CLIENT_DATA:
+        break;
+    case FrameType::CUSTOM_CLIENT_ROBOT_COMMAND:
+        break;
     default:
-        Serial.println("Ref System::set_ref_data: Unknown Frame Type");
+        Serial.printf("Ref System::set_ref_data: Unknown Frame Type 0x%04x\n", frame.commandID);
         break;
     }
 }
 
 void RefSystem::read_vtm() {
-    bool success = true;
-
-    // try to read the header
-    if (success && !vtm_data.header_read) {
-        success = read_frame_header(&VTM_SERIAL, vtm_data.raw_buffer, vtm_data.buffer_index, vtm_data.curr_frame);
-        vtm_data.header_read = success;
-    }
-
-    // try to read the ID
-    if (success && !vtm_data.command_ID_read) {
-        success = read_frame_command_ID(&VTM_SERIAL, vtm_data.raw_buffer, vtm_data.buffer_index, vtm_data.curr_frame);
-        vtm_data.command_ID_read = success;
-    }
-
-    // try to read the data
-    if (success && !vtm_data.data_read) {
-        success = read_frame_data(&VTM_SERIAL, vtm_data.raw_buffer, vtm_data.buffer_index, vtm_data.curr_frame);
-        vtm_data.data_read = success;
-    }
-
-    // try to read the tail
-    if (success && !vtm_data.tail_read) {
-        int tail_ret = read_frame_tail(&VTM_SERIAL, vtm_data.raw_buffer, vtm_data.buffer_index, vtm_data.curr_frame);
-
-        if (tail_ret == 1) {
-            success = true;
-            vtm_data.tail_read = true;
-        } else if (tail_ret == -1) {
-            success = false;
-
-            // crc failed so reset the frame
-            vtm_data.header_read = false;
-            vtm_data.command_ID_read = false;
-            vtm_data.data_read = false;
-            vtm_data.tail_read = false;
-            vtm_data.buffer_index = 0;
-            memset(vtm_data.raw_buffer, 0, REF_MAX_PACKET_SIZE * 2);
+#ifdef REF_SYSTEM_DEBUG
+    static uint32_t last_vtm_status_print_ms = 0;
+    uint32_t now_ms = millis();
+    if (now_ms - last_vtm_status_print_ms >= 1000) {
+        int available = VTM_SERIAL.available();
+        if (available > 0) {
+            Serial.printf("[VTM] waiting: available=%d peek=0x%02x\n", available, VTM_SERIAL.peek());
         } else {
-            success = false;
+            Serial.printf("[VTM] waiting: available=0\n");
         }
+        last_vtm_status_print_ms = now_ms;
     }
+#endif
 
-    // process the data
-    if (success) {
-        set_ref_data(vtm_data.curr_frame, vtm_data.raw_buffer);
+    while (VTM_SERIAL.available() >= VTM_REMOTE_CONTROL_PACKET_SIZE) {
+        uint16_t skipped_bytes = 0;
+        while (VTM_SERIAL.available() >= VTM_REMOTE_CONTROL_PACKET_SIZE && VTM_SERIAL.peek() != VTM_REMOTE_CONTROL_HEADER_1) {
+            VTM_SERIAL.read();
+            skipped_bytes++;
+        }
 
-        // reset flags
-        vtm_data.header_read = false;
-        vtm_data.command_ID_read = false;
-        vtm_data.data_read = false;
-        vtm_data.tail_read = false;
-        vtm_data.buffer_index = 0;
-        memset(vtm_data.raw_buffer, 0, REF_MAX_PACKET_SIZE * 2);
+#ifdef REF_SYSTEM_DEBUG
+        if (skipped_bytes > 0) {
+            int available = VTM_SERIAL.available();
+            if (available > 0) {
+                Serial.printf("[VTM] skipped %u byte(s) before header: available=%d peek=0x%02x\n", skipped_bytes, available, VTM_SERIAL.peek());
+            } else {
+                Serial.printf("[VTM] skipped %u byte(s) before header: available=0\n", skipped_bytes);
+            }
+        }
+#endif
+
+        if (VTM_SERIAL.available() < VTM_REMOTE_CONTROL_PACKET_SIZE) {
+            return;
+        }
+
+        uint8_t packet[VTM_REMOTE_CONTROL_PACKET_SIZE] = {0};
+        int bytes_read = VTM_SERIAL.readBytes(packet, VTM_REMOTE_CONTROL_PACKET_SIZE);
+        if (bytes_read != VTM_REMOTE_CONTROL_PACKET_SIZE) {
+            return;
+        }
+
+#ifdef REF_SYSTEM_DEBUG
+        Serial.printf("[VTM] raw:");
+        for (uint8_t i = 0; i < VTM_REMOTE_CONTROL_PACKET_SIZE; i++) {
+            Serial.printf(" %02x", packet[i]);
+        }
+        Serial.printf("\n");
+#endif
+
+        if (packet[1] != VTM_REMOTE_CONTROL_HEADER_2) {
+#ifdef REF_SYSTEM_DEBUG
+            Serial.printf("[VTM] bad second header: received=0x%02x expected=0x%02x\n", packet[1], VTM_REMOTE_CONTROL_HEADER_2);
+#endif
+            packets_failed++;
+            continue;
+        }
+
+        uint16_t received_crc = packet[19] | (static_cast<uint16_t>(packet[20]) << 8);
+        uint16_t expected_crc = generateCRC16(packet, VTM_REMOTE_CONTROL_PACKET_SIZE - 2);
+        if (received_crc != expected_crc) {
+            Serial.printf("[VTM] CRC failed: received=0x%04x expected=0x%04x\n", received_crc, expected_crc);
+            packets_failed++;
+            continue;
+        }
+
+        ref_data.vtm_remote_control.set_data(packet);
+        packets_received++;
+
+#ifdef REF_SYSTEM_DEBUG
+        const VTMRemoteControl &input = ref_data.vtm_remote_control;
+        Serial.printf("[VTM] mouse=(%d,%d) scroll=%d buttons=%u/%u/%u keys=0x%04x\n", input.mouse_speed_x, input.mouse_speed_y, input.scroll_speed, static_cast<uint32_t>(input.button_left), static_cast<uint32_t>(input.button_right), static_cast<uint32_t>(input.button_middle), input.keyboard_value);
+#endif
+        return;
     }
 }
 

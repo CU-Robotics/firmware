@@ -13,7 +13,7 @@ constexpr uint32_t REF_MAX_COMM_BUFFER_SIZE = 5;
 /// @brief The serial line for the MCM
 #define MCM_SERIAL (Serial2)
 /// @brief The serial line for the VTM
-#define VTM_SERIAL (Serial7)
+#define VTM_SERIAL (Serial4)
 
 /// @brief Generates a 1-byte CRC
 /// @param data data array
@@ -85,7 +85,21 @@ public:
     /// @param packet Byte array of the packet to be sent
     /// @param length The total size of the packet, including header/tail
     /// @note Re-computes the CRC, so no need to do it yourself
-    void write(uint8_t* packet, uint8_t length);
+    void write(uint8_t* packet, uint16_t length);
+
+    /// @brief Convert a robot ID to its corresponding player-client ID.
+    /// @param robot_id Referee System robot ID.
+    /// @return 0 when the robot does not have a corresponding player client.
+    static uint16_t get_client_id_for_robot(uint16_t robot_id);
+
+    /// @brief Build and send a 0x0301 robot-interaction frame.
+    /// @param content_id Robot-interaction sub-content ID.
+    /// @param payload Content data segment to send after the content/sender/receiver header.
+    /// @param payload_length Number of payload bytes to send.
+    /// @param receiver_id Receiver robot or player-client ID, or 0 to use the sender robot's corresponding client.
+    /// @return true when the interaction frame is accepted for transmission.
+    bool write_robot_interaction(uint16_t content_id, const uint8_t* payload, uint16_t payload_length, uint16_t receiver_id = 0);
+
 
     /// @brief Generate a byte array for all ref data to be sent over comms
     /// @note Only sends some packets, not all
@@ -129,6 +143,13 @@ private:
     /// @param raw_buffer Buffer to read from
     void set_ref_data(Frame& frame, uint8_t raw_buffer[REF_MAX_PACKET_SIZE * 2]);
 
+    /// @brief Write a complete Ref System frame on a specific serial link.
+    /// @param serial Serial link to write the frame to.
+    /// @param packet Complete Referee System packet buffer, including header, command ID, payload, and tail space.
+    /// @param length Total packet length in bytes.
+    /// @return true when validation passes and the full packet is written to the serial link.
+    bool write_frame(HardwareSerial& serial, uint8_t* packet, uint16_t length);
+
     /// @brief Get the current outgoing sequence. Used in sending frames
     /// @return The next sequence
     inline uint8_t get_seq() noexcept { seq++;  return seq; }
@@ -142,6 +163,12 @@ private:
 private:
     /// @brief Current sequence number. Used to send packets
     uint8_t seq = 0;
+
+    /// @brief Start time for the current outgoing byte budget window.
+    uint32_t byte_window_start_ms = 0;
+
+    /// @brief Last successful outgoing Ref System packet time.
+    uint32_t last_ref_packet_write_us = 0;
 
     /// @brief whether we have a new damage status since we last sent ref data to comms
     bool damage_status_changed = false;
@@ -164,8 +191,6 @@ private:
         Frame curr_frame {};
     };
 
-    /// @brief Internal data for the VTM
-    RefInternalData vtm_data {};
     /// @brief Internal data for the MCM
     RefInternalData mcm_data {};
 
@@ -180,7 +205,7 @@ public:
     /// @brief Number of failed tail reads
     uint32_t failed_tail_reads = 0;
 
-    /// @brief Current count of bytes sent since last reset
+    /// @brief Current count of bytes sent in the active one-second window
     uint16_t bytes_sent = 0;
 
     /// @brief struct to store all ref data

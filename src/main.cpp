@@ -19,6 +19,7 @@
 
 #include "controls/controller_manager.hpp"
 #include "controls/estimator_manager.hpp"
+#include "sensors/RefDrawing.hpp"
 #include "sensors/StereoCamTrigger.hpp"
 #include "sensors/RefSystem.hpp"
 #include "utils/profiler.hpp"
@@ -43,6 +44,7 @@ extern "C" void reset_teensy(void);
 
 CANManager can;
 RefSystem ref;
+RefDrawing ref_drawing(ref);
 TransmitterManager transmitter_manager;
 
 Comms::CommsLayer comms_layer;
