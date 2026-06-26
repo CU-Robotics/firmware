@@ -4,6 +4,7 @@
 #include "estimator.hpp"
 #include "ICM20649.hpp"
 #include "utils/vector_math.hpp"
+#include "utils/wrapping.hpp"
 #include "sensors/RefSystem.hpp"
 
 // Estimator shared checking implementation
@@ -271,8 +272,10 @@ void GimbalAndChassisEstimator::step_states(RobotStateMap& updated_state_map, co
     }
     
     if (override == 1) {
-        yaw_angle = previous_state_map[Cfg::StateName::GimbalYaw].get_position();
-        Serial.printf("Overriding gimbal yaw estimate to %f\n", yaw_angle);
+        float overridden_yaw = previous_state_map[yaw_state].get_position();
+        float error = Utils::wrap(overridden_yaw - yaw_angle, -PI, PI);
+        yaw_angle += error * 0.01;
+        Serial.printf("Overriding gimbal yaw estimate to %f. Currently %f\n", overridden_yaw, yaw_angle);
     }
 
     while (yaw_angle >= PI)
