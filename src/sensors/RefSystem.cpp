@@ -213,6 +213,7 @@ void RefSystem::send_to_comms() {
     ref_data_for_comms.damage_status_data = ref_data.damage_status.to_comms_data();
     ref_data_for_comms.launching_status_data = ref_data.launching_status.to_comms_data();
     ref_data_for_comms.projectile_allowance_data = ref_data.projectile_allowance.to_comms_data();
+    ref_data_for_comms.vtm_data = ref_data.vtm_remote_control.to_comms_data();
     Comms::Sendable<CommsRefData> ref_data_sendable = ref_data_for_comms;
     ref_data_sendable.send_to_comms();
 }

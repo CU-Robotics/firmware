@@ -1777,6 +1777,46 @@ struct VTMRemoteControl {
         last_update_ms = millis();
     }
 
+    /// @brief Converts this VTMRemoteControl struct to a VTMRemoteControlData struct for comms transmission
+    /// @return VTMRemoteControlData struct with the same data as this VTMRemoteControl struct
+    VTMData to_comms_data() {
+        VTMData data;
+        data.channel_0 = channel_0;
+        data.channel_1 = channel_1;
+        data.channel_2 = channel_2;
+        data.channel_3 = channel_3;
+        data.mode_switch = mode_switch;
+        data.pause_button = pause_button;
+        data.custom_button_left = custom_button_left;
+        data.custom_button_right = custom_button_right;
+        data.dial = dial;
+        data.mouse_speed_x = mouse_speed_x;
+        data.mouse_speed_y = mouse_speed_y;
+        data.scroll_speed = scroll_speed;
+        data.trigger = trigger;
+        data.button_left = button_left;
+        data.button_right = button_right;
+        data.button_middle = button_middle;
+        data.keyboard_value = keyboard_value;
+        data.key_w = key_w;
+        data.key_s = key_s;
+        data.key_a = key_a;
+        data.key_d = key_d;
+        data.key_shift = key_shift;
+        data.key_ctrl = key_ctrl;
+        data.key_q = key_q;
+        data.key_e = key_e;
+        data.key_r = key_r;
+        data.key_f = key_f;
+        data.key_g = key_g;
+        data.key_z = key_z;
+        data.key_x = key_x;
+        data.key_c = key_c;
+        data.key_v = key_v;
+        data.key_b = key_b;
+        return data;
+    }
+
   private:
     /// @brief Reads a little-endian bit field from a VT03/VT13 remote-control frame.
     /// @param packet Raw 21-byte frame
