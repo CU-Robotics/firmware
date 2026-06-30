@@ -27,4 +27,6 @@
 
 #include "stereo_cam_trigger_data.hpp"
 
+#include "ref_drawing_data.hpp"
+
 #endif // DATA_STRUCTS_HPP

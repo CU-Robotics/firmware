@@ -43,7 +43,7 @@ struct CommsRefGraphic {
     uint8_t name[3] = {0};
     uint8_t _padding = 0;
     GraphicOperation operation = GraphicOperation::NONE;
-    GraphicType type = GraphicType::Line;
+    GraphicType type = GraphicType::LINE;
     uint32_t layer = 0;
     GraphicColor color = GraphicColor::TEAM;
     uint32_t details_a = 0;
@@ -74,10 +74,10 @@ struct CommsRefGraphic {
         cg.details_e = static_cast<uint16_t>(details_e);
         return cg;
     }
-}
+};
 
 struct RefDrawingData : Comms::CommsData {
-    RefDrawingData() : CommsData(Comms::TypeLabel::RefDrawingData, Comms::PhysicalMedium::Ethernet, Commms::Priority::High, sizeof(RefDrawingData)) {}
+    RefDrawingData() : CommsData(Comms::TypeLabel::RefDrawingData, Comms::PhysicalMedium::Ethernet, Comms::Priority::High, sizeof(RefDrawingData)) {}
 
     uint32_t num_graphics = 0;
     CommsRefGraphic graphics[7] = {};
