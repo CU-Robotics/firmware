@@ -102,7 +102,7 @@ class RefDrawing {
     /// @param graphic_count Number of figures in the array; must be 1, 2, 5, or 7.
     /// @param receiver_id Player's Client receiver ID, or 0 to use the sender robot's corresponding client.
     /// @return true when the drawing packet is accepted for transmission.
-    bool draw_graphics_with_pad(const ClientGraphic graphics[7], uint8_t graphic_count, uint16_t receiver_id = 0);
+    bool draw_graphics_with_pad(ClientGraphic graphics[7], uint8_t graphic_count, uint16_t receiver_id = 0);
     /// @brief Draw or update a straight line on the Player's Client.
     /// @param name Three-character figure name used for later edit or delete operations.
     /// @param start_x Starting x-coordinate.

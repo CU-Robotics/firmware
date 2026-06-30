@@ -137,13 +137,13 @@ bool RefDrawing::draw_graphics(const ClientGraphic *graphics, uint8_t graphic_co
     return ref_system.write_robot_interaction(content_id, payload, payload_length, receiver_id);
 }
 
-bool RefDrawing::draw_graphics_with_pad(const ClientGraphic graphics[7], uint8_t graphic_count, uint16_t receiver_id) {
+bool RefDrawing::draw_graphics_with_pad(ClientGraphic graphics[7], uint8_t graphic_count, uint16_t receiver_id) {
     if (graphics == nullptr || graphic_count == 0) {
         Serial.println("No client graphics to draw");
         return false;
     }
 
-    graphics_count = std::min(graphic_count, 7);
+    graphic_count = std::min(graphic_count, uint8_t(7));
 
     // Pad the graphics array until we are at a valid amount.
     while (graphic_count != 1 && graphic_count != 2 && graphic_count != 5 && graphic_count != 7) {

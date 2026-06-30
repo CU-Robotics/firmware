@@ -82,7 +82,8 @@ inline std::string to_string(TypeLabel type_label) {
         return "EstimatedState";
     case TypeLabel::OverrideState:
         return "OverrideState";
-
+    case TypeLabel::RefDrawingData:
+        return "RefDrawingData";
     case TypeLabel::CommsRefData:
         return "CommsRefData";
     case TypeLabel::ConfigStart:
