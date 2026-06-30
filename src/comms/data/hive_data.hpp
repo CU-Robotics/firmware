@@ -25,6 +25,9 @@ struct HiveData {
     /// @brief Override state received from Hive; This is used to override the robot state estimate on firmware with a new one.
     OverrideState override_state_data;
 
+    /// @brief Ref drawing data recieved from Hive.
+    RefDrawingData ref_drawing_data;
+
     /// @brief stores the stereo camera trigger start and stop information
     StereoCamStartStop stereo_cam_start_stop;
     /// @brief The configuration data filled as config sections are received over comms. This should only be used after all config sections have been received.

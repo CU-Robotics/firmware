@@ -1,6 +1,7 @@
 #include "RefDrawing.hpp"
 
 static constexpr uint8_t CLIENT_CHARACTER_DATA_SIZE = 30;
+constexpr uint8_t PACKET_SIZE = 15;
 
 static void put_u32(uint8_t *data, uint32_t value) {
     data[0] = value & 0x000000FF;
@@ -127,12 +128,54 @@ bool RefDrawing::draw_graphics(const ClientGraphic *graphics, uint8_t graphic_co
         return false;
     }
 
-    uint8_t payload[ClientGraphic::packet_size * 7] = {0};
+    uint8_t payload[PACKET_SIZE * 7] = {0};
     for (uint8_t i = 0; i < graphic_count; i++) {
-        pack_client_graphic(graphics[i], payload + (i * ClientGraphic::packet_size));
+        pack_client_graphic(graphics[i], payload + (i * PACKET_SIZE));
     }
 
-    uint16_t payload_length = static_cast<uint16_t>(graphic_count) * ClientGraphic::packet_size;
+    uint16_t payload_length = static_cast<uint16_t>(graphic_count) * PACKET_SIZE;
+    return ref_system.write_robot_interaction(content_id, payload, payload_length, receiver_id);
+}
+
+bool RefDrawing::draw_graphics_with_pad(const ClientGraphic graphics[7], uint8_t graphic_count, uint16_t receiver_id) {
+    if (graphics == nullptr || graphic_count == 0) {
+        Serial.println("No client graphics to draw");
+        return false;
+    }
+
+    graphics_count = std::min(graphic_count, 7);
+
+    // Pad the graphics array until we are at a valid amount.
+    while (graphic_count != 1 && graphic_count != 2 && graphic_count != 5 && graphic_count != 7) {
+        graphics[graphic_count] = ClientGraphic{};
+        graphic_count++;
+    }
+
+    uint16_t content_id = 0;
+    switch (graphic_count) {
+    case 1:
+        content_id = RobotInteraction::DRAW_CLIENT_GRAPHIC_1;
+        break;
+    case 2:
+        content_id = RobotInteraction::DRAW_CLIENT_GRAPHIC_2;
+        break;
+    case 5:
+        content_id = RobotInteraction::DRAW_CLIENT_GRAPHIC_5;
+        break;
+    case 7:
+        content_id = RobotInteraction::DRAW_CLIENT_GRAPHIC_7;
+        break;
+    default:
+        Serial.println("Client graphics count must be 1, 2, 5, or 7");
+        return false;
+    }
+
+    uint8_t payload[PACKET_SIZE * 7] = {0};
+    for (uint8_t i = 0; i < graphic_count; i++) {
+        pack_client_graphic(graphics[i], payload + (i * PACKET_SIZE));
+    }
+
+    uint16_t payload_length = static_cast<uint16_t>(graphic_count) * PACKET_SIZE;
     return ref_system.write_robot_interaction(content_id, payload, payload_length, receiver_id);
 }
 
@@ -187,11 +230,11 @@ bool RefDrawing::draw_float(const char *name, int32_t value_milli, uint16_t star
 }
 
 bool RefDrawing::draw_character(const char *name, const char *text, uint16_t start_x, uint16_t start_y, uint16_t font_size, uint16_t width, uint8_t layer, ClientGraphicColor color, ClientGraphicOperation operation, uint16_t receiver_id) {
-    uint8_t payload[ClientGraphic::packet_size + CLIENT_CHARACTER_DATA_SIZE] = {0};
+    uint8_t payload[PACKET_SIZE + CLIENT_CHARACTER_DATA_SIZE] = {0};
 
     ClientGraphic graphic = make_client_graphic(name, ClientGraphicType::CHARACTER, start_x, start_y, width, layer, color, operation);
     graphic.details_a = font_size;
-    graphic.details_b = copy_client_text(payload + ClientGraphic::packet_size, text, CLIENT_CHARACTER_DATA_SIZE);
+    graphic.details_b = copy_client_text(payload + PACKET_SIZE, text, CLIENT_CHARACTER_DATA_SIZE);
     pack_client_graphic(graphic, payload);
 
     return ref_system.write_robot_interaction(RobotInteraction::DRAW_CLIENT_CHARACTER, payload, sizeof(payload), receiver_id);

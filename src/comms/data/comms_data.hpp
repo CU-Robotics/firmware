@@ -24,6 +24,7 @@ enum class TypeLabel : uint16_t {
     ReferenceState,
     EstimatedState,
     OverrideState,
+    RefDrawingData,
     CommsRefData,
     ConfigStart,
     ConfigurationStatus,

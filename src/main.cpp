@@ -183,6 +183,7 @@ int main() {
     Timer loop_timer;
     Timer stall_timer;
     Timer gimbal_power_timer;
+    Timer ref_drawing_timer;
 
     // start the main loop watchdog
     watchdog.start();
@@ -247,6 +248,14 @@ int main() {
         interrupts();
 
         override_request = false;
+        const ref_drawing_data& = comms_layer.get_hive_data().ref_drawing_data;
+        if (ref_drawing_data.num_graphics > 0 && ref_drawing_timer.delta() > 50) {
+            ref_drawing_timer.start();
+
+            ClientGraphic graphics[7] = {};
+            ref_drawing_data.fill_client_graphics(graphics);
+            ref_drawing.draw_graphics_with_pad(graphics, static_cast<uin8_t>(ref_drawing_data.num_graphics));
+        }
 
         if ((feed - estimated_state_map[Cfg::StateName::Feeder].get_position() > 2 && transmitter_manager.is_teensy_mode()) ||
             (target_state_map[Cfg::StateName::Feeder].get_position() - estimated_state_map[Cfg::StateName::Feeder].get_position() > 2 &&
