@@ -37,6 +37,11 @@ void HiveData::set_data(CommsData* data) {
         // override_state = *static_cast<OverrideState*>(data);
         break;
     }
+    case TypeLabel::RefDrawingData: {
+        RefDrawingData* rdd = static_cast<RefDrawingData*>(data);
+        memcpy(&ref_drawing_data, rdd, sizeof(RefDrawingData));
+        break;
+    }
     case TypeLabel::ConfigStart: {
         Cfg::ConfigStart* config_start = static_cast<Cfg::ConfigStart*>(data);
         if (config.is_configured()) {
@@ -127,7 +132,7 @@ void HiveData::set_data(CommsData* data) {
 	     TestLatencyData* latency_data_ = static_cast<TestLatencyData*>(data);
 	     memcpy(&latency_data, latency_data_, sizeof(TestLatencyData));
 	     break;
-     }
+    }
     default:
         safety::safety_procedure("HiveData::set_data: Invalid type label given to place in mega struct: %u\n", static_cast<uint32_t>(data->type_label));
     }

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "RefSystem.hpp"
+constexpr size_t MAX_REF_GRAPHICS = 7;
 
 enum class ClientGraphicOperation : uint8_t {
     NONE = 0,
@@ -40,13 +41,10 @@ enum class ClientLayerDeleteOperation : uint8_t {
 
 /// @brief Packed figure description used by player-client drawing packets.
 struct ClientGraphic {
-    /// @brief Size of one packed player-client figure description in bytes.
-    static constexpr uint8_t packet_size = 15;
-
     /// @brief Three-byte figure name used by the Player's Client to add, edit, or delete the figure.
     uint8_t name[3] = {0};
     /// @brief Figure operation field: no operation, add, edit, or delete.
-    ClientGraphicOperation operation = ClientGraphicOperation::ADD;
+    ClientGraphicOperation operation = ClientGraphicOperation::NONE;
     /// @brief Figure type field: line, rectangle, circle, ellipse, arc, float, integer, or character.
     ClientGraphicType type = ClientGraphicType::LINE;
     /// @brief Player-client drawing layer, from 0 to 9.
@@ -98,6 +96,13 @@ class RefDrawing {
     /// @param receiver_id Player's Client receiver ID, or 0 to use the sender robot's corresponding client.
     /// @return true when the drawing packet is accepted for transmission.
     bool draw_graphics(const ClientGraphic *graphics, uint8_t graphic_count, uint16_t receiver_id = 0);
+    /// @brief Draw or update a supported batch of packed Player's Client figures. Add padding to get to the
+    /// closest valid amount of graphics.
+    /// @param graphics Array of packed figure descriptions to send.
+    /// @param graphic_count Number of figures in the array; must be 1, 2, 5, or 7.
+    /// @param receiver_id Player's Client receiver ID, or 0 to use the sender robot's corresponding client.
+    /// @return true when the drawing packet is accepted for transmission.
+    bool draw_graphics_with_pad(const ClientGraphic graphics[7], uint8_t graphic_count, uint16_t receiver_id = 0);
     /// @brief Draw or update a straight line on the Player's Client.
     /// @param name Three-character figure name used for later edit or delete operations.
     /// @param start_x Starting x-coordinate.
