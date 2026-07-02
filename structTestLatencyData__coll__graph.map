@@ -1,0 +1,4 @@
+<map id="TestLatencyData" name="TestLatencyData">
+<area shape="rect" id="node1" title="Struct used to measure the round trip latency of the comms system." alt="" coords="17,80,139,107"/>
+<area shape="rect" id="node2" href="$structComms_1_1CommsData.html" title="base class for all data structs that want to be sent over comms." alt="" coords="5,5,151,32"/>
+</map>

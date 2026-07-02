@@ -1,0 +1,13 @@
+<map id="LowerFeederController" name="LowerFeederController">
+<area shape="rect" id="node1" title="Controller for the lower ball feeder on bottom fed." alt="" coords="424,468,577,495"/>
+<area shape="rect" id="node2" href="$structController.html" title="Parent controller struct, all controllers should be based off of this." alt="" coords="327,326,405,353"/>
+<area shape="rect" id="node3" href="$structCfg_1_1Controller.html" title="Controller configuration struct. This struct contains all the configuration data for a controller,..." alt="" coords="195,184,297,211"/>
+<area shape="rect" id="node4" href="$structComms_1_1CommsData.html" title="base class for all data structs that want to be sent over comms." alt="" coords="335,95,480,121"/>
+<area shape="rect" id="node5" href="$structCfg_1_1GearRatios.html" title="Gear ratios for a controller. These are generally used to convert between motor vaues and state value..." alt="" coords="197,95,311,121"/>
+<area shape="rect" id="node6" href="$structCfg_1_1SubController.html" title="Subcontroller configuration for a controller." alt="" coords="5,95,132,121"/>
+<area shape="rect" id="node7" href="$structCfg_1_1Gains.html" title="Gains for a sub controller." alt="" coords="27,5,110,32"/>
+<area shape="rect" id="node8" href="$structTimer.html" title="Timer class. Operates based on micros() and provides a simple interface for timing operations." alt="" coords="371,184,425,211"/>
+<area shape="rect" id="node10" href="$classGovernor.html" title="Use reference limits from config to convert ungoverned reference states to generated governed referen..." alt="" coords="463,326,538,353"/>
+<area shape="rect" id="node9" href="$structPIDFilter.html" title="PIDF filter used in controls. Gains are configurable via K." alt="" coords="860,326,933,353"/>
+<area shape="rect" id="node11" href="$classRobotStateMap.html" title="Manage all of the configured states." alt="" coords="566,184,678,211"/>
+</map>

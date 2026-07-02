@@ -1,0 +1,5 @@
+<map id="ICM20649" name="ICM20649">
+<area shape="rect" id="node1" title="Sensor access for an ICM20649 IMU Sensor. Child of the abstract IMUSensor class." alt="" coords="31,155,113,181"/>
+<area shape="rect" id="node2" href="$classAdafruitIMUSensor.html" title="Abstract parent class for all AdafruitIMUSensors, which give acceleration and gyroscope data." alt="" coords="5,80,139,107"/>
+<area shape="rect" id="node3" href="$classSensor.html" title="Abstract class representing a sensor. All sensors should inherit from this class." alt="" coords="41,5,103,32"/>
+</map>

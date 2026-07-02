@@ -1,0 +1,5 @@
+<map id="Transmitter" name="Transmitter">
+<area shape="rect" id="node1" title="A unifying interface for all transmitters." alt="" coords="30,5,118,32"/>
+<area shape="rect" id="node2" href="$classDR16.html" title="Wrapper for reading and mapping input from the DR16&#45;Receiver and associated controller." alt="" coords="5,80,60,107"/>
+<area shape="rect" id="node3" href="$classET16S.html" title="Class for W&#45;Fly transmitter and reciever to gather and map control data." alt="" coords="85,80,146,107"/>
+</map>

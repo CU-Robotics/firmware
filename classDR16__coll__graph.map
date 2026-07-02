@@ -1,0 +1,7 @@
+<map id="DR16" name="DR16">
+<area shape="rect" id="node1" title="Wrapper for reading and mapping input from the DR16&#45;Receiver and associated controller." alt="" coords="159,109,214,136"/>
+<area shape="rect" id="node2" href="$classTransmitter.html" title="A unifying interface for all transmitters." alt="" coords="5,5,93,32"/>
+<area shape="rect" id="node3" href="$structKeys.html" title="state of a set of keyboard keys" alt="" coords="117,5,168,32"/>
+<area shape="rect" id="node4" href="$structCfg_1_1DR16.html" title="Configuration struct for the DR16 transmitter." alt="" coords="192,5,272,32"/>
+<area shape="rect" id="node5" href="$structTimer.html" title="Timer class. Operates based on micros() and provides a simple interface for timing operations." alt="" coords="297,5,351,32"/>
+</map>
