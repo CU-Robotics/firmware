@@ -436,11 +436,15 @@ void ET16S::set_channel_data() {
 }
 
 void ET16S::test_connection() {		
+	static uint32_t last_connected_time = 0;
+
 	uint16_t flag_byte = channel[16].raw_format;
 	if (flag_byte & DISCONNECT) {
-		is_connect = false;
+		is_connect = (millis() - last_connected_time) < 500; // if we have been disconnected for more than 1 second, we are not connected
+
 	} else {
 		is_connect = true;
+		last_connected_time = millis();
 	}
 }
 
