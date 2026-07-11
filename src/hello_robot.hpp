@@ -129,7 +129,7 @@ class HelloRobot {
     std::optional<RobotStateMap> estimated_state_map;
     
     /// @brief Interrupt safe estimated state map
-	std::optional<RobotStateMap> estimated_state_map_interrupt_safe; 
+    std::unique_ptr<RobotStateMap> estimated_state_map_interrupt_safe;
 
     /// @brief Map containing the immediate reference values handed to controllers.
     std::optional<RobotStateMap> reference_map;

@@ -46,7 +46,7 @@ void HelloRobot::init() {
     controller_manager.init(config.controllers, can, config.states);
 
     estimated_state_map.emplace(config.states);
-    estimated_state_map_interrupt_safe.emplace(config.states);
+    estimated_state_map_interrupt_safe = std::make_unique<RobotStateMap>(config.states);
     reference_map.emplace(config.states);
     target_state_map.emplace(config.states);      // Temp ungoverned state
     hive_state_map_offset.emplace(config.states); // Hive offset state

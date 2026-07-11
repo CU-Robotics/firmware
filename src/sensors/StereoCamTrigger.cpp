@@ -3,7 +3,7 @@
 #include "transmitter_utils.hpp"
 #include <core_pins.h>
 
-std::optional<RobotStateMap>* StereoCamTrigger::estimated_state_map_interrupt_safe = nullptr;
+std::unique_ptr<RobotStateMap>* StereoCamTrigger::estimated_state_map_interrupt_safe = nullptr;
 
 StereoCamTrigger::StereoCamTrigger(const Cfg::StereoCamTrigger& config): Sensor(), config(config), comms_data(config.camera_trigger_name) {}
 
@@ -19,7 +19,7 @@ void StereoCamTrigger::track_exposures() {
   
   counter += 1;
 
-  if(estimated_state_map_interrupt_safe != nullptr && estimated_state_map_interrupt_safe->has_value()) {
+  if (estimated_state_map_interrupt_safe != nullptr && *estimated_state_map_interrupt_safe != nullptr) {
     // copy the estimated state map to the local estimated state map
     (*estimated_state_map_interrupt_safe)->fill_state_array(comms_data.state);
     comms_data.frame_count = counter;
@@ -60,7 +60,7 @@ void StereoCamTrigger::init() {
   start(mpf);
 }
 
-void StereoCamTrigger::provide_isr_map(std::optional<RobotStateMap> *safe_map) {
+void StereoCamTrigger::provide_isr_map(std::unique_ptr<RobotStateMap> *safe_map) {
     estimated_state_map_interrupt_safe = safe_map;
 }
 
