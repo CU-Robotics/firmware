@@ -29,9 +29,13 @@ struct FirmwareData {
     TestData test_data;
     /// @brief Big test data
     BigTestData big_test_data;
+    /// @brief Test Latency Data
+    TestLatencyData latency_data;
     
     /// @brief TargetState data
     TargetState temp_reference;
+    /// @brief Reference state output by the reference governor. This is what controllers should be trying to track.
+    ReferenceState reference_state;
 
     /// @brief Estimated state
     EstimatedState estimated_state;

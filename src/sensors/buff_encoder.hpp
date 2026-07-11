@@ -6,6 +6,7 @@
 #include "sensors/sensor.hpp"
 #include "comms/data/buff_encoder_data.hpp"
 
+constexpr uint32_t read_zero_pos_max_attempts = 10;
 
 // Encoder Registers and Config
 constexpr uint32_t MT6835_OP_READ = 0b0011;
@@ -55,6 +56,14 @@ public:
     /// @note Returns and sets m_angle when it reads
     void read() override;
 
+    /// @brief Read the ZERO_POS registers from the encoder
+    /// @return The ZERO_POS value in degrees (0-360)
+    float read_zero_pos();
+
+    /// @brief Write the ZERO_POS registers to the encoder
+    /// @param zero_pos_raw 12-bit value (0-4095) to write
+    void write_zero_pos(uint16_t zero_pos_raw);
+
     /// @brief Send the current data to comms
     void send_to_comms() const override;
 
@@ -68,6 +77,12 @@ public:
  
     /// @brief Print the data for debugging
     void print() const;
+
+    /// @brief Compute CRC8 per MT6835 datasheet spec (poly = X^8 + X^2 + X + 1, MSB first)
+    /// @param data Pointer to the 3 bytes covering ANGLE[20:0] + STATUS[2:0] (i.e. data[2], data[3], data[4] from the angle burst read)
+    /// @param len Number of bytes (should be 3 for this chip)
+    /// @return Computed 8-bit CRC
+    uint8_t mt6835_crc8(const uint8_t* data, size_t len) const;
 
 private:
 
