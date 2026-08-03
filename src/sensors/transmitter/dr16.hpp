@@ -228,8 +228,8 @@ public:
 	/// @brief Position offset for chassis x (so the sentry doesn't drive to 0,0)
 	float pos_offset_x = 0;
 	/// @brief Position offset for chassis y (so the sentry doesn't drive to 0,0)
-    float pos_offset_y = 0;
-	
+	float pos_offset_y = 0;
+
 	/// @brief Timer for control input for integrating mouse velocities into position target for manual controls
 	Timer control_input_timer;
 	/// @brief Timer for tracking long loops that can happen at startup or halts

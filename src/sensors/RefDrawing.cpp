@@ -1,5 +1,7 @@
 #include "RefDrawing.hpp"
 
+RefDrawing ref_drawing(ref);
+
 static constexpr uint8_t CLIENT_CHARACTER_DATA_SIZE = 30;
 
 static void put_u32(uint8_t *data, uint32_t value) {

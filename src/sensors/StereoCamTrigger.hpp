@@ -8,7 +8,6 @@
 #include <memory>
 
 
-
 /// @brief define to enable FPS logging in the timer interrupt callback (debugging)
 
 /// @brief class to manage triggering synchronized exposures for dual USB cameras
@@ -19,6 +18,8 @@ class StereoCamTrigger : public Sensor{
 
     /// @brief data to be sent to comms
     StereoCamTriggerData comms_data;
+	/// @brief local estimated state map for interrupt safe data transfer
+    static std::unique_ptr<RobotStateMap>* estimated_state_map_interrupt_safe;
     
     /// @brief Teensyduino timer instance used to maintain signal
     IntervalTimer timer;
@@ -47,6 +48,11 @@ class StereoCamTrigger : public Sensor{
     
     /// @brief initialize trigger manager by starting the interval timer
     void init() override;
+
+    /// @brief Bind the interrupt-safe estimated state map used by the exposure ISR.
+    /// @param safe_map Interrupt-safe estimated state map owned by HelloRobot.
+    void provide_isr_map(std::unique_ptr<RobotStateMap> *safe_map) override;
+
     /// @brief empty read function since the updates are done in the timer interrupt callback
     void read() override;
     /// @brief Send exposure timestamp and estimated state at exposure to comms

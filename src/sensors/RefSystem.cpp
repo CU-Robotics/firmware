@@ -1,6 +1,7 @@
 #include "RefSystem.hpp"
 #include "RefSystemPacketDefs.hpp"
 #include "comms/data/sendable.hpp"
+RefSystem ref; // Global instance
 
 // Uncomment to enable debug prints
 // #define REF_SYSTEM_DEBUG
