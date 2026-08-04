@@ -1,6 +1,6 @@
 # verify that curl is installed
-sudo apt update
-sudo apt install -y curl
+sudo pacman -Sy --noconfirm
+sudo pacman -S --needed --noconfirm curl
 
 # download arduino-cli's install script
 curl -o arduino-install-thing.sh https://raw.githubusercontent.com/arduino/arduino-cli/master/install.sh 
@@ -14,5 +14,6 @@ rm arduino-install-thing.sh
 # install the needed board/tools for Teensy
 arduino-cli core install teensy:avr@1.59.0 --additional-urls "https://www.pjrc.com/teensy/package_teensy_index.json"
 
-# install the compiler if we're running on arm (aarch64)
-./tools/install_compiler.sh
+# install the compiler
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+"$SCRIPT_DIR/install_compiler.sh"

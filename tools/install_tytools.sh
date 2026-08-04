@@ -9,36 +9,31 @@ OS="$(uname -s)"
 echo "Detected OS: $OS"
 
 if [[ "$OS" == "Linux" ]]; then
-  echo "--> Running Linux tytools installer..."
+  echo "--> Running Arch tytools installer! :D"
 
-  # 1. Ensure curl is present
-  echo "Installing curl..."
-  sudo apt update
-  sudo apt install -y curl
+  # 1. Ensure build tools (base-devel), git, and curl are present
+  echo "Ensuring base-devel, git, and curl are up to date..."
+  sudo pacman -Sy --noconfirm
+  sudo pacman -S --needed --noconfirm base-devel git curl
 
-  # 2. Prepare keyrings directory
-  echo "Creating /etc/apt/keyrings with proper perm..."
-  sudo mkdir -p -m0755 /etc/apt/keyrings
+  # 2. Prepare a temporary build directory for AUR package
+  echo "Creating temp build directory..."   
+  BUILD_DIR="$(mktemp -d)"
 
-  # 3. Download Koromix key
-  echo "Downloading Koromix GPG key..."
-  sudo curl -fsSL \
-    https://download.koromix.dev/debian/koromix-archive-keyring.gpg \
-    -o /etc/apt/keyrings/koromix-archive-keyring.gpg
+  # 3. Clone the tytools AUR package
+  echo "Downloading tytools AUR pkg..."
+  git clone https://aur.archlinux.org/tytools.git "$BUILD_DIR/tytools"
 
-  # 4. Add repo to sources.list.d
-  echo "Adding Koromix repo..."
-  echo \
-    "deb [signed-by=/etc/apt/keyrings/koromix-archive-keyring.gpg] \
-https://download.koromix.dev/debian stable main" \
-    | sudo tee /etc/apt/sources.list.d/koromix.dev-stable.list > /dev/null
+  # 4. Enter the cloned package directory
+  echo "Entering tytools build dir..." 
+  cd "$BUILD_DIR/tytools"
 
-  # 5. Update & install
-  echo "Updating APT and installing tytools..."
-  sudo apt update
-  sudo apt install -y tytools
+  # 5. Build and install tytools with makepkg
+  echo "Building..."
+  makepkg -si --noconfirm
+  cd - >/dev/null && rm -rf "$BUILD_DIR"
 
-  echo "[OK] tytools installed!"
+  echo "[DONE] tytools installed! yay! :3"
 
 elif [[ "$OS" == "Darwin" ]]; then
   echo "--> Running macOS installer (tycmd)..."
