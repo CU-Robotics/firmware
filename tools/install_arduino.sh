@@ -58,4 +58,4 @@ arduino-cli core install teensy:avr@1.59.0 --additional-urls "https://www.pjrc.c
 
 # install the compiler
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-(cd "$SCRIPT_DIR/.." && bash "$SCRIPT_DIR/install_compiler.sh")
+"$SCRIPT_DIR/install_compiler.sh"
