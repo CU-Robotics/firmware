@@ -1,0 +1,4 @@
+<map id="GIM" name="GIM">
+<area shape="rect" id="node1" title="Motor driver for the GIM motor." alt="" coords="9,80,56,107"/>
+<area shape="rect" id="node2" href="$classMotor.html" title="An abstract class holding common information for individual CAN&#45;capable motors." alt="" coords="5,5,60,32"/>
+</map>

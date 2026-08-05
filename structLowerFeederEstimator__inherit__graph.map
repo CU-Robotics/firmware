@@ -1,0 +1,4 @@
+<map id="LowerFeederEstimator" name="LowerFeederEstimator">
+<area shape="rect" id="node1" title="Estimate the state of the feeder ball velocity for the lower feeder based on the feeder encoder veloc..." alt="" coords="5,80,159,107"/>
+<area shape="rect" id="node2" href="$structEstimator.html" title="Parent estimator struct. All estimators should inherit from this." alt="" coords="43,5,121,32"/>
+</map>

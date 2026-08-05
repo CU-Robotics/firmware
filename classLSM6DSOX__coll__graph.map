@@ -1,0 +1,8 @@
+<map id="LSM6DSOX" name="LSM6DSOX">
+<area shape="rect" id="node1" title="Sensor access for an LSM6DSOX IMU Sensor. Child of the abstract AdafruitIMUSensor class." alt="" coords="174,171,269,197"/>
+<area shape="rect" id="node2" href="$classAdafruitIMUSensor.html" title="Abstract parent class for all AdafruitIMUSensors, which give acceleration and gyroscope data." alt="" coords="5,81,139,108"/>
+<area shape="rect" id="node3" href="$classSensor.html" title="Abstract class representing a sensor. All sensors should inherit from this class." alt="" coords="41,5,103,32"/>
+<area shape="rect" id="node4" href="$structLsmSensorData.html" title="Structure for the LSM sensor." alt="" coords="163,81,279,108"/>
+<area shape="rect" id="node5" href="$structComms_1_1CommsData.html" title="base class for all data structs that want to be sent over comms." alt="" coords="214,5,359,32"/>
+<area shape="rect" id="node6" href="$structCfg_1_1LsmImu.html" title="LSM IMU configuration struct." alt="" coords="304,81,400,108"/>
+</map>
