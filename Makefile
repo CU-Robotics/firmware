@@ -119,8 +119,7 @@ MAKEFLAGS += -j$(nproc)
 
 
 # Main build target; depends on the target executable and git scraper
-build: clangd $(BUILD_DIR)/$(TARGET_EXEC)
-
+build:	clangd $(BUILD_DIR)/$(TARGET_EXEC)
 # Final linking step to create the executable.
 # This rule links all the object files to produce the final ELF executable.
 # It depends on all object files and the 'git_scraper' target to ensure
@@ -154,7 +153,8 @@ $(BUILD_DIR)/$(TARGET_EXEC): git_scraper $(SRC_OBJS) $(LIBRARY_OBJS) $(TEENSY_OB
     # Disassemble the ELF executable to a .dump file
 	@$(OBJDUMP) -dstz $(BUILD_DIR)/$(TARGET_EXEC).elf > $(BUILD_DIR)/$(TARGET_EXEC).dump
 
-
+# Ensure git_scraper finishes before compiling any object files
+$(SRC_OBJS) $(LIBRARY_OBJS) $(TEENSY_OBJS): | git_scraper
 # Build step for compiling C source files
 $(BUILD_DIR)/%.c.o: %.c
 	@mkdir -p $(dir $@)
@@ -209,6 +209,7 @@ clean_teensy4:
 -include $(SRC_DEPS)
 
 # Build, run, and clean up the git scraper tool to store current Git info in a header file
+.PHONY: git_scraper
 git_scraper:
 	@g++ -std=gnu++17 $(GIT_SCRAPER) -o $(TOOLS_DIR)/git_scraper
 	@$(TOOLS_DIR)/git_scraper
