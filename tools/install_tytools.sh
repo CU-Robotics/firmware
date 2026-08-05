@@ -34,10 +34,9 @@ if [[ "$OS" == "Linux" ]]; then
   if [[ "$DISTRO" == "arch" ]]; then
     echo "--> Starting Arch tytools installer! :D"
 
-    # 1. Ensure build tools (base-devel), git, and curl are present
-    echo "Ensuring base-devel, git, and curl are up to date..."
-    sudo pacman -Sy --noconfirm
-    sudo pacman -S --needed --noconfirm base-devel git curl
+    # 1. Ensure build tools (base-devel), git, and curl are present (IF YOU HAVE PROBLEM WITH SYU INSTALL MANUALLY!!!)
+    echo "Ensuring base-devel, git, and curl are up to date..." 
+    sudo pacman -Syu --needed --noconfirm base-devel git curl
 
     # 2. Prepare a temporary build directory for AUR package
     echo "Creating temp build directory..."

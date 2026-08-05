@@ -24,11 +24,10 @@ detect_distro() {
 DISTRO="$(detect_distro)"
 echo "Detected distro family: $DISTRO"
 
-# verify that curl is installed
+# verify that curl is installed (IF YOU HAVE A PROBLEM WITH SYU INSTALL MANUALLY!!)
 case "$DISTRO" in
   arch)
-    sudo pacman -Sy --noconfirm
-    sudo pacman -S --needed --noconfirm curl
+    sudo pacman -Syu --needed --noconfirm curl
     ;;
   debian)
     sudo apt update
