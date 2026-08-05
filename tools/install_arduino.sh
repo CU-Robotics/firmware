@@ -4,6 +4,7 @@
 # Installs arduino-cli + the Teensy core.
 
 detect_distro() {
+  if [[ "$(uname -s)" == "Darwin" ]]; then echo "mac"; return; fi
   if [[ -r /etc/os-release ]]; then
     . /etc/os-release
     case "${ID:-}" in
@@ -32,6 +33,10 @@ case "$DISTRO" in
   debian)
     sudo apt update
     sudo apt install -y curl
+    ;;
+  mac)
+    # macOS ships with curl I think, homebrew install as fall back yep.
+    command -v curl >/dev/null 2>&1 || brew install curl
     ;;
   *)
     echo "[WARN] Unsupported distro. Please install 'curl' manually, then re-run." >&2
