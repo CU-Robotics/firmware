@@ -34,7 +34,7 @@ public:
 	/// @brief Whether the mode has been changed in between the last two reads.
 	/// @return true if the mode has been changed, false otherwise.
 	virtual bool mode_changed() = 0;
-	
+	virtual bool check_zeroed_state() = 0;
 	/// @brief Uses the transmitter input to update the target state map with the desired setpoints for each state.
 	/// @param estimated_state_map The current estimated state of the robot.
 	/// @param target_state_map The map of target states to update.

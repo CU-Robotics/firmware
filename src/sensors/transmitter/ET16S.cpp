@@ -582,7 +582,12 @@ bool ET16S::is_hive_mode() {
 bool ET16S::mode_changed(){
 	return mode_changed_flag;
 }
-
+bool ET16S::check_zeroed_state() {
+    if (get_wheel() == 0.0f && get_r_switch() == SwitchPos::BACKWARD) {
+		return true;
+    }
+    else (return false)
+}
 
 ET16SData ET16S::get_ET16S_data(){
 	ET16SData ET16S_data;

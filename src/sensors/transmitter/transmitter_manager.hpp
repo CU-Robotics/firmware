@@ -29,7 +29,7 @@ public:
     /// @brief Whether the mode has been changed in between the last two reads.
     /// @return true if the mode has been changed, false otherwise.
     bool mode_changed();
-    
+    bool check_zeroed_state();
     /// @copydoc Transmitter::manual_controls
     void manual_controls(const RobotStateMap& estimated_state_map, RobotStateMap& target_state_map, bool not_safety_mode, float& feed, float& last_feed);
 

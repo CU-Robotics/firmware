@@ -69,6 +69,14 @@ bool TransmitterManager::mode_changed() {
         return false; // default to no mode change if not initialized
     }
 }
+bool TransmitterManager::check_zeroed_state() {
+    if (transmitter) {
+        return transmitter->check_zeroed_state();
+    } else {
+        safety::safety_procedure("TransmitterManager::mode_changed called before transmitter was initialized");
+        return false; // default to state not zeroed if not initialized
+    }
+}
 
 void TransmitterManager::manual_controls(const RobotStateMap& estimated_state_map, RobotStateMap& target_state_map, bool not_safety_mode, float& feed, float& last_feed) {
     if (transmitter) {

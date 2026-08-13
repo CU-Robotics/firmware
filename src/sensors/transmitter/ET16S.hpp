@@ -225,7 +225,9 @@ class ET16S : public Transmitter {
 
 	/// @brief getter for raw data
 	/// @return raw data
-	uint8_t* get_raw() { return m_inputRaw; }
+    uint8_t *get_raw() { return m_inputRaw; }
+
+    bool check_zeroed_state();
 
 	
 private:

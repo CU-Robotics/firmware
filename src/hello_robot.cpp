@@ -204,8 +204,8 @@ void HelloRobot::check_safety() {
     }
     last_gimbal_power = ref.ref_data.robot_performance.gimbal_power_active;
     bool gimbal_power_recently_turned_on = gimbal_power_timer.get_elapsed_micros_no_restart() < 3000000;
-
-    not_safety_mode = (!transmitter_manager.is_safety_mode() && Comms::comms_layer.is_configured() && !is_slow_loop && ref.ref_data.robot_performance.gimbal_power_active && !gimbal_power_recently_turned_on);
+    bool inputs_zeroed = (transmitter_manager.mode_changed() && transmitter_manager.check_zeroed_state());
+    not_safety_mode = (!transmitter_manager.is_safety_mode() && Comms::comms_layer.is_configured() && !is_slow_loop && ref.ref_data.robot_performance.gimbal_power_active && !gimbal_power_recently_turned_on && !inputs_zeroed);
 
     safety::set_safety_mode(!not_safety_mode);
 
