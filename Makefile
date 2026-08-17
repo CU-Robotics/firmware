@@ -83,16 +83,6 @@ CXXFLAGS := $(CPU_CFLAGS) -std=gnu++23 \
 # -Map=... and --cref: Generate a cross-reference map file
 LINKING_FLAGS = -Wl,--gc-sections,--relax,-Tteensy4/imxrt1062_t41.ld,--print-memory-usage,-Map=$(BUILD_DIR)/$(TARGET_EXEC).map,--cref
 
-# Set the Arduino path based on the detected operating system
-ifeq ($(UNAME),Darwin)
-ARDUINO_PATH = $(abspath $(HOME)/Library/Arduino15)
-$(info We've detected you are using a Mac! Consult God if this breaks.)
-endif
-ifeq ($(UNAME),Linux)
-ARDUINO_PATH = $(abspath $(HOME)/.arduino15)
-$(info We've detected you're on Linux! Nerd.)
-endif
-
 # Base arm-none-eabi and Teensyduino tool paths
 COMPILER_TOOLS_PATH = $(TOOLS_DIR)/compiler/arm-gnu-toolchain/bin
 TARGET_TRIPLE ?= arm-none-eabi
