@@ -118,18 +118,12 @@ MAKEFLAGS += -j$(nproc)
 .PHONY: build
 
 
-# Main build target; depends on the target executable and git scraper
 build:	clangd $(BUILD_DIR)/$(TARGET_EXEC)
-# Final linking step to create the executable.
-# This rule links all the object files to produce the final ELF executable.
-# It depends on all object files and the 'git_scraper' target to ensure
-# that Git information is up-to-date before linking.
 $(BUILD_DIR)/$(TARGET_EXEC): git_scraper $(SRC_OBJS) $(LIBRARY_OBJS) $(TEENSY_OBJS) 
 	@$(COMPILER_CPP) $(CPPFLAGS) $(CXXFLAGS) $(LIBRARY_OBJS) $(TEENSY_OBJS) $(SRC_OBJS) $(LINKING_FLAGS) -o $(BUILD_DIR)/$(TARGET_EXEC).elf
-	@cp $(BUILD_DIR)/$(TARGET_EXEC).elf .
 	@echo [Constructing $(TARGET_EXEC).hex]
-	@$(OBJCOPY) -O ihex -R .eeprom $(TARGET_EXEC).elf $(TARGET_EXEC).hex
-	@chmod +x $(TARGET_EXEC).hex
+	@$(OBJCOPY) -O ihex -R .eeprom $(BUILD_DIR)/$(TARGET_EXEC).elf $(BUILD_DIR)/$(TARGET_EXEC).hex
+	@chmod +x $(BUILD_DIR)/$(TARGET_EXEC).hex
 	@$(OBJDUMP) -dstz $(BUILD_DIR)/$(TARGET_EXEC).elf > $(BUILD_DIR)/$(TARGET_EXEC).dump
 
 # Ensure git_scraper finishes before compiling any object files
@@ -164,7 +158,6 @@ docs: build
 # Clean the build directory and remove generated executables
 clean:
 	rm -rf $(BUILD_DIR)
-	rm -rf $(TARGET_EXEC).elf $(TARGET_EXEC).hex $(TARGET_EXEC).map $(TARGET_EXEC).dump
 	rm -f compile_commands.json
 
 # Clean only the source object files
@@ -196,7 +189,7 @@ git_scraper:
 # Upload the firmware to the Teensy device
 upload: build
 	@echo [Uploading] - If this fails, press the button on the teensy and re-run 'make upload'
-	@tycmd upload $(TARGET_EXEC).hex
+	@tycmd upload $(BUILD_DIR)/$(TARGET_EXEC).hex
 	@sleep 0.4s
 	@bash $(TOOLS_DIR)/monitor.sh
 
@@ -212,7 +205,7 @@ install:
 gdb:
 	@echo [Starting GDB]
 	@bash $(TOOLS_DIR)/prepare_gdb.sh
-	@$(GDB) -x $(TOOLS_DIR)/gdb_commands.txt --args $(TARGET_EXEC).elf
+	@$(GDB) -x $(TOOLS_DIR)/gdb_commands.txt --args $(BUILD_DIR)/$(TARGET_EXEC).elf
 
 
 # monitors currently running firmware on robot
