@@ -2,19 +2,18 @@
 # Example: make clean build FEATURE_DEFINES="-DPROFILER -DCOMMS_DEBUG"
 FEATURE_DEFINES ?=
 
+BUILD_DIR := build
+TOOLS_DIR := tools
+
 TARGET := firmware
-TARGET_ELF := $(TARGET).elf
-TARGET_HEX := $(TARGET).hex
-TARGET_MAP := $(TARGET).map
-TARGET_DUMP := $(TARGET).dump
+TARGET_ELF := $(BUILD_DIR)/$(TARGET).elf
+TARGET_HEX := $(BUILD_DIR)/$(TARGET).hex
+TARGET_MAP := $(BUILD_DIR)/$(TARGET).map
+TARGET_DUMP := $(BUILD_DIR)$(TARGET).dump
 
-BUILD_DIR := ./build
-
-TOOLS_DIR := ./tools
-
-TEENSY_SRC_DIRS := ./teensy4
-LIBRARY_SRC_DIRS := ./libraries
-SRC_SRC_DIRS := ./src
+TEENSY_SRC_DIRS := teensy4
+LIBRARY_SRC_DIRS := libraries
+SRC_SRC_DIRS := src
 
 TEENSY_SRC := $(shell find $(TEENSY_SRC_DIRS) -name '*.cpp' -or -name '*.c')
 LIBRARY_SRC := $(shell find $(LIBRARY_SRC_DIRS) -name '*.cpp' -or -name '*.c')
@@ -63,8 +62,7 @@ PROJECT_CXXFLAGS := $(COMMON_COMPILE_FLAGS) $(CXX_LANGUAGE_FLAGS) $(CXX_WARNING_
 # --relax: Allow linker to relax some constraints to sometimes generate smaller code
 # -Tteensy4/imxrt1062_t41.ld: Use the Teensy 4.1 linker script
 # -Map=... and --cref: Generate a cross-reference map file
-PROJECT_LDFLAGS := $(ARCH_FLAGS) --specs=nano.specs \
-		-Wl,--gc-sections,--relax,-Tteensy4/imxrt1062_t41.ld,--print-memory-usage,-Map=$(BUILD_DIR)/$(TARGET_MAP),--cref
+PROJECT_LDFLAGS := $(ARCH_FLAGS) --specs=nano.specs -Wl,--gc-sections,--relax,-Tteensy4/imxrt1062_t41.ld,--print-memory-usage,-Map=$(TARGET_MAP),--cref
 
 COMPILER_TOOLS_PATH = $(TOOLS_DIR)/compiler/arm-gnu-toolchain/bin
 TARGET_TRIPLE ?= arm-none-eabi
@@ -85,13 +83,18 @@ GIT_SCRAPER = $(TOOLS_DIR)/git_scraper.cpp
 .PHONY: build docs clean upload install gdb monitor kill restart help clangd git_scraper
 
 
-build:	clangd $(BUILD_DIR)/$(TARGET_ELF)
-$(BUILD_DIR)/$(TARGET_ELF): git_scraper $(SRC_OBJS) $(LIBRARY_OBJS) $(TEENSY_OBJS)
-	@$(COMPILER_CPP) $(PROJECT_LDFLAGS) $(LDFLAGS) $(LIBRARY_OBJS) $(TEENSY_OBJS) $(SRC_OBJS) $(LDLIBS) -o $(BUILD_DIR)/$(TARGET_ELF)
-	@echo [Constructing $(TARGET_HEX)]
-	@$(OBJCOPY) -O ihex -R .eeprom $(BUILD_DIR)/$(TARGET_ELF) $(BUILD_DIR)/$(TARGET_HEX)
-	@chmod +x $(BUILD_DIR)/$(TARGET_HEX)
-	@$(OBJDUMP) -dstz $(BUILD_DIR)/$(TARGET_ELF) > $(BUILD_DIR)/$(TARGET_DUMP)
+build: clangd $(TARGET_ELF)
+
+$(TARGET_ELF): git_scraper $(SRC_OBJS) $(LIBRARY_OBJS) $(TEENSY_OBJS)
+	@printf "LINK     %s\n" "$@"
+	@$(COMPILER_CPP) $(PROJECT_LDFLAGS) $(LDFLAGS) $(LIBRARY_OBJS) $(TEENSY_OBJS) $(SRC_OBJS) $(LDLIBS) -o $@
+
+	@printf "OBJCOPY  %s\n" "$(TARGET_HEX)"
+	@$(OBJCOPY) -O ihex -R .eeprom $@ $(TARGET_HEX)
+	@chmod +x $(TARGET_HEX)
+
+	@printf "OBJDUMP  %s\n" "$(TARGET_DUMP)"
+	@$(OBJDUMP) -dstz $@ > $(TARGET_DUMP)
 
 
 # Ensure git_scraper finishes before compiling any object files
@@ -100,17 +103,16 @@ $(SRC_OBJS) $(LIBRARY_OBJS) $(TEENSY_OBJS): | git_scraper
 
 $(BUILD_DIR)/%.c.o: %.c
 	@mkdir -p $(dir $@)
-	@echo [Building $<]
+	@printf "CC       %s\n" "$<"
 	@$(COMPILER_C) $(PROJECT_CPPFLAGS) $(CPPFLAGS) $(PROJECT_CFLAGS) $(CFLAGS) $(DEPFLAGS) -c $< -o $@
 	@$(OBJDUMP) -dstz $@ > $@.dump
 
 
 $(BUILD_DIR)/%.cpp.o: %.cpp
 	@mkdir -p $(dir $@)
-	@echo [Building $<]
+	@printf "CXX      %s\n" "$<"
 	@$(COMPILER_CPP) $(PROJECT_CPPFLAGS) $(CPPFLAGS) $(PROJECT_CXXFLAGS) $(CXXFLAGS) $(DEPFLAGS) -c $< -o $@
 	@$(OBJDUMP) -dstz $@ > $@.dump
-
 
 DOC_SCRIPT = $(TOOLS_DIR)/build_docs.sh
 
@@ -140,7 +142,7 @@ git_scraper:
 # Upload firmware to Teensy and start monitoring
 upload: build
 	@echo [Uploading] - If this fails, press the button on the teensy and re-run 'make upload'
-	@tycmd upload $(BUILD_DIR)/$(TARGET_HEX)
+	@tycmd upload $(TARGET_HEX)
 	@sleep 0.4s
 	@bash $(TOOLS_DIR)/monitor.sh
 
@@ -156,7 +158,7 @@ install:
 gdb:
 	@echo [Starting GDB]
 	@bash $(TOOLS_DIR)/prepare_gdb.sh
-	@$(GDB) -x $(TOOLS_DIR)/gdb_commands.txt --args $(BUILD_DIR)/$(TARGET_ELF)
+	@$(GDB) -x $(TOOLS_DIR)/gdb_commands.txt --args $(TARGET_ELF)
 
 
 # monitors currently running firmware on robot
@@ -211,3 +213,4 @@ $(COMPILE_DB): Makefile $(COMPILE_DB_SCRIPT) $(COMPILE_DB_DIR_DEPS)
 	CFLAGS='$(PROJECT_CFLAGS) $(CFLAGS)' \
 	SRC_FILES='$(SRC_SRC) $(LIBRARY_SRC) $(TEENSY_SRC)' \
 	"$(COMPILE_DB_SCRIPT)"
+	@printf "CLANGD   compile_commands.json generated\n"
