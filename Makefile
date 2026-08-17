@@ -1,11 +1,14 @@
 # Made by Jack Miller 2024 (Github: guywithhat99)
-# Thanks to Jackson Stepka (Github: Pandabear1125); a lot of code is based off his original makefile 
+# Thanks to Jackson Stepka (Github: Pandabear1125); a lot of code is based off his original makefile
 
 # Detect the current operating system using uname
 UNAME := $(shell uname -s)
 
-# The name of the target executable
-TARGET_EXEC := firmware
+TARGET := firmware
+TARGET_ELF := $(TARGET).elf
+TARGET_HEX := $(TARGET).hex
+TARGET_MAP := $(TARGET).map
+TARGET_DUMP := $(TARGET).dump
 
 # Directory where build outputs will be placed
 BUILD_DIR := ./build
@@ -81,7 +84,7 @@ CXXFLAGS := $(CPU_CFLAGS) -std=gnu++23 \
 # -Tteensy4/imxrt1062_t41.ld: Use the Teensy 4.1 linker script
 # --print-memory-usage: Print memory usage after linking
 # -Map=... and --cref: Generate a cross-reference map file
-LINKING_FLAGS = -Wl,--gc-sections,--relax,-Tteensy4/imxrt1062_t41.ld,--print-memory-usage,-Map=$(BUILD_DIR)/$(TARGET_EXEC).map,--cref
+LINKING_FLAGS = -Wl,--gc-sections,--relax,-Tteensy4/imxrt1062_t41.ld,--print-memory-usage,-Map=$(BUILD_DIR)/$(TARGET_MAP),--cref
 
 # Base arm-none-eabi and Teensyduino tool paths
 COMPILER_TOOLS_PATH = $(TOOLS_DIR)/compiler/arm-gnu-toolchain/bin
@@ -106,13 +109,13 @@ MAKEFLAGS += -j$(nproc)
 
 .PHONY: build docs clean upload install gdb monitor kill restart help clangd git_scraper
 
-build:	clangd $(BUILD_DIR)/$(TARGET_EXEC)
-$(BUILD_DIR)/$(TARGET_EXEC): git_scraper $(SRC_OBJS) $(LIBRARY_OBJS) $(TEENSY_OBJS) 
-	@$(COMPILER_CPP) $(CPPFLAGS) $(CXXFLAGS) $(LIBRARY_OBJS) $(TEENSY_OBJS) $(SRC_OBJS) $(LINKING_FLAGS) -o $(BUILD_DIR)/$(TARGET_EXEC).elf
-	@echo [Constructing $(TARGET_EXEC).hex]
-	@$(OBJCOPY) -O ihex -R .eeprom $(BUILD_DIR)/$(TARGET_EXEC).elf $(BUILD_DIR)/$(TARGET_EXEC).hex
-	@chmod +x $(BUILD_DIR)/$(TARGET_EXEC).hex
-	@$(OBJDUMP) -dstz $(BUILD_DIR)/$(TARGET_EXEC).elf > $(BUILD_DIR)/$(TARGET_EXEC).dump
+build:	clangd $(BUILD_DIR)/$(TARGET_ELF)
+$(BUILD_DIR)/$(TARGET_ELF): git_scraper $(SRC_OBJS) $(LIBRARY_OBJS) $(TEENSY_OBJS)
+	@$(COMPILER_CPP) $(CPPFLAGS) $(CXXFLAGS) $(LIBRARY_OBJS) $(TEENSY_OBJS) $(SRC_OBJS) $(LINKING_FLAGS) -o $(BUILD_DIR)/$(TARGET_ELF)
+	@echo [Constructing $(TARGET_HEX)]
+	@$(OBJCOPY) -O ihex -R .eeprom $(BUILD_DIR)/$(TARGET_ELF) $(BUILD_DIR)/$(TARGET_HEX)
+	@chmod +x $(BUILD_DIR)/$(TARGET_HEX)
+	@$(OBJDUMP) -dstz $(BUILD_DIR)/$(TARGET_ELF) > $(BUILD_DIR)/$(TARGET_DUMP)
 
 # Ensure git_scraper finishes before compiling any object files
 $(SRC_OBJS) $(LIBRARY_OBJS) $(TEENSY_OBJS): | git_scraper
@@ -159,7 +162,7 @@ git_scraper:
 # Upload the firmware to the Teensy device
 upload: build
 	@echo [Uploading] - If this fails, press the button on the teensy and re-run 'make upload'
-	@tycmd upload $(BUILD_DIR)/$(TARGET_EXEC).hex
+	@tycmd upload $(BUILD_DIR)/$(TARGET_HEX)
 	@sleep 0.4s
 	@bash $(TOOLS_DIR)/monitor.sh
 
@@ -175,7 +178,7 @@ install:
 gdb:
 	@echo [Starting GDB]
 	@bash $(TOOLS_DIR)/prepare_gdb.sh
-	@$(GDB) -x $(TOOLS_DIR)/gdb_commands.txt --args $(BUILD_DIR)/$(TARGET_EXEC).elf
+	@$(GDB) -x $(TOOLS_DIR)/gdb_commands.txt --args $(BUILD_DIR)/$(TARGET_ELF)
 
 
 # monitors currently running firmware on robot
@@ -197,7 +200,7 @@ restart:
 	@tycmd reset
 
 
-help: 
+help:
 	@echo "Basic usage: make [target]"
 	@echo "Targets:"
 	@echo "  install:       installs all required dependencies"
