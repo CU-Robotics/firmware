@@ -1,3 +1,7 @@
+# Optional features: PROFILER, COMMS_DEBUG, REF_SYSTEM_DEBUG, CAN_MANAGER_DEBUG
+# Example: make clean build FEATURE_DEFINES="-DPROFILER -DCOMMS_DEBUG"
+FEATURE_DEFINES ?=
+
 TARGET := firmware
 TARGET_ELF := $(TARGET).elf
 TARGET_HEX := $(TARGET).hex
@@ -37,33 +41,30 @@ INCLUDE_FLAGS := $(TEENSY_INC_FLAGS) $(LIBRARY_INC_FLAGS) $(SRC_INC_FLAGS)
 # CPU and ABI flags required during compilation and linking
 ARCH_FLAGS := -mcpu=cortex-m7 -mfloat-abi=hard -mfpu=fpv5-d16 -mthumb
 
-# Preprocessor definitions specific to Teensy 4.1
-TEENSY41_DEFINES := -DF_CPU=600000000 -DUSB_CUSTOM -DLAYOUT_US_ENGLISH -D__IMXRT1062__ -DTEENSYDUINO=159 -DARDUINO_TEENSY41 -DARDUINO=10813 -DFIRMWARE
+BOARD_DEFINES := -DF_CPU=600000000 -D__IMXRT1062__ -DTEENSYDUINO=159 -DARDUINO_TEENSY41 -DARDUINO=10813
+USB_DEFINES := -DUSB_CUSTOM -DLAYOUT_US_ENGLISH
+PROJECT_DEFINES := $(BOARD_DEFINES) $(USB_DEFINES) -DFIRMWARE $(FEATURE_DEFINES)
 
 # -MMD: Generate dependency files for each source file
 # -MP: Add a phony target for each dependency to avoid errors if the dependency is missing
 DEPFLAGS := -MMD -MP
 
-# -ffunction-sections: Place each function in its own section to allow the linker to remove unused functions
-# -fdata-sections: Place each variable in its own section to allow the linker to remove unused variables
-# --specs=nano.specs: Use newlib nano instead of full newlib to reduce binary size
-COMMON_FLAGS := -ffunction-sections -fdata-sections -O2 --specs=nano.specs -g3
+# Place each function and variable in its own section so the linker can remove unused code and data
+SECTION_FLAGS := -ffunction-sections -fdata-sections
+COMMON_COMPILE_FLAGS := $(ARCH_FLAGS) $(SECTION_FLAGS) -O2 -g3 --specs=nano.specs
+CXX_LANGUAGE_FLAGS := -std=gnu++23 -felide-constructors -fno-exceptions -fpermissive
+CXX_WARNING_FLAGS := -Wno-error=narrowing -Wno-trigraphs -Wno-comment -Wall -Werror -Wno-volatile
 
-CPPFLAGS += $(INCLUDE_FLAGS) $(TEENSY41_DEFINES)
-
-CFLAGS += $(ARCH_FLAGS) $(COMMON_FLAGS)
-
-CXXFLAGS += $(ARCH_FLAGS) $(COMMON_FLAGS) -std=gnu++23 \
-				-felide-constructors -fno-exceptions -fpermissive \
-				-Wno-error=narrowing -Wno-trigraphs -Wno-comment -Wall -Werror \
-				-Wno-volatile
+PROJECT_CPPFLAGS := $(INCLUDE_FLAGS) $(PROJECT_DEFINES)
+PROJECT_CFLAGS := $(COMMON_COMPILE_FLAGS)
+PROJECT_CXXFLAGS := $(COMMON_COMPILE_FLAGS) $(CXX_LANGUAGE_FLAGS) $(CXX_WARNING_FLAGS)
 
 # --gc-sections: Remove unused sections to reduce binary size
 # --relax: Allow linker to relax some constraints to sometimes generate smaller code
 # -Tteensy4/imxrt1062_t41.ld: Use the Teensy 4.1 linker script
 # -Map=... and --cref: Generate a cross-reference map file
-LDFLAGS += $(ARCH_FLAGS) --specs=nano.specs \
-	-Wl,--gc-sections,--relax,-Tteensy4/imxrt1062_t41.ld,--print-memory-usage,-Map=$(BUILD_DIR)/$(TARGET_MAP),--cref
+PROJECT_LDFLAGS := $(ARCH_FLAGS) --specs=nano.specs \
+		-Wl,--gc-sections,--relax,-Tteensy4/imxrt1062_t41.ld,--print-memory-usage,-Map=$(BUILD_DIR)/$(TARGET_MAP),--cref
 
 COMPILER_TOOLS_PATH = $(TOOLS_DIR)/compiler/arm-gnu-toolchain/bin
 TARGET_TRIPLE ?= arm-none-eabi
@@ -86,7 +87,7 @@ GIT_SCRAPER = $(TOOLS_DIR)/git_scraper.cpp
 
 build:	clangd $(BUILD_DIR)/$(TARGET_ELF)
 $(BUILD_DIR)/$(TARGET_ELF): git_scraper $(SRC_OBJS) $(LIBRARY_OBJS) $(TEENSY_OBJS)
-	@$(COMPILER_CPP) $(LDFLAGS) $(LIBRARY_OBJS) $(TEENSY_OBJS) $(SRC_OBJS) $(LDLIBS) -o $(BUILD_DIR)/$(TARGET_ELF)
+	@$(COMPILER_CPP) $(PROJECT_LDFLAGS) $(LDFLAGS) $(LIBRARY_OBJS) $(TEENSY_OBJS) $(SRC_OBJS) $(LDLIBS) -o $(BUILD_DIR)/$(TARGET_ELF)
 	@echo [Constructing $(TARGET_HEX)]
 	@$(OBJCOPY) -O ihex -R .eeprom $(BUILD_DIR)/$(TARGET_ELF) $(BUILD_DIR)/$(TARGET_HEX)
 	@chmod +x $(BUILD_DIR)/$(TARGET_HEX)
@@ -100,14 +101,14 @@ $(SRC_OBJS) $(LIBRARY_OBJS) $(TEENSY_OBJS): | git_scraper
 $(BUILD_DIR)/%.c.o: %.c
 	@mkdir -p $(dir $@)
 	@echo [Building $<]
-	@$(COMPILER_C) $(CPPFLAGS) $(CFLAGS) $(DEPFLAGS) -c $< -o $@
+	@$(COMPILER_C) $(PROJECT_CPPFLAGS) $(CPPFLAGS) $(PROJECT_CFLAGS) $(CFLAGS) $(DEPFLAGS) -c $< -o $@
 	@$(OBJDUMP) -dstz $@ > $@.dump
 
 
 $(BUILD_DIR)/%.cpp.o: %.cpp
 	@mkdir -p $(dir $@)
 	@echo [Building $<]
-	@$(COMPILER_CPP) $(CPPFLAGS) $(CXXFLAGS) $(DEPFLAGS) -c $< -o $@
+	@$(COMPILER_CPP) $(PROJECT_CPPFLAGS) $(CPPFLAGS) $(PROJECT_CXXFLAGS) $(CXXFLAGS) $(DEPFLAGS) -c $< -o $@
 	@$(OBJDUMP) -dstz $@ > $@.dump
 
 
@@ -205,8 +206,8 @@ $(COMPILE_DB): Makefile $(COMPILE_DB_SCRIPT) $(COMPILE_DB_DIR_DEPS)
 	COMPILER_CPP="$(COMPILER_CPP)" \
 	COMPILER_C="$(COMPILER_C)" \
 	TARGET_TRIPLE="$(TARGET_TRIPLE)" \
-	CPPFLAGS='$(CPPFLAGS)' \
-	CXXFLAGS='$(CXXFLAGS)' \
-	CFLAGS='$(CFLAGS)' \
+	CPPFLAGS='$(PROJECT_CPPFLAGS) $(CPPFLAGS)' \
+	CXXFLAGS='$(PROJECT_CXXFLAGS) $(CXXFLAGS)' \
+	CFLAGS='$(PROJECT_CFLAGS) $(CFLAGS)' \
 	SRC_FILES='$(SRC_SRC) $(LIBRARY_SRC) $(TEENSY_SRC)' \
 	"$(COMPILE_DB_SCRIPT)"

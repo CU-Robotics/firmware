@@ -3,9 +3,6 @@
 #include "comms/data/sendable.hpp"
 RefSystem ref; // Global instance
 
-// Uncomment to enable debug prints
-// #define REF_SYSTEM_DEBUG
-
 uint8_t generateCRC8(const uint8_t *data, uint32_t len) {
     uint8_t CRC8 = 0xFF;
     while (len-- > 0) {

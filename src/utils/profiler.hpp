@@ -1,9 +1,6 @@
 #ifndef PROFILER_H
 #define PROFILER_H
 
-// Use this flag to toggle profiling globally.
-//#define PROFILER
-
 #include <Arduino.h>
 
 #define PROF_MAX_SECTIONS 4   // max number of active profiling sections
