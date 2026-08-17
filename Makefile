@@ -51,32 +51,36 @@ LIBRARY_INC_FLAGS := $(addprefix -isystem,$(LIBRARY_INC_DIRS))
 SRC_INC_FLAGS := $(addprefix -I,$(SRC_INC_DIRS))
 INCLUDE_FLAGS := $(TEENSY_INC_FLAGS) $(LIBRARY_INC_FLAGS) $(SRC_INC_FLAGS)
 
-# Compiler flags specific to Teensy 4.1
-TEENSY4_FLAGS = -DF_CPU=600000000 -DUSB_CUSTOM -DLAYOUT_US_ENGLISH -D__IMXRT1062__ -DTEENSYDUINO=159 -DARDUINO_TEENSY41 -DARDUINO=10813 -DFIRMWARE
+# Preprocessor definitions specific to Teensy 4.1
+TEENSY4_DEFINES := -DF_CPU=600000000 -DUSB_CUSTOM -DLAYOUT_US_ENGLISH -D__IMXRT1062__ -DTEENSYDUINO=159 -DARDUINO_TEENSY41 -DARDUINO=10813 -DFIRMWARE
 
-# CPU flags to optimize code for the Teensy processor
-CPU_CFLAGS = -mcpu=cortex-m7 -mfloat-abi=hard -mfpu=fpv5-d16 -mthumb
+# CPU and ABI flags required during compilation and linking
+ARCH_FLAGS := -mcpu=cortex-m7 -mfloat-abi=hard -mfpu=fpv5-d16 -mthumb
 
-DEFINES := $(TEENSY4_FLAGS)
+DEFINES := $(TEENSY4_DEFINES)
 
-# Preprocessor flags for both C and C++ files
+# Preprocessor and dependency-generation flags for both C and C++ files
 # -MMD: Generate dependency files for each source file
 # -MP: Add a phony target for each dependency to avoid errors if the dependency is missing
+CPPFLAGS += $(INCLUDE_FLAGS) $(DEFINES)
+DEPFLAGS := -MMD -MP
+
+# Common compiler flags for C and C++ files
 # -ffunction-sections: Place each function in its own section to allow the linker to remove unused functions
 # -fdata-sections: Place each variable in its own section to allow the linker to remove unused variables
 # -O2: Optimize the code for speed
 # --specs=nano.specs: Use newlib nano instead of full newlib to reduce binary size
 # -g3: Generate debug information for GDB. Level 3 includes the most information possible
-CPPFLAGS := $(INCLUDE_FLAGS) $(DEFINES) -MMD -MP -ffunction-sections -fdata-sections -O2 --specs=nano.specs -g3
+COMMON_FLAGS := -ffunction-sections -fdata-sections -O2 --specs=nano.specs -g3
 
 # Compiler flags for C files
-CFLAGS := $(CPU_CFLAGS)
+CFLAGS += $(ARCH_FLAGS) $(COMMON_FLAGS)
 
 # Compiler flags for C++ files
-CXXFLAGS := $(CPU_CFLAGS) -std=gnu++23 \
-			-felide-constructors -fno-exceptions -fpermissive \
-			-Wno-error=narrowing -Wno-trigraphs -Wno-comment -Wall -Werror \
-			-Wno-volatile
+CXXFLAGS += $(ARCH_FLAGS) $(COMMON_FLAGS) -std=gnu++23 \
+				-felide-constructors -fno-exceptions -fpermissive \
+				-Wno-error=narrowing -Wno-trigraphs -Wno-comment -Wall -Werror \
+				-Wno-volatile
 
 # Linker flags, including Teensy-specific linker script
 # --gc-sections: Remove unused sections to reduce binary size
@@ -84,7 +88,8 @@ CXXFLAGS := $(CPU_CFLAGS) -std=gnu++23 \
 # -Tteensy4/imxrt1062_t41.ld: Use the Teensy 4.1 linker script
 # --print-memory-usage: Print memory usage after linking
 # -Map=... and --cref: Generate a cross-reference map file
-LINKING_FLAGS = -Wl,--gc-sections,--relax,-Tteensy4/imxrt1062_t41.ld,--print-memory-usage,-Map=$(BUILD_DIR)/$(TARGET_MAP),--cref
+LDFLAGS += $(ARCH_FLAGS) --specs=nano.specs \
+	-Wl,--gc-sections,--relax,-Tteensy4/imxrt1062_t41.ld,--print-memory-usage,-Map=$(BUILD_DIR)/$(TARGET_MAP),--cref
 
 # Base arm-none-eabi and Teensyduino tool paths
 COMPILER_TOOLS_PATH = $(TOOLS_DIR)/compiler/arm-gnu-toolchain/bin
@@ -111,7 +116,7 @@ MAKEFLAGS += -j$(nproc)
 
 build:	clangd $(BUILD_DIR)/$(TARGET_ELF)
 $(BUILD_DIR)/$(TARGET_ELF): git_scraper $(SRC_OBJS) $(LIBRARY_OBJS) $(TEENSY_OBJS)
-	@$(COMPILER_CPP) $(CPPFLAGS) $(CXXFLAGS) $(LIBRARY_OBJS) $(TEENSY_OBJS) $(SRC_OBJS) $(LINKING_FLAGS) -o $(BUILD_DIR)/$(TARGET_ELF)
+	@$(COMPILER_CPP) $(LDFLAGS) $(LIBRARY_OBJS) $(TEENSY_OBJS) $(SRC_OBJS) $(LDLIBS) -o $(BUILD_DIR)/$(TARGET_ELF)
 	@echo [Constructing $(TARGET_HEX)]
 	@$(OBJCOPY) -O ihex -R .eeprom $(BUILD_DIR)/$(TARGET_ELF) $(BUILD_DIR)/$(TARGET_HEX)
 	@chmod +x $(BUILD_DIR)/$(TARGET_HEX)
@@ -123,14 +128,14 @@ $(SRC_OBJS) $(LIBRARY_OBJS) $(TEENSY_OBJS): | git_scraper
 $(BUILD_DIR)/%.c.o: %.c
 	@mkdir -p $(dir $@)
 	@echo [Building $<]
-	@$(COMPILER_C) $(CPPFLAGS) $(CFLAGS) -c $< -o $@
+	@$(COMPILER_C) $(CPPFLAGS) $(CFLAGS) $(DEPFLAGS) -c $< -o $@
 	@$(OBJDUMP) -dstz $@ > $@.dump
 
 # Build step for compiling C++ source files
 $(BUILD_DIR)/%.cpp.o: %.cpp
 	@mkdir -p $(dir $@)
 	@echo [Building $<]
-	@$(COMPILER_CPP) $(CPPFLAGS) $(CXXFLAGS) -c $< -o $@
+	@$(COMPILER_CPP) $(CPPFLAGS) $(CXXFLAGS) $(DEPFLAGS) -c $< -o $@
 	@$(OBJDUMP) -dstz $@ > $@.dump
 
 
