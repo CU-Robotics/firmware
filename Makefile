@@ -109,9 +109,6 @@ SIZE			= $(COMPILER_TOOLS_PATH)/arm-none-eabi-size
 # Path to the Git scraper tool source file
 GIT_SCRAPER = $(TOOLS_DIR)/git_scraper.cpp
 
-# Utilize all available CPU cores for parallel build
-MAKEFLAGS += -j$(nproc)
-
 .PHONY: build docs clean upload install gdb monitor kill restart help clangd git_scraper
 
 build:	clangd $(BUILD_DIR)/$(TARGET_ELF)
