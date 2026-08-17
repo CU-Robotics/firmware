@@ -114,9 +114,7 @@ GIT_SCRAPER = $(TOOLS_DIR)/git_scraper.cpp
 # Utilize all available CPU cores for parallel build
 MAKEFLAGS += -j$(nproc)
 
-# Phony target to force a build every time
-.PHONY: build
-
+.PHONY: build docs clean upload install gdb monitor kill restart help clangd git_scraper
 
 build:	clangd $(BUILD_DIR)/$(TARGET_EXEC)
 $(BUILD_DIR)/$(TARGET_EXEC): git_scraper $(SRC_OBJS) $(LIBRARY_OBJS) $(TEENSY_OBJS) 
@@ -145,32 +143,16 @@ $(BUILD_DIR)/%.cpp.o: %.cpp
 
 
 DOC_SCRIPT = $(TOOLS_DIR)/build_docs.sh
-# Phony target to generate documentation using Doxygen
-.PHONY: docs
 
 docs: build
 	@chmod +x $(DOC_SCRIPT)
 	@$(DOC_SCRIPT)
 
-# Phony target to prevent conflicts with files named 'clean' and force a rebuild every time
-.PHONY: clean
 
 # Clean the build directory and remove generated executables
 clean:
 	rm -rf $(BUILD_DIR)
 	rm -f compile_commands.json
-
-# Clean only the source object files
-clean_src:
-	rm -r $(BUILD_DIR)/src
-
-# Clean only the library object files
-clean_libs:
-	rm -r $(BUILD_DIR)/libraries
-
-# Clean only the Teensy object files
-clean_teensy4:
-	rm -r $(BUILD_DIR)/teensy4
 
 # Include the dependency files to manage header file dependencies
 # The '-' suppresses errors if the files are missing (which they will be on the first run)
@@ -178,8 +160,6 @@ clean_teensy4:
 -include $(LIBRARY_DEPS)
 -include $(SRC_DEPS)
 
-# Build, run, and clean up the git scraper tool to store current Git info in a header file
-.PHONY: git_scraper
 git_scraper:
 	@g++ -std=gnu++17 $(GIT_SCRAPER) -o $(TOOLS_DIR)/git_scraper
 	@$(TOOLS_DIR)/git_scraper
@@ -238,9 +218,6 @@ help:
 	@echo "  kill:          stops any running firmware"
 	@echo "  restart:       restarts any running firmware"
 	@echo "  clean:         removes all build artifacts and generated files"
-	@echo "  clean_src:     removes only the source object files"
-	@echo "  clean_libs:    removes only the library object files"
-	@echo "  clean_teensy4: removes only the Teensy object files"
 	@echo "  clangd:        generates compile_commands.json for clangd"
 	@echo "  docs:          generates documentation of our src/ code using Doxygen"
 
@@ -250,7 +227,6 @@ COMPILE_DB = compile_commands.json
 COMPILE_DB_SCRIPT = $(TOOLS_DIR)/generate_compile_commands.sh
 COMPILE_DB_DIR_DEPS = $(SRC_INC_DIRS) $(LIBRARY_INC_DIRS) $(TEENSY_INC_DIRS)
 
-.PHONY: clangd
 clangd: $(COMPILE_DB)
 
 $(COMPILE_DB): Makefile $(COMPILE_DB_SCRIPT) $(COMPILE_DB_DIR_DEPS)
