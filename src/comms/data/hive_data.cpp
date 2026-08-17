@@ -1,6 +1,6 @@
 #include "hive_data.hpp"
 #include "comms_data.hpp"
-#include "config_data/sensor.hpp"
+#include "comms/config_data/sensor.hpp"
 
 #include "comms/comms_layer.hpp"            // for CommsLayer
 

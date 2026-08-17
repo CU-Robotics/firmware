@@ -1,7 +1,7 @@
 #pragma once
 
 #include <type_traits>                          // for is_base_of, is_copy_constructible
-#include "comms_layer.hpp"                      // for CommsLayer
+#include "comms/comms_layer.hpp"                // for CommsLayer
 
 namespace Comms {
 

@@ -2,7 +2,7 @@
 #include <memory>
 
 #include "comms/config_data/sensor.hpp"
-#include "robot_state_map.hpp"
+#include "controls/robot_state_map.hpp"
 
 
 /// @brief Abstract class representing a sensor. All sensors should inherit from this class.

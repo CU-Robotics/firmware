@@ -29,7 +29,7 @@ SRC_DEPS := $(SRC_OBJS:.o=.d)
 
 TEENSY_INC_DIRS := $(shell find $(TEENSY_SRC_DIRS) -type d)
 LIBRARY_INC_DIRS := $(shell find $(LIBRARY_SRC_DIRS) -maxdepth 2 -type d)
-SRC_INC_DIRS := $(shell find $(SRC_SRC_DIRS) -type d)
+SRC_INC_DIRS := $(SRC_SRC_DIRS)
 
 # -isystem on Teensy and Library files to suppress warnings
 TEENSY_INC_FLAGS := $(addprefix -isystem,$(TEENSY_INC_DIRS))
