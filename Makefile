@@ -86,7 +86,7 @@ GIT_SCRAPER = $(TOOLS_DIR)/git_scraper.cpp
 .PHONY: build docs clean upload install gdb monitor kill restart help clangd git_scraper
 
 
-build: clangd $(TARGET_ELF)
+build: $(TARGET_ELF)
 
 $(TARGET_ELF): git_scraper $(SRC_OBJS) $(LIBRARY_OBJS) $(TEENSY_OBJS)
 	@printf "LINK     %s\n" "$@"
