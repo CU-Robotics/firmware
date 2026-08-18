@@ -40,9 +40,10 @@ SRC_DEPS := $(SRC_OBJS:.o=.d)
 
 TEENSY_INC_DIRS := $(shell find $(TEENSY_SRC_DIRS) -type d)
 LIBRARY_INC_DIRS := $(LIBRARY_SRC_DIRS) \
-	$(wildcard $(LIBRARY_SRC_DIRS)/*/) \
-	$(wildcard $(LIBRARY_SRC_DIRS)/*/src/) \
-	$(wildcard $(LIBRARY_SRC_DIRS)/*/utility/)
+	$(patsubst %/,%,$(wildcard \
+		$(LIBRARY_SRC_DIRS)/*/ \
+		$(LIBRARY_SRC_DIRS)/*/src/ \
+		$(LIBRARY_SRC_DIRS)/*/utility/))
 SRC_INC_DIRS := $(SRC_SRC_DIRS)
 
 # -isystem on Teensy and Library files to suppress warnings
