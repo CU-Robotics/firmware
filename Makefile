@@ -80,7 +80,8 @@ READELF			= $(COMPILER_TOOLS_PATH)/arm-none-eabi-readelf
 ADDR2LINE		= $(COMPILER_TOOLS_PATH)/arm-none-eabi-addr2line
 SIZE			= $(COMPILER_TOOLS_PATH)/arm-none-eabi-size
 
-GIT_SCRAPER = $(TOOLS_DIR)/git_scraper.cpp
+GIT_SCRAPER_SRC = $(TOOLS_DIR)/git_scraper.cpp
+GIT_SCRAPER_BIN = $(BUILD_DIR)/git_scraper
 
 
 .PHONY: build docs clean upload install gdb monitor kill restart help clangd git_scraper
@@ -140,10 +141,16 @@ clean:
 -include $(SRC_DEPS)
 
 
-git_scraper:
-	@g++ -std=gnu++17 $(GIT_SCRAPER) -o $(TOOLS_DIR)/git_scraper
-	@$(TOOLS_DIR)/git_scraper
-	@rm $(TOOLS_DIR)/git_scraper
+# The scraper itself is rebuilt only when its source changes, but it is run on
+# every build so it can pick up branch/commit changes. It rewrites
+# src/git_info.h only when the contents actually differ.
+$(GIT_SCRAPER_BIN): $(GIT_SCRAPER_SRC)
+	@mkdir -p $(dir $@)
+	@printf "HOSTCXX  %s\n" "$<"
+	@g++ -std=gnu++17 $< -o $@
+
+git_scraper: $(GIT_SCRAPER_BIN)
+	@$(GIT_SCRAPER_BIN)
 
 
 # Upload firmware to Teensy and start monitoring
