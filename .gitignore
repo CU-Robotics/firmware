@@ -43,8 +43,5 @@ src/git_info.h
 .vscode
 .zed
 
-# Ignore Rust tool's build directory
-/tools/waggle-interceptor/target
-
 #ignore bear files
 .bearwrap

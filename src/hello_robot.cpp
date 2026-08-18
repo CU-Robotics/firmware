@@ -42,10 +42,10 @@ void HelloRobot::init() {
 
     // generate controller outputs based on governed references and estimated
     // state
-    controller_manager.init(config.controllers, can);
+    controller_manager.init(config.controllers, can, config.states);
 
     estimated_state_map.emplace(config.states);
-    estimated_state_map_interrupt_safe.emplace(config.states);
+    estimated_state_map_interrupt_safe = std::make_unique<RobotStateMap>(config.states);
     reference_map.emplace(config.states);
     target_state_map.emplace(config.states);      // Temp ungoverned state
     hive_state_map_offset.emplace(config.states); // Hive offset state
@@ -123,6 +123,11 @@ void HelloRobot::read_telemetry() {
     // this happens in one function call
     sensor_manager.read();
     sensor_manager.send_to_comms();
+
+    // print loopc every second to verify it is still alive
+    if (loopc % 1000 == 0) {
+        Serial.println(loopc);
+    }
 }
 void HelloRobot::process_behaviors() {
     // manual controls on firmware
@@ -178,14 +183,22 @@ void HelloRobot::update_controls() {
     *reference_map = governor->step_reference_map(*target_state_map);
 
     // generate motor outputs from controls
-    controller_manager.step(*reference_map, *estimated_state_map);
+    controller_manager.step(*reference_map, *estimated_state_map, *target_state_map);
 
     target_state_map->send_to_comms<TargetState>();
+    reference_map->send_to_comms<ReferenceState>();
     estimated_state_map->send_to_comms<EstimatedState>();
 
     Comms::Sendable<ConfigurationStatusData> config_status_sendable;
     config_status_sendable.data.is_configured = Comms::comms_layer.is_configured() ? 1 : 0;
     config_status_sendable.send_to_comms();
+
+    if (false) { // Tests roundtrip comms latency. also needs to be set to true in hive.
+        Comms::Sendable<TestLatencyData> latency_data;
+        latency_data.data.current_time = micros();
+        latency_data.data.time_since_last_received = micros() - Comms::comms_layer.get_hive_data().latency_data.current_time;
+        latency_data.send_to_comms();
+    }
 
     Comms::comms_layer.run();
 }
@@ -237,9 +250,11 @@ void HelloRobot::check_safety() {
         if (has_lower_feeder) {
             governor->set_position_reference(Cfg::StateName::LowerFeeder, (*estimated_state_map)[Cfg::StateName::LowerFeeder].get_position());
         }
-        feed = (fmodf(fmodf(current_feed, 1) + 1, 1) > 0.2f) ? (int)floor(current_feed) + 1 : (int)floor(current_feed); // reset feed to the current state
-        last_feed = feed;                                                                                               // reset last feed to the current state
-                                                                                                                        // Serial.printf("Can zero\n");
+        feed = (fmod(fmod(current_feed, 1) + 1, 1) > 0.2)
+                   ? (int)floor(current_feed) + 1
+                   : (int)floor(current_feed); // reset feed to the current state
+        last_feed = feed;                      // reset last feed to the current state
+                                               // Serial.printf("Can zero\n");
     }
 }
 void HelloRobot::loop_timing() {

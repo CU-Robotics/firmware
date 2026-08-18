@@ -19,7 +19,7 @@ class StereoCamTrigger : public Sensor{
     /// @brief data to be sent to comms
     StereoCamTriggerData comms_data;
 	/// @brief local estimated state map for interrupt safe data transfer
-    static std::optional<RobotStateMap>* estimated_state_map_interrupt_safe;
+    static std::unique_ptr<RobotStateMap>* estimated_state_map_interrupt_safe;
     
     /// @brief Teensyduino timer instance used to maintain signal
     IntervalTimer timer;
@@ -35,6 +35,9 @@ class StereoCamTrigger : public Sensor{
 
     /// @brief timestamp of the last time an exposure was triggered (last time signal was set to HIGH)
     volatile uint32_t latest_exposure_timestamp = 0;
+
+    /// @brief the number of frames that have been triggered since the last counter reset.
+   volatile int counter = -1;
     
     /// @brief callback to pass to timer to update latest exposure timestamp
     void track_exposures();
@@ -46,9 +49,9 @@ class StereoCamTrigger : public Sensor{
     /// @brief initialize trigger manager by starting the interval timer
     void init() override;
 
-    /// @brief binds local estimated state map with global for interrupt safety
-    /// @param safe_map is the passed in global estimated state map
-    static void bind_isr_map(std::optional<RobotStateMap> *safe_map); ///
+    /// @brief Bind the interrupt-safe estimated state map used by the exposure ISR.
+    /// @param safe_map Interrupt-safe estimated state map owned by HelloRobot.
+    void provide_isr_map(std::unique_ptr<RobotStateMap> *safe_map) override;
 
     /// @brief empty read function since the updates are done in the timer interrupt callback
     void read() override;

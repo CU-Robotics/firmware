@@ -1,7 +1,7 @@
-#pragma once 
+#pragma once
 
-#include "comms/data/comms_data.hpp"            // for CommsData
-#include <stdint.h>                             // uintN_t
+#include "comms/data/comms_data.hpp" // for CommsData
+#include <stdint.h>                  // uintN_t
 
 /// @copydoc GameStatus
 struct GameStatusData {
@@ -24,31 +24,16 @@ struct GameResultData {
 
 /// @copydoc GameRobotHP
 struct RobotHealthData {
-    /// @brief health of the red hero robot
-    uint32_t red_hero_health = 0;
-    /// @brief health of the red engineer robot
-    uint32_t red_engineer_health = 0;
-    /// @brief health of the red standard 3 robot 
-    uint32_t red_standard_3_health = 0;
-    /// @brief health of the red standard 4 robot 
-    uint32_t red_standard_4_health = 0;
-    /// @brief health of the red standard 5 robot
-    uint32_t red_standard_5_health = 0;
-    /// @brief health of the red sentry robot
-    uint32_t red_sentry_health = 0;
-    
-    /// @brief health of the blue hero robot
-    uint32_t blue_hero_health = 0;
-    /// @brief health of the blue engineer robot
-    uint32_t blue_engineer_health = 0;
-    /// @brief health of the blue standard 3 robot
-    uint32_t blue_standard_3_health = 0;
-    /// @brief health of the blue standard 4 robot
-    uint32_t blue_standard_4_health = 0;
-    /// @brief health of the blue standard 5 robot
-    uint32_t blue_standard_5_health = 0;
-    /// @brief health of the blue sentry robot
-    uint32_t blue_sentry_health = 0;
+    /// @copydoc GameRobotHP::hero_health
+    uint32_t hero_health = 0;
+    /// @copydoc GameRobotHP::engineer_health
+    uint32_t engineer_health = 0;
+    /// @copydoc GameRobotHP::standard_3_health
+    uint32_t standard_3_health = 0;
+    /// @copydoc GameRobotHP::standard_4_health
+    uint32_t standard_4_health = 0;
+    /// @copydoc GameRobotHP::sentry_health
+    uint32_t sentry_health = 0;
 };
 /// @copydoc EventData
 struct GameEventData {
@@ -82,18 +67,10 @@ struct RobotPerformanceData {
 };
 /// @copydoc RobotPowerHeat
 struct RobotPowerHeatData {
-    /// @copydoc RobotPowerHeat::chassis_voltage_output
-    uint32_t chassis_voltage_output = 0;
-    /// @copydoc RobotPowerHeat::chassis_current_output
-    uint32_t chassis_current_output = 0;
-    /// @copydoc RobotPowerHeat::chassis_power
-    float chassis_power = 0.f;
     /// @copydoc RobotPowerHeat::buffer_energy
     uint32_t buffer_energy = 0;
-    /// @copydoc RobotPowerHeat::barrel_heat_1_17mm
-    uint32_t barrel_heat_1_17mm = 0;
-    /// @copydoc RobotPowerHeat::barrel_heat_2_17mm
-    uint32_t barrel_heat_2_17mm = 0;
+    /// @copydoc RobotPowerHeat::barrel_heat_17mm
+    uint32_t barrel_heat_17mm = 0;
     /// @copydoc RobotPowerHeat::barrel_heat_42mm
     uint32_t barrel_heat_42mm = 0;
 };
@@ -127,10 +104,80 @@ struct ProjectileAllowanceData {
     uint32_t num_gold = 0;
 };
 
+/// @copydoc VTMRemoteControl
+struct VTMData {
+    /// @copydoc VTMRemoteControl::channel_0
+    uint16_t channel_0 = 1024;
+    /// @copydoc VTMRemoteControl::channel_1
+    uint16_t channel_1 = 1024;
+    /// @copydoc VTMRemoteControl::channel_2
+    uint16_t channel_2 = 1024;
+    /// @copydoc VTMRemoteControl::channel_3
+    uint16_t channel_3 = 1024;
+    /// @copydoc VTMRemoteControl::mode_switch
+    uint8_t mode_switch = 0;
+    /// @copydoc VTMRemoteControl::pause_button
+    uint8_t pause_button = 0;
+    /// @copydoc VTMRemoteControl::custom_button_left
+    uint8_t custom_button_left = 0;
+    /// @copydoc VTMRemoteControl::custom_button_right
+    uint8_t custom_button_right = 0;
+    /// @copydoc VTMRemoteControl::dial
+    uint16_t dial = 1024;
+    /// @copydoc VTMRemoteControl::mouse_speed_x
+    int16_t mouse_speed_x = 0;
+    /// @copydoc VTMRemoteControl::mouse_speed_y
+    int16_t mouse_speed_y = 0;
+    /// @copydoc VTMRemoteControl::scroll_speed
+    int16_t scroll_speed = 0;
+    /// @copydoc VTMRemoteControl::trigger
+    uint8_t trigger = 0;
+    /// @copydoc VTMRemoteControl::button_left
+    uint8_t button_left = 0;
+    /// @copydoc VTMRemoteControl::button_right
+    uint8_t button_right = 0;
+    /// @copydoc VTMRemoteControl::button_middle
+    uint8_t button_middle = 0;
+    /// @copydoc VTMRemoteControl::keyboard_value
+    uint16_t keyboard_value = 0;
+    /// @copydoc VTMRemoteControl::key_w
+    uint8_t key_w;
+    /// @copydoc VTMRemoteControl::key_s
+    uint8_t key_s;
+    /// @copydoc VTMRemoteControl::key_a
+    uint8_t key_a;
+    /// @copydoc VTMRemoteControl::key_d
+    uint8_t key_d;
+    /// @copydoc VTMRemoteControl::key_shift
+    uint8_t key_shift;
+    /// @copydoc VTMRemoteControl::key_ctrl
+    uint8_t key_ctrl;
+    /// @copydoc VTMRemoteControl::key_q
+    uint8_t key_q;
+    /// @copydoc VTMRemoteControl::key_e
+    uint8_t key_e;
+    /// @copydoc VTMRemoteControl::key_r
+    uint8_t key_r;
+    /// @copydoc VTMRemoteControl::key_f
+    uint8_t key_f;
+    /// @copydoc VTMRemoteControl::key_g
+    uint8_t key_g;
+    /// @copydoc VTMRemoteControl::key_z
+    uint8_t key_z;
+    /// @copydoc VTMRemoteControl::key_x
+    uint8_t key_x;
+    /// @copydoc VTMRemoteControl::key_c
+    uint8_t key_c;
+    /// @copydoc VTMRemoteControl::key_v
+    uint8_t key_v;
+    /// @copydoc VTMRemoteControl::key_b
+    uint8_t key_b;
+};
+
 /// @brief Mega struct fo al of the ref data we want to send over comms
 struct CommsRefData : Comms::CommsData {
     /// @brief default constructor that initializes the CommsData base class with the appropriate type label, physical medium, priority, and size for this struct
-    CommsRefData() : CommsData(Comms::TypeLabel::CommsRefData, Comms::PhysicalMedium::Ethernet, Comms::Priority::High, sizeof(CommsRefData)) { }
+    CommsRefData() : CommsData(Comms::TypeLabel::CommsRefData, Comms::PhysicalMedium::Ethernet, Comms::Priority::High, sizeof(CommsRefData)) {}
     /// @brief status of the current game
     GameStatusData game_status_data;
     /// @brief result of the current game
@@ -149,6 +196,8 @@ struct CommsRefData : Comms::CommsData {
     LaunchingStatusData launching_status_data;
     /// @brief projectile allowance data for our robot
     ProjectileAllowanceData projectile_allowance_data;
+    /// @brief VTM remote control data for our robot
+    VTMData vtm_data;
     /// @brief padding to ensure proper alignment
-    uint32_t _padding = 0;
+    uint16_t _padding[3] = {0};
 };
