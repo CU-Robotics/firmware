@@ -2,6 +2,11 @@
 # Example: make clean build FEATURE_DEFINES="-DPROFILER -DCOMMS_DEBUG"
 FEATURE_DEFINES ?=
 
+# Set to 1 to disassemble every object file alongside it, for inspecting the
+# codegen of a single translation unit. Off by default: it adds ~600MB to
+# build/ and a couple of seconds to a clean build.
+DUMP_OBJS ?= 0
+
 # Build in parallel across all available cores by default.
 # A -j here overrides one given on the command line, so use JOBS to change it:
 # 'make JOBS=1 build' for readable serial output.
@@ -126,14 +131,14 @@ $(BUILD_DIR)/%.c.o: %.c
 	@mkdir -p $(dir $@)
 	@printf "CC       %s\n" "$<"
 	@$(COMPILER_C) $(PROJECT_CPPFLAGS) $(CPPFLAGS) $(PROJECT_CFLAGS) $(CFLAGS) $(DEPFLAGS) -c $< -o $@
-	@$(OBJDUMP) -dstz $@ > $@.dump
+	@$(if $(filter-out 0,$(DUMP_OBJS)),$(OBJDUMP) -dstz $@ > $@.dump)
 
 
 $(BUILD_DIR)/%.cpp.o: %.cpp
 	@mkdir -p $(dir $@)
 	@printf "CXX      %s\n" "$<"
 	@$(COMPILER_CPP) $(PROJECT_CPPFLAGS) $(CPPFLAGS) $(PROJECT_CXXFLAGS) $(CXXFLAGS) $(DEPFLAGS) -c $< -o $@
-	@$(OBJDUMP) -dstz $@ > $@.dump
+	@$(if $(filter-out 0,$(DUMP_OBJS)),$(OBJDUMP) -dstz $@ > $@.dump)
 
 DOC_SCRIPT = $(TOOLS_DIR)/build_docs.sh
 
@@ -221,6 +226,10 @@ help:
 	@echo "  clean:         removes all build artifacts and generated files"
 	@echo "  clangd:        generates compile_commands.json for clangd"
 	@echo "  docs:          generates documentation of our src/ code using Doxygen"
+	@echo ""
+	@echo "Variables:"
+	@echo "  JOBS=N         parallel jobs (defaults to core count)"
+	@echo "  DUMP_OBJS=1    also disassemble each object file"
 
 
 # Generate compile_commands.json from the Makefile's flags and source lists.
