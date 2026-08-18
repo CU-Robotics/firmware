@@ -102,7 +102,9 @@ class ET16S : public Transmitter {
 	/// @return true if in teensy mode, false if not in teensy mode
 	bool is_teensy_mode() override;
 	/// @copydoc Transmitter::mode_changed
-	bool mode_changed() override;
+    bool mode_changed() override;
+    
+    bool is_fast_mode_active();
 
 	/// @copydoc Transmitter::manual_controls
 	void manual_controls(const RobotStateMap& estimated_state_map, RobotStateMap& target_state_map, bool not_safety_mode, float& feed, float& last_feed) override;
@@ -357,5 +359,5 @@ private:
 
 	/// @brief getter for transmitter data
 	/// @return Filled Transmitter data struct
-	ET16SData get_ET16S_data();
+    ET16SData get_ET16S_data();
 };

@@ -2,6 +2,7 @@
 #include "sensors/RefSystem.hpp"
 #include "comms/data/sendable.hpp"
 #include "state.hpp"
+#include "transmitter_utils.hpp"
 
 ET16S::ET16S(const Cfg::ET16S& config) : config(config) { }
 
@@ -694,5 +695,18 @@ void ET16S::manual_controls(const RobotStateMap& estimated_state_map, RobotState
 		pos_offset_x = estimated_state_map[Cfg::StateName::ChassisX].get_position();
 		pos_offset_y = estimated_state_map[Cfg::StateName::ChassisY].get_position();
 		feed = last_feed;
-	}
+    }
+    if (is_fast_mode_active()) {
+		target_state_map[Cfg::StateName::ChassisHeading].set_position(3.1416f / 4.0f);
+    } else {
+        target_state_map[Cfg::StateName::ChassisHeading].set_position(0);
+    }
+}
+bool ET16S::is_fast_mode_active() {
+    if (get_switch_f() == SwitchPos::FORWARD) {
+        return true;
+    }
+    else {
+        return false;
+    }
 }
