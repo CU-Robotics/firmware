@@ -2,6 +2,12 @@
 # Example: make clean build FEATURE_DEFINES="-DPROFILER -DCOMMS_DEBUG"
 FEATURE_DEFINES ?=
 
+# Build in parallel across all available cores by default.
+# A -j here overrides one given on the command line, so use JOBS to change it:
+# 'make JOBS=1 build' for readable serial output.
+JOBS ?= $(shell sysctl -n hw.ncpu 2>/dev/null || nproc 2>/dev/null || echo 1)
+MAKEFLAGS += -j$(JOBS)
+
 BUILD_DIR := build
 TOOLS_DIR := tools
 
@@ -84,10 +90,14 @@ GIT_SCRAPER_SRC = $(TOOLS_DIR)/git_scraper.cpp
 GIT_SCRAPER_BIN = $(BUILD_DIR)/git_scraper
 
 
-.PHONY: build docs clean upload install gdb monitor kill restart help clangd git_scraper
+.PHONY: build dump docs clean upload install gdb monitor kill restart help clangd git_scraper
 
 
-build: $(TARGET_HEX) $(TARGET_DUMP)
+build: $(TARGET_HEX)
+
+
+dump: $(TARGET_DUMP)
+
 
 $(TARGET_ELF): $(SRC_OBJS) $(LIBRARY_OBJS) $(TEENSY_OBJS)
 	@printf "LINK     %s\n" "$@"
@@ -199,6 +209,7 @@ help:
 	@echo "Targets:"
 	@echo "  install:       installs all required dependencies"
 	@echo "  build:         compiles the source code and links with libraries"
+	@echo "  dump:          generates a disassembly of the built firmware"
 	@echo "  upload:        builds the source and uploads it to the Teensy"
 	@echo "  gdb:           starts GDB and attaches to the firmware running on a connected Teensy"
 	@echo "  monitor:       monitors any actively running firmware and displays serial output"
