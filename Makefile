@@ -59,7 +59,10 @@ DEPFLAGS := -MMD -MP
 
 # Place each function and variable in its own section so the linker can remove unused code and data
 SECTION_FLAGS := -ffunction-sections -fdata-sections
-COMMON_COMPILE_FLAGS := $(ARCH_FLAGS) $(SECTION_FLAGS) -O2 -g3 --specs=nano.specs
+# -g2: full line tables for addr2line/GDB. -g3 additionally emits macro
+# definitions, which cost ~7x in object size and are not needed by the
+# addr2line crash-report workflow in teensy4/CrashReport.cpp.
+COMMON_COMPILE_FLAGS := $(ARCH_FLAGS) $(SECTION_FLAGS) -O2 -g2 --specs=nano.specs
 CXX_LANGUAGE_FLAGS := -std=gnu++23 -felide-constructors -fno-exceptions -fpermissive
 CXX_WARNING_FLAGS := -Wno-error=narrowing -Wno-trigraphs -Wno-comment -Wall -Werror -Wno-volatile
 
