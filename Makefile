@@ -9,7 +9,7 @@ TARGET := firmware
 TARGET_ELF := $(BUILD_DIR)/$(TARGET).elf
 TARGET_HEX := $(BUILD_DIR)/$(TARGET).hex
 TARGET_MAP := $(BUILD_DIR)/$(TARGET).map
-TARGET_DUMP := $(BUILD_DIR)$(TARGET).dump
+TARGET_DUMP := $(BUILD_DIR)/$(TARGET).dump
 
 TEENSY_SRC_DIRS := teensy4
 LIBRARY_SRC_DIRS := libraries
@@ -86,18 +86,22 @@ GIT_SCRAPER = $(TOOLS_DIR)/git_scraper.cpp
 .PHONY: build docs clean upload install gdb monitor kill restart help clangd git_scraper
 
 
-build: $(TARGET_ELF)
+build: $(TARGET_HEX) $(TARGET_DUMP)
 
-$(TARGET_ELF): git_scraper $(SRC_OBJS) $(LIBRARY_OBJS) $(TEENSY_OBJS)
+$(TARGET_ELF): $(SRC_OBJS) $(LIBRARY_OBJS) $(TEENSY_OBJS)
 	@printf "LINK     %s\n" "$@"
 	@$(COMPILER_CPP) $(PROJECT_LDFLAGS) $(LDFLAGS) $(LIBRARY_OBJS) $(TEENSY_OBJS) $(SRC_OBJS) $(LDLIBS) -o $@
 
-	@printf "OBJCOPY  %s\n" "$(TARGET_HEX)"
-	@$(OBJCOPY) -O ihex -R .eeprom $@ $(TARGET_HEX)
-	@chmod +x $(TARGET_HEX)
 
-	@printf "OBJDUMP  %s\n" "$(TARGET_DUMP)"
-	@$(OBJDUMP) -dstz $@ > $(TARGET_DUMP)
+$(TARGET_HEX): $(TARGET_ELF)
+	@printf "OBJCOPY  %s\n" "$@"
+	@$(OBJCOPY) -O ihex -R .eeprom $< $@
+	@chmod +x $@
+
+
+$(TARGET_DUMP): $(TARGET_ELF)
+	@printf "OBJDUMP  %s\n" "$@"
+	@$(OBJDUMP) -dstz $< > $@
 
 
 # Ensure git_scraper finishes before compiling any object files
