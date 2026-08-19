@@ -1,14 +1,9 @@
-# Jetson build sandbox (Ubuntu 24.04, arm64). Verifies that the compiler
-# install script and a full firmware build work on a Jetson, from any machine.
+# Jetson build sandbox (Ubuntu 24.04, arm64), runnable from any machine.
 #
 #   docker compose run --rm install   # run tools/install_compiler.sh
 #   docker compose run --rm build     # build the firmware
-#   docker compose down -v            # wipe it all, back to a fresh Jetson
+#   docker compose down -v            # wipe the volume, back to a fresh Jetson
 #
-# Your checkout is mounted read-only at /repo and synced into a named volume at
-# /workspace, where the install and build actually happen. That matters:
-# install_compiler.sh starts with `rm -rf ./tools/compiler`, and it installs
-# Linux binaries -- neither belongs anywhere near your host working tree.
 x-sandbox: &sandbox
   platform: linux/arm64
   build:
@@ -21,10 +16,6 @@ x-sandbox: &sandbox
   working_dir: /workspace
 
 services:
-  # Installs the arm-none-eabi toolchain into the volume's tools/compiler by
-  # running the real script. Note this is install_compiler.sh directly, not
-  # `make install` -- the latter also installs tytools, which this image has no
-  # use for since it never flashes hardware.
   install:
     <<: *sandbox
     command: >
@@ -36,9 +27,6 @@ services:
         ./tools/compiler/arm-gnu-toolchain/bin/arm-none-eabi-g++ --version | head -1
       '
 
-  # Builds the firmware with whatever `install` put in tools/compiler. Job count
-  # is left to the Makefile, and success is make's exit code -- so this stays
-  # correct regardless of where the Makefile puts its artifacts.
   build:
     <<: *sandbox
     command: >
@@ -47,7 +35,6 @@ services:
         make build
       '
 
-  # Interactive shell in the sandbox, for poking around.
   shell:
     <<: *sandbox
     stdin_open: true
