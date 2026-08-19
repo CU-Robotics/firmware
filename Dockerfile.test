@@ -1,0 +1,19 @@
+# Mirrors the robots' NVIDIA Jetsons (aarch64 Ubuntu) so we can check that the
+# firmware builds there. The platform is pinned so the arch is right even when
+# the image is built from an x86 machine.
+FROM --platform=linux/arm64 ubuntu:24.04
+
+# Prerequisites to `make install`
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        build-essential \
+        ca-certificates \
+        curl \
+        # TODO(#208): remove once install_compiler.sh uses curl instead of wget
+        wget \
+        git \
+        sudo \
+        xz-utils \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /work
+CMD ["bash"]

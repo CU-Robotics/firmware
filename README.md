@@ -45,6 +45,43 @@ make help
 ```
 
 
+## Building for the robots (Jetson) in a container
+
+The robots run Ubuntu on NVIDIA Jetsons (aarch64). `Dockerfile.test` mirrors
+that environment so you can confirm the firmware builds for the robots without
+needing one in front of you. Build the image once:
+
+```bash
+docker build -f Dockerfile.test -t fw-test .
+```
+
+Both use cases below share that image. Always mount a volume over
+`tools/compiler`: without it, `make install` overwrites your host toolchain.
+
+### Everyday builds
+
+```bash
+docker run --rm -it -v "$PWD:/work" -v fw-compiler:/work/tools/compiler -v fw-build:/work/build fw-test
+```
+
+Run `make install && make build` the first time. The toolchain persists in the
+`fw-compiler` volume, so later sessions only need `make build`. Builds only:
+`make upload` and `make monitor` need the Teensy on USB.
+
+### Testing a fresh setup
+
+To check `make install` from nothing, as on a new Jetson, use a throwaway
+volume and delete it after:
+
+```bash
+docker run --rm -it -v "$PWD:/work" -v fw-fresh:/work/tools/compiler -v fw-build:/work/build fw-test bash -lc 'make install && make build'
+```
+
+```bash
+docker volume rm fw-fresh
+```
+
+
 ## Contributing
 `main` is the production branch, which is required to be in an always working state.
 - Only authorized members can merge to `main`. All merges must go through a review and pull request. Direct pushes to `main` branches are strictly forbidden.
