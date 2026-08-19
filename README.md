@@ -44,6 +44,17 @@ There are a few other nice helper functions within the makefile. This will list 
 make help
 ```
 
+## Docker (NVIDIA Jetson)
+The `Dockerfile` provides an arm64 Ubuntu 24.04 sandbox that mimics a fresh Jetson, so you can check that the compiler installs and the firmware builds without having a Jetson on hand. It does not flash hardware.
+
+Your checkout is mounted read-only and copied into a Docker volume, so the container never writes to your working tree. Install the toolchain, build, and reset to a clean Jetson with:
+
+```bash
+docker compose run --rm install
+docker compose run --rm build
+docker compose down -v
+```
+
 
 ## Contributing
 `main` is the production branch, which is required to be in an always working state.

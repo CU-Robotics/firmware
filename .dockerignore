@@ -1,0 +1,3 @@
+# Nothing from the repo is COPYed into the image (it is bind-mounted at
+# runtime), so keep the build context empty.
+*
