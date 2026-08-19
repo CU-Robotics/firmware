@@ -1,6 +1,5 @@
-# Mirrors the robots' NVIDIA Jetsons (aarch64 Ubuntu) so we can check that the
-# firmware builds there. The platform is pinned so the arch is right even when
-# the image is built from an x86 machine.
+# Mirrors the robots' NVIDIA Jetsons (aarch64 Ubuntu) so we can test
+# builds and scripts from other platforms (e.g. x86_64 Ubuntu, macOS)
 FROM --platform=linux/arm64 ubuntu:24.04
 
 # Prerequisites to `make install`
