@@ -17,9 +17,11 @@ ENV DEBIAN_FRONTEND=noninteractive
 
 # The Arm toolchain only ships an aarch64 Linux build, so a non-arm64 image
 # would fail confusingly much later. Catch it at build time instead.
+# docker-compose.yml already pins platform: linux/arm64, so this only trips for
+# a hand-rolled `docker build` on an x86 host.
 RUN if [ "$(uname -m)" != "aarch64" ]; then \
         echo "ERROR: this image must be built for arm64/aarch64 (got $(uname -m))." >&2; \
-        echo "       On an x86 host use: docker build --platform linux/arm64 ..." >&2; \
+        echo "       Use docker compose, or pass --platform linux/arm64 to docker build." >&2; \
         exit 1; \
     fi
 

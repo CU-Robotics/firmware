@@ -10,6 +10,7 @@
 # install_compiler.sh starts with `rm -rf ./tools/compiler`, and it installs
 # Linux binaries -- neither belongs anywhere near your host working tree.
 x-sandbox: &sandbox
+  platform: linux/arm64
   build:
     context: .
     dockerfile: Dockerfile
