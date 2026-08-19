@@ -58,32 +58,54 @@ if [[ "$OS" == "Linux" ]]; then
   elif [[ "$DISTRO" == "debian" ]]; then
     echo "--> Starting Debian based tytools installer..."
 
+    # tytools is installed from a pinned .deb rather than by adding
+    # download.koromix.dev to APT, so nothing persists in /etc/apt and everyone
+    # on the team runs an identical build. To bump it, pick a version from
+    #   https://download.koromix.dev/debian/dists/stable/main/binary-<arch>/Packages
+    # and copy the Version and SHA256 fields for each architecture.
+    TYTOOLS_VERSION="0.9.9-1165"
+    DEB_ARCH="$(dpkg --print-architecture)"
+    case "$DEB_ARCH" in
+      amd64) TYTOOLS_SHA256="4e5ec03db55dc1119465d0303661c71f3432070bcbb6d17e1d026ee5321c099f" ;;
+      arm64) TYTOOLS_SHA256="28d3ce85c7fb0bb7e79d4eb034c64613bb35938acae0f81fa9b6e8afbdc00d79" ;;
+      *)
+        echo "[ERROR] No tytools package for architecture: $DEB_ARCH" >&2
+        echo "Upstream builds amd64 and arm64 only. Build it from source instead:" >&2
+        echo "  https://github.com/Koromix/tytools" >&2
+        exit 1
+        ;;
+    esac
+
+    DEB_NAME="tytools_${TYTOOLS_VERSION}_${DEB_ARCH}.deb"
+    DEB_URL="https://download.koromix.dev/debian/pool/${DEB_NAME}"
+
     # 1. Ensure curl is present
     echo "Installing curl..."
     sudo apt update
     sudo apt install -y curl
 
-    # 2. Prepare keyrings directory
-    echo "Creating /etc/apt/keyrings with proper perm..."
-    sudo mkdir -p -m0755 /etc/apt/keyrings
+    # 2. Download the pinned package
+    TMP_DIR="$(mktemp -d)"
+    trap 'rm -rf "$TMP_DIR"' EXIT
 
-    # 3. Download Koromix key
-    echo "Downloading Koromix GPG key..."
-    sudo curl -fsSL \
-      https://download.koromix.dev/debian/koromix-archive-keyring.gpg \
-      -o /etc/apt/keyrings/koromix-archive-keyring.gpg
+    echo "Downloading ${DEB_NAME}..."
+    curl -fL --retry 3 --retry-delay 2 -o "${TMP_DIR}/${DEB_NAME}" "$DEB_URL"
 
-    # 4. Add repo to sources.list.d
-    echo "Adding Koromix repo..."
-    echo \
-      "deb [signed-by=/etc/apt/keyrings/koromix-archive-keyring.gpg] \
-https://download.koromix.dev/debian stable main" \
-      | sudo tee /etc/apt/sources.list.d/koromix.dev-stable.list > /dev/null
+    # 3. Verify it before handing it to dpkg
+    echo "Verifying checksum..."
+    ACTUAL="$(sha256sum "${TMP_DIR}/${DEB_NAME}" | awk '{print $1}')"
+    if [[ "$ACTUAL" != "$TYTOOLS_SHA256" ]]; then
+      echo "[ERROR] Checksum mismatch for ${DEB_NAME}" >&2
+      echo "  expected: $TYTOOLS_SHA256" >&2
+      echo "  actual:   $ACTUAL" >&2
+      echo "The download was corrupted or the pinned build changed. Nothing was installed." >&2
+      exit 1
+    fi
 
-    # 5. Update & install
-    echo "Updating APT and installing tytools..."
-    sudo apt update
-    sudo apt install -y tytools
+    # 4. Install it. apt pulls the Qt6 and udev dependencies from the distro's
+    #    own repositories, so only the tytools package itself comes from here.
+    echo "Installing tytools..."
+    sudo apt install -y "${TMP_DIR}/${DEB_NAME}"
 
     echo "[OK] tytools installed!"
 
