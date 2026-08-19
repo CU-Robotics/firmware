@@ -41,19 +41,17 @@ if [[ "$OS" == "Linux" ]]; then
     # 2. Prepare a temporary build directory for AUR package
     echo "Creating temp build directory..."
     BUILD_DIR="$(mktemp -d)"
+    # Clean up even if the clone or build fails partway through
+    trap 'rm -rf "$BUILD_DIR"' EXIT
 
     # 3. Clone the tytools AUR package
     echo "Downloading tytools AUR pkg..."
     git clone https://aur.archlinux.org/tytools.git "$BUILD_DIR/tytools"
 
-    # 4. Enter the cloned package directory
-    echo "Entering tytools build dir..."
-    cd "$BUILD_DIR/tytools"
-
-    # 5. Build and install tytools with makepkg
+    # 4. Build and install tytools with makepkg, in a subshell so we do not
+    #    have to cd back afterwards
     echo "Building..."
-    makepkg -si --noconfirm
-    cd - >/dev/null && rm -rf "$BUILD_DIR"
+    ( cd "$BUILD_DIR/tytools" && makepkg -si --noconfirm )
 
     echo "[DONE] tytools installed! yay! :3"
 
@@ -97,28 +95,37 @@ https://download.koromix.dev/debian stable main" \
 elif [[ "$OS" == "Darwin" ]]; then
   echo "--> Running macOS installer (tycmd)..."
 
-  REPO_URL="https://github.com/CU-Robotics/tycmd.git"
+  # tycmd is a prebuilt binary installed with sudo, so it is pinned to one
+  # commit and verified rather than tracking whatever is on main. To bump it,
+  # pick a commit and record its hash:
+  #   curl -fsSL https://raw.githubusercontent.com/CU-Robotics/tycmd/<sha>/tycmd | shasum -a 256
+  TYCMD_COMMIT="5a416e8adfa0c454948f53bd801b3ce3e7f30f9c"
+  TYCMD_SHA256="00593e4d53672bf3ae86d30bb8eead3f4c8f671480f706a33129d2368952444a"
+  TYCMD_URL="https://raw.githubusercontent.com/CU-Robotics/tycmd/${TYCMD_COMMIT}/tycmd"
+
   BIN_NAME="tycmd"
   DEST_DIR="/usr/local/bin"
   TMP_DIR="$(mktemp -d)"
+  trap 'rm -rf "$TMP_DIR"' EXIT
 
-  echo "Cloning ${REPO_URL} into ${TMP_DIR}..."
-  git clone "${REPO_URL}" "${TMP_DIR}"
+  echo "Downloading ${BIN_NAME} (${TYCMD_COMMIT:0:7})..."
+  curl -fL --retry 3 --retry-delay 2 -o "${TMP_DIR}/${BIN_NAME}" "$TYCMD_URL"
 
-  # Verify file exists (may not be executable yet)
-  if [[ ! -e "${TMP_DIR}/${BIN_NAME}" ]]; then
-    echo "Error: '${BIN_NAME}' not found in repo root."
+  echo "Verifying checksum..."
+  ACTUAL="$(shasum -a 256 "${TMP_DIR}/${BIN_NAME}" | awk '{print $1}')"
+  if [[ "$ACTUAL" != "$TYCMD_SHA256" ]]; then
+    echo "[ERROR] Checksum mismatch for ${BIN_NAME}" >&2
+    echo "  expected: $TYCMD_SHA256" >&2
+    echo "  actual:   $ACTUAL" >&2
+    echo "The download was corrupted or the pinned commit changed. Nothing was installed." >&2
     exit 1
   fi
 
-  echo "Moving '${BIN_NAME}' to ${DEST_DIR} (requires sudo)..."
-  sudo mv "${TMP_DIR}/${BIN_NAME}" "${DEST_DIR}/"
-
-  echo "Setting executable permissions..."
-  sudo chmod +x "${DEST_DIR}/${BIN_NAME}"
-
-  echo "Cleaning up..."
-  rm -rf "${TMP_DIR}"
+  # macOS does not create /usr/local/bin, and Homebrew on Apple Silicon uses
+  # /opt/homebrew, so a clean Mac may not have it yet.
+  echo "Installing '${BIN_NAME}' to ${DEST_DIR} (requires sudo)..."
+  sudo mkdir -p "${DEST_DIR}"
+  sudo install -m 0755 "${TMP_DIR}/${BIN_NAME}" "${DEST_DIR}/${BIN_NAME}"
 
   echo "[OK] '${BIN_NAME}' installed to ${DEST_DIR}/${BIN_NAME}."
 
