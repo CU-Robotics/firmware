@@ -1,10 +1,12 @@
 # Optional features: PROFILER, COMMS_DEBUG, REF_SYSTEM_DEBUG, CAN_MANAGER_DEBUG
-# Example: make clean build FEATURE_DEFINES="-DPROFILER -DCOMMS_DEBUG"
+# Set them on the line below, e.g. FEATURE_DEFINES ?= -DPROFILER -DCOMMS_DEBUG
+# Rebuild from scratch after editing this line:
+#   make clean
+#   make build
 FEATURE_DEFINES ?=
 
-# Set to 1 to disassemble every object file alongside it, for inspecting the
-# codegen of a single translation unit. Off by default: it adds ~600MB to
-# build/ and a couple of seconds to a clean build.
+# Set to 1 to disassemble every object file alongside it, for inspecting a
+# single translation unit.
 DUMP_OBJS ?= 0
 
 # Build in parallel across all available cores by default.
