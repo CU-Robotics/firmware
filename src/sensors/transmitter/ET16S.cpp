@@ -1,6 +1,7 @@
 #include "ET16S.hpp"
 #include "sensors/RefSystem.hpp"
 #include "comms/data/sendable.hpp"
+#include "state.hpp"
 
 ET16S::ET16S(const Cfg::ET16S& config) : config(config) { }
 
@@ -25,7 +26,6 @@ void ET16S::init() {
 	channel[3].kind = InputKind::STICK;
 	//configure remaining channels
 	set_config();
-
 }
 
 void ET16S::read() {
@@ -436,11 +436,15 @@ void ET16S::set_channel_data() {
 }
 
 void ET16S::test_connection() {		
+	static uint32_t last_connected_time = 0;
+
 	uint16_t flag_byte = channel[16].raw_format;
 	if (flag_byte & DISCONNECT) {
-		is_connect = false;
+		is_connect = (millis() - last_connected_time) < 500; // if we have been disconnected for more than 1 second, we are not connected
+
 	} else {
 		is_connect = true;
+		last_connected_time = millis();
 	}
 }
 
@@ -608,11 +612,15 @@ ET16SData ET16S::get_ET16S_data(){
 	return ET16S_data;
 }
 
-void ET16S::manual_controls(const RobotStateMap& estimated_state_map, RobotStateMap& target_state_map, bool not_safety_mode, float& feed, float& last_feed) {
+void ET16S::manual_controls(const RobotStateMap& estimated_state_map, RobotStateMap& target_state_map, bool not_safety_mode, float& feed, float& last_feed) {	
 	float delta = control_input_timer.delta();
+	VTMRemoteControl vtm_input = ref.ref_data.vtm_remote_control;
+	if (!vtm_input.is_fresh()) {
+		vtm_input.clear();
+	}
 	
-	vtm_pos_x += ref.ref_data.kbm_interaction.mouse_speed_x * 0.05 * delta;
-	vtm_pos_y += ref.ref_data.kbm_interaction.mouse_speed_y * 0.05 * delta;
+	vtm_pos_x += vtm_input.mouse_speed_x * 0.05 * delta;
+	vtm_pos_y += -vtm_input.mouse_speed_y * 0.05 * delta;
 
 	float pitch_min = estimated_state_map[Cfg::StateName::GimbalPitch].config().reference_limits.position.min;
     float pitch_max = estimated_state_map[Cfg::StateName::GimbalPitch].config().reference_limits.position.max;
@@ -635,9 +643,9 @@ void ET16S::manual_controls(const RobotStateMap& estimated_state_map, RobotState
 	if (estimated_state_map[Cfg::StateName::ChassisX].config().governor_type == Cfg::StateOrder::Velocity) { // if we should be controlling velocity
 
 		chassis_vel_x = get_l_stick_y() * 5.4 +
-						(-ref.ref_data.kbm_interaction.key_w + ref.ref_data.kbm_interaction.key_s) * 2.5;
+						(vtm_input.key_w - vtm_input.key_s) * 2.5;
 		chassis_vel_y = -(get_l_stick_x() * 5.4) +
-						(ref.ref_data.kbm_interaction.key_d - ref.ref_data.kbm_interaction.key_a) * 2.5;
+						(vtm_input.key_a - vtm_input.key_d) * 2.5;
 		
 	} else if (estimated_state_map[Cfg::StateName::ChassisX].config().governor_type == Cfg::StateOrder::Position) { // if we should be controlling position
 		chassis_pos_x = get_l_stick_x() * 2 + pos_offset_x;
@@ -652,15 +660,15 @@ void ET16S::manual_controls(const RobotStateMap& estimated_state_map, RobotState
 		(get_switch_b() == SwitchPos::FORWARD || get_switch_b() == SwitchPos::MIDDLE) ? 18 : 0; // m/s
 	// if the right switch is forward, and either the left mouse button is pressed or the right switch is not
 	// backward, set the feeder to something. Otherwise, set it to 0
-	float feeder_target = (((ref.ref_data.kbm_interaction.button_left) &&
-							get_switch_b() != SwitchPos::BACKWARD) || get_switch_b() == SwitchPos::FORWARD) ? 10 : 0;
+	float feeder_target = ((vtm_input.button_left || get_switch_h() == SwitchPos::BACKWARD) && fly_wheel_target > 0) ? 12 : 0;
 	if (estimated_state_map[Cfg::StateName::Feeder].config().governor_type == Cfg::StateOrder::Position) {
 		float dt2 = timer.delta();
-		if (dt2 > 0.1)
-			dt2 = 0;
+		if (dt2 > 0.1) dt2 = 0;
 		// check if the shooter is active
-		if (not_safety_mode && ref.ref_data.robot_performance.shooter_power_active)
+		if (not_safety_mode && ref.ref_data.robot_performance.shooter_power_active) {
 			feed += feeder_target * dt2;
+		}
+		
 		target_state_map[Cfg::StateName::Feeder].set_position((int)feed);
 	} else { 
 		target_state_map[Cfg::StateName::Feeder].set_velocity(feeder_target);

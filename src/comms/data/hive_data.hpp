@@ -16,6 +16,8 @@ struct HiveData {
     TestData test_data;
     /// @brief Big test data
     BigTestData big_test_data;
+	/// @brief data for measuring 2 way latency
+    TestLatencyData latency_data;
 
     /// @brief Target state received from Hive; This is used as a reference for firmware to follow using its reference governor, state estimator and controllers.
     TargetState target_state_data;
@@ -23,6 +25,8 @@ struct HiveData {
     /// @brief Override state received from Hive; This is used to override the robot state estimate on firmware with a new one.
     OverrideState override_state_data;
 
+    /// @brief stores the stereo camera trigger start and stop information
+    StereoCamStartStop stereo_cam_start_stop;
     /// @brief The configuration data filled as config sections are received over comms. This should only be used after all config sections have been received.
     Cfg::RobotConfig config;
 };

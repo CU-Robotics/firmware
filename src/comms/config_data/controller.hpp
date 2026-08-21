@@ -41,7 +41,11 @@ enum class GenericControllerMotorUse : uint32_t {
     PitchRight,
     FlywheelLeft,
     FlywheelRight,
+    FlywheelBottom,
     Feeder,
+    NearFeeder,
+    FarFeeder,
+    UpperFeeder,
 };
 
 
@@ -64,6 +68,8 @@ enum class GenericControllerStateUse : uint32_t {
     GimbalPitch,
     ShooterBallVelocity,
     FeederBallPosition,
+    LowerFeederBallPosition,
+    UpperFeederBallPosition,
 };
 /// @brief This enum represents the different types of controllers that can be configured in the config.
 enum class ControllerType : uint32_t {
@@ -73,6 +79,7 @@ enum class ControllerType : uint32_t {
     PitchController,
     FlywheelController,
     FeederController,
+    LowerFeederController,
 };
 /// @brief This enum represents the different types of subcontrollers that a controller can be configured to have.
 enum class SubControllerType : uint32_t {
@@ -89,6 +96,11 @@ enum class SubControllerType : uint32_t {
     
     FullStatePositionController,
     FullStateVelocityController,
+
+    UpperFeederPositionController,
+    UpperFeederVelocityController,
+    LowerFeederPositionController,
+    LowerFeederVelocityController,
 };
 /// @brief Gains for a sub controller.
 struct Gains {
@@ -117,10 +129,24 @@ struct GearRatios {
     int motor1_direction = 0;
     /// @brief direction of motor 2 either 1 or -1
     int motor2_direction = 0;
+    /// @brief direction of motor 3 either 1 or -1
+    int motor3_direction = 0;
     /// @brief the ratio between ball velocity in m/s and flywheel velocity in rad/s for the flywheel motors.
     float ball_to_flywheel_rad = 0.0;
     /// @brief direction of the feeder motor either 1 or -1
     int feeder_direction = 0;
+    /// @brief direction of the upper feeder motor either 1 or -1
+    int upper_feeder_direction = 0;
+    /// @brief direction of the lower feeder motor either 1 or -1
+    int lower_feeder_direction = 0;
+    /// @brief the ratio between acceleration and normalized motor torque
+    float accel_to_normalized_torque = 0.0;
+    /// @brief the ratio between upper feeder acceleration in rad/s^2 and normalized motor torque for the upper feeder motor.
+    float upper_accel_to_normalized_torque = 0.0;
+    /// @brief the ratio between lower feeder acceleration in rad/s^2 and normalized motor torque for the lower feeder motors.
+    float lower_accel_to_normalized_torque = 0.0;
+    /// @brief in balls, the threshold for how far apart the upper and lower feeders can be before we stop the upper feeder from incrementing its target
+    float sync_threshold = 0.0; 
 };
 /// @brief Subcontroller configuration for a controller.
 struct SubController {

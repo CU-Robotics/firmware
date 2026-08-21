@@ -21,6 +21,7 @@ enum class TypeLabel : uint16_t {
     ET16SData,
     MotorStateData,
     TargetState,
+    ReferenceState,
     EstimatedState,
     OverrideState,
     CommsRefData,
@@ -36,6 +37,9 @@ enum class TypeLabel : uint16_t {
     StereoCameraTriggerConfig,
     StateConfig,
     TransmitterConfig,
+    StartStereoTrigger,
+    StopStereoTrigger,
+    TestLatencyData,
 };
 
 /// @brief Converts a TypeLabel to a string.
@@ -71,6 +75,8 @@ inline std::string to_string(TypeLabel type_label) {
         return "MotorStateData";
     case TypeLabel::TargetState:
         return "TargetState";
+    case TypeLabel::ReferenceState:
+        return "ReferenceState";
     case TypeLabel::EstimatedState:
         return "EstimatedState";
     case TypeLabel::OverrideState:
@@ -102,6 +108,12 @@ inline std::string to_string(TypeLabel type_label) {
         return "StateConfig";
     case TypeLabel::TransmitterConfig:
         return "TransmitterConfig";
+    case TypeLabel::StartStereoTrigger:
+        return "StartStereoTrigger";
+    case TypeLabel::StopStereoTrigger:
+        return "StopStereoTrigger";
+    case TypeLabel::TestLatencyData:
+	return "TestLatencyData";
     // no default case, so the compiler will warn us if we forget a case
     }
 

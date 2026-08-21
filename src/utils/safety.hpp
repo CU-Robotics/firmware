@@ -19,10 +19,33 @@ namespace safety {
         return safety_function;
     }
 
+    /// @brief Get a reference to the static safety mode active flag
+    /// @return A reference to the static boolean indicating if safety mode is currently active
+    inline bool& is_safety_mode_active() {
+        static bool safety_mode_active = false;
+        return safety_mode_active;
+    }
+
+    /// @brief Set the safety mode state
+    /// @param active true if safety mode is active (robot not being actively controlled), false otherwise
+    inline void set_safety_mode(bool active) {
+        is_safety_mode_active() = active;
+    }
+
     /// @brief Register a safety function to be called when a safety procedure is triggered
     /// @param func The safety function to register
     inline void register_safety_function(SafetyFunction func) {
         safety_function_handle() = std::move(func);
+    }
+
+    /// @brief Call the registered safety function and return true. If no safety function is registered, return false.
+    /// @return true if a safety function was registered and invoked, false otherwise.
+    inline bool call_safety_function() {
+        SafetyFunction &func = safety_function_handle();
+        if (!func) { return false; }
+
+        func();
+        return true;
     }
 
     /// @brief Trigger the safety procedure, which will call the registered safety function and then enter an infinite loop. If a safety function is not registered, it will immediately enter the infinite loop.
@@ -32,10 +55,7 @@ namespace safety {
     template<typename... Args>
     [[noreturn]] inline void safety_procedure(const char* message, Args&&... args) {
         Serial.printf("Safety procedure triggered!\n");
-        SafetyFunction func = safety_function_handle();
-        if (func) {
-            func();
-        } else{
+        if (!call_safety_function()) {
             Serial.printf("Safety procedure triggered but no safety function registered!\n");
         }
 

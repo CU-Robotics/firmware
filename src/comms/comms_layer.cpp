@@ -17,6 +17,8 @@ extern "C" void reset_teensy(void) {
 
 namespace Comms {
 
+CommsLayer comms_layer;
+	
 CommsLayer::CommsLayer() {
     Serial.printf("CommsLayer: constructed\n");
 };

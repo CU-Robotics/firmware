@@ -9,7 +9,7 @@ extern "C" void reset_teensy(void);
 namespace Comms {
 
 void HiveData::set_data(CommsData* data) {
-    Serial.printf("HiveData::set_data received type label %d\n", static_cast<uint8_t>(data->type_label));
+    // Serial.printf("HiveData::set_data received type label %d\n", static_cast<uint8_t>(data->type_label));
     // place the data in the mega struct
     switch (data->type_label) {
     case TypeLabel::TestData: {
@@ -32,6 +32,7 @@ void HiveData::set_data(CommsData* data) {
     }
     case TypeLabel::OverrideState: {
         OverrideState* o_state = static_cast<OverrideState*>(data);
+        Serial.printf("Received override state\n");
         memcpy(&override_state_data, o_state, sizeof(OverrideState));
         // override_state = *static_cast<OverrideState*>(data);
         break;
@@ -110,6 +111,23 @@ void HiveData::set_data(CommsData* data) {
         Serial.printf("Transmitter %u received\n", static_cast<uint32_t>(transmitter->transmitter_type));
         break;
     }
+    case TypeLabel::StartStereoTrigger: {
+        StartStereoTrigger* start_trigger = static_cast<StartStereoTrigger*>(data);
+        stereo_cam_start_stop.start_received = true;
+        Serial.printf("Start stereo trigger for %u received\n", static_cast<uint32_t>(start_trigger->camera_trigger_name));
+        break;
+    }
+    case TypeLabel::StopStereoTrigger: {
+        StopStereoTrigger* stop_trigger = static_cast<StopStereoTrigger*>(data);
+        stereo_cam_start_stop.stop_received = true;
+        Serial.printf("Stop stereo trigger for %u received\n", static_cast<uint32_t>(stop_trigger->camera_trigger_name));
+        break;
+    }
+    case TypeLabel::TestLatencyData: {
+	     TestLatencyData* latency_data_ = static_cast<TestLatencyData*>(data);
+	     memcpy(&latency_data, latency_data_, sizeof(TestLatencyData));
+	     break;
+     }
     default:
         safety::safety_procedure("HiveData::set_data: Invalid type label given to place in mega struct: %u\n", static_cast<uint32_t>(data->type_label));
     }

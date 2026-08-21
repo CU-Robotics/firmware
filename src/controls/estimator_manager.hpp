@@ -4,7 +4,7 @@
 #include "estimator.hpp"
 #include "sensors/sensor_manager.hpp"
 
-/// @brief Manage all estimators for macro and micro state
+/// @brief Manage all estimators for robot state
 class EstimatorManager {
 private:
     /// @brief List of all estimators that are currently active
