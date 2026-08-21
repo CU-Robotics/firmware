@@ -7,6 +7,7 @@
 # Ignore the build directory
 build
 build/
+.pio/
 
 # Ignore the output binaries
 *.elf
@@ -42,11 +43,5 @@ src/git_info.h
 .vscode
 .zed
 
-# Ignore Rust tool's build directory
-/tools/waggle-interceptor/target
-
 #ignore bear files
 .bearwrap
-
-# Ignore PlatformIO build artifacts
-.pio

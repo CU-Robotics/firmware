@@ -121,21 +121,7 @@ MAKEFLAGS += -j$(nproc)
 .PHONY: build test
 
 # Main build target; depends on the target executable and git scraper
-build: clangd $(BUILD_DIR)/$(TARGET_EXEC)
-
-# Unit testing target, runs on Teensy via PlatformIO and Unity
-test:
-	@echo "[Running PlatformIO Unity tests on Teensy 4.1]"
-	@command -v pio >/dev/null || { echo "PlatformIO not found."; exit 1; }
-	@command -v tycmd >/dev/null || { echo "tycmd not found. Run 'make install'."; exit 1; }
-	@tycmd reset -b 2>/dev/null || true; sleep 1
-	@pio test -e teensy41_test_sensors
-	@tycmd reset -b; sleep 1
-	@pio test -e teensy41_test_fltrs
-	@tycmd reset -b; sleep 1
-	@pio test -e teensy41_test_utils
-	@tycmd reset -b; sleep 1
-	@pio test -e teensy41_test_cntrls
+build:	clangd $(BUILD_DIR)/$(TARGET_EXEC)
 # Final linking step to create the executable.
 # This rule links all the object files to produce the final ELF executable.
 # It depends on all object files and the 'git_scraper' target to ensure
@@ -169,7 +155,8 @@ $(BUILD_DIR)/$(TARGET_EXEC): git_scraper $(SRC_OBJS) $(LIBRARY_OBJS) $(TEENSY_OB
     # Disassemble the ELF executable to a .dump file
 	@$(OBJDUMP) -dstz $(BUILD_DIR)/$(TARGET_EXEC).elf > $(BUILD_DIR)/$(TARGET_EXEC).dump
 
-
+# Ensure git_scraper finishes before compiling any object files
+$(SRC_OBJS) $(LIBRARY_OBJS) $(TEENSY_OBJS): | git_scraper
 # Build step for compiling C source files
 $(BUILD_DIR)/%.c.o: %.c
 	@mkdir -p $(dir $@)
@@ -224,6 +211,7 @@ clean_teensy4:
 -include $(SRC_DEPS)
 
 # Build, run, and clean up the git scraper tool to store current Git info in a header file
+.PHONY: git_scraper
 git_scraper:
 	@$(HOST_CXX) -std=gnu++17 $(GIT_SCRAPER) -o $(TOOLS_DIR)/git_scraper
 	@$(TOOLS_DIR)/git_scraper
@@ -311,3 +299,17 @@ $(COMPILE_DB): Makefile $(COMPILE_DB_SCRIPT) $(COMPILE_DB_DIR_DEPS)
 	CFLAGS='$(CFLAGS)' \
 	SRC_FILES='$(SRC_SRC) $(LIBRARY_SRC) $(TEENSY_SRC)' \
 	"$(COMPILE_DB_SCRIPT)"
+
+# Unit testing target, runs on Teensy via PlatformIO and Unity
+test:
+	@echo "[Running PlatformIO Unity tests on Teensy 4.1]"
+	@command -v pio >/dev/null || { echo "PlatformIO not found."; exit 1; }
+	@command -v tycmd >/dev/null || { echo "tycmd not found. Run 'make install'."; exit 1; }
+	@tycmd reset -b 2>/dev/null || true; sleep 1
+	@pio test -e teensy41_test_sensors
+	@tycmd reset -b; sleep 1
+	@pio test -e teensy41_test_fltrs
+	@tycmd reset -b; sleep 1
+	@pio test -e teensy41_test_utils
+	@tycmd reset -b; sleep 1
+	@pio test -e teensy41_test_controls

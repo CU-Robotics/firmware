@@ -67,7 +67,7 @@ void test_xdrive_opposite_motor_pairs_negate(void) {
     TEST_ASSERT_FLOAT_WITHIN(1e-4f, -mv.v[3], mv.v[1]);
 }
 
-void test_xdrive_motor_index_inconsistency_documented(void) {
+void test_xdrive_motor_index_mapping(void) {
     MotorVelocities vel = xdrive_mix(1.0f, 0.0f, 0.0f, 0.0f);
 
     // position-mode assignment from controller.cpp (indices [1,2,3,0])
@@ -79,6 +79,8 @@ void test_xdrive_motor_index_inconsistency_documented(void) {
 
     TEST_ASSERT_FLOAT_WITHIN(1e-5f, vel.v[3], pos_motor[0]);
     TEST_ASSERT_FLOAT_WITHIN(1e-5f, vel.v[0], pos_motor[1]);
+    TEST_ASSERT_FLOAT_WITHIN(1e-5f, vel.v[1], pos_motor[2]);
+    TEST_ASSERT_FLOAT_WITHIN(1e-5f, vel.v[2], pos_motor[3]);
 }
 
 // Output Clamping
@@ -206,7 +208,7 @@ void setup() {
     RUN_TEST(test_xdrive_pure_rotation);
     RUN_TEST(test_xdrive_pure_x_at_90deg_heading);
     RUN_TEST(test_xdrive_opposite_motor_pairs_negate);
-    RUN_TEST(test_xdrive_motor_index_inconsistency_documented);
+    RUN_TEST(test_xdrive_motor_index_mapping);
 
     RUN_TEST(test_clamp_large_positive_becomes_one);
     RUN_TEST(test_clamp_large_negative_becomes_minus_one);
