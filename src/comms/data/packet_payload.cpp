@@ -1,5 +1,5 @@
 #include "packet_payload.hpp"
-#include "safety.hpp"
+#include "utils/safety.hpp"
 
 #include <algorithm>                        // for min
 #include "comms/comms_layer.hpp"            // for CommsLayer

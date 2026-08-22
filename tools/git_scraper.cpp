@@ -59,35 +59,53 @@ int main(int argc, char** argv) {
 		}
 	}
 
-	// Now we construct the header file
-	std::ofstream git_info_header(path_to_header + header_name);
-	if (!git_info_header.is_open()) {
-		std::cout << "Failed to open '" << path_to_header + header_name << "'" << std::endl;
-		return -1;
-	}
+	// Now we construct the header file in memory
+	std::ostringstream header_contents;
 
 	// Add a message saying this file was auto-generated
-	git_info_header << "// THIS IS AN AUTO-GENERATED FILE, DO NOT EDIT" << "\n\n";
+	header_contents << "// THIS IS AN AUTO-GENERATED FILE, DO NOT EDIT" << "\n\n";
 
 	// Add a header guard
-	git_info_header << "#ifndef " << header_guard << "\n";
-	git_info_header << "#define " << header_guard << "\n\n";
+	header_contents << "#ifndef " << header_guard << "\n";
+	header_contents << "#define " << header_guard << "\n\n";
 
 	// Add the branch name
-	git_info_header << "#define " << branch_define_name << " \"" << branch << "\"\n";
+	header_contents << "#define " << branch_define_name << " \"" << branch << "\"\n";
 	// Add the commit hash
-	git_info_header << "#define " << commit_define_name << " \"" << commit_hash << "\"\n";
+	header_contents << "#define " << commit_define_name << " \"" << commit_hash << "\"\n";
 	// Add the commit message
-	git_info_header << "#define " << commit_msg_define_name << " \"" << commit_msg << "\"\n\n";
+	header_contents << "#define " << commit_msg_define_name << " \"" << commit_msg << "\"\n\n";
 
 	// Finish the header guard
-	git_info_header << "#endif // " << header_guard;
+	header_contents << "#endif // " << header_guard;
 
 	// Clean up and remove the temp text file
 	git_info_txt.close();
-	git_info_header.close();
-
 	std::filesystem::remove(temp_txt_name);
+
+	// Only rewrite the header if it would actually change. Rewriting it
+	// unconditionally bumps its mtime every build, which forces make to
+	// recompile every translation unit that includes it.
+	const std::string header_path = path_to_header + header_name;
+	std::ifstream existing_header(header_path);
+	if (existing_header.is_open()) {
+		std::stringstream existing_contents;
+		existing_contents << existing_header.rdbuf();
+		existing_header.close();
+
+		if (existing_contents.str() == header_contents.str()) {
+			return 0;
+		}
+	}
+
+	std::ofstream git_info_header(header_path);
+	if (!git_info_header.is_open()) {
+		std::cout << "Failed to open '" << header_path << "'" << std::endl;
+		return -1;
+	}
+
+	git_info_header << header_contents.str();
+	git_info_header.close();
 
 	return 0;
 }

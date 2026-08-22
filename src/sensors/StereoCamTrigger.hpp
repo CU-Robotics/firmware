@@ -4,7 +4,7 @@
 #include <avr/interrupt.h>
 #include "sensors/sensor.hpp"
 #include "comms/data/stereo_cam_trigger_data.hpp"
-#include "robot_state_map.hpp"
+#include "controls/robot_state_map.hpp"
 #include <memory>
 
 

@@ -28,7 +28,6 @@ compile_commands.json
 # Ignore any tools/ directory artifacts
 tools/*.txt
 tools/*.out
-tools/git_scraper
 tools/custom_monitor
 tools/compiler
 tools/tools

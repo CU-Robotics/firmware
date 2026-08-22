@@ -5,7 +5,7 @@
 #include "state.hpp"      // for StateName
 #include "motor.hpp"      // for MotorName
 #include "sensor.hpp"     // for SensorName
-#include "safety.hpp" // for assert_or_safety_mode
+#include "utils/safety.hpp" // for assert_or_safety_mode
 
 /// These values are arbitrary limits for the size of the arrays in the Estimator struct. 
 // They should be large enough to accommodate any reasonable number of states, motors, or sensors used by an estimator configuration.

@@ -2,8 +2,8 @@
 
 #include "estimator.hpp"
 #include "filters/pid_filter.hpp"
-#include "motor.hpp"
-#include "safety.hpp"
+#include "sensors/can/motor.hpp"
+#include "utils/safety.hpp"
 #include "utils/timing.hpp"
 #include "sensors/can/can_manager.hpp"
 #include "robot_state_map.hpp"
