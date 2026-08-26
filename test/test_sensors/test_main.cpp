@@ -1,7 +1,6 @@
 #include <Arduino.h>
-#include <unity.h>
-
 #include "sensors/buff_encoder.hpp"
+#include <unity.h>
 
 // OG dummy sensor rocko tests
 

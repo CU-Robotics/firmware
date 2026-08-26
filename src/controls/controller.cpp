@@ -3,28 +3,6 @@
 #include "sensors/RefSystem.hpp"
 #include <cmath>
 
-// Pure math helpers (declared in controller.hpp, tested directly in unit tests)
-
-float compute_power_limit_ratio(float buffer, float limit_thresh, float critical_thresh) {
-    if (buffer >= limit_thresh) return 1.0f;
-    return constrain((buffer - critical_thresh) / limit_thresh, 0.0f, 1.0f);
-}
-
-MotorVelocities xdrive_mix(float x, float y, float rot, float heading) {
-    float ch = cos(heading);
-    float sh = sin(heading);
-    return {{
-         x * ch + y * sh + rot,
-         x * sh - y * ch + rot,
-        -x * ch - y * sh + rot,
-        -x * sh + y * ch + rot
-    }};
-}
-
-float clamp1(float v) {
-    return constrain(v, -1.0f, 1.0f);
-}
-
 namespace {
 /// @brief Unwrap a potentially wrapped error value to maintain continuity across wrap boundaries.
 /// @param error The current error value.

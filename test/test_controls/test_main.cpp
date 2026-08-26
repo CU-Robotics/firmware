@@ -1,7 +1,7 @@
 #include <Arduino.h>
 #include <unity.h>
 #include <cmath>
-#include "controls/controller.hpp"
+#include "controls/controller_math.hpp"
 
 // Power Limiting
 

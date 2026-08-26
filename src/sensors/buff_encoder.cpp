@@ -1,5 +1,7 @@
 #include "buff_encoder.hpp"
+#ifndef UNIT_TEST
 #include "comms/data/sendable.hpp"
+#endif
 
 const SPISettings BuffEncoder::m_settings = SPISettings(1000000, MT6835_BITORDER, SPI_MODE3);
 
@@ -169,9 +171,11 @@ float BuffEncoder::read_zero_pos() {
 }
 
 void BuffEncoder::send_to_comms() const {
+#ifndef UNIT_TEST
     Comms::Sendable<BuffEncoderData> sendable;
     sendable.data = comms_data;
     sendable.send_to_comms();
+#endif
 }
 
 void BuffEncoder::print() const{
