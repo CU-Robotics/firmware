@@ -1,5 +1,5 @@
 #include "controller.hpp"
-#include "motor.hpp"
+#include "sensors/can/motor.hpp"
 #include "sensors/RefSystem.hpp"
 #include <cmath>
 
