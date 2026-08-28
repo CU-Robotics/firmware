@@ -1,6 +1,6 @@
 #include "StereoCamTrigger.hpp"
 #include "comms/data/sendable.hpp"
-#include "transmitter_utils.hpp"
+#include "sensors/transmitter/transmitter_utils.hpp"
 #include <core_pins.h>
 
 std::unique_ptr<RobotStateMap>* StereoCamTrigger::estimated_state_map_interrupt_safe = nullptr;

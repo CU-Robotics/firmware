@@ -2,18 +2,17 @@
 #include <Arduino.h>
 #include <optional>
 
-#include "can_manager.hpp"
+#include "sensors/can/can_manager.hpp"
 #include "comms/comms_layer.hpp"
 #include "controls/reference_governor.hpp"
 #include "controls/state.hpp"
 #include "git_info.h"
 
-#include "robot_state_map.hpp"
-#include "safety.hpp"
+#include "controls/robot_state_map.hpp"
+#include "utils/safety.hpp"
 #include "sensors/buff_encoder.hpp"
-#include "state.hpp"
+#include "comms/config_data/state.hpp"
 #include "utils/boot_splash.hpp"
-#include "utils/profiler.hpp"
 
 #include "sensors/d200.hpp"
 #include "sensors/transmitter/transmitter_manager.hpp"
@@ -22,8 +21,10 @@
 #include "controls/controller_manager.hpp"
 #include "controls/estimator_manager.hpp"
 #include "sensors/RefSystem.hpp"
-#include "sensor_manager.hpp"
 
+#include "sensors/StereoCamTrigger.hpp"
+
+#include "sensors/sensor_manager.hpp"
 #include <TeensyDebug.h>
 #include "utils/profiler.hpp"
 #include "utils/system_log.hpp"

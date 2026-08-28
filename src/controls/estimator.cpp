@@ -2,7 +2,7 @@
 #include <limits>
 
 #include "estimator.hpp"
-#include "ICM20649.hpp"
+#include "sensors/ICM20649.hpp"
 #include "utils/vector_math.hpp"
 #include "utils/wrapping.hpp"
 #include "sensors/RefSystem.hpp"

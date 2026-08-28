@@ -5,7 +5,7 @@
 #include "comms/data/comms_data.hpp" // for CommsData, TypeLabel, to_string
 #include "comms/config_data/motor.hpp" // for Motor
 #include "state.hpp" // for StateName
-#include "safety.hpp" // for assert_or_safety_mode
+#include "utils/safety.hpp" // for assert_or_safety_mode
 
 /// These values are arbitrary limits for the size of the arrays in the Controller struct. 
 // They should be large enough to accommodate any reasonable number of motors, states, or sub controllers per controller configuration.

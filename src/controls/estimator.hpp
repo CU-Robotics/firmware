@@ -1,8 +1,8 @@
 #pragma once
 
-#include "estimator.hpp"
+#include "comms/config_data/estimator.hpp"
 #include "robot_state_map.hpp"
-#include "safety.hpp"
+#include "utils/safety.hpp"
 #include "sensors/can/can_manager.hpp"
 #include "state.hpp"
 #include "utils/timing.hpp"

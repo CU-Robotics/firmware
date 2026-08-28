@@ -1,10 +1,6 @@
 #ifndef PROFILER_H
 #define PROFILER_H
 
-// Dont use this flag to toggle profiling globally.
-//#define PROFILER
-//JUST USE make debug
-
 #include <Arduino.h>
 
 #define PROF_MAX_SECTIONS 10   // max number of active profiling sections

@@ -1,7 +1,7 @@
 #include "can_manager.hpp"
 
 // driver includes are here not in header since they're only needed in the implementation
-#include "safety.hpp"
+#include "utils/safety.hpp"
 #include "sensors/can/C610.hpp"
 #include "sensors/can/C620.hpp"
 #include "sensors/can/MG8016EI6.hpp"
