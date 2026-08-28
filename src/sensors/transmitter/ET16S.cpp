@@ -697,16 +697,21 @@ void ET16S::manual_controls(const RobotStateMap& estimated_state_map, RobotState
 		feed = last_feed;
     }
     if (is_fast_mode_active()) {
-		target_state_map[Cfg::StateName::ChassisHeading].set_position(3.1416f / 4.0f);
-    } else {
-        target_state_map[Cfg::StateName::ChassisHeading].set_position(0);
+		float current_angle = estimated_state_map[Cfg::StateName::ChassisHeading].get_position();
+        float target_angle = 3.14159f / 4.0f; // 45 degrees
+        
+        // Shortest path to a 45
+        float error = target_angle - current_angle;
+        while (error > 3.14159f) error -= 2.0f * 3.14159f;
+        while (error < -3.14159f) error += 2.0f * 3.14159f;
+        // Proportional controller
+        float kp = 2.0f; // Tune this higher if it snaps too slowly, lower if it overshoots
+        float auto_spin_vel = error * kp;
+        
+        // Override the manual wheel with our auto-aiming velocity
+        target_state_map[Cfg::StateName::ChassisHeading].set_velocity(auto_spin_vel);
     }
 }
 bool ET16S::is_fast_mode_active() {
-    if (get_switch_f() == SwitchPos::FORWARD) {
-        return true;
-    }
-    else {
-        return false;
-    }
+    return (get_switch_f() == SwitchPos::FORWARD);
 }
