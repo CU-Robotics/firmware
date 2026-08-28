@@ -708,7 +708,6 @@ void ET16S::manual_controls(const RobotStateMap& estimated_state_map, RobotState
         float kp = 2.0f; // Tune this higher if it snaps too slowly, lower if it overshoots
         float auto_spin_vel = error * kp;
         
-        // Override the manual wheel with our auto-aiming velocity
         target_state_map[Cfg::StateName::ChassisHeading].set_velocity(auto_spin_vel);
     }
 }
