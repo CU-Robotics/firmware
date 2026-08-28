@@ -3,7 +3,7 @@ BUILD_BASE_DIR := build
 
 ifneq ($(filter debug,$(MAKECMDGOALS)),)
     BUILD_TYPE := debug
-    FEATURE_DEFINES += -DPROFILER -DEBUG
+    FEATURE_DEFINES += -DPROFILER
 endif
 
 ifneq ($(filter release,$(MAKECMDGOALS)),)
