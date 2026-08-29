@@ -149,7 +149,6 @@ void HelloRobot::process_behaviors() {
 void HelloRobot::update_controls() {
     // step estimates and construct estimated state
     estimator_manager.step(*estimated_state_map, override_request);
-    // estimated_state_map.print();
 
     noInterrupts();
     *estimated_state_map_interrupt_safe = *estimated_state_map;
