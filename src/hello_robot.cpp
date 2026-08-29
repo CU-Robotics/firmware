@@ -124,10 +124,6 @@ void HelloRobot::read_telemetry() {
     sensor_manager.read();
     sensor_manager.send_to_comms();
 
-    // print loopc every second to verify it is still alive
-    if (loopc % 1000 == 0) {
-        Serial.println(loopc);
-    }
 }
 void HelloRobot::process_behaviors() {
     // manual controls on firmware
