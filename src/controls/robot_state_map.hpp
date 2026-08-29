@@ -5,6 +5,8 @@
 #include <map>
 #include <vector>
 #include <Arduino.h>
+#include <array>
+#include <optional>
 
 constexpr size_t NUM_STATES = static_cast<size_t>(Cfg::StateName::StateNameCount);
 
@@ -27,12 +29,8 @@ public:
     /// @param state_name The name of the state to get.
     /// @return A const reference to the state object that corresponds to the given state name.
     const State& operator[](Cfg::StateName state_name) const;
-    /// @brief Get the entire state map as a mutable reference.
-    /// @return std::map of state names to their corresponding state objects, as a mutable reference.
-    std::map<Cfg::StateName, State>& get_state_map();
-    /// @brief Get the entire state map as a const reference.
-    /// @return std::map of state names to their corresponding state objects, as a const reference.
-    const std::map<Cfg::StateName, State>& get_state_map() const;
+	std::array<std::optional<State>, NUM_STATES>& get_state_array();
+    const std::array<std::optional<State>, NUM_STATES>& get_state_array() const;
 
     /// @brief Send the current state map to comms. 
     // This will convert the state map to a format that can be sent to comms and then send it.
@@ -40,8 +38,10 @@ public:
     template<typename T>
     void send_to_comms() const {
         Comms::Sendable<T> sendable;
-        for (const auto& [state_name, state] : robot_state) {
-            sendable.data.state[static_cast<size_t>(state_name)] = state.get_raw();
+		for (size_t i = 0; i < NUM_STATES; i++) {
+            if (robot_state[i].has_value()) {
+                sendable.data.state[i] = robot_state[i]->get_raw();
+            }
         }
 
         sendable.data.time = millis();
