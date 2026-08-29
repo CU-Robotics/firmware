@@ -1,5 +1,4 @@
 #include "hello_robot.hpp"
-#include "system_log.hpp"
 #ifdef PROFILER
 Profiler prof; 
 #endif
