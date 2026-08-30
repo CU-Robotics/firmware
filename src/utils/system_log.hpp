@@ -12,7 +12,7 @@ struct LogEvent {
     LogLevel level;
     /// @brief Message's subsystem
     Subsystem sys;
-    /// @breif contains message with max length 80 characters
+    /// @brief contains message with max length 80 characters
     char text[80];
 };
 
