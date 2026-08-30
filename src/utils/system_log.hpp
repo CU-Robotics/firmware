@@ -4,12 +4,16 @@
 enum class LogLevel { INFO, WARN, ERROR };
 /// @brief List of robot subsystems
 enum class Subsystem { ALL, GENERAL, CAN, MOTORS, SENSORS, ESTIMATOR, COMMS , REF};
-
+/// @brief Event log struct which holds all relevent data about potential print
 struct LogEvent {
+    /// @brief current loop count
     float timestamp;
+    /// @brief Priority Level
     LogLevel level;
+    /// @brief Message's subsystem
     Subsystem sys;
-    char text[80]; // Max length of message
+    /// @breif contains message with max length 80 characters
+    char text[80];
 };
 
 /// @brief Serial wrapper for handling print statements
@@ -22,7 +26,6 @@ private:
 	/// @brief max length including the timestamp
     static const int MAX_STORED_LEN = 100;
 	/// @brief message circuluar buffer
-    //char messages[LOG_HISTORY][MAX_LINE_LEN] = {{0}};
     LogEvent messages[LOG_HISTORY];
     /// @brief start of the message
     uint8_t head = 0;
@@ -43,6 +46,8 @@ private:
     /// @brief string formatter so we don't repeat code
     /// @param lvl is the urgency level of log
     /// @param sys is the subsystem
+    /// @param format is the message
+    /// @param args is the variadic formatting options
     void log_format(LogLevel lvl, Subsystem sys, const char *format, va_list args);
     /// @brief set context level and subsystem of interest for print statement
     /// @param lvl is the urgency level of log
