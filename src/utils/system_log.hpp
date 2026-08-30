@@ -34,19 +34,31 @@ private:
 	/// @brief length of print line in buffer
     uint8_t line_length = 0;
   
-    // Context for standard Print() calls
+    /// @brief Context for standard Print() calls
     LogLevel current_level = LogLevel::INFO;
+    /// @brief Subsystem for standard print call
     Subsystem current_sys = Subsystem::GENERAL;
     /// @brief handles whether we print to dashboard or direct to serial
     void push_message();
     /// @brief string formatter so we don't repeat code
-    void log_format(LogLevel lvl, Subsystem sys, const char* format, va_list args);
+    /// @param lvl is the urgency level of log
+    /// @param sys is the subsystem
+    void log_format(LogLevel lvl, Subsystem sys, const char *format, va_list args);
+    /// @brief set context level and subsystem of interest for print statement
+    /// @param lvl is the urgency level of log
+    /// @param sys is the subsystem
+    void set_context(LogLevel lvl, Subsystem sys);
+    /// @brief logic for determing wether a message should print or not
+    /// @param lvl is the urgency level of log
+    /// @param sys is the subsystem
+    /// @return whether we show the message or not
     bool should_show(LogLevel lvl, Subsystem sys);
 public:
     /// @brief flag for live printing from CLI
     bool is_live_view_active = false;
-    // Dashboard Filters (Defaults to showing everything)
+    /// @brief Dashboard System Filters (Defaults to showing everything)
     Subsystem view_filter_sys = Subsystem::ALL;
+    /// @brief Dashboard Level Filters (Defaults to showing everything)
     LogLevel view_filter_level = LogLevel::INFO;
   
 
@@ -60,16 +72,29 @@ public:
 	/// @param size of message
 	/// @return the message
     size_t write(const uint8_t *buffer, size_t size) override;
-  
-
-    void set_context(LogLevel lvl, Subsystem sys);
-
-    void info(Subsystem sys, const char* format, ...);
-    void warn(Subsystem sys, const char* format, ...);
+    /// @brief buffer info level message into queue
+	/// @param sys is the subsytem that will be coupled with the message
+	/// @param format is any printf variadic formatting information
+    void info(Subsystem sys, const char *format, ...);
+    /// @brief buffer warn level message into queue
+	/// @param sys is the subsytem that will be coupled with the message
+	/// @param format is any printf variadic formatting information
+    void warn(Subsystem sys, const char *format, ...);
+    /// @brief buffer error level message into queue
+	/// @param sys is the subsytem that will be coupled with the message
+	/// @param format is any printf variadic formatting information
     void error(Subsystem sys, const char* format, ...);
-
-    void info(const char* format, ...);
-    void warn(const char* format, ...);
+    /// @brief buffer info level message into queue
+    /// @param format is any printf variadic formatting information
+    /// @note defaults to general subsystem
+    void info(const char *format, ...);
+    /// @brief buffer warn level message into queue
+    /// @param format is any printf variadic formatting information
+    /// @note defaults to general subsystem
+    void warn(const char *format, ...);
+    /// @brief buffer error level message into queue
+    /// @param format is any printf variadic formatting information
+    /// @note defaults to general subsystem
     void error(const char* format, ...);
 	/// @brief draws dashboard for live prints from CLI
     void draw_dashboard_box();
