@@ -1,0 +1,7 @@
+<map id="BuffEncoder" name="BuffEncoder">
+<area shape="rect" id="node1" title="Driver for the Buff&#45;Encoder." alt="" coords="105,171,197,197"/>
+<area shape="rect" id="node2" href="$classSensor.html" title="Abstract class representing a sensor. All sensors should inherit from this class." alt="" coords="5,81,68,108"/>
+<area shape="rect" id="node3" href="$structBuffEncoderData.html" title="Structure for the buff encoder sensor." alt="" coords="92,81,211,108"/>
+<area shape="rect" id="node4" href="$structComms_1_1CommsData.html" title="base class for all data structs that want to be sent over comms." alt="" coords="149,5,295,32"/>
+<area shape="rect" id="node5" href="$structCfg_1_1BuffEncoder.html" title="Buff encoder configuration struct." alt="" coords="235,81,353,108"/>
+</map>

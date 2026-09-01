@@ -1,0 +1,7 @@
+<map id="Estimator" name="Estimator">
+<area shape="rect" id="node1" title="Parent estimator struct. All estimators should inherit from this." alt="" coords="263,5,340,32"/>
+<area shape="rect" id="node2" href="$structFeederEstimator.html" title="Estimate the state of the feeder ball velocity based on the feeder encoder velocity." alt="" coords="5,80,123,107"/>
+<area shape="rect" id="node3" href="$structFlywheelEstimator.html" title="Estimate the state of the flywheels as meters/second of balls exiting the barrel." alt="" coords="147,80,275,107"/>
+<area shape="rect" id="node4" href="$structGimbalAndChassisEstimator.html" title="Estimate the yaw, pitch, and chassis heading." alt="" coords="299,80,487,107"/>
+<area shape="rect" id="node5" href="$structLowerFeederEstimator.html" title="Estimate the state of the feeder ball velocity for the lower feeder based on the feeder encoder veloc..." alt="" coords="511,80,665,107"/>
+</map>
