@@ -10,7 +10,8 @@ const char* sys_to_str(Subsystem sys) {
     case Subsystem::SENSORS: return "SEN";
     case Subsystem::ESTIMATOR: return "EST";
 	case Subsystem::COMMS: return "COM";
-	case Subsystem::REF: return "REF";
+    case Subsystem::REF: return "REF";
+	case Subsystem::Controls: return "Con";
     default: return "GEN";
     }
 }

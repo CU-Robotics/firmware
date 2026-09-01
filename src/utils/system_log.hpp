@@ -3,7 +3,7 @@
 
 enum class LogLevel { INFO, WARN, ERROR };
 /// @brief List of robot subsystems
-enum class Subsystem { ALL, GENERAL, CAN, MOTORS, SENSORS, ESTIMATOR, COMMS , REF};
+enum class Subsystem { ALL, GENERAL, CAN, MOTORS, SENSORS, ESTIMATOR, COMMS , REF, Controls};
 /// @brief Event log struct which holds all relevent data about potential print
 struct LogEvent {
     /// @brief current loop count

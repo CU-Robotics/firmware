@@ -1,4 +1,5 @@
 #include "comms_layer.hpp"
+#include "utils/system_log.hpp"
 #include "comms/data/configuration_status_data.hpp"
 #include "comms/data/sendable.hpp"
 
@@ -20,30 +21,30 @@ namespace Comms {
 CommsLayer comms_layer;
 	
 CommsLayer::CommsLayer() {
-    Serial.printf("CommsLayer: constructed\n");
+    SystemLog.info(Subsystem::COMMS,"CommsLayer: constructed\n");
 };
 
 CommsLayer::~CommsLayer() {
-    Serial.printf("CommsLayer: destructed\n");
+    SystemLog.info(Subsystem::COMMS,"CommsLayer: destructed\n");
 };
 
 int CommsLayer::init() {
-    Serial.printf("CommsLayer: initializing\n");
+    SystemLog.info(Subsystem::COMMS,"CommsLayer: initializing\n");
     
     // hid failing is a fatal error
     bool hid_init = initialize_hid();
     if (!hid_init) {
-        Serial.printf("CommsLayer: HIDComms init failed\n");
+        SystemLog.error(Subsystem::COMMS,"CommsLayer: HIDComms init failed\n");
         return -1;
     }
 
     // ethernet init failing is not a fatal error
     bool ethernet_init = initialize_ethernet();
     if (!ethernet_init) {
-        Serial.printf("CommsLayer: EthernetComms init failed\n");
+        SystemLog.info(Subsystem::COMMS,"CommsLayer: EthernetComms init failed\n");
     }
 
-    Serial.printf("CommsLayer: initialized\n");
+    SystemLog.info(Subsystem::COMMS,"CommsLayer: initialized\n");
 
     return 0;
 };
@@ -63,7 +64,7 @@ void CommsLayer::queue_data(CommsData* data) {
     case PhysicalMedium::HID:
         if (!is_hid_connected()) {
             // discard attempt to send
-            Serial.printf("Attempting to re-route %s to HID but HID is not connected\n", to_string(data->type_label).c_str());
+            SystemLog.warn(Subsystem::COMMS,"Attempting to re-route %s to HID but HID is not connected\n", to_string(data->type_label).c_str());
             break;
         }
         m_hid_payload.add(data);
@@ -75,7 +76,7 @@ void CommsLayer::queue_data(CommsData* data) {
             break;
         } else if (data->size > HID_PACKET_PAYLOAD_SIZE) {
             // discard attempt to send
-            Serial.printf("Attempting to re-route %s to HID but packet is too large\n", to_string(data->type_label).c_str());
+            SystemLog.warn(Subsystem::COMMS,"Attempting to re-route %s to HID but packet is too large\n", to_string(data->type_label).c_str());
             break;
         }
 
@@ -169,19 +170,19 @@ void CommsLayer::configure() {
     int time = millis();
     Sendable<ConfigurationStatusData> config_status_sendable;
     while (!m_hive_data.config.config_start.num_config_sections != 0) {
-        Serial.printf("Waiting for config start packet... time since start: %d ms\n", millis() - time);
+        SystemLog.info(Subsystem::COMMS,"Waiting for config start packet... time since start: %d ms\n", millis() - time);
         config_status_sendable.data.is_configured = 0;
         config_status_sendable.send_to_comms();
         run();
         config_loop_timer.delay_micros(5000);
     }
-    Serial.printf("Config start packet received, expecting %d config sections\n", m_hive_data.config.config_start.num_config_sections);
+    SystemLog.info(Subsystem::COMMS,"Config start packet received, expecting %d config sections\n", m_hive_data.config.config_start.num_config_sections);
 
     while(!m_hive_data.config.is_configured()) {
         config_status_sendable.data.ready_for_config = 1;
         config_status_sendable.send_to_comms();
         run();
-        Serial.printf("Config: received %d of %d sections\n", m_hive_data.config.num_sections_received, m_hive_data.config.config_start.num_config_sections);
+        SystemLog.info(Subsystem::COMMS,"Config: received %d of %d sections\n", m_hive_data.config.num_sections_received, m_hive_data.config.config_start.num_config_sections);
         config_loop_timer.delay_micros(5000);
     }
 }

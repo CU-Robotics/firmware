@@ -2,6 +2,7 @@
 #include "sensors/RefSystem.hpp"
 #include "comms/data/sendable.hpp"
 #include "comms/config_data/state.hpp"
+#include "utils/system_log.hpp"
 
 ET16S::ET16S(const Cfg::ET16S& config) : config(config) { }
 
@@ -78,7 +79,7 @@ void ET16S::read() {
 
 void ET16S::print() {
 	for (int i = 0; i < ET16S_INPUT_VALUE_COUNT; i++) {
-		Serial.printf("%f ", channel[i].data);
+		SystemLog.info(Subsystem::SENSORS,"%f ", channel[i].data);
 	}
 
 	Serial.println();
@@ -86,7 +87,7 @@ void ET16S::print() {
 
 void ET16S::print_raw() {
 	for (int i = 0; i < ET16S_INPUT_VALUE_COUNT; i++) {
-		Serial.printf("%.3u ", channel[i].raw_format);
+		SystemLog.info(Subsystem::SENSORS,"%.3u ", channel[i].raw_format);
 	}
 
 	Serial.println();
