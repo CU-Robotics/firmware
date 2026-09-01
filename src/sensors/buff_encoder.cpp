@@ -18,11 +18,6 @@ void BuffEncoder::init() {
 }
 
 void BuffEncoder::read() {
-    while (read_zero_pos() != 0.0f && read_count < read_zero_pos_max_attempts) {
-        write_zero_pos(0);
-        read_count++;
-    }
-    read_count = 0; 
 
     uint8_t data[6] = { 0 }; // transact 48 bits
 
