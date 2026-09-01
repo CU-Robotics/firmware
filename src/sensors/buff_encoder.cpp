@@ -40,6 +40,21 @@ void BuffEncoder::read() {
         return; 
     }
     // Serial.printf("Pin: %u, Sending Buff Encoder read command\n", config_data.spi_cs);
+
+    // Check for misalignment
+    zero_check_timer++;
+    if (zero_check_timer >= 1000) {
+        zero_check_timer = 0;
+        
+        cached_zero_pos = read_zero_pos();
+        
+        if (cached_zero_pos != 0.0f) {
+            zero_misalign_count++;
+            SystemLog.error(Subsystem::SENSORS, "Pin: %u, ZERO_POS Misaligned! Read: %f\n", config_data.spi_cs, cached_zero_pos);
+            
+            write_zero_pos(0); 
+        }
+    }
     
     uint8_t status = rx_buffer[4] & 0x07;
     uint8_t crc_received = rx_buffer[5];
@@ -183,8 +198,8 @@ void BuffEncoder::print() const {
 }
 void BuffEncoder::print_live_data() {
     // Note: casting get_name() to int so it prints the enum number
-    Serial.printf(" [Buff Encoder %d] Angle (rad): %8.4f\n", 
-                  (int)get_name(), get_angle());
+    Serial.printf(" [Buff Encoder %d] Angle (rad): %8.4f Z-Mis: %-4u (%.1f deg)\n", 
+                  (int)get_name(), get_angle(), zero_misalign_count, cached_zero_pos);
 }
 
 void BuffEncoder::bind_dma_flag(const volatile bool* flag_ptr) {

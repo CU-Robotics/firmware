@@ -125,4 +125,9 @@ private:
 	/// @brief Pointer to the SensorManager's active transfer flag
     const volatile bool* shared_dma_flag;
     // Could/should this be a shared pointer??
+
+    // --- ZERO POS DIAGNOSTICS ---
+    uint32_t zero_check_timer = 0;
+    uint32_t zero_misalign_count = 0;
+    float cached_zero_pos = 0.0f;
 };
