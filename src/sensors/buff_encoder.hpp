@@ -99,4 +99,9 @@ private:
 
     /// @brief The SPI settings of the buff encoders
     static const SPISettings m_settings;
+
+    // --- ZERO POS DIAGNOSTICS ---
+    uint32_t zero_check_timer = 0;
+    uint32_t zero_misalign_count = 0;
+    float cached_zero_pos = 0.0f;
 };
