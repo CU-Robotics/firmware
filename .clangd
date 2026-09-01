@@ -1,2 +1,7 @@
 CompileFlags:
+  Add:
+    - -U__INT32_TYPE__
+    - "-D__INT32_TYPE__=long int"
+    - -U__UINT32_TYPE__
+    - "-D__UINT32_TYPE__=long unsigned int"
   Remove: [--specs=*]
