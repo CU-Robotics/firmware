@@ -24,6 +24,26 @@ TARGET_HEX := $(BUILD_DIR)/$(TARGET).hex
 TARGET_MAP := $(BUILD_DIR)/$(TARGET).map
 TARGET_DUMP := $(BUILD_DIR)/$(TARGET).dump
 
+TEST_DIR := test
+TEST_BUILD_DIR := $(BUILD_DIR)/test
+TEST_SUITES := $(notdir $(patsubst %/,%,$(dir $(wildcard $(TEST_DIR)/test_*/test_main.cpp))))
+# Run every host suite by default. To run a subset, for example:
+#   make test TEST_FILTER="test_utils test_fltrs"
+TEST_FILTER ?= $(TEST_SUITES)
+TEST_BINS := $(addprefix $(TEST_BUILD_DIR)/,$(TEST_FILTER))
+
+HOST_CXX ?= c++
+HOST_CC ?= cc
+HOST_TEST_CPPFLAGS := -I$(TEST_DIR)/host -Isrc -Ilibraries/unity -DUNIT_TEST
+HOST_TEST_CXXFLAGS := -std=gnu++23 -O0 -g3 -Wall -Werror
+HOST_TEST_CFLAGS := -std=c11 -O0 -g3 -Wall -Werror
+HOST_TEST_UNITY_OBJ := $(TEST_BUILD_DIR)/unity.o
+HOST_TEST_COMMON_SRC := $(TEST_DIR)/host/test_runner.cpp $(HOST_TEST_UNITY_OBJ)
+HOST_TEST_SRC_test_utils := $(TEST_DIR)/test_utils/test_main.cpp src/utils/wrapping.cpp src/utils/vector_math.cpp
+HOST_TEST_SRC_test_fltrs := $(TEST_DIR)/test_fltrs/test_main.cpp src/filters/pid_filter.cpp src/filters/lowpass_filter.cpp
+HOST_TEST_SRC_test_controls := $(TEST_DIR)/test_controls/test_main.cpp src/controls/controller_math.cpp
+HOST_TEST_SRC_test_sensors := $(TEST_DIR)/test_sensors/test_main.cpp src/sensors/buff_encoder.cpp
+
 TEENSY_SRC_DIRS := teensy4
 LIBRARY_SRC_DIRS := libraries
 SRC_SRC_DIRS := src
@@ -100,14 +120,45 @@ SIZE			= $(COMPILER_TOOLS_PATH)/arm-none-eabi-size
 GIT_SCRAPER_SRC = $(TOOLS_DIR)/git_scraper.cpp
 GIT_SCRAPER_BIN = $(BUILD_DIR)/git_scraper
 
-
-.PHONY: build dump docs clean upload install gdb monitor kill restart help clangd git_scraper
+.PHONY: build dump test test-build docs clean upload install gdb monitor kill restart help clangd git_scraper FORCE
 
 
 build: $(TARGET_HEX)
 
 
 dump: $(TARGET_DUMP)
+
+
+# Build and run the selected Unity suites as native host executables.
+test: test-build
+	@set -e; for suite in $(TEST_FILTER); do \
+		printf "\n===== %s =====\n" "$$suite"; \
+		"$(TEST_BUILD_DIR)/$$suite"; \
+	done
+
+
+# Compile native test executables without running them.
+test-build: $(TEST_BINS)
+
+
+define HOST_TEST_template
+$(TEST_BUILD_DIR)/$(1): $$(HOST_TEST_COMMON_SRC) $$(HOST_TEST_SRC_$(1)) FORCE
+	@mkdir -p $$(dir $$@)
+	@printf "HOSTTEST %s\n" "$(1)"
+	@$$(HOST_CXX) $$(HOST_TEST_CPPFLAGS) $$(CPPFLAGS) \
+		$$(HOST_TEST_CXXFLAGS) $$(CXXFLAGS) $$(filter-out FORCE,$$^) -o $$@
+endef
+
+$(foreach suite,$(TEST_SUITES),$(eval $(call HOST_TEST_template,$(suite))))
+
+
+$(HOST_TEST_UNITY_OBJ): libraries/unity/unity.c FORCE
+	@mkdir -p $(dir $@)
+	@printf "HOSTCC   %s\n" "$<"
+	@$(HOST_CC) -Ilibraries/unity $(CPPFLAGS) $(HOST_TEST_CFLAGS) $(CFLAGS) -c $< -o $@
+
+
+FORCE:
 
 
 $(TARGET_ELF): $(SRC_OBJS) $(LIBRARY_OBJS) $(TEENSY_OBJS)
@@ -222,6 +273,8 @@ help:
 	@echo "  build:         compiles the source code and links with libraries"
 	@echo "  dump:          generates a disassembly of the built firmware"
 	@echo "  upload:        builds the source and uploads it to the Teensy"
+	@echo "  test:          builds and runs native Unity unit tests"
+	@echo "  test-build:    builds native Unity test executables"
 	@echo "  gdb:           starts GDB and attaches to the firmware running on a connected Teensy"
 	@echo "  monitor:       monitors any actively running firmware and displays serial output"
 	@echo "  kill:          stops any running firmware"
@@ -233,6 +286,7 @@ help:
 	@echo "Variables:"
 	@echo "  JOBS=N         parallel jobs (defaults to core count)"
 	@echo "  DUMP_OBJS=1    also disassemble each object file"
+	@echo "  TEST_FILTER=\"suite ...\" selects test suites (defaults to all)"
 
 
 # Generate compile_commands.json from the Makefile's flags and source lists.

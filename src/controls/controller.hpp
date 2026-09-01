@@ -1,5 +1,6 @@
 #pragma once
 
+#include "controller_math.hpp"
 #include "estimator.hpp"
 #include "filters/pid_filter.hpp"
 #include "sensors/can/motor.hpp"
