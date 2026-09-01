@@ -46,8 +46,49 @@ void RobotStateMap::from_comms_packet(State::Raw robot_state_array[NUM_STATES]) 
 
 void RobotStateMap::print() {
     Serial.println("RobotStateMap:");
-    for (const auto& [state_name, state] : robot_state) {
-        Serial.printf("\tStateName: %lu, Position: %f, Velocity: %f, Acceleration: %f\n", static_cast<uint32_t>(state_name), state.get_position(), state.get_velocity(), state.get_acceleration());
-        Serial.printf("\t\tPosition limits: [%f, %f]\n", state.config().reference_limits.position.min, state.config().reference_limits.position.max);
-    }
+
+	auto state_to_str = [](Cfg::StateName name) -> const char* {
+		switch (name) {
+			// Replace these with your actual enum values!
+		case Cfg::StateName::UnsetStateName:
+			return "UnsetStateName";
+		case Cfg::StateName::ChassisX:
+			return "X";
+		case Cfg::StateName::ChassisY:
+			return "Y";
+		case Cfg::StateName::ChassisHeading:
+			return "Z";
+		case Cfg::StateName::GimbalYaw:
+			return "YAW";
+		case Cfg::StateName::GimbalPitch:
+			return "PITCH";
+		case Cfg::StateName::Flywheels:
+			return "Flywheels";
+		case Cfg::StateName::Feeder:
+			return "Feeder";
+		case Cfg::StateName::LowerFeeder:
+			return "LowerFeeder";
+		case Cfg::StateName::StructPadding:
+			return "StructPadding";
+		case Cfg::StateName::StateNameCount:
+			return "StateNameCount";
+		default:
+			return "UNKNOWN";
+		}
+	};
+
+	for (const auto& [state_name, state] : robot_state) {
+        
+		// Use %-12s to force the string to 12 characters, erasing terminal ghosting
+		// Use %8.3f to keep the decimals perfectly aligned in a column
+		Serial.printf("\tState: %-12s | Pos: %8.3f | Vel: %8.3f | Acc: %8.3f\n", 
+					  state_to_str(state_name), 
+					  state.get_position(), 
+					  state.get_velocity(), 
+					  state.get_acceleration());
+            
+		Serial.printf("\t\tPos Limits: [%.2f, %.2f]\n", 
+					  state.config().reference_limits.position.min, 
+					  state.config().reference_limits.position.max);
+	}
 }

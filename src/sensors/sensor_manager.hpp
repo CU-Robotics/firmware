@@ -28,16 +28,17 @@ public:
     /// @brief Initialize the sensor manager with configuration data. This will configure and initialize all sensors.
     /// @param config_data The configuration data to use to initialize the sensor manager and all sensors
     /// @param isr_safe_map to bind local state map with estimated state map
-    void init(const Cfg::RobotConfig& config_data, std::optional<RobotStateMap>* isr_safe_map);
+    void init(const Cfg::RobotConfig& config_data, std::unique_ptr<RobotStateMap>* isr_safe_map);
 
     /// @brief Configure the sensors based on the configuration data
     /// @param config_data The configuration data to use to configure the sensors
-    void configure_sensors(const Cfg::RobotConfig& config_data);
+    void configure_sensors(const Cfg::RobotConfig &config_data);
+
     /// @brief Call each sensor's init function
     /// @param isr_safe_map for binding to estimated state
-    void initialize_sensors(std::optional<RobotStateMap> *isr_safe_map);
+    void initialize_sensors(std::unique_ptr<RobotStateMap> *isr_safe_map);
     
-	/// @brief calls IMU's request_read function and start first encoder's dma transfer
+    /// @brief calls IMU's request_read function and start first encoder's dma transfer
 	void request_read();
 
     /// @brief Call each sensor's read function to update their data

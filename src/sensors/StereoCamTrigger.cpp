@@ -1,9 +1,9 @@
 #include "StereoCamTrigger.hpp"
 #include "comms/data/sendable.hpp"
-#include "transmitter_utils.hpp"
+#include "sensors/transmitter/transmitter_utils.hpp"
 #include <core_pins.h>
 
-std::optional<RobotStateMap>* StereoCamTrigger::estimated_state_map_interrupt_safe = nullptr;
+std::unique_ptr<RobotStateMap>* StereoCamTrigger::estimated_state_map_interrupt_safe = nullptr;
 
 StereoCamTrigger::StereoCamTrigger(const Cfg::StereoCamTrigger& config): Sensor(), config(config), comms_data(config.camera_trigger_name) {}
 
@@ -17,9 +17,12 @@ void StereoCamTrigger::track_exposures() {
   digitalWrite(config.digital_trigger_pin_1, LOW);
   digitalWrite(config.digital_trigger_pin_2, LOW);
   
-  if(estimated_state_map_interrupt_safe != nullptr && estimated_state_map_interrupt_safe->has_value()) {
+  counter += 1;
+
+  if (estimated_state_map_interrupt_safe != nullptr && *estimated_state_map_interrupt_safe != nullptr) {
     // copy the estimated state map to the local estimated state map
     (*estimated_state_map_interrupt_safe)->fill_state_array(comms_data.state);
+    comms_data.frame_count = counter;
   }
 }
 
@@ -57,7 +60,7 @@ void StereoCamTrigger::init() {
   start(mpf);
 }
 
-void StereoCamTrigger::bind_isr_map(std::optional<RobotStateMap> *safe_map) {
+void StereoCamTrigger::provide_isr_map(std::unique_ptr<RobotStateMap> *safe_map) {
     estimated_state_map_interrupt_safe = safe_map;
 }
 
@@ -70,7 +73,9 @@ void StereoCamTrigger::read() {
     
 		digitalWrite(config.camera_1_line_2_pin, LOW);
 		digitalWrite(config.camera_2_line_2_pin, LOW);
-		
+
+		counter = -1;
+
 		Serial.printf("counter reset pin: %u triggered\n", config.camera_1_line_2_pin);
 	}
 	Comms::comms_layer.get_hive_data().stereo_cam_start_stop.stop_received = false;
@@ -80,7 +85,9 @@ void StereoCamTrigger::read() {
 void StereoCamTrigger::send_to_comms() const {
   Comms::Sendable<StereoCamTriggerData> sendable;
 
+  noInterrupts();
   sendable.data = comms_data;
+  interrupts();
   sendable.send_to_comms();
 }
 

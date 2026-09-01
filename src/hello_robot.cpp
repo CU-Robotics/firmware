@@ -44,10 +44,10 @@ void HelloRobot::init() {
 
     // generate controller outputs based on governed references and estimated
     // state
-    controller_manager.init(config.controllers, can);
+    controller_manager.init(config.controllers, can, config.states);
 
     estimated_state_map.emplace(config.states);
-    estimated_state_map_interrupt_safe.emplace(config.states);
+    estimated_state_map_interrupt_safe = std::make_unique<RobotStateMap>(config.states);
     reference_map.emplace(config.states);
     target_state_map.emplace(config.states);      // Temp ungoverned state
     hive_state_map_offset.emplace(config.states); // Hive offset state
@@ -90,10 +90,8 @@ void HelloRobot::run() {
 		update_controls();
 		check_safety();
 		process_cli();
-		#endif
-		loop_timing();
-
-		
+#endif
+        loop_timing();		
 	}
 }
 
@@ -146,7 +144,7 @@ void HelloRobot::process_behaviors() {
         // clear the request
         Comms::comms_layer.get_hive_data().override_state_data.active = false;
 
-		SystemLog.printf("Overriding state with hive state\n");
+		SystemLog.info(Subsystem::GENERAL,"Overriding state with hive state\n");
 		hive_state_map_offset->from_comms_packet(Comms::comms_layer.get_hive_data().override_state_data.state);
 
         *estimated_state_map = *hive_state_map_offset;
@@ -156,7 +154,6 @@ void HelloRobot::process_behaviors() {
 void HelloRobot::update_controls() {
     // step estimates and construct estimated state
     estimator_manager.step(*estimated_state_map, override_request);
-    // estimated_state_map.print();
 
     noInterrupts();
     *estimated_state_map_interrupt_safe = *estimated_state_map;
@@ -166,7 +163,7 @@ void HelloRobot::update_controls() {
     float current_feed = (*estimated_state_map)[Cfg::StateName::Feeder].get_position();
     float target_feed = (*target_state_map)[Cfg::StateName::Feeder].get_position();
     if ((feed - current_feed > 2 && transmitter_manager.is_teensy_mode()) || (target_feed - current_feed > 2 && transmitter_manager.is_hive_mode())) {
-        SystemLog.printf("Feeder is lowkey jammed. current ball count: %f, feed: %f, hive target: %f\n", (*estimated_state_map)[Cfg::StateName::Feeder].get_position(), feed, (*target_state_map)[Cfg::StateName::Feeder].get_position());
+        SystemLog.error(Subsystem::GENERAL,"Feeder is lowkey jammed. current ball count: %f, feed: %f, hive target: %f\n", (*estimated_state_map)[Cfg::StateName::Feeder].get_position(), feed, (*target_state_map)[Cfg::StateName::Feeder].get_position());
         feed = current_feed + 1;
         governor->set_position_reference(Cfg::StateName::Feeder, feed);
     }
@@ -184,14 +181,22 @@ void HelloRobot::update_controls() {
     *reference_map = governor->step_reference_map(*target_state_map);
 
     // generate motor outputs from controls
-    controller_manager.step(*reference_map, *estimated_state_map);
+    controller_manager.step(*reference_map, *estimated_state_map, *target_state_map);
 
     target_state_map->send_to_comms<TargetState>();
+    reference_map->send_to_comms<ReferenceState>();
     estimated_state_map->send_to_comms<EstimatedState>();
 
     Comms::Sendable<ConfigurationStatusData> config_status_sendable;
     config_status_sendable.data.is_configured = Comms::comms_layer.is_configured() ? 1 : 0;
     config_status_sendable.send_to_comms();
+
+    if (false) { // Tests roundtrip comms latency. also needs to be set to true in hive.
+        Comms::Sendable<TestLatencyData> latency_data;
+        latency_data.data.current_time = micros();
+        latency_data.data.time_since_last_received = micros() - Comms::comms_layer.get_hive_data().latency_data.current_time;
+        latency_data.send_to_comms();
+    }
 
     Comms::comms_layer.run();
 }
@@ -204,13 +209,13 @@ void HelloRobot::check_safety() {
         // zero the can bus just in case
         can.issue_safety_mode();
 
-		SystemLog.printf("Slow loop with dt: %f, slow loop count %d\n", dt, slow_loop_counter);
+		SystemLog.error(Subsystem::GENERAL,"Slow loop with dt: %f, slow loop count %d\n", dt, slow_loop_counter);
 		// mark this as a slow loop to trigger safety mode
 		is_slow_loop = true;
 		if (last_loop_slow) {
 			slow_loop_counter++;
 			if (slow_loop_counter > 10) {
-				SystemLog.printf("Kowabunga bitches\n");
+				SystemLog.error("Kowabunga bitches\n");
 				reset_teensy();
 			}
 		} else {
@@ -233,7 +238,7 @@ void HelloRobot::check_safety() {
     if (not_safety_mode) {
         // SAFETY OFF
         can.write();
-        // Serial.printf("Can write\n");
+        SystemLog.info(Subsystem::CAN,"Can write\n");
     } else {
         // SAFETY ON
         // TODO: Reset all controller integrators here
@@ -243,9 +248,11 @@ void HelloRobot::check_safety() {
         if (has_lower_feeder) {
             governor->set_position_reference(Cfg::StateName::LowerFeeder, (*estimated_state_map)[Cfg::StateName::LowerFeeder].get_position());
         }
-        feed = (fmodf(fmodf(current_feed, 1) + 1, 1) > 0.2f) ? (int)floor(current_feed) + 1 : (int)floor(current_feed); // reset feed to the current state
-        last_feed = feed;                                                                                               // reset last feed to the current state
-                                                                                                                        // Serial.printf("Can zero\n");
+        feed = (fmod(fmod(current_feed, 1) + 1, 1) > 0.2)
+                   ? (int)floor(current_feed) + 1
+                   : (int)floor(current_feed); // reset feed to the current state
+        last_feed = feed;                      // reset last feed to the current state
+                                               // Serial.printf("Can zero\n");
     }
 }
 void HelloRobot::loop_timing() {
@@ -276,40 +283,40 @@ void HelloRobot::process_cli() {
             
             // Loop through the array and draw the views in the order the user typed them
             for (int i = 0; i < num_active_views; i++) {
-                switch (active_views[i]) {
-				case LiveMode::PROFILE_VIEW:
+              switch (active_views[i]) {
+			  case LiveMode::PROFILE_VIEW:
 #ifdef PROFILER
-					prof.print_summary();
+				prof.print_summary();
 #endif
-					break;
+				break;
                         
-				case LiveMode::TRANSMITTER:
-					transmitter_manager.print_live_data();
-					break;
+			  case LiveMode::TRANSMITTER:
+				transmitter_manager.print_live_data();
+				break;
                         
-				case LiveMode::SENSORS:
-					Serial.printf("=== LIVE SENSOR READOUT ===\n");
-					sensor_manager.print_sensors_live(); 
-					break;
+			  case LiveMode::SENSORS:
+				Serial.printf("=== LIVE SENSOR READOUT ===\n");
+				sensor_manager.print_sensors_live(); 
+				break;
                         
-				case LiveMode::ESTIMATED_STATE:
-					Serial.printf("=== LIVE ESTIMATED STATE ===\n");
-					estimated_state_map->print();
-					break;
+			  case LiveMode::ESTIMATED_STATE:
+				Serial.printf("=== LIVE ESTIMATED STATE ===\n");
+				estimated_state_map->print();
+				break;
 				
-				case LiveMode::TARGET_STATE:
-					Serial.printf("=== LIVE TARGET STATE ===\n");
-					target_state_map->print();
-					break;
+			  case LiveMode::TARGET_STATE:
+				Serial.printf("=== LIVE TARGET STATE ===\n");
+				target_state_map->print();
+				break;
 
-				case LiveMode::HEARTBEAT:
-					Serial.printf("=== LIVE HEARTBEAT  ===\n");
-					Serial.println(loopc);
-					break;
+			  case LiveMode::HEARTBEAT:
+				Serial.printf("=== LIVE HEARTBEAT  ===\n");
+				Serial.println(loopc);
+				break;
                         
-				default:
-					break;
-                }
+			  default:
+				break;
+              }
                 Serial.println(); // Add a blank line between stacked views
             }
 			SystemLog.draw_dashboard_box(); // puts all non-CLI prints in neat box
@@ -356,7 +363,8 @@ void HelloRobot::process_cli() {
             } commands[] = {
                 {"ping", &HelloRobot::cmd_ping},
                 {"help", &HelloRobot::cmd_help},
-                {"live", &HelloRobot::cmd_live}
+                {"live", &HelloRobot::cmd_live},
+                {"log", &HelloRobot::cmd_log}
             };
 
             // --- THE PARSER ---
@@ -419,6 +427,21 @@ void HelloRobot::cmd_help() {
                 Serial.println("                estimated_state : The robot's current estimated state map");
                 Serial.println("                target_state    : The robot's current target state map");
                 Serial.println("                heartbeat       : The main loop counter (loopc)");
+				Serial.println();
+				Serial.println("       log [subsystem] [priority]");
+				Serial.println("              Filters the system event log.");
+				Serial.println("              High-priority messages (Errors) will always bypass the subsystem filter.");
+				Serial.println("              Typing 'log' with no arguments displays the syntax menu.");
+				Serial.println();
+				Serial.println("              Available subsystems:");
+				Serial.println("                all, can, motors, sensors, est, comms");
+				Serial.println();
+				Serial.println("              Available priorities (minimum level to show):");
+				Serial.println("                info, warn, error");
+				Serial.println();
+				Serial.println("              Examples:");
+				Serial.println("                log motors warn  : Shows motor warnings/errors, and all other system errors");
+				Serial.println("                log all info     : Resets the filter to show absolutely everything");
                 Serial.println();
                 Serial.println("       help");
                 Serial.println("              Displays this manual.");
@@ -468,4 +491,82 @@ void HelloRobot::cmd_live() {
     } else {
         Serial.println("Usage: live [prof] [tx] [sensors] [estimated_state] [target_state] [heartbeat]");
     }
+}
+
+void HelloRobot::cmd_log() {
+    char* sys_tok = strtok(NULL, " ");
+    char* lvl_tok = strtok(NULL, " ");
+
+    // --- DATA DICTIONARIES ---
+    struct SysMap {
+        const char* name;
+        Subsystem sys;
+    };
+    static const SysMap sys_dict[] = {
+        {"all",     Subsystem::ALL},
+        {"can",     Subsystem::CAN},
+        {"motors",  Subsystem::MOTORS},
+        {"sensors", Subsystem::SENSORS},
+        {"est",     Subsystem::ESTIMATOR},
+        {"comms",   Subsystem::COMMS}
+    };
+
+    struct LvlMap {
+        const char* name;
+        LogLevel lvl;
+    };
+    static const LvlMap lvl_dict[] = {
+        {"info",  LogLevel::INFO},
+        {"warn",  LogLevel::WARN},
+        {"error", LogLevel::ERROR}
+    };
+
+    bool error_found = false;
+
+    // Check Subsystem (if provided)
+    if (sys_tok) {
+        bool found = false;
+        for (const auto& entry : sys_dict) {
+            if (strcmp(sys_tok, entry.name) == 0) {
+                SystemLog.view_filter_sys = entry.sys;
+                found = true;
+                break;
+            }
+        }
+        
+        if (!found) {
+            Serial.printf("Error: Unknown subsystem '%s'\n", sys_tok);
+            error_found = true;
+        }
+    }
+
+    // Check Priority Level (if provided)
+    if (lvl_tok && !error_found) {
+        bool found = false;
+        for (const auto& entry : lvl_dict) {
+            if (strcmp(lvl_tok, entry.name) == 0) {
+                SystemLog.view_filter_level = entry.lvl;
+                found = true;
+                break;
+            }
+        }
+        
+        if (!found) {
+            Serial.printf("Error: Unknown priority level '%s'\n", lvl_tok);
+            error_found = true;
+        }
+    }
+
+    // Check if log statement was written correctly
+    if (error_found || (!sys_tok && !lvl_tok)) {
+        Serial.println("Usage: log [subsystem] [priority]");
+        Serial.println("  Subsystems: all, can, motors, sensors, est, comms");
+        Serial.println("  Priorities: info, warn, error");
+        Serial.println("  Example:    log motors warn");
+        return; 
+    }
+
+    Serial.printf("Log filter updated. Sys: %s | Level: %s\n", 
+        sys_tok ? sys_tok : "UNCHANGED", 
+        lvl_tok ? lvl_tok : "UNCHANGED");
 }

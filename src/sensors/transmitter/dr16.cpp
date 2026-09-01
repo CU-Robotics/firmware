@@ -2,6 +2,7 @@
 #include <Arduino.h>
 #include "sensors/RefSystem.hpp"
 #include "comms/data/sendable.hpp"
+#include "utils/system_log.hpp"
 
 DR16::DR16(const Cfg::DR16& config_) : config(config_) {
 
@@ -63,7 +64,7 @@ void DR16::read() {
 			while (last_available == Serial8.available() && micros() - start < DR16_ALIGNMENT_LONG_INTERVAL_THRESHOLD);
 			uint32_t end = micros();
 			
-			Serial.printf("DR16: Still aligning (%d)\n", interval_count);
+			SystemLog.warn(Subsystem::SENSORS,"DR16: Still aligning (%d)\n", interval_count);
 
 			// if this interval was a long interval (break in packets), call the alignment done and finish up
 			// also mark this as a successful alignment, rather than it timing out
@@ -75,11 +76,11 @@ void DR16::read() {
 
 		// print success or failure
 		if (alignment_timed_out) {
-			Serial.printf("DR16: Alignment timed out, trying again next loop\n\n");
+			SystemLog.error(Subsystem::SENSORS,"DR16: Alignment timed out, trying again next loop\n\n");
 		} else {
 			uint32_t align_end = micros();
-			Serial.printf("DR16: Aligned successfully\n");
-			Serial.printf("DR16: Alignment took %fms\n\n", (align_end - align_start) / 1000.f);
+			SystemLog.error(Subsystem::SENSORS,"DR16: Aligned successfully\n");
+			SystemLog.error(Subsystem::SENSORS,"DR16: Alignment took %fms\n\n", (align_end - align_start) / 1000.f);
 		}
 
 		// clear the buffer to get ready for the next packet
@@ -324,15 +325,17 @@ void DR16::manual_controls(const RobotStateMap& estimated_state_map, RobotStateM
 	bool has_lower_feeder = estimated_state_map.get_state_map().find(Cfg::StateName::LowerFeeder) != estimated_state_map.get_state_map().end();
 
 	float delta = control_input_timer.delta();
-	// Used for determing whether we are using vtm or usb to dr16
-	auto merge_input = [](auto primary_val, auto secondary_val) {
-		// If primary isn't zero, use it. Else use secondary.
-		return (primary_val != 0) ? primary_val : secondary_val;
-	};
-	
-	pos_x += merge_input(mouse_x,ref.ref_data.kbm_interaction.mouse_speed_x) * 0.05 * delta;
-	pos_y += merge_input(mouse_y,ref.ref_data.kbm_interaction.mouse_speed_y) * 0.05 * delta;
-	feed_trigger = merge_input(l_mouse_button,ref.ref_data.kbm_interaction.button_left);
+	VTMRemoteControl vtm_input = ref.ref_data.vtm_remote_control;
+	if (!vtm_input.is_fresh()) {
+		vtm_input.clear();
+	}
+
+	transmitter_pos_x += mouse_x * 0.05 * delta;
+	transmitter_pos_y += mouse_y * 0.05 * delta;
+
+	vtm_pos_x += vtm_input.mouse_speed_x * 0.05 * delta;
+	vtm_pos_y += -vtm_input.mouse_speed_y * 0.05 * delta;
+
 	float pitch_min = estimated_state_map[Cfg::StateName::GimbalPitch].config().reference_limits.position.min;
     float pitch_max = estimated_state_map[Cfg::StateName::GimbalPitch].config().reference_limits.position.max;
     float pitch_average = 0.5 * (pitch_min + pitch_max);
@@ -340,11 +343,17 @@ void DR16::manual_controls(const RobotStateMap& estimated_state_map, RobotStateM
     pitch_max -= pitch_average;
 
 	// clamp to pitch limits
-	if (pos_y < pitch_min) {
-		pos_y = pitch_min;
+	if (transmitter_pos_y < pitch_min) {
+		transmitter_pos_y = pitch_min;
 	}
-	if (pos_y > pitch_max) {
-		pos_y = pitch_max;
+	if (transmitter_pos_y > pitch_max) {
+		transmitter_pos_y = pitch_max;
+	}
+	if (vtm_pos_y < pitch_min) {
+		vtm_pos_y = pitch_min;
+	}
+	if (vtm_pos_y > pitch_max) {
+		vtm_pos_y = pitch_max;
 	}
 
 	float chassis_vel_x = 0;
@@ -354,13 +363,15 @@ void DR16::manual_controls(const RobotStateMap& estimated_state_map, RobotStateM
 
 	if (estimated_state_map[Cfg::StateName::ChassisX].config().governor_type == Cfg::StateOrder::Velocity) { // if we should be controlling velocity
 
-		chassis_vel_x = get_l_stick_y() * 5.4;
-					
-		chassis_vel_x += merge_input((-ref.ref_data.kbm_interaction.key_w + ref.ref_data.kbm_interaction.key_s), (-keys.w + keys.s)) * 2.5;
+		chassis_vel_x = get_l_stick_y() * 5.4 +
+						(vtm_input.key_w - vtm_input.key_s) * 2.5;
 
-		chassis_vel_y = -(get_l_stick_x() * 5.4);
-		
-		chassis_vel_y += merge_input((ref.ref_data.kbm_interaction.key_d - ref.ref_data.kbm_interaction.key_a),(keys.d - keys.a)) * 2.5;
+		chassis_vel_x += (-keys.w + keys.s) * 2.5;
+
+		chassis_vel_y = -(get_l_stick_x() * 5.4) +
+						(vtm_input.key_a - vtm_input.key_d) * 2.5;
+
+		chassis_vel_y += (keys.d - keys.a) * 2.5;
 		
 	} else if (estimated_state_map[Cfg::StateName::ChassisX].config().governor_type == Cfg::StateOrder::Position) { // if we should be controlling position
 		chassis_pos_x = get_l_stick_x() * 2 + pos_offset_x;
@@ -368,14 +379,14 @@ void DR16::manual_controls(const RobotStateMap& estimated_state_map, RobotStateM
 	}
 
 	float chassis_spin = get_wheel() * 25;
-	float pitch_target = 1.57 + -get_r_stick_y() * 0.3 + pos_y;
-	float yaw_target = -get_r_stick_x() * 1.5 - pos_x; // This was setup with vtm_pos before which never functioned so, if bug its here
+	float pitch_target = 1.57 + -get_r_stick_y() * 0.3 + vtm_pos_y;
+	float yaw_target = -get_r_stick_x() * 1.5 - vtm_pos_x;
 
 	float fly_wheel_target =
 		(get_r_switch() == SwitchPos::FORWARD || get_r_switch() == SwitchPos::MIDDLE) ? 18 : 0; // m/s
 	// if the right switch is forward, and either the left mouse button is pressed or the right switch is not
 	// backward, set the feeder to something. Otherwise, set it to 0
-	float feeder_target = ((feed_trigger &&
+	float feeder_target = (((vtm_input.button_left) &&
 							get_r_switch() != SwitchPos::BACKWARD) || get_r_switch() == SwitchPos::FORWARD) ? 10 : 0;
 	if (estimated_state_map[Cfg::StateName::Feeder].config().governor_type == Cfg::StateOrder::Position) {
 		float dt2 = timer.delta();

@@ -3,9 +3,6 @@
 #include "motor.hpp"
 #include <map>
 #include <memory>
-/// @brief Debug flag to enable verbose logging. This can get quite noisy so it is off by default. Critical errors are still printed regardless of flag
-// #define CAN_MANAGER_DEBUG
-
 /// @brief The maximum number of motors that can be connected to a single bus
 constexpr uint32_t CAN_MAX_MOTORS_PER_BUS = 8u;
 

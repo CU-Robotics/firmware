@@ -21,8 +21,7 @@ SensorManager::~SensorManager() {
     Serial.println("SPI Ended");
 }
 
-
-void SensorManager::init(const Cfg::RobotConfig &config_data, std::optional<RobotStateMap> *isr_safe_map) {
+void SensorManager::init(const Cfg::RobotConfig& config_data, std::unique_ptr<RobotStateMap>* isr_safe_map) {
     instance = this;    
     // start SPI
     Serial.println("Starting SPI");
@@ -78,7 +77,7 @@ void SensorManager::configure_sensors(const Cfg::RobotConfig& config_data) {
     }
 }
 
-void SensorManager::initialize_sensors(std::optional<RobotStateMap>* isr_safe_map){
+void SensorManager::initialize_sensors(std::unique_ptr<RobotStateMap>* isr_safe_map){
     for (auto &[sensor_name, sensor] : sensors) {
         sensor->provide_isr_map(isr_safe_map);
         sensor->init();
