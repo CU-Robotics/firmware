@@ -124,5 +124,5 @@ private:
 
 	/// @brief Pointer to the SensorManager's active transfer flag
     const volatile bool* shared_dma_flag;
-	// Could/should this be a shared pointer??
+    // Could/should this be a shared pointer??
 };

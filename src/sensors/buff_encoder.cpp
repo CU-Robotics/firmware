@@ -39,8 +39,8 @@ void BuffEncoder::read() {
 	if (shared_dma_flag != nullptr && *shared_dma_flag == true) {
         return; 
     }
-	// Serial.printf("Pin: %u, Sending Buff Encoder read command\n", config_data.spi_cs);
-
+    // Serial.printf("Pin: %u, Sending Buff Encoder read command\n", config_data.spi_cs);
+    
     uint8_t status = rx_buffer[4] & 0x07;
     uint8_t crc_received = rx_buffer[5];
     uint8_t crc_computed  = mt6835_crc8(&rx_buffer[2], 3);
