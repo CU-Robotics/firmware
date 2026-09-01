@@ -1,5 +1,6 @@
 #include "buff_encoder.hpp"
 #include "comms/data/sendable.hpp"
+#include "utils/system_log.hpp"
 
 const SPISettings BuffEncoder::m_settings = SPISettings(1000000, MT6835_BITORDER, SPI_MODE3);
 
@@ -38,15 +39,15 @@ void BuffEncoder::read() {
     uint8_t crc_computed  = mt6835_crc8(&data[2], 3);
 
     if (crc_received != crc_computed) {
-        Serial.printf("Pin: %u, MT6835 CRC mismatch\n", config_data.spi_cs);
+        SystemLog.error(Subsystem::SENSORS,"Pin: %u, MT6835 CRC mismatch\n", config_data.spi_cs);
         return;
     }
     if (status & MT6835_STATUS_UNDERVOLT) { 
-        Serial.printf("Pin: %u, MT6835 undervoltage detected\n", config_data.spi_cs); 
+        SystemLog.error(Subsystem::SENSORS,"Pin: %u, MT6835 undervoltage detected\n", config_data.spi_cs); 
         return;
     }
     if (status & MT6835_STATUS_WEAKFIELD) { 
-        Serial.printf("Pin: %u, MT6835 weak field detected\n", config_data.spi_cs); 
+        SystemLog.error(Subsystem::SENSORS,"Pin: %u, MT6835 weak field detected\n", config_data.spi_cs); 
         return; 
     }
 
@@ -66,7 +67,7 @@ void BuffEncoder::read() {
 
 void BuffEncoder::write_zero_pos(uint16_t zero_pos_raw) {
     if (zero_pos_raw > 0x0FFF) {
-        Serial.printf("Pin: %u, ZERO_POS value out of range: %u\n", config_data.spi_cs, zero_pos_raw);
+        SystemLog.error(Subsystem::SENSORS,"Pin: %u, ZERO_POS value out of range: %u\n", config_data.spi_cs, zero_pos_raw);
         return;
     }
 
@@ -116,7 +117,7 @@ void BuffEncoder::write_zero_pos(uint16_t zero_pos_raw) {
     digitalWrite(config_data.spi_cs, HIGH);
     SPI.endTransaction();
 
-    Serial.printf("Pin: %u, wrote ZERO_POS = 0x%03X (%u)\n",
+    SystemLog.info(Subsystem::SENSORS,"Pin: %u, wrote ZERO_POS = 0x%03X (%u)\n",
                   config_data.spi_cs, zero_pos_raw, zero_pos_raw);
 }
 
@@ -155,7 +156,7 @@ float BuffEncoder::read_zero_pos() {
     uint16_t zero_pos_raw = (static_cast<uint16_t>(zero_pos_high) << 4) | zero_pos_low; // 12-bit value, 0-4095
 
     if (zero_pos_raw != 0) {
-        Serial.printf("Pin: %u, ZERO_POS raw = 0x%03X (%u), degrees = %.3f\n",
+        SystemLog.info(Subsystem::SENSORS,"Pin: %u, ZERO_POS raw = 0x%03X (%u), degrees = %.3f\n",
                   config_data.spi_cs, zero_pos_raw, zero_pos_raw,
                   zero_pos_raw * (360.0f / 4096.0f));
     }
@@ -172,6 +173,11 @@ void BuffEncoder::send_to_comms() const {
 void BuffEncoder::print() const{
     Serial.printf("Buff Encoder:\n\t");
     Serial.println(get_angle());
+}
+void BuffEncoder::print_live_data() {
+    // Note: casting get_name() to int so it prints the enum number
+    Serial.printf(" [Buff Encoder %d] Angle (rad): %8.4f\n", 
+                  (int)get_name(), get_angle());
 }
 
 uint8_t BuffEncoder::mt6835_crc8(const uint8_t* data, size_t len) const {

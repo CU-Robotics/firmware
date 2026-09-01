@@ -2,6 +2,7 @@
 #include <Arduino.h>
 #include "sensors/RefSystem.hpp"
 #include "comms/data/sendable.hpp"
+#include "utils/system_log.hpp"
 
 DR16::DR16(const Cfg::DR16& config_) : config(config_) {
 
@@ -63,7 +64,7 @@ void DR16::read() {
 			while (last_available == Serial8.available() && micros() - start < DR16_ALIGNMENT_LONG_INTERVAL_THRESHOLD);
 			uint32_t end = micros();
 			
-			Serial.printf("DR16: Still aligning (%d)\n", interval_count);
+			SystemLog.warn(Subsystem::SENSORS,"DR16: Still aligning (%d)\n", interval_count);
 
 			// if this interval was a long interval (break in packets), call the alignment done and finish up
 			// also mark this as a successful alignment, rather than it timing out
@@ -75,11 +76,11 @@ void DR16::read() {
 
 		// print success or failure
 		if (alignment_timed_out) {
-			Serial.printf("DR16: Alignment timed out, trying again next loop\n\n");
+			SystemLog.error(Subsystem::SENSORS,"DR16: Alignment timed out, trying again next loop\n\n");
 		} else {
 			uint32_t align_end = micros();
-			Serial.printf("DR16: Aligned successfully\n");
-			Serial.printf("DR16: Alignment took %fms\n\n", (align_end - align_start) / 1000.f);
+			SystemLog.error(Subsystem::SENSORS,"DR16: Aligned successfully\n");
+			SystemLog.error(Subsystem::SENSORS,"DR16: Alignment took %fms\n\n", (align_end - align_start) / 1000.f);
 		}
 
 		// clear the buffer to get ready for the next packet
@@ -426,4 +427,45 @@ void DR16::manual_controls(const RobotStateMap& estimated_state_map, RobotStateM
 		pos_offset_y = estimated_state_map[Cfg::StateName::ChassisY].get_position();
 		feed = last_feed;
 	}
+}
+void DR16::print_live_data() {
+    Serial.printf("=== LIVE DR16 TRANSMITTER DATA ===\n");
+    
+    const char* mode_str = "UNKNOWN";
+    if (is_safety_mode()) {
+        mode_str = "SAFETY";
+    } else if (is_teensy_mode()) {
+        mode_str = "TEENSY";
+    } else if (is_hive_mode()) {
+        mode_str = "HIVE";
+    }
+
+    Serial.printf(" Control Mode: %-7s\n", mode_str);
+    
+    Serial.println("----------------------------------");
+    Serial.printf(" L Stick: X: %5.2f | Y: %5.2f\n", get_l_stick_x(), get_l_stick_y());
+    Serial.printf(" R Stick: X: %5.2f | Y: %5.2f\n", get_r_stick_x(), get_r_stick_y());
+    Serial.printf(" Wheel  : %5.2f\n", get_wheel());
+	
+	// Lambda to convert the float value into the SwitchPos string
+    auto sw_str = [](auto val) -> const char* {
+        switch (static_cast<SwitchPos>(static_cast<uint32_t>(val))) {
+            case SwitchPos::FORWARD:  return "FORWARD";
+            case SwitchPos::BACKWARD: return "BACKWARD";
+            case SwitchPos::MIDDLE:   return "MIDDLE";
+            default:                  return "INVALID";
+        }
+    };
+
+    // Print using the lambda and the %-8s padding
+    Serial.printf(" L Switch: %-8s | R Switch: %-8s\n", sw_str(get_l_switch()), sw_str(get_r_switch()));
+	
+    Serial.println("------------- MOUSE --------------");
+    Serial.printf(" X: %5d | Y: %5d | Z: %5d\n", get_mouse_x(), get_mouse_y(), get_mouse_z());
+    Serial.printf(" L_Btn: %d | R_Btn: %d\n", get_l_mouse_button(), get_r_mouse_button());
+    Serial.println("------------ KEYBOARD ------------");
+    
+    Keys k = get_keys();
+    Serial.printf(" W:%d A:%d S:%d D:%d | Q:%d E:%d\n", k.w, k.a, k.s, k.d, k.q, k.e);
+    Serial.printf(" Shift:%d | Ctrl:%d\n", k.shift, k.ctrl);
 }

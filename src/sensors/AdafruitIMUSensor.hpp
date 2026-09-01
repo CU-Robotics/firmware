@@ -53,6 +53,8 @@ public:
 
     /// @brief Print out all IMU data to Serial for debugging purposes
     void print();
+	/// @brief Prints a live, formatted dashboard of IMU data
+    void print_live_data() override;
 
 protected:
     // sensor events to read from

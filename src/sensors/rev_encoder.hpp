@@ -41,4 +41,6 @@ public:
 
 	/// @brief print the encoder details
 	void print();
+	/// @brief Prints a formatted dashboard of live Rev Encoder values
+	void print_live_data() override;
 };

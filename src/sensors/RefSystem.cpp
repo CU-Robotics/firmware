@@ -1,6 +1,7 @@
 #include "RefSystem.hpp"
 #include "RefSystemPacketDefs.hpp"
 #include "comms/data/sendable.hpp"
+#include "utils/system_log.hpp"
 RefSystem ref; // Global instance
 
 uint8_t generateCRC8(const uint8_t *data, uint32_t len) {
@@ -88,35 +89,35 @@ uint16_t RefSystem::get_client_id_for_robot(uint16_t robot_id) {
 
 bool RefSystem::write_frame(HardwareSerial& serial, uint8_t* packet, uint16_t length) {
     if (packet == nullptr) {
-        Serial.println("No Ref packet to send");
+        SystemLog.error(Subsystem::REF,"No Ref packet to send");
         return false;
     }
 
     if (length > REF_MAX_PACKET_SIZE) {
-        Serial.println("Packet Too Long to Send!");
+        SystemLog.error(Subsystem::REF,"Packet Too Long to Send!");
         return false;
     }
 
     if (length < REF_FRAME_OVERHEAD) {
-        Serial.println("Packet Too Short to Send!");
+        SystemLog.error(Subsystem::REF,"Packet Too Short to Send!");
         return false;
     }
 
     uint16_t frame_data_length = get_u16(packet + 1);
     if (frame_data_length > REF_MAX_DATA_SIZE) {
-        Serial.println("Packet Data Too Long to Send!");
+        SystemLog.error(Subsystem::REF,"Packet Data Too Long to Send!");
         return false;
     }
 
     uint16_t expected_length = REF_FRAME_OVERHEAD + frame_data_length;
     if (length != expected_length) {
-        Serial.println("Packet Length Mismatch!");
+        SystemLog.error(Subsystem::REF,"Packet Length Mismatch!");
         return false;
     }
 
     uint16_t command_id = get_u16(packet + FrameHeader::packet_size);
     if (command_id > REF_MAX_COMMAND_ID) {
-        Serial.println("Invalid Ref command ID");
+        SystemLog.error(Subsystem::REF,"Invalid Ref command ID");
         return false;
     }
 
@@ -127,13 +128,13 @@ bool RefSystem::write_frame(HardwareSerial& serial, uint8_t* packet, uint16_t le
     }
 
     if (bytes_sent + length > REF_MAX_BAUD_RATE) {
-        Serial.println("Too many bytes");
+        SystemLog.error(Subsystem::REF,"Too many bytes");
         return false;
     }
 
     uint32_t now_us = micros();
     if (last_ref_packet_write_us != 0 && now_us - last_ref_packet_write_us < REF_MAX_PACKET_DELAY) {
-        Serial.println("Ref packet rate limited");
+        SystemLog.warn(Subsystem::REF,"Ref packet rate limited");
         return false;
     }
 
@@ -153,24 +154,24 @@ bool RefSystem::write_frame(HardwareSerial& serial, uint8_t* packet, uint16_t le
         return true;
     }
 
-    Serial.println("Failed to write");
+    SystemLog.error(Subsystem::REF,"Failed to write");
     return false;
 }
 
 bool RefSystem::write_robot_interaction(uint16_t content_id, const uint8_t* payload, uint16_t payload_length, uint16_t receiver_id) {
     if (payload_length > RobotInteraction::max_content_size) {
-        Serial.println("Robot interaction payload too long");
+        SystemLog.error(Subsystem::REF,"Robot interaction payload too long");
         return false;
     }
 
     if (payload_length > 0 && payload == nullptr) {
-        Serial.println("No robot interaction payload");
+        SystemLog.error(Subsystem::REF,"No robot interaction payload");
         return false;
     }
 
     uint16_t sender_id = ref_data.robot_performance.robot_ID;
     if (sender_id == 0) {
-        Serial.println("No robot ID for client drawing");
+        SystemLog.error(Subsystem::REF,"No robot ID for client drawing");
         return false;
     }
 
@@ -179,7 +180,7 @@ bool RefSystem::write_robot_interaction(uint16_t content_id, const uint8_t* payl
     }
 
     if (receiver_id == 0) {
-        Serial.println("No player client ID for this robot");
+        SystemLog.error(Subsystem::REF,"No player client ID for this robot");
         return false;
     }
 
@@ -233,7 +234,7 @@ bool RefSystem::read_frame_header(HardwareSerial* serial, uint8_t raw_buffer[REF
     // read and verify header
     int bytes_read = serial->readBytes(raw_buffer, FrameHeader::packet_size);
     if (bytes_read != FrameHeader::packet_size) {
-        Serial.println("Couldnt read enough bytes for Header");
+        SystemLog.error(Subsystem::REF,"Couldnt read enough bytes for Header");
         packets_failed++;
         return false;
     }
@@ -241,7 +242,7 @@ bool RefSystem::read_frame_header(HardwareSerial* serial, uint8_t raw_buffer[REF
     // set read data
     frame.header.SOF = raw_buffer[buffer_index + 0];
     if (frame.header.SOF != 0xA5) {
-        Serial.println("Not a valid frame");
+        SystemLog.error(Subsystem::REF,"Not a valid frame");
         return false;
     }
 
@@ -252,13 +253,13 @@ bool RefSystem::read_frame_header(HardwareSerial* serial, uint8_t raw_buffer[REF
     // verify the CRC is correct
     uint8_t expected_CRC = generateCRC8(raw_buffer, 4);
     if (frame.header.CRC != expected_CRC) {
-        Serial.printf("[Ref] Header CRC failed: received=0x%02x expected=0x%02x\n", frame.header.CRC, expected_CRC);
+        SystemLog.error(Subsystem::REF,"[Ref] Header CRC failed: received=0x%02x expected=0x%02x\n", frame.header.CRC, expected_CRC);
         packets_failed++;
         return false;
     }
 
     if (frame.header.data_length > REF_MAX_DATA_SIZE) {
-        Serial.printf("[Ref] Data length too large: %u (max %u)\n", frame.header.data_length, REF_MAX_DATA_SIZE);
+        SystemLog.error(Subsystem::REF,"[Ref] Data length too large: %u (max %u)\n", frame.header.data_length, REF_MAX_DATA_SIZE);
         packets_failed++;
         return false;
     }
@@ -277,7 +278,7 @@ bool RefSystem::read_frame_command_ID(HardwareSerial* serial, uint8_t raw_buffer
     // read and verify command ID
     int bytes_read = serial->readBytes(raw_buffer + buffer_index, REF_COMMAND_ID_SIZE);
     if (bytes_read != REF_COMMAND_ID_SIZE) {
-        Serial.println("Couldnt read enough bytes for ID");
+        SystemLog.error(Subsystem::REF,"Couldnt read enough bytes for ID");
         packets_failed++;
         return false;
     }
@@ -287,7 +288,7 @@ bool RefSystem::read_frame_command_ID(HardwareSerial* serial, uint8_t raw_buffer
 
     // sanity check, verify the ID is valid
     if (frame.commandID > REF_MAX_COMMAND_ID) {
-        Serial.printf("[Ref] Invalid command ID: 0x%04x\n", frame.commandID);
+		SystemLog.error(Subsystem::REF,"[Ref] Invalid command ID: 0x%04x\n", frame.commandID);
         packets_failed++;
         return false;
     }
@@ -306,7 +307,7 @@ bool RefSystem::read_frame_data(HardwareSerial* serial, uint8_t raw_buffer[REF_M
     // read and verify data
     int bytes_read = serial->readBytes(raw_buffer + buffer_index, frame.header.data_length);
     if (bytes_read != frame.header.data_length) {
-        Serial.println("Couldnt read enough bytes for Data");
+        SystemLog.error(Subsystem::REF,"Couldnt read enough bytes for Data");
         packets_failed++;
         return false;
     }
@@ -328,7 +329,7 @@ int RefSystem::read_frame_tail(HardwareSerial* serial, uint8_t raw_buffer[REF_MA
     // read and verify tail
     int bytes_read = serial->readBytes(raw_buffer + buffer_index, REF_FRAME_TAIL_SIZE);
     if (bytes_read != REF_FRAME_TAIL_SIZE) {
-        Serial.println("Couldnt read enough bytes for CRC");
+        SystemLog.error(Subsystem::REF,"Couldnt read enough bytes for CRC");
         packets_failed++;
         return 0;
     }
@@ -338,7 +339,7 @@ int RefSystem::read_frame_tail(HardwareSerial* serial, uint8_t raw_buffer[REF_MA
 
     uint16_t expected_CRC = generateCRC16(raw_buffer, buffer_index);
     if (frame.CRC != expected_CRC) {
-        Serial.printf("[Ref] Tail CRC failed: command=0x%04x length=%u received=0x%04x expected=0x%04x\n",
+		SystemLog.error(Subsystem::REF,"[Ref] Tail CRC failed: command=0x%04x length=%u received=0x%04x expected=0x%04x\n",
                       frame.commandID, frame.header.data_length, frame.CRC, expected_CRC);
         packets_failed++;
         return -1;
@@ -368,7 +369,7 @@ void RefSystem::set_ref_data(Frame& frame, uint8_t raw_buffer[REF_MAX_PACKET_SIZ
     FrameType type = static_cast<FrameType>(frame.commandID);
 
 #ifdef REF_SYSTEM_DEBUG
-    Serial.printf("[Ref] command=0x%04x length=%u sequence=%u\n",
+	SystemLog.info(Subsystem::REF,"[Ref] command=0x%04x length=%u sequence=%u\n",
                   frame.commandID, frame.header.data_length, frame.header.sequence);
 #endif
 
@@ -460,7 +461,7 @@ void RefSystem::set_ref_data(Frame& frame, uint8_t raw_buffer[REF_MAX_PACKET_SIZ
     case FrameType::CUSTOM_CLIENT_ROBOT_COMMAND:
         break;
     default:
-        Serial.printf("Ref System::set_ref_data: Unknown Frame Type 0x%04x\n", frame.commandID);
+        SystemLog.error(Subsystem::REF,"Ref System::set_ref_data: Unknown Frame Type 0x%04x\n", frame.commandID);
         break;
     }
 }
@@ -472,9 +473,9 @@ void RefSystem::read_vtm() {
     if (now_ms - last_vtm_status_print_ms >= 1000) {
         int available = VTM_SERIAL.available();
         if (available > 0) {
-            Serial.printf("[VTM] waiting: available=%d peek=0x%02x\n", available, VTM_SERIAL.peek());
+            SystemLog.info(Subsystem::REF,"[VTM] waiting: available=%d peek=0x%02x\n", available, VTM_SERIAL.peek());
         } else {
-            Serial.printf("[VTM] waiting: available=0\n");
+            SystemLog.info(Subsystem::REF,"[VTM] waiting: available=0\n");
         }
         last_vtm_status_print_ms = now_ms;
     }
@@ -491,9 +492,9 @@ void RefSystem::read_vtm() {
         if (skipped_bytes > 0) {
             int available = VTM_SERIAL.available();
             if (available > 0) {
-                Serial.printf("[VTM] skipped %u byte(s) before header: available=%d peek=0x%02x\n", skipped_bytes, available, VTM_SERIAL.peek());
+				SystemLog.info(Subsystem::REF,"[VTM] skipped %u byte(s) before header: available=%d peek=0x%02x\n", skipped_bytes, available, VTM_SERIAL.peek());
             } else {
-                Serial.printf("[VTM] skipped %u byte(s) before header: available=0\n", skipped_bytes);
+                SystemLog.error(Subsystem::REF,"[VTM] skipped %u byte(s) before header: available=0\n", skipped_bytes);
             }
         }
 #endif
@@ -509,16 +510,16 @@ void RefSystem::read_vtm() {
         }
 
 #ifdef REF_SYSTEM_DEBUG
-        Serial.printf("[VTM] raw:");
+        SystemLog.info(Subsystem::REF,"[VTM] raw:");
         for (uint8_t i = 0; i < VTM_REMOTE_CONTROL_PACKET_SIZE; i++) {
-            Serial.printf(" %02x", packet[i]);
+            SystemLog.info(Subsystem::REF," %02x", packet[i]);
         }
-        Serial.printf("\n");
+        SystemLog.info(Subsystem::REF,"\n");
 #endif
 
         if (packet[1] != VTM_REMOTE_CONTROL_HEADER_2) {
 #ifdef REF_SYSTEM_DEBUG
-            Serial.printf("[VTM] bad second header: received=0x%02x expected=0x%02x\n", packet[1], VTM_REMOTE_CONTROL_HEADER_2);
+            SystemLog.info(Subsystem::REF,"[VTM] bad second header: received=0x%02x expected=0x%02x\n", packet[1], VTM_REMOTE_CONTROL_HEADER_2);
 #endif
             packets_failed++;
             continue;
@@ -527,7 +528,7 @@ void RefSystem::read_vtm() {
         uint16_t received_crc = packet[19] | (static_cast<uint16_t>(packet[20]) << 8);
         uint16_t expected_crc = generateCRC16(packet, VTM_REMOTE_CONTROL_PACKET_SIZE - 2);
         if (received_crc != expected_crc) {
-            Serial.printf("[VTM] CRC failed: received=0x%04x expected=0x%04x\n", received_crc, expected_crc);
+			SystemLog.warn(Subsystem::REF,"[VTM] CRC failed: received=0x%04x expected=0x%04x\n", received_crc, expected_crc);
             packets_failed++;
             continue;
         }
@@ -537,7 +538,7 @@ void RefSystem::read_vtm() {
 
 #ifdef REF_SYSTEM_DEBUG
         const VTMRemoteControl &input = ref_data.vtm_remote_control;
-        Serial.printf("[VTM] mouse=(%d,%d) scroll=%d buttons=%u/%u/%u keys=0x%04x\n", input.mouse_speed_x, input.mouse_speed_y, input.scroll_speed, static_cast<uint32_t>(input.button_left), static_cast<uint32_t>(input.button_right), static_cast<uint32_t>(input.button_middle), input.keyboard_value);
+        SystemLog.info(Subsystem::REF,"[VTM] mouse=(%d,%d) scroll=%d buttons=%u/%u/%u keys=0x%04x\n", input.mouse_speed_x, input.mouse_speed_y, input.scroll_speed, static_cast<uint32_t>(input.button_left), static_cast<uint32_t>(input.button_right), static_cast<uint32_t>(input.button_middle), input.keyboard_value);
 #endif
         return;
     }
