@@ -16,6 +16,8 @@ public:
 	
 	/// @brief prints all output values
 	virtual void print() = 0;
+	/// @brief Prints a formatted dashboard of live transmitter values
+	virtual void print_live_data() = 0;
 	/// @brief prints raw packet values for debugging
 	virtual void print_raw() = 0;
 	/// @brief sends data to comms

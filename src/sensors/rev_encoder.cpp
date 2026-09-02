@@ -53,3 +53,7 @@ void RevEncoder::print() {
     Serial.print("\tRadians: ");
     Serial.println(radians);
 }
+void RevEncoder::print_live_data() {
+    Serial.printf(" [Rev Encoder %d]  Angle (rad): %8.4f | Ticks: %8.0f\n", 
+                  (int)config.encoder_name, get_angle_radians(), get_angle_ticks());
+}

@@ -143,6 +143,8 @@ public:
 
 	/// @brief Prints the raw 18-byte packet from the receiver
 	void print_raw() override;
+	/// @brief Prints a formatted dashboard of live DR16 values
+	void print_live_data() override;
 
 	/// @brief Get mouse velocity x
 	/// @return Amount of points since last read
