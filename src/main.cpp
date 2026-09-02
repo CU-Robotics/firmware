@@ -5,6 +5,7 @@ int main() {
 
     Serial.begin(115200); // the serial monitor is actually always active (for
                           // debug use Serial.println & tycmd)
+	while(!Serial);
     debug.begin(SerialUSB1);
 
     Utils::print_logo();
