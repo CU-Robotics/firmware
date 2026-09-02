@@ -41,6 +41,14 @@ extern "C" void reset_teensy(void);
 #define LOOP_FREQ 1000
 #define HEARTBEAT_FREQ 2
 
+// Showcase mode constants
+/// @brief Yaw spin rate in showcase mode (rad/s). One full circle takes 2*pi / SHOWCASE_YAW_RATE seconds.
+#define SHOWCASE_YAW_RATE 0.5f
+/// @brief Pitch sweep rate in showcase mode (rad/s of sine phase). One up-and-down cycle takes 2*pi / SHOWCASE_PITCH_RATE seconds.
+#define SHOWCASE_PITCH_RATE 0.8f
+/// @brief Fraction of the pitch reference range that the showcase sweep covers.
+#define SHOWCASE_PITCH_RANGE_FRACTION 0.8f
+
 
 /// @brief Coordinates all hardware, networking, and control systems.
 class HelloRobot {
@@ -119,6 +127,22 @@ class HelloRobot {
     bool has_lower_feeder = false;
 
     // ==========================================
+    // SHOWCASE MODE
+    // ==========================================
+
+    /// @brief Whether the previous loop was in showcase mode, used to detect entering showcase mode.
+    bool was_showcase_mode = false;
+
+    /// @brief Current showcase yaw target (rad). Increases continuously so the yaw spins in full circles.
+    float showcase_yaw = 0;
+
+    /// @brief Current showcase pitch phase (rad). The pitch target follows a sine wave of this phase.
+    float showcase_pitch_phase = 0;
+
+    /// @brief Timer for stepping the showcase targets.
+    Timer showcase_timer;
+
+    // ==========================================
     // STATE MAPS
     // ==========================================
 
@@ -148,6 +172,10 @@ class HelloRobot {
 
     /// @brief Processes manual inputs, hive modes, and state overrides.
     void process_behaviors();
+
+    /// @brief Overwrites the target state map with showcase targets: yaw slowly spinning in a full circle,
+    /// pitch slowly sweeping up and down, and everything else (chassis, flywheels, feeders) stopped.
+    void showcase_controls();
 
     /// @brief Steps estimators, governors, and controllers to generate motor targets.
     void update_controls();

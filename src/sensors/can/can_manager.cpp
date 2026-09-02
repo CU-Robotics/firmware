@@ -196,6 +196,16 @@ void CANManager::issue_safety_mode() {
     write();
 }
 
+void CANManager::zero_non_gimbal_motors() {
+    for (auto& [name, motor] : m_motor_name_map) {
+        bool is_gimbal = name == Cfg::MotorName::Yaw1 || name == Cfg::MotorName::Yaw2
+                      || name == Cfg::MotorName::Pitch1 || name == Cfg::MotorName::Pitch2;
+        if (!is_gimbal) {
+            motor->zero_motor();
+        }
+    }
+}
+
 void CANManager::write_motor_torque_by_name(Cfg::MotorName motor_name, float torque) {
     safety::assert_or_safety_procedure(motor_name!= Cfg::MotorName::UnsetMotorName, 
                                         "CANManager: Requested write to an unset motor name");

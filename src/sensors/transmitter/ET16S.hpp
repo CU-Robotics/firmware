@@ -103,6 +103,9 @@ class ET16S : public Transmitter {
 	bool is_teensy_mode() override;
 	/// @copydoc Transmitter::mode_changed
 	bool mode_changed() override;
+	/// @copydoc Transmitter::is_showcase_mode
+	/// @note Determined by switch F being in the backward position.
+	bool is_showcase_mode() override;
 
 	/// @copydoc Transmitter::manual_controls
 	void manual_controls(const RobotStateMap& estimated_state_map, RobotStateMap& target_state_map, bool not_safety_mode, float& feed, float& last_feed) override;

@@ -114,6 +114,12 @@ void HelloRobot::process_behaviors() {
         last_feed = (*target_state_map)[Cfg::StateName::Feeder].get_position();
     }
 
+    // showcase mode overrides both manual and hive targets
+    if (transmitter_manager.is_showcase_mode()) {
+        showcase_controls();
+    }
+    was_showcase_mode = transmitter_manager.is_showcase_mode();
+
     // override temp state if needed. Dont override in teensy mode so the sentry doesnt move during inspection
     if (Comms::comms_layer.get_hive_data().override_state_data.active && !(transmitter_manager.is_teensy_mode())) {
         // clear the request
@@ -125,6 +131,46 @@ void HelloRobot::process_behaviors() {
         override_request = true;
     }
 }
+void HelloRobot::showcase_controls() {
+    float dt = showcase_timer.delta();
+
+    // on entry, start the yaw sweep from where the gimbal currently is so it doesn't jump
+    if (!was_showcase_mode) {
+        showcase_yaw = (*estimated_state_map)[Cfg::StateName::GimbalYaw].get_position();
+        showcase_pitch_phase = 0;
+        dt = 0;
+    }
+
+    // yaw: keep increasing, set_position wraps it into the configured range
+    showcase_yaw += SHOWCASE_YAW_RATE * dt;
+
+    // pitch: sine wave centered in the configured reference range
+    showcase_pitch_phase += SHOWCASE_PITCH_RATE * dt;
+    const Cfg::Limit& pitch_limits = (*estimated_state_map)[Cfg::StateName::GimbalPitch].config().reference_limits.position;
+    float pitch_center = 0.5f * (pitch_limits.min + pitch_limits.max);
+    float pitch_amplitude = 0.5f * SHOWCASE_PITCH_RANGE_FRACTION * (pitch_limits.max - pitch_limits.min);
+    float pitch_target = pitch_center + pitch_amplitude * sinf(showcase_pitch_phase);
+
+    (*target_state_map)[Cfg::StateName::GimbalYaw].set_position(showcase_yaw);
+    (*target_state_map)[Cfg::StateName::GimbalYaw].set_velocity(0);
+    (*target_state_map)[Cfg::StateName::GimbalPitch].set_position(pitch_target);
+    (*target_state_map)[Cfg::StateName::GimbalPitch].set_velocity(0);
+
+    // everything dangerous is told to stop (and its motors are zeroed in check_safety regardless)
+    (*target_state_map)[Cfg::StateName::ChassisX].set_position((*estimated_state_map)[Cfg::StateName::ChassisX].get_position());
+    (*target_state_map)[Cfg::StateName::ChassisX].set_velocity(0);
+    (*target_state_map)[Cfg::StateName::ChassisY].set_position((*estimated_state_map)[Cfg::StateName::ChassisY].get_position());
+    (*target_state_map)[Cfg::StateName::ChassisY].set_velocity(0);
+    (*target_state_map)[Cfg::StateName::ChassisHeading].set_velocity(0);
+    (*target_state_map)[Cfg::StateName::Flywheels].set_velocity(0);
+    (*target_state_map)[Cfg::StateName::Feeder].set_position((*estimated_state_map)[Cfg::StateName::Feeder].get_position());
+    (*target_state_map)[Cfg::StateName::Feeder].set_velocity(0);
+    if (has_lower_feeder) {
+        (*target_state_map)[Cfg::StateName::LowerFeeder].set_position((*estimated_state_map)[Cfg::StateName::LowerFeeder].get_position());
+        (*target_state_map)[Cfg::StateName::LowerFeeder].set_velocity(0);
+    }
+}
+
 void HelloRobot::update_controls() {
     // step estimates and construct estimated state
     estimator_manager.step(*estimated_state_map, override_request);
@@ -212,6 +258,10 @@ void HelloRobot::check_safety() {
     //  SAFETY MODE
     if (not_safety_mode) {
         // SAFETY OFF
+        if (transmitter_manager.is_showcase_mode()) {
+            // only the gimbal is allowed to move in showcase mode
+            can.zero_non_gimbal_motors();
+        }
         can.write();
         // Serial.printf("Can write\n");
     } else {

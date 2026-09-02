@@ -92,6 +92,10 @@ public:
 	/// @copydoc Transmitter::mode_changed
 	bool mode_changed() override;
 
+	/// @copydoc Transmitter::is_showcase_mode
+	/// @note The DR16 has no spare switch, so it never enters showcase mode.
+	bool is_showcase_mode() override { return false; }
+
 	/// @copydoc Transmitter::manual_controls
 	void manual_controls(const RobotStateMap& estimated_state_map, RobotStateMap& target_state_map, bool not_safety_mode, float& feed, float& last_feed) override;
 

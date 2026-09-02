@@ -34,6 +34,11 @@ public:
 	/// @brief Whether the mode has been changed in between the last two reads.
 	/// @return true if the mode has been changed, false otherwise.
 	virtual bool mode_changed() = 0;
+
+	/// @brief Whether the transmitter is requesting showcase mode: the gimbal slowly sweeps yaw and pitch on its own
+	/// while every other motor (chassis, flywheels, feeders) is held at zero torque so the robot is safe on a table.
+	/// @return true if showcase mode is requested, false otherwise.
+	virtual bool is_showcase_mode() = 0;
 	
 	/// @brief Uses the transmitter input to update the target state map with the desired setpoints for each state.
 	/// @param estimated_state_map The current estimated state of the robot.

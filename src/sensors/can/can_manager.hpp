@@ -72,6 +72,10 @@ public:
     /// @note This immediately issues a CAN command over the bus
     void issue_safety_mode();
 
+    /// @brief Zero every motor except the yaw and pitch motors. Used by showcase mode so only the gimbal can move.
+    /// @note Does not issue a CAN command over the bus, call write() afterwards
+    void zero_non_gimbal_motors();
+
     /// @brief Write a torque command to a specific motor by name
     /// @param motor_name The name of the motor to write to
     /// @param torque The torque command to write to the motor

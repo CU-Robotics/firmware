@@ -583,6 +583,10 @@ bool ET16S::mode_changed(){
 	return mode_changed_flag;
 }
 
+bool ET16S::is_showcase_mode() {
+	return get_switch_f() == SwitchPos::BACKWARD;
+}
+
 
 ET16SData ET16S::get_ET16S_data(){
 	ET16SData ET16S_data;

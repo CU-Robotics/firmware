@@ -70,6 +70,15 @@ bool TransmitterManager::mode_changed() {
     }
 }
 
+bool TransmitterManager::is_showcase_mode() {
+    if (transmitter) {
+        return transmitter->is_showcase_mode();
+    } else {
+        safety::safety_procedure("TransmitterManager::is_showcase_mode called before transmitter was initialized");
+        return false; // default to not showcase mode if not initialized
+    }
+}
+
 void TransmitterManager::manual_controls(const RobotStateMap& estimated_state_map, RobotStateMap& target_state_map, bool not_safety_mode, float& feed, float& last_feed) {
     if (transmitter) {
         transmitter->manual_controls(estimated_state_map, target_state_map, not_safety_mode, feed, last_feed);
