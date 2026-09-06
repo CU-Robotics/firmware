@@ -233,7 +233,7 @@ void HelloRobot::check_safety() {
     if (not_safety_mode) {
         // SAFETY OFF
         can.write();
-        SystemLog.info(Subsystem::CAN,"Can write\n");
+        //SystemLog.info(Subsystem::CAN,"Can write\n");
     } else {
         // SAFETY ON
         // TODO: Reset all controller integrators here
@@ -482,8 +482,9 @@ void HelloRobot::cmd_live() {
 
     if (num_active_views > 0) {
         last_redraw_time = 0;    
-        Serial.print("\033[2J"); 
+        Serial.print("\033[2J");
     } else {
+        SystemLog.is_live_view_active = false;
         Serial.println("Usage: live [prof] [tx] [sensors] [estimated_state] [target_state] [heartbeat]");
     }
 }

@@ -21,7 +21,7 @@ struct Profiler {
 		/// @brief max time of section
         uint32_t max_time = 0;
         /// @brief Number of start/end times recorded
-        uint16_t count = 0;
+        uint32_t count = 0;
         /// @brief Label on if a begin() has been called and the corresponding end() hasn't yet
         uint8_t started = 0;
         /// @brief Name for each section
