@@ -22,7 +22,19 @@ SensorManager::~SensorManager() {
 }
 
 void SensorManager::init(const Cfg::RobotConfig& config_data, std::unique_ptr<RobotStateMap>* isr_safe_map) {
-    instance = this;    
+    instance = this;
+    // Put all chip selects high
+    for (const auto& enc : config_data.buff_encoders) {
+        pinMode(enc.spi_cs, OUTPUT);
+        digitalWrite(enc.spi_cs, HIGH);
+    }
+    for (const auto& imu : config_data.icm_imus) {
+        pinMode(imu.spi_cs, OUTPUT);
+        digitalWrite(imu.spi_cs, HIGH);
+    }
+    SPI1.setMISO(config_data.icm_imus[0].spi_miso);
+	SPI1.setMOSI(config_data.icm_imus[0].spi_mosi);
+	SPI1.setSCK(config_data.icm_imus[0].spi_sck);
     // start SPI
     Serial.println("Starting SPI");
     SPI.begin();
