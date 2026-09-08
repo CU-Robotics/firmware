@@ -238,7 +238,7 @@ void HelloRobot::check_safety() {
     if (not_safety_mode) {
         // SAFETY OFF
         can.write();
-        SystemLog.info(Subsystem::CAN,"Can write\n");
+        //SystemLog.info(Subsystem::CAN,"Can write\n");
     } else {
         // SAFETY ON
         // TODO: Reset all controller integrators here
