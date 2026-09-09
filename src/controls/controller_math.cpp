@@ -4,10 +4,11 @@
 #include <cmath>
 
 float compute_power_limit_ratio(float buffer, float limit_thresh, float critical_thresh) {
-    if (buffer >= limit_thresh) {
-        return 1.0f;
+    // Match the original comparison, including unordered (NaN) inputs.
+    if (buffer < limit_thresh) {
+        return std::clamp((buffer - critical_thresh) / limit_thresh, 0.0f, 1.0f);
     }
-    return std::clamp((buffer - critical_thresh) / limit_thresh, 0.0f, 1.0f);
+    return 1.0f;
 }
 
 MotorVelocities xdrive_mix(float x, float y, float rot, float heading) {

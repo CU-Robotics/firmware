@@ -183,7 +183,7 @@ void XDriveController::step(RobotStateMap& reference_map, RobotStateMap& estimat
 
         float chassis_heading = estimate_map[Cfg::StateName::ChassisHeading].get_position();
         MotorVelocities mv = xdrive_mix(output[0], output[1], output[2], chassis_heading);
-        // position mode uses [1,2,3,0] index order
+        // Mixer order maps to controller motor indices [1,2,3,0].
         motor_velocity[1] = mv.v[0];
         motor_velocity[2] = mv.v[1];
         motor_velocity[3] = mv.v[2];
@@ -252,10 +252,12 @@ void XDriveController::step(RobotStateMap& reference_map, RobotStateMap& estimat
         float chassis_heading = estimate_map[Cfg::StateName::ChassisHeading].get_position();
 
         // Convert to motor velocities
-        motor_velocity[1] = output[0] * cos(chassis_heading) + output[1] * sin(chassis_heading) + output[2];
-        motor_velocity[2] = output[0] * sin(chassis_heading) - output[1] * cos(chassis_heading) + output[2];
-        motor_velocity[3] = -output[0] * cos(chassis_heading) - output[1] * sin(chassis_heading) + output[2];
-        motor_velocity[0] = -output[0] * sin(chassis_heading) + output[1] * cos(chassis_heading) + output[2];
+        MotorVelocities mv = xdrive_mix(output[0], output[1], output[2], chassis_heading);
+        // Mixer order maps to controller motor indices [1,2,3,0].
+        motor_velocity[1] = mv.v[0];
+        motor_velocity[2] = mv.v[1];
+        motor_velocity[3] = mv.v[2];
+        motor_velocity[0] = mv.v[3];
         // Power limiting
         float power_limit_ratio = compute_power_limit_ratio(
             ref.ref_data.robot_power_heat.buffer_energy,
