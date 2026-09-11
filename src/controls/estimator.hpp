@@ -51,6 +51,15 @@ protected:
     ///@brief create a timer object for each estimator
     Timer time;
 
+    /// @brief Calculate acceleration from changes in velocity.
+    struct AccelerationEstimate {
+        float previous_velocity = 0;
+        float previous_dt = 0;
+
+        /// @brief Return the change in velocity per second. Start over after an invalid sample or time step.
+        float step(float velocity, float dt, bool valid = true);
+    };
+
     /// @brief Internal tracking for estimator exceedance on a single state.
     struct ErrorMonitor {
         /// @brief Whether the error monitor has been initialized
@@ -301,6 +310,8 @@ public:
 /// @brief Estimate the state of the feeder ball velocity based on the feeder encoder velocity.
 struct FeederEstimator : public Estimator {
     private:
+        /// @brief Calculate feeder acceleration from encoder velocity in balls/s^2.
+        AccelerationEstimate feeder_acceleration;
         /// @brief delta time
         float dt = 0;
         /// @brief previous feeder angle
@@ -341,6 +352,9 @@ struct FeederEstimator : public Estimator {
 /// @brief Estimate the state of the feeder ball velocity for the lower feeder based on the feeder encoder velocity. This is separate from the main FeederEstimator because it has different config data and we want to be able to disable one without affecting the other.
 struct LowerFeederEstimator : public Estimator {
     private:
+        /// @brief Track upper and lower feeder acceleration separately, in balls/s^2.
+        AccelerationEstimate feeder_acceleration;
+        AccelerationEstimate lower_feeder_acceleration;
         /// @brief delta time
         float dt = 0;
         /// @brief previous feeder angle

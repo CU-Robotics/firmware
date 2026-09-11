@@ -415,6 +415,21 @@ void FlywheelEstimator::validate(const RobotStateMap& updated_state_map) {
     check_state_limits("FlywheelEstimator", "Flywheel Velocity", updated_state_map[ball_exit_velocity], flywheel_monitor);
 }
 
+float Estimator::AccelerationEstimate::step(float velocity, float dt, bool valid) {
+    if (!valid || !(dt > 0)) {
+        previous_dt = 0;
+        return 0;
+    }
+
+    // Get acceleration from the difference between two velocity samples.
+    float acceleration = previous_dt > 0
+        ? (velocity - previous_velocity) / ((previous_dt + dt) * 0.5f)
+        : 0;
+    previous_velocity = velocity;
+    previous_dt = dt;
+    return acceleration;
+}
+
 FeederEstimator::FeederEstimator(const Cfg::Estimator& estimator_config, SensorManager& sensor_manager, CANManager& can, std::vector<Cfg::StateName> available_states) :
     feeder_ball_state(get_state_name_by_generic_use(Cfg::GenericEstimatorStateUse::FeederBallPosition, estimator_config, available_states)),
     feeder_encoder(sensor_manager.get_sensor_by_name<BuffEncoder>(estimator_config.get_sensor_name_by_generic_use(Cfg::GenericSensorUse::FeederBuffEncoder))) {
@@ -444,7 +459,8 @@ void FeederEstimator::step_states(RobotStateMap& updated_state_map, const RobotS
     ball_count += diff/(M_PI/feeder_ratio);
     updated_state_map[feeder_ball_state].set_position_no_bound(ball_count * feeder_direction); // ball count
     updated_state_map[feeder_ball_state].set_velocity_no_bound(feeder_velocity * feeder_direction); // ball velocity
-    updated_state_map[feeder_ball_state].set_acceleration_no_bound(0); // this is not the acceleration just the encoder value for debugging
+    updated_state_map[feeder_ball_state].set_acceleration_no_bound(
+        feeder_acceleration.step(feeder_velocity * feeder_direction, dt)); // balls/s^2
 
 }
 
@@ -480,6 +496,8 @@ void LowerFeederEstimator::step_states(RobotStateMap& updated_state_map, const R
     float lower_feeder_angle = lower_feeder_encoder->get_angle();
     float diff;
     float lower_diff;
+    bool feeder_sample_valid = true;
+    bool lower_feeder_sample_valid = true;
     if (count == 0) {
         dt = 0; // first dt loop generates huge time so check for that
         diff = fmod((feeder_angle - feeder_offset), (float)(M_PI / feeder_ratio)) ;
@@ -495,12 +513,14 @@ void LowerFeederEstimator::step_states(RobotStateMap& updated_state_map, const R
         reset_value = feeder_angle;
         Serial.printf("Feeder angle diff is large: %d, feeder angle: %f, prev feeder angle: %f\n", num_encoder_resets, feeder_angle, prev_feeder_angle);
         diff = 0; // set diff to 0 to avoid large jumps in ball count
+        feeder_sample_valid = false;
     }
     if (fabs(lower_diff) > 0.5 && fabs(lower_diff) < 2*PI - 0.5 && count > 0) {
         num_encoder_resets++;
         reset_value = lower_feeder_angle;
         Serial.printf("Lower feeder angle diff is large: %d, lower feeder angle: %f, prev lower feeder angle: %f\n", num_encoder_resets, lower_feeder_angle, prev_lower_feeder_angle);
         lower_diff = 0; // set lower_diff to 0 to avoid large jumps in ball count
+        lower_feeder_sample_valid = false;
     }
 
     prev_feeder_angle = feeder_angle;
@@ -527,8 +547,10 @@ void LowerFeederEstimator::step_states(RobotStateMap& updated_state_map, const R
 
     updated_state_map[feeder_ball_state].set_position_no_bound(ball_count); // ball count
     updated_state_map[feeder_ball_state].set_velocity_no_bound(feeder_velocity); // ball velocity
-    updated_state_map[feeder_ball_state].set_acceleration_no_bound(0); // this is not the acceleration just the encoder value for debugging
+    updated_state_map[feeder_ball_state].set_acceleration_no_bound(
+        feeder_acceleration.step(feeder_velocity, dt, feeder_sample_valid)); // balls/s^2
     updated_state_map[lower_feeder_ball_state].set_position_no_bound(lower_ball_count); // ball count
     updated_state_map[lower_feeder_ball_state].set_velocity_no_bound(lower_feeder_velocity); // ball velocity
-    updated_state_map[lower_feeder_ball_state].set_acceleration_no_bound(0); // this is not the acceleration just the encoder value for debugging
+    updated_state_map[lower_feeder_ball_state].set_acceleration_no_bound(
+        lower_feeder_acceleration.step(lower_feeder_velocity, dt, lower_feeder_sample_valid)); // balls/s^2
 }
