@@ -14,6 +14,9 @@
 
 #include "utils/safety.hpp"
 
+/// @brief FlexCAN register base address of each bus, for reading its flags directly
+static const uint32_t CAN_BUS_BASE[CAN_NUM_BUSSES] = { CAN1, CAN2, CAN3 };
+
 /// @brief Short motor name for the feedback statistics prints
 /// @param name The motor name
 /// @return A printable name
@@ -121,7 +124,14 @@ void CANManager::read() {
     for (uint32_t bus = 0; bus < CAN_NUM_BUSSES; bus++) {
         // we want to read all the messages from this bus as there might be many queued up
         CAN_message_t msg;
-        while (m_busses[bus]->read(msg)) {
+        while (true) {
+            // FlexCAN_T4's read() picks the FIFO or the mailboxes at random and returns 0 if the one it picked is empty,
+            // even when the FIFO still has frames. Only stop once the FIFO is empty too, or frames pile up and get dropped.
+            if (!m_busses[bus]->read(msg)) {
+                if (FLEXCANb_IFLAG1(CAN_BUS_BASE[bus]) & FLEXCAN_IFLAG1_BUF5I) continue;
+                break;
+            }
+
             m_bus_frames[bus]++;
             if (msg.flags.overrun) m_mailbox_overruns[bus]++;
 
@@ -161,13 +171,11 @@ void CANManager::record_feedback_frame(Cfg::MotorName motor_name, const CAN_mess
 void CANManager::check_rx_fifo_flags() {
     // FlexCAN_T4 only clears the FIFO warning (bit 6) and overflow (bit 7) flags in its interrupt handler,
     // which we don't use, so read and clear them here. Writing a 1 clears a flag and leaves the others alone.
-    const uint32_t bus_base[CAN_NUM_BUSSES] = { CAN1, CAN2, CAN3 };
-
     for (uint32_t bus = 0; bus < CAN_NUM_BUSSES; bus++) {
-        uint32_t fifo_flags = FLEXCANb_IFLAG1(bus_base[bus]) & (FLEXCAN_IFLAG1_BUF6I | FLEXCAN_IFLAG1_BUF7I);
+        uint32_t fifo_flags = FLEXCANb_IFLAG1(CAN_BUS_BASE[bus]) & (FLEXCAN_IFLAG1_BUF6I | FLEXCAN_IFLAG1_BUF7I);
         if (fifo_flags & FLEXCAN_IFLAG1_BUF6I) m_fifo_warnings[bus]++;
         if (fifo_flags & FLEXCAN_IFLAG1_BUF7I) m_fifo_overflows[bus]++;
-        FLEXCANb_IFLAG1(bus_base[bus]) = fifo_flags;
+        FLEXCANb_IFLAG1(CAN_BUS_BASE[bus]) = fifo_flags;
     }
 }
 
