@@ -104,6 +104,17 @@ private:
     /// @return The motor that successfully read the message or Cfg::MotorName::UnsetMotorName if no motor read the message
     Cfg::MotorName distribute_msg(CAN_message_t& msg);
 
+    /// @brief Record that a feedback frame arrived for a motor
+    /// @param motor_name The motor that read the frame
+    /// @param msg The frame it read
+    void record_feedback_frame(Cfg::MotorName motor_name, const CAN_message_t& msg);
+
+    /// @brief Count and clear the RX FIFO warning and overflow flags on each bus
+    void check_rx_fifo_flags();
+
+    /// @brief Print each bus's frame rate and FIFO flags and each motor's feedback rate, then reset the counters
+    void print_feedback_stats();
+
 private:
     /// @brief CAN bus 1
     FlexCAN_T4<CAN1, RX_SIZE_256, TX_SIZE_16> m_can1;
@@ -120,5 +131,32 @@ private:
 
     /// @brief The timeout for motor initialization in milliseconds. Most motors respond within 1-2 ms
     uint32_t m_motor_init_timeout = 250u;
+
+    /// @brief Feedback frame statistics for one motor over the current print window
+    struct FeedbackStats {
+        /// @brief Feedback frames received this window
+        uint32_t frames = 0;
+        /// @brief Longest time between two feedback frames this window, in microseconds
+        uint32_t max_gap_us = 0;
+        /// @brief Time the last feedback frame was read, in microseconds. 0 if none has been read yet
+        uint32_t last_frame_us = 0;
+        /// @brief CAN ID of the last feedback frame
+        uint32_t can_id = 0;
+    };
+
+    /// @brief How often to print feedback statistics in milliseconds
+    uint32_t m_feedback_stats_period_ms = 1000u;
+    /// @brief Time the current print window started, in milliseconds
+    uint32_t m_feedback_stats_start_ms = 0;
+    /// @brief Feedback frame statistics for each motor
+    std::map<Cfg::MotorName, FeedbackStats> m_feedback_stats;
+    /// @brief Frames read from each bus this window, including ones no motor claimed
+    uint32_t m_bus_frames[CAN_NUM_BUSSES] = { 0 };
+    /// @brief Frames read from each bus this window that had overwritten an unread mailbox
+    uint32_t m_mailbox_overruns[CAN_NUM_BUSSES] = { 0 };
+    /// @brief Reads this window where each bus's RX FIFO had reached 5 unread frames
+    uint32_t m_fifo_warnings[CAN_NUM_BUSSES] = { 0 };
+    /// @brief Reads this window where each bus's RX FIFO had been full and dropped at least one frame
+    uint32_t m_fifo_overflows[CAN_NUM_BUSSES] = { 0 };
 
 };

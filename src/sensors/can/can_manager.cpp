@@ -14,6 +14,30 @@
 
 #include "utils/safety.hpp"
 
+/// @brief Short motor name for the feedback statistics prints
+/// @param name The motor name
+/// @return A printable name
+static const char* motor_name_to_string(Cfg::MotorName name) {
+    switch (name) {
+    case Cfg::MotorName::Chassis1:          return "Chassis1";
+    case Cfg::MotorName::Chassis2:          return "Chassis2";
+    case Cfg::MotorName::Chassis3:          return "Chassis3";
+    case Cfg::MotorName::Chassis4:          return "Chassis4";
+    case Cfg::MotorName::Yaw1:              return "Yaw1";
+    case Cfg::MotorName::Yaw2:              return "Yaw2";
+    case Cfg::MotorName::Pitch1:            return "Pitch1";
+    case Cfg::MotorName::Pitch2:            return "Pitch2";
+    case Cfg::MotorName::Flywheel1:         return "Flywheel1";
+    case Cfg::MotorName::Flywheel2:         return "Flywheel2";
+    case Cfg::MotorName::Flywheel3:         return "Flywheel3";
+    case Cfg::MotorName::Feeder:            return "Feeder";
+    case Cfg::MotorName::UpperFeeder:       return "UpperFeeder";
+    case Cfg::MotorName::LowerFeederClose:  return "LowerFeederClose";
+    case Cfg::MotorName::LowerFeederFar:    return "LowerFeederFar";
+    default:                                return "Unknown";
+    }
+}
+
 // FlexCAN_T4 moment
 CANManager::CANManager() { }
 
@@ -48,6 +72,9 @@ void CANManager::init(const std::vector<Cfg::Motor>& motor_configs) {
     }
 
     init_motors();
+
+    // start the first feedback statistics window after init so it doesn't include boot time
+    m_feedback_stats_start_ms = millis();
 }
 
 void CANManager::configure_motor(const Cfg::Motor& motor_config){
@@ -87,20 +114,108 @@ void CANManager::configure_motor(const Cfg::Motor& motor_config){
 }
 
 void CANManager::read() {
+    // count FIFO warnings/overflows from since the last read, before draining the FIFOs
+    check_rx_fifo_flags();
+
     // for each bus
     for (uint32_t bus = 0; bus < CAN_NUM_BUSSES; bus++) {
         // we want to read all the messages from this bus as there might be many queued up
         CAN_message_t msg;
         while (m_busses[bus]->read(msg)) {
+            m_bus_frames[bus]++;
+            if (msg.flags.overrun) m_mailbox_overruns[bus]++;
+
             // distribute the message to the correct motor
             // if this fails, we've received a message that does not match any motor
             // how would this happen?
-            if (distribute_msg(msg) == Cfg::MotorName::UnsetMotorName) {
+            Cfg::MotorName motor_name = distribute_msg(msg);
+            if (motor_name == Cfg::MotorName::UnsetMotorName) {
                 // - 1 on msg.bus to maintain bus IDs being 0-indexed
                 Serial.printf("CANManager failed to distribute message with raw CAN ID: %.4x on bus: %x\n", msg.id, msg.bus - 1);
+            } else {
+                record_feedback_frame(motor_name, msg);
             }
+
+            // the mailbox read only ever sets this flag, so clear it before msg is reused
+            msg.flags.overrun = false;
         }
     }
+
+    if (millis() - m_feedback_stats_start_ms >= m_feedback_stats_period_ms) {
+        print_feedback_stats();
+    }
+}
+
+void CANManager::record_feedback_frame(Cfg::MotorName motor_name, const CAN_message_t& msg) {
+    uint32_t now_us = micros();
+    FeedbackStats& stats = m_feedback_stats[motor_name];
+
+    if (stats.last_frame_us != 0 && now_us - stats.last_frame_us > stats.max_gap_us) {
+        stats.max_gap_us = now_us - stats.last_frame_us;
+    }
+    stats.last_frame_us = now_us;
+    stats.can_id = msg.id;
+    stats.frames++;
+}
+
+void CANManager::check_rx_fifo_flags() {
+    // FlexCAN_T4 only clears the FIFO warning (bit 6) and overflow (bit 7) flags in its interrupt handler,
+    // which we don't use, so read and clear them here. Writing a 1 clears a flag and leaves the others alone.
+    const uint32_t bus_base[CAN_NUM_BUSSES] = { CAN1, CAN2, CAN3 };
+
+    for (uint32_t bus = 0; bus < CAN_NUM_BUSSES; bus++) {
+        uint32_t fifo_flags = FLEXCANb_IFLAG1(bus_base[bus]) & (FLEXCAN_IFLAG1_BUF6I | FLEXCAN_IFLAG1_BUF7I);
+        if (fifo_flags & FLEXCAN_IFLAG1_BUF6I) m_fifo_warnings[bus]++;
+        if (fifo_flags & FLEXCAN_IFLAG1_BUF7I) m_fifo_overflows[bus]++;
+        FLEXCANb_IFLAG1(bus_base[bus]) = fifo_flags;
+    }
+}
+
+void CANManager::print_feedback_stats() {
+    uint32_t now_ms = millis();
+    uint32_t now_us = micros();
+    uint32_t window_ms = now_ms - m_feedback_stats_start_ms;
+
+    for (uint32_t bus = 0; bus < CAN_NUM_BUSSES; bus++) {
+        bool bus_has_motors = false;
+        for (const auto& [name, motor] : m_motor_name_map) {
+            if (motor->get_bus_id() == bus) bus_has_motors = true;
+        }
+
+        if (bus_has_motors || m_bus_frames[bus] > 0) {
+            Serial.printf("CAN bus %lu (%lu ms): %lu frames/s, FIFO warn %lu, FIFO overflow %lu, MB overrun %lu |",
+                          bus, window_ms, m_bus_frames[bus] * 1000 / window_ms,
+                          m_fifo_warnings[bus], m_fifo_overflows[bus], m_mailbox_overruns[bus]);
+
+            for (const auto& [name, motor] : m_motor_name_map) {
+                if (motor->get_bus_id() != bus) continue;
+
+                FeedbackStats& stats = m_feedback_stats[name];
+                if (stats.last_frame_us == 0) {
+                    Serial.printf(" %s id %lu: no frames yet |", motor_name_to_string(name), motor->get_id());
+                    continue;
+                }
+
+                // include the time since the last frame so a motor that went quiet this window still shows a gap
+                uint32_t gap_us = now_us - stats.last_frame_us;
+                if (stats.max_gap_us > gap_us) gap_us = stats.max_gap_us;
+
+                Serial.printf(" %s 0x%03lx: %lu/s gap %lums |", motor_name_to_string(name), stats.can_id,
+                              stats.frames * 1000 / window_ms, gap_us / 1000);
+
+                stats.frames = 0;
+                stats.max_gap_us = 0;
+            }
+            Serial.printf("\n");
+        }
+
+        m_bus_frames[bus] = 0;
+        m_mailbox_overruns[bus] = 0;
+        m_fifo_warnings[bus] = 0;
+        m_fifo_overflows[bus] = 0;
+    }
+
+    m_feedback_stats_start_ms = now_ms;
 }
 
 void CANManager::write() {
