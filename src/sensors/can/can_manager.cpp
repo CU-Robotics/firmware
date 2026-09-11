@@ -87,11 +87,9 @@ void CANManager::configure_motor(const Cfg::Motor& motor_config){
 }
 
 void CANManager::read() {
-    // for each bus
-    for (uint32_t bus = 0; bus < CAN_NUM_BUSSES; bus++) {
-        // we want to read all the messages from this bus as there might be many queued up
+    auto drain_fifo = [this](auto& bus) {
         CAN_message_t msg;
-        while (m_busses[bus]->read(msg)) {
+        while (bus.readFIFO(msg)) {
             // distribute the message to the correct motor
             // if this fails, we've received a message that does not match any motor
             // how would this happen?
@@ -100,7 +98,11 @@ void CANManager::read() {
                 Serial.printf("CANManager failed to distribute message with raw CAN ID: %.4x on bus: %x\n", msg.id, msg.bus - 1);
             }
         }
-    }
+    };
+
+    drain_fifo(m_can1);
+    drain_fifo(m_can2);
+    drain_fifo(m_can3);
 }
 
 void CANManager::write() {
