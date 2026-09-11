@@ -17,6 +17,22 @@
 /// @brief FlexCAN register base address of each bus, for reading its flags directly
 static const uint32_t CAN_BUS_BASE[CAN_NUM_BUSSES] = { CAN1, CAN2, CAN3 };
 
+// FlexCAN ESR1 error bits, from the i.MX RT1060 reference manual
+/// @brief Fault confinement state: 0 error active, 1 error passive, 2 or 3 bus off
+constexpr uint32_t ESR1_FLTCONF_SHIFT = 4;
+/// @brief Stuff error: more than 5 identical bits in a row
+constexpr uint32_t ESR1_STFERR = 1UL << 10;
+/// @brief Form error: a fixed-format field had the wrong value
+constexpr uint32_t ESR1_FRMERR = 1UL << 11;
+/// @brief CRC error: a received frame's CRC didn't match
+constexpr uint32_t ESR1_CRCERR = 1UL << 12;
+/// @brief ACK error: nothing acknowledged a frame we sent
+constexpr uint32_t ESR1_ACKERR = 1UL << 13;
+/// @brief Bit0 error: we sent a dominant bit but read back recessive
+constexpr uint32_t ESR1_BIT0ERR = 1UL << 14;
+/// @brief Bit1 error: we sent a recessive bit but read back dominant
+constexpr uint32_t ESR1_BIT1ERR = 1UL << 15;
+
 /// @brief Short motor name for the feedback statistics prints
 /// @param name The motor name
 /// @return A printable name
@@ -117,8 +133,9 @@ void CANManager::configure_motor(const Cfg::Motor& motor_config){
 }
 
 void CANManager::read() {
-    // count FIFO warnings/overflows from since the last read, before draining the FIFOs
+    // count FIFO warnings/overflows and bus errors from since the last read, before draining the FIFOs
     check_rx_fifo_flags();
+    check_bus_errors();
 
     // for each bus
     for (uint32_t bus = 0; bus < CAN_NUM_BUSSES; bus++) {
@@ -179,6 +196,32 @@ void CANManager::check_rx_fifo_flags() {
     }
 }
 
+void CANManager::check_bus_errors() {
+    // The error type bits in ESR1 are cleared when ESR1 is read, so each read reports the error types seen since
+    // the last one. FlexCAN_T4 only reads ESR1 when every TX mailbox is busy, so it rarely clears them first.
+    for (uint32_t bus = 0; bus < CAN_NUM_BUSSES; bus++) {
+        uint32_t esr1 = FLEXCANb_ESR1(CAN_BUS_BASE[bus]);
+        uint32_t ecr = FLEXCANb_ECR(CAN_BUS_BASE[bus]);
+        BusErrorStats& errors = m_bus_errors[bus];
+
+        if (esr1 & ESR1_STFERR) errors.stuff++;
+        if (esr1 & ESR1_FRMERR) errors.form++;
+        if (esr1 & ESR1_CRCERR) errors.crc++;
+        if (esr1 & ESR1_ACKERR) errors.ack++;
+        if (esr1 & ESR1_BIT0ERR) errors.bit0++;
+        if (esr1 & ESR1_BIT1ERR) errors.bit1++;
+
+        // ECR holds the transmit error counter in bits 0-7 and the receive error counter in bits 8-15
+        uint32_t tx_error_count = ecr & 0xFF;
+        uint32_t rx_error_count = (ecr >> 8) & 0xFF;
+        if (tx_error_count > errors.max_tx_error_count) errors.max_tx_error_count = tx_error_count;
+        if (rx_error_count > errors.max_rx_error_count) errors.max_rx_error_count = rx_error_count;
+
+        uint32_t fault_state = (esr1 >> ESR1_FLTCONF_SHIFT) & 0x3;
+        if (fault_state > errors.worst_fault_state) errors.worst_fault_state = fault_state;
+    }
+}
+
 void CANManager::print_feedback_stats() {
     uint32_t now_ms = millis();
     uint32_t now_us = micros();
@@ -194,6 +237,14 @@ void CANManager::print_feedback_stats() {
             Serial.printf("CAN bus %lu (%lu ms): %lu frames/s, FIFO warn %lu, FIFO overflow %lu, MB overrun %lu |",
                           bus, window_ms, m_bus_frames[bus] * 1000 / window_ms,
                           m_fifo_warnings[bus], m_fifo_overflows[bus], m_mailbox_overruns[bus]);
+
+            const BusErrorStats& errors = m_bus_errors[bus];
+            const char* fault_state = errors.worst_fault_state == 0 ? "error active"
+                                    : errors.worst_fault_state == 1 ? "error passive"
+                                                                    : "bus off";
+            Serial.printf(" errors: stuff %lu form %lu crc %lu ack %lu bit0 %lu bit1 %lu, TEC max %lu REC max %lu, %s |",
+                          errors.stuff, errors.form, errors.crc, errors.ack, errors.bit0, errors.bit1,
+                          errors.max_tx_error_count, errors.max_rx_error_count, fault_state);
 
             for (const auto& [name, motor] : m_motor_name_map) {
                 if (motor->get_bus_id() != bus) continue;
@@ -221,6 +272,7 @@ void CANManager::print_feedback_stats() {
         m_mailbox_overruns[bus] = 0;
         m_fifo_warnings[bus] = 0;
         m_fifo_overflows[bus] = 0;
+        m_bus_errors[bus] = BusErrorStats{};
     }
 
     m_feedback_stats_start_ms = now_ms;

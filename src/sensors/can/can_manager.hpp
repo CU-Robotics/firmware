@@ -112,7 +112,10 @@ private:
     /// @brief Count and clear the RX FIFO warning and overflow flags on each bus
     void check_rx_fifo_flags();
 
-    /// @brief Print each bus's frame rate and FIFO flags and each motor's feedback rate, then reset the counters
+    /// @brief Count the error types and track the error counters and fault state on each bus
+    void check_bus_errors();
+
+    /// @brief Print each bus's frame rate, FIFO flags, and errors and each motor's feedback rate, then reset the counters
     void print_feedback_stats();
 
 private:
@@ -158,5 +161,30 @@ private:
     uint32_t m_fifo_warnings[CAN_NUM_BUSSES] = { 0 };
     /// @brief Reads this window where each bus's RX FIFO had been full and dropped at least one frame
     uint32_t m_fifo_overflows[CAN_NUM_BUSSES] = { 0 };
+
+    /// @brief CAN error statistics for one bus over the current print window
+    struct BusErrorStats {
+        /// @brief Reads this window that found a stuff error since the last read
+        uint32_t stuff = 0;
+        /// @brief Reads this window that found a form error since the last read
+        uint32_t form = 0;
+        /// @brief Reads this window that found a CRC error since the last read
+        uint32_t crc = 0;
+        /// @brief Reads this window that found an ACK error since the last read
+        uint32_t ack = 0;
+        /// @brief Reads this window that found a bit0 error since the last read
+        uint32_t bit0 = 0;
+        /// @brief Reads this window that found a bit1 error since the last read
+        uint32_t bit1 = 0;
+        /// @brief Highest transmit error counter seen this window
+        uint32_t max_tx_error_count = 0;
+        /// @brief Highest receive error counter seen this window
+        uint32_t max_rx_error_count = 0;
+        /// @brief Worst fault confinement state seen this window: 0 error active, 1 error passive, 2 or 3 bus off
+        uint32_t worst_fault_state = 0;
+    };
+
+    /// @brief CAN error statistics for each bus
+    BusErrorStats m_bus_errors[CAN_NUM_BUSSES];
 
 };
