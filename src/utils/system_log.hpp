@@ -106,7 +106,7 @@ public:
 	/// @brief draws dashboard for live prints from CLI
     void draw_dashboard_box();
     /// @brief Call this once at boot to link the CLI buffer to the logger
-    /// @param pointer to CLI buffer
+    /// @param buffer is a pointer to CLI buffer
     void bind_cli_buffer(char* buffer) { shared_cli_buffer = buffer; }
 };
 
