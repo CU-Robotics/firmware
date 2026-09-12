@@ -37,7 +37,7 @@ bool SdLogger::new_log_file() {
     
     // sub number into format
     char log_file_path[32];
-    sprintf(log_file_path, LOG_FILE_DIR LOG_FILE_FORMAT, num+1);
+    snprintf(log_file_path, sizeof(log_file_path), LOG_FILE_DIR LOG_FILE_FORMAT, num+1);
 
     // open the file
     return _log_file.open(log_file_path, O_WRITE | O_APPEND | O_CREAT);
