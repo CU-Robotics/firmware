@@ -388,6 +388,9 @@ private:
 	/// @brief Recovers frame alignment if packet does not start with start byte and end with end byte
     void resync_frame();
 
+    volatile bool is_phase_shifting = false;
+    volatile bool is_resyncing = false;
+    elapsedMillis gap_timer = 0;
 
 	/// @brief  Pointer to the singleton instance of this class
 	static ET16S* instance;

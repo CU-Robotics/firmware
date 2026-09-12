@@ -17,7 +17,10 @@ void ET16S::init() {
 
 	//  Hook the instance pointer to THIS object
     instance = this;
-	
+	// Scrub the DMAMEM so we know if it's actually dead
+    memset(dma_buffer_a, 0, 32);
+    memset(dma_buffer_b, 0, 32);
+    
 	Serial8.begin(100000, SERIAL_8E1_RXINV_TXINV);
 	Serial8.flush();
 	Serial8.clear();
@@ -41,26 +44,48 @@ void ET16S::init() {
 	setup_edma_channel();
 }
 void ET16S::setup_edma_channel() {
-	// Enable DMA on Serial8 (i.MX RT1060 manual pg 2921)
-	LPUART5_BAUD |= LPUART_BAUD_RDMAE; 
-	
-	// Setup ping-pong buffer pointers
-	dma_target_buffer = dma_buffer_a;
+    // 1. CRITICAL: Disable the HardwareSerial CPU RX interrupt!
+    // This stops Teensyduino from stealing bytes from the DMA.
+    LPUART5_CTRL &= ~LPUART_CTRL_RIE;
+
+    // 2. Clear any lingering hardware error flags (Overrun, Noise, Framing, Parity)
+    LPUART5_STAT |= (LPUART_STAT_OR | LPUART_STAT_NF | LPUART_STAT_FE | LPUART_STAT_PF);
+
+    // 3. Set RX Watermark to 0 so every single byte immediately triggers the DMA
+    LPUART5_WATER &= ~(0xFF << 16);
+
+    // 4. Enable DMA requests on UART RX
+    LPUART5_BAUD |= LPUART_BAUD_RDMAE;
+
+    // 5. Invalidate cache lines for both DMAMEM ping-pong buffers
+    arm_dcache_delete((void*)dma_buffer_a, 32);
+    arm_dcache_delete((void*)dma_buffer_b, 32);
+
+    dma_target_buffer = dma_buffer_a;
     active_buffer = dma_buffer_b;
-	
-    // The physical memory address of LPUART5's Data Register
-    rx_dma.source(LPUART5_DATA); 
-    
-    // Our cache-aligned RAM buffer, major loop of 25 bytes
-    rx_dma.destinationBuffer(dma_target_buffer, ET16S_PACKET_SIZE); 
-    
-    // Map the LPUART5 RX hardware event through the DMAMUX
+
+    // 6. Wait for the inter-packet gap (4ms of silence) before enabling DMA
+    // This guarantees the very first byte DMA captures is 0x0F (byte 0).
+    elapsedMillis silence = 0;
+    while (silence < 4) {
+        if (LPUART5_STAT & LPUART_STAT_RDRF) {
+            volatile uint32_t discard = LPUART5_DATA;
+            (void)discard;
+            silence = 0;
+        }
+    }
+
+    // 7. Configure the eDMA Channel
+    rx_dma.source((volatile uint8_t&)LPUART5_DATA);
+    rx_dma.destinationBuffer(dma_target_buffer, ET16S_PACKET_SIZE);
     rx_dma.triggerAtHardwareEvent(DMAMUX_SOURCE_LPUART5_RX);
-    
     rx_dma.attachInterrupt(dma_isr_wrapper);
     rx_dma.interruptAtCompletion();
     
-    // Arm the DMA channel
+    // CRITICAL: Forces DMA to strictly stop after 25 bytes.
+    // It will not bleed into byte 26 or roll over.
+    rx_dma.disableOnCompletion(); 
+
     rx_dma.enable();
 }
 void ET16S::dma_isr_wrapper() {
@@ -70,77 +95,79 @@ void ET16S::dma_isr_wrapper() {
     }
 }
 
-void ET16S::dma_isr(){
-    // Clear the hardware interrupt flag
+void ET16S::resync_frame() {
+    SystemLog.warn(Subsystem::SENSORS, "ET16S: Frame misaligned. Entering non-blocking resync...\n");
+    rx_dma.disable();
+    
+    // Un-hijack the UART to let the software buffer catch the bytes
+    LPUART5_BAUD &= ~LPUART_BAUD_RDMAE; 
+    packet_ready = false;
+}
+
+void ET16S::dma_isr() {
     rx_dma.clearInterrupt();
 
+    // Invalidate D-Cache on the buffer that just finished receiving
+    arm_dcache_delete((void*)dma_target_buffer, 32);
+
+    // Swap the ping-pong pointers
     active_buffer = dma_target_buffer;
-    // Invalidate the cache for this buffer so the CPU fetches the fresh RAM
-    arm_dcache_delete((void*)active_buffer, 32);
-	
-	// Determine target buffer to read from
-	if (dma_target_buffer == dma_buffer_a) {
-        dma_target_buffer = dma_buffer_b;
-    }
-	else {
-        dma_target_buffer = dma_buffer_a;
-    }
-    
-    // Update the hardware to point to the newly cleared buffer for the next packet
+    dma_target_buffer = (dma_target_buffer == dma_buffer_a) ? dma_buffer_b : dma_buffer_a;
+
+    // Prepare target buffer cache and configure DMA for the NEXT 25-byte packet
+    arm_dcache_delete((void*)dma_target_buffer, 32);
     rx_dma.destinationBuffer(dma_target_buffer, ET16S_PACKET_SIZE);
-	
-    // Flag the main loop to process the data
-    packet_ready = true; 
-}
-void ET16S::resync_frame(){
-	Serial.print("ET16S reframing (should only be called on startup)");
-    rx_dma.disable();
-    Serial8.clear();
-    
-    //  Wait for the frame boundary
-    elapsedMillis timeout; 
-    
-    // We give it 10ms (enough time for ~3 full packets) to find the sync boundary
-    while (timeout < 10) {
-        if (Serial8.available() > 0) {
-            uint8_t c = Serial8.read();
-            
-            // If the byte we just read was the 0x00 footer, AND the next byte 
-            // sitting in the buffer is the 0x0F header, we are perfectly aligned!
-            if (c == 0x00 && Serial8.peek() == 0x0F) {
-                break; 
-            }
-        }
-    }
-    
-    // start writing from beginning of buffer
-    rx_dma.destinationBuffer(dma_target_buffer, ET16S_PACKET_SIZE);
-    
-    // next byte should be  0x0F.
-    rx_dma.enable();
+    rx_dma.enable(); // Re-arm for the next packet (occurs during the 4-7ms silent gap)
+
+    packet_ready = true;
 }
 void ET16S::read() {
-    if (packet_ready) {
-        packet_ready = false; // Reset flag
-		if (active_buffer[0] == 0x0F && active_buffer[24] == 0x00) {
-			// Data is complete in active buffer
-			format_raw((uint8_t*)active_buffer);
-			//set flag data
-			channel[16].data = channel[16].raw_format;
-			//set remaining data
-			set_channel_data();
-			//Check flag byte for disconnect
-			test_connection();
+    // --- 1. NON-BLOCKING RESYNC (Only if hardware line glitched) ---
+    if (is_resyncing) {
+        // Discard any noise while waiting for the line to go quiet
+        if (LPUART5_STAT & LPUART_STAT_RDRF) {
+            volatile uint32_t discard = LPUART5_DATA;
+            (void)discard;
+            gap_timer = 0; // Reset silence timer
+        }
 
-			mode_changed_flag = (get_safety_switch() != prev_safety_switch_pos);
-			prev_safety_switch_pos = get_safety_switch();
-		}
-		else {
-			resync_frame();
-		}
-	}
+        // Once the line has been completely silent for 4ms, re-arm DMA
+        if (gap_timer >= 4) {
+            LPUART5_STAT |= (LPUART_STAT_OR | LPUART_STAT_NF | LPUART_STAT_FE | LPUART_STAT_PF);
+            LPUART5_FIFO |= LPUART_FIFO_RXFLUSH;
+
+            arm_dcache_delete((void*)dma_target_buffer, 32);
+            rx_dma.destinationBuffer(dma_target_buffer, ET16S_PACKET_SIZE);
+            rx_dma.enable();
+
+            is_resyncing = false;
+            packet_ready = false;
+            SystemLog.info(Subsystem::SENSORS, "ET16S: Resync complete. DMA re-aligned.\n");
+        }
+        return;
+    }
+
+    // --- 2. PROCESS COMPLETED PACKET ---
+    if (!packet_ready) return;
+    packet_ready = false;
+
+    // Validate that the ping-pong buffer holds a complete, unshifted frame
+    if (active_buffer[0] == 0x0F && active_buffer[24] == 0x00) {
+        format_raw((uint8_t*)active_buffer);
+        channel[16].data = channel[16].raw_format;
+        set_channel_data();
+        test_connection();
+
+        mode_changed_flag = (get_safety_switch() != prev_safety_switch_pos);
+        prev_safety_switch_pos = get_safety_switch();
+    } else {
+        // If an electrical glitch dropped a byte, pause DMA and wait for the gap
+        SystemLog.warn(Subsystem::SENSORS, "ET16S: Desync detected. Entering gap resync...\n");
+        rx_dma.disable();
+        is_resyncing = true;
+        gap_timer = 0;
+    }
 }
-
 void ET16S::print() {
 	for (int i = 0; i < ET16S_INPUT_VALUE_COUNT; i++) {
 		SystemLog.info(Subsystem::SENSORS,"%f ", channel[i].data);
@@ -173,27 +200,56 @@ void ET16S::print_raw_bin(uint8_t m_inputRaw[ET16S_PACKET_SIZE]) {
 	Serial.println();
 }
 void ET16S::print_live_data() {
-    Serial.printf("=== LIVE ET16S TRANSMITTER DATA ===\n");
+    Serial.printf("=== LIVE ET16S DIAGNOSTICS ===\n");
     
-    const char* mode_str = "UNKNOWN";
-    if (is_safety_mode()) {
-        mode_str = "SAFETY";
-    } else if (is_teensy_mode()) {
-        mode_str = "TEENSY";
-    } else if (is_hive_mode()) {
-        mode_str = "HIVE";
+    // --- 1. RAW HEX DUMP (What the DMA actually sees) ---
+    Serial.print(" RAW BUF: ");
+    if (active_buffer != nullptr) {
+        for (int i = 0; i < ET16S_PACKET_SIZE; i++) {
+            if (i == 0 && active_buffer[i] == 0x0F) {
+                Serial.print("\033[32m0F \033[0m"); // Green if header is perfectly aligned
+            } else if (i == 24 && active_buffer[i] == 0x00) {
+                Serial.print("\033[32m00 \033[0m"); // Green if footer is perfectly aligned
+            } else if (i == 0 || i == 24) {
+                Serial.printf("\033[31m%02X \033[0m", active_buffer[i]); // Red if misaligned
+            } else {
+                Serial.printf("%02X ", active_buffer[i]); // Standard byte
+            }
+        }
+    } else {
+        Serial.print("NULL");
     }
+    Serial.println();
+
+    // --- 2. UART SILICON ERROR CHECK ---
+    uint32_t uart_stat = LPUART5_STAT;
+    Serial.print(" UART ERR: ");
+    bool has_err = false;
+    if (uart_stat & LPUART_STAT_OR) { Serial.print("\033[31m[OVERRUN]\033[0m "); has_err = true; }
+    if (uart_stat & LPUART_STAT_NF) { Serial.print("\033[31m[NOISE]\033[0m "); has_err = true; }
+    if (uart_stat & LPUART_STAT_FE) { Serial.print("\033[31m[FRAMING]\033[0m "); has_err = true; }
+    if (uart_stat & LPUART_STAT_PF) { Serial.print("\033[31m[PARITY]\033[0m "); has_err = true; }
+    if (!has_err) Serial.print("\033[32mNONE\033[0m");
+    Serial.println();
+
+    // --- 3. ALGORITHM STATUS ---
+    bool is_resyncing = ((LPUART5_BAUD & LPUART_BAUD_RDMAE) == 0);
+    Serial.printf(" DMA STATE: %s\n", is_resyncing ? "\033[33mSEARCHING FOR GAP\033[0m" : "\033[32mLOCKED & RUNNING\033[0m");
+
+    Serial.println("---------------------------------------");
+    
+    // --- EXISTING READOUT ---
+    const char* mode_str = "UNKNOWN";
+    if (is_safety_mode()) mode_str = "SAFETY";
+    else if (is_teensy_mode()) mode_str = "TEENSY";
+    else if (is_hive_mode()) mode_str = "HIVE";
 
     Serial.printf(" Control Mode: %-7s\n", mode_str);
     
-    Serial.println("---------------------------------------");
     Serial.printf(" L Stick : X: %5.2f | Y: %5.2f\n", get_l_stick_x(), get_l_stick_y());
     Serial.printf(" R Stick : X: %5.2f | Y: %5.2f\n", get_r_stick_x(), get_r_stick_y());
-    Serial.printf(" L Dial  :    %5.2f | R Dial  :    %5.2f\n", get_l_dial(), get_r_dial());
-    Serial.printf(" L Slider:    %5.2f | R Slider:    %5.2f\n", get_l_slider(), get_r_slider());
     Serial.println("---------------------------------------");
 
-    // Lambda to convert the float value into the SwitchPos string
     auto sw_str = [](auto val) -> const char* {
         switch (static_cast<SwitchPos>(static_cast<uint32_t>(val))) {
             case SwitchPos::FORWARD:  return "FORWARD";
@@ -203,7 +259,6 @@ void ET16S::print_live_data() {
         }
     };
 
-    // Print using the lambda and the %-8s padding to prevent text ghosting
     Serial.printf(" SW_B: %-8s | SW_C: %-8s\n", sw_str(get_switch_b()), sw_str(get_switch_c()));
     Serial.printf(" SW_D: %-8s | SW_E: %-8s\n", sw_str(get_switch_d()), sw_str(get_switch_e()));
     Serial.printf(" SW_F: %-8s | SW_G: %-8s\n", sw_str(get_switch_f()), sw_str(get_switch_g()));
