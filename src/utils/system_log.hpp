@@ -105,7 +105,7 @@ public:
     void error(const char* format, ...);
 	/// @brief draws dashboard for live prints from CLI
     void draw_dashboard_box();
-    // Call this once at boot to link the CLI buffer to the logger
+    /// @brief Call this once at boot to link the CLI buffer to the logger
     void bind_cli_buffer(char* buffer) { shared_cli_buffer = buffer; }
 };
 
