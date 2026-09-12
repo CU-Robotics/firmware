@@ -60,11 +60,20 @@ void SystemLogger::push_message() {
 
     // 2. If CLI is closed, print immediately with colors!
     if (!is_live_view_active && should_show(messages[head].level, messages[head].sys)) {
+        // Clear any typed text before print
+		Serial.print("\r\033[K");
+        
         Serial.printf("[%7.2fs] %s[%s] %s\033[0m\n", 
             messages[head].timestamp, 
             level_to_color(messages[head].level),
             sys_to_str(messages[head].sys), 
             messages[head].text);
+
+        // --- 3. REDRAW THE PROMPT AND YOUR TEXT ---
+        Serial.print("Robot> ");
+        if (shared_cli_buffer != nullptr) {
+            Serial.print(shared_cli_buffer);
+        }
     }
 
     // 3. Advance circular buffer

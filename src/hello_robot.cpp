@@ -50,6 +50,9 @@ void HelloRobot::init() {
     target_state_map.emplace(config.states);      // Temp ungoverned state
     hive_state_map_offset.emplace(config.states); // Hive offset state
 
+    // Link Logger and CLI
+    SystemLog.bind_cli_buffer(cli_buffer);
+    
     // start the main loop watchdog
     watchdog.start();
 }
@@ -346,10 +349,26 @@ void HelloRobot::process_cli() {
     while (Serial.available() > 0) {
         char c = Serial.read();
         
+        // Handle Backspace (ASCII 8 or DEL 127)
+        if (c == '\b' || c == 127) {
+            if (cli_index > 0) {
+                cli_index--;
+                cli_buffer[cli_index] = '\0';
+                
+                // \r moves to the start of the line, \033[K erases it, then we redraw
+                Serial.print("\r\033[KRobot> ");
+                Serial.print(cli_buffer);
+            }
+            continue;
+        }
         if (c == '\n' || c == '\r') {
-            if (cli_index == 0) continue; 
+			if (cli_index == 0) {
+                Serial.print("\r\nRobot> "); // Reprint prompt on empty enter
+                continue; 
+            }
 
-            cli_buffer[cli_index] = '\0'; 
+            Serial.println(); // Move to new line so command output doesn't overwrite the prompt
+            cli_buffer[cli_index] = '\0';
 
             // --- THE COMMAND DICTIONARY ---
             static const struct {
@@ -384,10 +403,19 @@ void HelloRobot::process_cli() {
                 }
             }
 
-            cli_index = 0; 
+            cli_index = 0;
+            cli_buffer[0] = '\0';
+            if (num_active_views == 0) {
+                Serial.print("\r\nRobot> ");
+            }
         } 
         else if (cli_index < 63) {
-            cli_buffer[cli_index++] = c;
+			cli_buffer[cli_index++] = c;
+            cli_buffer[cli_index] = '\0'; // keep it null-terminated
+            
+            // Clear the line and  redraw the buffer on every keystroke
+            Serial.print("\r\033[KRobot> ");
+            Serial.print(cli_buffer);
         }
     }
 }
