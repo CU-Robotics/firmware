@@ -8,6 +8,9 @@ void HelloRobot::init() {
     // Execute setup functions
     pinMode(LED_BUILTIN, OUTPUT);
 
+    // Start manager for builtin SD card
+    BuiltinSd.start();
+
     Comms::comms_layer.init();
 
     // Configure the robot from comms data, which is filled on Hive.

@@ -35,6 +35,7 @@
 #include "comms/data/sendable.hpp"
 #include "utils/timing.hpp"
 #include "utils/watchdog.hpp"
+#include "utils/sd/sd_manager.hpp"
 
 extern "C" void reset_teensy(void);
 
