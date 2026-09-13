@@ -1,7 +1,9 @@
 #include "StereoCamTrigger.hpp"
 #include "comms/data/sendable.hpp"
 #include "sensors/transmitter/transmitter_utils.hpp"
+#include "utils/system_log.hpp"
 #include <core_pins.h>
+
 
 std::unique_ptr<RobotStateMap>* StereoCamTrigger::estimated_state_map_interrupt_safe = nullptr;
 
@@ -76,7 +78,7 @@ void StereoCamTrigger::read() {
 
 		counter = -1;
 
-		Serial.printf("counter reset pin: %u triggered\n", config.camera_1_line_2_pin);
+		SystemLog.info(Subsystem::SENSORS,"counter reset pin: %u triggered\n", config.camera_1_line_2_pin);
 	}
 	Comms::comms_layer.get_hive_data().stereo_cam_start_stop.stop_received = false;
 	Comms::comms_layer.get_hive_data().stereo_cam_start_stop.start_received = false;

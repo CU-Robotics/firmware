@@ -36,6 +36,8 @@ private:
     char current_line[MAX_LINE_LEN] = {0};
 	/// @brief length of print line in buffer
     uint8_t line_length = 0;
+	/// @brief pointer to link CLI to logger so print statements arent interuppted
+    char* shared_cli_buffer = nullptr;
   
     /// @brief Context for standard Print() calls
     LogLevel current_level = LogLevel::INFO;
@@ -103,6 +105,9 @@ public:
     void error(const char* format, ...);
 	/// @brief draws dashboard for live prints from CLI
     void draw_dashboard_box();
+    /// @brief Call this once at boot to link the CLI buffer to the logger
+    /// @param buffer is a pointer to CLI buffer
+    void bind_cli_buffer(char* buffer) { shared_cli_buffer = buffer; }
 };
 
 // Declare a global instance so you can use it everywhere, just like 'Serial'
