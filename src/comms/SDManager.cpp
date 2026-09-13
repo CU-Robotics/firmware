@@ -1,6 +1,8 @@
 #include "SDManager.hpp"
 
-SDManager::SDManager() {
+SDManager::SDManager() {}
+
+void SDManager::init() {
     if (!SDinternal.begin()) {
         Serial.println("SD_ERROR::SDManager card initialization failed");
         // TODO: perhaps there should be a better error handler here?? 
@@ -34,7 +36,7 @@ int SDManager::touch(const char* filename) {
         Serial.print("SD_NOTICE::file located at ");
         Serial.print(filename);
         Serial.println(" already exists");
-        return -1;
+        return 0;
     }
     if (!SDinternal.open(filename, FILE_WRITE)) {
         Serial.print("SD_NOTICE::file located at ");

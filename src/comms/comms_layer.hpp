@@ -8,6 +8,9 @@
 #include "comms/data/firmware_data.hpp"     // for FirmwareData
 #include "comms/config_data/robot_config.hpp" // for RobotConfig
 #include "config_data/robot_config.hpp"
+#include "comms/SDManager.hpp"
+
+constexpr const char* config_file_name = "config.yaml";
 
 namespace Comms {
 
@@ -30,7 +33,7 @@ public:
     /// @note Should never return
     int run();
     /// @brief Requests the configuration data from the Hive and waits until it is fully received before returning
-    void configure();
+    void configure(SDManager& sd_manager);
 public:
     /// @brief Send a CommsData packet to the appropriate packet payload
     /// @param data The CommsData packet to send
@@ -97,6 +100,16 @@ private:
     /// @brief Initializes Ethernet and starts its thread
     /// @return True if successful, false if failed
     bool initialize_ethernet();
+
+    /// @brief Open the file object for the config_file on SDManager, creates one if there is none
+    /// @return True if successful, false if not
+    /// TODO: make this return an explicit file object instead of making it 
+    /// part of SDManager
+    std::optional<SDManager*> get_config_sd_file(SDManager& sd_manager);
+
+    /// @brief Read the config file on the SD card
+    /// @return True if successful, false if not
+    bool read_config_sd(SDManager& sd_manager);
 
 private:
     /// @brief Ethernet physical layer

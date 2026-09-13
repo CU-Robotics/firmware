@@ -3,6 +3,7 @@
 #include "comms/data/comms_data.hpp"            // for CommsData
 #include "comms/data/data_structs.hpp"          // for shared data structs
 #include "comms/config_data/robot_config.hpp"   // for RobotConfig
+#include "comms/SDManager.hpp"                  // for SDmanager
 
 namespace Comms {
 
@@ -11,6 +12,14 @@ struct HiveData {
     /// @brief Set a data section in the mega struct.
     /// @param data The data to be set.
     void set_data(CommsData* data);
+
+    template <typename T1, typename T2>
+    void save_config_packet(T1* packet, T2& struct_vector) {
+        struct_vector.push_back(*packet);
+        config.num_sections_received++;
+        if (config_file.has_value()) 
+            (*config_file.value()).write(reinterpret_cast<uint8_t*>(packet), sizeof(*packet));
+    }
     
     /// @brief Test data
     TestData test_data;
@@ -29,6 +38,9 @@ struct HiveData {
     StereoCamStartStop stereo_cam_start_stop;
     /// @brief The configuration data filled as config sections are received over comms. This should only be used after all config sections have been received.
     Cfg::RobotConfig config;
+    /// @brief The sd card file which will store config packets as they are recieved to be used later on boot-up. Will be std::nullopt if something went wrong creating it.
+    /// TODO: should rename or replace SDMangaer with a file object, that is essentially what the SDManager currently becomes once you start writing.
+    std::optional<SDManager*> config_file;
 };
 
 } // namespace Comms

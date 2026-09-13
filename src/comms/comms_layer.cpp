@@ -2,6 +2,7 @@
 #include "comms/data/configuration_status_data.hpp"
 #include "comms/data/sendable.hpp"
 
+#include <sstream>
 
 /// @brief This resets the whole processor and kicks it back to program entry (teensy4/startup.c)
 /// @param void specify no arguments (needed in C)
@@ -165,10 +166,15 @@ void CommsLayer::set_firmware_data(FirmwareData& data) {
     m_firmware_data = data;
 };
 
-void CommsLayer::configure() {
+void CommsLayer::configure(SDManager& sd_manager) {
+    if (sd_manager.exists(config_file_name)) {
+        Serial.printf("Found config file %s already stored", config_file_name); 
+    } 
+
+    m_hive_data.config_file = get_config_sd_file(sd_manager);
     int time = millis();
     Sendable<ConfigurationStatusData> config_status_sendable;
-    while (!m_hive_data.config.config_start.num_config_sections != 0) {
+    while (!m_hive_data.config.config_start.num_config_sections) {
         Serial.printf("Waiting for config start packet... time since start: %d ms\n", millis() - time);
         config_status_sendable.data.is_configured = 0;
         config_status_sendable.send_to_comms();
@@ -184,6 +190,28 @@ void CommsLayer::configure() {
         Serial.printf("Config: received %d of %d sections\n", m_hive_data.config.num_sections_received, m_hive_data.config.config_start.num_config_sections);
         config_loop_timer.delay_micros(5000);
     }
+
+    if (m_hive_data.config_file.has_value()) sd_manager.close();
+}
+
+// TODO: replace SDManager with something else and make this just return an 
+// std::optional<file_t> object
+std::optional<SDManager*> CommsLayer::get_config_sd_file(SDManager& sd_manager) {
+    if (sd_manager.touch(config_file_name)) {
+        Serial.printf("Could not create or find config file %s\n", config_file_name);
+        return std::nullopt;
+    }
+    
+    if (sd_manager.open(config_file_name, FILE_WRITE)) {
+        Serial.printf("Could not open config file %s\n", config_file_name);
+        return std::nullopt;
+    }
+
+    return &sd_manager;
+}
+
+bool CommsLayer::read_config_sd(SDManager& sd_manager) {
+    return true;
 }
 
 bool CommsLayer::initialize_hid() {

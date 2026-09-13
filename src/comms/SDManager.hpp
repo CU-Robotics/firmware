@@ -13,8 +13,11 @@
 class SDManager {
 public:
 
-    /// @brief Constructor, initializes SD objects
+    /// @brief Empty construtor
     SDManager();
+
+    /// @brief Initialize SD card
+    void init(); 
 
     /// @brief Opens to internal file
     /// @param filepath path to file

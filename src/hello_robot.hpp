@@ -29,6 +29,8 @@
 #include <TeensyDebug.h>
 #include <wiring.h>
 
+#include "comms/SDManager.hpp"
+
 #include "comms/data/hive_data.hpp"
 #include "comms/data/robot_state_data.hpp"
 #include "comms/data/sendable.hpp"
@@ -63,6 +65,9 @@ class HelloRobot {
 
     /// @brief Calculates controls and feed-forward outputs for all physical actuators.
     ControllerManager controller_manager;
+
+    /// @brief Manages the SD card.
+    SDManager sd_manager;
 
     /// @brief Hardware watchdog that resets the Teensy if the loop hangs.
     Watchdog watchdog;
