@@ -349,7 +349,13 @@ void HelloRobot::process_cli() {
     while (Serial.available() > 0) {
         char c = Serial.read();
         
+        static bool last_was_cr = false;
         // Handle Backspace (ASCII 8 or DEL 127)
+        if (c == '\n' && last_was_cr) {
+            last_was_cr = false;
+            continue; 
+        }
+        last_was_cr = (c == '\r');
         if (c == '\b' || c == 127) {
             if (cli_index > 0) {
                 cli_index--;
