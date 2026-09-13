@@ -156,9 +156,9 @@ bool SystemLogger::should_show(LogLevel lvl, Subsystem sys) {
 }
 
 void SystemLogger::draw_dashboard_box() {
-    Serial.println("============= SYSTEM EVENT LOG =============");
+    Serial.print("============= SYSTEM EVENT LOG =============\033[K\n");
     if (count == 0) {
-        Serial.println(" No recent events.");
+        Serial.print(" No recent events.\033[K\n");
     } else {
         uint8_t start = (count == LOG_HISTORY) ? head : 0;
         for (uint8_t i = 0; i < count; i++) {
@@ -166,7 +166,8 @@ void SystemLogger::draw_dashboard_box() {
             LogEvent& ev = messages[idx];
 
             if (should_show(ev.level, ev.sys)) {
-                Serial.printf(" [%7.2fs] %s[%s] %s\033[0m\n", 
+                // \033[K erases all residual characters to the right of this line
+                Serial.printf(" [%7.2fs] %s[%s] %s\033[0m\033[K\n", 
                     ev.timestamp, 
                     level_to_color(ev.level),
                     sys_to_str(ev.sys), 
@@ -174,5 +175,5 @@ void SystemLogger::draw_dashboard_box() {
             }
         }
     }
-    Serial.println("============================================");
+    Serial.print("============================================\033[K\n");
 }

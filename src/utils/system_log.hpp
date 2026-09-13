@@ -20,8 +20,8 @@ struct LogEvent {
 class SystemLogger : public Print {
 private:
     /// @brief number of messages in dashboard box
-    static const int LOG_HISTORY = 10;
-	/// @brief max length of message in dashbarod box
+    static const int LOG_HISTORY = 5;
+	/// @brief max length of message in dashboard box
     static const int MAX_LINE_LEN = 80;
 	/// @brief max length including the timestamp
     static const int MAX_STORED_LEN = 100;
