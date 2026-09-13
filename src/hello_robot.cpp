@@ -293,22 +293,22 @@ void HelloRobot::process_cli() {
 				break;
                         
 			  case LiveMode::SENSORS:
-				Serial.printf("=== LIVE SENSOR READOUT ===\n");
+				Serial.printf("=== LIVE SENSOR READOUT ===\033[K\n");
 				sensor_manager.print_sensors_live(); 
 				break;
                         
 			  case LiveMode::ESTIMATED_STATE:
-				Serial.printf("=== LIVE ESTIMATED STATE ===\n");
+				Serial.printf("=== LIVE ESTIMATED STATE ===\033[K\n");
 				estimated_state_map->print();
 				break;
 				
 			  case LiveMode::TARGET_STATE:
-				Serial.printf("=== LIVE TARGET STATE ===\n");
+				Serial.printf("=== LIVE TARGET STATE ===\033[K\n");
 				target_state_map->print();
 				break;
 
 			  case LiveMode::HEARTBEAT:
-				Serial.printf("=== LIVE HEARTBEAT  ===\n");
+				Serial.printf("=== LIVE HEARTBEAT  ===\033[K\n");
 				Serial.println(loopc);
 				break;
                         
