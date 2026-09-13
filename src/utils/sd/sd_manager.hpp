@@ -19,11 +19,6 @@ public:
     /// @brief Stops the SD card manager
     void stop();
 
-    /// @brief Check if a file exists on the SD card
-    /// @param path Path to file
-    /// @return `true` if exists, else `false`
-    bool file_exists(const char* path);    
-
     /// @brief Opens a file on the SD card
     /// @param path Path to the file
     /// @param oflag File open flags (8-bit bitfield)
