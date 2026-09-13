@@ -8,9 +8,10 @@ SdLogger BuiltinSdLogger(BuiltinSd);
 bool SdLogger::write_log(LogEvent& event) {
     if (!_log_file) return false;
 
-    _log_file.write(
+    int res = _log_file.write(
         event.text
     );
+    if (res < 0) return false;
 
     // Actually write the file to the SD card
     return _log_file.sync();
