@@ -44,28 +44,26 @@ void ET16S::init() {
 	setup_edma_channel();
 }
 void ET16S::setup_edma_channel() {
-    // 1. CRITICAL: Disable the HardwareSerial CPU RX interrupt!
-    // This stops Teensyduino from stealing bytes from the DMA.
+    // Disable the HardwareSerial CPU RX interrupt!
     LPUART5_CTRL &= ~LPUART_CTRL_RIE;
 
-    // 2. Clear any lingering hardware error flags (Overrun, Noise, Framing, Parity)
+    // Clear any lingering hardware error flags (Overrun, Noise, Framing, Parity)
     LPUART5_STAT |= (LPUART_STAT_OR | LPUART_STAT_NF | LPUART_STAT_FE | LPUART_STAT_PF);
 
-    // 3. Set RX Watermark to 0 so every single byte immediately triggers the DMA
+    // Set RX Watermark to 0 so every single byte immediately triggers the DMA
     LPUART5_WATER &= ~(0xFF << 16);
 
-    // 4. Enable DMA requests on UART RX
+    // Enable DMA requests on UART RX
     LPUART5_BAUD |= LPUART_BAUD_RDMAE;
 
-    // 5. Invalidate cache lines for both DMAMEM ping-pong buffers
+    // Clear DMA ping pong buffers
     arm_dcache_delete((void*)dma_buffer_a, 32);
     arm_dcache_delete((void*)dma_buffer_b, 32);
 
     dma_target_buffer = dma_buffer_a;
     active_buffer = dma_buffer_b;
 
-    // 6. Wait for the inter-packet gap (4ms of silence) before enabling DMA
-    // This guarantees the very first byte DMA captures is 0x0F (byte 0).
+    // Align buffer with ET16S packet start
     elapsedMillis silence = 0;
     while (silence < 4) {
         if (LPUART5_STAT & LPUART_STAT_RDRF) {
@@ -75,15 +73,14 @@ void ET16S::setup_edma_channel() {
         }
     }
 
-    // 7. Configure the eDMA Channel
+    // Configure the eDMA Channel
     rx_dma.source((volatile uint8_t&)LPUART5_DATA);
     rx_dma.destinationBuffer(dma_target_buffer, ET16S_PACKET_SIZE);
     rx_dma.triggerAtHardwareEvent(DMAMUX_SOURCE_LPUART5_RX);
     rx_dma.attachInterrupt(dma_isr_wrapper);
     rx_dma.interruptAtCompletion();
     
-    // CRITICAL: Forces DMA to strictly stop after 25 bytes.
-    // It will not bleed into byte 26 or roll over.
+	// Disable DMA able packet has been captured
     rx_dma.disableOnCompletion(); 
 
     rx_dma.enable();
@@ -107,22 +104,22 @@ void ET16S::resync_frame() {
 void ET16S::dma_isr() {
     rx_dma.clearInterrupt();
 
-    // Invalidate D-Cache on the buffer that just finished receiving
+    // clear DMA cache for target buffer
     arm_dcache_delete((void*)dma_target_buffer, 32);
 
-    // Swap the ping-pong pointers
+    // Swap the ping pong pointers
     active_buffer = dma_target_buffer;
     dma_target_buffer = (dma_target_buffer == dma_buffer_a) ? dma_buffer_b : dma_buffer_a;
 
     // Prepare target buffer cache and configure DMA for the NEXT 25-byte packet
     arm_dcache_delete((void*)dma_target_buffer, 32);
     rx_dma.destinationBuffer(dma_target_buffer, ET16S_PACKET_SIZE);
-    rx_dma.enable(); // Re-arm for the next packet (occurs during the 4-7ms silent gap)
+    rx_dma.enable(); // Re-arm for the next packet
 
     packet_ready = true;
 }
 void ET16S::read() {
-    // --- 1. NON-BLOCKING RESYNC (Only if hardware line glitched) ---
+    // Resync if frame is misaligned
     if (is_resyncing) {
         // Discard any noise while waiting for the line to go quiet
         if (LPUART5_STAT & LPUART_STAT_RDRF) {
@@ -147,11 +144,10 @@ void ET16S::read() {
         return;
     }
 
-    // --- 2. PROCESS COMPLETED PACKET ---
     if (!packet_ready) return;
     packet_ready = false;
 
-    // Validate that the ping-pong buffer holds a complete, unshifted frame
+    // Validate that the ping pong buffer holds a complete aligned frame
     if (active_buffer[0] == 0x0F && active_buffer[24] == 0x00) {
         format_raw((uint8_t*)active_buffer);
         channel[16].data = channel[16].raw_format;

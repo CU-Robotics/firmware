@@ -388,8 +388,9 @@ private:
 	/// @brief Recovers frame alignment if packet does not start with start byte and end with end byte
     void resync_frame();
 
-    volatile bool is_phase_shifting = false;
+	/// @brief flag used for if we need to re align packet
     volatile bool is_resyncing = false;
+    /// @brief timer used for ensuring we dont read partial packets
     elapsedMillis gap_timer = 0;
 
 	/// @brief  Pointer to the singleton instance of this class
