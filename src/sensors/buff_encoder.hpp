@@ -124,10 +124,12 @@ private:
 
 	/// @brief Pointer to the SensorManager's active transfer flag
     const volatile bool* shared_dma_flag;
-    // Could/should this be a shared pointer??
 
     // --- ZERO POS DIAGNOSTICS ---
+    /// @brief used for spacing out zero alignment checks
     uint32_t zero_check_timer = 0;
+    /// @brief number of itmes zero pos is misalgined
     uint32_t zero_misalign_count = 0;
+    /// @brief The value that the zero pos is set to
     float cached_zero_pos = 0.0f;
 };
