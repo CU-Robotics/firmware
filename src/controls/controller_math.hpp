@@ -26,7 +26,7 @@ float compute_power_limit_ratio(float buffer, float limit_thresh, float critical
 /// @return Unclamped, unnormalized motor velocity targets in the order documented by MotorVelocities::v.
 MotorVelocities xdrive_mix(float x, float y, float rot, float heading);
 
-/// @brief Clamp a controller output to the inclusive range [-1, 1]. Basically uselss just here so I can use this in the testing file instead of the real controller file.
+/// @brief Clamp a controller output to the inclusive range [-1, 1].
 /// @param value Controller output to clamp.
 /// @return The input value constrained to [-1, 1]; NaN inputs remain NaN.
 float clamp1(float value);
