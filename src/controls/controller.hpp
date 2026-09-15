@@ -5,6 +5,8 @@
 #include "sensors/can/motor.hpp"
 #include "utils/safety.hpp"
 #include "utils/timing.hpp"
+#include "utils/system_log.hpp"
+
 #include "sensors/can/can_manager.hpp"
 #include "robot_state_map.hpp"
 #include "reference_governor.hpp"
@@ -540,7 +542,7 @@ struct LowerFeederController : public Controller {
             bool found = false;
             for (auto& state: state_config) {
                 if (state.name == upper_feeder_position_state) {
-                    Serial.printf("state config, reference limits velocity: min %f, max %f\n", state.reference_limits.velocity.min, state.reference_limits.velocity.max);
+                SystemLog.info(Subsystem::Controls,"state config, reference limits velocity: min %f, max %f\n", state.reference_limits.velocity.min, state.reference_limits.velocity.max);
                     upper_feeder_reference_state.get_state_map().emplace(upper_feeder_position_state, State(state));
                     upper_target.get_state_map().emplace(upper_feeder_position_state, State(state));
                     std::vector<Cfg::State> state_config_vec = {};

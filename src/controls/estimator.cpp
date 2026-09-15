@@ -5,6 +5,7 @@
 #include "sensors/ICM20649.hpp"
 #include "utils/vector_math.hpp"
 #include "utils/wrapping.hpp"
+#include "utils/system_log.hpp"
 #include "sensors/RefSystem.hpp"
 
 // Estimator shared checking implementation
@@ -275,7 +276,7 @@ void GimbalAndChassisEstimator::step_states(RobotStateMap& updated_state_map, co
         float overridden_yaw = previous_state_map[yaw_state].get_position();
         float error = Utils::wrap(overridden_yaw - yaw_angle, -PI, PI);
         yaw_angle += error * 0.01;
-        Serial.printf("Overriding gimbal yaw estimate to %f. Currently %f\n", overridden_yaw, yaw_angle);
+        SystemLog.info(Subsystem::ESTIMATOR,"Overriding gimbal yaw estimate to %f. Currently %f\n", overridden_yaw, yaw_angle);
     }
 
     while (yaw_angle >= PI)
@@ -493,13 +494,13 @@ void LowerFeederEstimator::step_states(RobotStateMap& updated_state_map, const R
     if (fabs(diff) > 0.5 && fabs(diff) < 2*PI - 0.5 && count > 0) {
         num_encoder_resets++;
         reset_value = feeder_angle;
-        Serial.printf("Feeder angle diff is large: %d, feeder angle: %f, prev feeder angle: %f\n", num_encoder_resets, feeder_angle, prev_feeder_angle);
+        SystemLog.warn(Subsystem::ESTIMATOR,"Feeder angle diff is large: %d, feeder angle: %f, prev feeder angle: %f\n", num_encoder_resets, feeder_angle, prev_feeder_angle);
         diff = 0; // set diff to 0 to avoid large jumps in ball count
     }
     if (fabs(lower_diff) > 0.5 && fabs(lower_diff) < 2*PI - 0.5 && count > 0) {
         num_encoder_resets++;
         reset_value = lower_feeder_angle;
-        Serial.printf("Lower feeder angle diff is large: %d, lower feeder angle: %f, prev lower feeder angle: %f\n", num_encoder_resets, lower_feeder_angle, prev_lower_feeder_angle);
+       SystemLog.warn(Subsystem::ESTIMATOR,"Lower feeder angle diff is large: %d, lower feeder angle: %f, prev lower feeder angle: %f\n", num_encoder_resets, lower_feeder_angle, prev_lower_feeder_angle);
         lower_diff = 0; // set lower_diff to 0 to avoid large jumps in ball count
     }
 
@@ -518,10 +519,10 @@ void LowerFeederEstimator::step_states(RobotStateMap& updated_state_map, const R
     lower_ball_count += (lower_diff/(M_PI/lower_feeder_ratio)) * lower_feeder_direction;
 
     if (count == 0) {
-        Serial.printf("Initial feeder ball count: %f, lower feeder ball count: %f\n", ball_count, lower_ball_count);
+        SystemLog.info(Subsystem::ESTIMATOR,"Initial feeder ball count: %f, lower feeder ball count: %f\n", ball_count, lower_ball_count);
         while (ball_count - lower_ball_count > 0.5) lower_ball_count += 1.0;
         while (lower_ball_count - ball_count > 0.5) ball_count += 1.0;
-        Serial.printf("Adjusted feeder ball count: %f, lower feeder ball count: %f\n", ball_count, lower_ball_count);
+		SystemLog.info(Subsystem::ESTIMATOR,"Adjusted feeder ball count: %f, lower feeder ball count: %f\n", ball_count, lower_ball_count);
         count++;
     }
 
