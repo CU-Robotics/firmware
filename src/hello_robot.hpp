@@ -158,6 +158,9 @@ class HelloRobot {
     /// @brief LED hearbeat, feeds the watchdog, and ensures consistent loop time.
     void loop_timing();
 
+    /// @brief aligns chassis heading to the nearest 45-degree diagonal
+	void apply_fast_mode();
+
   public:
     /**
      * @brief Bootstraps the robot's architecture.

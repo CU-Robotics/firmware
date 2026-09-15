@@ -1,6 +1,7 @@
 #include "transmitter_manager.hpp"
 #include "sensors/transmitter/ET16S.hpp"
 #include "sensors/transmitter/dr16.hpp"
+#include <usb_serial.h>
 
 void TransmitterManager::init(const Cfg::Transmitter& transmitter_config) {
     Serial.printf("Initializing TransmitterManager with transmitter type: %d\n", static_cast<int>(transmitter_config.transmitter_type));
@@ -73,6 +74,13 @@ bool TransmitterManager::mode_changed() {
 void TransmitterManager::manual_controls(const RobotStateMap& estimated_state_map, RobotStateMap& target_state_map, bool not_safety_mode, float& feed, float& last_feed) {
     if (transmitter) {
         transmitter->manual_controls(estimated_state_map, target_state_map, not_safety_mode, feed, last_feed);
+    } else {
+        safety::safety_procedure("TransmitterManager::manual_controls called before transmitter was initialized");
+    }
+}
+bool TransmitterManager::is_fast_mode_active() {
+    if (transmitter){
+		return transmitter->is_fast_mode_active();
     } else {
         safety::safety_procedure("TransmitterManager::manual_controls called before transmitter was initialized");
     }
