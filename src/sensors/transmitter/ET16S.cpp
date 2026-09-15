@@ -118,7 +118,7 @@ void ET16S::read() {
             gap_timer = 0; // Reset silence timer
         }
 
-        // Once the line has been completely silent for 4ms, re-start DMA
+        // Once the line has been completely silent for 4ms, restart DMA
         if (gap_timer >= 4) {
             LPUART5_STAT |= (LPUART_STAT_OR | LPUART_STAT_NF | LPUART_STAT_FE | LPUART_STAT_PF);
             LPUART5_FIFO |= LPUART_FIFO_RXFLUSH;
