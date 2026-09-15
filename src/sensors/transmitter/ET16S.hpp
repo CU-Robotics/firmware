@@ -384,9 +384,6 @@ private:
 	
 	/// @brief init for all dma functions and buffers
 	void setup_edma_channel();
-	
-	/// @brief Recovers frame alignment if packet does not start with start byte and end with end byte
-    void resync_frame();
 
 	/// @brief flag used for if we need to re align packet
     volatile bool is_resyncing = false;

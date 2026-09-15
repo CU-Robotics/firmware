@@ -14,10 +14,9 @@ volatile uint8_t* ET16S::dma_target_buffer = nullptr;
 ET16S::ET16S(const Cfg::ET16S& config) : config(config) { }
 
 void ET16S::init() {
-
-	//  Hook the instance pointer to THIS object
     instance = this;
-	// Scrub the DMAMEM so we know if it's actually dead
+    
+	// Zero DMAMEM buffers
     memset(dma_buffer_a, 0, 32);
     memset(dma_buffer_b, 0, 32);
     
@@ -44,10 +43,10 @@ void ET16S::init() {
 	setup_edma_channel();
 }
 void ET16S::setup_edma_channel() {
-    // Disable the HardwareSerial CPU RX interrupt!
+    // Disable the HardwareSerial CPU RX interrupt so that it doesnt compete with dma interrupt
     LPUART5_CTRL &= ~LPUART_CTRL_RIE;
 
-    // Clear any lingering hardware error flags (Overrun, Noise, Framing, Parity)
+    // Clear hardware error flags (Overrun, Noise, Framing, Parity)
     LPUART5_STAT |= (LPUART_STAT_OR | LPUART_STAT_NF | LPUART_STAT_FE | LPUART_STAT_PF);
 
     // Set RX Watermark to 0 so every single byte immediately triggers the DMA
@@ -92,15 +91,6 @@ void ET16S::dma_isr_wrapper() {
     }
 }
 
-void ET16S::resync_frame() {
-    SystemLog.warn(Subsystem::SENSORS, "ET16S: Frame misaligned. Entering non-blocking resync...\n");
-    rx_dma.disable();
-    
-    // Un-hijack the UART to let the software buffer catch the bytes
-    LPUART5_BAUD &= ~LPUART_BAUD_RDMAE; 
-    packet_ready = false;
-}
-
 void ET16S::dma_isr() {
     rx_dma.clearInterrupt();
 
@@ -121,14 +111,14 @@ void ET16S::dma_isr() {
 void ET16S::read() {
     // Resync if frame is misaligned
     if (is_resyncing) {
-        // Discard any noise while waiting for the line to go quiet
+        // Discard incoming bytes while waiting for gap between packets
         if (LPUART5_STAT & LPUART_STAT_RDRF) {
             volatile uint32_t discard = LPUART5_DATA;
             (void)discard;
             gap_timer = 0; // Reset silence timer
         }
 
-        // Once the line has been completely silent for 4ms, re-arm DMA
+        // Once the line has been completely silent for 4ms, re-start DMA
         if (gap_timer >= 4) {
             LPUART5_STAT |= (LPUART_STAT_OR | LPUART_STAT_NF | LPUART_STAT_FE | LPUART_STAT_PF);
             LPUART5_FIFO |= LPUART_FIFO_RXFLUSH;
@@ -198,7 +188,7 @@ void ET16S::print_raw_bin(uint8_t m_inputRaw[ET16S_PACKET_SIZE]) {
 void ET16S::print_live_data() {
     Serial.printf("=== LIVE ET16S DIAGNOSTICS ===\n");
     
-    // --- 1. RAW HEX DUMP (What the DMA actually sees) ---
+    // Raw input data
     Serial.print(" RAW BUF: ");
     if (active_buffer != nullptr) {
         for (int i = 0; i < ET16S_PACKET_SIZE; i++) {
@@ -209,7 +199,7 @@ void ET16S::print_live_data() {
             } else if (i == 0 || i == 24) {
                 Serial.printf("\033[31m%02X \033[0m", active_buffer[i]); // Red if misaligned
             } else {
-                Serial.printf("%02X ", active_buffer[i]); // Standard byte
+                Serial.printf("%02X ", active_buffer[i]);
             }
         }
     } else {
@@ -217,7 +207,7 @@ void ET16S::print_live_data() {
     }
     Serial.println();
 
-    // --- 2. UART SILICON ERROR CHECK ---
+    // Error byte readout
     uint32_t uart_stat = LPUART5_STAT;
     Serial.print(" UART ERR: ");
     bool has_err = false;
@@ -228,13 +218,11 @@ void ET16S::print_live_data() {
     if (!has_err) Serial.print("\033[32mNONE\033[0m");
     Serial.println();
 
-    // --- 3. ALGORITHM STATUS ---
-    bool is_resyncing = ((LPUART5_BAUD & LPUART_BAUD_RDMAE) == 0);
-    Serial.printf(" DMA STATE: %s\n", is_resyncing ? "\033[33mSEARCHING FOR GAP\033[0m" : "\033[32mLOCKED & RUNNING\033[0m");
+    // Resync status
+    Serial.printf(" DMA STATE: %s\n", this->is_resyncing ? "\033[33mSEARCHING FOR GAP\033[0m" : "\033[32mLOCKED & RUNNING\033[0m");
 
     Serial.println("---------------------------------------");
     
-    // --- EXISTING READOUT ---
     const char* mode_str = "UNKNOWN";
     if (is_safety_mode()) mode_str = "SAFETY";
     else if (is_teensy_mode()) mode_str = "TEENSY";
