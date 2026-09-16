@@ -1,19 +1,38 @@
 #include "sd_logger.hpp"
+#include "utils/system_log.hpp"
+#include <cstring>
 
 #define LOG_FILE_DIR "/logs/"
 #define LOG_FILE_FORMAT "log_%d.log"
 
 SdLogger BuiltinSdLogger(BuiltinSd);
 
+const char* level_to_str(LogLevel level) {
+    switch(level) {
+        case LogLevel::WARN: return "WARN";
+        case LogLevel::ERROR: return "ERROR";
+        default: return "INFO";
+    };
+}
+
 bool SdLogger::write_log(LogEvent& event) {
     if (!_log_file) return false;
-
-    int res = _log_file.write(
+    
+    // build string
+    char log_buffer[128];
+    snprintf(log_buffer, sizeof(log_buffer), 
+        "%f : %s : %s : %s",
+        event.timestamp,
+        level_to_str(event.level),
+        sys_to_str(event.sys),
         event.text
     );
-    if (res < 0) return false;
 
-    // Actually write the file to the SD card
+    // write to file
+    if (_log_file.write(log_buffer) < 0)
+        return false;
+
+    // sync write to SD card
     return _log_file.sync();
 }
 

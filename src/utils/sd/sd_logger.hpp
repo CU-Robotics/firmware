@@ -22,6 +22,8 @@ private:
     // File to write to, opened with O_APPEND
     SdFile _log_file;
 
+    // Opens a new log file
+    // Format specified in sd_loggr.cpp
     bool new_log_file();
 };
 
