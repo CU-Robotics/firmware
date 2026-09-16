@@ -45,8 +45,8 @@ void EstimatorManager::init_estimator(const Cfg::Estimator& estimator_config, Se
     }
 }
 
-void EstimatorManager::step(RobotStateMap& current_state_array, int override) {
-    RobotStateMap previous_state_array = current_state_array;
+void EstimatorManager::step(RobotStateArray& current_state_array, int override) {
+    RobotStateArray previous_state_array = current_state_array;
 
     for (auto& estimator : estimators) {
         estimator->step_states(current_state_array, previous_state_array, override);

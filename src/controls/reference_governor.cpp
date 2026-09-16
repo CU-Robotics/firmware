@@ -34,8 +34,13 @@ const RobotStateArray& Governor::step_reference_array(const RobotStateArray& ung
         count++;
     }
 
-    for(auto& [reference_name, reference] : reference_state_array.get_state_array()) {
-        State ungoverned_reference = ungoverned_reference_array[reference_name];
+    for (size_t i = 0; i < NUM_STATES; ++i) {
+        const Cfg::StateName reference_name = static_cast<Cfg::StateName>(i);
+        if (!reference_state_array.has_state(reference_name)) {
+            continue;
+        }
+        State& reference = reference_state_array[reference_name];
+        const State& ungoverned_reference = ungoverned_reference_array[reference_name];
 
         if (reference.config().governor_type == Cfg::StateOrder::Position) { // position based governor
             State error = ungoverned_reference.get_error_no_bounds(reference);            

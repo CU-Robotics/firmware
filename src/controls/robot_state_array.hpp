@@ -19,7 +19,7 @@ namespace Comms {
 /// @brief Manage all of the configured states
 class RobotStateArray {
 public:
-    /// @brief Construct a new RobotStateMap object with the given state configurations. The state configurations are used to set up the state array with the correct state names and limits.
+    /// @brief Construct a new RobotStateArray object with the given state configurations. The state configurations are used to set up the state array with the correct state names and limits.
     /// @param _state_configurations List of the state configurations
     RobotStateArray(const std::vector<Cfg::State>& _state_configurations);
     /// @brief Get a mutable reference corresponding to the given state name. Will trigger a safety procedure if the state name is not found in the array.
