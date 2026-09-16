@@ -1,0 +1,6 @@
+<map id="Cfg::Transmitter" name="Cfg::Transmitter">
+<area shape="rect" id="node1" title="The Transmitter struct represents the configuration for a transmitter, including its type and any spe..." alt="" coords="158,95,273,121"/>
+<area shape="rect" id="node2" href="$structComms_1_1CommsData.html" title="base class for all data structs that want to be sent over comms." alt="" coords="5,5,151,32"/>
+<area shape="rect" id="node3" href="$structCfg_1_1DR16.html" title="Configuration struct for the DR16 transmitter." alt="" coords="175,5,255,32"/>
+<area shape="rect" id="node4" href="$structCfg_1_1ET16S.html" title="Configuration struct for the ET16S transmitter." alt="" coords="280,5,367,32"/>
+</map>

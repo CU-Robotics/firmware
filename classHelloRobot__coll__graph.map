@@ -1,0 +1,10 @@
+<map id="HelloRobot" name="HelloRobot">
+<area shape="rect" id="node1" title="Coordinates all hardware, networking, and control systems." alt="" coords="315,159,401,185"/>
+<area shape="rect" id="node2" href="$classControllerManager.html" title="Manage all controllers." alt="" coords="11,7,138,33"/>
+<area shape="rect" id="node3" href="$classEstimatorManager.html" title="Manage all estimators for robot state." alt="" coords="11,57,138,84"/>
+<area shape="rect" id="node4" href="$classWatchdog.html" title="This watchdog timer restarts the CPU if the trigger variable has not been sensed after the timout tim..." alt="" coords="35,108,115,135"/>
+<area shape="rect" id="node5" href="$classSensorManager.html" title="Class to manage sensors on the robot." alt="" coords="18,159,131,185"/>
+<area shape="rect" id="node6" href="$classCANManager.html" title="The overall manager for the CAN busses and motors." alt="" coords="25,209,125,236"/>
+<area shape="rect" id="node7" href="$classTransmitterManager.html" title="Manage the configured transmitter." alt="" coords="5,260,144,287"/>
+<area shape="rect" id="node8" href="$structTimer.html" title="Timer class. Operates based on micros() and provides a simple interface for timing operations." alt="" coords="47,332,102,359"/>
+</map>

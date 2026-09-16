@@ -1,0 +1,8 @@
+<map id="Motor" name="Motor">
+<area shape="rect" id="node1" title="An abstract class holding common information for individual CAN&#45;capable motors." alt="" coords="153,5,208,32"/>
+<area shape="rect" id="node2" href="$classC610.html" title="C610 controller driver. This manages generating CAN output messages and processing incomming CAN mess..." alt="" coords="5,80,57,107"/>
+<area shape="rect" id="node3" href="$classC620.html" title="C620 controller driver. This manages generating CAN output messages and processing incomming CAN mess..." alt="" coords="81,80,133,107"/>
+<area shape="rect" id="node4" href="$classGIM.html" title="Motor driver for the GIM motor." alt="" coords="157,80,204,107"/>
+<area shape="rect" id="node5" href="$classMG8016EI6.html" title="MG8016E&#45;i6v3 controller driver. This manages generating CAN output messages and processing incomming ..." alt="" coords="229,80,319,107"/>
+<area shape="rect" id="node6" href="$classSDC104.html" title="SDC104 motor controller class." alt="" coords="344,80,415,107"/>
+</map>

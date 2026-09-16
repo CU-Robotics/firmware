@@ -1,0 +1,8 @@
+<map id="D200LD14P" name="D200LD14P">
+<area shape="rect" id="node1" title="class for LiDAR driver" alt="" coords="184,171,276,197"/>
+<area shape="rect" id="node2" href="$classSensor.html" title="Abstract class representing a sensor. All sensors should inherit from this class." alt="" coords="5,81,68,108"/>
+<area shape="rect" id="node3" href="$structLidarDataPacketSI.html" title="data for a singular LiDAR packet (SI units)" alt="" coords="92,81,224,108"/>
+<area shape="rect" id="node4" href="$structComms_1_1CommsData.html" title="base class for all data structs that want to be sent over comms." alt="" coords="156,5,301,32"/>
+<area shape="rect" id="node5" href="$structCfg_1_1D200Lidar.html" title="D200 Lidar configuration struct." alt="" coords="249,81,355,108"/>
+<area shape="rect" id="node6" href="$structD200Calibration.html" title="struct storing timestamp calibration results" alt="" coords="380,81,493,108"/>
+</map>
