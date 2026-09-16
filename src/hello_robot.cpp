@@ -36,7 +36,7 @@ void HelloRobot::init() {
     transmitter_manager.init(config.transmitter);
 
     // initialize sensors
-    sensor_manager.init(config, &estimated_state_map_interrupt_safe);
+    sensor_manager.init(config, &estimated_state_array_interrupt_safe);
 
     estimator_manager.init(config.estimators, sensor_manager, can);
 
@@ -44,11 +44,11 @@ void HelloRobot::init() {
     // state
     controller_manager.init(config.controllers, can, config.states);
 
-    estimated_state_map.emplace(config.states);
-    estimated_state_map_interrupt_safe = std::make_unique<RobotStateMap>(config.states);
-    reference_map.emplace(config.states);
-    target_state_map.emplace(config.states);      // Temp ungoverned state
-    hive_state_map_offset.emplace(config.states); // Hive offset state
+    estimated_state_array.emplace(config.states);
+    estimated_state_array_interrupt_safe = std::make_unique<RobotStateArray>(config.states);
+    reference_array.emplace(config.states);
+    target_state_array.emplace(config.states);      // Temp ungoverned state
+    hive_state_array_offset.emplace(config.states); // Hive offset state
 
     // start the main loop watchdog
     watchdog.start();
@@ -131,13 +131,13 @@ void HelloRobot::read_telemetry() {
 }
 void HelloRobot::process_behaviors() {
     // manual controls on firmware
-    transmitter_manager.manual_controls(*estimated_state_map, *target_state_map, not_safety_mode, feed, last_feed);
+    transmitter_manager.manual_controls(*estimated_state_array, *target_state_array, not_safety_mode, feed, last_feed);
 
     // check if we want to use hive controls instead
     if (transmitter_manager.is_hive_mode()) {
-        // hid_incoming.get_target_state_map(target_state_map);
-        target_state_map->from_comms_packet(Comms::comms_layer.get_hive_data().target_state_data.state);
-        last_feed = (*target_state_map)[Cfg::StateName::Feeder].get_position();
+        // hid_incoming.get_target_state_array(target_state_array);
+        target_state_array->from_comms_packet(Comms::comms_layer.get_hive_data().target_state_data.state);
+        last_feed = (*target_state_array)[Cfg::StateName::Feeder].get_position();
     }
 
     // override temp state if needed. Dont override in teensy mode so the sentry doesnt move during inspection
@@ -146,48 +146,48 @@ void HelloRobot::process_behaviors() {
         Comms::comms_layer.get_hive_data().override_state_data.active = false;
 
 		SystemLog.printf("Overriding state with hive state\n");
-		hive_state_map_offset->from_comms_packet(Comms::comms_layer.get_hive_data().override_state_data.state);
+		hive_state_array_offset->from_comms_packet(Comms::comms_layer.get_hive_data().override_state_data.state);
 
-        *estimated_state_map = *hive_state_map_offset;
+        *estimated_state_array = *hive_state_array_offset;
         override_request = true;
     }
 }
 void HelloRobot::update_controls() {
     // step estimates and construct estimated state
-    estimator_manager.step(*estimated_state_map, override_request);
-    // estimated_state_map.print();
+    estimator_manager.step(*estimated_state_array, override_request);
+    // estimated_state_array.print();
 
     noInterrupts();
-    *estimated_state_map_interrupt_safe = *estimated_state_map;
+    *estimated_state_array_interrupt_safe = *estimated_state_array;
     interrupts();
     
     override_request = false;
-    float current_feed = (*estimated_state_map)[Cfg::StateName::Feeder].get_position();
-    float target_feed = (*target_state_map)[Cfg::StateName::Feeder].get_position();
+    float current_feed = (*estimated_state_array)[Cfg::StateName::Feeder].get_position();
+    float target_feed = (*target_state_array)[Cfg::StateName::Feeder].get_position();
     if ((feed - current_feed > 2 && transmitter_manager.is_teensy_mode()) || (target_feed - current_feed > 2 && transmitter_manager.is_hive_mode())) {
-        SystemLog.printf("Feeder is lowkey jammed. current ball count: %f, feed: %f, hive target: %f\n", (*estimated_state_map)[Cfg::StateName::Feeder].get_position(), feed, (*target_state_map)[Cfg::StateName::Feeder].get_position());
+        SystemLog.printf("Feeder is lowkey jammed. current ball count: %f, feed: %f, hive target: %f\n", (*estimated_state_array)[Cfg::StateName::Feeder].get_position(), feed, (*target_state_array)[Cfg::StateName::Feeder].get_position());
         feed = current_feed + 1;
         governor->set_position_reference(Cfg::StateName::Feeder, feed);
     }
 
     // if first loop set target state to estimated state
     if (is_first_loop == true) {
-        governor->set_reference_map(*estimated_state_map);
+        governor->set_reference_array(*estimated_state_array);
         is_first_loop = false;
     }
 
     if (transmitter_manager.mode_changed()) {
-        governor->set_reference_map(*estimated_state_map);
+        governor->set_reference_array(*estimated_state_array);
     }
     // reference govern
-    *reference_map = governor->step_reference_map(*target_state_map);
+    *reference_array = governor->step_reference_array(*target_state_array);
 
     // generate motor outputs from controls
-    controller_manager.step(*reference_map, *estimated_state_map, *target_state_map);
+    controller_manager.step(*reference_array, *estimated_state_array, *target_state_array);
 
-    target_state_map->send_to_comms<TargetState>();
-    reference_map->send_to_comms<ReferenceState>();
-    estimated_state_map->send_to_comms<EstimatedState>();
+    target_state_array->send_to_comms<TargetState>();
+    reference_array->send_to_comms<ReferenceState>();
+    estimated_state_array->send_to_comms<EstimatedState>();
 
     Comms::Sendable<ConfigurationStatusData> config_status_sendable;
     config_status_sendable.data.is_configured = Comms::comms_layer.is_configured() ? 1 : 0;
@@ -245,10 +245,10 @@ void HelloRobot::check_safety() {
         // SAFETY ON
         // TODO: Reset all controller integrators here
         can.issue_safety_mode();
-        float current_feed = (*estimated_state_map)[Cfg::StateName::Feeder].get_position();
+        float current_feed = (*estimated_state_array)[Cfg::StateName::Feeder].get_position();
         governor->set_position_reference(Cfg::StateName::Feeder, current_feed);
         if (has_lower_feeder) {
-            governor->set_position_reference(Cfg::StateName::LowerFeeder, (*estimated_state_map)[Cfg::StateName::LowerFeeder].get_position());
+            governor->set_position_reference(Cfg::StateName::LowerFeeder, (*estimated_state_array)[Cfg::StateName::LowerFeeder].get_position());
         }
         feed = (fmod(fmod(current_feed, 1) + 1, 1) > 0.2)
                    ? (int)floor(current_feed) + 1
@@ -303,12 +303,12 @@ void HelloRobot::process_cli() {
                         
 				case LiveMode::ESTIMATED_STATE:
 					Serial.printf("=== LIVE ESTIMATED STATE ===\n");
-					estimated_state_map->print();
+					estimated_state_array->print();
 					break;
 				
 				case LiveMode::TARGET_STATE:
 					Serial.printf("=== LIVE TARGET STATE ===\n");
-					target_state_map->print();
+					target_state_array->print();
 					break;
 
 				case LiveMode::HEARTBEAT:
@@ -425,8 +425,8 @@ void HelloRobot::cmd_help() {
                 Serial.println("                prof            : Execution time profiler (only available if running make debug) ");
                 Serial.println("                tx              : Real-time radio transmitter inputs");
                 Serial.println("                sensors         : Real-time readouts from all configured sensors");
-                Serial.println("                estimated_state : The robot's current estimated state map");
-                Serial.println("                target_state    : The robot's current target state map");
+                Serial.println("                estimated_state : The robot's current estimated state array");
+                Serial.println("                target_state    : The robot's current target state array");
                 Serial.println("                heartbeat       : The main loop counter (loopc)");
                 Serial.println();
                 Serial.println("       help");

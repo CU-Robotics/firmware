@@ -86,12 +86,12 @@ void Estimator::handleEstimatorError(const char* estimator_name, const char* sta
     );
 }
 
-void GimbalAndChassisEstimator::validate(const RobotStateMap& updated_state_map) {
-    check_state_limits("GimbalAndChassisEstimator", "Chassis X", updated_state_map[chassis_x_state], chassis_x_monitor);
-    check_state_limits("GimbalAndChassisEstimator", "Chassis Y", updated_state_map[chassis_y_state], chassis_y_monitor);
-    check_state_limits("GimbalAndChassisEstimator", "Chassis Heading", updated_state_map[chassis_heading_state], chassis_heading_monitor);
-    check_state_limits("GimbalAndChassisEstimator", "Yaw", updated_state_map[yaw_state], yaw_monitor);
-    check_state_limits("GimbalAndChassisEstimator", "Pitch", updated_state_map[pitch_state], pitch_monitor);
+void GimbalAndChassisEstimator::validate(const RobotStateArray& updated_state_array) {
+    check_state_limits("GimbalAndChassisEstimator", "Chassis X", updated_state_array[chassis_x_state], chassis_x_monitor);
+    check_state_limits("GimbalAndChassisEstimator", "Chassis Y", updated_state_array[chassis_y_state], chassis_y_monitor);
+    check_state_limits("GimbalAndChassisEstimator", "Chassis Heading", updated_state_array[chassis_heading_state], chassis_heading_monitor);
+    check_state_limits("GimbalAndChassisEstimator", "Yaw", updated_state_array[yaw_state], yaw_monitor);
+    check_state_limits("GimbalAndChassisEstimator", "Pitch", updated_state_array[pitch_state], pitch_monitor);
 }
 
 GimbalAndChassisEstimator::GimbalAndChassisEstimator(const Cfg::Estimator& estimator_config, SensorManager& sensor_manager, CANManager& can, std::vector<Cfg::StateName> available_states) : 
@@ -147,7 +147,7 @@ GimbalAndChassisEstimator::GimbalAndChassisEstimator(const Cfg::Estimator& estim
     roll_axis_spherical[0] = 1;  // rho (1 for a spherical)
 }
 
-void GimbalAndChassisEstimator::step_states(RobotStateMap& updated_state_map, const RobotStateMap& previous_state_map, int override) {
+void GimbalAndChassisEstimator::step_states(RobotStateArray& updated_state_array, const RobotStateArray& previous_state_array, int override) {
     float pitch_enc_angle = (buff_enc_pitch->get_angle() * pitch_encoder_direction) - pitch_encoder_offset;
     while (pitch_enc_angle >= PI)
         pitch_enc_angle -= 2 * PI;
@@ -252,7 +252,7 @@ void GimbalAndChassisEstimator::step_states(RobotStateMap& updated_state_map, co
         dt = 0; // first dt loop generates huge time so check for that
         current_pitch_velocity = 0;
     } else {
-        current_pitch_velocity = (pitch_enc_angle - previous_state_map[pitch_state].get_position()) / dt;
+        current_pitch_velocity = (pitch_enc_angle - previous_state_array[pitch_state].get_position()) / dt;
     }
 
     yaw_angle += current_yaw_velocity * (dt);
@@ -272,7 +272,7 @@ void GimbalAndChassisEstimator::step_states(RobotStateMap& updated_state_map, co
     }
     
     if (override == 1) {
-        float overridden_yaw = previous_state_map[yaw_state].get_position();
+        float overridden_yaw = previous_state_array[yaw_state].get_position();
         float error = Utils::wrap(overridden_yaw - yaw_angle, -PI, PI);
         yaw_angle += error * 0.01;
         Serial.printf("Overriding gimbal yaw estimate to %f. Currently %f\n", overridden_yaw, yaw_angle);
@@ -292,13 +292,13 @@ void GimbalAndChassisEstimator::step_states(RobotStateMap& updated_state_map, co
     // output[2][1] = 0;
     // output[2][2] = 0;
     
-    updated_state_map[yaw_state].set_position_no_bound(yaw_angle);
-    updated_state_map[yaw_state].set_velocity_no_bound(current_yaw_velocity);
-    updated_state_map[yaw_state].set_acceleration_no_bound(roll_angle);
-    updated_state_map[pitch_state].set_position_no_bound(pitch_enc_angle);
-    updated_state_map[pitch_state].set_velocity_no_bound(current_pitch_velocity);
-    updated_state_map[pitch_state].set_acceleration_no_bound(0);
-    updated_state_map[chassis_heading_state].set_position_no_bound(chassis_angle);
+    updated_state_array[yaw_state].set_position_no_bound(yaw_angle);
+    updated_state_array[yaw_state].set_velocity_no_bound(current_yaw_velocity);
+    updated_state_array[yaw_state].set_acceleration_no_bound(roll_angle);
+    updated_state_array[pitch_state].set_position_no_bound(pitch_enc_angle);
+    updated_state_array[pitch_state].set_velocity_no_bound(current_pitch_velocity);
+    updated_state_array[pitch_state].set_acceleration_no_bound(0);
+    updated_state_array[chassis_heading_state].set_position_no_bound(chassis_angle);
 
     
 
@@ -327,10 +327,10 @@ void GimbalAndChassisEstimator::step_states(RobotStateMap& updated_state_map, co
     }
     prev_global_chassis_angle = global_chassis_angle;
     if (override == 1) {
-        pos_estimate[0] = previous_state_map[chassis_x_state].get_position();
-        pos_estimate[1] = previous_state_map[chassis_y_state].get_position();
-        previous_pos[0] = previous_state_map[chassis_x_state].get_position();
-        previous_pos[1] = previous_state_map[chassis_y_state].get_position();
+        pos_estimate[0] = previous_state_array[chassis_x_state].get_position();
+        pos_estimate[1] = previous_state_array[chassis_y_state].get_position();
+        previous_pos[0] = previous_state_array[chassis_x_state].get_position();
+        previous_pos[1] = previous_state_array[chassis_y_state].get_position();
     }
     // chassis estimation
     float front = chassis_1->get_state().speed;
@@ -368,18 +368,18 @@ void GimbalAndChassisEstimator::step_states(RobotStateMap& updated_state_map, co
     pos_estimate[2] += vel_estimate[2] * dt;
 
 
-    updated_state_map[chassis_x_state].set_position_no_bound(pos_estimate[0]);
+    updated_state_array[chassis_x_state].set_position_no_bound(pos_estimate[0]);
     // output[0][1] = (pos_estimate[0] - previous_pos[0]) / dt;
-    updated_state_map[chassis_x_state].set_velocity_no_bound(vel_estimate[0]);
-    updated_state_map[chassis_x_state].set_acceleration_no_bound(0);
+    updated_state_array[chassis_x_state].set_velocity_no_bound(vel_estimate[0]);
+    updated_state_array[chassis_x_state].set_acceleration_no_bound(0);
 
-    updated_state_map[chassis_y_state].set_position_no_bound(pos_estimate[1]);
+    updated_state_array[chassis_y_state].set_position_no_bound(pos_estimate[1]);
     // output[1][1] = (pos_estimate[1] - previous_pos[1]) / dt;
-    updated_state_map[chassis_y_state].set_velocity_no_bound(vel_estimate[1]);
-    updated_state_map[chassis_y_state].set_acceleration_no_bound(0);
+    updated_state_array[chassis_y_state].set_velocity_no_bound(vel_estimate[1]);
+    updated_state_array[chassis_y_state].set_acceleration_no_bound(0);
 
-    updated_state_map[chassis_heading_state].set_velocity_no_bound(d_chassis_heading / dt);
-    updated_state_map[chassis_heading_state].set_acceleration_no_bound(0);
+    updated_state_array[chassis_heading_state].set_velocity_no_bound(d_chassis_heading / dt);
+    updated_state_array[chassis_heading_state].set_acceleration_no_bound(0);
 
 
     previous_pos[0] = pos_estimate[0];
@@ -398,7 +398,7 @@ ball_exit_velocity(get_state_name_by_generic_use(Cfg::GenericEstimatorStateUse::
     ref_estimate_weight = 1 - motor_estimate_weight;
 }
 
-void FlywheelEstimator::step_states(RobotStateMap& updated_state_map, const RobotStateMap& previous_state_map, int override) {
+void FlywheelEstimator::step_states(RobotStateArray& updated_state_array, const RobotStateArray& previous_state_array, int override) {
     float angular_velocity_l = -flywheel_motor_left->get_state().speed; //motor speed is in rad/s and negative because of orientation
     float angular_velocity_r = flywheel_motor_right->get_state().speed; //motor speed is in rad/s
     float angular_velocity_avg = (angular_velocity_l + angular_velocity_r) / 2;
@@ -408,11 +408,11 @@ void FlywheelEstimator::step_states(RobotStateMap& updated_state_map, const Robo
     projectile_speed_ref = ref.ref_data.launching_status.initial_speed;
 
     //weighted average
-    updated_state_map[ball_exit_velocity].set_velocity_no_bound((projectile_speed_ref * ref_estimate_weight) + (linear_velocity * motor_estimate_weight));
+    updated_state_array[ball_exit_velocity].set_velocity_no_bound((projectile_speed_ref * ref_estimate_weight) + (linear_velocity * motor_estimate_weight));
 }
 
-void FlywheelEstimator::validate(const RobotStateMap& updated_state_map) {
-    check_state_limits("FlywheelEstimator", "Flywheel Velocity", updated_state_map[ball_exit_velocity], flywheel_monitor);
+void FlywheelEstimator::validate(const RobotStateArray& updated_state_array) {
+    check_state_limits("FlywheelEstimator", "Flywheel Velocity", updated_state_array[ball_exit_velocity], flywheel_monitor);
 }
 
 FeederEstimator::FeederEstimator(const Cfg::Estimator& estimator_config, SensorManager& sensor_manager, CANManager& can, std::vector<Cfg::StateName> available_states) :
@@ -423,7 +423,7 @@ FeederEstimator::FeederEstimator(const Cfg::Estimator& estimator_config, SensorM
     feeder_ratio = estimator_config.sensor_info.feeder_ratio;
 }
 
-void FeederEstimator::step_states(RobotStateMap& updated_state_map, const RobotStateMap& previous_state_map, int override) {
+void FeederEstimator::step_states(RobotStateArray& updated_state_array, const RobotStateArray& previous_state_array, int override) {
     dt = time.delta();
     float feeder_angle = feeder_encoder->get_angle();
     float diff;
@@ -442,18 +442,18 @@ void FeederEstimator::step_states(RobotStateMap& updated_state_map, const RobotS
     float feeder_velocity = (dt > 0) ? (diff/(M_PI/feeder_ratio))/dt : 0;
   
     ball_count += diff/(M_PI/feeder_ratio);
-    updated_state_map[feeder_ball_state].set_position_no_bound(ball_count * feeder_direction); // ball count
-    updated_state_map[feeder_ball_state].set_velocity_no_bound(feeder_velocity * feeder_direction); // ball velocity
-    updated_state_map[feeder_ball_state].set_acceleration_no_bound(0); // this is not the acceleration just the encoder value for debugging
+    updated_state_array[feeder_ball_state].set_position_no_bound(ball_count * feeder_direction); // ball count
+    updated_state_array[feeder_ball_state].set_velocity_no_bound(feeder_velocity * feeder_direction); // ball velocity
+    updated_state_array[feeder_ball_state].set_acceleration_no_bound(0); // this is not the acceleration just the encoder value for debugging
 
 }
 
-void FeederEstimator::validate(const RobotStateMap& updated_state_map) {
-    check_state_limits("FeederEstimator", "Feeder", updated_state_map[feeder_ball_state], feeder_monitor);
+void FeederEstimator::validate(const RobotStateArray& updated_state_array) {
+    check_state_limits("FeederEstimator", "Feeder", updated_state_array[feeder_ball_state], feeder_monitor);
 }
 
-void LowerFeederEstimator::validate(const RobotStateMap& updated_state_map) {
-    check_state_limits("LowerFeederEstimator", "Lower Feeder", updated_state_map[lower_feeder_ball_state], lower_feeder_monitor);
+void LowerFeederEstimator::validate(const RobotStateArray& updated_state_array) {
+    check_state_limits("LowerFeederEstimator", "Lower Feeder", updated_state_array[lower_feeder_ball_state], lower_feeder_monitor);
 }
 
 LowerFeederEstimator::LowerFeederEstimator(const Cfg::Estimator& estimator_config, SensorManager& sensor_manager, CANManager& can, std::vector<Cfg::StateName> available_states) :
@@ -474,7 +474,7 @@ LowerFeederEstimator::LowerFeederEstimator(const Cfg::Estimator& estimator_confi
     far_feeder_motor = can.get_motor_by_name(estimator_config.get_motor_name_by_generic_use(Cfg::GenericEstimatorMotorUse::FeederFar));
 }
 
-void LowerFeederEstimator::step_states(RobotStateMap& updated_state_map, const RobotStateMap& previous_state_map, int override) {
+void LowerFeederEstimator::step_states(RobotStateArray& updated_state_array, const RobotStateArray& previous_state_array, int override) {
     dt = time.delta();
     float feeder_angle = feeder_encoder->get_angle();
     float lower_feeder_angle = lower_feeder_encoder->get_angle();
@@ -525,10 +525,10 @@ void LowerFeederEstimator::step_states(RobotStateMap& updated_state_map, const R
         count++;
     }
 
-    updated_state_map[feeder_ball_state].set_position_no_bound(ball_count); // ball count
-    updated_state_map[feeder_ball_state].set_velocity_no_bound(feeder_velocity); // ball velocity
-    updated_state_map[feeder_ball_state].set_acceleration_no_bound(0); // this is not the acceleration just the encoder value for debugging
-    updated_state_map[lower_feeder_ball_state].set_position_no_bound(lower_ball_count); // ball count
-    updated_state_map[lower_feeder_ball_state].set_velocity_no_bound(lower_feeder_velocity); // ball velocity
-    updated_state_map[lower_feeder_ball_state].set_acceleration_no_bound(0); // this is not the acceleration just the encoder value for debugging
+    updated_state_array[feeder_ball_state].set_position_no_bound(ball_count); // ball count
+    updated_state_array[feeder_ball_state].set_velocity_no_bound(feeder_velocity); // ball velocity
+    updated_state_array[feeder_ball_state].set_acceleration_no_bound(0); // this is not the acceleration just the encoder value for debugging
+    updated_state_array[lower_feeder_ball_state].set_position_no_bound(lower_ball_count); // ball count
+    updated_state_array[lower_feeder_ball_state].set_velocity_no_bound(lower_feeder_velocity); // ball velocity
+    updated_state_array[lower_feeder_ball_state].set_acceleration_no_bound(0); // this is not the acceleration just the encoder value for debugging
 }
