@@ -77,6 +77,8 @@ public:
  
     /// @brief Print the data for debugging
     void print() const;
+	/// @brief Prints a formatted dashboard of live Buff Encoder values
+    void print_live_data() override;
 
     /// @brief Compute CRC8 per MT6835 datasheet spec (poly = X^8 + X^2 + X + 1, MSB first)
     /// @param data Pointer to the 3 bytes covering ANGLE[20:0] + STATUS[2:0] (i.e. data[2], data[3], data[4] from the angle burst read)

@@ -1,9 +1,17 @@
-# Optional features: PROFILER, COMMS_DEBUG, REF_SYSTEM_DEBUG, CAN_MANAGER_DEBUG
-# Set them on the line below, e.g. FEATURE_DEFINES ?= -DPROFILER -DCOMMS_DEBUG
-# Rebuild from scratch after editing this line:
-#   make clean
-#   make build
-FEATURE_DEFINES ?=
+BUILD_TYPE ?= release
+BUILD_BASE_DIR := build
+
+ifneq ($(filter debug,$(MAKECMDGOALS)),)
+    BUILD_TYPE := debug
+    FEATURE_DEFINES += -DPROFILER
+endif
+
+ifneq ($(filter release,$(MAKECMDGOALS)),)
+	BUILD_TYPE := release
+endif
+
+BUILD_DIR := $(BUILD_BASE_DIR)/$(BUILD_TYPE)
+TOOLS_DIR := tools
 
 # Set to 1 to disassemble every object file alongside it, for inspecting a
 # single translation unit.
@@ -14,9 +22,6 @@ DUMP_OBJS ?= 0
 # 'make JOBS=1 build' for readable serial output.
 JOBS ?= $(shell sysctl -n hw.ncpu 2>/dev/null || nproc 2>/dev/null || echo 1)
 MAKEFLAGS += -j$(JOBS)
-
-BUILD_DIR := build
-TOOLS_DIR := tools
 
 TARGET := firmware
 TARGET_ELF := $(BUILD_DIR)/$(TARGET).elf
@@ -101,11 +106,14 @@ GIT_SCRAPER_SRC = $(TOOLS_DIR)/git_scraper.cpp
 GIT_SCRAPER_BIN = $(BUILD_DIR)/git_scraper
 
 
-.PHONY: build dump docs clean upload install gdb monitor kill restart help clangd git_scraper
+.PHONY: build debug release dump docs clean upload install gdb monitor kill restart help clangd git_scraper
 
 
 build: $(TARGET_HEX)
 
+debug: build
+
+release: build
 
 dump: $(TARGET_DUMP)
 
@@ -152,7 +160,7 @@ docs: build
 
 
 clean:
-	rm -rf $(BUILD_DIR)
+	rm -rf $(BUILD_BASE_DIR)
 	rm -f compile_commands.json
 
 # Include the dependency files to manage header file dependencies
@@ -179,7 +187,8 @@ upload: build
 	@echo [Uploading] - If this fails, press the button on the teensy and re-run 'make upload'
 	@tycmd upload $(TARGET_HEX)
 	@sleep 0.4s
-	@bash $(TOOLS_DIR)/monitor.sh
+#@bash $(TOOLS_DIR)/monitor.sh
+	@tycmd monitor
 
 
 # Install requirements for building and uploading firmware
@@ -199,7 +208,7 @@ gdb:
 # monitors currently running firmware on robot
 monitor:
 	@echo [Monitoring]
-	@bash $(TOOLS_DIR)/monitor.sh
+	@tycmd monitor
 
 
 # resets teensy and switches it into boot-loader mode, effectively stopping any execution

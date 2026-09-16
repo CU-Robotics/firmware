@@ -90,6 +90,8 @@ class ET16S : public Transmitter {
 	void print_raw() override;
 	/// @brief prints formatted transmitter data
 	void print() override;
+	/// @brief prints a formatted dashboard of live ET16S values
+    void print_live_data() override;
 	/// @brief sends mapped data to comms
 	void send_to_comms() override;
 	/// @brief whether the ET16S is in safety mode, determined if switch a is in forward position or if the ET16S is disconnected.

@@ -26,6 +26,14 @@ void TransmitterManager::read() {
     }
 }
 
+void TransmitterManager::print_live_data() {
+    if (transmitter) {
+        transmitter->print_live_data();
+    } else {
+		safety::safety_procedure("TransmitterManager::print_live_data called before transmitter was initialized");
+    }
+}
+
 void TransmitterManager::send_to_comms() {
     if (transmitter) {
         transmitter->send_to_comms();
