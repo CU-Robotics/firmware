@@ -15,6 +15,10 @@ const char* level_to_str(LogLevel level) {
     };
 }
 
+bool SdLogger::start() {
+    return new_log_file();
+}
+
 bool SdLogger::write_log(LogEvent& event) {
     if (!_log_file) return false;
     

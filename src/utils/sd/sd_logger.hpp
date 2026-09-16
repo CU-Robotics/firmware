@@ -7,9 +7,11 @@ class SdLogger {
 public:
     /// @brief Creates a new SdLogger, and a new file on the SD card with it
     /// @param sd_man `SdManager` to use
-    SdLogger(SdManager& sd_man) : _sd_man(sd_man) { new_log_file(); }
+    SdLogger(SdManager& sd_man) : _sd_man(sd_man) {}
 
     ~SdLogger() { _log_file.close(); }
+
+    bool start();
 
     /// @brief Write a `LogEvent` to the SD card
     /// @param event `LogEvent` to log
