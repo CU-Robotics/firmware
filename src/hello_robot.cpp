@@ -128,7 +128,7 @@ void HelloRobot::read_telemetry() {
 }
 void HelloRobot::process_behaviors() {
     // manual controls on firmware
-    transmitter_manager.manual_controls(*estimated_state_map, *target_state_map, not_safety_mode, feed, last_feed);
+    transmitter_manager.manual_controls(*estimated_state_map, *target_state_map, motors_armed, feed, last_feed);
 
     // check if we want to use hive controls instead
     if (transmitter_manager.is_hive_mode()) {
@@ -198,61 +198,85 @@ void HelloRobot::update_controls() {
 
     Comms::comms_layer.run();
 }
+
 void HelloRobot::check_safety() {
-    bool is_slow_loop = false;
+    bool is_slow_loop = check_slow_loop();
 
-    // check whether this was a slow loop or not
-    float dt = stall_timer.delta();
-    if (dt > 0.002f) {
-        // zero the can bus just in case
-        can.issue_safety_mode();
+    uint8_t previous_reasons = safety::active_reasons();
 
-		SystemLog.error(Subsystem::GENERAL,"Slow loop with dt: %f, slow loop count %d\n", dt, slow_loop_counter);
-		// mark this as a slow loop to trigger safety mode
-		is_slow_loop = true;
-		if (last_loop_slow) {
-			slow_loop_counter++;
-			if (slow_loop_counter > 10) {
-				SystemLog.error("Kowabunga bitches\n");
-				reset_teensy();
-			}
-		} else {
-			slow_loop_counter = 0;
-		}
-	}
-	last_loop_slow = is_slow_loop;
+    uint8_t reasons = evaluate_safety_reasons(is_slow_loop);
+    safety::set_safety_reasons(reasons);
 
-    if (!last_gimbal_power && ref.ref_data.robot_performance.gimbal_power_active) {
-        gimbal_power_timer.start();
+    if (reasons != previous_reasons) {
+        char reason_str[safety::REASON_STR_LEN];
+        safety::reasons_to_string(reasons, reason_str, sizeof(reason_str));
+        SystemLog.info(Subsystem::GENERAL, "Safety mode %s: %s\n", reasons ? "ON" : "OFF", reason_str);
     }
-    last_gimbal_power = ref.ref_data.robot_performance.gimbal_power_active;
-    bool gimbal_power_recently_turned_on = gimbal_power_timer.get_elapsed_micros_no_restart() < 3000000;
 
-    not_safety_mode = (!transmitter_manager.is_safety_mode() && Comms::comms_layer.is_configured() && !is_slow_loop && ref.ref_data.robot_performance.gimbal_power_active && !gimbal_power_recently_turned_on);
+    motors_armed = (reasons == safety::Reason::NONE);
 
-    safety::set_safety_mode(!not_safety_mode);
-
-    //  SAFETY MODE
-    if (not_safety_mode) {
-        // SAFETY OFF
+    if (motors_armed) {
         can.write();
-        //SystemLog.info(Subsystem::CAN,"Can write\n");
     } else {
-        // SAFETY ON
         // TODO: Reset all controller integrators here
         can.issue_safety_mode();
-        float current_feed = (*estimated_state_map)[Cfg::StateName::Feeder].get_position();
-        governor->set_position_reference(Cfg::StateName::Feeder, current_feed);
-        if (has_lower_feeder) {
-            governor->set_position_reference(Cfg::StateName::LowerFeeder, (*estimated_state_map)[Cfg::StateName::LowerFeeder].get_position());
-        }
-        feed = (fmod(fmod(current_feed, 1) + 1, 1) > 0.2)
-                   ? (int)floor(current_feed) + 1
-                   : (int)floor(current_feed); // reset feed to the current state
-        last_feed = feed;                      // reset last feed to the current state
-                                               // Serial.printf("Can zero\n");
+        hold_feeder_position();
     }
 }
+
+bool HelloRobot::check_slow_loop() {
+    float dt = stall_timer.delta();
+    if (dt <= SLOW_LOOP_THRESHOLD_S) {
+        consecutive_slow_loops = 0;
+        return false;
+    }
+
+    consecutive_slow_loops++;
+    SystemLog.error(Subsystem::GENERAL, "Slow loop with dt: %f, consecutive slow loops: %d\n", dt, consecutive_slow_loops);
+
+    if (consecutive_slow_loops > MAX_CONSECUTIVE_SLOW_LOOPS) {
+        can.issue_safety_mode();
+        SystemLog.error("Kowabunga bitches\n");
+        reset_teensy();
+    }
+    return true;
+}
+
+uint8_t HelloRobot::evaluate_safety_reasons(bool is_slow_loop) {
+    bool gimbal_power = ref.ref_data.robot_performance.gimbal_power_active;
+    if (gimbal_power && !last_gimbal_power) {
+        gimbal_power_timer.start();
+    }
+    last_gimbal_power = gimbal_power;
+
+    uint8_t reasons = safety::Reason::NONE;
+    if (transmitter_manager.is_safety_mode())
+        reasons |= safety::Reason::TRANSMITTER;
+    if (!Comms::comms_layer.is_configured())
+        reasons |= safety::Reason::NOT_CONFIGURED;
+    if (is_slow_loop)
+        reasons |= safety::Reason::SLOW_LOOP;
+    if (!gimbal_power) {
+        reasons |= safety::Reason::GIMBAL_POWER_OFF;
+    } else if (gimbal_power_timer.get_elapsed_micros_no_restart() < GIMBAL_POWER_SETTLE_US) {
+        reasons |= safety::Reason::GIMBAL_POWER_SETTLING;
+    }
+    return reasons;
+}
+
+void HelloRobot::hold_feeder_position() {
+    float current_feed = (*estimated_state_map)[Cfg::StateName::Feeder].get_position();
+    governor->set_position_reference(Cfg::StateName::Feeder, current_feed);
+    if (has_lower_feeder) {
+        governor->set_position_reference(Cfg::StateName::LowerFeeder, (*estimated_state_map)[Cfg::StateName::LowerFeeder].get_position());
+    }
+
+    // Snap the manual feed target to a whole ball so re-arming doesn't advance the feeder
+    float whole_balls = floor(current_feed);
+    feed = (current_feed - whole_balls > FEED_ROUND_UP_FRACTION) ? whole_balls + 1 : whole_balls;
+    last_feed = feed;
+}
+
 void HelloRobot::loop_timing() {
     // print loopc every second to verify it is still alive
     if (loopc % 1000 == 0) {

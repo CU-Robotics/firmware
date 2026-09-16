@@ -42,6 +42,16 @@ extern "C" void reset_teensy(void);
 #define LOOP_FREQ 1000
 #define HEARTBEAT_FREQ 2
 
+// Safety constants
+/// @brief A loop longer than this (twice the nominal period) is considered slow and disarms the motors.
+constexpr float SLOW_LOOP_THRESHOLD_S = 2.0f / LOOP_FREQ;
+/// @brief Consecutive slow loops tolerated before the Teensy is reset.
+constexpr int MAX_CONSECUTIVE_SLOW_LOOPS = 11;
+/// @brief How long to stay disarmed after gimbal power turns on, to let the motors boot.
+constexpr uint32_t GIMBAL_POWER_SETTLE_US = 3000000;
+/// @brief When disarmed, a feeder position whose fractional part exceeds this is rounded up to the next ball.
+constexpr float FEED_ROUND_UP_FRACTION = 0.2f;
+
 #ifdef PROFILER
 extern Profiler prof; 
 #endif
@@ -88,7 +98,7 @@ class HelloRobot {
     uint32_t loopc = 0;
 
     /// @brief Counts consecutive slow loops to trigger a hard reset if the system locks.
-    int slow_loop_counter = 0;
+    int consecutive_slow_loops = 0;
 
     // ==========================================
     // ROBOT VARIABLES
@@ -108,16 +118,13 @@ class HelloRobot {
     // ==========================================
 
     /// @brief Flag indicating if the motors are armed and allowed to move.
-    bool not_safety_mode = false;
+    bool motors_armed = false;
 
     /// @brief Param to specify whether this is the first loop.
     bool is_first_loop = true;
 
     /// @brief Cache of the previous loop's gimbal power state to detect changes.
     bool last_gimbal_power = false;
-
-    /// @brief Used to detect multiple slow loops in a row
-    bool last_loop_slow = false;
 
     /// @brief Whether the active robot config contains the lower feeder state.
     bool has_lower_feeder = false;
@@ -190,6 +197,18 @@ class HelloRobot {
 	
 	/// @brief Checks loop timing/safety constraints and writes to the CAN bus.
     void check_safety();
+
+    /// @brief Measures loop time and resets the Teensy after too many consecutive slow loops.
+    /// @return true if this loop was slow
+    bool check_slow_loop();
+
+    /// @brief Evaluates every arming condition.
+    /// @param is_slow_loop Whether this loop overran SLOW_LOOP_THRESHOLD_S
+    /// @return safety::Reason bitmask, NONE if the motors may be armed
+    uint8_t evaluate_safety_reasons(bool is_slow_loop);
+
+    /// @brief Holds the feeders at their current position so they don't jump when re-armed.
+    void hold_feeder_position();
     
     /// @brief Command line interface for live printing
     void process_cli();
