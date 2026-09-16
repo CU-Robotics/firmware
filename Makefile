@@ -41,7 +41,7 @@ HOST_TEST_UNITY_OBJ := $(TEST_BUILD_DIR)/unity.o
 HOST_TEST_COMMON_SRC := $(TEST_DIR)/host/test_runner.cpp $(HOST_TEST_UNITY_OBJ)
 HOST_TEST_SRC_test_utils := $(TEST_DIR)/test_utils/test_main.cpp src/utils/wrapping.cpp src/utils/vector_math.cpp
 HOST_TEST_SRC_test_fltrs := $(TEST_DIR)/test_fltrs/test_main.cpp src/filters/pid_filter.cpp src/filters/lowpass_filter.cpp
-HOST_TEST_SRC_test_controls := $(TEST_DIR)/test_controls/test_main.cpp src/controls/controller_math.cpp
+HOST_TEST_SRC_test_controls := $(TEST_DIR)/test_controls/test_main.cpp src/controls/controller.cpp
 HOST_TEST_SRC_test_sensors := $(TEST_DIR)/test_sensors/test_main.cpp src/sensors/buff_encoder.cpp
 
 TEENSY_SRC_DIRS := teensy4

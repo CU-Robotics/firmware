@@ -1,10 +1,14 @@
 #include <Arduino.h>
-#include <unity.h>
 #include <cmath>
 #include <bit>
 #include <cstdint>
 #include <limits>
-#include "controls/controller_math.hpp"
+#include "controls/controller.hpp"
+#include <unity.h>
+
+using controller::MotorVelocities;
+using controller::compute_power_limit_ratio;
+using controller::xdrive_mix;
 
 namespace {
 // Keep these reference expressions independent of the helpers: they reproduce
@@ -88,9 +92,8 @@ void test_xdrive_matches_original_motor_outputs(void) {
                     original[0] = -x * sin(heading) + y * cos(heading) + rot;
 
                     MotorVelocities mixed = xdrive_mix(x, y, rot, heading);
-                    const float actual[4] = {mixed.v[3], mixed.v[0], mixed.v[1], mixed.v[2]};
                     for (int motor = 0; motor < 4; ++motor) {
-                        assert_same_float(original[motor], actual[motor]);
+                        assert_same_float(original[motor], mixed[motor]);
                     }
                 }
             }
@@ -100,87 +103,50 @@ void test_xdrive_matches_original_motor_outputs(void) {
 
 void test_xdrive_pure_x_at_zero_heading(void) {
     MotorVelocities mv = xdrive_mix(1.0f, 0.0f, 0.0f, 0.0f);
-    TEST_ASSERT_FLOAT_WITHIN(1e-5f,  1.0f, mv.v[0]);
-    TEST_ASSERT_FLOAT_WITHIN(1e-5f,  0.0f, mv.v[1]);
-    TEST_ASSERT_FLOAT_WITHIN(1e-5f, -1.0f, mv.v[2]);
-    TEST_ASSERT_FLOAT_WITHIN(1e-5f,  0.0f, mv.v[3]);
+    TEST_ASSERT_FLOAT_WITHIN(1e-5f,  0.0f, mv[0]);
+    TEST_ASSERT_FLOAT_WITHIN(1e-5f,  1.0f, mv[1]);
+    TEST_ASSERT_FLOAT_WITHIN(1e-5f,  0.0f, mv[2]);
+    TEST_ASSERT_FLOAT_WITHIN(1e-5f, -1.0f, mv[3]);
 }
 
 void test_xdrive_pure_y_at_zero_heading(void) {
     MotorVelocities mv = xdrive_mix(0.0f, 1.0f, 0.0f, 0.0f);
-    TEST_ASSERT_FLOAT_WITHIN(1e-5f,  0.0f, mv.v[0]);
-    TEST_ASSERT_FLOAT_WITHIN(1e-5f, -1.0f, mv.v[1]);
-    TEST_ASSERT_FLOAT_WITHIN(1e-5f,  0.0f, mv.v[2]);
-    TEST_ASSERT_FLOAT_WITHIN(1e-5f,  1.0f, mv.v[3]);
+    TEST_ASSERT_FLOAT_WITHIN(1e-5f,  1.0f, mv[0]);
+    TEST_ASSERT_FLOAT_WITHIN(1e-5f,  0.0f, mv[1]);
+    TEST_ASSERT_FLOAT_WITHIN(1e-5f, -1.0f, mv[2]);
+    TEST_ASSERT_FLOAT_WITHIN(1e-5f,  0.0f, mv[3]);
 }
 
 void test_xdrive_pure_rotation(void) {
     MotorVelocities mv = xdrive_mix(0.0f, 0.0f, 1.0f, 0.0f);
-    TEST_ASSERT_FLOAT_WITHIN(1e-5f, 1.0f, mv.v[0]);
-    TEST_ASSERT_FLOAT_WITHIN(1e-5f, 1.0f, mv.v[1]);
-    TEST_ASSERT_FLOAT_WITHIN(1e-5f, 1.0f, mv.v[2]);
-    TEST_ASSERT_FLOAT_WITHIN(1e-5f, 1.0f, mv.v[3]);
+    TEST_ASSERT_FLOAT_WITHIN(1e-5f, 1.0f, mv[0]);
+    TEST_ASSERT_FLOAT_WITHIN(1e-5f, 1.0f, mv[1]);
+    TEST_ASSERT_FLOAT_WITHIN(1e-5f, 1.0f, mv[2]);
+    TEST_ASSERT_FLOAT_WITHIN(1e-5f, 1.0f, mv[3]);
 }
 
 void test_xdrive_pure_x_at_90deg_heading(void) {
     MotorVelocities mv = xdrive_mix(1.0f, 0.0f, 0.0f, (float)M_PI / 2.0f);
-    TEST_ASSERT_FLOAT_WITHIN(1e-5f,  0.0f, mv.v[0]);
-    TEST_ASSERT_FLOAT_WITHIN(1e-5f,  1.0f, mv.v[1]);
-    TEST_ASSERT_FLOAT_WITHIN(1e-5f,  0.0f, mv.v[2]);
-    TEST_ASSERT_FLOAT_WITHIN(1e-5f, -1.0f, mv.v[3]);
+    TEST_ASSERT_FLOAT_WITHIN(1e-5f, -1.0f, mv[0]);
+    TEST_ASSERT_FLOAT_WITHIN(1e-5f,  0.0f, mv[1]);
+    TEST_ASSERT_FLOAT_WITHIN(1e-5f,  1.0f, mv[2]);
+    TEST_ASSERT_FLOAT_WITHIN(1e-5f,  0.0f, mv[3]);
 }
 
 void test_xdrive_opposite_motor_pairs_negate(void) {
     MotorVelocities mv = xdrive_mix(2.5f, 3.1f, 0.0f, 0.7f);
-    TEST_ASSERT_FLOAT_WITHIN(1e-4f, -mv.v[2], mv.v[0]);
-    TEST_ASSERT_FLOAT_WITHIN(1e-4f, -mv.v[3], mv.v[1]);
+    TEST_ASSERT_FLOAT_WITHIN(1e-4f, -mv[2], mv[0]);
+    TEST_ASSERT_FLOAT_WITHIN(1e-4f, -mv[3], mv[1]);
 }
 
 void test_xdrive_motor_index_mapping(void) {
     MotorVelocities vel = xdrive_mix(1.0f, 0.0f, 0.0f, 0.0f);
 
-    // position-mode assignment from controller.cpp (indices [1,2,3,0])
-    float pos_motor[4];
-    pos_motor[1] =  1.0f;
-    pos_motor[2] =  0.0f;
-    pos_motor[3] = -1.0f;
-    pos_motor[0] =  0.0f;
-
-    TEST_ASSERT_FLOAT_WITHIN(1e-5f, vel.v[3], pos_motor[0]);
-    TEST_ASSERT_FLOAT_WITHIN(1e-5f, vel.v[0], pos_motor[1]);
-    TEST_ASSERT_FLOAT_WITHIN(1e-5f, vel.v[1], pos_motor[2]);
-    TEST_ASSERT_FLOAT_WITHIN(1e-5f, vel.v[2], pos_motor[3]);
-}
-
-// Output Clamping
-
-void test_clamp_matches_original(void) {
-    const float values[] = {
-        -std::numeric_limits<float>::infinity(), -5.0f, -1.0f,
-        std::nextafter(-1.0f, 0.0f), -0.0f, 0.0f,
-        std::nextafter(1.0f, 0.0f), 1.0f, 5.0f,
-        std::numeric_limits<float>::infinity(),
-        std::numeric_limits<float>::quiet_NaN(),
-    };
-    for (float value : values) {
-        float original = value < -1.0 ? -1.0 : (value > 1.0 ? 1.0 : value);
-        assert_same_float(original, clamp1(value));
+    // Both controller modes consume the returned motor indices directly.
+    const float expected[4] = {0.0f, 1.0f, 0.0f, -1.0f};
+    for (int motor = 0; motor < 4; ++motor) {
+        TEST_ASSERT_FLOAT_WITHIN(1e-5f, expected[motor], vel[motor]);
     }
-}
-
-void test_clamp_large_positive_becomes_one(void) {
-    TEST_ASSERT_EQUAL_FLOAT(1.0f, clamp1(5.0f));
-}
-
-void test_clamp_large_negative_becomes_minus_one(void) {
-    TEST_ASSERT_EQUAL_FLOAT(-1.0f, clamp1(-5.0f));
-}
-
-void test_clamp_value_within_range_unchanged(void) {
-    TEST_ASSERT_EQUAL_FLOAT( 0.5f, clamp1( 0.5f));
-    TEST_ASSERT_EQUAL_FLOAT(-0.5f, clamp1(-0.5f));
-    TEST_ASSERT_EQUAL_FLOAT( 1.0f, clamp1( 1.0f));
-    TEST_ASSERT_EQUAL_FLOAT(-1.0f, clamp1(-1.0f));
 }
 
 // Pitch Feedforward
@@ -263,9 +229,9 @@ void test_feeder_direction_reverse(void) {
 void test_power_limit_scales_all_motors(void) {
     MotorVelocities mv = xdrive_mix(1.0f, 0.5f, 0.2f, 0.0f);
     float ratio = compute_power_limit_ratio(35.0f, 60.0f, 10.0f);
-    const float expected[] = {0.5f, -0.125f, -1.0f / 3.0f, 7.0f / 24.0f};
+    const float expected[] = {7.0f / 24.0f, 0.5f, -0.125f, -1.0f / 3.0f};
     for (int i = 0; i < 4; i++) {
-        TEST_ASSERT_FLOAT_WITHIN(1e-5f, expected[i], mv.v[i] * ratio);
+        TEST_ASSERT_FLOAT_WITHIN(1e-5f, expected[i], mv[i] * ratio);
     }
 }
 
@@ -273,7 +239,7 @@ void test_zero_power_limit_zeros_all_motors(void) {
     MotorVelocities mv = xdrive_mix(1.0f, 1.0f, 1.0f, 0.5f);
     float ratio = compute_power_limit_ratio(10.0f, 60.0f, 10.0f);
     for (int i = 0; i < 4; i++) {
-        TEST_ASSERT_EQUAL_FLOAT(0.0f, mv.v[i] * ratio);
+        TEST_ASSERT_EQUAL_FLOAT(0.0f, mv[i] * ratio);
     }
 }
 
@@ -283,7 +249,6 @@ void setup() {
 
     RUN_TEST(test_power_limit_matches_original);
     RUN_TEST(test_xdrive_matches_original_motor_outputs);
-    RUN_TEST(test_clamp_matches_original);
 
     RUN_TEST(test_power_limit_full_above_threshold);
     RUN_TEST(test_power_limit_full_at_threshold);
@@ -297,10 +262,6 @@ void setup() {
     RUN_TEST(test_xdrive_pure_x_at_90deg_heading);
     RUN_TEST(test_xdrive_opposite_motor_pairs_negate);
     RUN_TEST(test_xdrive_motor_index_mapping);
-
-    RUN_TEST(test_clamp_large_positive_becomes_one);
-    RUN_TEST(test_clamp_large_negative_becomes_minus_one);
-    RUN_TEST(test_clamp_value_within_range_unchanged);
 
     RUN_TEST(test_pitch_feedforward_zero_at_level);
     RUN_TEST(test_pitch_feedforward_max_at_vertical);
