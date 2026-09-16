@@ -1,5 +1,32 @@
 #pragma once
 
+#include <array>
+
+/// @brief Shared controller calculations, also available to host unit tests.
+namespace controller {
+/// @brief X-drive motor velocity targets in controller motor index order [0, 1, 2, 3].
+/// @details Values retain the input velocity units and are not clamped or normalized.
+using MotorVelocities = std::array<float, 4>;
+
+/// @brief Compute the motor output scale from the available power buffer.
+/// @param buffer Current power buffer level.
+/// @param limit_thresh Buffer level below which limiting starts, in the same units as buffer.
+/// @param critical_thresh Buffer offset used in the limiting calculation, in the same units as buffer.
+/// @return If buffer is below limit_thresh, (buffer - critical_thresh) / limit_thresh
+/// clamped to [0, 1]; otherwise, 1.
+float compute_power_limit_ratio(float buffer, float limit_thresh, float critical_thresh);
+
+/// @brief Mix translation and rotation into four X-drive motor velocity targets.
+/// @param x Translational velocity input along the reference frame's x axis.
+/// @param y Translational velocity input along the reference frame's y axis.
+/// @param rot Rotational contribution added to each motor target, in the same units as x and y.
+/// @param heading Chassis heading relative to the translation reference frame, in radians.
+/// @return Unclamped, unnormalized motor velocity targets in controller motor index order [0, 1, 2, 3].
+MotorVelocities xdrive_mix(float x, float y, float rot, float heading);
+} // namespace controller
+
+// Host tests exercise the calculations without Teensy hardware dependencies.
+#ifndef UNIT_TEST
 #include "estimator.hpp"
 #include "filters/pid_filter.hpp"
 #include "sensors/can/motor.hpp"
@@ -138,7 +165,7 @@ private:
     /// @brief combined outputs of the pid position and velocity controllers
     float output[4];
     /// @brief target motor velocity
-    float motor_velocity[4];
+    controller::MotorVelocities motor_velocity;
 
     /// @brief front left chassis motor
     std::shared_ptr<Motor> chassis_motor_1; // front left
@@ -574,3 +601,5 @@ struct LowerFeederController : public Controller {
             lower_feeder_error_monitor = ErrorMonitor{};
         }
 };
+
+#endif // UNIT_TEST
