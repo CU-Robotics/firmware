@@ -9,6 +9,8 @@
 #include <cstddef>
 #include <cstdint>
 #include <cstdio>
+#include <cstdarg>
+#include <cstring>
 
 #ifndef PI
 /// @brief Ratio of a circle's circumference to its diameter.
@@ -53,9 +55,28 @@ using std::isinf;
 /// @brief Expose the standard NaN check through the Arduino interface.
 using std::isnan;
 
+/// @brief Minimal Print base required by the production system logger.
+class Print {
+public:
+    /// @brief Write one byte to the destination.
+    /// @param value Byte to write.
+    /// @return Number of bytes written.
+    virtual size_t write(uint8_t value) = 0;
+
+    /// @brief Write a byte buffer to the destination.
+    /// @param buffer Bytes to write.
+    /// @param size Number of bytes.
+    /// @return Number of bytes written.
+    virtual size_t write(const uint8_t* buffer, size_t size) = 0;
+};
+
 /// @brief Minimal serial output stub that writes to standard output.
 class HardwareSerial {
 public:
+    /// @brief Write text verbatim to standard output.
+    /// @param text Null-terminated text to write.
+    void print(const char* text) { std::fputs(text, stdout); }
+
     /// @brief Write text verbatim without interpreting format specifiers.
     /// @param text Null-terminated text to write.
     void printf(const char* text) {

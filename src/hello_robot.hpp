@@ -13,7 +13,6 @@
 #include "sensors/buff_encoder.hpp"
 #include "comms/config_data/state.hpp"
 #include "utils/boot_splash.hpp"
-#include "utils/profiler.hpp"
 
 #include "sensors/d200.hpp"
 #include "sensors/transmitter/transmitter_manager.hpp"
@@ -22,11 +21,13 @@
 #include "controls/controller_manager.hpp"
 #include "controls/estimator_manager.hpp"
 #include "sensors/RefSystem.hpp"
+
 #include "sensors/StereoCamTrigger.hpp"
-#include "utils/profiler.hpp"
 
 #include "sensors/sensor_manager.hpp"
 #include <TeensyDebug.h>
+#include "utils/profiler.hpp"
+#include "utils/system_log.hpp"
 #include <wiring.h>
 
 #include "comms/data/hive_data.hpp"
@@ -41,6 +42,9 @@ extern "C" void reset_teensy(void);
 #define LOOP_FREQ 1000
 #define HEARTBEAT_FREQ 2
 
+#ifdef PROFILER
+extern Profiler prof; 
+#endif
 
 /// @brief Coordinates all hardware, networking, and control systems.
 class HelloRobot {
@@ -139,26 +143,62 @@ class HelloRobot {
 
     /// @brief Hive offset state
     std::optional<RobotStateMap> hive_state_map_offset;
-
-    /// @brief check to see if there is a crash report, and if so, print it repeatedly
-    void crash_report();
-
-    /// @brief Reads data from CAN, RefSystem, Transmitter, and Sensors.
+	// ==========================================
+    // CLI  Variables
+    // ==========================================
+    /// @brief Collection of Live viewmodes
+    enum class LiveMode { NONE, PROFILE_VIEW, TRANSMITTER, ESTIMATED_STATE, TARGET_STATE, SENSORS, HEARTBEAT };
+    /// @brief number of live views allowed at once
+    static const uint8_t MAX_LIVE_VIEWS = 4;
+    /// @brief array of current live views
+    LiveMode active_views[MAX_LIVE_VIEWS];
+    /// @brief number of active live views
+    uint8_t num_active_views = 0;
+    /// @brief time since the live view was refreshed
+    uint32_t last_redraw_time = 0;
+    /// @brief refresh rate in milliseconds
+    uint32_t redraw_interval = 1000; 
+	/// @brief CLI Buffer
+    char cli_buffer[64] = {0};
+	/// @brief index for cli_buffer
+    uint8_t cli_index = 0;
+	/// @brief flag for live CLI printing
+    bool live_profiler_active = false;
+    
+    /// @brief CLI ping function
+    void cmd_ping();
+    /// @brief CLI help function
+    void cmd_help();
+    /// @brief CLI live view function
+    void cmd_live();
+    /// @brief CLI function to handle logging
+    void cmd_log();
+	// ==========================================
+    // Major Loop functions
+    // ==========================================
+	/// @brief check to see if there is a crash report, and if so, print it repeatedly
+	void crash_report();
+	
+	/// @brief Reads data from CAN, RefSystem, Transmitter, and Sensors.
     void read_telemetry();
-
-    /// @brief Processes manual inputs, hive modes, and state overrides.
-    void process_behaviors();
-
-    /// @brief Steps estimators, governors, and controllers to generate motor targets.
+	
+	/// @brief Processes manual inputs, hive modes, and state overrides.
+	void process_behaviors();
+	
+	/// @brief Steps estimators, governors, and controllers to generate motor targets.
     void update_controls();
-
-    /// @brief Checks loop timing/safety constraints and writes to the CAN bus.
+	
+	/// @brief Checks loop timing/safety constraints and writes to the CAN bus.
     void check_safety();
+    
+    /// @brief Command line interface for live printing
+    void process_cli();
+	
+	/// @brief LED hearbeat, feeds the watchdog, and ensures consistent loop time.
+	void loop_timing();
 
-    /// @brief LED hearbeat, feeds the watchdog, and ensures consistent loop time.
-    void loop_timing();
 
-  public:
+public:
     /**
      * @brief Bootstraps the robot's architecture.
      * * Downloads the active configuration from the Hive data layer and uses it

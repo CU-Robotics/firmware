@@ -15,6 +15,8 @@ public:
     void init(const Cfg::Transmitter& transmitter_config);
     /// @brief Reads data from the transmitter
     void read();
+	/// @brief Prints the formatted live dashboard of the active transmitter
+    void print_live_data();
     /// @brief Sends data from the transmitter to comms
     void send_to_comms();
     /// @brief Whether the transmitter is currently in safety mode.

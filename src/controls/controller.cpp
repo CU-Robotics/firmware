@@ -28,6 +28,7 @@ MotorVelocities xdrive_mix(float x, float y, float rot, float heading) {
 #ifndef UNIT_TEST
 #include "sensors/can/motor.hpp"
 #include "sensors/RefSystem.hpp"
+#include "utils/system_log.hpp"
 
 namespace {
 /// @brief Unwrap a potentially wrapped error value to maintain continuity across wrap boundaries.
@@ -295,7 +296,7 @@ void XDriveController::step(RobotStateMap& reference_map, RobotStateMap& estimat
             drive_motors[i]->write_motor_torque(motor_outputs[i]);
         }
     } else {
-        Serial.printf("governor type not used for xdrive controller");
+        SystemLog.error(Subsystem::Controls,"governor type not used for xdrive controller");
     }
 }
 

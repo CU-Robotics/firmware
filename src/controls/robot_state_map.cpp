@@ -45,9 +45,31 @@ void RobotStateMap::from_comms_packet(State::Raw robot_state_array[NUM_STATES]) 
 }
 
 void RobotStateMap::print() {
-    Serial.println("RobotStateMap:");
-    for (const auto& [state_name, state] : robot_state) {
-        Serial.printf("\tStateName: %lu, Position: %f, Velocity: %f, Acceleration: %f\n", static_cast<uint32_t>(state_name), state.get_position(), state.get_velocity(), state.get_acceleration());
-        Serial.printf("\t\tPosition limits: [%f, %f]\n", state.config().reference_limits.position.min, state.config().reference_limits.position.max);
-    }
+	auto state_to_str = [](Cfg::StateName name) -> const char* {
+		switch (name) {
+		case Cfg::StateName::UnsetStateName: return "Unset";
+		case Cfg::StateName::ChassisX:       return "X";
+		case Cfg::StateName::ChassisY:       return "Y";
+		case Cfg::StateName::ChassisHeading: return "Z";
+		case Cfg::StateName::GimbalYaw:      return "YAW";
+		case Cfg::StateName::GimbalPitch:    return "PITCH";
+		case Cfg::StateName::Flywheels:      return "Flywheels";
+		case Cfg::StateName::Feeder:         return "Feeder";
+		case Cfg::StateName::LowerFeeder:    return "LowerFeeder";
+		case Cfg::StateName::StructPadding:  return "Padding";
+		case Cfg::StateName::StateNameCount: return "Count";
+		default:                             return "UNKNOWN";
+		}
+	};
+
+	for (const auto& [state_name, state] : robot_state) {
+		// Single compact row with ANSI line clear (\033[K)
+		Serial.printf("  %-11s | P: %7.2f | V: %7.2f | A: %7.2f | Lim: [%.1f, %.1f]\033[K\n", 
+					  state_to_str(state_name), 
+					  state.get_position(), 
+					  state.get_velocity(), 
+					  state.get_acceleration(),
+					  state.config().reference_limits.position.min, 
+					  state.config().reference_limits.position.max);
+	}
 }
