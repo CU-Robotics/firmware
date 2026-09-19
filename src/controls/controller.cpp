@@ -118,49 +118,49 @@ void Controller::handleControllerError(const char* controller_name, const char* 
     );
 }
 
-void XDriveController::validate(const RobotStateMap& reference_map, const RobotStateMap& estimate_map) {
+void XDriveController::validate(const RobotStateArray& reference_array, const RobotStateArray& estimate_array) {
     // Our estimates of the chassis states are not accurate enough to run checks against their references.
-    // checkControllerError("XDriveController", "Chassis X", reference_map[chassis_x_state], estimate_map[chassis_x_state], chassis_x_error_monitor);
-    // checkControllerError("XDriveController", "Chassis Y", reference_map[chassis_y_state], estimate_map[chassis_y_state], chassis_y_error_monitor);
-    // checkControllerError("XDriveController", "Chassis Heading", reference_map[chassis_heading_state], estimate_map[chassis_heading_state], chassis_heading_error_monitor);
+    // checkControllerError("XDriveController", "Chassis X", reference_array[chassis_x_state], estimate_array[chassis_x_state], chassis_x_error_monitor);
+    // checkControllerError("XDriveController", "Chassis Y", reference_array[chassis_y_state], estimate_array[chassis_y_state], chassis_y_error_monitor);
+    // checkControllerError("XDriveController", "Chassis Heading", reference_array[chassis_heading_state], estimate_array[chassis_heading_state], chassis_heading_error_monitor);
 }
 
-void XDriveController::step(RobotStateMap& reference_map, RobotStateMap& estimate_map, RobotStateMap& target_map) {
+void XDriveController::step(RobotStateArray& reference_array, RobotStateArray& estimate_array, RobotStateArray& target_array) {
     float dt = timer.delta();
 
     Cfg::StateName drive_states[3]  = { chassis_x_state, chassis_y_state, chassis_heading_state };
     std::shared_ptr<Motor> drive_motors[4] = { chassis_motor_1, chassis_motor_2, chassis_motor_3, chassis_motor_4 };
 
-    if (reference_map[Cfg::StateName::ChassisX].config().governor_type == Cfg::StateOrder::Position) {
+    if (reference_array[Cfg::StateName::ChassisX].config().governor_type == Cfg::StateOrder::Position) {
 
         // High level position controller
         for (int i = 0; i < 2; i++) {
-            pidp[i].setpoint = reference_map[drive_states[i]].get_position();
-            pidp[i].measurement = estimate_map[drive_states[i]].get_position();
+            pidp[i].setpoint = reference_array[drive_states[i]].get_position();
+            pidp[i].measurement = estimate_array[drive_states[i]].get_position();
 
             pidp[i].kp = xy_position_controller.gains.p;
             pidp[i].ki = xy_position_controller.gains.i;
             pidp[i].kd = xy_position_controller.gains.d;
             pidp[i].kf = xy_position_controller.gains.f;
 
-            pidv[i].setpoint = reference_map[drive_states[i]].get_velocity();
-            pidv[i].measurement = estimate_map[drive_states[i]].get_velocity();
+            pidv[i].setpoint = reference_array[drive_states[i]].get_velocity();
+            pidv[i].measurement = estimate_array[drive_states[i]].get_velocity();
 
             pidv[i].kp = xy_velocity_controller.gains.p;
             pidv[i].ki = xy_velocity_controller.gains.i;
             pidv[i].kd = xy_velocity_controller.gains.d;
-            pidv[i].kf = reference_map[drive_states[i]].get_velocity();
+            pidv[i].kf = reference_array[drive_states[i]].get_velocity();
 
             outputp[i] = pidp[i].filter(dt, false, false);
             outputv[i] = pidv[i].filter(dt, false, false);
             output[i] = (outputp[i] + outputv[i]) * controller_config.gear_ratios.chassis_x_to_motor_rad;
         }
-        pidp[2].setpoint = reference_map[Cfg::StateName::ChassisHeading].get_position();
-        pidp[2].measurement = estimate_map[Cfg::StateName::ChassisHeading].get_position();
+        pidp[2].setpoint = reference_array[Cfg::StateName::ChassisHeading].get_position();
+        pidp[2].measurement = estimate_array[Cfg::StateName::ChassisHeading].get_position();
 
-        pidv[2].setpoint = reference_map[Cfg::StateName::ChassisHeading].get_velocity();
-        pidv[2].measurement = estimate_map[Cfg::StateName::ChassisHeading].get_velocity();
-        if (reference_map[Cfg::StateName::ChassisHeading].config().governor_type == Cfg::StateOrder::Position) {
+        pidv[2].setpoint = reference_array[Cfg::StateName::ChassisHeading].get_velocity();
+        pidv[2].measurement = estimate_array[Cfg::StateName::ChassisHeading].get_velocity();
+        if (reference_array[Cfg::StateName::ChassisHeading].config().governor_type == Cfg::StateOrder::Position) {
             pidp[2].kp = chassis_angle_controller.gains.p;
             pidp[2].ki = chassis_angle_controller.gains.i;
             pidp[2].kd = chassis_angle_controller.gains.d;
@@ -175,12 +175,12 @@ void XDriveController::step(RobotStateMap& reference_map, RobotStateMap& estimat
             pidv[2].kp = 0;
             pidv[2].ki = 0;
             pidv[2].kd = 0;
-            pidv[2].kf = reference_map[Cfg::StateName::ChassisHeading].get_velocity();
+            pidv[2].kf = reference_array[Cfg::StateName::ChassisHeading].get_velocity();
         }
         outputp[2] = pidp[2].filter(dt, false, false);
         outputv[2] = pidv[2].filter(dt, false, false);
         output[2] = (outputp[2] + outputv[2]) * controller_config.gear_ratios.chassis_rad_to_motor_rad;
-        float chassis_heading = estimate_map[Cfg::StateName::ChassisHeading].get_position();
+        float chassis_heading = estimate_array[Cfg::StateName::ChassisHeading].get_position();
 
         // Convert to motor velocities
         motor_velocity[1] = output[0] * cos(chassis_heading) + output[1] * sin(chassis_heading) + output[2];
@@ -211,24 +211,24 @@ void XDriveController::step(RobotStateMap& reference_map, RobotStateMap& estimat
             drive_motors[i]->write_motor_torque(motor_outputs[i]);
         }
 
-    } else if (reference_map[Cfg::StateName::ChassisX].config().governor_type == Cfg::StateOrder::Velocity) {
+    } else if (reference_array[Cfg::StateName::ChassisX].config().governor_type == Cfg::StateOrder::Velocity) {
 
         // High level velocity controller
         for (int i = 0; i < 2; i++) {
             pidv[i].kp = xy_velocity_controller.gains.p;
             pidv[i].ki = xy_velocity_controller.gains.i;
             pidv[i].kd = xy_velocity_controller.gains.d;
-            pidv[i].kf = reference_map[drive_states[i]].get_velocity();
+            pidv[i].kf = reference_array[drive_states[i]].get_velocity();
 
-            pidv[i].setpoint = reference_map[drive_states[i]].get_velocity();
-            pidv[i].measurement = estimate_map[drive_states[i]].get_velocity();
+            pidv[i].setpoint = reference_array[drive_states[i]].get_velocity();
+            pidv[i].measurement = estimate_array[drive_states[i]].get_velocity();
             output[i] = pidv[i].filter(dt, false, false) * controller_config.gear_ratios.chassis_x_to_motor_rad;
         }
-        pidp[2].setpoint = reference_map[Cfg::StateName::ChassisHeading].get_position();
-        pidp[2].measurement = 0;//estimate_map[Cfg::StateName::ChassisHeading].get_position();  put this back for actual chassis heading feedback control
-        pidv[2].setpoint = reference_map[Cfg::StateName::ChassisHeading].get_velocity();
-        pidv[2].measurement = 0;//estimate_map[Cfg::StateName::ChassisHeading].get_velocity();
-        if (reference_map[Cfg::StateName::ChassisHeading].config().governor_type == Cfg::StateOrder::Position) { 
+        pidp[2].setpoint = reference_array[Cfg::StateName::ChassisHeading].get_position();
+        pidp[2].measurement = 0;//estimate_array[Cfg::StateName::ChassisHeading].get_position();  put this back for actual chassis heading feedback control
+        pidv[2].setpoint = reference_array[Cfg::StateName::ChassisHeading].get_velocity();
+        pidv[2].measurement = 0;//estimate_array[Cfg::StateName::ChassisHeading].get_velocity();
+        if (reference_array[Cfg::StateName::ChassisHeading].config().governor_type == Cfg::StateOrder::Position) { 
             pidp[2].kp = chassis_angle_controller.gains.p;
             pidp[2].ki = chassis_angle_controller.gains.i;
             pidp[2].kd = chassis_angle_controller.gains.d;
@@ -244,14 +244,14 @@ void XDriveController::step(RobotStateMap& reference_map, RobotStateMap& estimat
             pidv[2].kp = 0;
             pidv[2].ki = 0;
             pidv[2].kd = 0;
-            pidv[2].kf = reference_map[Cfg::StateName::ChassisHeading].get_velocity();
+            pidv[2].kf = reference_array[Cfg::StateName::ChassisHeading].get_velocity();
         }
         outputp[2] = pidp[2].filter(dt, false, false);
         outputv[2] = pidv[2].filter(dt, false, false);
         output[2] = (outputp[2] + outputv[2]) * controller_config.gear_ratios.chassis_rad_to_motor_rad;
         // Serial.printf("chassis heading output: %f, chassis x output: %f, chassis y output: %f chassis angle:%f\n", output[2], output[0], output[1], estimate[2][0]);
         // Adjust for chassis heading so control is field relative
-        float chassis_heading = estimate_map[Cfg::StateName::ChassisHeading].get_position();
+        float chassis_heading = estimate_array[Cfg::StateName::ChassisHeading].get_position();
 
         // Convert to motor velocities
         motor_velocity[1] = output[0] * cos(chassis_heading) + output[1] * sin(chassis_heading) + output[2];
@@ -289,11 +289,11 @@ void XDriveController::handleControllerError(const char* controller_name, const 
     Controller::handleControllerError(controller_name, state_name, reference_state, estimate_state, error);
 }
 
-void YawController::validate(const RobotStateMap& reference_map, const RobotStateMap& estimate_map) {
-    checkControllerError("YawController", "Gimbal Yaw", reference_map[yaw_angle_state], estimate_map[yaw_angle_state], yaw_error_monitor);
+void YawController::validate(const RobotStateArray& reference_array, const RobotStateArray& estimate_array) {
+    checkControllerError("YawController", "Gimbal Yaw", reference_array[yaw_angle_state], estimate_array[yaw_angle_state], yaw_error_monitor);
 }
 
-void YawController::step(RobotStateMap& reference_map, RobotStateMap& estimate_map, RobotStateMap& target_map) {
+void YawController::step(RobotStateArray& reference_array, RobotStateArray& estimate_array, RobotStateArray& target_array) {
     float dt = timer.delta();
     float output = 0.0;
 
@@ -301,18 +301,18 @@ void YawController::step(RobotStateMap& reference_map, RobotStateMap& estimate_m
     pidp.ki = full_state_position_controller.gains.i;
     pidp.kd = full_state_position_controller.gains.d;
     // pidp.kf = full_state_position_controller.gains.f;
-    pidp.kf = full_state_position_controller.gains.f * reference_map[yaw_angle_state].get_acceleration() * controller_config.gear_ratios.accel_to_normalized_torque;
+    pidp.kf = full_state_position_controller.gains.f * reference_array[yaw_angle_state].get_acceleration() * controller_config.gear_ratios.accel_to_normalized_torque;
 
     pidv.kp = full_state_velocity_controller.gains.p;
     pidv.ki = full_state_velocity_controller.gains.i;
     pidv.kd = full_state_velocity_controller.gains.d;
     pidv.kf = full_state_velocity_controller.gains.f;
 
-    pidp.setpoint = reference_map[yaw_angle_state].get_position();
-    pidp.measurement = estimate_map[yaw_angle_state].get_position();
+    pidp.setpoint = reference_array[yaw_angle_state].get_position();
+    pidp.measurement = estimate_array[yaw_angle_state].get_position();
 
-    pidv.setpoint = reference_map[yaw_angle_state].get_velocity();
-    pidv.measurement = estimate_map[yaw_angle_state].get_velocity();
+    pidv.setpoint = reference_array[yaw_angle_state].get_velocity();
+    pidv.measurement = estimate_array[yaw_angle_state].get_velocity();
 
     output += pidp.filter(dt, true, true); // position wraps
     output += pidv.filter(dt, true, false); // no wrap for velocity
@@ -333,29 +333,29 @@ void YawController::handleControllerError(const char* controller_name, const cha
     Controller::handleControllerError(controller_name, state_name, reference_state, estimate_state, error);
 }
 
-void PitchController::validate(const RobotStateMap& reference_map, const RobotStateMap& estimate_map) {
-    checkControllerError("PitchController", "Gimbal Pitch", reference_map[pitch_angle_state], estimate_map[pitch_angle_state], pitch_error_monitor);
+void PitchController::validate(const RobotStateArray& reference_array, const RobotStateArray& estimate_array) {
+    checkControllerError("PitchController", "Gimbal Pitch", reference_array[pitch_angle_state], estimate_array[pitch_angle_state], pitch_error_monitor);
 }
 
-void PitchController::step(RobotStateMap& reference_map, RobotStateMap& estimate_map, RobotStateMap& target_map) {
+void PitchController::step(RobotStateArray& reference_array, RobotStateArray& estimate_array, RobotStateArray& target_array) {
     float dt = timer.delta();
     float output = 0.0;
 
     pidp.kp = full_state_position_controller.gains.p;
     pidp.ki = full_state_position_controller.gains.i;
     pidp.kd = full_state_position_controller.gains.d;
-    pidp.kf = full_state_position_controller.gains.f * sin(estimate_map[pitch_angle_state].get_position()); 
+    pidp.kf = full_state_position_controller.gains.f * sin(estimate_array[pitch_angle_state].get_position()); 
     
     pidv.kp = full_state_velocity_controller.gains.p;
     pidv.ki = full_state_velocity_controller.gains.i;
     pidv.kd = full_state_velocity_controller.gains.d;
     pidv.kf = full_state_velocity_controller.gains.f;
-    pidp.setpoint = reference_map[pitch_angle_state].get_position();
-    pidp.measurement = estimate_map[pitch_angle_state].get_position();
+    pidp.setpoint = reference_array[pitch_angle_state].get_position();
+    pidp.measurement = estimate_array[pitch_angle_state].get_position();
 
 
-    pidv.setpoint = reference_map[pitch_angle_state].get_velocity();
-    pidv.measurement = estimate_map[pitch_angle_state].get_velocity();
+    pidv.setpoint = reference_array[pitch_angle_state].get_velocity();
+    pidv.measurement = estimate_array[pitch_angle_state].get_velocity();
 
     output += pidp.filter(dt, true, false); // position wraps
     output += pidv.filter(dt, true, false); // no wrap for velocity
@@ -374,20 +374,20 @@ void PitchController::handleControllerError(const char* controller_name, const c
     Controller::handleControllerError(controller_name, state_name, reference_state, estimate_state, error);
 }
 
-void FlywheelController::validate(const RobotStateMap& reference_map, const RobotStateMap& estimate_map) {
-    // checkControllerError("FlywheelController", "Flywheels", reference_map[flywheel_velocity_state], estimate_map[flywheel_velocity_state], flywheel_error_monitor);
+void FlywheelController::validate(const RobotStateArray& reference_array, const RobotStateArray& estimate_array) {
+    // checkControllerError("FlywheelController", "Flywheels", reference_array[flywheel_velocity_state], estimate_array[flywheel_velocity_state], flywheel_error_monitor);
 }
 
-void FlywheelController::step(RobotStateMap& reference_map, RobotStateMap& estimate_map, RobotStateMap& target_map) {
+void FlywheelController::step(RobotStateArray& reference_array, RobotStateArray& estimate_array, RobotStateArray& target_array) {
     float dt = timer.delta();
 
     pid_high.kp = high_level_velocity_controller.gains.p;
     pid_high.ki = high_level_velocity_controller.gains.i;
     pid_high.kd = high_level_velocity_controller.gains.d;
-    pid_high.kf = reference_map[flywheel_velocity_state].get_velocity();
+    pid_high.kf = reference_array[flywheel_velocity_state].get_velocity();
 
-    pid_high.setpoint = reference_map[flywheel_velocity_state].get_velocity();
-    pid_high.measurement = estimate_map[flywheel_velocity_state].get_velocity();
+    pid_high.setpoint = reference_array[flywheel_velocity_state].get_velocity();
+    pid_high.measurement = estimate_array[flywheel_velocity_state].get_velocity();
 
     float target_motor_velocity = pid_high.filter(dt, false, false) * controller_config.gear_ratios.ball_to_flywheel_rad;
     
@@ -414,11 +414,11 @@ void FlywheelController::handleControllerError(const char* controller_name, cons
     Controller::handleControllerError(controller_name, state_name, reference_state, estimate_state, error);
 }
 
-void FeederController::validate(const RobotStateMap& reference_map, const RobotStateMap& estimate_map) {
-    // checkControllerError("FeederController", "Feeder", reference_map[feeder_position_state], estimate_map[feeder_position_state], feeder_error_monitor);
+void FeederController::validate(const RobotStateArray& reference_array, const RobotStateArray& estimate_array) {
+    // checkControllerError("FeederController", "Feeder", reference_array[feeder_position_state], estimate_array[feeder_position_state], feeder_error_monitor);
 }
 
-void FeederController::step(RobotStateMap& reference_map, RobotStateMap& estimate_map, RobotStateMap& target_map) {
+void FeederController::step(RobotStateArray& reference_array, RobotStateArray& estimate_array, RobotStateArray& target_array) {
     float dt = timer.delta();
     pidp.kp = full_state_position_controller.gains.p;
     pidp.ki = full_state_position_controller.gains.i;
@@ -430,8 +430,8 @@ void FeederController::step(RobotStateMap& reference_map, RobotStateMap& estimat
     pidv.kd = full_state_velocity_controller.gains.d;
     pidv.kf = full_state_velocity_controller.gains.f;
     
-    pidp.setpoint = reference_map[feeder_position_state].get_position();
-    pidp.measurement = estimate_map[feeder_position_state].get_position();
+    pidp.setpoint = reference_array[feeder_position_state].get_position();
+    pidp.measurement = estimate_array[feeder_position_state].get_position();
 
     float outputp = pidp.filter(dt, true, true);
     float output = outputp * controller_config.gear_ratios.feeder_direction;
@@ -443,11 +443,11 @@ void FeederController::handleControllerError(const char* controller_name, const 
     Controller::handleControllerError(controller_name, state_name, reference_state, estimate_state, error);
 }
 
-void LowerFeederController::validate(const RobotStateMap& reference_map, const RobotStateMap& estimate_map) {
-    // checkControllerError("LowerFeederController", "Lower Feeder", reference_map[lower_feeder_position_state], estimate_map[lower_feeder_position_state], lower_feeder_error_monitor);
+void LowerFeederController::validate(const RobotStateArray& reference_array, const RobotStateArray& estimate_array) {
+    // checkControllerError("LowerFeederController", "Lower Feeder", reference_array[lower_feeder_position_state], estimate_array[lower_feeder_position_state], lower_feeder_error_monitor);
 }
 
-void LowerFeederController::step(RobotStateMap& reference_map, RobotStateMap& estimate_map, RobotStateMap& target_map) {
+void LowerFeederController::step(RobotStateArray& reference_array, RobotStateArray& estimate_array, RobotStateArray& target_array) {
     float dt = timer.delta();
     upper_pidp.kp = upper_position_controller.gains.p;
     upper_pidp.ki = upper_position_controller.gains.i;
@@ -462,7 +462,7 @@ void LowerFeederController::step(RobotStateMap& reference_map, RobotStateMap& es
     lower_pidp.kp = lower_position_controller.gains.p;
     lower_pidp.ki = lower_position_controller.gains.i;
     lower_pidp.kd = lower_position_controller.gains.d;
-    lower_pidp.kf = lower_position_controller.gains.f * reference_map[upper_feeder_position_state].get_acceleration() * controller_config.gear_ratios.lower_accel_to_normalized_torque;
+    lower_pidp.kf = lower_position_controller.gains.f * reference_array[upper_feeder_position_state].get_acceleration() * controller_config.gear_ratios.lower_accel_to_normalized_torque;
 
     lower_pidv.kp = lower_velocity_controller.gains.p;
     lower_pidv.ki = lower_velocity_controller.gains.i;
@@ -471,13 +471,13 @@ void LowerFeederController::step(RobotStateMap& reference_map, RobotStateMap& es
 
     float sync_threshold = controller_config.gear_ratios.sync_threshold; // balls
 
-    float upper_pos = estimate_map[upper_feeder_position_state].get_position();
-    float lower_pos = estimate_map[lower_feeder_position_state].get_position();
+    float upper_pos = estimate_array[upper_feeder_position_state].get_position();
+    float lower_pos = estimate_array[lower_feeder_position_state].get_position();
 
     float upper_target_pos = upper_target[upper_feeder_position_state].get_position();
-    float lower_target_pos = target_map[upper_feeder_position_state].get_position();
+    float lower_target_pos = target_array[upper_feeder_position_state].get_position();
 
-    // Serial.printf("upper target: %f, lower target: %f, upper pos: %f, lower pos: %f, upper reference: %f, lower reference: %f\n", upper_target_pos, lower_target_pos, upper_pos, lower_pos, upper_feeder_reference_state[upper_feeder_position_state].get_position(), reference_map[lower_feeder_position_state].get_position());
+    // Serial.printf("upper target: %f, lower target: %f, upper pos: %f, lower pos: %f, upper reference: %f, lower reference: %f\n", upper_target_pos, lower_target_pos, upper_pos, lower_pos, upper_feeder_reference_state[upper_feeder_position_state].get_position(), reference_array[lower_feeder_position_state].get_position());
 
     if (upper_target_pos > lower_target_pos) {
         upper_target_pos--;
@@ -496,19 +496,19 @@ void LowerFeederController::step(RobotStateMap& reference_map, RobotStateMap& es
         timer_active = false;
     }
     
-    upper_feeder_reference_state = upper_feeder_reference_governor.step_reference_map(upper_target);
+    upper_feeder_reference_state = upper_feeder_reference_governor.step_reference_array(upper_target);
     
     upper_pidp.setpoint = upper_feeder_reference_state[upper_feeder_position_state].get_position();
     upper_pidp.measurement = upper_pos;
 
     upper_pidv.setpoint = upper_feeder_reference_state[upper_feeder_position_state].get_velocity();
-    upper_pidv.measurement = estimate_map[upper_feeder_position_state].get_velocity();
+    upper_pidv.measurement = estimate_array[upper_feeder_position_state].get_velocity();
 
-    lower_pidp.setpoint = reference_map[upper_feeder_position_state].get_position();
+    lower_pidp.setpoint = reference_array[upper_feeder_position_state].get_position();
     lower_pidp.measurement = lower_pos;
 
-    lower_pidv.setpoint = reference_map[upper_feeder_position_state].get_velocity();
-    lower_pidv.measurement = estimate_map[lower_feeder_position_state].get_velocity();
+    lower_pidv.setpoint = reference_array[upper_feeder_position_state].get_velocity();
+    lower_pidv.measurement = estimate_array[lower_feeder_position_state].get_velocity();
     
     float upper_outputp = upper_pidp.filter(dt, true, true);
     float upper_outputv = upper_pidv.filter(dt, true, false);
@@ -522,8 +522,8 @@ void LowerFeederController::step(RobotStateMap& reference_map, RobotStateMap& es
     
     // Serial.printf("Feeder Velocity Setpoint: %f, Measurement: %f, output: %f\n", lower_pidv.setpoint, lower_pidv.measurement, output);
     // Serial.printf("lower feeder reference position: %f, reference velocity: %f, estimate position: %f, estimate velocity: %f\n", 
-    //                 reference_map[lower_feeder_position_state].get_position(), reference_map[lower_feeder_position_state].get_velocity(),
-    //                 estimate_map[lower_feeder_position_state].get_position(), estimate_map[lower_feeder_position_state].get_velocity());
+    //                 reference_array[lower_feeder_position_state].get_position(), reference_array[lower_feeder_position_state].get_velocity(),
+    //                 estimate_array[lower_feeder_position_state].get_position(), estimate_array[lower_feeder_position_state].get_velocity());
     upper_feeder_motor->write_motor_torque(upper_output);    
 
     near_feeder_motor->write_motor_torque(lower_output);

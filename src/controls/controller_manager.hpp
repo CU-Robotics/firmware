@@ -1,7 +1,7 @@
 #pragma once
 
 #include "controller.hpp"
-#include "robot_state_map.hpp"
+#include "robot_state_array.hpp"
 #include "sensors/can/can_manager.hpp"
 #include <memory>
 
@@ -31,8 +31,8 @@ public:
     void init_controller(const Cfg::Controller& controller_config, CANManager& _can, const std::vector<Cfg::State>& state_config);
 
     /// @brief Steps all controllers in the controller manager. This should be called every control loop iteration
-    /// @param reference_map the map of reference states that controllers should try to achieve
-    /// @param estimate_map the map of estimated states that controllers should use to calculate their outputs
-    /// @param target_map the map of target states that controllers should use to calculate their outputs
-    void step(RobotStateMap& reference_map, RobotStateMap& estimate_map, RobotStateMap& target_map);
+    /// @param reference_array the array of reference states that controllers should try to achieve
+    /// @param estimate_array the array of estimated states that controllers should use to calculate their outputs
+    /// @param target_array the array of target states that controllers should use to calculate their outputs
+    void step(RobotStateMap& reference_array, RobotStateMap& estimate_array, RobotStateMap& target_array);
 };

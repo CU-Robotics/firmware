@@ -1,6 +1,6 @@
 #include "estimator_manager.hpp"
 #include "estimator.hpp"
-#include "robot_state_map.hpp"
+#include "robot_state_array.hpp"
 
 
 EstimatorManager::EstimatorManager() { }
@@ -45,11 +45,11 @@ void EstimatorManager::init_estimator(const Cfg::Estimator& estimator_config, Se
     }
 }
 
-void EstimatorManager::step(RobotStateMap& current_state_map, int override) {
-    RobotStateMap previous_state_map = current_state_map;
+void EstimatorManager::step(RobotStateMap& current_state_array, int override) {
+    RobotStateMap previous_state_array = current_state_array;
 
     for (auto& estimator : estimators) {
-        estimator->step_states(current_state_map, previous_state_map, override);
-        estimator->validate(current_state_map);
+        estimator->step_states(current_state_array, previous_state_array, override);
+        estimator->validate(current_state_array);
     }
 }

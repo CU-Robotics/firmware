@@ -43,9 +43,9 @@ void ControllerManager::init_controller(const Cfg::Controller& controller_config
     }
 }
 
-void ControllerManager::step(RobotStateMap& reference_map, RobotStateMap& estimate_map, RobotStateMap& target_map) {
+void ControllerManager::step(RobotStateMap& reference_array, RobotStateMap& estimate_array, RobotStateMap& target_array) {
     for (const auto& controller : controllers) {
-        controller->validate(reference_map, estimate_map);
-        controller->step(reference_map, estimate_map, target_map);
+        controller->validate(reference_array, estimate_array);
+        controller->step(reference_array, estimate_array, target_array);
     }
 }
