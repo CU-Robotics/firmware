@@ -1,8 +1,7 @@
 #include "sensor_manager.hpp"
-
+#include "utils/system_log.hpp"
 
 #include "sensors/rev_encoder.hpp"
-
 
 #include "sensors/LSM6DSOX.hpp"
 
@@ -32,9 +31,14 @@ void SensorManager::init(const Cfg::RobotConfig& config_data, std::unique_ptr<Ro
         pinMode(imu.spi_cs, OUTPUT);
         digitalWrite(imu.spi_cs, HIGH);
     }
-    SPI1.setMISO(config_data.icm_imus[0].spi_miso);
-	SPI1.setMOSI(config_data.icm_imus[0].spi_mosi);
-	SPI1.setSCK(config_data.icm_imus[0].spi_sck);
+    if (!config_data.icm_imus.empty()) {
+		const auto& imu = config_data.icm_imus[0];
+		SPI1.setMISO(imu.spi_miso);
+		SPI1.setMOSI(imu.spi_mosi);
+		SPI1.setSCK(imu.spi_sck);
+	} else {
+		SystemLog.error(Subsystem::SENSORS, "No ICM IMUs configured; SPI1 pins not set\n");
+	}
     // start SPI
     Serial.println("Starting SPI");
     SPI.begin();
@@ -64,8 +68,12 @@ void SensorManager::configure_sensors(const Cfg::RobotConfig& config_data) {
     for (const auto& rev_encoder_config : config_data.rev_encoders) {
         sensors.emplace(rev_encoder_config.encoder_name, std::make_shared<RevEncoder>(rev_encoder_config));
     }
-
-    for (const auto& icm_config : config_data.icm_imus) {
+    if (config_data.icm_imus.size() > 1) {
+        // Note the ICM IMU non-blocking logic is only capable of working with 1 IMU on the same spi bus
+        // If another ICM IMU is added it will need to be daisy chained like the buff encoders or put on a seperate spi bus
+		safety::safety_procedure("SensorManager only supports a single ICM20649 IMU.");
+	}
+    for (const auto &icm_config : config_data.icm_imus) {
         Serial.printf("Configuring ICM20649 with name %u\n", static_cast<uint32_t>(icm_config.imu_name));
 		auto imu_ptr = std::make_shared<ICM20649>(icm_config);
         sensors.emplace(icm_config.imu_name, imu_ptr);
