@@ -20,8 +20,10 @@ public:
 
     /// @brief Construct the reference governor and get the state configurations to set up the reference state array
     /// @param state_configurations The configuration data for the reference state array
-    explicit Governor(std::vector<Cfg::State> state_configurations) : reference_state_array(state_configurations) {}
-
+	explicit Governor(const std::vector<Cfg::State> &state_configurations) : reference_state_array(state_configurations) {}
+	void set_state(const Cfg::State& state_config) {
+		reference_state_array.set_state(state_config);
+	}
     /// @brief Set the governed reference array.
     /// @note Should not be used often as it defeats the purpose of the reference governor
     /// @param new_reference State array setting the reference array (should equal the robots current estimate)
