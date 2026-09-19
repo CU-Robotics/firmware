@@ -79,7 +79,9 @@ void HelloRobot::run() {
         prof.begin("Controls");
         update_controls();
         prof.end("Controls");
-
+        prof.begin("Comms");
+        update_comms();
+		prof.end("Comms"); 
         prof.begin("Safety");
         check_safety();
         prof.end("Safety");
@@ -87,10 +89,11 @@ void HelloRobot::run() {
         prof.begin("CLI");
         process_cli();
         prof.end("CLI");
-		#else
+#else
 		read_telemetry();
 		process_behaviors();
 		update_controls();
+		update_comms();
 		check_safety();
 		process_cli();
 #endif
@@ -186,6 +189,8 @@ void HelloRobot::update_controls() {
     // generate motor outputs from controls
     controller_manager.step(*reference_map, *estimated_state_map, *target_state_map);
 
+}
+void HelloRobot::update_comms() {
     target_state_map->send_to_comms<TargetState>();
     reference_map->send_to_comms<ReferenceState>();
     estimated_state_map->send_to_comms<EstimatedState>();
@@ -202,6 +207,7 @@ void HelloRobot::update_controls() {
     }
 
     Comms::comms_layer.run();
+    
 }
 void HelloRobot::check_safety() {
     bool is_slow_loop = false;
