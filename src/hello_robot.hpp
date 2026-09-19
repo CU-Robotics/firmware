@@ -187,6 +187,9 @@ class HelloRobot {
 	
 	/// @brief Steps estimators, governors, and controllers to generate motor targets.
     void update_controls();
+
+    /// @brief Handles all comms data transfers
+    void update_comms();
 	
 	/// @brief Checks loop timing/safety constraints and writes to the CAN bus.
     void check_safety();
