@@ -202,20 +202,20 @@ void HelloRobot::update_controls() {
 void HelloRobot::check_safety() {
     bool is_slow_loop = check_slow_loop();
 
-    uint8_t previous_reasons = safety_manager.active_reasons();
+    uint8_t previous_reasons = safety_state.active_reasons();
 
-    uint8_t reasons = safety_manager.evaluate(transmitter_manager.is_safety_mode(),
+    uint8_t reasons = safety_state.evaluate(transmitter_manager.is_safety_mode(),
                                               Comms::comms_layer.is_configured(),
                                               is_slow_loop,
                                               ref.ref_data.robot_performance.gimbal_power_active);
 
     if (reasons != previous_reasons) {
-        char reason_str[SafetyManager::REASON_STR_LEN];
-        SafetyManager::reasons_to_string(reasons, reason_str, sizeof(reason_str));
+        char reason_str[SafetyState::REASON_STR_LEN];
+        SafetyState::reasons_to_string(reasons, reason_str, sizeof(reason_str));
         SystemLog.info(Subsystem::GENERAL, "Safety mode %s: %s\n", reasons ? "ON" : "OFF", reason_str);
     }
 
-    motors_armed = safety_manager.motors_armed();
+    motors_armed = safety_state.motors_armed();
 
     if (motors_armed) {
         can.write();

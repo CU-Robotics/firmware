@@ -8,7 +8,7 @@ constexpr uint32_t GIMBAL_POWER_SETTLE_US = 3000000;
 
 /// @brief Owns the robot's safety mode (arming) state: whether the motors may be driven and why not.
 /// @note This is distinct from safety.hpp, which handles fatal safety procedures that halt the robot.
-class SafetyManager {
+class SafetyState {
   public:
     /// @brief Bitmask of reasons the robot is in safety mode. NONE means the motors are armed.
     struct Reason {
@@ -63,5 +63,5 @@ class SafetyManager {
     Timer m_gimbal_power_timer;
 };
 
-// Declare a global instance
-extern SafetyManager safety_manager;
+// Declare a global instance so you can use it everywhere, just like 'SystemLog'
+extern SafetyState safety_state;

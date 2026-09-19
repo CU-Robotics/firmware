@@ -1,8 +1,8 @@
-#include "utils/safety_manager.hpp"
+#include "utils/safety_state.hpp"
 
-SafetyManager safety_manager;
+SafetyState safety_state;
 
-uint8_t SafetyManager::evaluate(bool transmitter_safety_engaged, bool is_configured, bool is_slow_loop, bool gimbal_power_active) {
+uint8_t SafetyState::evaluate(bool transmitter_safety_engaged, bool is_configured, bool is_slow_loop, bool gimbal_power_active) {
     if (gimbal_power_active && !m_last_gimbal_power) {
         m_gimbal_power_timer.start();
     }
@@ -25,7 +25,7 @@ uint8_t SafetyManager::evaluate(bool transmitter_safety_engaged, bool is_configu
     return reasons;
 }
 
-void SafetyManager::reasons_to_string(uint8_t reasons, char* buf, size_t len) {
+void SafetyState::reasons_to_string(uint8_t reasons, char* buf, size_t len) {
     static const struct { uint8_t bit; const char* name; } names[] = {
         {Reason::TRANSMITTER, "transmitter"},
         {Reason::NOT_CONFIGURED, "not-configured"},

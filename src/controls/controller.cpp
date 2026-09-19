@@ -2,7 +2,7 @@
 #include "sensors/can/motor.hpp"
 #include "sensors/RefSystem.hpp"
 #include "utils/system_log.hpp"
-#include "utils/safety_manager.hpp"
+#include "utils/safety_state.hpp"
 
 namespace {
 /// @brief Unwrap a potentially wrapped error value to maintain continuity across wrap boundaries.
@@ -61,7 +61,7 @@ float normalize_wrapped_error(float error, const Cfg::State& config) {
 
 void Controller::checkControllerError(const char* controller_name, const char* state_name, const State& reference_state, const State& estimate_state, ErrorMonitor& monitor) {
     // Skip error checking if in safety mode (robot is not actively controlled)
-    if (safety_manager.is_safety_mode_active()) {
+    if (safety_state.is_safety_mode_active()) {
         // Reset monitor to clean slate when safety mode is active
         monitor.exceeding = false;
         monitor.exceed_start_us = 0;

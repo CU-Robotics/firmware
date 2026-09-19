@@ -10,7 +10,7 @@
 
 #include "controls/robot_state_map.hpp"
 #include "utils/safety.hpp"
-#include "utils/safety_manager.hpp"
+#include "utils/safety_state.hpp"
 #include "sensors/buff_encoder.hpp"
 #include "comms/config_data/state.hpp"
 #include "utils/boot_splash.hpp"
