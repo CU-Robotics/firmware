@@ -57,7 +57,7 @@ public:
     }
 
     /// @brief Print the state map to the serial monitor
-    void print();
+    void print() const;
     /// @brief Update the state map from a comms packet. This will convert the comms packet to the state map format and then update the state map values
     /// @param robot_state_array The array of raw state values received from comms, indexed by the StateName enum values.
     void from_comms_packet(State::Raw robot_state_array[NUM_STATES]);
