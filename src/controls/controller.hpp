@@ -48,13 +48,13 @@ public:
     /// @param reference_array current target robot state array
     /// @param estimate_array current estimate robot state array
     /// @param target_array current target robot state array
-    virtual void step(RobotStateMap& reference_array, RobotStateMap& estimate_array, RobotStateMap& target_array) = 0;
+    virtual void step(RobotStateArray& reference_array, RobotStateArray& estimate_array, RobotStateArray& target_array) = 0;
 
     /// @brief Validate controller state before stepping.
     /// Managers call this so controller-specific checks live outside the control loop itself.
     /// @param reference_array current target robot state array
     /// @param estimate_array current estimate robot state array
-    virtual void validate(const RobotStateMap& reference_array, const RobotStateMap& estimate_array) { }
+    virtual void validate(const RobotStateArray& reference_array, const RobotStateArray& estimate_array) { }
 
     /// @brief Resets integrators/timers
     virtual void reset() { timer.start(); }

@@ -34,5 +34,5 @@ public:
     /// @param reference_array the array of reference states that controllers should try to achieve
     /// @param estimate_array the array of estimated states that controllers should use to calculate their outputs
     /// @param target_array the array of target states that controllers should use to calculate their outputs
-    void step(RobotStateMap& reference_array, RobotStateMap& estimate_array, RobotStateMap& target_array);
+    void step(RobotStateArray& reference_array, RobotStateArray& estimate_array, RobotStateArray& target_array);
 };
