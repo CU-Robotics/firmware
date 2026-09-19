@@ -42,8 +42,8 @@ public:
     /// @param state_name The name of the state to get.
     /// @return A const reference to the state object that corresponds to the given state name.
     const State& operator[](Cfg::StateName state_name) const;
-	std::array<std::optional<State>, NUM_STATES>& get_state_array();
-    const std::array<std::optional<State>, NUM_STATES>& get_state_array() const;
+	std::array<std::optional<State>, NUM_STATES>& get_state_array() {return robot_states;};
+    const std::array<std::optional<State>, NUM_STATES>& get_state_array() const {return robot_states;};
     /// @brief Send the current state array to comms. 
     // This will convert the state array to a format that can be sent to comms and then send it.
     // The tempalte paramater T is the type of state array to send (eg. target reference state, estimated state) and is used to determine the comms packet format to send.
@@ -77,5 +77,5 @@ public:
 
 private:
     /// @brief Array of state names to their corresponding state objects
-	std::array<std::optional<State>, NUM_STATES> robot_states;
+	std::array<std::optional<State>, NUM_STATES> robot_states{};
 };

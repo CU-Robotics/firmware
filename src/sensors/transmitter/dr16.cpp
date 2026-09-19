@@ -322,7 +322,7 @@ DR16Data DR16::get_dr16_data(){
 }
 
 void DR16::manual_controls(const RobotStateArray& estimated_state_array, RobotStateArray& target_state_array, bool not_safety_mode, float& feed, float& last_feed) {
-	bool has_lower_feeder =estimated_state_array.has_state(Cfg::StateName::LowerFeeder);
+	bool has_lower_feeder = estimated_state_array.has_state(Cfg::StateName::LowerFeeder);
 
 	float delta = control_input_timer.delta();
 	VTMRemoteControl vtm_input = ref.ref_data.vtm_remote_control;
