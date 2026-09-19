@@ -44,7 +44,7 @@ void RobotStateMap::from_comms_packet(State::Raw robot_state_array[NUM_STATES]) 
     }
 }
 
-void RobotStateMap::print() {
+void RobotStateMap::print() const {
 	auto state_to_str = [](Cfg::StateName name) -> const char* {
 		switch (name) {
 		case Cfg::StateName::UnsetStateName: return "Unset";
