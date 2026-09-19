@@ -248,11 +248,13 @@ bool HelloRobot::check_slow_loop(float &loop_dt) {
 }
 
 void HelloRobot::hold_feeder_position() {
-    float current_feed = (*estimated_state_map)[Cfg::StateName::Feeder].get_position();
-    governor->hold_position(Cfg::StateName::Feeder, current_feed);
+    governor->hold_position(Cfg::StateName::Feeder, (*estimated_state_map)[Cfg::StateName::Feeder].get_position());
     if (has_lower_feeder) {
         governor->hold_position(Cfg::StateName::LowerFeeder, (*estimated_state_map)[Cfg::StateName::LowerFeeder].get_position());
     }
+
+    Cfg::StateName fed_state = has_lower_feeder ? Cfg::StateName::LowerFeeder : Cfg::StateName::Feeder;
+    float current_feed = (*estimated_state_map)[fed_state].get_position();
 
     // Snap the manual feed target to a whole ball so re-arming doesn't advance the feeder
     float whole_balls = floor(current_feed);
