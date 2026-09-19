@@ -30,7 +30,7 @@ void HelloRobot::init() {
 
     can.init(config.motors);
 
-    safety::register_safety_function([&]() { can.issue_safety_mode(); });
+    safety::register_safety_function([&]() { can.zero_all_motors(); });
 
     ref.init();
     transmitter_manager.init(config.transmitter);
@@ -213,7 +213,7 @@ void HelloRobot::check_safety() {
         can.write();
     } else {
         // TODO: Reset all controller integrators here
-        can.issue_safety_mode();
+        can.zero_all_motors();
         hold_feeder_position();
     }
 
@@ -238,7 +238,7 @@ bool HelloRobot::check_slow_loop(float &loop_dt) {
     consecutive_slow_loops++;
 
     if (consecutive_slow_loops > MAX_CONSECUTIVE_SLOW_LOOPS) {
-        can.issue_safety_mode();
+        can.zero_all_motors();
         // reset_teensy never returns, so this path has to log for itself
         SystemLog.error(Subsystem::GENERAL, "Slow loop with dt: %f, consecutive slow loops: %d\n", loop_dt, consecutive_slow_loops);
         SystemLog.error("Kowabunga bitches\n");
