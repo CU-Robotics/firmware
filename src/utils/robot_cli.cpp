@@ -25,64 +25,64 @@ void RobotCLI::process() {
 }
 
 void RobotCLI::render_live_view() {
-        if (millis() - last_redraw_time >= redraw_interval) {
-            Serial.print("\033[H"); // Move cursor to top-left
+    if (millis() - last_redraw_time >= redraw_interval) {
+        Serial.print("\033[H"); // Move cursor to top-left
             
-            // Loop through the array and draw the views in the order the user typed them
-            for (int i = 0; i < num_active_views; i++) {
-              switch (active_views[i]) {
-			  case LiveMode::PROFILE_VIEW:
+        // Loop through the array and draw the views in the order the user typed them
+        for (int i = 0; i < num_active_views; i++) {
+            switch (active_views[i]) {
+			case LiveMode::PROFILE_VIEW:
 #ifdef PROFILER
 				prof.print_summary();
 #endif
 				break;
                         
-			  case LiveMode::TRANSMITTER:
+			case LiveMode::TRANSMITTER:
 				transmitter_manager->print_live_data();
 				break;
                         
-			  case LiveMode::SENSORS:
+			case LiveMode::SENSORS:
 				Serial.printf("=== LIVE SENSOR READOUT ===\033[K\n");
 				sensor_manager->print_sensors_live(); 
 				break;
                         
-			  case LiveMode::ESTIMATED_STATE:
+			case LiveMode::ESTIMATED_STATE:
 				Serial.printf("=== LIVE ESTIMATED STATE ===\033[K\n");
 				estimated_state_map->print();
 				break;
 				
-			  case LiveMode::TARGET_STATE:
+			case LiveMode::TARGET_STATE:
 				Serial.printf("=== LIVE TARGET STATE ===\033[K\n");
 				target_state_map->print();
 				break;
 
-			  case LiveMode::HEARTBEAT:
+			case LiveMode::HEARTBEAT:
 				Serial.printf("=== LIVE HEARTBEAT  ===\033[K\n");
-				Serial.println(*loopc);
+				if (loopc)Serial.println(*loopc);
 				break;
                         
-			  default:
+			default:
 				break;
-              }
-                Serial.println(); // Add a blank line between stacked views
             }
-			SystemLog.draw_dashboard_box(); // puts all non-CLI prints in neat box
-            Serial.println("\n[ LIVE MODE ACTIVE - PRESS ENTER TO EXIT ]");
-            
-            // \033[J clears everything *below* the cursor. 
-            Serial.print("\033[J"); 
-            
-            last_redraw_time = millis();
+            Serial.println(); // Add a blank line between stacked views
         }
+		SystemLog.draw_dashboard_box(); // puts all non-CLI prints in neat box
+        Serial.println("\n[ LIVE MODE ACTIVE - PRESS ENTER TO EXIT ]");
+            
+        // \033[J clears everything *below* the cursor. 
+        Serial.print("\033[J"); 
+            
+        last_redraw_time = millis();
+    }
 
-        // Exit live mode on any keystroke
-        if (Serial.available() > 0) {
-            num_active_views = 0; // Empty the array
-			SystemLog.is_live_view_active = false; //Turn standard scrolling prints back on
-            while(Serial.available()) Serial.read(); // Flush buffer
-            Serial.println("\n\n[Exited Live View]");
-            cli_index = 0; 
-        }
+    // Exit live mode on any keystroke
+    if (Serial.available() > 0) {
+        num_active_views = 0; // Empty the array
+		SystemLog.is_live_view_active = false; //Turn standard scrolling prints back on
+        while(Serial.available()) Serial.read(); // Flush buffer
+        Serial.println("\n\n[Exited Live View]");
+        cli_index = 0; 
+    }
     
 }
 void RobotCLI::parse_serial_stream() {
@@ -170,50 +170,50 @@ void RobotCLI::cmd_ping() {
 }
 
 void RobotCLI::cmd_help() {
-                Serial.println("NAME");
-                Serial.println("       Robot CLI - Control and monitor firmware");
-                Serial.println();
-                Serial.println("SYNOPSIS");
-                Serial.println("       [command] [arguments...]");
-                Serial.println();
-                Serial.println("DESCRIPTION");
-                Serial.println("       Provides a serial interface to interact with the robot, check");
-                Serial.println("       connection status, and launch live, real-time data dashboards.");
-                Serial.println();
-                Serial.println("COMMANDS");
-                Serial.println("       ping");
-                Serial.println("              Replies with 'pong!' to verify the serial connection is active.");
-                Serial.println();
-                Serial.println("       live [view1] [view2] ...");
-                Serial.println("              Launches a live updating dashboard with the specified views.");
-                Serial.println("              Views are stacked vertically in the order provided.");
-                Serial.println("              Press ENTER to exit live mode.");
-                Serial.println();
-                Serial.println("              Available views:");
-                Serial.println("                prof            : Execution time profiler (only available if running make debug) ");
-                Serial.println("                tx              : Real-time radio transmitter inputs");
-                Serial.println("                sensors         : Real-time readouts from all configured sensors");
-                Serial.println("                estimated_state : The robot's current estimated state map");
-                Serial.println("                target_state    : The robot's current target state map");
-                Serial.println("                heartbeat       : The main loop counter (loopc)");
-				Serial.println();
-				Serial.println("       log [subsystem] [priority]");
-				Serial.println("              Filters the system event log.");
-				Serial.println("              High-priority messages (Errors) will always bypass the subsystem filter.");
-				Serial.println("              Typing 'log' with no arguments displays the syntax menu.");
-				Serial.println();
-				Serial.println("              Available subsystems:");
-				Serial.println("                all, can, motors, sensors, est, comms");
-				Serial.println();
-				Serial.println("              Available priorities (minimum level to show):");
-				Serial.println("                info, warn, error");
-				Serial.println();
-				Serial.println("              Examples:");
-				Serial.println("                log motors warn  : Shows motor warnings/errors, and all other system errors");
-				Serial.println("                log all info     : Resets the filter to show absolutely everything");
-                Serial.println();
-                Serial.println("       help");
-                Serial.println("              Displays this manual.");
+    Serial.println("NAME");
+    Serial.println("       Robot CLI - Control and monitor firmware");
+    Serial.println();
+    Serial.println("SYNOPSIS");
+    Serial.println("       [command] [arguments...]");
+    Serial.println();
+    Serial.println("DESCRIPTION");
+    Serial.println("       Provides a serial interface to interact with the robot, check");
+    Serial.println("       connection status, and launch live, real-time data dashboards.");
+    Serial.println();
+    Serial.println("COMMANDS");
+    Serial.println("       ping");
+    Serial.println("              Replies with 'pong!' to verify the serial connection is active.");
+    Serial.println();
+    Serial.println("       live [view1] [view2] ...");
+    Serial.println("              Launches a live updating dashboard with the specified views.");
+    Serial.println("              Views are stacked vertically in the order provided.");
+    Serial.println("              Press ENTER to exit live mode.");
+    Serial.println();
+    Serial.println("              Available views:");
+    Serial.println("                prof            : Execution time profiler (only available if running make debug) ");
+    Serial.println("                tx              : Real-time radio transmitter inputs");
+    Serial.println("                sensors         : Real-time readouts from all configured sensors");
+    Serial.println("                estimated_state : The robot's current estimated state map");
+    Serial.println("                target_state    : The robot's current target state map");
+    Serial.println("                heartbeat       : The main loop counter (loopc)");
+	Serial.println();
+	Serial.println("       log [subsystem] [priority]");
+	Serial.println("              Filters the system event log.");
+	Serial.println("              High-priority messages (Errors) will always bypass the subsystem filter.");
+	Serial.println("              Typing 'log' with no arguments displays the syntax menu.");
+	Serial.println();
+	Serial.println("              Available subsystems:");
+	Serial.println("                all, can, motors, sensors, est, comms");
+	Serial.println();
+	Serial.println("              Available priorities (minimum level to show):");
+	Serial.println("                info, warn, error");
+	Serial.println();
+	Serial.println("              Examples:");
+	Serial.println("                log motors warn  : Shows motor warnings/errors, and all other system errors");
+	Serial.println("                log all info     : Resets the filter to show absolutely everything");
+    Serial.println();
+    Serial.println("       help");
+    Serial.println("              Displays this manual.");
 }
 void RobotCLI::cmd_live() {
     num_active_views = 0;
@@ -337,6 +337,6 @@ void RobotCLI::cmd_log() {
     }
 
     Serial.printf("Log filter updated. Sys: %s | Level: %s\n", 
-        sys_tok ? sys_tok : "UNCHANGED", 
-        lvl_tok ? lvl_tok : "UNCHANGED");
+				  sys_tok ? sys_tok : "UNCHANGED", 
+				  lvl_tok ? lvl_tok : "UNCHANGED");
 }
