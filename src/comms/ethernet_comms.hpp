@@ -8,10 +8,6 @@ namespace qn = qindesign::network;
 #include "utils/timing.hpp"				// for Timer
 #include "comms/ethernet_packet.hpp"	// for EthernetPacket
 
-// DEBUG define for displaying all comms errors/status updates
-// This is very noisy on start up
-// #define COMMS_DEBUG
-
 namespace Comms {
 
 /// @brief Ethernet Communications. This handles all comms between the Jetson and the Teensy via Ethernet
@@ -69,7 +65,7 @@ private:
 	const uint16_t 	m_jetson_port = 35654;
 
 	/// @brief The UDP server object, initialized with 50 packet buffer
-	qn::EthernetUDP m_udp_server = qn::EthernetUDP(50);
+	qn::EthernetUDP m_udp_server = qn::EthernetUDP(10);
 
 	/// @brief A time in us for a minimum ethernet loop. If ethernet runs too fast, it will break and not send/recv anything. This is calculated based on a set data rate
 	uint32_t m_regulation_time = 0;

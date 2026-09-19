@@ -1,5 +1,4 @@
-#ifndef SD_WRAP
-#define SD_WRAP
+#pragma once
 
 #include <SD/SD.h>
 #include <SPI/SPI.h>
@@ -98,5 +97,3 @@ private:
     /// @brief Internal File object that represents currently opened file on SD card
     File file;
 };
-
-#endif

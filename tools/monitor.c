@@ -15,7 +15,7 @@
 const size_t read_size = 8ul * 1024ul;
 
 /// @brief Max size of the serial path, - 1 for null terminator
-const size_t SERIAL_PATH_SIZE = SERIAL_PATH_MAX - 1;
+#define SERIAL_PATH_SIZE (SERIAL_PATH_MAX - 1)
 
 /// @brief In serial buffer
 char* in_buffer = NULL;

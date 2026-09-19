@@ -7,6 +7,7 @@
 # Ignore the build directory
 build
 build/
+.pio/
 
 # Ignore the output binaries
 *.elf
@@ -23,12 +24,10 @@ build/
 # Ignore clangd files
 compile_commands.json
 .cache/
-.clangd
 
 # Ignore any tools/ directory artifacts
 tools/*.txt
 tools/*.out
-tools/git_scraper
 tools/custom_monitor
 tools/compiler
 tools/tools
@@ -42,9 +41,6 @@ src/git_info.h
 # Ignore IDE configs
 .vscode
 .zed
-
-# Ignore Rust tool's build directory
-/tools/waggle-interceptor/target
 
 #ignore bear files
 .bearwrap

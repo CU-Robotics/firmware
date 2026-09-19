@@ -1,6 +1,22 @@
+#pragma once
 #include "motor.hpp"
+//GIM3505
+constexpr float GIM3505_TORQUE_CONSTANT = 0.52f; // Nm/A
+constexpr float GIM3505_GEAR_RATIO = 8.0f; // 8:1
+constexpr float GIM3505_MAX_TORQUE = 1.27f; // Nm
+constexpr float GIM3505_MAX_SPEED = 225.0f; // RPM
 
+//GIM4310
+constexpr float GIM4310_TORQUE_CONSTANT = 3.46f; // Nm/A
+constexpr float GIM4310_GEAR_RATIO = 36.0f; // 36:1
+constexpr float GIM4310_MAX_TORQUE = 20.16f; // Nm
+constexpr float GIM4310_MAX_SPEED = 63.0f; // RPM
 
+//GIM8108
+constexpr float GIM8108_TORQUE_CONSTANT = 1.83f; // NmA
+constexpr float GIM8108_GEAR_RATIO = 9.0f; // 9:1
+constexpr float GIM8108_MAX_TORQUE = 27.38f; // Nm
+constexpr float GIM8108_MAX_SPEED = 242.0f; // RPM
 
 /// @brief Motor driver for the GIM motor
 /// @note GIM8108 docs (SDC103): https://steadywin.cn/en/pd.jsp?id=15&fromColId=0#_pp=0_752_3
@@ -13,37 +29,34 @@ public:
     GIM() = delete;
 
     /// @brief Main constructor. Defines the controller type, global ID, id, and can bus
-    /// @param gid The global ID, not the per-bus motor ID
-    /// @param id The per-bus motor ID. This is 1-indexed
-    /// @param bus_id The CAN bus index/ID
-    /// @param motor_type The motor type, used for GIM to determine gear ratio, max torque, max speed, and torque constant
-    GIM(uint32_t gid, uint32_t id, uint8_t bus_id, MotorType motor_type)
-        : Motor(MotorControllerType::MG8016, gid, id, bus_id, motor_type) {
+    /// @param motor_config The configuration for this motor, including its controller type, physical bus and id, motor type, and motor name.
+    GIM(const Cfg::Motor& motor_config)
+        : Motor(motor_config) {
 
-        switch (motor_type) {
-        case MotorType::GIM3505: {
-            m_torque_constant = 0.52f;
-            m_gear_ratio = 8.0f; // 8:1
-            m_max_torque = 1.27f; // Nm
-            m_max_speed = 225.0f; // RPM
+        switch (motor_config.motor_type) {
+        case Cfg::MotorType::GIM3505: {
+            m_torque_constant = GIM3505_TORQUE_CONSTANT;
+            m_gear_ratio = GIM3505_GEAR_RATIO;
+            m_max_torque = GIM3505_MAX_TORQUE;
+            m_max_speed = GIM3505_MAX_SPEED;
             break;
         }
-        case MotorType::GIM4310: {
-            m_torque_constant = 3.46f;
-            m_gear_ratio = 36.0f; // 36:1
-            m_max_torque = 20.16f; // Nm
-            m_max_speed = 63.0f; // RPM
+        case Cfg::MotorType::GIM4310: {
+            m_torque_constant = GIM4310_TORQUE_CONSTANT;
+            m_gear_ratio = GIM4310_GEAR_RATIO;
+            m_max_torque = GIM4310_MAX_TORQUE;
+            m_max_speed = GIM4310_MAX_SPEED;
             break;
         }
-        case MotorType::GIM8108: {
-            m_torque_constant = 1.83f;
-            m_gear_ratio = 9.0f; // 9:1
-            m_max_torque = 27.38; // Nm
-            m_max_speed = 242.0f; // RPM
+        case Cfg::MotorType::GIM8108: {
+            m_torque_constant = GIM8108_TORQUE_CONSTANT;
+            m_gear_ratio = GIM8108_GEAR_RATIO;
+            m_max_torque = GIM8108_MAX_TORQUE;
+            m_max_speed = GIM8108_MAX_SPEED;
             break;
         }
         default: {
-            Serial.printf("GIM motor type not recognized: %d\n", motor_type);
+            Serial.printf("GIM motor type not recognized: %d\n", motor_config.motor_type);
             break;
         }
         }
@@ -75,7 +88,7 @@ public:
 
     /// @brief Write the motor's torque
     /// @param torque Torque from -1.0f to 1.0f. This gets clamped into this range and then scaled to the motor type's max torque.
-    void write_motor_torque(float torque) override;
+    void execute_motor_torque_command(float torque) override;
 
     /// @brief Write the motor's speed
     /// @param speed Speed from -1.0f to 1.0f. This gets clamped into this range and then scaled to the individual motor type's max speed.

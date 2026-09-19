@@ -1,11 +1,9 @@
-#ifndef D200_H
-#define D200_H
-
+#pragma once
 // Arduino library
 #include <Arduino.h>
 #include <HardwareSerial.h>
 
-#include "Sensor.hpp"
+#include "sensors/sensor.hpp"
 #include "comms/data/lidar_data_packet_si.hpp"
 
 // development manual
@@ -79,21 +77,21 @@ const float D200_MAX_SPEED = (float)(8 * 360 - 1) * M_PI / 180.0;
 const int D200_TIMESTAMP_WRAP_LIMIT = 30000;
 
 /// @brief points per D200 data packet
-const int D200_POINTS_PER_PACKET = 12;
+const size_t D200_POINTS_PER_PACKET = 12;
 
 /// @brief number of timestamp calibration packets. new packet read rate of 333 Hz = 1 packet / 3ms
-const int D200_MAX_CALIBRATION_PACKETS = 333;
+const size_t D200_MAX_CALIBRATION_PACKETS = 333;
 
 /// @brief number of packets stored teensy-side
-const int D200_NUM_PACKETS_CACHED = 2;
+const size_t D200_NUM_PACKETS_CACHED = 2;
 
 /// @brief struct storing timestamp calibration results 
 struct D200Calibration {
   /// @brief how many packets are used for calibration
-  int max_calibration_packets = D200_MAX_CALIBRATION_PACKETS;
+  size_t max_calibration_packets = D200_MAX_CALIBRATION_PACKETS;
 
   /// @brief how many calibration packets have been received
-  int packets_recv = 0;
+  size_t packets_recv = 0;
 
   /// @brief count of D200 timestamp wraps
   int num_wraps = 0;
@@ -105,11 +103,11 @@ struct D200Calibration {
   int timestamp_delta_sum = 0;
 };
 
-
-
 /// @brief class for LiDAR driver
-class D200LD14P : Sensor {
+class D200LD14P : public Sensor {
 private:
+  /// @brief reference to config struct for this sensor
+  const Cfg::D200Lidar& config;
 
   /// @brief default scanning speed (deg/s) (used internally)
   const uint16_t DEFAULT_SPEED = 6 * 360;
@@ -127,7 +125,7 @@ private:
   int current_packet = 0;
 
   /// @brief serial object to read from
-  HardwareSerial* port = nullptr;
+  HardwareSerial& port;
 
   /// @brief assigned ID of this specific module
   uint8_t id;
@@ -154,12 +152,18 @@ private:
 
 public:
   /// @brief constructor and initialization
-  /// @param _port pointer to HardwareSerial object to read/write from
-  /// @param _id ID of this specific module
-  D200LD14P(HardwareSerial* _port, uint8_t _id);
+  /// @param config reference to config struct for this sensor
+  /// @note grabs serial port based on config
+  D200LD14P(const Cfg::D200Lidar& config);
 
-  //default constructor
-  D200LD14P() : Sensor(SensorType::LIDAR) { };
+  /// @brief initialize the d200 module
+  void init() override;
+
+  /// @brief read latest packet(s) from D200 module
+  void read() override;
+
+  /// @brief send latest packet(s) to comms
+  void send_to_comms() const override;
 
   /// @brief set rotation the speed of the LiDAR
   /// @param speed desired rotation speed of LiDAR (rad/s)
@@ -171,9 +175,6 @@ public:
   /// @brief stop the LiDAR motor
   void stop_motor();
 
-  /// @brief read latest packet(s) from D200 module
-  /// @return true if successful, false if no data available
-  bool read() override;
 
   /// @brief Set the current yaw angle and velocity of the robot
   /// @param yaw current yaw angle of the robot (rad)
@@ -209,6 +210,3 @@ public:
   /// @return the current packet index
   int get_current_packet_index() { return current_packet; };
 };
-
-
-#endif // D200_H

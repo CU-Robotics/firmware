@@ -1,5 +1,4 @@
-#ifndef HID_COMMS_HPP
-#define HID_COMMS_HPP
+#pragma once
 
 #include "hid_packet.hpp"			// for HIDPacket
 
@@ -64,5 +63,3 @@ private:
 extern HIDComms comms;
 
 } 	// namespace Comms
-
-#endif	// HID_COMMS_HPP

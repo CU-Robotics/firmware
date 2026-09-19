@@ -1,5 +1,4 @@
-#ifndef MG8016EI6_DRIVER_HPP
-#define MG8016EI6_DRIVER_HPP
+#pragma once
 
 #include "motor.hpp"
 
@@ -13,12 +12,9 @@ public:
     MG8016EI6() = delete;
 
     /// @brief Main constructor. Defines the controller type, global ID, id, and can bus
-    /// @param gid The global ID, not the per-bus motor ID
-    /// @param id The per-bus motor ID. This is 1-indexed
-    /// @param bus_id The CAN bus index/ID
-    /// @param motor_type The motor type (not used for MG8016EI6, do not speicify)
-    MG8016EI6(uint32_t gid, uint32_t id, uint8_t bus_id, MotorType motor_type)
-        : Motor(MotorControllerType::MG8016, gid, id, bus_id, motor_type) {
+    /// @param motor_config The configuration for this motor, including its controller type, physical bus and id, motor type, and motor name.
+    MG8016EI6(const Cfg::Motor& motor_config)
+        : Motor(motor_config) {
         m_base_id = 0x140;
     }
 
@@ -47,7 +43,7 @@ public:
 
     /// @brief Write motor torque given a normalized value
     /// @param torque A value between [-1, 1] representing the torque range of [-33A, 33A]
-    void write_motor_torque(float torque) override;
+    void execute_motor_torque_command(float torque) override;
 
     /// @brief Write motor speed
     /// @param speed The speed value in radians per second
@@ -321,5 +317,3 @@ private:
     static constexpr uint8_t CMD_READ_STATE_3 = 0x9D;
 
 };
-
-#endif // MG8016E_I6_DRIVER_HPP

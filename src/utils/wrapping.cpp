@@ -1,7 +1,13 @@
 #include "wrapping.hpp"
+#include <math.h>
 
-float wrapAngle(float angle) {
-	while (angle >= M_PI) angle -= 2 * M_PI;
-	while (angle <= -M_PI) angle += 2 * M_PI;
-	return angle;
+namespace Utils {
+
+float wrap(float value, float min, float max) {
+	float range = max - min;
+	value = min + fmod(value - min, range);
+	if (value < min) value += range;
+	return value;
 }
+
+} // namespace Utils
