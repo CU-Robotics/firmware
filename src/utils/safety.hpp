@@ -9,46 +9,6 @@ constexpr int SAFETY_PROCEDURE_LED_BLINK_FREQ = 5;
 constexpr int SAFETY_PROCEDURE_LED_BLINK_DURATION_MS = 1000 / (2 * SAFETY_PROCEDURE_LED_BLINK_FREQ);
 
 namespace safety {
-    /// @brief Bitmask of reasons the robot is in safety mode. NONE means the motors are armed.
-    namespace Reason {
-        enum : uint8_t {
-            NONE = 0,
-            TRANSMITTER = 1 << 0,           ///< Transmitter safety switch is engaged
-            NOT_CONFIGURED = 1 << 1,        ///< Hive has not configured the robot yet
-            SLOW_LOOP = 1 << 2,             ///< The last main loop overran its time budget
-            GIMBAL_POWER_OFF = 1 << 3,      ///< Ref system reports gimbal power is off
-            GIMBAL_POWER_SETTLING = 1 << 4, ///< Gimbal power turned on too recently for the motors to be ready
-        };
-    }
-
-    /// @brief Buffer size that fits every reason name from reasons_to_string
-    constexpr size_t REASON_STR_LEN = 96;
-
-    /// @brief Write a space-separated list of the reason names in a bitmask, or "none"
-    /// @param reasons safety::Reason bitmask
-    /// @param buf Output buffer, always null-terminated
-    /// @param len Size of buf, REASON_STR_LEN fits every reason
-    inline void reasons_to_string(uint8_t reasons, char* buf, size_t len) {
-        static const struct { uint8_t bit; const char* name; } names[] = {
-            {Reason::TRANSMITTER, "transmitter"},
-            {Reason::NOT_CONFIGURED, "not-configured"},
-            {Reason::SLOW_LOOP, "slow-loop"},
-            {Reason::GIMBAL_POWER_OFF, "gimbal-power-off"},
-            {Reason::GIMBAL_POWER_SETTLING, "gimbal-power-settling"},
-        };
-        if (len == 0) return;
-        buf[0] = '\0';
-        if (reasons == Reason::NONE) {
-            strlcpy(buf, "none", len);
-            return;
-        }
-        for (const auto& n : names) {
-            if (!(reasons & n.bit)) continue;
-            if (buf[0] != '\0') strlcat(buf, " ", len);
-            strlcat(buf, n.name, len);
-        }
-    }
-
     /// @brief Type definition for our safety function    
     using SafetyFunction = std::function<void()>;
 
@@ -57,27 +17,6 @@ namespace safety {
     inline SafetyFunction& safety_function_handle() {
         static SafetyFunction safety_function = nullptr;
         return safety_function;
-    }
-
-    /// @brief Get a reference to the static safety mode active flag
-    /// @return A reference to the static boolean indicating if safety mode is currently active
-    inline bool& is_safety_mode_active() {
-        static bool safety_mode_active = false;
-        return safety_mode_active;
-    }
-
-    /// @brief Get a reference to the static safety reason bitmask
-    /// @return A reference to the safety::Reason bitmask from the most recent safety check
-    inline uint8_t& active_reasons() {
-        static uint8_t reasons = Reason::NONE;
-        return reasons;
-    }
-
-    /// @brief Record why the robot is in safety mode; safety mode is active whenever any reason is set
-    /// @param reasons safety::Reason bitmask, Reason::NONE to arm the motors
-    inline void set_safety_reasons(uint8_t reasons) {
-        active_reasons() = reasons;
-        is_safety_mode_active() = (reasons != Reason::NONE);
     }
 
     /// @brief Register a safety function to be called when a safety procedure is triggered

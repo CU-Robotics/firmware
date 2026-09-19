@@ -10,6 +10,7 @@
 
 #include "controls/robot_state_map.hpp"
 #include "utils/safety.hpp"
+#include "utils/safety_manager.hpp"
 #include "sensors/buff_encoder.hpp"
 #include "comms/config_data/state.hpp"
 #include "utils/boot_splash.hpp"
@@ -47,8 +48,6 @@ extern "C" void reset_teensy(void);
 constexpr float SLOW_LOOP_THRESHOLD_S = 2.0f / LOOP_FREQ;
 /// @brief Consecutive slow loops tolerated before the Teensy is reset.
 constexpr int MAX_CONSECUTIVE_SLOW_LOOPS = 11;
-/// @brief How long to stay disarmed after gimbal power turns on, to let the motors boot.
-constexpr uint32_t GIMBAL_POWER_SETTLE_US = 3000000;
 /// @brief When disarmed, a feeder position whose fractional part exceeds this is rounded up to the next ball.
 constexpr float FEED_ROUND_UP_FRACTION = 0.2f;
 
@@ -91,9 +90,6 @@ class HelloRobot {
     /// @brief Timer used to detect stall conditions and compute delta-time (dt).
     Timer stall_timer;
 
-    /// @brief Timer to track how long gimbal power has been active.
-    Timer gimbal_power_timer;
-
     /// @brief Absolute count of executed loops since boot. Used for heartbeat math.
     uint32_t loopc = 0;
 
@@ -122,9 +118,6 @@ class HelloRobot {
 
     /// @brief Param to specify whether this is the first loop.
     bool is_first_loop = true;
-
-    /// @brief Cache of the previous loop's gimbal power state to detect changes.
-    bool last_gimbal_power = false;
 
     /// @brief Whether the active robot config contains the lower feeder state.
     bool has_lower_feeder = false;
@@ -201,11 +194,6 @@ class HelloRobot {
     /// @brief Measures loop time and resets the Teensy after too many consecutive slow loops.
     /// @return true if this loop was slow
     bool check_slow_loop();
-
-    /// @brief Evaluates every arming condition.
-    /// @param is_slow_loop Whether this loop overran SLOW_LOOP_THRESHOLD_S
-    /// @return safety::Reason bitmask, NONE if the motors may be armed
-    uint8_t evaluate_safety_reasons(bool is_slow_loop);
 
     /// @brief Holds the feeders at their current position so they don't jump when re-armed.
     void hold_feeder_position();

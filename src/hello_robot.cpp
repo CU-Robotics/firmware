@@ -202,18 +202,20 @@ void HelloRobot::update_controls() {
 void HelloRobot::check_safety() {
     bool is_slow_loop = check_slow_loop();
 
-    uint8_t previous_reasons = safety::active_reasons();
+    uint8_t previous_reasons = safety_manager.active_reasons();
 
-    uint8_t reasons = evaluate_safety_reasons(is_slow_loop);
-    safety::set_safety_reasons(reasons);
+    uint8_t reasons = safety_manager.evaluate(transmitter_manager.is_safety_mode(),
+                                              Comms::comms_layer.is_configured(),
+                                              is_slow_loop,
+                                              ref.ref_data.robot_performance.gimbal_power_active);
 
     if (reasons != previous_reasons) {
-        char reason_str[safety::REASON_STR_LEN];
-        safety::reasons_to_string(reasons, reason_str, sizeof(reason_str));
+        char reason_str[SafetyManager::REASON_STR_LEN];
+        SafetyManager::reasons_to_string(reasons, reason_str, sizeof(reason_str));
         SystemLog.info(Subsystem::GENERAL, "Safety mode %s: %s\n", reasons ? "ON" : "OFF", reason_str);
     }
 
-    motors_armed = (reasons == safety::Reason::NONE);
+    motors_armed = safety_manager.motors_armed();
 
     if (motors_armed) {
         can.write();
@@ -240,28 +242,6 @@ bool HelloRobot::check_slow_loop() {
         reset_teensy();
     }
     return true;
-}
-
-uint8_t HelloRobot::evaluate_safety_reasons(bool is_slow_loop) {
-    bool gimbal_power = ref.ref_data.robot_performance.gimbal_power_active;
-    if (gimbal_power && !last_gimbal_power) {
-        gimbal_power_timer.start();
-    }
-    last_gimbal_power = gimbal_power;
-
-    uint8_t reasons = safety::Reason::NONE;
-    if (transmitter_manager.is_safety_mode())
-        reasons |= safety::Reason::TRANSMITTER;
-    if (!Comms::comms_layer.is_configured())
-        reasons |= safety::Reason::NOT_CONFIGURED;
-    if (is_slow_loop)
-        reasons |= safety::Reason::SLOW_LOOP;
-    if (!gimbal_power) {
-        reasons |= safety::Reason::GIMBAL_POWER_OFF;
-    } else if (gimbal_power_timer.get_elapsed_micros_no_restart() < GIMBAL_POWER_SETTLE_US) {
-        reasons |= safety::Reason::GIMBAL_POWER_SETTLING;
-    }
-    return reasons;
 }
 
 void HelloRobot::hold_feeder_position() {
