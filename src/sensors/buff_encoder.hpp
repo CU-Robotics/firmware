@@ -117,13 +117,13 @@ private:
     static const SPISettings m_settings;
 	
 	/// @brief Buffer of transmitted data to the buff encoders
-    alignas(32) uint8_t tx_buffer[32];
+    alignas(32) uint8_t tx_buffer[32]{0};
 	
 	/// @brief Buffer of recieved data from the buff encoders
-    alignas(32) uint8_t rx_buffer[32];
+    alignas(32) uint8_t rx_buffer[32]{0};
 
 	/// @brief Pointer to the SensorManager's active transfer flag
-    const volatile bool* shared_dma_flag;
+    const volatile bool* shared_dma_flag = nullptr;
 
     // --- ZERO POS DIAGNOSTICS ---
     /// @brief used for spacing out zero alignment checks

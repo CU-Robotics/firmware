@@ -27,7 +27,9 @@ void BuffEncoder::isr_start_transfer(EventResponderRef spi_event) {
 	SPI.beginTransaction(m_settings);
 	digitalWrite(config_data.spi_cs, LOW);
 
-	SPI.transfer(tx_buffer, rx_buffer, 6, spi_event); //after testing make this an assert_or_safety_procedure()
+    if (!SPI.transfer(tx_buffer, rx_buffer, 6, spi_event)) {
+        SystemLog.error(Subsystem::SENSORS,"Buff Encoder SPI transfer Failed");
+        }
 }
 void BuffEncoder::isr_stop_transfer(EventResponderRef spi_event) {
 	digitalWrite(config_data.spi_cs, HIGH);
