@@ -20,7 +20,7 @@ public:
 
     /// @brief Construct the reference governor and get the state configurations to set up the reference state array
     /// @param state_configurations The configuration data for the reference state array
-    Governor(std::vector<Cfg::State> state_configurations) : reference_state_array(state_configurations) {}
+    explicit Governor(std::vector<Cfg::State> state_configurations) : reference_state_array(state_configurations) {}
 
     /// @brief Set the governed reference array.
     /// @note Should not be used often as it defeats the purpose of the reference governor
