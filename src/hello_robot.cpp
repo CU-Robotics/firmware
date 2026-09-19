@@ -200,20 +200,12 @@ void HelloRobot::update_controls() {
 }
 
 void HelloRobot::check_safety() {
-    bool is_slow_loop = check_slow_loop();
+    float loop_dt = 0.0f;
+    bool is_slow_loop = check_slow_loop(loop_dt);
 
     uint8_t previous_reasons = safety_state.active_reasons();
 
-    uint8_t reasons = safety_state.evaluate(transmitter_manager.is_safety_mode(),
-                                              Comms::comms_layer.is_configured(),
-                                              is_slow_loop,
-                                              ref.ref_data.robot_performance.gimbal_power_active);
-
-    if (reasons != previous_reasons) {
-        char reason_str[SafetyState::REASON_STR_LEN];
-        SafetyState::reasons_to_string(reasons, reason_str, sizeof(reason_str));
-        SystemLog.info(Subsystem::GENERAL, "Safety mode %s: %s\n", reasons ? "ON" : "OFF", reason_str);
-    }
+    uint8_t reasons = safety_state.evaluate(transmitter_manager.is_safety_mode(), Comms::comms_layer.is_configured(), is_slow_loop, ref.ref_data.robot_performance.gimbal_power_active);
 
     motors_armed = safety_state.motors_armed();
 
@@ -224,20 +216,31 @@ void HelloRobot::check_safety() {
         can.issue_safety_mode();
         hold_feeder_position();
     }
+
+    if (is_slow_loop) {
+        SystemLog.error(Subsystem::GENERAL, "Slow loop with dt: %f, consecutive slow loops: %d\n", loop_dt, consecutive_slow_loops);
+    }
+
+    if (reasons != previous_reasons) {
+        char reason_str[SafetyState::REASON_STR_LEN];
+        SafetyState::reasons_to_string(reasons, reason_str, sizeof(reason_str));
+        SystemLog.info(Subsystem::GENERAL, "Safety mode %s: %s\n", reasons ? "ON" : "OFF", reason_str);
+    }
 }
 
-bool HelloRobot::check_slow_loop() {
-    float dt = stall_timer.delta();
-    if (dt <= SLOW_LOOP_THRESHOLD_S) {
+bool HelloRobot::check_slow_loop(float &loop_dt) {
+    loop_dt = stall_timer.delta();
+    if (loop_dt <= SLOW_LOOP_THRESHOLD_S) {
         consecutive_slow_loops = 0;
         return false;
     }
 
     consecutive_slow_loops++;
-    SystemLog.error(Subsystem::GENERAL, "Slow loop with dt: %f, consecutive slow loops: %d\n", dt, consecutive_slow_loops);
 
     if (consecutive_slow_loops > MAX_CONSECUTIVE_SLOW_LOOPS) {
         can.issue_safety_mode();
+        // reset_teensy never returns, so this path has to log for itself
+        SystemLog.error(Subsystem::GENERAL, "Slow loop with dt: %f, consecutive slow loops: %d\n", loop_dt, consecutive_slow_loops);
         SystemLog.error("Kowabunga bitches\n");
         reset_teensy();
     }

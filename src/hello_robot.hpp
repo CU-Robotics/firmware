@@ -192,8 +192,10 @@ class HelloRobot {
     void check_safety();
 
     /// @brief Measures loop time and resets the Teensy after too many consecutive slow loops.
+    /// @param loop_dt Set to the measured loop time in seconds
     /// @return true if this loop was slow
-    bool check_slow_loop();
+    /// @note Reporting is left to check_safety so logging can't delay disarming the motors.
+    bool check_slow_loop(float& loop_dt);
 
     /// @brief Holds the feeders at their current position so they don't jump when re-armed.
     void hold_feeder_position();
