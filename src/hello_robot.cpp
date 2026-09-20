@@ -151,7 +151,6 @@ void HelloRobot::process_behaviors() {
         *estimated_state_map = *hive_state_map_offset;
         override_request = true;
     }
-    apply_fast_mode();
 }
 void HelloRobot::update_controls() {
     // step estimates and construct estimated state
@@ -179,6 +178,9 @@ void HelloRobot::update_controls() {
     if (transmitter_manager.mode_changed()) {
         governor->set_reference_map(*estimated_state_map);
     }
+
+    apply_fast_mode();
+
     // reference govern
     *reference_map = governor->step_reference_map(*target_state_map);
 
