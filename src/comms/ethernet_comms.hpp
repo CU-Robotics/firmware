@@ -27,8 +27,7 @@ public:
 	/// @brief Send a packet to Hive
     /// @param packet The packet to send
     /// @return True if success
-    bool send_packet(EthernetPacket& packet);
-
+	bool send_packet(EthernetPacket& packet,uint32_t packet_size = ETHERNET_PACKET_MAX_SIZE);
     /// @brief Receive a packet from Hive
     /// @param packet The packet to fill with data
     /// @return True if success

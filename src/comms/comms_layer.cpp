@@ -92,13 +92,17 @@ void CommsLayer::send_packets() {
     m_hid_payload.construct_data();
     memcpy(m_hid_outgoing.payload(), m_hid_payload.data(), m_hid_payload.get_max_size());
     m_hid.send_packet(m_hid_outgoing);
-    
+
     // prepare and send an ethernet packet
     m_ethernet_payload.construct_data();
-    memcpy(m_ethernet_outgoing.payload(), m_ethernet_payload.data(), m_ethernet_payload.get_max_size());
-    m_ethernet.send_packet(m_ethernet_outgoing);
+    const uint16_t payload_size =
+        m_ethernet_payload.get_used_size();
+    if (payload_size != 0) {
+        memcpy(m_ethernet_outgoing.payload(), m_ethernet_payload.data(), payload_size);
+    }
+    const uint32_t packet_size = PACKET_HEADER_SIZE + payload_size;
+    m_ethernet.send_packet(m_ethernet_outgoing, packet_size);
 };
-
 void CommsLayer::receive_packets() {
     // defaulted to true so tests can run without physical layers
     bool hid_recv = true;

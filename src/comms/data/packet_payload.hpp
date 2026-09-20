@@ -65,6 +65,10 @@ public:
     /// @brief Get the max size of the raw data buffer.
     /// @return The max size of the raw data buffer.
     uint16_t get_max_size() const;
+    
+    uint16_t get_used_size() const {
+		return max_data_size - remaining_data_size;
+	}
 
 private:
     /// @brief Clear the raw data buffer.
