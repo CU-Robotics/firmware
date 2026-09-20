@@ -1,7 +1,6 @@
 #include "ET16S.hpp"
 #include "sensors/RefSystem.hpp"
 #include "comms/data/sendable.hpp"
-#include "state.hpp"
 #include "transmitter_utils.hpp"
 #include "comms/config_data/state.hpp"
 #include "utils/system_log.hpp"
