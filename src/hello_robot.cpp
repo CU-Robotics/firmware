@@ -151,6 +151,7 @@ void HelloRobot::process_behaviors() {
         *estimated_state_map = *hive_state_map_offset;
         override_request = true;
     }
+    apply_fast_mode();
 }
 void HelloRobot::update_controls() {
     // step estimates and construct estimated state
