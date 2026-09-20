@@ -92,7 +92,8 @@ void CANManager::read() {
     for (uint32_t bus = 0; bus < CAN_NUM_BUSSES; bus++) {
         // we want to read all the messages from this bus as there might be many queued up
         CAN_message_t msg;
-        while (m_busses[bus]->read(msg)) {
+        // readFIFO, not read: read() checks a random source and returns 0 half the time
+        while (m_busses[bus]->readFIFO(msg)) {
             // distribute the message to the correct motor
             // if this fails, we've received a message that does not match any motor
             // how would this happen?
@@ -276,7 +277,8 @@ void CANManager::init_motors() {
             CAN_message_t msg;
 
             // we want to read all the messages from this bus as there might be many queued up
-            while (m_busses[bus]->read(msg)) {
+            // readFIFO instead of read, see the note in CANManager::read
+            while (m_busses[bus]->readFIFO(msg)) {
                 // try to distribute the message to the correct motor
                 Cfg::MotorName recieving_motor_name = distribute_msg(msg);
 
