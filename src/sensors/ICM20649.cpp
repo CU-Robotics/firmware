@@ -1,5 +1,5 @@
 #include "ICM20649.hpp"
-#include "safety.hpp"
+#include "utils/safety.hpp"
 #include "comms/data/sendable.hpp"
 
 // initialize ICM

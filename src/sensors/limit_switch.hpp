@@ -22,6 +22,8 @@ public:
     /// @brief Get whether the limit switch is currently pressed
     /// @return true if the limit switch is pressed, false otherwise
     inline bool get_is_pressed() const { return is_pressed; }
+	/// @brief Prints a formatted dashboard of the live Limit Switch state
+    void print_live_data() override;
     
 private:
     /// @brief Configuration data for the limit switch

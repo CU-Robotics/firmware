@@ -39,8 +39,6 @@ get_system_includes() {
 : "${CFLAGS:?CFLAGS is required}"
 : "${SRC_FILES:?SRC_FILES is required}"
 
-echo "[Generating compile_commands.json]"
-
 if [[ ! -x "$COMPILER_CPP" ]]; then
     echo "Error: C++ compiler not found at $COMPILER_CPP" >&2
     exit 1
@@ -138,5 +136,3 @@ printf '\n]\n' >&3
 exec 3>&-
 mv "$tmp_db" compile_commands.json
 trap - EXIT
-
-echo "[compile_commands.json generated with $entry_count entries]"

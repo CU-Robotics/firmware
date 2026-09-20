@@ -8,10 +8,6 @@ namespace qn = qindesign::network;
 #include "utils/timing.hpp"				// for Timer
 #include "comms/ethernet_packet.hpp"	// for EthernetPacket
 
-// DEBUG define for displaying all comms errors/status updates
-// This is very noisy on start up
-// #define COMMS_DEBUG
-
 namespace Comms {
 
 /// @brief Ethernet Communications. This handles all comms between the Jetson and the Teensy via Ethernet
