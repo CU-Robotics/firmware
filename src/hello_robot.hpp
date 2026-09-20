@@ -202,7 +202,7 @@ class HelloRobot {
 
     /// @brief aligns chassis heading to the nearest 45-degree diagonal
     void apply_fast_mode();
-    
+public:
     /**
      * @brief Bootstraps the robot's architecture.
      * * Downloads the active configuration from the Hive data layer and uses it
