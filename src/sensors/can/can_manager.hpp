@@ -70,7 +70,7 @@ public:
 
     /// @brief Issue zero torque commands to all motors
     /// @note This immediately issues a CAN command over the bus
-    void issue_safety_mode();
+    void zero_all_motors();
 
     /// @brief Write a torque command to a specific motor by name
     /// @param motor_name The name of the motor to write to

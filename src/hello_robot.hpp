@@ -10,6 +10,7 @@
 
 #include "controls/robot_state_map.hpp"
 #include "utils/safety.hpp"
+#include "utils/safety_state.hpp"
 #include "sensors/buff_encoder.hpp"
 #include "comms/config_data/state.hpp"
 #include "utils/boot_splash.hpp"
@@ -41,6 +42,14 @@ extern "C" void reset_teensy(void);
 // Loop constants
 #define LOOP_FREQ 1000
 #define HEARTBEAT_FREQ 2
+
+// Safety constants
+/// @brief A loop longer than this (twice the nominal period) is considered slow and disarms the motors.
+constexpr float SLOW_LOOP_THRESHOLD_S = 2.0f / LOOP_FREQ;
+/// @brief Consecutive slow loops tolerated before the Teensy is reset.
+constexpr int MAX_CONSECUTIVE_SLOW_LOOPS = 11;
+/// @brief When disarmed, a feeder position whose fractional part exceeds this is rounded up to the next ball.
+constexpr float FEED_ROUND_UP_FRACTION = 0.2f;
 
 #ifdef PROFILER
 extern Profiler prof; 
@@ -81,14 +90,11 @@ class HelloRobot {
     /// @brief Timer used to detect stall conditions and compute delta-time (dt).
     Timer stall_timer;
 
-    /// @brief Timer to track how long gimbal power has been active.
-    Timer gimbal_power_timer;
-
     /// @brief Absolute count of executed loops since boot. Used for heartbeat math.
     uint32_t loopc = 0;
 
     /// @brief Counts consecutive slow loops to trigger a hard reset if the system locks.
-    int slow_loop_counter = 0;
+    int consecutive_slow_loops = 0;
 
     // ==========================================
     // ROBOT VARIABLES
@@ -108,16 +114,10 @@ class HelloRobot {
     // ==========================================
 
     /// @brief Flag indicating if the motors are armed and allowed to move.
-    bool not_safety_mode = false;
+    bool motors_armed = false;
 
     /// @brief Param to specify whether this is the first loop.
     bool is_first_loop = true;
-
-    /// @brief Cache of the previous loop's gimbal power state to detect changes.
-    bool last_gimbal_power = false;
-
-    /// @brief Used to detect multiple slow loops in a row
-    bool last_loop_slow = false;
 
     /// @brief Whether the active robot config contains the lower feeder state.
     bool has_lower_feeder = false;
@@ -193,6 +193,15 @@ class HelloRobot {
 	
 	/// @brief Checks loop timing/safety constraints and writes to the CAN bus.
     void check_safety();
+
+    /// @brief Measures loop time and resets the Teensy after too many consecutive slow loops.
+    /// @param loop_dt Set to the measured loop time in seconds
+    /// @return true if this loop was slow
+    /// @note Reporting is left to check_safety so logging can't delay disarming the motors.
+    bool check_slow_loop(float& loop_dt);
+
+    /// @brief Holds the feeders at their current position so they don't jump when re-armed.
+    void hold_feeder_position();
     
     /// @brief Command line interface for live printing
     void process_cli();

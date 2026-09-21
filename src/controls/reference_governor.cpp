@@ -21,6 +21,13 @@ void Governor::set_acceleration_reference(Cfg::StateName state_name, float value
     reference_state_map[state_name].set_acceleration(value);
 }
 
+void Governor::hold_position(Cfg::StateName state_name, float position) {
+    State& reference = reference_state_map[state_name];
+    reference.set_position(position);
+    reference.set_velocity(0.0f);
+    reference.set_acceleration(0.0f);
+}
+
 const RobotStateMap& Governor::get_reference_map() const {
     return reference_state_map;
 }
