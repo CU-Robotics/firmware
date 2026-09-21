@@ -77,6 +77,9 @@ bool EthernetComms::init(uint32_t data_rate) {
 bool EthernetComms::send_packet(EthernetPacket& packet,uint32_t packet_size) {
     if (packet_size < PACKET_HEADER_SIZE ||
         packet_size > ETHERNET_PACKET_MAX_SIZE) {
+#if defined(COMMS_DEBUG)
+        SystemLog.info(Subsystem::COMMS, "EthernetComms: Packet size incorrect\n");
+#endif
         return false;
     }
 	// update the connection status if needed
