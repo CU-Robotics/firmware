@@ -44,7 +44,7 @@ void ET16S::init() {
 }
 void ET16S::setup_edma_channel() {
     // Disable the HardwareSerial CPU RX interrupt so that it doesnt compete with dma interrupt
-    LPUART5_CTRL &= ~LPUART_CTRL_RIE;
+    LPUART5_CTRL &= ~(LPUART_CTRL_RIE | LPUART_CTRL_ILIE);
 
     // Clear hardware error flags (Overrun, Noise, Framing, Parity)
     LPUART5_STAT |= (LPUART_STAT_OR | LPUART_STAT_NF | LPUART_STAT_FE | LPUART_STAT_PF);
@@ -93,6 +93,7 @@ void ET16S::dma_isr_wrapper() {
 
 void ET16S::dma_isr() {
     rx_dma.clearInterrupt();
+    rx_dma.clearComplete();
 
     // clear DMA cache for target buffer
     arm_dcache_delete((void*)dma_target_buffer, 32);
