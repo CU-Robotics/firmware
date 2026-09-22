@@ -97,6 +97,7 @@ void CommsLayer::send_packets() {
     m_ethernet_payload.construct_data();
     const uint16_t payload_size =
         m_ethernet_payload.get_used_size();
+    m_last_ethernet_send_payload_size = payload_size;
     if (payload_size != 0) {
         memcpy(m_ethernet_outgoing.payload(), m_ethernet_payload.data(), payload_size);
     }
@@ -209,5 +210,119 @@ bool CommsLayer::initialize_ethernet() {
 
     return true;
 };
+
+void CommsLayer::print_live_data() {
+    bool eth_init = m_ethernet.is_initialized();
+    bool eth_conn = m_ethernet.is_connected();
+    bool eth_link = m_ethernet.is_link_up();
+    bool hid_init = m_hid.is_initialized();
+    bool hid_conn = m_hid.is_connected();
+    bool configured = is_configured();
+
+    // Statistics and rate calculations
+    static uint32_t last_calc_time = 0;
+    static uint32_t last_tx_pkts = 0;
+    static uint32_t last_rx_pkts = 0;
+    static uint32_t last_tx_bytes = 0;
+    static uint32_t last_rx_bytes = 0;
+    static float tx_rate_hz = 0.0f;
+    static float rx_rate_hz = 0.0f;
+    static float tx_rate_kbs = 0.0f;
+    static float rx_rate_kbs = 0.0f;
+
+    uint32_t now = millis();
+    uint32_t dt_ms = now - last_calc_time;
+    uint32_t tx_pkts = m_ethernet.get_packets_sent();
+    uint32_t rx_pkts = m_ethernet.get_packets_received();
+    uint32_t tx_bytes = m_ethernet.get_total_bytes_sent();
+    uint32_t rx_bytes = m_ethernet.get_total_bytes_received();
+
+    if (dt_ms >= 500) {
+        if (last_calc_time != 0 && dt_ms > 0) {
+            tx_rate_hz = (float)(tx_pkts - last_tx_pkts) * 1000.0f / (float)dt_ms;
+            rx_rate_hz = (float)(rx_pkts - last_rx_pkts) * 1000.0f / (float)dt_ms;
+            tx_rate_kbs = (float)(tx_bytes - last_tx_bytes) * 1000.0f / (1024.0f * (float)dt_ms);
+            rx_rate_kbs = (float)(rx_bytes - last_rx_bytes) * 1000.0f / (1024.0f * (float)dt_ms);
+        }
+        last_calc_time = now;
+        last_tx_pkts = tx_pkts;
+        last_rx_pkts = rx_pkts;
+        last_tx_bytes = tx_bytes;
+        last_rx_bytes = rx_bytes;
+    }
+
+    uint32_t now_us = micros();
+    uint32_t time_since_tx_us = m_ethernet.get_last_send_time() > 0 ? (now_us - m_ethernet.get_last_send_time()) : 0;
+    uint32_t time_since_rx_us = m_ethernet.get_last_recv_time() > 0 ? (now_us - m_ethernet.get_last_recv_time()) : 0;
+
+    Serial.printf("=== LIVE COMMS STATUS ===\033[K\n");
+    Serial.printf(" Status        : Eth: %s (%s) | HID: %s | Configured: %s\033[K\n",
+                  eth_init ? (eth_conn ? "CONNECTED" : "DISCONNECTED") : "OFFLINE",
+                  eth_link ? "LINK UP" : "NO LINK",
+                  hid_init ? (hid_conn ? "CONNECTED" : "DISCONNECTED") : "OFFLINE",
+                  configured ? "YES" : "NO");
+    Serial.printf(" Network       : Jetson %u.%u.%u.%u:%u <-> Teensy %u.%u.%u.%u:%u\033[K\n",
+                  m_ethernet.get_jetson_ip()[0], m_ethernet.get_jetson_ip()[1],
+                  m_ethernet.get_jetson_ip()[2], m_ethernet.get_jetson_ip()[3],
+                  m_ethernet.get_jetson_port(),
+                  m_ethernet.get_teensy_ip()[0], m_ethernet.get_teensy_ip()[1],
+                  m_ethernet.get_teensy_ip()[2], m_ethernet.get_teensy_ip()[3],
+                  m_ethernet.get_teensy_port());
+    Serial.printf("----------------------------------------------------------------------\033[K\n");
+    Serial.printf(" ETHERNET TX (Teensy -> Jetson)\033[K\n");
+    Serial.printf("   Packets     : Sent: %lu | Failed: %lu | Rate: %6.1f Hz (%5.1f KB/s)\033[K\n",
+                  (unsigned long)tx_pkts,
+                  (unsigned long)m_ethernet.get_packets_send_failed(),
+                  tx_rate_hz, tx_rate_kbs);
+    uint32_t last_tx_pkt_sz = m_ethernet.get_last_send_packet_size();
+    uint16_t last_tx_pld_sz = m_last_ethernet_send_payload_size;
+    float pld_pct = (float)last_tx_pld_sz * 100.0f / (float)ETHERNET_PACKET_PAYLOAD_SIZE;
+    Serial.printf("   Packet Size : %lu B [Hdr: %lu B | Payload: %u / %lu B (%.1f%%)]\033[K\n",
+                  (unsigned long)last_tx_pkt_sz,
+                  (unsigned long)PACKET_HEADER_SIZE,
+                  (unsigned int)last_tx_pld_sz,
+                  (unsigned long)ETHERNET_PACKET_PAYLOAD_SIZE,
+                  pld_pct);
+    if (m_ethernet.get_last_send_time() > 0) {
+        Serial.printf("   Last TX     : %.2f ms ago\033[K\n", (float)time_since_tx_us / 1000.0f);
+    } else {
+        Serial.printf("   Last TX     : Never\033[K\n");
+    }
+    Serial.printf("----------------------------------------------------------------------\033[K\n");
+    Serial.printf(" ETHERNET RX (Jetson -> Teensy)\033[K\n");
+    Serial.printf("   Packets     : Recv: %lu | Dropped: %lu | Rate: %6.1f Hz (%5.1f KB/s)\033[K\n",
+                  (unsigned long)rx_pkts,
+                  (unsigned long)m_ethernet.get_packets_recv_failed(),
+                  rx_rate_hz, rx_rate_kbs);
+    uint32_t last_rx_pkt_sz = m_ethernet.get_last_recv_packet_size();
+    int32_t last_rx_err_sz = m_ethernet.get_last_recv_error_size();
+    if (last_rx_pkt_sz > 0) {
+        Serial.printf("   Last Valid  : %lu B [Hdr: %lu B | Payload: %lu B]\033[K\n",
+                      (unsigned long)last_rx_pkt_sz,
+                      (unsigned long)PACKET_HEADER_SIZE,
+                      (unsigned long)(last_rx_pkt_sz >= PACKET_HEADER_SIZE ? last_rx_pkt_sz - PACKET_HEADER_SIZE : 0));
+    } else {
+        Serial.printf("   Last Valid  : None\033[K\n");
+    }
+    if (last_rx_err_sz != 0) {
+        Serial.printf("   Last Error  : %ld B (Expected: %lu B [FIXED_MAX])\033[K\n",
+                      (long)last_rx_err_sz, (unsigned long)ETHERNET_PACKET_MAX_SIZE);
+    } else {
+        Serial.printf("   Last Error  : None\033[K\n");
+    }
+    if (m_ethernet.get_last_recv_time() > 0) {
+        Serial.printf("   Last RX     : %.2f ms ago (Timeout: %lu ms)\033[K\n",
+                      (float)time_since_rx_us / 1000.0f,
+                      (unsigned long)(m_ethernet.get_connection_timeout() / 1000));
+    } else {
+        Serial.printf("   Last RX     : Never (Timeout: %lu ms)\033[K\n",
+                      (unsigned long)(m_ethernet.get_connection_timeout() / 1000));
+    }
+    Serial.printf("----------------------------------------------------------------------\033[K\n");
+    Serial.printf(" HID STATS     : Read: %llu | Sent: %llu | Failed: %llu\033[K\n",
+                  (unsigned long long)m_hid.get_packets_read(),
+                  (unsigned long long)m_hid.get_packets_sent(),
+                  (unsigned long long)m_hid.get_packets_failed());
+}
 
 }   // namespace Comms

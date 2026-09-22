@@ -59,6 +59,9 @@ public:
     /// @return True if configuration is complete, false if not
     bool is_configured() const { return m_hive_data.config.is_configured(); }
 
+    /// @brief Print live telemetry, packet sizes, and health statistics to Serial CLI
+    void print_live_data();
+
 public:
     /// @brief Get the outgoing ethernet packet
     /// @return The outgoing ethernet packet
@@ -126,6 +129,9 @@ private:
     
     /// @brief Timer for use in the configuration process
     Timer config_loop_timer;
+
+    /// @brief Last Ethernet payload size packed and transmitted
+    uint16_t m_last_ethernet_send_payload_size = 0;
 };
 	extern CommsLayer comms_layer;
 }   // namespace Comms

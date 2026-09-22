@@ -72,6 +72,17 @@ bool EthernetComms::init(uint32_t data_rate) {
 	// set the initialized flag
 	m_initialized = true;
 
+	// reset stats post-warmup
+	m_packets_sent = 0;
+	m_packets_send_failed = 0;
+	m_packets_received = 0;
+	m_packets_recv_failed = 0;
+	m_total_bytes_sent = 0;
+	m_total_bytes_received = 0;
+	m_last_send_packet_size = 0;
+	m_last_recv_packet_size = 0;
+	m_last_recv_error_size = 0;
+
 	return true;
 }
 bool EthernetComms::send_packet(EthernetPacket& packet,uint32_t packet_size) {
@@ -80,19 +91,27 @@ bool EthernetComms::send_packet(EthernetPacket& packet,uint32_t packet_size) {
 #if defined(COMMS_DEBUG)
         SystemLog.info(Subsystem::COMMS, "EthernetComms: Packet size incorrect\n");
 #endif
+        m_packets_send_failed++;
         return false;
     }
 	// update the connection status if needed
     check_connection();
 
     m_last_send_time = micros();
+    m_last_send_packet_size = packet_size;
     m_regulation_timer.start();
 
     const bool sent = m_udp_server.send(m_jetson_ip,m_jetson_port,packet.data_start(),packet_size);
 
+    if (sent) {
+        m_packets_sent++;
+        m_total_bytes_sent += packet_size;
+    } else {
+        m_packets_send_failed++;
 #if defined(COMMS_DEBUG)
-    if (!sent) {SystemLog.info(Subsystem::COMMS,"EthernetComms: Send fail\n");}
+        SystemLog.info(Subsystem::COMMS,"EthernetComms: Send fail\n");
 #endif
+    }
 
     return sent;
 }
@@ -111,6 +130,8 @@ bool EthernetComms::recv_packet(EthernetPacket& packet) {
 		return false;
 	} else if (current_buffer_size != Comms::ETHERNET_PACKET_MAX_SIZE) {
 		// half-read, log as a failure
+		m_packets_recv_failed++;
+		m_last_recv_error_size = current_buffer_size;
 	#if defined(COMMS_DEBUG)
 		SystemLog.info(Subsystem::COMMS,"EthernetComms: Recv fail: %d\n", current_buffer_size);
 	#endif
@@ -130,6 +151,9 @@ bool EthernetComms::recv_packet(EthernetPacket& packet) {
 
 		// log this packet as the last packet received
 		m_last_recv_time = micros();
+		m_last_recv_packet_size = current_buffer_size;
+		m_packets_received++;
+		m_total_bytes_received += current_buffer_size;
 
 		return true;
 	}
@@ -143,6 +167,10 @@ bool EthernetComms::is_connected() const {
 
 bool EthernetComms::is_initialized() const {
 	return m_initialized;
+}
+
+bool EthernetComms::is_link_up() const {
+	return qn::Ethernet.linkStatus() == qn::EthernetLinkStatus::LinkON;
 }
 
 void EthernetComms::check_connection() {

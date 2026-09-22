@@ -66,6 +66,8 @@ public:
     /// @return The max size of the raw data buffer.
     uint16_t get_max_size() const;
     
+    /// @brief Get the used size of the raw data buffer.
+    /// @return The number of bytes packed into the raw data buffer.
     uint16_t get_used_size() const {
 		return max_data_size - remaining_data_size;
 	}
