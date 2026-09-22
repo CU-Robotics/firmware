@@ -11,6 +11,9 @@ ifneq ($(filter release,$(MAKECMDGOALS)),)
 endif
 
 BUILD_DIR := $(BUILD_BASE_DIR)/$(BUILD_TYPE)
+ifneq ($(TEST_SUITE),)
+    BUILD_DIR := $(BUILD_DIR)/teensy-tests/$(TEST_SUITE)
+endif
 TOOLS_DIR := tools
 
 # Set to 1 to disassemble every object file alongside it, for inspecting a
@@ -21,13 +24,34 @@ DUMP_OBJS ?= 0
 # A -j here overrides one given on the command line, so use JOBS to change it:
 # 'make JOBS=1 build' for readable serial output.
 JOBS ?= $(shell sysctl -n hw.ncpu 2>/dev/null || nproc 2>/dev/null || echo 1)
-MAKEFLAGS += -j$(JOBS)
+ifeq ($(MAKELEVEL),0)
+    MAKEFLAGS += -j$(JOBS)
+endif
 
 TARGET := firmware
 TARGET_ELF := $(BUILD_DIR)/$(TARGET).elf
 TARGET_HEX := $(BUILD_DIR)/$(TARGET).hex
 TARGET_MAP := $(BUILD_DIR)/$(TARGET).map
 TARGET_DUMP := $(BUILD_DIR)/$(TARGET).dump
+
+TEST_DIR := test
+TEST_SUITES := $(notdir $(patsubst %/,%,$(dir $(wildcard $(TEST_DIR)/test_*/test_main.cpp))))
+TEST_FILTER ?= $(TEST_SUITES)
+TEST_BOARD ?=
+TEST_TIMEOUT ?= 30
+TYCMD ?= tycmd
+TEST_SRC_test_utils := src/utils/wrapping.cpp src/utils/vector_math.cpp
+TEST_SRC_test_fltrs := src/filters/pid_filter.cpp src/filters/lowpass_filter.cpp
+TEST_SRC_test_sensors := src/sensors/buff_encoder.cpp src/utils/system_log.cpp libraries/SPI/SPI.cpp
+
+ifneq ($(filter test test-build,$(MAKECMDGOALS)),)
+    ifeq ($(strip $(TEST_FILTER)),)
+        $(error TEST_FILTER must select at least one test suite)
+    endif
+    ifneq ($(filter-out $(TEST_SUITES),$(TEST_FILTER)),)
+        $(error Unknown test suite: $(filter-out $(TEST_SUITES),$(TEST_FILTER)))
+    endif
+endif
 
 TEENSY_SRC_DIRS := teensy4
 LIBRARY_SRC_DIRS := libraries
@@ -36,6 +60,11 @@ SRC_SRC_DIRS := src
 TEENSY_SRC := $(shell find $(TEENSY_SRC_DIRS) -name '*.cpp' -or -name '*.c')
 LIBRARY_SRC := $(shell find $(LIBRARY_SRC_DIRS) -name '*.cpp' -or -name '*.c')
 SRC_SRC := $(shell find $(SRC_SRC_DIRS) -name '*.cpp' -or -name '*.c')
+
+ifneq ($(TEST_SUITE),)
+    SRC_SRC := $(TEST_DIR)/$(TEST_SUITE)/test_main.cpp $(TEST_DIR)/teensy/test_runner.cpp $(TEST_SRC_$(TEST_SUITE))
+    LIBRARY_SRC := libraries/unity/unity.c
+endif
 
 TEENSY_OBJS := $(TEENSY_SRC:%=$(BUILD_DIR)/%.o)
 LIBRARY_OBJS := $(LIBRARY_SRC:%=$(BUILD_DIR)/%.o)
@@ -79,6 +108,13 @@ COMMON_COMPILE_FLAGS := $(ARCH_FLAGS) $(SECTION_FLAGS) -O2 -g2 --specs=nano.spec
 CXX_LANGUAGE_FLAGS := -std=gnu++23 -felide-constructors -fno-exceptions -fpermissive
 CXX_WARNING_FLAGS := -Wno-error=narrowing -Wno-trigraphs -Wno-comment -Wall -Werror -Wno-volatile
 
+ifneq ($(TEST_SUITE),)
+    USB_DEFINES := -DUSB_SERIAL -DLAYOUT_US_ENGLISH
+    PROJECT_DEFINES := $(BOARD_DEFINES) $(USB_DEFINES) -DUNIT_TEST
+    # Use C-compatible serial hooks instead of the bundled Unity config.
+    INCLUDE_FLAGS += -include $(TEST_DIR)/teensy/unity_config.h
+endif
+
 PROJECT_CPPFLAGS := $(INCLUDE_FLAGS) $(PROJECT_DEFINES)
 PROJECT_CFLAGS := $(COMMON_COMPILE_FLAGS)
 PROJECT_CXXFLAGS := $(COMMON_COMPILE_FLAGS) $(CXX_LANGUAGE_FLAGS) $(CXX_WARNING_FLAGS)
@@ -105,8 +141,7 @@ SIZE			= $(COMPILER_TOOLS_PATH)/arm-none-eabi-size
 GIT_SCRAPER_SRC = $(TOOLS_DIR)/git_scraper.cpp
 GIT_SCRAPER_BIN = $(BUILD_DIR)/git_scraper
 
-
-.PHONY: build debug release dump docs clean upload install gdb monitor kill restart help clangd git_scraper
+.PHONY: build debug release dump test test-build docs clean upload install gdb monitor kill restart help clangd git_scraper $(addprefix test-build-,$(TEST_SUITES))
 
 
 build: $(TARGET_HEX)
@@ -116,6 +151,21 @@ debug: build
 release: build
 
 dump: $(TARGET_DUMP)
+
+
+# Upload suites sequentially to one Teensy and fail if any suite fails or times out.
+test: test-build
+	@set -e; for suite in $(TEST_FILTER); do \
+		TYCMD="$(TYCMD)" TEST_BOARD="$(TEST_BOARD)" TEST_TIMEOUT="$(TEST_TIMEOUT)" \
+			bash $(TOOLS_DIR)/run_teensy_test.sh \
+			"$(BUILD_DIR)/teensy-tests/$$suite/firmware.hex"; \
+	done
+
+# Cross-compile test firmware without requiring a connected board.
+test-build: $(addprefix test-build-,$(TEST_FILTER))
+
+$(addprefix test-build-,$(TEST_SUITES)):
+	@$(MAKE) --no-print-directory TEST_SUITE=$(@:test-build-%=%) build
 
 
 $(TARGET_ELF): $(SRC_OBJS) $(LIBRARY_OBJS) $(TEENSY_OBJS)
@@ -135,7 +185,11 @@ $(TARGET_DUMP): $(TARGET_ELF)
 
 
 # Ensure git_scraper finishes before compiling any object files
+ifeq ($(TEST_SUITE),)
 $(SRC_OBJS) $(LIBRARY_OBJS) $(TEENSY_OBJS): | git_scraper
+else
+$(SRC_OBJS) $(LIBRARY_OBJS) $(TEENSY_OBJS): Makefile
+endif
 
 
 $(BUILD_DIR)/%.c.o: %.c
@@ -231,6 +285,8 @@ help:
 	@echo "  build:         compiles the source code and links with libraries"
 	@echo "  dump:          generates a disassembly of the built firmware"
 	@echo "  upload:        builds the source and uploads it to the Teensy"
+	@echo "  test:          builds, uploads, and runs Unity tests on a Teensy 4.1"
+	@echo "  test-build:    builds Teensy test firmware without uploading"
 	@echo "  gdb:           starts GDB and attaches to the firmware running on a connected Teensy"
 	@echo "  monitor:       monitors any actively running firmware and displays serial output"
 	@echo "  kill:          stops any running firmware"
@@ -242,6 +298,9 @@ help:
 	@echo "Variables:"
 	@echo "  JOBS=N         parallel jobs (defaults to core count)"
 	@echo "  DUMP_OBJS=1    also disassemble each object file"
+	@echo "  TEST_BOARD=tag selects the Teensy (required if multiple boards are connected)"
+	@echo "  TEST_TIMEOUT=N seconds allowed for each test suite (default: 30)"
+	@echo "  TEST_FILTER=\"suite ...\" selects test suites (defaults to all)"
 
 
 # Generate compile_commands.json from the Makefile's flags and source lists.

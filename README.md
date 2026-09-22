@@ -44,6 +44,18 @@ There are a few other nice helper functions within the makefile. This will list 
 make help
 ```
 
+To build, upload, and run the Unity tests on a connected Teensy 4.1:
+
+```bash
+make test
+```
+
+Or If you don't want to touch the filters and just test the math:
+
+```bash
+make test TEST_FILTER="test_utils test_fltrs
+```
+
 
 ## Contributing
 `main` is the production branch, which is required to be in an always working state.
