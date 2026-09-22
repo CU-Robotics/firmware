@@ -66,7 +66,7 @@ public:
     void write();
 
     /// @brief Send the state of all motors to comms
-    void send_to_comms();
+    void send_to_comms() const;
 
     /// @brief Issue zero torque commands to all motors
     /// @note This immediately issues a CAN command over the bus
@@ -78,11 +78,11 @@ public:
     void write_motor_torque_by_name(Cfg::MotorName motor_name, float torque);
 
     /// @brief Print the state of all motors
-    void print_state();
+    void print_state() const;
 
     /// @brief Print the state of a specific motor
     /// @param motor_name The name of the motor to print the state of
-    void print_motor_state_by_name(Cfg::MotorName motor_name);
+    void print_motor_state_by_name(Cfg::MotorName motor_name) const;
 
     /// @brief Get the underlying motor object by name
     /// @param motor_name The name of the motor to get

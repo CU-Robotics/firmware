@@ -172,7 +172,7 @@ void CANManager::write() {
     }
 }
 
-void CANManager::send_to_comms(){
+void CANManager::send_to_comms() const {
     for(const auto& [name, motor] : m_motor_name_map) {
         Comms::Sendable<MotorStateData> motor_state_sendable;
         MotorState state = motor->get_state();
@@ -212,7 +212,7 @@ void CANManager::write_motor_torque_by_name(Cfg::MotorName motor_name, float tor
     #endif
 }
 
-void CANManager::print_state() {
+void CANManager::print_state() const {
     // for each motor, print it's state
     for (const auto& [name, motor] : m_motor_name_map) {
         // print the motor state
@@ -220,14 +220,14 @@ void CANManager::print_state() {
     }
 }
 
-void CANManager::print_motor_state_by_name(Cfg::MotorName motor_name) {
+void CANManager::print_motor_state_by_name(Cfg::MotorName motor_name) const {
     safety::assert_or_safety_procedure(motor_name!= Cfg::MotorName::UnsetMotorName, 
                                         "CANManager: Requested print of an unset motor name");
     safety::assert_or_safety_procedure(m_motor_name_map.count(motor_name) != 0,
                                         "CANManager: Requested print of an invalid motor name: %u", static_cast<uint32_t>(motor_name));
 
     // print the motor state
-    m_motor_name_map[motor_name]->print_state();
+    m_motor_name_map.at(motor_name)->print_state();
 }
 
 std::shared_ptr<Motor> CANManager::get_motor_by_name(Cfg::MotorName motor_name) {
