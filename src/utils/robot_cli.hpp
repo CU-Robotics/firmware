@@ -15,6 +15,7 @@
 #ifdef PROFILER
 extern Profiler prof; 
 #endif
+/// @brief Command line interface for real-time monitoring and debugging over serial.
 class RobotCLI {
 public:
 	/// @brief Collection of Live viewmodes
@@ -32,6 +33,11 @@ public:
 	/// @brief size of CLI Buffer
     static constexpr size_t CLI_BUFFER_SIZE = 64;
     /// @brief Links CLI commands to active robot states and managers and binds the system log buffer.
+    /// @param tx Reference to transmitter manager
+    /// @param sensors Reference to sensor manager
+    /// @param estimated_state Reference to current estimated robot state map
+    /// @param target_state Reference to current target robot state map
+    /// @param loop_counter Reference to loop counter
     void init(
         TransmitterManager& tx,
         SensorManager& sensors,
@@ -44,10 +50,15 @@ public:
 
 private:
     // Subsystem handles
+    /// @brief Pointer to transmitter manager handle
     TransmitterManager* transmitter_manager = nullptr;
+    /// @brief Pointer to sensor manager handle
     SensorManager* sensor_manager = nullptr;
+    /// @brief Pointer to estimated robot state map
     const RobotStateMap* estimated_state_map = nullptr;
+    /// @brief Pointer to target robot state map
     const RobotStateMap* target_state_map = nullptr;
+    /// @brief Pointer to loop counter
     const uint32_t* loopc = nullptr;
     
     /// @brief array of current live views
