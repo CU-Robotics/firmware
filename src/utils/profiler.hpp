@@ -39,9 +39,6 @@ struct Profiler {
     /// @param name The name of the section to end
     void end(const char *name);
 
-    /// @brief Print stats for a profiling section
-    /// @param name The name of the section to print stats for
-	// void print(const char *name);
 	/// @brief print formatted summary of all sections
 	void print_summary();
 };

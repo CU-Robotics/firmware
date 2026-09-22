@@ -27,12 +27,15 @@ public:
     /// @return A mutable reference to the state object that corresponds to the given state name.
     State &operator[](Cfg::StateName state_name);
     /// @brief Check if a state has been configured and initialized in this array.
+    /// @param state_name The name of the state to check.
+    /// @return True if configured and initialized, false otherwise.
     bool has_state(Cfg::StateName state_name) const {
         const size_t idx = static_cast<size_t>(state_name);
         return idx < NUM_STATES && robot_states[idx].has_value();
     }
 
     /// @brief Insert or reinitialize an individual state directly.
+    /// @param state_config Configuration for the state to initialize.
     void set_state(const Cfg::State& state_config) {
         const size_t idx = static_cast<size_t>(state_config.name);
         safety::assert_or_safety_procedure(idx < NUM_STATES, "RobotStateArray: Invalid state index %u", static_cast<uint32_t>(idx));
@@ -42,7 +45,11 @@ public:
     /// @param state_name The name of the state to get.
     /// @return A const reference to the state object that corresponds to the given state name.
     const State& operator[](Cfg::StateName state_name) const;
+    /// @brief Get a mutable reference to the underlying state array.
+    /// @return Mutable reference to the array of optional states.
 	std::array<std::optional<State>, NUM_STATES>& get_state_array() {return robot_states;};
+    /// @brief Get a const reference to the underlying state array.
+    /// @return Const reference to the array of optional states.
     const std::array<std::optional<State>, NUM_STATES>& get_state_array() const {return robot_states;};
     /// @brief Send the current state array to comms. 
     // This will convert the state array to a format that can be sent to comms and then send it.
@@ -72,7 +79,7 @@ public:
     /// @brief Print the state array to the serial monitor
     void print() const;
     /// @brief Update the state array from a comms packet. This will convert the comms packet to the state array format and then update the state array values
-    /// @param robot_state_array The array of raw state values received from comms, indexed by the StateName enum values.
+    /// @param incoming_states The array of raw state values received from comms, indexed by the StateName enum values.
     void from_comms_packet(const State::Raw incoming_states[NUM_STATES]);
 
 private:
