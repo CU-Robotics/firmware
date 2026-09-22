@@ -28,7 +28,6 @@ void CANManager::init(const std::vector<Cfg::Motor>& motor_configs) {
     m_can1.begin();
     m_can1.setBaudRate(1000000u);   // 1Mbit baud
     m_can1.enableFIFO(true);
-    // TODO: fifo?
 
     // initialize CAN 2
     m_can2.begin();
