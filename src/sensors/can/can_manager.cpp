@@ -187,7 +187,7 @@ void CANManager::send_to_comms(){
     }
 }
 
-void CANManager::issue_safety_mode() {
+void CANManager::zero_all_motors() {
     // for each motor, cant be const
     for (auto& [name, motor] : m_motor_name_map) {
         motor->zero_motor();
