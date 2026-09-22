@@ -1,44 +1,88 @@
 #include "packet_payload.hpp"
 #include "utils/safety.hpp"
+#include "comms/comms_layer.hpp"
 
-#include <algorithm>                        // for min
-#include "comms/comms_layer.hpp"            // for CommsLayer
+#include <cstring>
+#include <limits>
 
 namespace Comms {
 
-PacketPayload::PacketPayload(uint16_t max_data_size) {
-    this->max_data_size = max_data_size;
-    raw_data = new uint8_t[this->max_data_size];
-
-    clear_raw_data();
+PacketPayload::PacketPayload(uint8_t* high_priority_buffer, uint8_t* medium_priority_buffer, uint16_t max_data_size)
+    : max_data_size(max_data_size), high_priority_buf(high_priority_buffer), medium_priority_buf(medium_priority_buffer) {
 }
 
-PacketPayload::~PacketPayload() {
-    delete[] raw_data;
+uint16_t PacketPayload::pack_staged_buffer(uint8_t* source, uint16_t& used, uint16_t& count, uint8_t* destination, uint16_t destination_capacity) {
+    uint16_t emitted_bytes = 0;
+    uint16_t emitted_count = 0;
 
-    while (!high_priority_send_queue.empty()) {
-        delete high_priority_send_queue.front();
-        high_priority_send_queue.pop();
+    while (emitted_bytes < used) {
+        const uint16_t staged_bytes_remaining = used - emitted_bytes;
+        if (staged_bytes_remaining < sizeof(CommsData)) {
+            used = 0;
+            count = 0;
+            safety::assert_or_safety_procedure(false, "PacketPayload::construct_data: Staged record header is truncated");
+            return 0;
+        }
+
+        CommsData header;
+        memcpy(&header, source + emitted_bytes, sizeof(header));
+        if (header.size < sizeof(CommsData) || header.size > staged_bytes_remaining || header.size > max_data_size) {
+            const uint16_t invalid_size = header.size;
+            used = 0;
+            count = 0;
+            safety::assert_or_safety_procedure(false, "PacketPayload::construct_data: Invalid staged record size %u with %u bytes remaining and %u byte capacity", invalid_size, staged_bytes_remaining, max_data_size);
+            return 0;
+        }
+
+        if (header.size > destination_capacity - emitted_bytes) {
+            break;
+        }
+
+        emitted_bytes += header.size;
+        emitted_count++;
     }
 
-    while (!medium_priority_send_queue.empty()) {
-        delete medium_priority_send_queue.front();
-        medium_priority_send_queue.pop();
+    if (emitted_count > count) {
+        used = 0;
+        count = 0;
+        safety::assert_or_safety_procedure(false, "PacketPayload::construct_data: Staged record count is corrupt");
+        return 0;
     }
+
+    if (emitted_bytes > 0) {
+        memcpy(destination, source, emitted_bytes);
+    }
+
+    const uint16_t retained_bytes = used - emitted_bytes;
+    if (retained_bytes > 0 && emitted_bytes > 0) {
+        memmove(source, source + emitted_bytes, retained_bytes);
+    }
+    used = retained_bytes;
+    count -= emitted_count;
+
+    return emitted_bytes;
 }
 
-void PacketPayload::construct_data() {
-    clear_raw_data();
+uint16_t PacketPayload::construct_data(uint8_t* destination) {
+    if (destination == nullptr) {
+        safety::assert_or_safety_procedure(false, "PacketPayload::construct_data: Destination is null");
+        return 0;
+    }
 
-    append_data_from_queue(high_priority_send_queue);
-    append_data_from_queue(medium_priority_send_queue);
+    uint16_t written = pack_staged_buffer(high_priority_buf, high_priority_used, high_priority_count, destination, max_data_size);
+    written += pack_staged_buffer(medium_priority_buf, medium_priority_used, medium_priority_count, destination + written, max_data_size - written);
 
+    const uint16_t remaining = max_data_size - written;
+    if (remaining >= sizeof(CommsData)) {
+        const CommsData sentinel{};
+        memcpy(destination + written, &sentinel, sizeof(sentinel));
+    }
+
+    return written;
 }
 
 void PacketPayload::deconstruct_data(uint8_t* data, uint16_t size) {
     safety::assert_or_safety_procedure(size == max_data_size, "PacketPayload::deconstruct_data: Data size %u does not match max data size %u", size, max_data_size);
-
-    
 
     uint16_t offset = 0;
 
@@ -63,117 +107,84 @@ void PacketPayload::deconstruct_data(uint8_t* data, uint16_t size) {
     }    
 }
 
-void PacketPayload::add(CommsData* data) {
-    switch (data->priority) {
-        case Priority::High: {
-            if (high_priority_send_queue.size() < MAX_QUEUE_SIZE) {
-                high_priority_send_queue.push(data);
-                break;
-            } else {
-                // since we could not successfully add to the high priority queue,
-                // we intentionally fall through to the medium priority queue
-                [[fallthrough]];
-            }
-        } case Priority::Medium: {
-            if (medium_priority_send_queue.size() < MAX_QUEUE_SIZE) {
-                medium_priority_send_queue.push(data);
-            } else {
-                delete data;
-            }
-            break;    
-        }
-        // Don't have a default case so that the compiler will warn us if we forget to handle a priority case
+bool PacketPayload::add(const CommsData* data) {
+    if (data == nullptr) {
+        safety::assert_or_safety_procedure(false, "PacketPayload::add: Data is null");
+        return false;
     }
+    if (data->size < sizeof(CommsData) || data->size > max_data_size) {
+        safety::assert_or_safety_procedure(false, "PacketPayload::add: Invalid record size %u for %u byte capacity", data->size, max_data_size);
+        return false;
+    }
+
+    uint8_t* destination = nullptr;
+    uint16_t* used = nullptr;
+    switch (data->priority) {
+    case Priority::High:
+        if (data->size <= max_data_size - high_priority_used) {
+            destination = high_priority_buf;
+            used = &high_priority_used;
+            break;
+        }
+        [[fallthrough]];
+    case Priority::Medium:
+        if (data->size <= max_data_size - medium_priority_used) {
+            destination = medium_priority_buf;
+            used = &medium_priority_used;
+        }
+        break;
+    default:
+        safety::assert_or_safety_procedure(false, "PacketPayload::add: Invalid priority");
+        return false;
+    }
+
+    if (destination == nullptr) {
+        if (dropped_record_count < std::numeric_limits<uint32_t>::max()) {
+            dropped_record_count++;
+        }
+        return false;
+    }
+
+    memcpy(destination + *used, data, data->size);
+    *used += data->size;
+    if (destination == high_priority_buf) {
+        high_priority_count++;
+    } else {
+        medium_priority_count++;
+    }
+    return true;
 }
-uint8_t* PacketPayload::data() {
-    return raw_data;
-}
+
 
 void PacketPayload::clear_queues() {
-    // clear the queues
-    while (!high_priority_send_queue.empty()) {
-        delete high_priority_send_queue.front();
-        high_priority_send_queue.pop();
-    }
-
-    while (!medium_priority_send_queue.empty()) {
-        delete medium_priority_send_queue.front();
-        medium_priority_send_queue.pop();
-    }
-    // clear the raw data buffer
-    clear_raw_data();
+    high_priority_used = 0;
+    high_priority_count = 0;
+    medium_priority_used = 0;
+    medium_priority_count = 0;
 }
 
 uint16_t PacketPayload::get_high_priority_queue_size() const {
-    return high_priority_send_queue.size();
+    return high_priority_count;
 }
 
 uint16_t PacketPayload::get_medium_priority_queue_size() const {
-    return medium_priority_send_queue.size();
+    return medium_priority_count;
+}
+
+uint32_t PacketPayload::get_dropped_record_count() const {
+    return dropped_record_count;
 }
 
 uint16_t PacketPayload::get_max_size() const {
     return max_data_size;
 }
 
-void PacketPayload::clear_raw_data() {
-    // fill raw data with 0's, and reset remaining size
-    memset(raw_data, 0, max_data_size);
-    remaining_data_size = max_data_size;
-}
-
-void PacketPayload::append_data_from_queue(std::queue<CommsData*>& queue) {
-    while (!queue.empty() && remaining_data_size > 0) {
-        CommsData* next_data = queue.front();
-
-        bool successful_append = try_append_data(next_data);
-
-        if (successful_append) {
-            // set the data in the mega struct
-            place_outgoing_data_in_mega_struct(next_data);
-            
-            // free the pointer
-            delete next_data;
-            queue.pop(); // remove the appended item from the queue, going to the next.
-        } else {
-            // If we could not append (out of space), give up.
-            // Could optimize the space by continuing to try every element in queue instead.
-            break;
-        }
-    }
-}
-
-bool PacketPayload::try_append_data(CommsData* data) {
-    // if we don't have enough space left in our packet to store this data
-    if (data->size > remaining_data_size) {
-        return false; // failure
-    }
-    // we have enough space, append it
-
-    // where to start the append
-    uint16_t append_offset = max_data_size - remaining_data_size;
-
-    // append into raw data buffer.
-    memcpy(raw_data + append_offset, data, data->size);
-
-    remaining_data_size -= data->size;
-
-    return true; // success
-}
 
 void PacketPayload::place_incoming_data_in_mega_struct(CommsData* data) {
     HiveData& hive_data = comms_layer.get_hive_data();
     
     // Serial.printf("Placing incoming in mega struct: %s\n", to_string(data->type_label).c_str());
     hive_data.set_data(data);
-}
-
-void PacketPayload::place_outgoing_data_in_mega_struct(CommsData* data) {
-
-    FirmwareData& firmware_data = comms_layer.get_firmware_data();
-
-    // Serial.printf("Placing outgoing in mega struct: %s\n", to_string(data->type_label).c_str());
-    firmware_data.set_data(data);
 }
 
 }   // namespace Comms

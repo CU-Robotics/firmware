@@ -24,7 +24,7 @@ public:
 
     /// @brief Add this Sendable to the comms layer to be sent.
     void send_to_comms() {
-        comms_layer.queue_data(new T(data));
+        comms_layer.queue_data(&data);
     }
 
     /// @brief Copy assignment operator. Allows easier creation of Sendables.

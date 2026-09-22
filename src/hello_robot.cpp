@@ -186,13 +186,24 @@ void HelloRobot::update_controls() {
 
 }
 void HelloRobot::update_comms() {
+    uint32_t now_ms = millis();
+
+    // Send all state maps at full 1 kHz rate
     target_state_map->send_to_comms<TargetState>();
     reference_map->send_to_comms<ReferenceState>();
     estimated_state_map->send_to_comms<EstimatedState>();
 
-    Comms::Sendable<ConfigurationStatusData> config_status_sendable;
-    config_status_sendable.data.is_configured = Comms::comms_layer.is_configured() ? 1 : 0;
-    config_status_sendable.send_to_comms();
+    // Send ConfigurationStatusData only on status change or on a 1 Hz heartbeat
+    static int8_t last_configured_status = -1;
+    static uint32_t last_config_status_time_ms = 0;
+    uint8_t current_configured = Comms::comms_layer.is_configured() ? 1 : 0;
+    if (current_configured != last_configured_status || (now_ms - last_config_status_time_ms >= 1000)) {
+        Comms::Sendable<ConfigurationStatusData> config_status_sendable;
+        config_status_sendable.data.is_configured = current_configured;
+        config_status_sendable.send_to_comms();
+        last_configured_status = current_configured;
+        last_config_status_time_ms = now_ms;
+    }
 
     if (false) { // Tests roundtrip comms latency. also needs to be set to true in hive.
         Comms::Sendable<TestLatencyData> latency_data;

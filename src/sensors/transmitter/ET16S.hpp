@@ -108,6 +108,12 @@ class ET16S : public Transmitter {
 
 	/// @copydoc Transmitter::manual_controls
 	void manual_controls(const RobotStateMap& estimated_state_map, RobotStateMap& target_state_map, bool not_safety_mode, float& feed, float& last_feed) override;
+
+	/// @copydoc Transmitter::has_new_data
+	bool has_new_data() const override { return m_has_new_data; }
+
+	/// @copydoc Transmitter::clear_new_data
+	void clear_new_data() override { m_has_new_data = false; }
 	
 	/// @brief prints data in binary for a specific channel
 	/// @param channel_num channel number from 0-16 inclusive
@@ -353,6 +359,9 @@ private:
 
 	/// @brief raw data packet
 	uint8_t m_inputRaw[ET16S_PACKET_SIZE] = { 0 };
+
+	/// @brief Flag indicating a new valid radio frame was decoded
+	bool m_has_new_data = false;
 
 	/// @brief Configuration struct for the ET16S transmitter.
 	const Cfg::ET16S& config;

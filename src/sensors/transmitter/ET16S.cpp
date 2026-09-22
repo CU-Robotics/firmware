@@ -73,6 +73,8 @@ void ET16S::read() {
 	//Check flag byte for disconnect
 	test_connection();
 
+	m_has_new_data = true;
+
 	mode_changed_flag = (get_safety_switch() != prev_safety_switch_pos);
 	prev_safety_switch_pos = get_safety_switch();
 }
