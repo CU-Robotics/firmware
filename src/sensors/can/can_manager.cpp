@@ -35,7 +35,7 @@ void CANManager::init(const std::vector<Cfg::Motor>& motor_configs) {
     m_can2.enableFIFO(true);
 
     // initialize CAN 3
-    // TODO: can CAN 3 act the same as CAN 1/2 since its CANFD?
+    // CAN3 is FD-capable, but the classic FlexCAN_T4 template runs it in CAN 2.0 mode, same as CAN1/2
     m_can3.begin();
     m_can3.setBaudRate(1000000u);   // 1Mbit baud
     m_can3.enableFIFO(true);
