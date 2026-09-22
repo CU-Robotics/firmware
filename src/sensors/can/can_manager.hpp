@@ -46,8 +46,8 @@ public:
     /// @return CANManager& The reference to this object
     CANManager& operator=(const CANManager& copy) = delete;
 
-    /// @brief Destructor, cleans up motor array
-    ~CANManager();
+    /// @brief Destructor, the motor map cleans itself up
+    ~CANManager() = default;
 
 public:
     /// @brief Initialize the CAN buses and motor map
@@ -119,6 +119,6 @@ private:
     std::map<Cfg::MotorName, std::shared_ptr<Motor>> m_motor_name_map;
 
     /// @brief The timeout for motor initialization in milliseconds. Most motors respond within 1-2 ms
-    uint32_t m_motor_init_timeout = 250u;
+    static constexpr uint32_t m_motor_init_timeout = 250u;
 
 };
