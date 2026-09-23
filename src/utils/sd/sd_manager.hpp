@@ -26,8 +26,10 @@ public:
     SdFile open_file(const char* path, oflag_t oflag);
 
 private:
+    /// @brief SdioConfig used to initialize the manager
     const SdioConfig _SD_CONFIG;    
 
+    /// @brief SdFat object used in manager
     SdFat _sdfat;
 };
 

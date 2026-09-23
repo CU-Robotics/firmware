@@ -9,8 +9,10 @@ public:
     /// @param sd_man `SdManager` to use
     SdLogger(SdManager& sd_man) : _sd_man(sd_man) {}
 
+    /// @brief Closes the file associated with the logger
     ~SdLogger() { _log_file.close(); }
 
+    /// @brief Creates and binds a file to the logger
     bool start();
 
     /// @brief Write a `LogEvent` to the SD card
@@ -19,13 +21,13 @@ public:
     bool write_log(LogEvent& event);
 
 private:
+    /// @brief SD manager used for file management
     SdManager& _sd_man;
 
-    // File to write to, opened with O_APPEND
+    /// @brief File to write to, opened with O_APPEND
     SdFile _log_file;
 
-    // Opens a new log file
-    // Format specified in sd_loggr.cpp
+    /// @brief Opens a new log file
     bool new_log_file();
 };
 
