@@ -3,7 +3,7 @@
 // default implementation for printing data
 void AdafruitIMUSensor::print() {
 	// Display the temperature data, measured in Celcius
-	Serial.print("\t\tTemperature ");
+    Serial.print("\t\tTemperature ");
 	Serial.print(get_temperature());
 	Serial.println(" deg C");
 	// Display the acceleration data, measured in m/s^2)
