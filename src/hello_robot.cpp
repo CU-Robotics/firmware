@@ -37,7 +37,7 @@ void HelloRobot::init() {
 
     can.init(config.motors);
 
-    safety::register_safety_function([&]() { can.issue_safety_mode(); });
+    safety::register_safety_function([&]() { can.zero_all_motors(); });
 
     ref.init();
     transmitter_manager.init(config.transmitter);
@@ -84,7 +84,9 @@ void HelloRobot::run() {
         prof.begin("Controls");
         update_controls();
         prof.end("Controls");
-
+        prof.begin("Comms");
+        update_comms();
+		prof.end("Comms"); 
         prof.begin("Safety");
         check_safety();
         prof.end("Safety");
@@ -92,10 +94,11 @@ void HelloRobot::run() {
         prof.begin("CLI");
         process_cli();
         prof.end("CLI");
-		#else
+#else
 		read_telemetry();
 		process_behaviors();
 		update_controls();
+		update_comms();
 		check_safety();
 		process_cli();
 #endif
@@ -135,7 +138,7 @@ void HelloRobot::read_telemetry() {
 }
 void HelloRobot::process_behaviors() {
     // manual controls on firmware
-    transmitter_manager.manual_controls(*estimated_state_map, *target_state_map, not_safety_mode, feed, last_feed);
+    transmitter_manager.manual_controls(*estimated_state_map, *target_state_map, motors_armed, feed, last_feed);
 
     // check if we want to use hive controls instead
     if (transmitter_manager.is_hive_mode()) {
@@ -188,6 +191,8 @@ void HelloRobot::update_controls() {
     // generate motor outputs from controls
     controller_manager.step(*reference_map, *estimated_state_map, *target_state_map);
 
+}
+void HelloRobot::update_comms() {
     target_state_map->send_to_comms<TargetState>();
     reference_map->send_to_comms<ReferenceState>();
     estimated_state_map->send_to_comms<EstimatedState>();
@@ -204,62 +209,72 @@ void HelloRobot::update_controls() {
     }
 
     Comms::comms_layer.run();
+    
 }
+
 void HelloRobot::check_safety() {
-    bool is_slow_loop = false;
+    float loop_dt = 0.0f;
+    bool is_slow_loop = check_slow_loop(loop_dt);
 
-    // check whether this was a slow loop or not
-    float dt = stall_timer.delta();
-    if (dt > 0.002f) {
-        // zero the can bus just in case
-        can.issue_safety_mode();
+    uint8_t previous_reasons = safety_state.active_reasons();
 
-		SystemLog.error(Subsystem::GENERAL,"Slow loop with dt: %f, slow loop count %d\n", dt, slow_loop_counter);
-		// mark this as a slow loop to trigger safety mode
-		is_slow_loop = true;
-		if (last_loop_slow) {
-			slow_loop_counter++;
-			if (slow_loop_counter > 10) {
-				SystemLog.error("Kowabunga bitches\n");
-				reset_teensy();
-			}
-		} else {
-			slow_loop_counter = 0;
-		}
-	}
-	last_loop_slow = is_slow_loop;
+    uint8_t reasons = safety_state.evaluate(transmitter_manager.is_safety_mode(), Comms::comms_layer.is_configured(), is_slow_loop, ref.ref_data.robot_performance.gimbal_power_active);
 
-    if (!last_gimbal_power && ref.ref_data.robot_performance.gimbal_power_active) {
-        gimbal_power_timer.start();
-    }
-    last_gimbal_power = ref.ref_data.robot_performance.gimbal_power_active;
-    bool gimbal_power_recently_turned_on = gimbal_power_timer.get_elapsed_micros_no_restart() < 3000000;
+    motors_armed = safety_state.motors_armed();
 
-    not_safety_mode = (!transmitter_manager.is_safety_mode() && Comms::comms_layer.is_configured() && !is_slow_loop && ref.ref_data.robot_performance.gimbal_power_active && !gimbal_power_recently_turned_on);
-
-    safety::set_safety_mode(!not_safety_mode);
-
-    //  SAFETY MODE
-    if (not_safety_mode) {
-        // SAFETY OFF
+    if (motors_armed) {
         can.write();
-        //SystemLog.info(Subsystem::CAN,"Can write\n");
     } else {
-        // SAFETY ON
         // TODO: Reset all controller integrators here
-        can.issue_safety_mode();
-        float current_feed = (*estimated_state_map)[Cfg::StateName::Feeder].get_position();
-        governor->set_position_reference(Cfg::StateName::Feeder, current_feed);
-        if (has_lower_feeder) {
-            governor->set_position_reference(Cfg::StateName::LowerFeeder, (*estimated_state_map)[Cfg::StateName::LowerFeeder].get_position());
-        }
-        feed = (fmod(fmod(current_feed, 1) + 1, 1) > 0.2)
-                   ? (int)floor(current_feed) + 1
-                   : (int)floor(current_feed); // reset feed to the current state
-        last_feed = feed;                      // reset last feed to the current state
-                                               // Serial.printf("Can zero\n");
+        can.zero_all_motors();
+        hold_feeder_position();
+    }
+
+    if (is_slow_loop) {
+        SystemLog.error(Subsystem::GENERAL, "Slow loop with dt: %f, consecutive slow loops: %d\n", loop_dt, consecutive_slow_loops);
+    }
+
+    if (reasons != previous_reasons) {
+        char reason_str[SafetyState::REASON_STR_LEN];
+        SafetyState::reasons_to_string(reasons, reason_str, sizeof(reason_str));
+        SystemLog.info(Subsystem::GENERAL, "Safety mode %s: %s\n", reasons ? "ON" : "OFF", reason_str);
     }
 }
+
+bool HelloRobot::check_slow_loop(float &loop_dt) {
+    loop_dt = stall_timer.delta();
+    if (loop_dt <= SLOW_LOOP_THRESHOLD_S) {
+        consecutive_slow_loops = 0;
+        return false;
+    }
+
+    consecutive_slow_loops++;
+
+    if (consecutive_slow_loops > MAX_CONSECUTIVE_SLOW_LOOPS) {
+        can.zero_all_motors();
+        // reset_teensy never returns, so this path has to log for itself
+        SystemLog.error(Subsystem::GENERAL, "Slow loop with dt: %f, consecutive slow loops: %d\n", loop_dt, consecutive_slow_loops);
+        SystemLog.error("Kowabunga bitches\n");
+        reset_teensy();
+    }
+    return true;
+}
+
+void HelloRobot::hold_feeder_position() {
+    governor->hold_position(Cfg::StateName::Feeder, (*estimated_state_map)[Cfg::StateName::Feeder].get_position());
+    if (has_lower_feeder) {
+        governor->hold_position(Cfg::StateName::LowerFeeder, (*estimated_state_map)[Cfg::StateName::LowerFeeder].get_position());
+    }
+
+    Cfg::StateName fed_state = has_lower_feeder ? Cfg::StateName::LowerFeeder : Cfg::StateName::Feeder;
+    float current_feed = (*estimated_state_map)[fed_state].get_position();
+
+    // Snap the manual feed target to a whole ball so re-arming doesn't advance the feeder
+    float whole_balls = floor(current_feed);
+    feed = (current_feed - whole_balls > FEED_ROUND_UP_FRACTION) ? whole_balls + 1 : whole_balls;
+    last_feed = feed;
+}
+
 void HelloRobot::loop_timing() {
     // print loopc every second to verify it is still alive
     if (loopc % 1000 == 0) {
