@@ -3,6 +3,7 @@
 #include "utils/sd/sd_manager.hpp"
 #include "utils/system_log.hpp"
 
+/// @brief Creates and manages a log file on the SD card
 class SdLogger {
 public:
     /// @brief Creates a new SdLogger, and a new file on the SD card with it
@@ -13,6 +14,7 @@ public:
     ~SdLogger() { _log_file.close(); }
 
     /// @brief Creates and binds a file to the logger
+    /// @return Whether the start successfully created a new file
     bool start();
 
     /// @brief Write a `LogEvent` to the SD card
@@ -28,6 +30,7 @@ private:
     SdFile _log_file;
 
     /// @brief Opens a new log file
+    /// @return Whether file was created and bound to successfully
     bool new_log_file();
 };
 
