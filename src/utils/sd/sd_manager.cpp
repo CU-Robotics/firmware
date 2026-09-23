@@ -1,4 +1,5 @@
 #include "sd_manager.hpp"
+#include <SdFat.h>
 
 #ifndef BUILTIN_SDCARD_CONFIG
 #define BUILTIN_SDCARD_CONFIG SdioConfig(FIFO_SDIO)
@@ -18,4 +19,8 @@ void SdManager::stop() {
 
 SdFile SdManager::open_file(const char* path, oflag_t oflag) {
     return SdFile(path, oflag);
+}
+
+bool SdManager::file_exists(const char* path) {
+    return _sdfat.exists(path);
 }

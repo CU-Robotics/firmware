@@ -22,8 +22,14 @@ public:
     /// @brief Opens a file on the SD card
     /// @param path Path to the file
     /// @param oflag File open flags (8-bit bitfield)
-    /// @return Requested file. Existence check with `file.exists()`
+    /// @return Requested file
     SdFile open_file(const char* path, oflag_t oflag);
+
+
+    /// @brief Checks if a file exists on the SD card
+    /// @param path File path to checj
+    /// @return Whether the file exists
+    bool file_exists(const char* path);
 
 private:
     /// @brief SdioConfig used to initialize the manager
