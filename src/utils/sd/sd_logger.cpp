@@ -25,7 +25,7 @@ bool SdLogger::write_log(LogEvent& event) {
     // build string
     char log_buffer[128];
     snprintf(log_buffer, sizeof(log_buffer), 
-        "%f : %s : %s : %s",
+        "%f : %s : %s : %s \n",
         event.timestamp,
         level_to_str(event.level),
         sys_to_str(event.sys),
@@ -47,7 +47,7 @@ bool SdLogger::new_log_file() {
     SdFile curr_file;
     
     // get next log file number
-    int num = 1;
+    int num = 0;
     while (curr_file.openNext(&log_dir, O_RDONLY)) {
         char name_buf[32];
         int num_match;
