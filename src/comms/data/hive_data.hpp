@@ -13,8 +13,8 @@ struct HiveData {
     /// @param data The data to be set.
     void set_data(CommsData* data);
 
-    template <typename T1, typename T2>
-    void save_config_packet(T1* packet, T2& struct_vector) {
+    template <typename T>
+    void save_config_packet(T* packet, std::vector<T>& struct_vector) {
         struct_vector.push_back(*packet);
         config.num_sections_received++;
         if (config_file.has_value()) 

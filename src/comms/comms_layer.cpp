@@ -169,8 +169,11 @@ void CommsLayer::set_firmware_data(FirmwareData& data) {
 void CommsLayer::configure(SDManager& sd_manager) {
     if (sd_manager.exists(config_file_name)) {
         Serial.printf("Found config file %s already stored", config_file_name); 
+        // if we can load the conifg file from the sd card we are done
+        if (read_config_sd(sd_manager)) return;
     } 
-
+    
+    // config packets are saved to the sd card if it exists in HiveData::set_data() 
     m_hive_data.config_file = get_config_sd_file(sd_manager);
     int time = millis();
     Sendable<ConfigurationStatusData> config_status_sendable;
@@ -211,6 +214,18 @@ std::optional<SDManager*> CommsLayer::get_config_sd_file(SDManager& sd_manager) 
 }
 
 bool CommsLayer::read_config_sd(SDManager& sd_manager) {
+    int size = sd_manager.lseek(0, SEEK_END);
+    uint8_t* buffer = new uint8_t[size];
+    if (sd_manager.read(buffer, size)) {
+        Serial.printf("Could not read from config file %s\n", config_file_name);
+        return false;
+    }
+    for (int offset = 0; offset < size;) {
+        CommsData* header = reinterpret_cast<CommsData*>(buffer);
+        offset += header->size;
+        
+        m_hive_data.set_data(header); 
+    }
     return true;
 }
 
