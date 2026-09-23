@@ -27,7 +27,7 @@ public:
 
 
     /// @brief Checks if a file exists on the SD card
-    /// @param path File path to checj
+    /// @param path File path to check
     /// @return Whether the file exists
     bool file_exists(const char* path);
 
