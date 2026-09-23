@@ -8,7 +8,7 @@
 #include "comms/data/firmware_data.hpp"     // for FirmwareData
 #include "comms/config_data/robot_config.hpp" // for RobotConfig
 #include "config_data/robot_config.hpp"
-#include "comms/SDManager.hpp"
+#include "utils/sd/sd_manager.hpp"
 
 constexpr const char* config_file_name = "config.dat";
 
@@ -32,8 +32,8 @@ public:
     /// @return Exit status, 0 for success, < 0 for error
     /// @note Should never return
     int run();
-    /// @brief Requests the configuration data from the Hive and waits until it is fully received before returning
-    void configure(SDManager& sd_manager);
+    /// @brief Requests the configuration data from the Hive and waits until it is fully received before returning, also saves config to sd card
+    void configure();
 public:
     /// @brief Send a CommsData packet to the appropriate packet payload
     /// @param data The CommsData packet to send
@@ -103,13 +103,12 @@ private:
 
     /// @brief Open the file object for the config_file on SDManager, creates one if there is none
     /// @return True if successful, false if not
-    /// TODO: make this return an explicit file object instead of making it 
     /// part of SDManager
-    std::optional<SDManager*> get_config_sd_file(SDManager& sd_manager);
+    std::optional<SdFile> get_config_sd_file();
 
     /// @brief Read the config file on the SD card
     /// @return True if successful, false if not
-    bool read_config_sd(SDManager& sd_manager);
+    bool read_config_sd();
 
 private:
     /// @brief Ethernet physical layer

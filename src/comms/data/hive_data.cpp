@@ -46,7 +46,7 @@ void HiveData::set_data(CommsData* data) {
         }
         config.config_start = *config_start;
         if (config_file.has_value())
-            (*config_file.value()).write(reinterpret_cast<uint8_t*>(config_start), sizeof(*config_start));
+            (config_file.value()).write(reinterpret_cast<uint8_t*>(config_start), sizeof(*config_start));
         break;
     }
     case TypeLabel::ControllerConfig: {
@@ -99,7 +99,10 @@ void HiveData::set_data(CommsData* data) {
     }
     case TypeLabel::TransmitterConfig: {
         Cfg::Transmitter* transmitter = static_cast<Cfg::Transmitter*>(data);
-        save_config_packet(transmitter, config.transmitter);
+        config.transmitter = *transmitter;
+        config.num_sections_received++;
+        if (config_file.has_value()) 
+            (config_file.value()).write(reinterpret_cast<uint8_t*>(transmitter), sizeof(*transmitter));
         Serial.printf("Transmitter %u received\n", static_cast<uint32_t>(transmitter->transmitter_type));
         break;
     }

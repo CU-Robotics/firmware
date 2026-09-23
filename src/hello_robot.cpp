@@ -17,12 +17,10 @@ void HelloRobot::init() {
 
     Comms::comms_layer.init();
     
-    sd_manager.init();
-
     // Configure the robot from comms data, which is filled on Hive.
     Serial.println("Configuring...");
 
-    Comms::comms_layer.configure(sd_manager);
+    Comms::comms_layer.configure();
 
     const Cfg::RobotConfig &config = Comms::comms_layer.get_hive_data().config;
 

@@ -167,24 +167,19 @@ void CommsLayer::set_firmware_data(FirmwareData& data) {
     m_firmware_data = data;
 };
 
-void CommsLayer::configure(SDManager& sd_manager) {
-    if (sd_manager.exists(config_file_name)) {
+void CommsLayer::configure() {
+    if (BuiltinSd.file_exists(config_file_name)) {
         Serial.printf("Found config file %s already stored", config_file_name); 
         // if we can load the conifg file from the sd card we are done
-        if (read_config_sd(sd_manager)) return;
+        if (read_config_sd()) return;
     } 
     
     // config packets are saved to the sd card if it exists in HiveData::set_data() 
-    m_hive_data.config_file = get_config_sd_file(sd_manager);
+    m_hive_data.config_file = get_config_sd_file();
     int time = millis();
     Sendable<ConfigurationStatusData> config_status_sendable;
-<<<<<<< HEAD
     while (!m_hive_data.config.config_start.num_config_sections) {
-        Serial.printf("Waiting for config start packet... time since start: %d ms\n", millis() - time);
-=======
-    while (!m_hive_data.config.config_start.num_config_sections != 0) {
         SystemLog.info(Subsystem::COMMS,"Waiting for config start packet... time since start: %d ms\n", millis() - time);
->>>>>>> feature-sd-logging
         config_status_sendable.data.is_configured = 0;
         config_status_sendable.send_to_comms();
         run();
@@ -202,50 +197,45 @@ void CommsLayer::configure(SDManager& sd_manager) {
 
     if (m_hive_data.config_file.has_value()) {
         Serial.printf("Config: closed sd card config file");
-        sd_manager.close();
+        m_hive_data.config_file.value().close();
     }
 }
 
-// TODO: replace SDManager with something else and make this just return an 
-// std::optional<file_t> object
-std::optional<SDManager*> CommsLayer::get_config_sd_file(SDManager& sd_manager) {
-    if (sd_manager.touch(config_file_name)) {
-        Serial.printf("Could not create or find config file %s\n", config_file_name);
-        return std::nullopt;
-    }
-    
-    if (sd_manager.open(config_file_name, FILE_WRITE)) {
+std::optional<SdFile> CommsLayer::get_config_sd_file() {
+    SdFile file = BuiltinSd.open_file(config_file_name, O_WRITE | O_CREAT);
+    if (!file) {
         Serial.printf("Could not open config file %s\n", config_file_name);
         return std::nullopt;
     }
 
     Serial.printf("Config: created sd card config file %s\n", config_file_name);
-    return &sd_manager;
+    return file;
 }
 
-bool CommsLayer::read_config_sd(SDManager& sd_manager) {
-    int size = sd_manager.lseek(0, SEEK_END);
-    uint8_t* buffer = new uint8_t[size];
-    if (sd_manager.open(config_file_name, FILE_READ)) {
+bool CommsLayer::read_config_sd() {
+    SdFile file = BuiltinSd.open_file(config_file_name, O_READ);
+    if (!file) {
         Serial.printf("Could not open config file %s\n", config_file_name);
         return false;
     }
+    uint64_t size = file.fileSize();
     Serial.printf("Openned sd card config file %s\n", config_file_name);
 
-    if (sd_manager.read(buffer, size)) {
+    uint8_t* buffer = new uint8_t[size];
+    if (file.read(buffer, size)) {
         Serial.printf("Could not read from config file %s\n", config_file_name);
         return false;
     }
 
-    for (int offset = 0; offset < size;) {
-        CommsData* header = reinterpret_cast<CommsData*>(buffer);
+    for (uint64_t offset = 0; offset < size;) {
+        CommsData* header = reinterpret_cast<CommsData*>(buffer + offset);
         offset += header->size;
 
         m_hive_data.set_data(header); 
     }
     
     Serial.println("Received all config packets from sd card");
-    sd_manager.close();
+    file.close();
     return true;
 }
 
