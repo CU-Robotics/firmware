@@ -2,6 +2,7 @@
 
 // driver includes are here not in header since they're only needed in the implementation
 #include "utils/safety.hpp"
+#include "utils/system_log.hpp"
 #include "sensors/can/C610.hpp"
 #include "sensors/can/C620.hpp"
 #include "sensors/can/MG8016EI6.hpp"
@@ -97,7 +98,7 @@ void CANManager::read() {
             // how would this happen?
             if (distribute_msg(msg) == Cfg::MotorName::UnsetMotorName) {
                 // - 1 on msg.bus to maintain bus IDs being 0-indexed
-                Serial.printf("CANManager failed to distribute message with raw CAN ID: %.4x on bus: %x\n", msg.id, msg.bus - 1);
+                SystemLog.error(Subsystem::CAN,"CANManager failed to distribute message with raw CAN ID: %.4x on bus: %x\n", msg.id, msg.bus - 1);
             }
         }
     }
@@ -186,7 +187,7 @@ void CANManager::send_to_comms(){
     }
 }
 
-void CANManager::issue_safety_mode() {
+void CANManager::zero_all_motors() {
     // for each motor, cant be const
     for (auto& [name, motor] : m_motor_name_map) {
         motor->zero_motor();

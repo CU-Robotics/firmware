@@ -1,4 +1,6 @@
 #include "SDC104.hpp"
+#include "utils/system_log.hpp"
+
 
 void SDC104::init() {
     // axis state is defered until the first control command is sent
@@ -38,13 +40,13 @@ int SDC104::read(CAN_message_t& msg) {
             break;
         }
         default: {
-            Serial.printf("Unknown error type: %d\n", static_cast<int>(m_error_request_type));
+            SystemLog.error(Subsystem::MOTORS,"Unknown error type: %d\n", static_cast<int>(m_error_request_type));
             break;
         }
         }
         break;
     }
-    case CMD_MIT_CONTROL: { Serial.printf("MIT control command not implemented\n"); break; }
+    case CMD_MIT_CONTROL: {  SystemLog.error(Subsystem::MOTORS,"MIT control command not implemented\n"); break; }
     case CMD_GET_ENCODER_ESTIMATES: {
         m_position_estimate = *((float*)&msg.buf[0]);
         m_velocity_estimate = *((float*)&msg.buf[4]);
@@ -91,7 +93,7 @@ int SDC104::read(CAN_message_t& msg) {
         break;
     }
     default: {
-        Serial.printf("Unknown command byte: %d\n", cmd_byte);
+        SystemLog.error(Subsystem::MOTORS,"Unknown command byte: %d\n", cmd_byte);
         break;
     }
     }

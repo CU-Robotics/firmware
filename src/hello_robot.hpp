@@ -10,10 +10,10 @@
 
 #include "controls/robot_state_map.hpp"
 #include "utils/safety.hpp"
+#include "utils/safety_state.hpp"
 #include "sensors/buff_encoder.hpp"
 #include "comms/config_data/state.hpp"
 #include "utils/boot_splash.hpp"
-#include "utils/profiler.hpp"
 
 #include "sensors/d200.hpp"
 #include "sensors/transmitter/transmitter_manager.hpp"
@@ -22,11 +22,13 @@
 #include "controls/controller_manager.hpp"
 #include "controls/estimator_manager.hpp"
 #include "sensors/RefSystem.hpp"
+
 #include "sensors/StereoCamTrigger.hpp"
-#include "utils/profiler.hpp"
 
 #include "sensors/sensor_manager.hpp"
 #include <TeensyDebug.h>
+#include "utils/profiler.hpp"
+#include "utils/system_log.hpp"
 #include <wiring.h>
 
 #include "comms/SDManager.hpp"
@@ -36,6 +38,7 @@
 #include "comms/data/sendable.hpp"
 #include "utils/timing.hpp"
 #include "utils/watchdog.hpp"
+#include "utils/sd/sd_manager.hpp"
 
 extern "C" void reset_teensy(void);
 
@@ -43,6 +46,17 @@ extern "C" void reset_teensy(void);
 #define LOOP_FREQ 1000
 #define HEARTBEAT_FREQ 2
 
+// Safety constants
+/// @brief A loop longer than this (twice the nominal period) is considered slow and disarms the motors.
+constexpr float SLOW_LOOP_THRESHOLD_S = 2.0f / LOOP_FREQ;
+/// @brief Consecutive slow loops tolerated before the Teensy is reset.
+constexpr int MAX_CONSECUTIVE_SLOW_LOOPS = 11;
+/// @brief When disarmed, a feeder position whose fractional part exceeds this is rounded up to the next ball.
+constexpr float FEED_ROUND_UP_FRACTION = 0.2f;
+
+#ifdef PROFILER
+extern Profiler prof; 
+#endif
 
 /// @brief Coordinates all hardware, networking, and control systems.
 class HelloRobot {
@@ -82,14 +96,11 @@ class HelloRobot {
     /// @brief Timer used to detect stall conditions and compute delta-time (dt).
     Timer stall_timer;
 
-    /// @brief Timer to track how long gimbal power has been active.
-    Timer gimbal_power_timer;
-
     /// @brief Absolute count of executed loops since boot. Used for heartbeat math.
     uint32_t loopc = 0;
 
     /// @brief Counts consecutive slow loops to trigger a hard reset if the system locks.
-    int slow_loop_counter = 0;
+    int consecutive_slow_loops = 0;
 
     // ==========================================
     // ROBOT VARIABLES
@@ -109,16 +120,10 @@ class HelloRobot {
     // ==========================================
 
     /// @brief Flag indicating if the motors are armed and allowed to move.
-    bool not_safety_mode = false;
+    bool motors_armed = false;
 
     /// @brief Param to specify whether this is the first loop.
     bool is_first_loop = true;
-
-    /// @brief Cache of the previous loop's gimbal power state to detect changes.
-    bool last_gimbal_power = false;
-
-    /// @brief Used to detect multiple slow loops in a row
-    bool last_loop_slow = false;
 
     /// @brief Whether the active robot config contains the lower feeder state.
     bool has_lower_feeder = false;
@@ -144,26 +149,74 @@ class HelloRobot {
 
     /// @brief Hive offset state
     std::optional<RobotStateMap> hive_state_map_offset;
-
-    /// @brief check to see if there is a crash report, and if so, print it repeatedly
-    void crash_report();
-
-    /// @brief Reads data from CAN, RefSystem, Transmitter, and Sensors.
+	// ==========================================
+    // CLI  Variables
+    // ==========================================
+    /// @brief Collection of Live viewmodes
+    enum class LiveMode { NONE, PROFILE_VIEW, TRANSMITTER, ESTIMATED_STATE, TARGET_STATE, SENSORS, HEARTBEAT };
+    /// @brief number of live views allowed at once
+    static const uint8_t MAX_LIVE_VIEWS = 4;
+    /// @brief array of current live views
+    LiveMode active_views[MAX_LIVE_VIEWS];
+    /// @brief number of active live views
+    uint8_t num_active_views = 0;
+    /// @brief time since the live view was refreshed
+    uint32_t last_redraw_time = 0;
+    /// @brief refresh rate in milliseconds
+    uint32_t redraw_interval = 1000; 
+	/// @brief CLI Buffer
+    char cli_buffer[64] = {0};
+	/// @brief index for cli_buffer
+    uint8_t cli_index = 0;
+	/// @brief flag for live CLI printing
+    bool live_profiler_active = false;
+    
+    /// @brief CLI ping function
+    void cmd_ping();
+    /// @brief CLI help function
+    void cmd_help();
+    /// @brief CLI live view function
+    void cmd_live();
+    /// @brief CLI function to handle logging
+    void cmd_log();
+	// ==========================================
+    // Major Loop functions
+    // ==========================================
+	/// @brief check to see if there is a crash report, and if so, print it repeatedly
+	void crash_report();
+	
+	/// @brief Reads data from CAN, RefSystem, Transmitter, and Sensors.
     void read_telemetry();
-
-    /// @brief Processes manual inputs, hive modes, and state overrides.
-    void process_behaviors();
-
-    /// @brief Steps estimators, governors, and controllers to generate motor targets.
+	
+	/// @brief Processes manual inputs, hive modes, and state overrides.
+	void process_behaviors();
+	
+	/// @brief Steps estimators, governors, and controllers to generate motor targets.
     void update_controls();
 
-    /// @brief Checks loop timing/safety constraints and writes to the CAN bus.
+    /// @brief Handles all comms data transfers
+    void update_comms();
+	
+	/// @brief Checks loop timing/safety constraints and writes to the CAN bus.
     void check_safety();
 
-    /// @brief LED hearbeat, feeds the watchdog, and ensures consistent loop time.
-    void loop_timing();
+    /// @brief Measures loop time and resets the Teensy after too many consecutive slow loops.
+    /// @param loop_dt Set to the measured loop time in seconds
+    /// @return true if this loop was slow
+    /// @note Reporting is left to check_safety so logging can't delay disarming the motors.
+    bool check_slow_loop(float& loop_dt);
 
-  public:
+    /// @brief Holds the feeders at their current position so they don't jump when re-armed.
+    void hold_feeder_position();
+    
+    /// @brief Command line interface for live printing
+    void process_cli();
+	
+	/// @brief LED hearbeat, feeds the watchdog, and ensures consistent loop time.
+	void loop_timing();
+
+
+public:
     /**
      * @brief Bootstraps the robot's architecture.
      * * Downloads the active configuration from the Hive data layer and uses it
