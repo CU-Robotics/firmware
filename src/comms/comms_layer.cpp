@@ -194,7 +194,10 @@ void CommsLayer::configure(SDManager& sd_manager) {
         config_loop_timer.delay_micros(5000);
     }
 
-    if (m_hive_data.config_file.has_value()) sd_manager.close();
+    if (m_hive_data.config_file.has_value()) {
+        Serial.printf("Config: closed sd card config file");
+        sd_manager.close();
+    }
 }
 
 // TODO: replace SDManager with something else and make this just return an 
@@ -210,22 +213,33 @@ std::optional<SDManager*> CommsLayer::get_config_sd_file(SDManager& sd_manager) 
         return std::nullopt;
     }
 
+    Serial.printf("Config: created sd card config file %s\n", config_file_name);
     return &sd_manager;
 }
 
 bool CommsLayer::read_config_sd(SDManager& sd_manager) {
     int size = sd_manager.lseek(0, SEEK_END);
     uint8_t* buffer = new uint8_t[size];
+    if (sd_manager.open(config_file_name, FILE_READ)) {
+        Serial.printf("Could not open config file %s\n", config_file_name);
+        return false;
+    }
+    Serial.printf("Openned sd card config file %s\n", config_file_name);
+
     if (sd_manager.read(buffer, size)) {
         Serial.printf("Could not read from config file %s\n", config_file_name);
         return false;
     }
+
     for (int offset = 0; offset < size;) {
         CommsData* header = reinterpret_cast<CommsData*>(buffer);
         offset += header->size;
-        
+
         m_hive_data.set_data(header); 
     }
+    
+    Serial.println("Received all config packets from sd card");
+    sd_manager.close();
     return true;
 }
 

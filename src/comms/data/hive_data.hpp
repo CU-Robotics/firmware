@@ -13,6 +13,9 @@ struct HiveData {
     /// @param data The data to be set.
     void set_data(CommsData* data);
 
+    // @brief Add a config packet to the desired vector and additionally save to sd card.
+    // @param packet The packet to save to the vector.
+    // @param struct_vector The vector of the config packets to save to.
     template <typename T>
     void save_config_packet(T* packet, std::vector<T>& struct_vector) {
         struct_vector.push_back(*packet);

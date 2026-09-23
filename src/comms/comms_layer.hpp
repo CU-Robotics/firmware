@@ -10,7 +10,7 @@
 #include "config_data/robot_config.hpp"
 #include "comms/SDManager.hpp"
 
-constexpr const char* config_file_name = "config.yaml";
+constexpr const char* config_file_name = "config.dat";
 
 namespace Comms {
 
