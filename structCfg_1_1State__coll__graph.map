@@ -1,0 +1,6 @@
+<map id="Cfg::State" name="Cfg::State">
+<area shape="rect" id="node1" title="The State struct represents the configuration for a state, including its reference limits,..." alt="" coords="87,228,165,255"/>
+<area shape="rect" id="node2" href="$structComms_1_1CommsData.html" title="base class for all data structs that want to be sent over comms." alt="" coords="5,124,151,151"/>
+<area shape="rect" id="node3" href="$structCfg_1_1StateLimit.html" title="StateLimit represents the limits for all orders of a state. States are governed by these values." alt="" coords="175,124,283,151"/>
+<area shape="rect" id="node4" href="$structCfg_1_1Limit.html" title="Generic Limit type with a min and a max." alt="" coords="190,5,267,32"/>
+</map>

@@ -1,0 +1,5 @@
+<map id="Frame" name="Frame">
+<area shape="rect" id="node1" title="Struct for the entire Frame. Consists of a FrameHeader, Command ID, FrameData, and CRC." alt="" coords="78,95,137,121"/>
+<area shape="rect" id="node2" href="$structFrameData.html" title="Struct for the Frame data portion." alt="" coords="5,5,92,32"/>
+<area shape="rect" id="node3" href="$structFrameHeader.html" title="Struct for the Frame header portion." alt="" coords="117,5,218,32"/>
+</map>

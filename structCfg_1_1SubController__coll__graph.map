@@ -1,0 +1,4 @@
+<map id="Cfg::SubController" name="Cfg::SubController">
+<area shape="rect" id="node1" title="Subcontroller configuration for a controller." alt="" coords="5,95,132,121"/>
+<area shape="rect" id="node2" href="$structCfg_1_1Gains.html" title="Gains for a sub controller." alt="" coords="27,5,110,32"/>
+</map>
