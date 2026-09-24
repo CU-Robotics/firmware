@@ -26,7 +26,6 @@ MotorVelocities xdrive_mix(float x, float y, float rot, float heading);
 } // namespace controller
 
 // Host tests exercise the calculations without Teensy hardware dependencies.
-#ifndef UNIT_TEST
 #include "estimator.hpp"
 #include "filters/pid_filter.hpp"
 #include "sensors/can/motor.hpp"
@@ -603,5 +602,3 @@ struct LowerFeederController : public Controller {
             lower_feeder_error_monitor = ErrorMonitor{};
         }
 };
-
-#endif // UNIT_TEST
