@@ -49,6 +49,12 @@ public:
     /// @note This function should be used sparingly, as setting the reference defeats its purpose.
     void set_acceleration_reference(Cfg::StateName state_name, float value);
 
+    /// @brief Holds a state at a fixed position by setting its position reference and zeroing its motion
+    /// @param state_name The name of the state to hold
+    /// @param position The position to hold the state at
+    /// @note Use this instead of set_position_reference when a state should stop where it is, such as while the motors are disarmed.
+    void hold_position(Cfg::StateName state_name, float position);
+
     /// @brief Gives the instantaneous governed state reference matrix (also known as desired state)
     /// @return the current reference state array
     const RobotStateArray& get_reference_array() const;
