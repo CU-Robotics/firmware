@@ -187,7 +187,7 @@ void ET16S::print_raw_bin(uint8_t m_inputRaw[ET16S_PACKET_SIZE]) {
 	Serial.println();
 }
 void ET16S::print_live_data() {
-    Serial.printf("=== LIVE ET16S DIAGNOSTICS ===\n");
+    Serial.printf("=== LIVE ET16S TRANSMITTER DATA ===\n");
     
     // Raw input data
     Serial.print(" RAW BUF: ");
