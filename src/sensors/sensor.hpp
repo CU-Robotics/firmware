@@ -5,16 +5,23 @@
 #include "controls/robot_state_map.hpp"
 
 
+
+
+
 /// @brief Abstract class representing a sensor. All sensors should inherit from this class.
 class Sensor {
 public: 
 /// @brief Default constructor
 Sensor() = default;
+	
 /// @brief Initialize the sensor; typically involves setting up the communication link.
 virtual void init() = 0;
 
 /// @brief Read data from the sensor and update internal state accordingly.
 virtual void read() = 0;
+	
+/// @brief Initiates a non-blocking hardware read (The "Kick"). Default does nothing.
+virtual void request_read() {}
 
 /// @brief Bind local state map with estimated state map
 /// @param map is the global estimated state map	
