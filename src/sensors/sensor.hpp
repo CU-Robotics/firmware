@@ -2,7 +2,7 @@
 #include <memory>
 
 #include "comms/config_data/sensor.hpp"
-#include "controls/robot_state_map.hpp"
+#include "controls/robot_state_array.hpp"
 
 
 
@@ -25,7 +25,7 @@ virtual void request_read() {}
 
 /// @brief Bind local state map with estimated state map
 /// @param map is the global estimated state map	
-virtual void provide_isr_map(std::unique_ptr<RobotStateMap> *map) {}
+virtual void provide_isr_map(std::unique_ptr<RobotStateArray> *map) {}
 
 /// @brief Send the current sensor data to the comms layer.
 virtual void send_to_comms() const = 0;
