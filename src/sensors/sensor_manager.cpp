@@ -1,46 +1,83 @@
 #include "sensor_manager.hpp"
+#include "utils/system_log.hpp"
 
-#include "sensors/buff_encoder.hpp"
 #include "sensors/rev_encoder.hpp"
 
-#include "sensors/ICM20649.hpp"
 #include "sensors/LSM6DSOX.hpp"
 
 #include "sensors/d200.hpp"
 #include "sensors/limit_switch.hpp"
 #include "sensors/StereoCamTrigger.hpp"
 
+SensorManager* SensorManager::instance = nullptr;
+
 SensorManager::SensorManager() {}
 
 SensorManager::~SensorManager() {
     Serial.println("Ending SPI");
     SPI.end();
+	SPI1.end();
     Serial.println("SPI Ended");
 }
 
 void SensorManager::init(const Cfg::RobotConfig& config_data, std::unique_ptr<RobotStateArray>* isr_safe_map) {
+    instance = this;
+    // Put all chip selects high
+    for (const auto& enc : config_data.buff_encoders) {
+        pinMode(enc.spi_cs, OUTPUT);
+        digitalWrite(enc.spi_cs, HIGH);
+    }
+    for (const auto& imu : config_data.icm_imus) {
+        pinMode(imu.spi_cs, OUTPUT);
+        digitalWrite(imu.spi_cs, HIGH);
+    }
+    if (!config_data.icm_imus.empty()) {
+		const auto& imu = config_data.icm_imus[0];
+		SPI1.setMISO(imu.spi_miso);
+		SPI1.setMOSI(imu.spi_mosi);
+		SPI1.setSCK(imu.spi_sck);
+	} else {
+		SystemLog.error(Subsystem::SENSORS, "No ICM IMUs configured; SPI1 pins not set\n");
+	}
     // start SPI
     Serial.println("Starting SPI");
     SPI.begin();
-    Serial.println("SPI Started");
+	SPI1.begin();
+	Serial.println("SPI Started");
+	// Attach Interupt for buff encoders
+	spi_event.attachInterrupt(&encoder_isr_wrapper);
 
     configure_sensors(config_data);
 
+	num_encoders = encoders.size();
     initialize_sensors(isr_safe_map);
 }
 
 void SensorManager::configure_sensors(const Cfg::RobotConfig& config_data) {
-    for (const auto& buff_encoder_config : config_data.buff_encoders) {
-        sensors.emplace(buff_encoder_config.encoder_name, std::make_shared<BuffEncoder>(buff_encoder_config));
+    for (const auto &buff_encoder_config : config_data.buff_encoders) {
+        auto encoder_ptr = std::make_shared<BuffEncoder>(buff_encoder_config);
+
+        encoder_ptr->bind_dma_flag(&encoder_isr_in_progress);
+		
+        sensors.emplace(buff_encoder_config.encoder_name, encoder_ptr);
+        
+        // Add to the dedicated ISR routing list
+        encoders.push_back(encoder_ptr);
     }
 
     for (const auto& rev_encoder_config : config_data.rev_encoders) {
         sensors.emplace(rev_encoder_config.encoder_name, std::make_shared<RevEncoder>(rev_encoder_config));
     }
-
-    for (const auto& icm_config : config_data.icm_imus) {
+    if (config_data.icm_imus.size() > 1) {
+        // Note the ICM IMU non-blocking logic is only capable of working with 1 IMU on the same spi bus
+        // If another ICM IMU is added it will need to be daisy chained like the buff encoders or put on a seperate spi bus
+		safety::safety_procedure("SensorManager only supports a single ICM20649 IMU.");
+	}
+    for (const auto &icm_config : config_data.icm_imus) {
         Serial.printf("Configuring ICM20649 with name %u\n", static_cast<uint32_t>(icm_config.imu_name));
-        sensors.emplace(icm_config.imu_name, std::make_shared<ICM20649>(icm_config));
+		auto imu_ptr = std::make_shared<ICM20649>(icm_config);
+        sensors.emplace(icm_config.imu_name, imu_ptr);
+		icm_imu = imu_ptr;
     }
 
     for (const auto& lsm_config : config_data.lsm_imus) {
@@ -66,7 +103,17 @@ void SensorManager::initialize_sensors(std::unique_ptr<RobotStateArray>* isr_saf
         sensor->init();
     }
 }
-
+void SensorManager::request_read() {
+	if (icm_imu != nullptr) {
+        icm_imu->request_read();
+	}
+	if (!encoder_isr_in_progress && !encoders.empty()) {
+        encoder_isr_in_progress = true;
+        encoder_index = 0;
+        // start transfering data on first encoder
+        encoders[0]->isr_start_transfer(spi_event); 
+    }
+}
 void SensorManager::read() {
     for(auto& [sensor_name, sensor] : sensors) {
         sensor->read();
@@ -85,3 +132,23 @@ void SensorManager::print_sensors_live() {
     }
 }
 
+void SensorManager::encoder_isr() {
+    // Tell the active encoder to clean up its own private variables
+    encoders[encoder_index]->isr_stop_transfer(spi_event);
+
+    encoder_index = encoder_index + 1;
+
+    // Tell the next encoder to start using its own private variables
+    if (encoder_index < num_encoders) {
+        encoders[encoder_index]->isr_start_transfer(spi_event);
+    } else {
+		encoder_isr_in_progress = false;
+    }
+	
+}
+void SensorManager::encoder_isr_wrapper(EventResponderRef spi_event) {
+    if (instance != nullptr) {
+        // Route the execution back into the specific object instance
+        instance->encoder_isr();
+    }
+}

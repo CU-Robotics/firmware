@@ -37,7 +37,9 @@ void HelloRobot::init() {
     transmitter_manager.init(config.transmitter);
 
     // initialize sensors
-    sensor_manager.init(config, &estimated_state_array_interrupt_safe);
+	sensor_manager.init(config, &estimated_state_array_interrupt_safe);
+	// Begin cycle of reading sensor data
+	sensor_manager.request_read();
 
     estimator_manager.init(config.estimators, sensor_manager, can);
 
@@ -111,24 +113,27 @@ void HelloRobot::crash_report(){
 		}
 	}
 }
-void HelloRobot::read_telemetry() {
-    // read CAN and send motor states to comms
-    can.read();
-    can.send_to_comms();
+void HelloRobot::read_telemetry(){
+	// read sensors and send to comms
+	// this happens in one function call 
+	sensor_manager.read();
+	sensor_manager.send_to_comms();
+	
+	// read CAN and send motor states to comms
+	can.read();
+	can.send_to_comms();
 
     // read ref and send to comms
     ref.read();
     ref.send_to_comms();
 
-    // read transmitter and send to comms
-    transmitter_manager.read();
-    transmitter_manager.send_to_comms();
-
-    // read sensors and send to comms
-    // this happens in one function call
-    sensor_manager.read();
-    sensor_manager.send_to_comms();
-
+	// read transmitter and send to comms
+	transmitter_manager.read();
+	transmitter_manager.send_to_comms();
+	
+	// Begin Sensor DMA transfer for next loop
+	sensor_manager.request_read();
+		
 }
 void HelloRobot::process_behaviors() {
     // manual controls on firmware
