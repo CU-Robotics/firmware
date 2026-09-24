@@ -76,12 +76,13 @@ void CommsLayer::queue_data(const CommsData* data) {
         break;
     case PhysicalMedium::Ethernet:
         // if ethernet is down and it is a small enough packet, route it through HID instead
-        if (!is_ethernet_connected() && data->size < HID_PACKET_PAYLOAD_SIZE) {
+        if (!is_ethernet_connected()) {
+            if (data->size > HID_PACKET_PAYLOAD_SIZE) {
+                // discard attempt to send
+                SystemLog.warn(Subsystem::COMMS,"Attempting to re-route %s to HID but packet is too large\n", to_string(data->type_label).c_str());
+                break;
+            }
             (void)m_hid_payload.add(data);
-            break;
-        } else if (data->size > HID_PACKET_PAYLOAD_SIZE) {
-            // discard attempt to send
-            SystemLog.warn(Subsystem::COMMS,"Attempting to re-route %s to HID but packet is too large\n", to_string(data->type_label).c_str());
             break;
         }
 
