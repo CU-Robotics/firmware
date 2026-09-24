@@ -16,6 +16,11 @@ struct LogEvent {
     char text[80];
 };
 
+/// @brief Converts Subsystem enum to cstring
+/// @param sys Subsystem to convert
+/// @return cstring representaiton of `sys`
+const char* sys_to_str(Subsystem sys);
+
 /// @brief Serial wrapper for handling print statements
 class SystemLogger : public Print {
 private:
