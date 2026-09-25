@@ -178,6 +178,12 @@ public:
 	
 	/// @brief Send the current DR16 data to comms
 	void send_to_comms() override;
+
+	/// @copydoc Transmitter::has_new_data
+	bool has_new_data() const override { return m_has_new_data; }
+
+	/// @copydoc Transmitter::clear_new_data
+	void clear_new_data() override { m_has_new_data = false; }
 	
 	/// @brief A simple check to see if read data is within expected values
 	/// @return True/false whether data is deemed valid or not
@@ -199,6 +205,9 @@ public:
 	
 	/// @brief Configuration struct for the DR16 transmitter.
 	const Cfg::DR16& config;
+
+	/// @brief Flag indicating a new valid radio frame was decoded
+	bool m_has_new_data = false;
 
 	/// @brief previous left switch position, used for detecting toggles
 	SwitchPos prev_l_switch_pos = SwitchPos::FORWARD; // used for tracking switch toggles

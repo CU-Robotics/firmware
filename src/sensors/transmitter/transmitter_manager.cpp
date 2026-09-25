@@ -36,6 +36,12 @@ void TransmitterManager::print_live_data() {
 
 void TransmitterManager::send_to_comms() {
     if (transmitter) {
+        uint32_t now_us = micros();
+        if (!transmitter->has_new_data() && (now_us - m_last_comms_send_time_us < TRANSMITTER_HEARTBEAT_INTERVAL_US)) {
+            return;
+        }
+        transmitter->clear_new_data();
+        m_last_comms_send_time_us = now_us;
         transmitter->send_to_comms();
     } else {
         safety::safety_procedure("TransmitterManager::send_to_comms called before transmitter was initialized");

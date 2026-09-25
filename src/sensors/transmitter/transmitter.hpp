@@ -22,6 +22,13 @@ public:
 	virtual void print_raw() = 0;
 	/// @brief sends data to comms
 	virtual void send_to_comms() = 0;
+
+	/// @brief Whether new transmitter frame data has been received since last comms send.
+	/// @return true if new data is available, false otherwise.
+	virtual bool has_new_data() const = 0;
+
+	/// @brief Clear the new data flag after transmission.
+	virtual void clear_new_data() = 0;
 	/// @brief Whether the transmitter is currently in safety mode.
 	/// @return true if the transmitter is in safety mode, false otherwise.
 	virtual bool is_safety_mode() = 0;

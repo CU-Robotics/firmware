@@ -9,6 +9,8 @@
 #include "comms/config_data/robot_config.hpp" // for RobotConfig
 #include "config_data/robot_config.hpp"
 
+#include <array>
+
 namespace Comms {
 
 /// @brief The CommsLayer class is the top-level class for the communication layer. Handles HID and Ethernet communications
@@ -34,7 +36,7 @@ public:
 public:
     /// @brief Send a CommsData packet to the appropriate packet payload
     /// @param data The CommsData packet to send
-    void queue_data(CommsData* data);
+    void queue_data(const CommsData* data);
 
     /// @brief Prepare and send packets to the appropriate physical layer
     /// @note This function should only be ran internally
@@ -58,6 +60,9 @@ public:
     /// @brief Check if the configuration process is complete
     /// @return True if configuration is complete, false if not
     bool is_configured() const { return m_hive_data.config.is_configured(); }
+
+    /// @brief Print live telemetry, packet sizes, and health statistics to Serial CLI
+    void print_live_data();
 
 public:
     /// @brief Get the outgoing ethernet packet
@@ -113,10 +118,19 @@ private:
     /// @brief Outgoing HID packet
     HIDPacket m_hid_outgoing;
 
-    /// @brief Packet payload for Ethernet
-    PacketPayload m_ethernet_payload{ETHERNET_PACKET_PAYLOAD_SIZE};
-    /// @brief Packet payload for HID
-    PacketPayload m_hid_payload{HID_PACKET_PAYLOAD_SIZE};
+    /// @brief Caller-owned high-priority staging storage for Ethernet.
+    std::array<uint8_t, ETHERNET_PACKET_PAYLOAD_SIZE> m_ethernet_high_priority_buffer{};
+    /// @brief Caller-owned medium-priority staging storage for Ethernet.
+    std::array<uint8_t, ETHERNET_PACKET_PAYLOAD_SIZE> m_ethernet_medium_priority_buffer{};
+    /// @brief Packet payload for Ethernet.
+    PacketPayload m_ethernet_payload{m_ethernet_high_priority_buffer.data(), m_ethernet_medium_priority_buffer.data(), ETHERNET_PACKET_PAYLOAD_SIZE};
+
+    /// @brief Caller-owned high-priority staging storage for HID.
+    std::array<uint8_t, HID_PACKET_PAYLOAD_SIZE> m_hid_high_priority_buffer{};
+    /// @brief Caller-owned medium-priority staging storage for HID.
+    std::array<uint8_t, HID_PACKET_PAYLOAD_SIZE> m_hid_medium_priority_buffer{};
+    /// @brief Packet payload for HID.
+    PacketPayload m_hid_payload{m_hid_high_priority_buffer.data(), m_hid_medium_priority_buffer.data(), HID_PACKET_PAYLOAD_SIZE};
 
     /// @brief Hive data
     HiveData m_hive_data;
@@ -126,6 +140,9 @@ private:
     
     /// @brief Timer for use in the configuration process
     Timer config_loop_timer;
+
+    /// @brief Last Ethernet payload size packed and transmitted
+    uint16_t m_last_ethernet_send_payload_size = 0;
 };
 	extern CommsLayer comms_layer;
 }   // namespace Comms

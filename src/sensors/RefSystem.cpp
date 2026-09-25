@@ -202,6 +202,13 @@ bool RefSystem::write_robot_interaction(uint16_t content_id, const uint8_t* payl
 }
 
 void RefSystem::send_to_comms() {
+    uint32_t now_us = micros();
+    if (!m_has_new_data && (now_us - m_last_comms_send_time_us < REF_HEARTBEAT_INTERVAL_US)) {
+        return;
+    }
+    m_has_new_data = false;
+    m_last_comms_send_time_us = now_us;
+
     CommsRefData ref_data_for_comms;
     ref_data_for_comms.game_status_data = ref_data.game_status.to_comms_data();
     ref_data_for_comms.game_result_data = ref_data.game_result.to_comms_data();
@@ -535,6 +542,7 @@ void RefSystem::read_vtm() {
 
         ref_data.vtm_remote_control.set_data(packet);
         packets_received++;
+        m_has_new_data = true;
 
 #ifdef REF_SYSTEM_DEBUG
         const VTMRemoteControl &input = ref_data.vtm_remote_control;
@@ -590,6 +598,7 @@ void RefSystem::read_mcm() {
     // process the data
     if (success) {
         set_ref_data(mcm_data.curr_frame, mcm_data.raw_buffer);
+        m_has_new_data = true;
 
         // reset flags
         mcm_data.header_read = false;

@@ -210,6 +210,13 @@ public:
 
     /// @brief struct to store all ref data
     RefData ref_data {};
+
+    /// @brief Whether new referee or VTM frame data has been received since last comms transmission
+    bool m_has_new_data = false;
+    /// @brief Timestamp of the last comms send in microseconds
+    uint32_t m_last_comms_send_time_us = 0;
+    /// @brief Maximum interval between referee telemetry sends (20 Hz heartbeat)
+    static constexpr uint32_t REF_HEARTBEAT_INTERVAL_US = 50000;
 };
 
 extern RefSystem ref;

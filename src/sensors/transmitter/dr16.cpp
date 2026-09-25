@@ -139,6 +139,7 @@ void DR16::read() {
 	if (is_data_valid()) {
 		m_fail = false;
 		m_failTime = 0;
+		m_has_new_data = true;
 		// assign formated data (within ranges of [-1,1]) to the true input buffer
 		// joy sticks
 		m_input[0] = bounded_map(c0, DR16_CONTROLLER_INPUT_LOW, DR16_CONTROLLER_INPUT_HIGH, -1000, 1000) / 1000.f;

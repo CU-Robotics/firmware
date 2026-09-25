@@ -192,12 +192,24 @@ void HelloRobot::update_controls() {
     controller_manager.step(*reference_array, *estimated_state_array, *target_state_array);
 }
 void HelloRobot::update_comms() {
+    uint32_t now_ms = millis();
+
+    // Send all state maps at full 1 kHz rate
     target_state_array->send_to_comms<TargetState>();
     reference_array->send_to_comms<ReferenceState>();
     estimated_state_array->send_to_comms<EstimatedState>();
-    Comms::Sendable<ConfigurationStatusData> config_status_sendable;
-    config_status_sendable.data.is_configured = Comms::comms_layer.is_configured() ? 1 : 0;
-    config_status_sendable.send_to_comms();
+
+    // Send ConfigurationStatusData only on status change or on a 1 Hz heartbeat
+    static int8_t last_configured_status = -1;
+    static uint32_t last_config_status_time_ms = 0;
+    uint8_t current_configured = Comms::comms_layer.is_configured() ? 1 : 0;
+    if (current_configured != last_configured_status || (now_ms - last_config_status_time_ms >= 1000)) {
+        Comms::Sendable<ConfigurationStatusData> config_status_sendable;
+        config_status_sendable.data.is_configured = current_configured;
+        config_status_sendable.send_to_comms();
+        last_configured_status = current_configured;
+        last_config_status_time_ms = now_ms;
+    }
 
     if (false) { // Tests roundtrip comms latency. also needs to be set to true in hive.
         Comms::Sendable<TestLatencyData> latency_data;
@@ -328,9 +340,13 @@ void HelloRobot::process_cli() {
 				  break;
 
 			  case LiveMode::HEARTBEAT:
-				  Serial.printf("=== LIVE HEARTBEAT  ===\033[K\n");
-				  Serial.println(loopc);
-				  break;
+				Serial.printf("=== LIVE HEARTBEAT  ===\033[K\n");
+				Serial.println(loopc);
+				break;
+
+			  case LiveMode::COMMS:
+				Comms::comms_layer.print_live_data();
+				break;
                         
 			  default:
 				  break;
@@ -404,7 +420,8 @@ void HelloRobot::process_cli() {
                 {"ping", &HelloRobot::cmd_ping},
                 {"help", &HelloRobot::cmd_help},
                 {"live", &HelloRobot::cmd_live},
-                {"log", &HelloRobot::cmd_log}
+                {"log", &HelloRobot::cmd_log},
+                {"comms", &HelloRobot::cmd_comms}
             };
 
             // --- THE PARSER ---
@@ -476,6 +493,10 @@ void HelloRobot::cmd_help() {
                 Serial.println("                estimated_state : The robot's current estimated state array");
                 Serial.println("                target_state    : The robot's current target state array");
                 Serial.println("                heartbeat       : The main loop counter (loopc)");
+                Serial.println("                comms           : Real-time ethernet/HID packet metrics and connection status");
+				Serial.println();
+				Serial.println("       comms");
+				Serial.println("              Prints a single snapshot of the current communications status.");
 				Serial.println();
 				Serial.println("       log [subsystem] [priority]");
 				Serial.println("              Filters the system event log.");
@@ -495,6 +516,11 @@ void HelloRobot::cmd_help() {
                 Serial.println("       help");
                 Serial.println("              Displays this manual.");
 }
+
+void HelloRobot::cmd_comms() {
+    Comms::comms_layer.print_live_data();
+}
+
 void HelloRobot::cmd_live() {
     num_active_views = 0;
     SystemLog.is_live_view_active = true;
@@ -512,7 +538,8 @@ void HelloRobot::cmd_live() {
         {"sensors",         LiveMode::SENSORS,         100},
         {"target_state",    LiveMode::TARGET_STATE,    100},
         {"estimated_state", LiveMode::ESTIMATED_STATE, 100},
-        {"heartbeat",       LiveMode::HEARTBEAT,       100}
+        {"heartbeat",       LiveMode::HEARTBEAT,       100},
+        {"comms",           LiveMode::COMMS,           100}
     };
 
 	// --- THE PARSER ---
@@ -539,7 +566,7 @@ void HelloRobot::cmd_live() {
         Serial.print("\033[2J");
     } else {
         SystemLog.is_live_view_active = false;
-        Serial.println("Usage: live [prof] [tx] [sensors] [estimated_state] [target_state] [heartbeat]");
+        Serial.println("Usage: live [prof] [tx] [sensors] [estimated_state] [target_state] [heartbeat] [comms]");
     }
 }
 

@@ -39,5 +39,8 @@ private:
     /// @brief pointer to the transmitter object. This is allocated and assigned upin initialization based on the provided configuration.
     std::unique_ptr<Transmitter> transmitter;
 
-
+    /// @brief Timestamp of the last comms send in microseconds
+    uint32_t m_last_comms_send_time_us = 0;
+    /// @brief Heartbeat interval for transmitter telemetry (20 Hz / 50 ms)
+    static constexpr uint32_t TRANSMITTER_HEARTBEAT_INTERVAL_US = 50000;
 };

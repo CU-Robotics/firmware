@@ -140,15 +140,19 @@ void ET16S::read() {
 
     // Validate that the ping pong buffer holds a complete aligned frame
     if (active_buffer[0] == 0x0F && active_buffer[24] == 0x00) {
-        format_raw((uint8_t*)active_buffer);
+        //format raw data
+        format_raw((uint8_t *)active_buffer);
+        //set flag data
         channel[16].data = channel[16].raw_format;
+        //set remaining data
         set_channel_data();
+        //Check flag byte for disconnect
         test_connection();
 
         mode_changed_flag = (get_safety_switch() != prev_safety_switch_pos);
         prev_safety_switch_pos = get_safety_switch();
     } else {
-        // If an electrical glitch dropped a byte, pause DMA and wait for the gap
+        // If a byte was dropped, pause DMA and wait for the gap
         SystemLog.warn(Subsystem::SENSORS, "ET16S: Desync detected. Entering gap resync...\n");
         rx_dma.disable();
         is_resyncing = true;
