@@ -121,7 +121,8 @@ class HelloRobot {
 
     /// @brief Whether the active robot config contains the lower feeder state.
     bool has_lower_feeder = false;
-
+    /// @brief Used for tracking if we spin when in fast mode
+	bool fast_mode_engaged = false;
     // ==========================================
     // STATE ARRAYS
     // ==========================================
@@ -173,6 +174,7 @@ class HelloRobot {
     void cmd_live();
     /// @brief CLI function to handle logging
     void cmd_log();
+    
 	// ==========================================
     // Major Loop functions
     // ==========================================

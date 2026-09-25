@@ -1,7 +1,6 @@
 #include "transmitter_manager.hpp"
 #include "sensors/transmitter/ET16S.hpp"
 #include "sensors/transmitter/dr16.hpp"
-#include <usb_serial.h>
 
 void TransmitterManager::init(const Cfg::Transmitter& transmitter_config) {
     Serial.printf("Initializing TransmitterManager with transmitter type: %d\n", static_cast<int>(transmitter_config.transmitter_type));
@@ -90,6 +89,6 @@ bool TransmitterManager::is_fast_mode_active() {
     if (transmitter){
 		return transmitter->is_fast_mode_active();
     } else {
-        safety::safety_procedure("TransmitterManager::manual_controls called before transmitter was initialized");
+        safety::safety_procedure("TransmitterManager::is_Fast_mode_active called before transmitter was initialized");
     }
 }

@@ -1,4 +1,5 @@
 #include "hello_robot.hpp"
+#include <wiring.h>
 
 #ifdef PROFILER
 Profiler prof; 
@@ -296,16 +297,28 @@ void HelloRobot::apply_fast_mode() {
 	if (!transmitter_manager.is_fast_mode_active()) {
         return;
     }
+    
     float chassis_vel_x = (*target_state_array)[Cfg::StateName::ChassisX].get_velocity();
     float chassis_vel_y = (*target_state_array)[Cfg::StateName::ChassisY].get_velocity();
     float current_angle = (*estimated_state_array)[Cfg::StateName::ChassisHeading].get_position();
     float input_mag = sqrtf((chassis_vel_x * chassis_vel_x) + (chassis_vel_y * chassis_vel_y));
-    if (input_mag > 0.1f) { 
+    
+	constexpr float FAST_MODE_ENTER = 0.3f;
+	constexpr float FAST_MODE_EXIT = 0.1f;
+	// Hystersis to prevent twitching in and out of fast mode
+    if (input_mag > FAST_MODE_ENTER) {
+        fast_mode_engaged = true;
+    } else if (input_mag < FAST_MODE_EXIT) {
+        fast_mode_engaged = false;
+    }
+    
+    
+    if (fast_mode_engaged) { 
         float stick_angle = atan2f(chassis_vel_y, chassis_vel_x);
 
         // Find the nearest 45 degree diagonal to our current heading
-        constexpr float pi_over_4 = 3.14159f / 4.0f;
-        constexpr float pi_over_2 = 3.14159f / 2.0f;
+        constexpr float pi_over_4 = PI / 4.0f;
+        constexpr float pi_over_2 = PI / 2.0f;
             
         float offset = current_angle - stick_angle;
         float snapped_offset = roundf((offset - pi_over_4) / pi_over_2) * pi_over_2 + pi_over_4; 
@@ -314,11 +327,10 @@ void HelloRobot::apply_fast_mode() {
 
         // Shortest path to the target diagonal
         float error = target_angle - current_angle;
-        while (error > 3.14159f) error -= 2.0f * 3.14159f;
-        while (error < -3.14159f) error += 2.0f * 3.14159f;
-
+        while (error > PI) error -= TWO_PI;
+        while (error < PI) error += TWO_PI;
         // P controller
-        float kp = 5.0f; 
+        constexpr float kp = 5.0f; 
         float auto_spin_vel = error * kp;
         (*target_state_array)[Cfg::StateName::ChassisHeading].set_velocity(auto_spin_vel);
 	}

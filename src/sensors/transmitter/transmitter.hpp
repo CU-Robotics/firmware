@@ -37,7 +37,7 @@ public:
 	/// @return true if the mode has been changed, false otherwise.
     virtual bool mode_changed() = 0;
 
-    /// @brief Whethere fast mode is active or not
+    /// @brief Whether fast mode is active or not
     /// @return true if fast_mode is active, false otherwise
     virtual bool is_fast_mode_active() { return false; }
     
