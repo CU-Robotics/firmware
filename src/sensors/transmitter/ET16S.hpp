@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Arduino.h>
+#include "DMAChannel.h"
 #include "transmitter.hpp"
 #include "comms/data/ET16S_data.hpp"
 #include "utils/timing.hpp"
@@ -107,7 +108,7 @@ class ET16S : public Transmitter {
 	bool mode_changed() override;
 
 	/// @copydoc Transmitter::manual_controls
-	void manual_controls(const RobotStateMap& estimated_state_map, RobotStateMap& target_state_map, bool not_safety_mode, float& feed, float& last_feed) override;
+	void manual_controls(const RobotStateArray& estimated_state_array, RobotStateArray& target_state_array, bool not_safety_mode, float& feed, float& last_feed) override;;
 
 	/// @copydoc Transmitter::has_new_data
 	bool has_new_data() const override { return m_has_new_data; }
@@ -231,10 +232,6 @@ class ET16S : public Transmitter {
 	/// @return back left spin wheel value
 	float get_wheel();
 
-	/// @brief getter for raw data
-	/// @return raw data
-	uint8_t* get_raw() { return m_inputRaw; }
-
 	
 private:
 	/// @brief prints the entire raw binary data packet exactly as it is recieved
@@ -353,12 +350,11 @@ private:
 	const static int AVERAGE_SAMPLE_COUNT = 2;
 
 	/// @brief circular buffer for storing the last few samples of each channel
-	float channel_values_circular_buf[ET16S_INPUT_VALUE_COUNT][AVERAGE_SAMPLE_COUNT] = { 0 };
+	float channel_values_circular_buf[ET16S_INPUT_VALUE_COUNT][AVERAGE_SAMPLE_COUNT] = {{ 0 }};
 	/// @brief the index of the next sample to be stored in the circular buffer
 	int value_indices[ET16S_INPUT_VALUE_COUNT] = { 0 };
 
-	/// @brief raw data packet
-	uint8_t m_inputRaw[ET16S_PACKET_SIZE] = { 0 };
+
 
 	/// @brief Flag indicating a new valid radio frame was decoded
 	bool m_has_new_data = false;
@@ -369,4 +365,40 @@ private:
 	/// @brief getter for transmitter data
 	/// @return Filled Transmitter data struct
 	ET16SData get_ET16S_data();
+
+	
+	/// @brief Points to the complete buffer the CPU should read from
+    static volatile uint8_t* active_buffer;
+	
+    /// @brief Points to the buffer the DMA is currently actively writing to
+    static volatile uint8_t* dma_target_buffer;
+	
+	/// @brief Ping-pong buffer A so we dont pull from a buffer being actively read from
+    alignas(32) static DMAMEM uint8_t dma_buffer_a[32];
+	
+	/// @brief Ping-pong buffer B 
+	alignas(32) static DMAMEM uint8_t dma_buffer_b[32];
+	
+	/// @brief boolean flag for if we have a complete 25 byte packet from transmitter
+	volatile bool packet_ready = false;
+	
+	/// @brief DMA channel object
+	DMAChannel rx_dma;
+	
+	/// @brief wrapper around DMA ISR so that static instance may be passed
+	static void dma_isr_wrapper();
+	
+	/// @brief Interupt Service Routine (how we should interupt)
+	void dma_isr();
+	
+	/// @brief init for all dma functions and buffers
+	void setup_edma_channel();
+
+	/// @brief flag used for if we need to re align packet
+    volatile bool is_resyncing = false;
+    /// @brief timer used for ensuring we dont read partial packets
+    elapsedMillis gap_timer = 0;
+
+	/// @brief  Pointer to the singleton instance of this class
+	static ET16S* instance;
 };

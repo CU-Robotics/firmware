@@ -84,9 +84,9 @@ bool TransmitterManager::mode_changed() {
     }
 }
 
-void TransmitterManager::manual_controls(const RobotStateMap& estimated_state_map, RobotStateMap& target_state_map, bool not_safety_mode, float& feed, float& last_feed) {
+void TransmitterManager::manual_controls(const RobotStateArray& estimated_state_array, RobotStateArray& target_state_array, bool not_safety_mode, float& feed, float& last_feed) {
     if (transmitter) {
-        transmitter->manual_controls(estimated_state_map, target_state_map, not_safety_mode, feed, last_feed);
+        transmitter->manual_controls(estimated_state_array, target_state_array, not_safety_mode, feed, last_feed);
     } else {
         safety::safety_procedure("TransmitterManager::manual_controls called before transmitter was initialized");
     }
