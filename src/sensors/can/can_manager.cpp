@@ -13,22 +13,14 @@
 #include <cstdint>
 #include <set>
 
-#include "utils/safety.hpp"
-
 // FlexCAN_T4 moment
 CANManager::CANManager() { }
-
-CANManager::~CANManager() {
-    //clean up motors since they are allocated.
-    m_motor_name_map.clear();
-}
 
 void CANManager::init(const std::vector<Cfg::Motor>& motor_configs) {
     // initialize CAN 1
     m_can1.begin();
     m_can1.setBaudRate(1000000u);   // 1Mbit baud
     m_can1.enableFIFO(true);
-    // TODO: fifo?
 
     // initialize CAN 2
     m_can2.begin();
@@ -36,7 +28,7 @@ void CANManager::init(const std::vector<Cfg::Motor>& motor_configs) {
     m_can2.enableFIFO(true);
 
     // initialize CAN 3
-    // TODO: can CAN 3 act the same as CAN 1/2 since its CANFD?
+    // CAN3 is FD-capable, but the classic FlexCAN_T4 template runs it in CAN 2.0 mode, same as CAN1/2
     m_can3.begin();
     m_can3.setBaudRate(1000000u);   // 1Mbit baud
     m_can3.enableFIFO(true);
@@ -81,8 +73,8 @@ void CANManager::configure_motor(const Cfg::Motor& motor_config){
             break;
         }
         default: {
-            Serial.printf("CANManager tried to create a motor of invalid type: %u\n", motor_config.motor_controller_type);
-            break;   // continue in order to not call the later map insert since new_motor would be null
+            Serial.printf("CANManager tried to create a motor of invalid type: %u\n", static_cast<uint32_t>(motor_config.motor_controller_type));
+            break;
         }
     }
 }
@@ -92,7 +84,8 @@ void CANManager::read() {
     for (uint32_t bus = 0; bus < CAN_NUM_BUSSES; bus++) {
         // we want to read all the messages from this bus as there might be many queued up
         CAN_message_t msg;
-        while (m_busses[bus]->read(msg)) {
+        // readFIFO, not read: read() checks a random source and returns 0 half the time
+        while (m_busses[bus]->readFIFO(msg)) {
             // distribute the message to the correct motor
             // if this fails, we've received a message that does not match any motor
             // how would this happen?
@@ -158,7 +151,7 @@ void CANManager::write() {
                 break;
             }
             default: {
-                Serial.printf("CANManager tried to write to a motor of invalid type: %d\n", motor->get_controller_type());
+                Serial.printf("CANManager tried to write to a motor of invalid type: %u\n", static_cast<uint32_t>(motor->get_controller_type()));
                 break;
             }
             }
@@ -172,7 +165,7 @@ void CANManager::write() {
     }
 }
 
-void CANManager::send_to_comms(){
+void CANManager::send_to_comms() const {
     for(const auto& [name, motor] : m_motor_name_map) {
         Comms::Sendable<MotorStateData> motor_state_sendable;
         MotorState state = motor->get_state();
@@ -201,18 +194,19 @@ void CANManager::write_motor_torque_by_name(Cfg::MotorName motor_name, float tor
     safety::assert_or_safety_procedure(motor_name!= Cfg::MotorName::UnsetMotorName, 
                                         "CANManager: Requested write to an unset motor name");
 
-    safety::assert_or_safety_procedure(!m_motor_name_map.count(motor_name) == 0,
+    auto it = m_motor_name_map.find(motor_name);
+    safety::assert_or_safety_procedure(it != m_motor_name_map.end(),
                                         "CANManager: Requested write to an invalid motor name: %u", static_cast<uint32_t>(motor_name));
 
 
-    m_motor_name_map[motor_name]->write_motor_torque(torque);
+    it->second->write_motor_torque(torque);
 
     #ifdef CAN_MANAGER_DEBUG
     Serial.printf("CANManager wrote to motor with name %u\n", static_cast<uint32_t>(motor_name));
     #endif
 }
 
-void CANManager::print_state() {
+void CANManager::print_state() const {
     // for each motor, print it's state
     for (const auto& [name, motor] : m_motor_name_map) {
         // print the motor state
@@ -220,33 +214,36 @@ void CANManager::print_state() {
     }
 }
 
-void CANManager::print_motor_state_by_name(Cfg::MotorName motor_name) {
+void CANManager::print_motor_state_by_name(Cfg::MotorName motor_name) const {
     safety::assert_or_safety_procedure(motor_name!= Cfg::MotorName::UnsetMotorName, 
                                         "CANManager: Requested print of an unset motor name");
-    safety::assert_or_safety_procedure(!m_motor_name_map.count(motor_name) == 0,
+    auto it = m_motor_name_map.find(motor_name);
+    safety::assert_or_safety_procedure(it != m_motor_name_map.end(),
                                         "CANManager: Requested print of an invalid motor name: %u", static_cast<uint32_t>(motor_name));
 
     // print the motor state
-    m_motor_name_map[motor_name]->print_state();
+    it->second->print_state();
 }
 
 std::shared_ptr<Motor> CANManager::get_motor_by_name(Cfg::MotorName motor_name) {
     safety::assert_or_safety_procedure(motor_name!= Cfg::MotorName::UnsetMotorName, 
                                         "CANManager: Requested get of an unset motor name");
-    safety::assert_or_safety_procedure(!m_motor_name_map.count(motor_name) == 0,
+    auto it = m_motor_name_map.find(motor_name);
+    safety::assert_or_safety_procedure(it != m_motor_name_map.end(),
                                         "CANManager: Requested get of an invalid motor name: %u", static_cast<uint32_t>(motor_name));
 
-    return m_motor_name_map[motor_name];
+    return it->second;
 }
 
 MotorState CANManager::get_motor_state_by_name(Cfg::MotorName motor_name) const {
     safety::assert_or_safety_procedure(motor_name!= Cfg::MotorName::UnsetMotorName, 
                                         "CANManager: Requested get of an unset motor name");
-    safety::assert_or_safety_procedure(!m_motor_name_map.count(motor_name) == 0,
+    auto it = m_motor_name_map.find(motor_name);
+    safety::assert_or_safety_procedure(it != m_motor_name_map.end(),
                                         "CANManager: Requested get of an invalid motor name: %u", static_cast<uint32_t>(motor_name));
 
     // return the motor state
-    return m_motor_name_map.at(motor_name)->get_state();
+    return it->second->get_state();
 }
 
 void CANManager::init_motors() {
@@ -276,7 +273,8 @@ void CANManager::init_motors() {
             CAN_message_t msg;
 
             // we want to read all the messages from this bus as there might be many queued up
-            while (m_busses[bus]->read(msg)) {
+            // readFIFO instead of read, see the note in CANManager::read
+            while (m_busses[bus]->readFIFO(msg)) {
                 // try to distribute the message to the correct motor
                 Cfg::MotorName recieving_motor_name = distribute_msg(msg);
 
