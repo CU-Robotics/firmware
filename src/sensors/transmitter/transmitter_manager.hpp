@@ -31,10 +31,13 @@ public:
     /// @brief Whether the mode has been changed in between the last two reads.
     /// @return true if the mode has been changed, false otherwise.
     bool mode_changed();
+    /// @brief Whether fast mode is active.
+    /// @return true if fast mode is active, false otherwise
+	bool is_fast_mode_active();
     
     /// @copydoc Transmitter::manual_controls
-    void manual_controls(const RobotStateArray& estimated_state_array, RobotStateArray& target_state_array, bool not_safety_mode, float& feed, float& last_feed);
-
+    void manual_controls(const RobotStateArray &estimated_state_array, RobotStateArray &target_state_array, bool not_safety_mode, float &feed, float &last_feed);
+    
 private:
     /// @brief pointer to the transmitter object. This is allocated and assigned upin initialization based on the provided configuration.
     std::unique_ptr<Transmitter> transmitter;
