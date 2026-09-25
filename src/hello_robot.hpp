@@ -29,6 +29,7 @@
 #include <TeensyDebug.h>
 #include "utils/profiler.hpp"
 #include "utils/system_log.hpp"
+#include "utils/robot_cli.hpp"
 #include <wiring.h>
 
 #include "comms/data/hive_data.hpp"
@@ -76,7 +77,10 @@ class HelloRobot {
 
     /// @brief Calculates controls and feed-forward outputs for all physical actuators.
     ControllerManager controller_manager;
-
+    
+    /// @brief Manages the command line interface
+    RobotCLI cli;
+    
     /// @brief Hardware watchdog that resets the Teensy if the loop hangs.
     Watchdog watchdog;
 
@@ -143,36 +147,7 @@ class HelloRobot {
 
     /// @brief Hive offset state
     std::optional<RobotStateArray> hive_state_array_offset;
-	// ==========================================
-    // CLI  Variables
-    // ==========================================
-    /// @brief Collection of Live viewmodes
-    enum class LiveMode { NONE, PROFILE_VIEW, TRANSMITTER, ESTIMATED_STATE, TARGET_STATE, SENSORS, HEARTBEAT };
-    /// @brief number of live views allowed at once
-    static const uint8_t MAX_LIVE_VIEWS = 4;
-    /// @brief array of current live views
-    LiveMode active_views[MAX_LIVE_VIEWS];
-    /// @brief number of active live views
-    uint8_t num_active_views = 0;
-    /// @brief time since the live view was refreshed
-    uint32_t last_redraw_time = 0;
-    /// @brief refresh rate in milliseconds
-    uint32_t redraw_interval = 1000; 
-	/// @brief CLI Buffer
-    char cli_buffer[64] = {0};
-	/// @brief index for cli_buffer
-    uint8_t cli_index = 0;
-	/// @brief flag for live CLI printing
-    bool live_profiler_active = false;
     
-    /// @brief CLI ping function
-    void cmd_ping();
-    /// @brief CLI help function
-    void cmd_help();
-    /// @brief CLI live view function
-    void cmd_live();
-    /// @brief CLI function to handle logging
-    void cmd_log();
 	// ==========================================
     // Major Loop functions
     // ==========================================
@@ -193,7 +168,7 @@ class HelloRobot {
 	
 	/// @brief Checks loop timing/safety constraints and writes to the CAN bus.
     void check_safety();
-
+    
     /// @brief Measures loop time and resets the Teensy after too many consecutive slow loops.
     /// @param loop_dt Set to the measured loop time in seconds
     /// @return true if this loop was slow
@@ -202,9 +177,6 @@ class HelloRobot {
 
     /// @brief Holds the feeders at their current position so they don't jump when re-armed.
     void hold_feeder_position();
-    
-    /// @brief Command line interface for live printing
-    void process_cli();
 	
 	/// @brief LED hearbeat, feeds the watchdog, and ensures consistent loop time.
 	void loop_timing();
