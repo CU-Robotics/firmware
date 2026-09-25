@@ -3,14 +3,14 @@
 void RobotCLI::init(
     TransmitterManager& tx,
     SensorManager& sensors,
-    const RobotStateMap& estimated_state,
-    const RobotStateMap& target_state,
+    const RobotStateArray& estimated_state,
+    const RobotStateArray& target_state,
     const uint32_t& loop_counter
 ) {
     transmitter_manager = &tx;
     sensor_manager = &sensors;
-    estimated_state_map = &estimated_state;
-    target_state_map = &target_state;
+    estimated_state_array = &estimated_state;
+    target_state_array = &target_state;
     loopc = &loop_counter;
 
     SystemLog.bind_cli_buffer(cli_buffer);
@@ -48,12 +48,12 @@ void RobotCLI::render_live_view() {
                         
 			case LiveMode::ESTIMATED_STATE:
 				Serial.printf("=== LIVE ESTIMATED STATE ===\033[K\n");
-				estimated_state_map->print();
+				estimated_state_array->print();
 				break;
 				
 			case LiveMode::TARGET_STATE:
 				Serial.printf("=== LIVE TARGET STATE ===\033[K\n");
-				target_state_map->print();
+				target_state_array->print();
 				break;
 
 			case LiveMode::HEARTBEAT:
@@ -193,8 +193,8 @@ void RobotCLI::cmd_help() {
     Serial.println("                prof            : Execution time profiler (only available if running make debug) ");
     Serial.println("                tx              : Real-time radio transmitter inputs");
     Serial.println("                sensors         : Real-time readouts from all configured sensors");
-    Serial.println("                estimated_state : The robot's current estimated state map");
-    Serial.println("                target_state    : The robot's current target state map");
+    Serial.println("                estimated_state : The robot's current estimated state array");
+    Serial.println("                target_state    : The robot's current target state array");
     Serial.println("                heartbeat       : The main loop counter (loopc)");
 	Serial.println();
 	Serial.println("       log [subsystem] [priority]");

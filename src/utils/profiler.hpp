@@ -39,7 +39,6 @@ struct Profiler {
     /// @param name The name of the section to end
     void end(const char *name);
 
-	// void print(const char *name);
 	/// @brief print formatted summary of all sections
 	void print_summary();
 };

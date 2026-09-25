@@ -2,9 +2,10 @@
 #include <Arduino.h>
 #include <optional>
 
+#include "controls/robot_state_array.hpp"
 #include "sensors/transmitter/transmitter_manager.hpp"
 #include "sensors/sensor_manager.hpp"
-#include "controls/robot_state_map.hpp"
+#include "controls/robot_state_array.hpp"
 #include "utils/system_log.hpp"
 #include "utils/profiler.hpp"
 /* Adding new commands is simple.
@@ -41,8 +42,8 @@ public:
     void init(
         TransmitterManager& tx,
         SensorManager& sensors,
-        const RobotStateMap& estimated_state,
-        const RobotStateMap& target_state,
+        const RobotStateArray& estimated_state,
+        const RobotStateArray& target_state,
         const uint32_t& loop_counter
     );
 	/// @brief check for serial input and redraws the active dashboard.
@@ -55,9 +56,9 @@ private:
     /// @brief Pointer to sensor manager handle
     SensorManager* sensor_manager = nullptr;
     /// @brief Pointer to estimated robot state map
-    const RobotStateMap* estimated_state_map = nullptr;
+    const RobotStateArray* estimated_state_array = nullptr;
     /// @brief Pointer to target robot state map
-    const RobotStateMap* target_state_map = nullptr;
+    const RobotStateArray* target_state_array = nullptr;
     /// @brief Pointer to loop counter
     const uint32_t* loopc = nullptr;
     

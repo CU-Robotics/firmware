@@ -25,9 +25,9 @@ public:
     void init(const std::vector<Cfg::Estimator>& estimator_configurations, SensorManager& sensor_manager, CANManager& can);
 
     /// @brief Steps through every estimator to update the state estimate
-    /// @param updated_state_map the current state estimate map, which is updated by each estimator as they step through
-    /// @param override whether we are currently overriding the estimated state map
-    void step(RobotStateMap& updated_state_map, int override);
+    /// @param updated_state_array the current state estimate array, which is updated by each estimator as they step through
+    /// @param override whether we are currently overriding the estimated state array
+    void step(RobotStateArray& updated_state_array, int override);
     
 private:
     /// @brief init an estimator based on the estimator configuration, and add it to the estimator manager's list of estimators
