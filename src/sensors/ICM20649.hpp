@@ -1,10 +1,14 @@
 #pragma once
 
 // adafruit library specific to ICM20(...) hardware
-#include <Adafruit_ICM20649.h> 
+#include <Adafruit_ICM20649.h>
+#include <SPI.h>
 
 #include "sensors/AdafruitIMUSensor.hpp"
-#include "comms/data/icm_sensor_data.hpp" 
+#include "comms/data/icm_sensor_data.hpp"
+
+
+constexpr uint32_t ICM20649_BITORDER = MSBFIRST;
 
 /// @brief Sensor access for an ICM20649 IMU Sensor. Child of the abstract IMUSensor class.
 /// @note supports I2C and SPI communication. 
@@ -17,7 +21,8 @@ public:
     ICM20649(const Cfg::IcmImu& config) : config(config), comms_data(config.imu_name) {}
     /// @brief Initialize the sensor with the assigned communication protocol.
     void init() override;
-
+	/// @copydoc AdafruitIMUSensor::request_read()
+	void request_read() override;
     /// @copydoc AdafruitIMUSensor::read()    
     void read() override;
     /// @brief sends the current ICM sensor data to comms
@@ -39,6 +44,7 @@ private:
     /// @brief calculate the approximate acceleration rates in Hz from the divisor.
     /// @return acceleration data rate in Hz
     float get_accel_data_rate();
+	
     /// @brief calculate the approximate gyroscope rates in Hz from the divisor.
     /// @return gyroscope data rate in Hz 
     float get_gyro_data_rate();
@@ -49,6 +55,27 @@ private:
     /// @brief approximate gyroscope data rate (Hz) calculated from divisor.
     float gyro_rate;
 
-    /// ICM sensor data.
+    /// @brief ICM sensor data.
     ICMSensorData comms_data;
+	
+	/// @brief Buffer of transmitted data to IMU
+    alignas(32) uint8_t tx_buffer[32];
+	
+	/// @brief Buffer of recieved data from IMU
+    alignas(32)uint8_t rx_buffer[32];
+
+    /// @brief The Teensy object that tracks DMA completion
+    EventResponder spi_event;
+	
+	/// @brief The SPI settings of the ICM IMU
+    static const SPISettings m_settings;
+    
+    /// @brief Flag to track if there is a pending data transfer
+    bool transfer_in_progress = false;
+	
+	/// @brief multiplier to adjust acceleration to m/s
+    float accel_multiplier = 1.0f;
+	
+	/// @brief multiplier to adjust acceleration to rads/s
+    float gyro_multiplier = 1.0f;
 };

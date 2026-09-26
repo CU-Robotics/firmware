@@ -41,6 +41,7 @@ src/git_info.h
 # Ignore IDE configs
 .vscode
 .zed
+.idea
 
 #ignore bear files
 .bearwrap

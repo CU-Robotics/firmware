@@ -1,7 +1,7 @@
 #pragma once
 
 #include "comms/config_data/estimator.hpp"
-#include "robot_state_map.hpp"
+#include "robot_state_array.hpp"
 #include "utils/safety.hpp"
 #include "sensors/can/can_manager.hpp"
 #include "state.hpp"
@@ -23,15 +23,15 @@ public:
     virtual ~Estimator() { };
 
     /// @brief step the current state(s) and update the estimate array accordingly
-    /// @param updated_state_map the map of states to update with the new estimates
-    /// @param previous_state_map the map of states with the previous estimates.
+    /// @param updated_state_array the array of states to update with the new estimates
+    /// @param previous_state_array the array of states with the previous estimates.
     /// @param override whether the current estimate is being overriden by an incoming override state from hive.
-    virtual void step_states(RobotStateMap& updated_state_map, const RobotStateMap& previous_state_map, int override) = 0;
+    virtual void step_states(RobotStateArray& updated_state_array, const RobotStateArray& previous_state_array, int override) = 0;
 
     /// @brief Validate estimator outputs after stepping.
     /// Managers call this so limit checks live outside the estimator step logic.
-    /// @param updated_state_map the current estimate map produced by the estimators
-    virtual void validate(const RobotStateMap& updated_state_map) { }
+    /// @param updated_state_array the current estimate array produced by the estimators
+    virtual void validate(const RobotStateArray& updated_state_array) { }
     /// @brief Helper function to get a state name by its generic use. Will trigger safety procedure if the state is not available.
     /// @param use the generic use of the state to get
     /// @param estimator_config config data for this estimator to get the requested state name from
@@ -249,10 +249,10 @@ public:
     GimbalAndChassisEstimator(const Cfg::Estimator& estimator_config, SensorManager& sensor_manager, CANManager& can, std::vector<Cfg::StateName> available_states);
 
     /// @copydoc Estimator::step_states
-    void step_states(RobotStateMap& updated_state_map, const RobotStateMap& previous_state_map, int override) override;
+    void step_states(RobotStateArray& updated_state_array, const RobotStateArray& previous_state_array, int override) override;
 
     /// @copydoc Estimator::validate
-    void validate(const RobotStateMap& updated_state_map) override;
+    void validate(const RobotStateArray& updated_state_array) override;
 };
 
 /// @brief Estimate the state of the flywheels as meters/second of balls exiting the barrel.
@@ -292,10 +292,10 @@ public:
     FlywheelEstimator(const Cfg::Estimator& estimator_config, SensorManager& sensor_manager, CANManager& can, std::vector<Cfg::StateName> available_states);
 
     /// @copydoc Estimator::step_states
-    void step_states(RobotStateMap& updated_state_map, const RobotStateMap& previous_state_map, int override);
+    void step_states(RobotStateArray& updated_state_array, const RobotStateArray& previous_state_array, int override);
 
     /// @copydoc Estimator::validate
-    void validate(const RobotStateMap& updated_state_map) override;
+    void validate(const RobotStateArray& updated_state_array) override;
 };
 
 /// @brief Estimate the state of the feeder ball velocity based on the feeder encoder velocity.
@@ -332,10 +332,10 @@ struct FeederEstimator : public Estimator {
         FeederEstimator(const Cfg::Estimator& estimator_config, SensorManager& sensor_manager, CANManager& can, std::vector<Cfg::StateName> available_states);
     
         /// @copydoc Estimator::step_states
-        void step_states(RobotStateMap& updated_state_map, const RobotStateMap& previous_state_map, int override) override;
+        void step_states(RobotStateArray& updated_state_array, const RobotStateArray& previous_state_array, int override) override;
 
         /// @copydoc Estimator::validate
-        void validate(const RobotStateMap& updated_state_map) override;
+        void validate(const RobotStateArray& updated_state_array) override;
 };
 
 /// @brief Estimate the state of the feeder ball velocity for the lower feeder based on the feeder encoder velocity. This is separate from the main FeederEstimator because it has different config data and we want to be able to disable one without affecting the other.
@@ -402,8 +402,8 @@ struct LowerFeederEstimator : public Estimator {
         LowerFeederEstimator(const Cfg::Estimator& estimator_config, SensorManager& sensor_manager, CANManager& can, std::vector<Cfg::StateName> available_states);
     
         /// @copydoc Estimator::step_states
-        void step_states(RobotStateMap& updated_state_map, const RobotStateMap& previous_state_map, int override) override;
+        void step_states(RobotStateArray& updated_state_array, const RobotStateArray& previous_state_array, int override) override;
 
         /// @copydoc Estimator::validate
-        void validate(const RobotStateMap& updated_state_map) override;
+        void validate(const RobotStateArray& updated_state_array) override;
     };
