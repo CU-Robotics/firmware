@@ -219,7 +219,7 @@ bool CommsLayer::read_config_sd() {
         return false;
     }
     uint64_t size = file.fileSize();
-    Serial.printf("Openned sd card config file %s\n", config_file_name);
+    Serial.printf("Openned sd card config file %s, size is %lu\n", config_file_name, size);
 
     uint8_t* buffer = new uint8_t[size];
     if (file.read(buffer, size)) {
