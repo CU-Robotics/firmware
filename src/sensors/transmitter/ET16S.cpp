@@ -835,5 +835,10 @@ void ET16S::manual_controls(const RobotStateArray& estimated_state_array, RobotS
 		pos_offset_x = estimated_state_array[Cfg::StateName::ChassisX].get_position();
 		pos_offset_y = estimated_state_array[Cfg::StateName::ChassisY].get_position();
 		feed = last_feed;
-	}
+    }
+    if (get_switch_h() == SwitchPos::FORWARD) {
+        constexpr float FEEDER_UNJAM_OFFSET_BALLS = 0.25f;
+        const float feeder_position = estimated_state_array[Cfg::StateName::Feeder].get_position();
+        target_state_array[Cfg::StateName::Feeder].set_position(feeder_position - FEEDER_UNJAM_OFFSET_BALLS);
+    }
 }
