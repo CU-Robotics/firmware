@@ -21,7 +21,7 @@ struct HiveData {
         struct_vector.push_back(*packet);
         config.num_sections_received++;
         if (config_file.has_value()) { 
-            Serial.println("Saved conifg packet to sd card");
+            Serial.printf("Saved conifg packet to sd card, bytes written: %lu\n", sizeof(*packet));
             (config_file.value()).write(reinterpret_cast<uint8_t*>(packet), sizeof(*packet));
         }
     }
