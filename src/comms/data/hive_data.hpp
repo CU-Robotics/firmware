@@ -20,8 +20,10 @@ struct HiveData {
     void save_config_packet(T* packet, std::vector<T>& struct_vector) {
         struct_vector.push_back(*packet);
         config.num_sections_received++;
-        if (config_file.has_value()) 
+        if (config_file.has_value()) { 
+            Serial.println("Saved conifg packet to sd card");
             (config_file.value()).write(reinterpret_cast<uint8_t*>(packet), sizeof(*packet));
+        }
     }
     
     /// @brief Test data
