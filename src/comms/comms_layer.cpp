@@ -169,7 +169,7 @@ void CommsLayer::set_firmware_data(FirmwareData& data) {
 
 void CommsLayer::configure() {
     if (BuiltinSd.file_exists(config_file_name)) {
-        Serial.printf("Found config file %s already stored", config_file_name); 
+        SystemLog.info(Subsystem::COMMS,"Found config file %s already stored\n", config_file_name); 
         // if we can load the conifg file from the sd card we are done
         if (read_config_sd()) return;
     } 
@@ -196,7 +196,7 @@ void CommsLayer::configure() {
     }
 
     if (m_hive_data.config_file.has_value()) {
-        Serial.printf("Config: closed sd card config file");
+        SystemLog.info(Subsystem::COMMS,"Config: closed sd card config file");
         m_hive_data.config_file.value().close();
     }
 }
@@ -204,26 +204,26 @@ void CommsLayer::configure() {
 std::optional<SdFile> CommsLayer::get_config_sd_file() {
     SdFile file = BuiltinSd.open_file(config_file_name, O_WRITE | O_CREAT);
     if (!file) {
-        Serial.printf("Could not open config file %s\n", config_file_name);
+        SystemLog.info(Subsystem::COMMS,"Could not open config file %s\n", config_file_name);
         return std::nullopt;
     }
 
-    Serial.printf("Config: created sd card config file %s\n", config_file_name);
+    SystemLog.info(Subsystem::COMMS,"Config: created sd card config file %s\n", config_file_name);
     return file;
 }
 
 bool CommsLayer::read_config_sd() {
     SdFile file = BuiltinSd.open_file(config_file_name, O_READ);
     if (!file) {
-        Serial.printf("Could not open config file %s\n", config_file_name);
+        SystemLog.info(Subsystem::COMMS,"Could not open config file %s\n", config_file_name);
         return false;
     }
     uint64_t size = file.fileSize();
-    Serial.printf("Openned sd card config file %s\n", config_file_name);
+    SystemLog.info(Subsystem::COMMS,"Openned sd card config file %s\n", config_file_name);
 
     uint8_t* buffer = new uint8_t[size];
     if (file.read(buffer, size)) {
-        Serial.printf("Could not read from config file %s\n", config_file_name);
+        SystemLog.info(Subsystem::COMMS,"Could not read from config file %s\n", config_file_name);
         return false;
     }
 
@@ -234,7 +234,7 @@ bool CommsLayer::read_config_sd() {
         m_hive_data.set_data(header); 
     }
     
-    Serial.println("Received all config packets from sd card");
+    SystemLog.info(Subsystem::COMMS,"Received all config packets from sd card");
     file.close();
     return true;
 }
