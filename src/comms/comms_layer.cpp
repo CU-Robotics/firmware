@@ -240,10 +240,10 @@ bool CommsLayer::read_config_sd() {
         if (header->type_label == TypeLabel::NONE) {
             Serial.printf("Skipping NONE section, offset is %llu and size is %llu, comms_data size is %llu\n", 
                           (unsigned long long) offset, (unsigned long long) size, (unsigned long long) sizeof(CommsData));
+            offset += sizeof(CommsData);
             continue;
         }
-        if (!header->size) offset += sizeof(CommsData);
-        else offset += header->size;
+        offset += header->size;
 
         m_hive_data.set_data(header); 
     }
