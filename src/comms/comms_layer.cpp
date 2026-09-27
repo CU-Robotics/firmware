@@ -221,7 +221,7 @@ bool CommsLayer::read_config_sd() {
     //Extremely intelligent debugging
     uint64_t size = 1800;
     //uint64_t size = file.fileSize();
-    Serial.printf("Openned sd card config file %s, size is %lu bytes\n", config_file_name, size);
+    Serial.printf("Opened sd card config file %s, size is %llu bytes\n", config_file_name, (unsigned long long) size);
 
     uint8_t* buffer = new (std::nothrow) uint8_t[size];
     if (buffer == nullptr) {
