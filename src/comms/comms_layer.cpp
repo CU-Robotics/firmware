@@ -242,8 +242,8 @@ bool CommsLayer::read_config_sd() {
                           (unsigned long long) offset, (unsigned long long) size, (unsigned long long) sizeof(CommsData));
             continue;
         }
-        if (!header->size) break;
-        offset += header->size;
+        if (!header->size) offset += sizeof(CommsData);
+        else offset += header->size;
 
         m_hive_data.set_data(header); 
     }
