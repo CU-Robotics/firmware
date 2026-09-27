@@ -31,7 +31,9 @@ public:
 	bool send_packet(EthernetPacket& packet,uint32_t packet_size = ETHERNET_PACKET_MAX_SIZE);
     /// @brief Receive a packet from Hive
     /// @param packet The packet to fill with data
-    /// @return True if success
+    /// @return True if a valid packet was received, false otherwise
+    /// @note Accepts variable-length datagrams between PACKET_HEADER_SIZE and ETHERNET_PACKET_MAX_SIZE.
+    ///       Call get_last_recv_packet_size() to obtain the total received size in bytes.
     bool recv_packet(EthernetPacket& packet);
 
 	/// @brief Get the current connection status to Hive

@@ -124,7 +124,11 @@ void CommsLayer::receive_packets() {
         m_hid_payload.deconstruct_data(m_hid_incoming.payload(), m_hid_payload.get_max_size());
     }
     if (ethernet_recv) {
-        m_ethernet_payload.deconstruct_data(m_ethernet_incoming.payload(), m_ethernet_payload.get_max_size());
+        const uint32_t rx_pkt_size = m_ethernet.get_last_recv_packet_size();
+        const uint16_t payload_size = (rx_pkt_size >= PACKET_HEADER_SIZE)
+            ? static_cast<uint16_t>(rx_pkt_size - PACKET_HEADER_SIZE)
+            : 0;
+        m_ethernet_payload.deconstruct_data(m_ethernet_incoming.payload(), payload_size);
     }    
 };
 
@@ -311,8 +315,10 @@ void CommsLayer::print_live_data() {
         Serial.printf("   Last Valid  : None\033[K\n");
     }
     if (last_rx_err_sz != 0) {
-        Serial.printf("   Last Error  : %ld B (Expected: %lu B [FIXED_MAX])\033[K\n",
-                      (long)last_rx_err_sz, (unsigned long)ETHERNET_PACKET_MAX_SIZE);
+        Serial.printf("   Last Error  : %ld B (Expected: %lu - %lu B)\033[K\n",
+                      (long)last_rx_err_sz,
+                      (unsigned long)PACKET_HEADER_SIZE,
+                      (unsigned long)ETHERNET_PACKET_MAX_SIZE);
     } else {
         Serial.printf("   Last Error  : None\033[K\n");
     }

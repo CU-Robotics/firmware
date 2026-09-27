@@ -1,5 +1,6 @@
 #include "packet_payload.hpp"
 #include "utils/safety.hpp"
+#include "utils/system_log.hpp"
 #include "comms/comms_layer.hpp"
 
 #include <cstring>
@@ -82,29 +83,39 @@ uint16_t PacketPayload::construct_data(uint8_t* destination) {
 }
 
 void PacketPayload::deconstruct_data(uint8_t* data, uint16_t size) {
-    safety::assert_or_safety_procedure(size == max_data_size, "PacketPayload::deconstruct_data: Data size %u does not match max data size %u", size, max_data_size);
+    if (data == nullptr) {
+        safety::assert_or_safety_procedure(false, "PacketPayload::deconstruct_data: Data is null");
+        return;
+    }
+    if (size > max_data_size) {
+        safety::assert_or_safety_procedure(false, "PacketPayload::deconstruct_data: Data size %u exceeds max data size %u", size, max_data_size);
+        return;
+    }
 
     uint16_t offset = 0;
 
-    while (1) {
-        // get the header
+    while (offset < size) {
+        const uint16_t remaining = size - offset;
+        if (remaining < sizeof(CommsData)) {
+            break;
+        }
+
         CommsData* header = reinterpret_cast<CommsData*>(data + offset);
 
-        // increment the data pointer
-        offset += header->size;
-        // if the header is a NONE type, we are done
         if (header->type_label == TypeLabel::NONE) {
             break;
         }
-        
-        // send the data to the mega struct
-        place_incoming_data_in_mega_struct(header);
 
-        // if we have reached the end of the data, we are done
-        if (offset >= size - sizeof(CommsData)) {
+        if (header->size < sizeof(CommsData) || header->size > remaining) {
+            SystemLog.warn(Subsystem::COMMS, "PacketPayload: Invalid record size %u (remaining: %u) at offset %u\n",
+                           header->size, remaining, offset);
             break;
         }
-    }    
+
+        place_incoming_data_in_mega_struct(header);
+
+        offset += header->size;
+    }
 }
 
 bool PacketPayload::add(const CommsData* data) {

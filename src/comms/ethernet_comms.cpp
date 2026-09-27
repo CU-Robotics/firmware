@@ -124,30 +124,35 @@ bool EthernetComms::recv_packet(EthernetPacket& packet) {
 	// parsePacket returns the current size of the RX buffer
 	int current_buffer_size = m_udp_server.parsePacket();
 	
-	// if this buffer data is the size of a packet, process it
+	// if this buffer data is within valid packet size limits, process it
 	if (current_buffer_size == -1) {
 		// no packet to be read
 		return false;
-	} else if (current_buffer_size != Comms::ETHERNET_PACKET_MAX_SIZE) {
-		// half-read, log as a failure
+	} else if (current_buffer_size < static_cast<int>(PACKET_HEADER_SIZE) ||
+	           current_buffer_size > static_cast<int>(Comms::ETHERNET_PACKET_MAX_SIZE)) {
+		// invalid datagram size, log as a failure
 		m_packets_recv_failed++;
 		m_last_recv_error_size = current_buffer_size;
 	#if defined(COMMS_DEBUG)
-		SystemLog.info(Subsystem::COMMS,"EthernetComms: Recv fail: %d\n", current_buffer_size);
+		SystemLog.info(Subsystem::COMMS, "EthernetComms: Recv fail: %d (expected %lu to %lu bytes)\n",
+		               current_buffer_size,
+		               static_cast<unsigned long>(PACKET_HEADER_SIZE),
+		               static_cast<unsigned long>(Comms::ETHERNET_PACKET_MAX_SIZE));
 	#endif
 		return false;
 	} else {
 		// grab the data pointer
 		const uint8_t* packet_data = m_udp_server.data();
 		// this should never happen, but sanity check
-		if (packet_data == NULL) {
+		if (packet_data == nullptr) {
 		#if defined(COMMS_DEBUG)
-			SystemLog.info(Subsystem::COMMS,"EthernetComms: Recv data NULL\n");
+			SystemLog.info(Subsystem::COMMS, "EthernetComms: Recv data NULL\n");
 		#endif
+			return false;
 		}
 
 		// copy the data of the buffer into the receive packet
-		memcpy(packet.data_start(), m_udp_server.data(), current_buffer_size);
+		memcpy(packet.data_start(), packet_data, current_buffer_size);
 
 		// log this packet as the last packet received
 		m_last_recv_time = micros();

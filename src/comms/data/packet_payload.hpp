@@ -28,10 +28,9 @@ public:
     /// @return Number of complete record bytes written, excluding any sentinel.
     uint16_t construct_data(uint8_t* destination);
 
-    /// @brief Deconstructs the data packet. Places each CommsData into the correct place in the mega structs  
-    /// @param data The raw data buffer.
-    /// @param size The size of the raw data buffer.
-    /// @note This is thread safe
+    /// @brief Deconstructs the data packet. Places each CommsData into the correct place in the mega structs.
+    /// @param data The raw data buffer containing payload records.
+    /// @param size The number of payload bytes received (must be <= get_max_size()).
     void deconstruct_data(uint8_t* data, uint16_t size);
 
 
