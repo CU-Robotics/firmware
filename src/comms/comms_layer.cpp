@@ -238,6 +238,11 @@ bool CommsLayer::read_config_sd() {
         CommsData* header = reinterpret_cast<CommsData*>(buffer + offset);
         offset += header->size;
         Serial.printf("Recieved section %s from sd card\n", to_string(header->type_label).c_str());
+        if (header->type_label == TypeLabel::NONE) {
+            Serial.printf("Skipping NONE section, offset is %llu and size is %llu", 
+                          (unsigned long long) offset, (unsigned long long) size);
+            continue;
+        }
 
         m_hive_data.set_data(header); 
     }
