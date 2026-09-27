@@ -219,8 +219,8 @@ bool CommsLayer::read_config_sd() {
         return false;
     }
     uint64_t size = file.fileSize();
-    Serial.printf("Opened sd card config file %s, size is %llu bytes, available is %d, position is %llu\n", 
-                  config_file_name, (unsigned long long) size, file.available(), (unsigned long long) file.curPosition());
+    Serial.printf("Opened sd card config file %s, size is %llu bytes, available is %d\n", 
+                  config_file_name, (unsigned long long) size, file.available());
 
     uint8_t* buffer = new (std::nothrow) uint8_t[size];
     if (buffer == nullptr) {
@@ -228,7 +228,7 @@ bool CommsLayer::read_config_sd() {
         file.close();
         return false;
     } 
-    if (file.read(buffer, size)) {
+    if (file.read(buffer, size) == -1) {
         Serial.printf("Could not read from config file %s\n", config_file_name);
         file.close();
         return false;
