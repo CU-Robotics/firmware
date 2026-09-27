@@ -234,7 +234,7 @@ bool CommsLayer::read_config_sd() {
         return false;
     }
 
-    for (uint64_t offset = 0; offset < size;) {
+    for (uint64_t offset = 0; offset <= (size - sizeof(CommsData));) {
         CommsData* header = reinterpret_cast<CommsData*>(buffer + offset);
         offset += header->size;
         Serial.printf("Recieved section %s from sd card\n", to_string(header->type_label).c_str());
