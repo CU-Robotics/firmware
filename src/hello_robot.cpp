@@ -328,13 +328,13 @@ void HelloRobot::process_cli() {
 				  break;
 
 			  case LiveMode::HEARTBEAT:
-				Serial.printf("=== LIVE HEARTBEAT  ===\033[K\n");
-				Serial.println(loopc);
-				break;
+				  Serial.printf("=== LIVE HEARTBEAT  ===\033[K\n");
+				  Serial.println(loopc);
+				  break;
 
 			  case LiveMode::COMMS:
-				Comms::comms_layer.print_live_data();
-				break;
+				  Comms::comms_layer.print_live_data();
+				  break;
                         
 			  default:
 				  break;

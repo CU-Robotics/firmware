@@ -52,7 +52,6 @@ public:
     /// @brief Get the output and per-priority staging capacity.
     /// @return The capacity in bytes.
     uint16_t get_max_size() const;
-    
 
 private:
     /// @brief Pack a complete FIFO prefix from one staging buffer.

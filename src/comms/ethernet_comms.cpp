@@ -85,35 +85,35 @@ bool EthernetComms::init(uint32_t data_rate) {
 
 	return true;
 }
-bool EthernetComms::send_packet(EthernetPacket& packet,uint32_t packet_size) {
-    if (packet_size < PACKET_HEADER_SIZE ||
-        packet_size > ETHERNET_PACKET_MAX_SIZE) {
+bool EthernetComms::send_packet(EthernetPacket& packet, uint32_t packet_size) {
+	if (packet_size < PACKET_HEADER_SIZE ||
+	    packet_size > ETHERNET_PACKET_MAX_SIZE) {
 #if defined(COMMS_DEBUG)
-        SystemLog.info(Subsystem::COMMS, "EthernetComms: Packet size incorrect\n");
+		SystemLog.info(Subsystem::COMMS, "EthernetComms: Packet size incorrect\n");
 #endif
-        m_packets_send_failed++;
-        return false;
-    }
+		m_packets_send_failed++;
+		return false;
+	}
 	// update the connection status if needed
-    check_connection();
+	check_connection();
 
-    m_last_send_time = micros();
-    m_last_send_packet_size = packet_size;
-    m_regulation_timer.start();
+	m_last_send_time = micros();
+	m_last_send_packet_size = packet_size;
+	m_regulation_timer.start();
 
-    const bool sent = m_udp_server.send(m_jetson_ip,m_jetson_port,packet.data_start(),packet_size);
+	const bool sent = m_udp_server.send(m_jetson_ip, m_jetson_port, packet.data_start(), packet_size);
 
-    if (sent) {
-        m_packets_sent++;
-        m_total_bytes_sent += packet_size;
-    } else {
-        m_packets_send_failed++;
+	if (sent) {
+		m_packets_sent++;
+		m_total_bytes_sent += packet_size;
+	} else {
+		m_packets_send_failed++;
 #if defined(COMMS_DEBUG)
-        SystemLog.info(Subsystem::COMMS,"EthernetComms: Send fail\n");
+		SystemLog.info(Subsystem::COMMS, "EthernetComms: Send fail\n");
 #endif
-    }
+	}
 
-    return sent;
+	return sent;
 }
 
 bool EthernetComms::recv_packet(EthernetPacket& packet) {

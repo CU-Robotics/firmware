@@ -106,6 +106,7 @@ void CommsLayer::send_packets() {
     const uint32_t packet_size = PACKET_HEADER_SIZE + payload_size;
     m_ethernet.send_packet(m_ethernet_outgoing, packet_size);
 };
+
 void CommsLayer::receive_packets() {
     // defaulted to true so tests can run without physical layers
     bool hid_recv = true;
