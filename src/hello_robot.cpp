@@ -363,12 +363,12 @@ void HelloRobot::process_cli() {
 				  break;
                         
 			  case LiveMode::ESTIMATED_STATE:
-				  Serial.printf("=== LIVE ESTIMATED STATE ===\n");
+				  Serial.printf("=== LIVE ESTIMATED STATE ===\033[K\n");
 				  estimated_state_array->print();
 				  break;
 				
 			  case LiveMode::TARGET_STATE:
-				  Serial.printf("=== LIVE TARGET STATE ===\n");
+				  Serial.printf("=== LIVE TARGET STATE ===\033[K\n");
 				  target_state_array->print();
 				  break;
 
