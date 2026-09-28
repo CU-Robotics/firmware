@@ -1,4 +1,5 @@
 #include "hello_robot.hpp"
+#include <wiring.h>
 
 #ifdef PROFILER
 Profiler prof; 
@@ -185,6 +186,9 @@ void HelloRobot::update_controls() {
     if (transmitter_manager.mode_changed()) {
         governor->set_reference_array(*estimated_state_array);
     }
+
+    apply_fast_mode();
+
     // reference govern
     *reference_array = governor->step_reference_array(*target_state_array);
 
@@ -289,7 +293,48 @@ void HelloRobot::loop_timing() {
     // Keep the loop running at the desired rate
     loop_timer.delay_micros((int)(1E6 / (float)(LOOP_FREQ)));
 }
+void HelloRobot::apply_fast_mode() {
+	if (!transmitter_manager.is_fast_mode_active()) {
+        return;
+    }
+    
+    float chassis_vel_x = (*target_state_array)[Cfg::StateName::ChassisX].get_velocity();
+    float chassis_vel_y = (*target_state_array)[Cfg::StateName::ChassisY].get_velocity();
+    float current_angle = (*estimated_state_array)[Cfg::StateName::ChassisHeading].get_position();
+    float input_mag = sqrtf((chassis_vel_x * chassis_vel_x) + (chassis_vel_y * chassis_vel_y));
+    
+	constexpr float FAST_MODE_ENTER = 0.3f;
+	constexpr float FAST_MODE_EXIT = 0.1f;
+	// Hystersis to prevent twitching in and out of fast mode
+    if (input_mag > FAST_MODE_ENTER) {
+        fast_mode_engaged = true;
+    } else if (input_mag < FAST_MODE_EXIT) {
+        fast_mode_engaged = false;
+    }
+    
+    
+    if (fast_mode_engaged) { 
+        float stick_angle = atan2f(chassis_vel_y, chassis_vel_x);
 
+        // Find the nearest 45 degree diagonal to our current heading
+        constexpr float pi_over_4 = PI / 4.0f;
+        constexpr float pi_over_2 = PI / 2.0f;
+            
+        float offset = current_angle - stick_angle;
+        float snapped_offset = roundf((offset - pi_over_4) / pi_over_2) * pi_over_2 + pi_over_4; 
+            
+        float target_angle = stick_angle + snapped_offset;
+
+        // Shortest path to the target diagonal
+        float error = target_angle - current_angle;
+        while (error > PI) error -= TWO_PI;
+        while (error < PI) error += TWO_PI;
+        // P controller
+        constexpr float kp = 5.0f; 
+        float auto_spin_vel = error * kp;
+        (*target_state_array)[Cfg::StateName::ChassisHeading].set_velocity(auto_spin_vel);
+	}
+}
 void HelloRobot::process_cli() {
     // ==========================================
     // 2. LIVE VIEW RENDERER

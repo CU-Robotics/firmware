@@ -85,3 +85,10 @@ void TransmitterManager::manual_controls(const RobotStateArray& estimated_state_
         safety::safety_procedure("TransmitterManager::manual_controls called before transmitter was initialized");
     }
 }
+bool TransmitterManager::is_fast_mode_active() {
+    if (transmitter){
+		return transmitter->is_fast_mode_active();
+    } else {
+        safety::safety_procedure("TransmitterManager::is_Fast_mode_active called before transmitter was initialized");
+    }
+}
