@@ -192,11 +192,9 @@ void HelloRobot::update_controls() {
     controller_manager.step(*reference_array, *estimated_state_array, *target_state_array);
 }
 void HelloRobot::update_comms() {
-    // Send all state maps at full 1 kHz rate
     target_state_array->send_to_comms<TargetState>();
     reference_array->send_to_comms<ReferenceState>();
     estimated_state_array->send_to_comms<EstimatedState>();
-
     Comms::Sendable<ConfigurationStatusData> config_status_sendable;
     config_status_sendable.data.is_configured = Comms::comms_layer.is_configured() ? 1 : 0;
     config_status_sendable.send_to_comms();
