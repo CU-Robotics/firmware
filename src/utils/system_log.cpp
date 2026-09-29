@@ -1,7 +1,5 @@
 #include "system_log.hpp"
 
-#include "utils/sd/sd_logger.hpp"
-
 // Instantiate the global logger
 SystemLogger SystemLog;
 
@@ -86,8 +84,9 @@ void SystemLogger::push_message() {
         }
     }
 
-    // Log data to SD card
-    // BuiltinSdLogger.write_log(messages[head]);
+    // Log data to SD card if it's bound
+    if (sd_logger)
+        sd_logger->write_log(messages[head]);
 
     // 3. Advance circular buffer
     head = (head + 1) % LOG_HISTORY;

@@ -1,4 +1,5 @@
 #pragma once
+#include "utils/sd/sd_logger.hpp"
 #include <Arduino.h>
 
 enum class LogLevel { INFO, WARN, ERROR };
@@ -48,6 +49,8 @@ private:
     uint8_t line_length = 0;
 	/// @brief pointer to link CLI to logger so print statements arent interuppted
     char* shared_cli_buffer = nullptr;
+    /// @brief pointer to SD logger to log to
+    SdLogger* sd_logger = nullptr;
   
     /// @brief Context for standard Print() calls
     LogLevel current_level = LogLevel::INFO;
@@ -118,6 +121,9 @@ public:
     /// @brief Call this once at boot to link the CLI buffer to the logger
     /// @param buffer is a pointer to CLI buffer
     void bind_cli_buffer(char* buffer) { shared_cli_buffer = buffer; }
+    /// @brief Call at boot to link to SD logger
+    /// @param logger is a pointer to the SdLogger instance
+    void bind_sd_logger(SdLogger* logger) { sd_logger = logger; }
 };
 
 // Declare a global instance so you can use it everywhere, just like 'Serial'

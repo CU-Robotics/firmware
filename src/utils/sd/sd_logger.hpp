@@ -1,7 +1,6 @@
 #pragma once
 
 #include "utils/sd/sd_manager.hpp"
-#include "utils/system_log.hpp"
 
 /// @brief Creates and manages a log file on the SD card
 class SdLogger {
@@ -20,7 +19,7 @@ public:
     /// @brief Write a `LogEvent` to the SD card
     /// @param event `LogEvent` to log
     /// @return If write was successful
-    bool write_log(LogEvent& event);
+    bool write_log(struct LogEvent& event);
 
 private:
     /// @brief SD manager used for file management
