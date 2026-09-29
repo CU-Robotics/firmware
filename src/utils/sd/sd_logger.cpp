@@ -26,7 +26,7 @@ bool SdLogger::write_log(LogEvent& event) {
     );
 
     // write to file
-    if (_log_file.write(log_buffer) < 0)
+    if (_log_file.write(log_buffer) <= 0)
         return false;
 
     // sync write to SD card
