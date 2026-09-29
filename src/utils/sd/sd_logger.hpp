@@ -23,6 +23,10 @@ public:
     /// @return If write was successful
     bool write_log(struct LogEvent& event);
 
+    /// @brief Binds the logger to an SdManager
+    /// @param sd_manager Pointer to the SdManager
+    void bind_sd_manager(SdManager* sd_manager) { _sd_man = sd_manager; }
+
 private:
     /// @brief SD manager used for file management
     SdManager* _sd_man = nullptr;
