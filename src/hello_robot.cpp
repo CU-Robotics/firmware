@@ -57,8 +57,9 @@ void HelloRobot::init() {
     sd_manager.start();
     sd_logger.bind_sd_manager(&sd_manager);
 
-    // Link Logger and CLI
+    // Link Logger with CLI and SdLogger
     SystemLog.bind_cli_buffer(cli_buffer);
+    SystemLog.bind_sd_logger(&sd_logger);
     
     // start the main loop watchdog
     watchdog.start();
