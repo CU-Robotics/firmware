@@ -9,9 +9,6 @@ void HelloRobot::init() {
     // Execute setup functions
     pinMode(LED_BUILTIN, OUTPUT);
 
-    // Start manager for builtin SD card
-    sd_manager.start();
-
     Comms::comms_layer.init();
 
     // Configure the robot from comms data, which is filled on Hive.
@@ -55,6 +52,9 @@ void HelloRobot::init() {
     reference_array.emplace(config.states);
     target_state_array.emplace(config.states);      // Temp ungoverned state
     hive_state_array_offset.emplace(config.states); // Hive offset state
+
+    // Start manager for builtin SD card
+    sd_manager.start();
 
     // Link Logger and CLI
     SystemLog.bind_cli_buffer(cli_buffer);
