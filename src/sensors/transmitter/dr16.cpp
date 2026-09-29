@@ -379,7 +379,7 @@ void DR16::manual_controls(const RobotStateArray& estimated_state_array, RobotSt
 	}
 
 	float chassis_spin = get_wheel() * 25;
-	float pitch_target = 1.57 + -get_r_stick_y() * 0.3 + vtm_pos_y;
+	float pitch_target = HALF_PI + -get_r_stick_y() * 0.3 + vtm_pos_y;
 	float yaw_target = -get_r_stick_x() * 1.5 - vtm_pos_x;
 
 	float fly_wheel_target =
