@@ -1,38 +1,36 @@
 #include "reference_governor.hpp"
 
-#include "robot_state_map.hpp"
+#include "robot_state_array.hpp"
 #include "state.hpp"
 #include <memory>
 #include <set>
 
-void Governor::set_reference_map(const RobotStateMap& new_reference) {
-    reference_state_map = new_reference;
+void Governor::set_reference_array(const RobotStateArray& new_reference) {
+    reference_state_array = new_reference;
 }
 
 void Governor::set_position_reference(Cfg::StateName state_name, float value) {
-    reference_state_map[state_name].set_position(value);
+    reference_state_array[state_name].set_position(value);
 }
 
 void Governor::set_velocity_reference(Cfg::StateName state_name, float value) {
-    reference_state_map[state_name].set_velocity(value);
+    reference_state_array[state_name].set_velocity(value);
 }
 
 void Governor::set_acceleration_reference(Cfg::StateName state_name, float value) {
-    reference_state_map[state_name].set_acceleration(value);
+    reference_state_array[state_name].set_acceleration(value);
 }
 
+const RobotStateArray &Governor::get_reference_array() const { return reference_state_array; }
+
 void Governor::hold_position(Cfg::StateName state_name, float position) {
-    State& reference = reference_state_map[state_name];
+    State& reference = reference_state_array[state_name];
     reference.set_position(position);
     reference.set_velocity(0.0f);
     reference.set_acceleration(0.0f);
 }
 
-const RobotStateMap& Governor::get_reference_map() const {
-    return reference_state_map;
-}
-
-const RobotStateMap& Governor::step_reference_map(const RobotStateMap& ungoverned_reference_map) {
+const RobotStateArray& Governor::step_reference_array(const RobotStateArray& ungoverned_reference_array) {
     float threshold = 0.0005;
     float dt = governor_timer.delta();
     
@@ -41,8 +39,13 @@ const RobotStateMap& Governor::step_reference_map(const RobotStateMap& ungoverne
         count++;
     }
 
-    for(auto& [reference_name, reference] : reference_state_map.get_state_map()) {
-        State ungoverned_reference = ungoverned_reference_map[reference_name];
+    for (size_t i = 0; i < NUM_STATES; ++i) {
+        const Cfg::StateName reference_name = static_cast<Cfg::StateName>(i);
+        if (!reference_state_array.has_state(reference_name)) {
+            continue;
+        }
+        State& reference = reference_state_array[reference_name];
+        const State& ungoverned_reference = ungoverned_reference_array[reference_name];
 
         if (reference.config().governor_type == Cfg::StateOrder::Position) { // position based governor
             State error = ungoverned_reference.get_error_no_bounds(reference);            
@@ -103,5 +106,5 @@ const RobotStateMap& Governor::step_reference_map(const RobotStateMap& ungoverne
             reference.set_position(ungoverned_reference.get_position());
         }
     }
-    return reference_state_map;
+    return reference_state_array;
 }

@@ -1,6 +1,8 @@
 #include "buff_encoder.hpp"
 #include "comms/data/sendable.hpp"
+#include "utils/safety.hpp"
 #include "utils/system_log.hpp"
+#include <SPI.h>
 
 const SPISettings BuffEncoder::m_settings = SPISettings(1000000, MT6835_BITORDER, SPI_MODE3);
 
@@ -10,6 +12,10 @@ void BuffEncoder::init() {
     // set the SPI pins to the correct mode
     pinMode(config_data.spi_cs, OUTPUT);
     digitalWrite(config_data.spi_cs, HIGH); // set CS high to start
+	tx_buffer[0] = (MT6835_OP_ANGLE << 4);
+	tx_buffer[1] = MT6835_REG_ANGLE1;
+	// Flush the cache to RAM
+    arm_dcache_flush_delete(tx_buffer, sizeof(tx_buffer));
 
     while (read_zero_pos() != 0.0f && read_count < read_zero_pos_max_attempts) {
         write_zero_pos(0);
@@ -17,31 +23,44 @@ void BuffEncoder::init() {
     }
     read_count = 0;
 }
+void BuffEncoder::isr_start_transfer(EventResponderRef spi_event) {
+	SPI.beginTransaction(m_settings);
+	digitalWrite(config_data.spi_cs, LOW);
 
-void BuffEncoder::read() {
-    while (read_zero_pos() != 0.0f && read_count < read_zero_pos_max_attempts) {
-        write_zero_pos(0);
-        read_count++;
-    }
-    read_count = 0; 
-
-    uint8_t data[6] = { 0 }; // transact 48 bits
-
-    // set the operation
-    data[0] = (MT6835_OP_ANGLE << 4);
-    data[1] = MT6835_REG_ANGLE1;
-
-    // Serial.printf("Pin: %u, Sending Buff Encoder read command\n", config_data.spi_cs);
-    // do the SPI transfer
-    SPI.beginTransaction(m_settings);
-    digitalWrite(config_data.spi_cs, LOW);
-    SPI.transfer(data, 6);
-    digitalWrite(config_data.spi_cs, HIGH);
+    if (!SPI.transfer(tx_buffer, rx_buffer, 6, spi_event)) {
+        SystemLog.error(Subsystem::SENSORS,"Buff Encoder SPI transfer Failed");
+        }
+}
+void BuffEncoder::isr_stop_transfer(EventResponderRef spi_event) {
+	digitalWrite(config_data.spi_cs, HIGH);
     SPI.endTransaction();
+    arm_dcache_delete(rx_buffer, 32);
+	
+}
+void BuffEncoder::read() {
+	if (shared_dma_flag != nullptr && *shared_dma_flag == true) {
+        return; 
+    }
+    // Serial.printf("Pin: %u, Sending Buff Encoder read command\n", config_data.spi_cs);
 
-    uint8_t status = data[4] & 0x07;
-    uint8_t crc_received = data[5];
-    uint8_t crc_computed  = mt6835_crc8(&data[2], 3);
+    // Check for misalignment
+    zero_check_timer++;
+    if (zero_check_timer >= 1000) {
+        zero_check_timer = 0;
+        
+        cached_zero_pos = read_zero_pos();
+        
+        if (cached_zero_pos != 0.0f) {
+            zero_misalign_count++;
+            SystemLog.error(Subsystem::SENSORS, "Pin: %u, ZERO_POS Misaligned! Read: %f\n", config_data.spi_cs, cached_zero_pos);
+            
+            write_zero_pos(0); 
+        }
+    }
+    
+    uint8_t status = rx_buffer[4] & 0x07;
+    uint8_t crc_received = rx_buffer[5];
+    uint8_t crc_computed  = mt6835_crc8(&rx_buffer[2], 3);
 
     if (crc_received != crc_computed) {
         SystemLog.error(Subsystem::SENSORS,"Pin: %u, MT6835 CRC mismatch\n", config_data.spi_cs);
@@ -57,8 +76,8 @@ void BuffEncoder::read() {
     }
 
     // convert received angle into radians
-    int raw_angle = (data[2] << 13) | (data[3] << 5) | (data[4] >> 3);
-    float radians = raw_angle / (float)MT6835_CPR * (3.14159265 * 2.0);
+	int raw_angle = (rx_buffer[2] << 13) | (rx_buffer[3] << 5) | (rx_buffer[4] >> 3);
+	float radians = raw_angle / (float)MT6835_CPR * (3.14159265f * 2.0f);
 
     // assign angle
     m_angle = radians;
@@ -175,16 +194,19 @@ void BuffEncoder::send_to_comms() const {
     sendable.send_to_comms();
 }
 
-void BuffEncoder::print() const{
+void BuffEncoder::print() const {
     Serial.printf("Buff Encoder:\n\t");
     Serial.println(get_angle());
 }
 void BuffEncoder::print_live_data() {
     // Note: casting get_name() to int so it prints the enum number
-    Serial.printf(" [Buff Encoder %d] Angle (rad): %8.4f\n", 
-                  (int)get_name(), get_angle());
+    Serial.printf(" [Buff Encoder %d] Angle (rad): %8.4f Z-Mis: %-4u (%.1f deg)\n", 
+                  (int)get_name(), get_angle(), zero_misalign_count, cached_zero_pos);
 }
 
+void BuffEncoder::bind_dma_flag(const volatile bool* flag_ptr) {
+        shared_dma_flag = flag_ptr;
+}
 uint8_t BuffEncoder::mt6835_crc8(const uint8_t* data, size_t len) const {
     constexpr uint8_t poly = 0x07; // X^8 + X^2 + X + 1
     uint8_t crc = 0x00;            // datasheet does not state a seed; 0x00 is the typical default for this polynomial family

@@ -4,8 +4,7 @@
 #include "utils/system_log.hpp"
 #include <core_pins.h>
 
-
-std::unique_ptr<RobotStateMap>* StereoCamTrigger::estimated_state_map_interrupt_safe = nullptr;
+std::unique_ptr<RobotStateArray>* StereoCamTrigger::estimated_state_map_interrupt_safe = nullptr;
 
 StereoCamTrigger::StereoCamTrigger(const Cfg::StereoCamTrigger& config): Sensor(), config(config), comms_data(config.camera_trigger_name) {}
 
@@ -62,7 +61,7 @@ void StereoCamTrigger::init() {
   start(mpf);
 }
 
-void StereoCamTrigger::provide_isr_map(std::unique_ptr<RobotStateMap> *safe_map) {
+void StereoCamTrigger::provide_isr_map(std::unique_ptr<RobotStateArray> *safe_map) {
     estimated_state_map_interrupt_safe = safe_map;
 }
 

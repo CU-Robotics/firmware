@@ -6,6 +6,8 @@
 #include <Adafruit_Sensor.h>
 #include "sensors/sensor.hpp"
 
+#define GRAVITY_EARTH (9.80665F) //  Earth's gravity in m/s^2 
+#define DPS_TO_RADS (0.017453293F) // Degrees/s to rad/s multiplier 
 /// @brief Abstract parent class for all AdafruitIMUSensors, which give acceleration and gyroscope data. 
 class AdafruitIMUSensor : public Sensor {
 public:

@@ -1,5 +1,5 @@
 #pragma once
-#include "controls/robot_state_map.hpp"
+#include "controls/robot_state_array.hpp"
 #include "controls/reference_governor.hpp"
 /// @brief A unifying interface for all transmitters
 class Transmitter {
@@ -37,11 +37,11 @@ public:
 	/// @return true if the mode has been changed, false otherwise.
 	virtual bool mode_changed() = 0;
 	
-	/// @brief Uses the transmitter input to update the target state map with the desired setpoints for each state.
-	/// @param estimated_state_map The current estimated state of the robot.
-	/// @param target_state_map The map of target states to update.
+	/// @brief Uses the transmitter input to update the target state array with the desired setpoints for each state.
+	/// @param estimated_state_array The current estimated state of the robot.
+	/// @param target_state_array The array of target states to update.
 	/// @param not_safety_mode Whether we are in safety mode.
 	/// @param feed The feed value.
 	/// @param last_feed The last feed value.
-	virtual void manual_controls(const RobotStateMap& estimated_state_map, RobotStateMap& target_state_map, bool not_safety_mode, float& feed, float& last_feed) = 0;
+	virtual void manual_controls(const RobotStateArray& estimated_state_array, RobotStateArray& target_state_array, bool not_safety_mode, float& feed, float& last_feed) = 0;
 };
