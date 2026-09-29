@@ -1,5 +1,4 @@
 #include "hello_robot.hpp"
-#include "utils/sd/sd_logger.hpp"
 
 #ifdef PROFILER
 Profiler prof; 
@@ -11,10 +10,7 @@ void HelloRobot::init() {
     pinMode(LED_BUILTIN, OUTPUT);
 
     // Start manager for builtin SD card
-    BuiltinSd.start();
-
-    // start SD logger
-    BuiltinSdLogger.start();
+    sd_manager.start();
 
     Comms::comms_layer.init();
 

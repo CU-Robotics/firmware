@@ -81,6 +81,9 @@ class HelloRobot {
     /// @brief Hardware watchdog that resets the Teensy if the loop hangs.
     Watchdog watchdog;
 
+    /// @brief Manages the builtin SD card reader
+    SdManager sd_manager;
+
     // ==========================================
     // SYSTEM TIMERS & COUNTERS
     // ==========================================

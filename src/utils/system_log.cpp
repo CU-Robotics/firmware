@@ -88,7 +88,7 @@ void SystemLogger::push_message() {
     }
 
     // Log data to SD card
-    BuiltinSdLogger.write_log(messages[head]);
+    // BuiltinSdLogger.write_log(messages[head]);
 
     // 3. Advance circular buffer
     head = (head + 1) % LOG_HISTORY;

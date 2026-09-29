@@ -33,5 +33,3 @@ private:
     /// @return Whether file was created and bound to successfully
     bool new_log_file();
 };
-
-extern SdLogger BuiltinSdLogger;

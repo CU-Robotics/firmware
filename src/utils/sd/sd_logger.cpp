@@ -5,8 +5,6 @@
 #define LOG_FILE_DIR "/logs/"
 #define LOG_FILE_FORMAT "log_%d.log"
 
-SdLogger BuiltinSdLogger(BuiltinSd);
-
 
 bool SdLogger::start() {
     return new_log_file();
