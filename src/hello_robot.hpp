@@ -86,7 +86,7 @@ class HelloRobot {
     SdManager sd_manager;
 
     /// @brief Manages logging to SD card
-    SdLogger sd_logger; // TODO no default constructor
+    SdLogger sd_logger;
 
     // ==========================================
     // SYSTEM TIMERS & COUNTERS

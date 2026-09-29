@@ -55,6 +55,7 @@ void HelloRobot::init() {
 
     // Start manager for builtin SD card
     sd_manager.start();
+    sd_logger.bind_sd_manager(&sd_manager);
 
     // Link Logger and CLI
     SystemLog.bind_cli_buffer(cli_buffer);
