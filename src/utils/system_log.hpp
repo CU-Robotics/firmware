@@ -21,6 +21,11 @@ struct LogEvent {
 /// @return cstring representaiton of `sys`
 const char* sys_to_str(Subsystem sys);
 
+/// @brief Converts LogLevel to appropriate string representation
+/// @param level LogLevel to convert
+/// @return cstring representation of `level`
+const char* level_to_str(LogLevel level);
+
 /// @brief Serial wrapper for handling print statements
 class SystemLogger : public Print {
 private:

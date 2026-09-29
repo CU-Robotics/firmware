@@ -27,6 +27,14 @@ const char* level_to_color(LogLevel lvl) {
     }
 }
 
+const char* level_to_str(LogLevel level) {
+    switch(level) {
+        case LogLevel::WARN: return "WARN";
+        case LogLevel::ERROR: return "ERROR";
+        default: return "INFO";
+    };
+}
+
 void SystemLogger::set_context(LogLevel lvl, Subsystem sys) {
     current_level = lvl;
     current_sys = sys;

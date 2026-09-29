@@ -7,13 +7,6 @@
 
 SdLogger BuiltinSdLogger(BuiltinSd);
 
-const char* level_to_str(LogLevel level) {
-    switch(level) {
-        case LogLevel::WARN: return "WARN";
-        case LogLevel::ERROR: return "ERROR";
-        default: return "INFO";
-    };
-}
 
 bool SdLogger::start() {
     return new_log_file();
