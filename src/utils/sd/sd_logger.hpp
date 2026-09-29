@@ -5,9 +5,11 @@
 /// @brief Creates and manages a log file on the SD card
 class SdLogger {
 public:
+    SdLogger() {}
+
     /// @brief Creates a new SdLogger, and a new file on the SD card with it
     /// @param sd_man `SdManager` to use
-    SdLogger(SdManager& sd_man) : _sd_man(sd_man) {}
+    SdLogger(SdManager* sd_man) : _sd_man(sd_man) {}
 
     /// @brief Closes the file associated with the logger
     ~SdLogger() { _log_file.close(); }
@@ -23,7 +25,7 @@ public:
 
 private:
     /// @brief SD manager used for file management
-    SdManager& _sd_man;
+    SdManager* _sd_man = nullptr;
 
     /// @brief File to write to, opened with O_APPEND
     SdFile _log_file;

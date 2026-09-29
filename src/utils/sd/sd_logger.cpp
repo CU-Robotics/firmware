@@ -34,12 +34,14 @@ bool SdLogger::write_log(LogEvent& event) {
 }
 
 bool SdLogger::new_log_file() {
+    if (!_sd_man) return false;
+
     // create log directory if not exists
-    if (!_sd_man.file_exists(LOG_FILE_DIR)) {
-        _sd_man.mkdir(LOG_FILE_DIR, "0755");
+    if (!_sd_man->file_exists(LOG_FILE_DIR)) {
+        _sd_man->mkdir(LOG_FILE_DIR, "0755");
     }
 
-    SdFile log_dir = _sd_man.open_file(LOG_FILE_DIR, O_RDONLY);
+    SdFile log_dir = _sd_man->open_file(LOG_FILE_DIR, O_RDONLY);
     if (!log_dir) return false;
 
     SdFile curr_file;
