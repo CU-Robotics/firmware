@@ -17,3 +17,7 @@ SdFile SdManager::open_file(const char* path, oflag_t oflag) {
 bool SdManager::file_exists(const char* path) {
     return _sdfat.exists(path);
 }
+
+bool SdManager::mkdir(const char* path, const char* pflag) {
+    return _sdfat.mkdir(path, pflag);
+}

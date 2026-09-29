@@ -40,6 +40,12 @@ public:
     /// @return Whether the file exists
     bool file_exists(const char* path);
 
+    /// @brief Creates a directory at the specified location
+    /// @param path Path of the directory to create
+    /// @param pflag Pflags for directory creation
+    /// @return If directory creation was successful
+    bool mkdir(const char* path, const char* pflag);
+
 private:
     /// @brief SdioConfig used to initialize the manager
     const SdioConfig _SD_CONFIG;
@@ -47,6 +53,3 @@ private:
     /// @brief SdFat object used in manager
     SdFat _sdfat;
 };
-
-/// @brief `SdManager` instance for the builtin SD card reader
-extern SdManager BuiltinSd;
