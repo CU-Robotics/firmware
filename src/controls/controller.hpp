@@ -356,8 +356,21 @@ public:
     /// @param error The signed controller error that triggered the escalation.
     void handleControllerError(const char* controller_name, const char* state_name, const State& reference_state, const State& estimate_state, float error) override;
 
+#ifdef DEBUG
+    /// @brief Read the active pitch position integral gain.
+    /// @return Current copied position-loop integral gain.
+    float position_i_gain() const { return full_state_position_controller.gains.i; }
+
+    /// @brief Change the active pitch position integral gain and discard stored error.
+    /// @param gain New position-loop integral gain.
+    void set_position_i_gain(float gain) {
+        full_state_position_controller.gains.i = gain;
+        pidp.sumError = 0.0f;
+    }
+#endif
+
     /// @brief reset the controller
-    inline void reset() {
+    inline void reset() override {
         Controller::reset();
         pidp.sumError = 0.0;
         pidv.sumError = 0.0;

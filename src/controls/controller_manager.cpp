@@ -3,6 +3,8 @@
 #include "utils/system_log.hpp"
 
 void ControllerManager::init(const std::vector<Cfg::Controller>& controller_configurations, CANManager& can, const std::vector<Cfg::State>& state_config) {
+    pitch_controller = nullptr;
+    controllers.clear();
     available_motors.clear();
     for (size_t i = 0; i < static_cast<size_t>(Cfg::MotorName::MotorNameCount); i++) {
         available_motors.push_back(static_cast<Cfg::MotorName>(i));
@@ -27,6 +29,7 @@ void ControllerManager::init_controller(const Cfg::Controller& controller_config
             break;
         case Cfg::ControllerType::PitchController:
             controllers.push_back(std::make_unique<PitchController>(controller_config, can, available_motors));
+            pitch_controller = static_cast<PitchController*>(controllers.back().get());
             break;
         case Cfg::ControllerType::FlywheelController:
             controllers.push_back(std::make_unique<FlywheelController>(controller_config, can, available_motors));
@@ -42,6 +45,23 @@ void ControllerManager::init_controller(const Cfg::Controller& controller_config
             break;
     }
 }
+
+void ControllerManager::reset_pitch_controller() {
+    if (pitch_controller) pitch_controller->reset();
+}
+
+#ifdef DEBUG
+std::optional<float> ControllerManager::pitch_position_i_gain() const {
+    if (!pitch_controller) return std::nullopt;
+    return pitch_controller->position_i_gain();
+}
+
+bool ControllerManager::set_pitch_position_i_gain(float gain) {
+    if (!pitch_controller) return false;
+    pitch_controller->set_position_i_gain(gain);
+    return true;
+}
+#endif
 
 void ControllerManager::step(RobotStateArray& reference_array, RobotStateArray& estimate_array, RobotStateArray& target_array) {
     for (const auto& controller : controllers) {

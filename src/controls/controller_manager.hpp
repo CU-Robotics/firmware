@@ -10,6 +10,8 @@ class ControllerManager {
 private:
     /// @brief List of all controllers that are currently active
     std::vector<std::unique_ptr<Controller>> controllers;
+    /// @brief Non-owning pointer to the active pitch controller, if configured.
+    PitchController* pitch_controller = nullptr;
 
     /// @brief List of motors that are available to be used by controllers. 
     //  This is used to make sure that two controllers cant write to the same motor
@@ -29,6 +31,20 @@ public:
     /// @param _can reference to the can data struct to use to initialize the controller
     /// @param state_config reference to the state configuration data
     void init_controller(const Cfg::Controller& controller_config, CANManager& _can, const std::vector<Cfg::State>& state_config);
+    /// @brief Reset pitch integrators and timer if a pitch controller is configured.
+    void reset_pitch_controller();
+
+#ifdef DEBUG
+    /// @brief Read the active pitch position integral gain.
+    /// @return Current gain, or nullopt if no pitch controller is configured.
+    std::optional<float> pitch_position_i_gain() const;
+
+    /// @brief Change the active pitch position integral gain.
+    /// @param gain New position-loop integral gain.
+    /// @return Whether a pitch controller is configured.
+    bool set_pitch_position_i_gain(float gain);
+#endif
+
 
     /// @brief Steps all controllers in the controller manager. This should be called every control loop iteration
     /// @param reference_array the array of reference states that controllers should try to achieve

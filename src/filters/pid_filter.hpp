@@ -1,5 +1,5 @@
 #pragma once
-#include "math.h"
+#include <cmath>
 #include <Arduino.h>
 
 
@@ -40,10 +40,26 @@ struct PIDFilter {
         float error = setpoint - measurement;
         if (error > PI && wrap) error -= 2 * PI;
         if (error < -PI && wrap) error += 2 * PI;
-        // if(wrap) Serial.println(error);
-        sumError += error * dt;
-        float output = (kp * error) + (kd * ((error - prevError) / dt)) + kf;
+        const bool valid_dt = dt > 0.0f && std::isfinite(dt);
+        float output = (kp * error) + kf;
+        if (valid_dt) output += kd * ((error - prevError) / dt);
         prevError = error;
+        if (ki == 0.0f) {
+            sumError = 0.0f;
+        } else if (valid_dt) {
+            if (bound) {
+                static constexpr float MAX_INTEGRAL_OUTPUT = 0.25f;
+                const float previous_integral = ki * sumError;
+                const float proposed_integral = std::fmax(-MAX_INTEGRAL_OUTPUT, std::fmin(MAX_INTEGRAL_OUTPUT, ki * (sumError + error * dt)));
+                if (!((output + proposed_integral > 1.0f && proposed_integral > previous_integral) ||
+                      (output + proposed_integral < -1.0f && proposed_integral < previous_integral))) {
+                    sumError = proposed_integral / ki;
+                }
+            } else {
+                sumError += error * dt;
+            }
+        }
+        output += ki * sumError;
         if (fabs(output) > 1.0 && bound) output /= fabs(output);
         return output;
     }

@@ -1,4 +1,10 @@
 #include "hello_robot.hpp"
+#ifdef DEBUG
+#include <cerrno>
+#include <cmath>
+#include <cstring>
+#include <cstdlib>
+#endif
 
 #ifdef PROFILER
 Profiler prof; 
@@ -184,6 +190,7 @@ void HelloRobot::update_controls() {
 
     if (transmitter_manager.mode_changed()) {
         governor->set_reference_array(*estimated_state_array);
+        controller_manager.reset_pitch_controller();
     }
     // reference govern
     *reference_array = governor->step_reference_array(*target_state_array);
@@ -223,8 +230,8 @@ void HelloRobot::check_safety() {
     if (motors_armed) {
         can.write();
     } else {
-        // TODO: Reset all controller integrators here
         can.zero_all_motors();
+        controller_manager.reset_pitch_controller();
         hold_feeder_position();
     }
 
@@ -327,6 +334,24 @@ void HelloRobot::process_cli() {
 				  target_state_array->print();
 				  break;
 
+#ifdef DEBUG
+              case LiveMode::PITCH_TUNING: {
+                  Serial.println("=== LIVE PITCH POSITION ===\033[K");
+                  const std::optional<float> gain = controller_manager.pitch_position_i_gain();
+                  constexpr Cfg::StateName pitch = Cfg::StateName::GimbalPitch;
+                  if (!gain || !target_state_array || !reference_array || !estimated_state_array ||
+                      !target_state_array->has_state(pitch) || !reference_array->has_state(pitch) || !estimated_state_array->has_state(pitch)) {
+                      Serial.println("Pitch controller/state unavailable\033[K");
+                      break;
+                  }
+                  const float target = (*target_state_array)[pitch].get_position();
+                  const float reference = (*reference_array)[pitch].get_position();
+                  const float estimate = (*estimated_state_array)[pitch].get_position();
+                  Serial.printf("Target: %.5f rad  Reference: %.5f rad  Estimate: %.5f rad\033[K\n", target, reference, estimate);
+                  Serial.printf("Error (reference - estimate): %.5f rad  Position I gain: %.6f\033[K\n", reference - estimate, *gain);
+                  break;
+              }
+#endif
 			  case LiveMode::HEARTBEAT:
 				  Serial.printf("=== LIVE HEARTBEAT  ===\033[K\n");
 				  Serial.println(loopc);
@@ -404,7 +429,10 @@ void HelloRobot::process_cli() {
                 {"ping", &HelloRobot::cmd_ping},
                 {"help", &HelloRobot::cmd_help},
                 {"live", &HelloRobot::cmd_live},
-                {"log", &HelloRobot::cmd_log}
+                {"log", &HelloRobot::cmd_log},
+#ifdef DEBUG
+                {"pitch_i", &HelloRobot::cmd_pitch_i},
+#endif
             };
 
             // --- THE PARSER ---
@@ -476,6 +504,9 @@ void HelloRobot::cmd_help() {
                 Serial.println("                estimated_state : The robot's current estimated state array");
                 Serial.println("                target_state    : The robot's current target state array");
                 Serial.println("                heartbeat       : The main loop counter (loopc)");
+#ifdef DEBUG
+                Serial.println("                pitch           : Pitch target/reference/estimate/error and position I gain (debug)");
+#endif
 				Serial.println();
 				Serial.println("       log [subsystem] [priority]");
 				Serial.println("              Filters the system event log.");
@@ -492,9 +523,46 @@ void HelloRobot::cmd_help() {
 				Serial.println("                log motors warn  : Shows motor warnings/errors, and all other system errors");
 				Serial.println("                log all info     : Resets the filter to show absolutely everything");
                 Serial.println();
+#ifdef DEBUG
+                Serial.println("       pitch_i [gain 0..2]");
+                Serial.println("              Shows or changes the active pitch position I gain (debug only).");
+                Serial.println("              Build make debug; upload tycmd upload build/debug/firmware.hex;");
+                Serial.println("              connect with make monitor (make upload builds release).");
+                Serial.println("              Press ENTER to exit live view, type pitch_i <gain>, then live pitch.");
+                Serial.println("              CLI changes are temporary; reboot reloads the Hive gain.");
+                Serial.println("              To persist: edit only Gerald YAML Pitch Controller / Full State");
+                Serial.println("              Position Controller / Gains.i, then reboot/reconfigure.");
+                Serial.println("              Leave Pitch Encoder Offset -0.35749 unchanged.");
+                Serial.println();
+#endif
                 Serial.println("       help");
                 Serial.println("              Displays this manual.");
 }
+#ifdef DEBUG
+void HelloRobot::cmd_pitch_i() {
+    char* token = strtok(nullptr, " ");
+    if (!token) {
+        const std::optional<float> gain = controller_manager.pitch_position_i_gain();
+        if (gain) Serial.printf("Pitch position I gain: %.6f\n", *gain);
+        else Serial.println("Pitch controller unavailable");
+        return;
+    }
+
+    errno = 0;
+    char* end = nullptr;
+    const float gain = strtof(token, &end);
+    if (end == token || *end != '\0' || strspn(token, "0123456789+-.eE") != static_cast<size_t>(end - token) || errno == ERANGE || !std::isfinite(gain) || gain < 0.0f || gain > 2.0f || strtok(nullptr, " ") != nullptr) {
+        Serial.println("Usage: pitch_i [gain 0..2]");
+        return;
+    }
+    if (!controller_manager.set_pitch_position_i_gain(gain)) {
+        Serial.println("Pitch controller unavailable");
+        return;
+    }
+    Serial.printf("Pitch position I gain: %.6f\n", gain);
+}
+#endif
+
 void HelloRobot::cmd_live() {
     num_active_views = 0;
     SystemLog.is_live_view_active = true;
@@ -512,7 +580,10 @@ void HelloRobot::cmd_live() {
         {"sensors",         LiveMode::SENSORS,         100},
         {"target_state",    LiveMode::TARGET_STATE,    100},
         {"estimated_state", LiveMode::ESTIMATED_STATE, 100},
-        {"heartbeat",       LiveMode::HEARTBEAT,       100}
+        {"heartbeat",       LiveMode::HEARTBEAT,       100},
+#ifdef DEBUG
+        {"pitch",           LiveMode::PITCH_TUNING,    100},
+#endif
     };
 
 	// --- THE PARSER ---
@@ -539,7 +610,11 @@ void HelloRobot::cmd_live() {
         Serial.print("\033[2J");
     } else {
         SystemLog.is_live_view_active = false;
+#ifdef DEBUG
+        Serial.println("Usage: live [prof] [tx] [sensors] [estimated_state] [target_state] [heartbeat] [pitch]");
+#else
         Serial.println("Usage: live [prof] [tx] [sensors] [estimated_state] [target_state] [heartbeat]");
+#endif
     }
 }
 
