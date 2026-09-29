@@ -1,7 +1,6 @@
 #include "system_log.hpp"
 
 #include "utils/sd/sd_logger.hpp"
-#include <system_error>
 
 // Instantiate the global logger
 SystemLogger SystemLog;
