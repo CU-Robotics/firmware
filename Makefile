@@ -11,6 +11,7 @@ ifneq ($(filter release,$(MAKECMDGOALS)),)
 endif
 
 ifneq ($(filter config,$(MAKECMDGOALS)),)
+	@echo Updating conifg
 	FEATURE_DEFINES += -DFORCE_UPDATE_CONFIG
 endif
 
