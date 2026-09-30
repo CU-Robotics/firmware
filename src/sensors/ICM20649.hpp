@@ -20,6 +20,7 @@ public:
     /// @param config configuration struct for this ICM20649 sensor
     ICM20649(const Cfg::IcmImu& config) : config(config), comms_data(config.imu_name) {}
     /// @brief Initialize the sensor with the assigned communication protocol.
+    /// @note Enables 23.9 Hz hardware low-pass filters for acceleration and angular rate before gyro calibration, on both I2C and SPI.
     void init() override;
 	/// @copydoc AdafruitIMUSensor::request_read()
 	void request_read() override;

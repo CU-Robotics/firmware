@@ -554,21 +554,15 @@ bool Adafruit_ICM20X::enableAccelDLPF(bool enable,
 
   Adafruit_BusIO_RegisterBits dlpf_enable =
       Adafruit_BusIO_RegisterBits(&accel_config1, 1, 0);
-  if (!dlpf_enable.write(enable)) {
-    return false;
+  bool success = dlpf_enable.write(enable);
+  if (success && enable) {
+    Adafruit_BusIO_RegisterBits dlpf_config =
+        Adafruit_BusIO_RegisterBits(&accel_config1, 3, 3);
+    success = dlpf_config.write(cutoff_freq);
   }
 
-  if (!enable) {
-    return true;
-  }
-
-  Adafruit_BusIO_RegisterBits dlpf_config =
-      Adafruit_BusIO_RegisterBits(&accel_config1, 3, 3);
-
-  if (!dlpf_config.write(cutoff_freq)) {
-    return false;
-  }
-  return true;
+  _setBank(0);
+  return success;
 }
 
 /**************************************************************************/
@@ -584,25 +578,19 @@ bool Adafruit_ICM20X::enableGyrolDLPF(bool enable,
                                       icm20x_gyro_cutoff_t cutoff_freq) {
   _setBank(2);
   Adafruit_BusIO_Register gyro_config1 = Adafruit_BusIO_Register(
-      i2c_dev, spi_dev, ADDRBIT8_HIGH_TOREAD, ICM20X_B2_ACCEL_CONFIG_1);
+      i2c_dev, spi_dev, ADDRBIT8_HIGH_TOREAD, ICM20X_B2_GYRO_CONFIG_1);
 
   Adafruit_BusIO_RegisterBits dlpf_enable =
       Adafruit_BusIO_RegisterBits(&gyro_config1, 1, 0);
-  if (!dlpf_enable.write(enable)) {
-    return false;
+  bool success = dlpf_enable.write(enable);
+  if (success && enable) {
+    Adafruit_BusIO_RegisterBits dlpf_config =
+        Adafruit_BusIO_RegisterBits(&gyro_config1, 3, 3);
+    success = dlpf_config.write(cutoff_freq);
   }
 
-  if (!enable) {
-    return true;
-  }
-
-  Adafruit_BusIO_RegisterBits dlpf_config =
-      Adafruit_BusIO_RegisterBits(&gyro_config1, 3, 3);
-
-  if (!dlpf_config.write(cutoff_freq)) {
-    return false;
-  }
-  return true;
+  _setBank(0);
+  return success;
 }
 
 /**************************************************************************/

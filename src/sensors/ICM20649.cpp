@@ -31,6 +31,8 @@ void ICM20649::init() {
 
     set_accel_range(config.accel_range);
     set_gyro_range(config.gyro_range);
+    safety::assert_or_safety_procedure(sensor.enableAccelDLPF(true, ICM20X_ACCEL_FREQ_23_9_HZ), "ICM: Failed to configure accelerometer DLPF");
+    safety::assert_or_safety_procedure(sensor.enableGyrolDLPF(true, ICM20X_GYRO_FREQ_23_9_HZ), "ICM: Failed to configure gyroscope DLPF");
 
 	// ICM20649 data starts at register 0x2D (ACCEL_XOUT_H) 0x80 is the SPI read flag.
     tx_buffer[0] = 0x80 | ICM20X_B0_ACCEL_XOUT_H;
