@@ -7,7 +7,7 @@ class SdLogger {
 public:
     SdLogger() {}
 
-    /// @brief Creates a new SdLogger, and a new file on the SD card with it
+    /// @brief Creates a new SdLogger, which must be started with start()
     /// @param sd_man `SdManager` to use
     SdLogger(SdManager* sd_man) : _sd_man(sd_man) {}
 
