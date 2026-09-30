@@ -168,11 +168,15 @@ void CommsLayer::set_firmware_data(FirmwareData& data) {
 };
 
 void CommsLayer::configure() {
+#ifndef FORCE_UPDATE_CONFIG
     if (BuiltinSd.file_exists(config_file_name)) {
         Serial.printf("Found config file %s already stored\n", config_file_name); 
         // if we can load the conifg file from the sd card we are done
         if (read_config_sd()) return;
     } 
+#else
+    Serial.println("Updating config");
+#endif
     
     // config packets are saved to the sd card if it exists in HiveData::set_data() 
     m_hive_data.config_file = get_config_sd_file();

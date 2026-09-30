@@ -10,6 +10,10 @@ ifneq ($(filter release,$(MAKECMDGOALS)),)
 	BUILD_TYPE := release
 endif
 
+ifneq ($(filter config,$(MAKECMDGOALS)),)
+	FEATURE_DEFINES += -DFORCE_UPDATE_CONFIG
+endif
+
 BUILD_DIR := $(BUILD_BASE_DIR)/$(BUILD_TYPE)
 TOOLS_DIR := tools
 
@@ -114,6 +118,8 @@ build: $(TARGET_HEX)
 debug: build
 
 release: build
+
+config: build
 
 dump: $(TARGET_DUMP)
 
