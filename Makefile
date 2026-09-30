@@ -123,12 +123,12 @@ release: build
 
 dump: $(TARGET_DUMP)
 
-config: 
+config: build 
 	@echo Updating config
-	rm -f CONFIG_OUT_FILE
 	$(MAKE) build
 
 $(TARGET_ELF): $(SRC_OBJS) $(LIBRARY_OBJS) $(TEENSY_OBJS)
+	rm -f CONFIG_OUT_FILE
 	@printf "LINK     %s\n" "$@"
 	@$(COMPILER_CPP) $(PROJECT_LDFLAGS) $(LDFLAGS) $(LIBRARY_OBJS) $(TEENSY_OBJS) $(SRC_OBJS) $(LDLIBS) -o $@
 
