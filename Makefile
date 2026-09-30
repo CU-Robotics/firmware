@@ -11,7 +11,6 @@ ifneq ($(filter release,$(MAKECMDGOALS)),)
 endif
 
 ifneq ($(filter config,$(MAKECMDGOALS)),)
-	@echo Updating conifg
 	FEATURE_DEFINES += -DFORCE_UPDATE_CONFIG
 endif
 
@@ -120,9 +119,10 @@ debug: build
 
 release: build
 
-config: build
-
 dump: $(TARGET_DUMP)
+
+config: build
+	@echo Updating config
 
 
 $(TARGET_ELF): $(SRC_OBJS) $(LIBRARY_OBJS) $(TEENSY_OBJS)
