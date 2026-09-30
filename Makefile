@@ -109,6 +109,8 @@ SIZE			= $(COMPILER_TOOLS_PATH)/arm-none-eabi-size
 GIT_SCRAPER_SRC = $(TOOLS_DIR)/git_scraper.cpp
 GIT_SCRAPER_BIN = $(BUILD_DIR)/git_scraper
 
+CONFIG_OUT_FILE = $(BUILD_DIR)/src/comms/comms_layer.o
+
 
 .PHONY: build debug release dump docs clean upload install gdb monitor kill restart help clangd git_scraper
 
@@ -121,9 +123,10 @@ release: build
 
 dump: $(TARGET_DUMP)
 
-config: build
+config: 
 	@echo Updating config
-
+	rm -f CONFIG_OUT_FILE
+	$(MAKE) build
 
 $(TARGET_ELF): $(SRC_OBJS) $(LIBRARY_OBJS) $(TEENSY_OBJS)
 	@printf "LINK     %s\n" "$@"
