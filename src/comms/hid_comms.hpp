@@ -40,6 +40,18 @@ public:
 	/// @note This massively slows the loop down
 	void print_incoming();
 
+	/// @brief Get the total number of packets received over HID
+	/// @return Total packets received
+	uint64_t get_packets_read() const { return m_packetsRead; }
+
+	/// @brief Get the total number of packets successfully sent over HID
+	/// @return Total packets sent
+	uint64_t get_packets_sent() const { return m_packetsSent; }
+
+	/// @brief Get the total number of packets that failed to send over HID
+	/// @return Total packets failed
+	uint64_t get_packets_failed() const { return m_packetsFailed; }
+
 private:
 	/// @brief An encapsulating struct around the packet received from Hive
 	HIDPacket m_incomingPacket{};

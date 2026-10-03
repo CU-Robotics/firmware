@@ -331,6 +331,10 @@ void HelloRobot::process_cli() {
 				  Serial.printf("=== LIVE HEARTBEAT  ===\033[K\n");
 				  Serial.println(loopc);
 				  break;
+
+			  case LiveMode::COMMS:
+				  Comms::comms_layer.print_live_data();
+				  break;
                         
 			  default:
 				  break;
@@ -404,7 +408,8 @@ void HelloRobot::process_cli() {
                 {"ping", &HelloRobot::cmd_ping},
                 {"help", &HelloRobot::cmd_help},
                 {"live", &HelloRobot::cmd_live},
-                {"log", &HelloRobot::cmd_log}
+                {"log", &HelloRobot::cmd_log},
+                {"comms", &HelloRobot::cmd_comms}
             };
 
             // --- THE PARSER ---
@@ -476,6 +481,10 @@ void HelloRobot::cmd_help() {
                 Serial.println("                estimated_state : The robot's current estimated state array");
                 Serial.println("                target_state    : The robot's current target state array");
                 Serial.println("                heartbeat       : The main loop counter (loopc)");
+                Serial.println("                comms           : Real-time ethernet/HID packet metrics and connection status");
+				Serial.println();
+				Serial.println("       comms");
+				Serial.println("              Prints a single snapshot of the current communications status.");
 				Serial.println();
 				Serial.println("       log [subsystem] [priority]");
 				Serial.println("              Filters the system event log.");
@@ -495,6 +504,11 @@ void HelloRobot::cmd_help() {
                 Serial.println("       help");
                 Serial.println("              Displays this manual.");
 }
+
+void HelloRobot::cmd_comms() {
+    Comms::comms_layer.print_live_data();
+}
+
 void HelloRobot::cmd_live() {
     num_active_views = 0;
     SystemLog.is_live_view_active = true;
@@ -512,7 +526,8 @@ void HelloRobot::cmd_live() {
         {"sensors",         LiveMode::SENSORS,         100},
         {"target_state",    LiveMode::TARGET_STATE,    100},
         {"estimated_state", LiveMode::ESTIMATED_STATE, 100},
-        {"heartbeat",       LiveMode::HEARTBEAT,       100}
+        {"heartbeat",       LiveMode::HEARTBEAT,       100},
+        {"comms",           LiveMode::COMMS,           100}
     };
 
 	// --- THE PARSER ---
@@ -539,7 +554,7 @@ void HelloRobot::cmd_live() {
         Serial.print("\033[2J");
     } else {
         SystemLog.is_live_view_active = false;
-        Serial.println("Usage: live [prof] [tx] [sensors] [estimated_state] [target_state] [heartbeat]");
+        Serial.println("Usage: live [prof] [tx] [sensors] [estimated_state] [target_state] [heartbeat] [comms]");
     }
 }
 

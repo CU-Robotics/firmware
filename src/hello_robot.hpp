@@ -147,7 +147,7 @@ class HelloRobot {
     // CLI  Variables
     // ==========================================
     /// @brief Collection of Live viewmodes
-    enum class LiveMode { NONE, PROFILE_VIEW, TRANSMITTER, ESTIMATED_STATE, TARGET_STATE, SENSORS, HEARTBEAT };
+    enum class LiveMode { NONE, PROFILE_VIEW, TRANSMITTER, ESTIMATED_STATE, TARGET_STATE, SENSORS, HEARTBEAT, COMMS };
     /// @brief number of live views allowed at once
     static const uint8_t MAX_LIVE_VIEWS = 4;
     /// @brief array of current live views
@@ -173,6 +173,8 @@ class HelloRobot {
     void cmd_live();
     /// @brief CLI function to handle logging
     void cmd_log();
+    /// @brief CLI comms function
+    void cmd_comms();
 	// ==========================================
     // Major Loop functions
     // ==========================================
