@@ -1,0 +1,4 @@
+<map id="Cfg::StateLimit" name="Cfg::StateLimit">
+<area shape="rect" id="node1" title="StateLimit represents the limits for all orders of a state. States are governed by these values." alt="" coords="5,124,113,151"/>
+<area shape="rect" id="node2" href="$structCfg_1_1Limit.html" title="Generic Limit type with a min and a max." alt="" coords="21,5,98,32"/>
+</map>

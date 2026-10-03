@@ -1,0 +1,4 @@
+<map id="Cfg::LsmImu" name="Cfg::LsmImu">
+<area shape="rect" id="node1" title="LSM IMU configuration struct." alt="" coords="30,80,126,107"/>
+<area shape="rect" id="node2" href="$structComms_1_1CommsData.html" title="base class for all data structs that want to be sent over comms." alt="" coords="5,5,151,32"/>
+</map>

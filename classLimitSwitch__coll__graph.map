@@ -1,0 +1,7 @@
+<map id="LimitSwitch" name="LimitSwitch">
+<area shape="rect" id="node1" title="Class to manage a limit switch." alt="" coords="106,171,197,197"/>
+<area shape="rect" id="node2" href="$classSensor.html" title="Abstract class representing a sensor. All sensors should inherit from this class." alt="" coords="5,81,68,108"/>
+<area shape="rect" id="node3" href="$structCfg_1_1LimitSwitch.html" title="Limit switch configuration struct." alt="" coords="93,81,210,108"/>
+<area shape="rect" id="node4" href="$structComms_1_1CommsData.html" title="base class for all data structs that want to be sent over comms." alt="" coords="148,5,293,32"/>
+<area shape="rect" id="node5" href="$structLimitSwitchData.html" title="Limit switch data for comms." alt="" coords="233,81,352,108"/>
+</map>

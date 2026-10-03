@@ -1,0 +1,4 @@
+<map id="AdafruitIMUSensor" name="AdafruitIMUSensor">
+<area shape="rect" id="node1" title="Abstract parent class for all AdafruitIMUSensors, which give acceleration and gyroscope data." alt="" coords="5,80,139,107"/>
+<area shape="rect" id="node2" href="$classSensor.html" title="Abstract class representing a sensor. All sensors should inherit from this class." alt="" coords="41,5,103,32"/>
+</map>

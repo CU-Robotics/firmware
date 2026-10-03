@@ -1,0 +1,4 @@
+<map id="SDC104" name="SDC104">
+<area shape="rect" id="node1" title="SDC104 motor controller class." alt="" coords="5,80,76,107"/>
+<area shape="rect" id="node2" href="$classMotor.html" title="An abstract class holding common information for individual CAN&#45;capable motors." alt="" coords="13,5,68,32"/>
+</map>
