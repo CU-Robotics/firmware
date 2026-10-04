@@ -109,15 +109,13 @@ SIZE			= $(COMPILER_TOOLS_PATH)/arm-none-eabi-size
 GIT_SCRAPER_SRC = $(TOOLS_DIR)/git_scraper.cpp
 GIT_SCRAPER_BIN = $(BUILD_DIR)/git_scraper
 
-CONFIG_OUT_FILE = $(BUILD_DIR)/src/comms/comms_layer.o
+CONFIG_CPP_FILE = $(BUILD_DIR)/src/comms/comms_layer.cpp
 
 
 .PHONY: build debug release dump docs clean upload install gdb monitor kill restart help clangd git_scraper
 
 
-build:
-	rm -f CONFIG_OUT_FILE
-	$(MAKE) $(TARGET_HEX)
+build: $(TARGET_HEX)
 
 debug: build
 
@@ -128,6 +126,10 @@ dump: $(TARGET_DUMP)
 config:  
 	@echo Updating config
 	$(MAKE) build
+
+remove_config_file: 
+	rm -f $(CONFIG_CPP_FILE).o
+	rm -f $(CONFIG_CPP_FILE).d
 
 $(TARGET_ELF): $(SRC_OBJS) $(LIBRARY_OBJS) $(TEENSY_OBJS)
 	@printf "LINK     %s\n" "$@"
@@ -146,7 +148,7 @@ $(TARGET_DUMP): $(TARGET_ELF)
 
 
 # Ensure git_scraper finishes before compiling any object files
-$(SRC_OBJS) $(LIBRARY_OBJS) $(TEENSY_OBJS): | git_scraper
+$(SRC_OBJS) $(LIBRARY_OBJS) $(TEENSY_OBJS) $(CONFIG_OUT_FILE:%=$(BUILD_DIR)/$.o): | git_scraper
 
 
 $(BUILD_DIR)/%.c.o: %.c

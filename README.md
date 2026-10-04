@@ -44,6 +44,13 @@ There are a few other nice helper functions within the makefile. This will list 
 make help
 ```
 
+## Updating Config File
+
+In order to update the config file, you will need to build and upload a firmware version which will do this. To do this, run:
+```bash
+make config upload
+make remove_config_file
+```
 
 ## Contributing
 `main` is the production branch, which is required to be in an always working state.
