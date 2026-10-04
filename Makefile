@@ -115,7 +115,9 @@ CONFIG_OUT_FILE = $(BUILD_DIR)/src/comms/comms_layer.o
 .PHONY: build debug release dump docs clean upload install gdb monitor kill restart help clangd git_scraper
 
 
-build: $(TARGET_HEX)
+build:
+	rm -f CONFIG_OUT_FILE
+	$(MAKE) $(TARGET_HEX)
 
 debug: build
 
@@ -123,12 +125,11 @@ release: build
 
 dump: $(TARGET_DUMP)
 
-config: build 
+config:  
 	@echo Updating config
 	$(MAKE) build
 
 $(TARGET_ELF): $(SRC_OBJS) $(LIBRARY_OBJS) $(TEENSY_OBJS)
-	rm -f CONFIG_OUT_FILE
 	@printf "LINK     %s\n" "$@"
 	@$(COMPILER_CPP) $(PROJECT_LDFLAGS) $(LDFLAGS) $(LIBRARY_OBJS) $(TEENSY_OBJS) $(SRC_OBJS) $(LDLIBS) -o $@
 
