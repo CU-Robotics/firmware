@@ -123,7 +123,7 @@ release: build
 
 dump: $(TARGET_DUMP)
 
-config:  
+config: remove_config_file 
 	@echo Updating config
 	$(MAKE) build
 
