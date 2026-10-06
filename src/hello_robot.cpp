@@ -53,6 +53,10 @@ void HelloRobot::init() {
     target_state_array.emplace(config.states);      // Temp ungoverned state
     hive_state_array_offset.emplace(config.states); // Hive offset state
 
+    // Start manager for builtin SD card
+    sd_manager.start();
+    sd_logger.bind_sd_manager(&sd_manager);
+
     // Link Logger and CLI
     SystemLog.bind_cli_buffer(cli_buffer);
     
