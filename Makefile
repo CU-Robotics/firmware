@@ -10,7 +10,9 @@ ifneq ($(filter release,$(MAKECMDGOALS)),)
 	BUILD_TYPE := release
 endif
 
+CONFIG_DEFINE := 0
 ifneq ($(filter config,$(MAKECMDGOALS)),)
+	CONFIG_DEFINE := 1
 	FEATURE_DEFINES += -DFORCE_UPDATE_CONFIG
 endif
 
@@ -109,10 +111,11 @@ SIZE			= $(COMPILER_TOOLS_PATH)/arm-none-eabi-size
 GIT_SCRAPER_SRC = $(TOOLS_DIR)/git_scraper.cpp
 GIT_SCRAPER_BIN = $(BUILD_DIR)/git_scraper
 
+CONFIG_STAMP = $(BUILD_DIR)/.config_define
 CONFIG_CPP_FILE = $(BUILD_DIR)/src/comms/comms_layer.cpp
 
 
-.PHONY: build debug release dump docs clean upload install gdb monitor kill restart help clangd git_scraper
+.PHONY: build debug release dump docs clean upload install config update_config_file gdb monitor kill restart help clangd git_scraper
 
 
 build: $(TARGET_HEX)
@@ -123,13 +126,17 @@ release: build
 
 dump: $(TARGET_DUMP)
 
-config: remove_config_file 
+config: update_config_file  
 	@echo Updating config
-	$(MAKE) build
+	$(MAKE) BUILD_TYPE=$(BUILD_TYPE) CONFIG_DEFINE=$(CONFIG_DEFINE) $(TARGET_HEX)
+	$(MAKE) BUILD_TYPE=$(BUILD_TYPE) update_config_file 
 
-remove_config_file: 
-	rm -f $(CONFIG_CPP_FILE).o
-	rm -f $(CONFIG_CPP_FILE).d
+update_config_file:
+	@mkdir -p $(dir $(CONFIG_STAMP))
+	@printf '%s\n' '$(CONFIG_DEFINE)' > $(CONFIG_STAMP)
+
+$(CONFIG_CPP_FILE:%=%.o): $(CONFIG_STAMP)
+
 
 $(TARGET_ELF): $(SRC_OBJS) $(LIBRARY_OBJS) $(TEENSY_OBJS)
 	@printf "LINK     %s\n" "$@"
