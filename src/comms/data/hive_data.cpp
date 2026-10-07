@@ -114,7 +114,7 @@ void HiveData::set_data(CommsData *data) {
     case TypeLabel::StereoCameraSignalCounterSync: {
         StereoCameraSignalCounterSync *counter_sync_request = static_cast<StereoCameraSignalCounterSync *>(data);
         stereo_control.counter_sync_pending = true;
-        Serial.printf("Start stereo trigger for %u received\n", static_cast<uint32_t>(counter_sync_request->camera_trigger_name));
+        Serial.printf("Stereo camera counter sync request for %u received\n", static_cast<uint32_t>(counter_sync_request->camera_trigger_name));
         break;
     }
     case TypeLabel::TestLatencyData: {

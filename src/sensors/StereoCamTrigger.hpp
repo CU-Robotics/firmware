@@ -50,10 +50,10 @@ class StereoCamTrigger : public Sensor {
     /// @param safe_map Interrupt-safe estimated state map owned by HelloRobot.
     void provide_isr_map(std::unique_ptr<RobotStateArray> *safe_map) override;
 
-    /// @brief empty read function since the updates are done in the timer interrupt callback
+    /// @brief Handles pending counter sync requests
     void read() override;
+
     /// @brief Send exposure timestamp and estimated state at exposure to comms
-    /// @note This is not implemented currently
     void send_to_comms() const override;
 
     /// @brief Prints a formatted dashboard of the camera trigger state

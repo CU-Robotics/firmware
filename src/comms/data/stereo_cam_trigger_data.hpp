@@ -22,7 +22,7 @@ struct StereoCamTriggerData : Comms::CommsData {
     void print() const { printf("StereoCamTriggerData - camera_trigger_name: %lu\n", static_cast<unsigned long>(camera_trigger_name)); }
 };
 
-/// @brief Comms Packet used to reset the stereo trigger counters, should be renamed
+/// @brief comms packet used to reset the frame counters on both stereo cameras
 struct StereoCameraSignalCounterSync : Comms::CommsData {
     StereoCameraSignalCounterSync() : CommsData(Comms::TypeLabel::StereoCameraSignalCounterSync, Comms::PhysicalMedium::Ethernet, Comms::Priority::High, sizeof(StereoCameraSignalCounterSync)) {}
     /// @brief the name of the stereo camera trigger
