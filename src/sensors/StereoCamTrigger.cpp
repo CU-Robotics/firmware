@@ -75,6 +75,7 @@ void StereoCamTrigger::read() {
         counter = -1;
 
         SystemLog.info(Subsystem::SENSORS, "counter reset pin: %u triggered\n", config.camera_1_line_2_pin);
+        Comms::comms_layer.get_hive_data().stereo_control.counter_sync_pending = false;
     }
 }
 
