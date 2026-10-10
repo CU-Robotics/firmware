@@ -126,6 +126,7 @@ void SensorManager::send_to_comms() {
     }
 }
 
+#if APPLIED_CONTROL_CAPTURE
 uint8_t SensorManager::fill_fresh_gimbal_encoders(float angles[2]) const {
     uint8_t present = 0;
     for (const auto& encoder : encoders) {
@@ -142,6 +143,7 @@ uint8_t SensorManager::fill_fresh_gimbal_encoders(float angles[2]) const {
     }
     return present;
 }
+#endif
 
 void SensorManager::print_sensors_live() {
     for(auto& [sensor_name, sensor] : sensors) {

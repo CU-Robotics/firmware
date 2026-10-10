@@ -32,7 +32,13 @@ Now, navigate to the main directory, and run:
 make
 ```
 
-This will build the current firmware. To upload, run:
+This will build the current firmware. To build with opt-in telemetry recording for offline comparison:
+
+```bash
+make release APPLIED_CONTROL_CAPTURE=1
+```
+
+To upload, run:
 
 ```bash
 make upload

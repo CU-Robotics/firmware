@@ -38,7 +38,9 @@ void BuffEncoder::isr_stop_transfer(EventResponderRef spi_event) {
 	
 }
 void BuffEncoder::read() {
+#if APPLIED_CONTROL_CAPTURE
     fresh_sample = false;
+#endif
 	if (shared_dma_flag != nullptr && *shared_dma_flag == true) {
         return; 
     }
@@ -86,7 +88,9 @@ void BuffEncoder::read() {
     // Serial.printf("Buff Encoder %u - angle: %f\n", static_cast<uint32_t>(config_data.encoder_name), m_angle);
 
     comms_data.m_angle = m_angle;
+#if APPLIED_CONTROL_CAPTURE
     fresh_sample = true;
+#endif
 
     // read_zero_pos();
 }

@@ -46,6 +46,7 @@ struct OverrideState : Comms::CommsData {
     uint64_t active = false;
 };
 
+#if APPLIED_CONTROL_CAPTURE
 /// @brief Fixed-size snapshot of the targets actually used by this control loop, queued after safety.
 struct AppliedControl : Comms::CommsData {
     /// @brief Initializes the authoritative telemetry packet without dynamic allocation.
@@ -74,3 +75,4 @@ struct AppliedControl : Comms::CommsData {
     uint8_t reserved[5] = {};
 };
 static_assert(sizeof(AppliedControl) == 96, "AppliedControl wire layout must match Hive");
+#endif

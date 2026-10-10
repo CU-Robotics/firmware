@@ -17,6 +17,7 @@ target_compile_features(firmware_turret_sim PUBLIC cxx_std_23)
 target_include_directories(firmware_turret_sim PRIVATE host ../src)
 set_target_properties(firmware_turret_sim PROPERTIES POSITION_INDEPENDENT_CODE ON)
 target_compile_options(firmware_turret_sim PRIVATE -Wall -Wextra -Wno-unused-parameter)
+target_compile_definitions(firmware_turret_sim PRIVATE FIRMWARE_SIM)
 
 add_executable(firmware_bridge_smoke smoke.cpp)
 target_link_libraries(firmware_bridge_smoke PRIVATE firmware_turret_sim)

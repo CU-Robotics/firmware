@@ -54,18 +54,25 @@ public:
     /// @brief Send the current state array to comms. 
     // This will convert the state array to a format that can be sent to comms and then send it.
     // The tempalte paramater T is the type of state array to send (eg. target reference state, estimated state) and is used to determine the comms packet format to send.
+    template<typename T>
+    void send_to_comms() const {
+        Comms::Sendable<T> sendable;
+        fill_state_array(sendable.data.state);
+        sendable.data.time = millis();
+        sendable.send_to_comms();
+    }
+
+#if APPLIED_CONTROL_CAPTURE
+    /// @brief Send the current state array to comms with a specific capture timestamp.
     /// @param capture_ms Shared firmware boot milliseconds for the producing control loop.
     template<typename T>
-    void send_to_comms(double capture_ms = millis()) const {
+    void send_to_comms(double capture_ms) const {
         Comms::Sendable<T> sendable;
-        for (size_t i = 0; i < NUM_STATES; i++) {
-            if (robot_states[i].has_value()) {
-                sendable.data.state[i] = robot_states[i]->get_raw();
-            }
-        }
+        fill_state_array(sendable.data.state);
         sendable.data.time = capture_ms;
         sendable.send_to_comms();
     }
+#endif
 
     /// @brief Copies current raw state values into a C-array for comms.
     /// @param states the robot state array that will be copied from

@@ -10,7 +10,15 @@ ifneq ($(filter release,$(MAKECMDGOALS)),)
 	BUILD_TYPE := release
 endif
 
-BUILD_DIR := $(BUILD_BASE_DIR)/$(BUILD_TYPE)
+APPLIED_CONTROL_CAPTURE ?= 0
+ifeq ($(APPLIED_CONTROL_CAPTURE),1)
+    FEATURE_DEFINES += -DAPPLIED_CONTROL_CAPTURE
+    BUILD_DIR := $(BUILD_BASE_DIR)/$(BUILD_TYPE)-capture
+else ifeq ($(APPLIED_CONTROL_CAPTURE),0)
+    BUILD_DIR := $(BUILD_BASE_DIR)/$(BUILD_TYPE)
+else
+    $(error APPLIED_CONTROL_CAPTURE must be 0 or 1)
+endif
 TOOLS_DIR := tools
 
 # Set to 1 to disassemble every object file alongside it, for inspecting a
