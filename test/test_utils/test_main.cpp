@@ -66,7 +66,7 @@ void test_rotate_vector_3d() {
     TEST_ASSERT_FLOAT_WITHIN(1e-3f,  9.0f, output[2]);
 }
 
-void test_solve_system_all_same() {
+void test_solve_system_not_unique() {
     float coeff[3][4] = {
         {67.0f, 67.0f, 67.0f, 67.0f},
         {67.0f, 67.0f, 67.0f, 67.0f},
@@ -114,7 +114,7 @@ void setup() {
     // Matrix Math tests
     RUN_TEST(test_determinant_3x3);
     RUN_TEST(test_rotate_vector_3d);
-    RUN_TEST(test_solve_system_all_same);
+    RUN_TEST(test_solve_system_not_unique);
     RUN_TEST(test_solve_system_unique_solution);
     UNITY_END();
 }

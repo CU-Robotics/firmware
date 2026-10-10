@@ -149,71 +149,6 @@ void test_xdrive_motor_index_mapping(void) {
     }
 }
 
-// Pitch Feedforward
-
-void test_pitch_feedforward_zero_at_level(void) {
-    float kf = 1.5f * sinf(0.0f);
-    TEST_ASSERT_EQUAL_FLOAT(0.0f, kf);
-}
-
-void test_pitch_feedforward_max_at_vertical(void) {
-    float base_ff = 1.5f;
-    float kf = base_ff * sinf((float)M_PI / 2.0f);
-    TEST_ASSERT_FLOAT_WITHIN(1e-5f, base_ff, kf);
-}
-
-void test_pitch_feedforward_negative_at_negative_angle(void) {
-    float kf = 1.5f * sinf(-(float)M_PI / 4.0f);
-    TEST_ASSERT_TRUE(kf < 0.0f);
-}
-
-void test_pitch_feedforward_proportional_scaling(void) {
-    float base_ff = 2.0f;
-    float kf_30 = base_ff * sinf((float)M_PI / 6.0f);
-    float kf_90 = base_ff * sinf((float)M_PI / 2.0f);
-    TEST_ASSERT_FLOAT_WITHIN(1e-5f, 0.5f, kf_30 / kf_90);
-}
-
-// Heading Velocity Mode
-
-void test_heading_velocity_mode_position_gains_zeroed(void) {
-    float kp = 0.0f, ki = 0.0f, kd = 0.0f;
-    TEST_ASSERT_EQUAL_FLOAT(0.0f, kp);
-    TEST_ASSERT_EQUAL_FLOAT(0.0f, ki);
-    TEST_ASSERT_EQUAL_FLOAT(0.0f, kd);
-}
-
-void test_heading_velocity_mode_feedforward_equals_setpoint(void) {
-    float commanded_vel = 3.7f;
-    float kf = commanded_vel;
-    TEST_ASSERT_EQUAL_FLOAT(commanded_vel, kf);
-}
-
-// Flywheel
-
-void test_flywheel_gear_ratio_scales_target_velocity(void) {
-    TEST_ASSERT_EQUAL_FLOAT(105.0f, 30.0f * 3.5f);
-}
-
-void test_flywheel_motors_get_opposite_directions(void) {
-    float base_vel = 50.0f;
-    TEST_ASSERT_EQUAL_FLOAT( 50.0f, base_vel *  1.0f);
-    TEST_ASSERT_EQUAL_FLOAT(-50.0f, base_vel * -1.0f);
-}
-
-// Yaw
-
-void test_yaw_motor_directions_applied(void) {
-    float output = 0.8f;
-    TEST_ASSERT_EQUAL_FLOAT( 0.8f,  1.0f * output);
-    TEST_ASSERT_EQUAL_FLOAT(-0.8f, -1.0f * output);
-}
-
-void test_yaw_motors_equal_magnitude(void) {
-    float output = 0.6f;
-    TEST_ASSERT_EQUAL_FLOAT(fabsf(1.0f * output), fabsf(-1.0f * output));
-}
-
 // Feeder
 
 void test_feeder_direction_forward(void) {
@@ -262,20 +197,6 @@ void setup() {
     RUN_TEST(test_xdrive_pure_x_at_90deg_heading);
     RUN_TEST(test_xdrive_opposite_motor_pairs_negate);
     RUN_TEST(test_xdrive_motor_index_mapping);
-
-    RUN_TEST(test_pitch_feedforward_zero_at_level);
-    RUN_TEST(test_pitch_feedforward_max_at_vertical);
-    RUN_TEST(test_pitch_feedforward_negative_at_negative_angle);
-    RUN_TEST(test_pitch_feedforward_proportional_scaling);
-
-    RUN_TEST(test_heading_velocity_mode_position_gains_zeroed);
-    RUN_TEST(test_heading_velocity_mode_feedforward_equals_setpoint);
-
-    RUN_TEST(test_flywheel_gear_ratio_scales_target_velocity);
-    RUN_TEST(test_flywheel_motors_get_opposite_directions);
-
-    RUN_TEST(test_yaw_motor_directions_applied);
-    RUN_TEST(test_yaw_motors_equal_magnitude);
 
     RUN_TEST(test_feeder_direction_forward);
     RUN_TEST(test_feeder_direction_reverse);
