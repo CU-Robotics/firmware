@@ -8,6 +8,9 @@
 #include "comms/data/firmware_data.hpp"     // for FirmwareData
 #include "comms/config_data/robot_config.hpp" // for RobotConfig
 #include "config_data/robot_config.hpp"
+#include "utils/sd/sd_manager.hpp"
+
+constexpr const char* config_file_name = "config.dat";
 
 #include <array>
 
@@ -23,15 +26,15 @@ public:
     ~CommsLayer();
 
 public:
-    /// @brief Initializes the CommsLayer
+    /// @brief Initializes the CommsLayer hid and ethernet
     /// @return Exit status, 0 for success, < 0 for error
-    int init();
+    int init_hid_ethernet();
 
     /// @brief Starts the CommsLayer, runs the Ethernet and HID communication modules
     /// @return Exit status, 0 for success, < 0 for error
     /// @note Should never return
     int run();
-    /// @brief Requests the configuration data from the Hive and waits until it is fully received before returning
+    /// @brief Requests the configuration data from the Hive and waits until it is fully received before returning, also saves config to sd card
     void configure();
 public:
     /// @brief Send a CommsData packet to the appropriate packet payload
@@ -102,6 +105,15 @@ private:
     /// @brief Initializes Ethernet and starts its thread
     /// @return True if successful, false if failed
     bool initialize_ethernet();
+
+    /// @brief Open the file object for the config_file on SDManager, creates one if there is none
+    /// @return True if successful, false if not
+    /// part of SDManager
+    std::optional<SdFile> get_config_sd_file();
+
+    /// @brief Read the config file on the SD card
+    /// @return True if successful, false if not
+    bool read_config_sd();
 
 private:
     /// @brief Ethernet physical layer

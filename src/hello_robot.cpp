@@ -9,7 +9,12 @@ void HelloRobot::init() {
     // Execute setup functions
     pinMode(LED_BUILTIN, OUTPUT);
 
-    Comms::comms_layer.init();
+    // Start manager for builtin SD card
+    BuiltinSd.start();
+
+    // TODO: consider adding a mode where one can boot without hid or ethernet from just the 
+    // sd_card, but force it to initialize hid and ethernet first if FORCE_UPDATE_CONFIG is #defined.
+    Comms::comms_layer.init_hid_ethernet();
 
     // Configure the robot from comms data, which is filled on Hive.
     Serial.println("Configuring...");

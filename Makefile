@@ -10,6 +10,12 @@ ifneq ($(filter release,$(MAKECMDGOALS)),)
 	BUILD_TYPE := release
 endif
 
+CONFIG_DEFINE := 0
+ifneq ($(filter config,$(MAKECMDGOALS)),)
+	CONFIG_DEFINE := 1
+	FEATURE_DEFINES += -DFORCE_UPDATE_CONFIG
+endif
+
 BUILD_DIR := $(BUILD_BASE_DIR)/$(BUILD_TYPE)
 TOOLS_DIR := tools
 
@@ -105,8 +111,11 @@ SIZE			= $(COMPILER_TOOLS_PATH)/arm-none-eabi-size
 GIT_SCRAPER_SRC = $(TOOLS_DIR)/git_scraper.cpp
 GIT_SCRAPER_BIN = $(BUILD_DIR)/git_scraper
 
+CONFIG_STAMP = $(BUILD_DIR)/.config_define
+CONFIG_CPP_FILE = $(BUILD_DIR)/src/comms/comms_layer.cpp
 
-.PHONY: build debug release dump docs clean upload install gdb monitor kill restart help clangd git_scraper
+
+.PHONY: build debug release dump docs clean upload install config update_config_file gdb monitor kill restart help clangd git_scraper
 
 
 build: $(TARGET_HEX)
@@ -116,6 +125,22 @@ debug: build
 release: build
 
 dump: $(TARGET_DUMP)
+
+config: update_config_file $(TARGET_HEX) 
+	@echo Updating config
+
+update_config_file: $(CONFIG_STAMP)
+
+FORCE:
+
+$(CONFIG_STAMP): FORCE
+	@mkdir -p $(dir $@)
+	@if [ ! -f "$@" ] || \
+		[ "$$(cat "$(CONFIG_STAMP)")" != "$(CONFIG_DEFINE)" ]; then \
+		printf '%s\n' '$(CONFIG_DEFINE)' > "$@"; \
+	fi
+
+$(CONFIG_CPP_FILE:%=%.o): $(CONFIG_STAMP)
 
 
 $(TARGET_ELF): $(SRC_OBJS) $(LIBRARY_OBJS) $(TEENSY_OBJS)
@@ -135,8 +160,8 @@ $(TARGET_DUMP): $(TARGET_ELF)
 
 
 # Ensure git_scraper finishes before compiling any object files
-$(SRC_OBJS) $(LIBRARY_OBJS) $(TEENSY_OBJS): | git_scraper
-
+$(SRC_OBJS) $(LIBRARY_OBJS) $(TEENSY_OBJS) $(CONFIG_OUT_FILE:%=$(BUILD_DIR)/$.o): | git_scraper
+$(SRC_OBJS) $(LIBRARY_OBJS) $(TEENSY_OBJS) $(CONFIG_OUT_FILE:%=$(BUILD_DIR)/$.o): | update_config_file
 
 $(BUILD_DIR)/%.c.o: %.c
 	@mkdir -p $(dir $@)

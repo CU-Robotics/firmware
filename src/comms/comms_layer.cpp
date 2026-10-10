@@ -4,6 +4,7 @@
 #include "comms/data/sendable.hpp"
 #include "utils/safety.hpp"
 
+#include <sstream>
 
 /// @brief This resets the whole processor and kicks it back to program entry (teensy4/startup.c)
 /// @param void specify no arguments (needed in C)
@@ -22,30 +23,30 @@ namespace Comms {
 CommsLayer comms_layer;
 	
 CommsLayer::CommsLayer() {
-    SystemLog.info(Subsystem::COMMS,"CommsLayer: constructed\n");
+    Serial.printf("CommsLayer: constructed\n");
 };
 
 CommsLayer::~CommsLayer() {
-    SystemLog.info(Subsystem::COMMS,"CommsLayer: destructed\n");
+    Serial.printf("CommsLayer: destructed\n");
 };
 
-int CommsLayer::init() {
-    SystemLog.info(Subsystem::COMMS,"CommsLayer: initializing\n");
+int CommsLayer::init_hid_ethernet() {
+    Serial.printf("CommsLayer: initializing\n");
     
     // hid failing is a fatal error
     bool hid_init = initialize_hid();
     if (!hid_init) {
-        SystemLog.error(Subsystem::COMMS,"CommsLayer: HIDComms init failed\n");
+        Serial.printf("CommsLayer: HIDComms init failed\n");
         return -1;
     }
 
     // ethernet init failing is not a fatal error
     bool ethernet_init = initialize_ethernet();
     if (!ethernet_init) {
-        SystemLog.info(Subsystem::COMMS,"CommsLayer: EthernetComms init failed\n");
+        Serial.printf("CommsLayer: EthernetComms init failed\n");
     }
 
-    SystemLog.info(Subsystem::COMMS,"CommsLayer: initialized\n");
+    Serial.printf("CommsLayer: initialized\n");
 
     return 0;
 };
@@ -69,7 +70,7 @@ void CommsLayer::queue_data(const CommsData* data) {
     case PhysicalMedium::HID:
         if (!is_hid_connected()) {
             // discard attempt to send
-            SystemLog.warn(Subsystem::COMMS,"Attempting to re-route %s to HID but HID is not connected\n", to_string(data->type_label).c_str());
+            Serial.printf("Attempting to re-route %s to HID but HID is not connected\n", to_string(data->type_label).c_str());
             break;
         }
         (void)m_hid_payload.add(data);
@@ -163,7 +164,7 @@ void CommsLayer::set_hid_incoming(HIDPacket&& packet) {
 };
 
 HiveData& CommsLayer::get_hive_data() {
-    return m_hive_data;
+return m_hive_data;
 };
 
 void CommsLayer::set_hive_data(HiveData& data) {
@@ -179,24 +180,99 @@ void CommsLayer::set_firmware_data(FirmwareData& data) {
 };
 
 void CommsLayer::configure() {
+#ifndef FORCE_UPDATE_CONFIG
+    if (BuiltinSd.file_exists(config_file_name)) {
+        Serial.printf("Found config file %s already stored\n", config_file_name); 
+        // if we can load the conifg file from the sd card we are done
+        if (read_config_sd()) return;
+    } 
+#else
+    Serial.println("Updating config");
+#endif
+    
+    // config packets are saved to the sd card if it exists in HiveData::set_data() 
+    m_hive_data.config_file = get_config_sd_file();
     int time = millis();
     Sendable<ConfigurationStatusData> config_status_sendable;
-    while (!m_hive_data.config.config_start.num_config_sections != 0) {
-        SystemLog.info(Subsystem::COMMS,"Waiting for config start packet... time since start: %d ms\n", millis() - time);
+    while (!m_hive_data.config.config_start.num_config_sections) {
+        Serial.printf("Waiting for config start packet... time since start: %d ms\n", millis() - time);
         config_status_sendable.data.is_configured = 0;
         config_status_sendable.send_to_comms();
         run();
         config_loop_timer.delay_micros(5000);
     }
-    SystemLog.info(Subsystem::COMMS,"Config start packet received, expecting %d config sections\n", m_hive_data.config.config_start.num_config_sections);
+    Serial.printf("Config start packet received, expecting %d config sections\n", m_hive_data.config.config_start.num_config_sections);
 
     while(!m_hive_data.config.is_configured()) {
         config_status_sendable.data.ready_for_config = 1;
         config_status_sendable.send_to_comms();
         run();
-        SystemLog.info(Subsystem::COMMS,"Config: received %d of %d sections\n", m_hive_data.config.num_sections_received, m_hive_data.config.config_start.num_config_sections);
+        Serial.printf("Config: received %d of %d sections\n", m_hive_data.config.num_sections_received, m_hive_data.config.config_start.num_config_sections);
         config_loop_timer.delay_micros(5000);
     }
+
+    if (m_hive_data.config_file.has_value()) {
+        Serial.println("Config: closed sd card config file");
+        m_hive_data.config_file.value().close();
+    }
+}
+
+std::optional<SdFile> CommsLayer::get_config_sd_file() {
+    SdFile file = BuiltinSd.open_file(config_file_name, O_WRITE | O_CREAT);
+    if (!file) {
+        Serial.printf("Could not open config file %s\n", config_file_name);
+        return std::nullopt;
+    }
+
+    Serial.printf("Config: created sd card config file %s\n", config_file_name);
+    return file;
+}
+
+bool CommsLayer::read_config_sd() {
+    SdFile file = BuiltinSd.open_file(config_file_name, O_READ);
+    if (!file) {
+        Serial.printf("Could not open config file %s\n", config_file_name);
+        return false;
+    }
+    uint64_t size = file.fileSize();
+    Serial.printf("Opened sd card config file %s, size is %llu bytes, available is %d\n", 
+                  config_file_name, (unsigned long long) size, file.available());
+
+    uint8_t* buffer = new (std::nothrow) uint8_t[size];
+    if (buffer == nullptr) {
+        Serial.println("Failed to allocate buffer for reading sd card");
+        file.close();
+        return false;
+    } 
+    if (file.read(buffer, size) == -1) {
+        Serial.printf("Could not read from config file %s\n", config_file_name);
+        file.close();
+        return false;
+    }
+
+    for (uint64_t offset = 0; offset <= (size - sizeof(CommsData));) {
+        CommsData* header = reinterpret_cast<CommsData*>(buffer + offset);
+        Serial.printf("Recieved section %s from sd card\n", to_string(header->type_label).c_str());
+        if (header->type_label == TypeLabel::NONE) {
+            Serial.printf("Skipping NONE section, offset is %llu and size is %llu, comms_data size is %llu\n", 
+                          (unsigned long long) offset, (unsigned long long) size, (unsigned long long) sizeof(CommsData));
+            offset += sizeof(CommsData);
+            continue;
+        }
+        offset += header->size;
+
+        m_hive_data.set_data(header); 
+    }
+
+    if (!m_hive_data.config.is_configured()) {
+        Serial.println("Did not receive all conifg sections from sd card");
+        file.close();
+        return false;
+    }
+
+    Serial.println("Received all config packets from sd card");
+    file.close();
+    return true;
 }
 
 bool CommsLayer::initialize_hid() {
