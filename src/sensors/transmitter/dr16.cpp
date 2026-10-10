@@ -2,6 +2,7 @@
 #include <Arduino.h>
 #include "sensors/RefSystem.hpp"
 #include "comms/data/sendable.hpp"
+#include "utils/system_log.hpp"
 
 DR16::DR16(const Cfg::DR16& config_) : config(config_) {
 
@@ -63,7 +64,7 @@ void DR16::read() {
 			while (last_available == Serial8.available() && micros() - start < DR16_ALIGNMENT_LONG_INTERVAL_THRESHOLD);
 			uint32_t end = micros();
 			
-			Serial.printf("DR16: Still aligning (%d)\n", interval_count);
+			SystemLog.warn(Subsystem::SENSORS,"DR16: Still aligning (%d)\n", interval_count);
 
 			// if this interval was a long interval (break in packets), call the alignment done and finish up
 			// also mark this as a successful alignment, rather than it timing out
@@ -75,11 +76,11 @@ void DR16::read() {
 
 		// print success or failure
 		if (alignment_timed_out) {
-			Serial.printf("DR16: Alignment timed out, trying again next loop\n\n");
+			SystemLog.error(Subsystem::SENSORS,"DR16: Alignment timed out, trying again next loop\n\n");
 		} else {
 			uint32_t align_end = micros();
-			Serial.printf("DR16: Aligned successfully\n");
-			Serial.printf("DR16: Alignment took %fms\n\n", (align_end - align_start) / 1000.f);
+			SystemLog.error(Subsystem::SENSORS,"DR16: Aligned successfully\n");
+			SystemLog.error(Subsystem::SENSORS,"DR16: Alignment took %fms\n\n", (align_end - align_start) / 1000.f);
 		}
 
 		// clear the buffer to get ready for the next packet
@@ -320,8 +321,8 @@ DR16Data DR16::get_dr16_data(){
 	return dr16_data;
 }
 
-void DR16::manual_controls(const RobotStateMap& estimated_state_map, RobotStateMap& target_state_map, bool not_safety_mode, float& feed, float& last_feed) {
-	bool has_lower_feeder = estimated_state_map.get_state_map().find(Cfg::StateName::LowerFeeder) != estimated_state_map.get_state_map().end();
+void DR16::manual_controls(const RobotStateArray& estimated_state_array, RobotStateArray& target_state_array, bool not_safety_mode, float& feed, float& last_feed) {
+	bool has_lower_feeder = estimated_state_array.has_state(Cfg::StateName::LowerFeeder);
 
 	float delta = control_input_timer.delta();
 	VTMRemoteControl vtm_input = ref.ref_data.vtm_remote_control;
@@ -335,8 +336,8 @@ void DR16::manual_controls(const RobotStateMap& estimated_state_map, RobotStateM
 	vtm_pos_x += vtm_input.mouse_speed_x * 0.05 * delta;
 	vtm_pos_y += -vtm_input.mouse_speed_y * 0.05 * delta;
 
-	float pitch_min = estimated_state_map[Cfg::StateName::GimbalPitch].config().reference_limits.position.min;
-    float pitch_max = estimated_state_map[Cfg::StateName::GimbalPitch].config().reference_limits.position.max;
+	float pitch_min = estimated_state_array[Cfg::StateName::GimbalPitch].config().reference_limits.position.min;
+    float pitch_max = estimated_state_array[Cfg::StateName::GimbalPitch].config().reference_limits.position.max;
     float pitch_average = 0.5 * (pitch_min + pitch_max);
     pitch_min -= pitch_average;
     pitch_max -= pitch_average;
@@ -360,7 +361,7 @@ void DR16::manual_controls(const RobotStateMap& estimated_state_map, RobotStateM
 	float chassis_pos_x = 0;
 	float chassis_pos_y = 0;
 
-	if (estimated_state_map[Cfg::StateName::ChassisX].config().governor_type == Cfg::StateOrder::Velocity) { // if we should be controlling velocity
+	if (estimated_state_array[Cfg::StateName::ChassisX].config().governor_type == Cfg::StateOrder::Velocity) { // if we should be controlling velocity
 
 		chassis_vel_x = get_l_stick_y() * 5.4 +
 						(vtm_input.key_w - vtm_input.key_s) * 2.5;
@@ -372,7 +373,7 @@ void DR16::manual_controls(const RobotStateMap& estimated_state_map, RobotStateM
 
 		chassis_vel_y += (keys.d - keys.a) * 2.5;
 		
-	} else if (estimated_state_map[Cfg::StateName::ChassisX].config().governor_type == Cfg::StateOrder::Position) { // if we should be controlling position
+	} else if (estimated_state_array[Cfg::StateName::ChassisX].config().governor_type == Cfg::StateOrder::Position) { // if we should be controlling position
 		chassis_pos_x = get_l_stick_x() * 2 + pos_offset_x;
 		chassis_pos_y = get_l_stick_y() * 2 + pos_offset_y;
 	}
@@ -387,7 +388,7 @@ void DR16::manual_controls(const RobotStateMap& estimated_state_map, RobotStateM
 	// backward, set the feeder to something. Otherwise, set it to 0
 	float feeder_target = (((vtm_input.button_left) &&
 							get_r_switch() != SwitchPos::BACKWARD) || get_r_switch() == SwitchPos::FORWARD) ? 10 : 0;
-	if (estimated_state_map[Cfg::StateName::Feeder].config().governor_type == Cfg::StateOrder::Position) {
+	if (estimated_state_array[Cfg::StateName::Feeder].config().governor_type == Cfg::StateOrder::Position) {
 		float dt2 = timer.delta();
 		if (dt2 > 0.1)
 			dt2 = 0;
@@ -396,34 +397,75 @@ void DR16::manual_controls(const RobotStateMap& estimated_state_map, RobotStateM
 			feed += feeder_target * dt2;
 		
 		if (has_lower_feeder) {
-			target_state_map[Cfg::StateName::Feeder].set_position(estimated_state_map[Cfg::StateName::LowerFeeder].get_position());
-			target_state_map[Cfg::StateName::LowerFeeder].set_position((int)feed);
+			target_state_array[Cfg::StateName::Feeder].set_position(estimated_state_array[Cfg::StateName::LowerFeeder].get_position());
+			target_state_array[Cfg::StateName::LowerFeeder].set_position((int)feed);
 		} else {
-			target_state_map[Cfg::StateName::Feeder].set_position((int)feed);
+			target_state_array[Cfg::StateName::Feeder].set_position((int)feed);
 		}
 	} else { 
-		target_state_map[Cfg::StateName::Feeder].set_velocity(feeder_target);
+		target_state_array[Cfg::StateName::Feeder].set_velocity(feeder_target);
 	}
 	// if (transmitter->get_r_switch() == 1 && last_switch != 1) {
 	//     feed++;
 	// }
 	// last_switch = transmitter->get_r_switch();
 	// set manual controls
-	target_state_map[Cfg::StateName::ChassisX].set_position(chassis_pos_x);
-	target_state_map[Cfg::StateName::ChassisX].set_velocity(chassis_vel_x);
-	target_state_map[Cfg::StateName::ChassisY].set_position(chassis_pos_y);
-	target_state_map[Cfg::StateName::ChassisY].set_velocity(chassis_vel_y);
-	target_state_map[Cfg::StateName::ChassisHeading].set_velocity(chassis_spin);
-	target_state_map[Cfg::StateName::GimbalYaw].set_position(yaw_target);
-	target_state_map[Cfg::StateName::GimbalYaw].set_velocity(0);
-	target_state_map[Cfg::StateName::GimbalPitch].set_position(pitch_target);
-	target_state_map[Cfg::StateName::GimbalPitch].set_velocity(0);
-	target_state_map[Cfg::StateName::Flywheels].set_velocity(fly_wheel_target);
+	target_state_array[Cfg::StateName::ChassisX].set_position(chassis_pos_x);
+	target_state_array[Cfg::StateName::ChassisX].set_velocity(chassis_vel_x);
+	target_state_array[Cfg::StateName::ChassisY].set_position(chassis_pos_y);
+	target_state_array[Cfg::StateName::ChassisY].set_velocity(chassis_vel_y);
+	target_state_array[Cfg::StateName::ChassisHeading].set_velocity(chassis_spin);
+	target_state_array[Cfg::StateName::GimbalYaw].set_position(yaw_target);
+	target_state_array[Cfg::StateName::GimbalYaw].set_velocity(0);
+	target_state_array[Cfg::StateName::GimbalPitch].set_position(pitch_target);
+	target_state_array[Cfg::StateName::GimbalPitch].set_velocity(0);
+	target_state_array[Cfg::StateName::Flywheels].set_velocity(fly_wheel_target);
 
 	// when in teensy control mode reset hive toggle
 	if (is_teensy_mode() && mode_changed()) {
-		pos_offset_x = estimated_state_map[Cfg::StateName::ChassisX].get_position();
-		pos_offset_y = estimated_state_map[Cfg::StateName::ChassisY].get_position();
+		pos_offset_x = estimated_state_array[Cfg::StateName::ChassisX].get_position();
+		pos_offset_y = estimated_state_array[Cfg::StateName::ChassisY].get_position();
 		feed = last_feed;
 	}
+}
+void DR16::print_live_data() {
+    Serial.printf("=== LIVE DR16 TRANSMITTER DATA ===\n");
+    
+    const char* mode_str = "UNKNOWN";
+    if (is_safety_mode()) {
+        mode_str = "SAFETY";
+    } else if (is_teensy_mode()) {
+        mode_str = "TEENSY";
+    } else if (is_hive_mode()) {
+        mode_str = "HIVE";
+    }
+
+    Serial.printf(" Control Mode: %-7s\n", mode_str);
+    
+    Serial.println("----------------------------------");
+    Serial.printf(" L Stick: X: %5.2f | Y: %5.2f\n", get_l_stick_x(), get_l_stick_y());
+    Serial.printf(" R Stick: X: %5.2f | Y: %5.2f\n", get_r_stick_x(), get_r_stick_y());
+    Serial.printf(" Wheel  : %5.2f\n", get_wheel());
+	
+	// Lambda to convert the float value into the SwitchPos string
+    auto sw_str = [](auto val) -> const char* {
+        switch (static_cast<SwitchPos>(static_cast<uint32_t>(val))) {
+            case SwitchPos::FORWARD:  return "FORWARD";
+            case SwitchPos::BACKWARD: return "BACKWARD";
+            case SwitchPos::MIDDLE:   return "MIDDLE";
+            default:                  return "INVALID";
+        }
+    };
+
+    // Print using the lambda and the %-8s padding
+    Serial.printf(" L Switch: %-8s | R Switch: %-8s\n", sw_str(get_l_switch()), sw_str(get_r_switch()));
+	
+    Serial.println("------------- MOUSE --------------");
+    Serial.printf(" X: %5d | Y: %5d | Z: %5d\n", get_mouse_x(), get_mouse_y(), get_mouse_z());
+    Serial.printf(" L_Btn: %d | R_Btn: %d\n", get_l_mouse_button(), get_r_mouse_button());
+    Serial.println("------------ KEYBOARD ------------");
+    
+    Keys k = get_keys();
+    Serial.printf(" W:%d A:%d S:%d D:%d | Q:%d E:%d\n", k.w, k.a, k.s, k.d, k.q, k.e);
+    Serial.printf(" Shift:%d | Ctrl:%d\n", k.shift, k.ctrl);
 }

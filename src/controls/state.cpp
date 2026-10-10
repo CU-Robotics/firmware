@@ -87,7 +87,7 @@ State State::operator-(const State& other) const {
     result.set_acceleration(get_acceleration() - other.get_acceleration());
     return result;
 }
-
+/*
 State& State::operator=(const State& other) {
     if (&other == this) {
         return *this;
@@ -95,5 +95,12 @@ State& State::operator=(const State& other) {
     set_position(other.get_position());
     set_velocity(other.get_velocity());
     set_acceleration(other.get_acceleration());
+    return *this;
+}
+*/
+State& State::operator=(const State& other) {
+    if (&other != this) {
+        m_state = other.m_state;
+    }
     return *this;
 }

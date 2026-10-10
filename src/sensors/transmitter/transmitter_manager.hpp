@@ -15,6 +15,8 @@ public:
     void init(const Cfg::Transmitter& transmitter_config);
     /// @brief Reads data from the transmitter
     void read();
+	/// @brief Prints the formatted live dashboard of the active transmitter
+    void print_live_data();
     /// @brief Sends data from the transmitter to comms
     void send_to_comms();
     /// @brief Whether the transmitter is currently in safety mode.
@@ -31,7 +33,7 @@ public:
     bool mode_changed();
     
     /// @copydoc Transmitter::manual_controls
-    void manual_controls(const RobotStateMap& estimated_state_map, RobotStateMap& target_state_map, bool not_safety_mode, float& feed, float& last_feed);
+    void manual_controls(const RobotStateArray& estimated_state_array, RobotStateArray& target_state_array, bool not_safety_mode, float& feed, float& last_feed);
 
 private:
     /// @brief pointer to the transmitter object. This is allocated and assigned upin initialization based on the provided configuration.

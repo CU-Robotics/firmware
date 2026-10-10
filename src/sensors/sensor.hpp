@@ -2,7 +2,10 @@
 #include <memory>
 
 #include "comms/config_data/sensor.hpp"
-#include "controls/robot_state_map.hpp"
+#include "controls/robot_state_array.hpp"
+
+
+
 
 
 /// @brief Abstract class representing a sensor. All sensors should inherit from this class.
@@ -10,17 +13,23 @@ class Sensor {
 public: 
 /// @brief Default constructor
 Sensor() = default;
+	
 /// @brief Initialize the sensor; typically involves setting up the communication link.
 virtual void init() = 0;
 
 /// @brief Read data from the sensor and update internal state accordingly.
 virtual void read() = 0;
+	
+/// @brief Initiates a non-blocking hardware read (The "Kick"). Default does nothing.
+virtual void request_read() {}
 
 /// @brief Bind local state map with estimated state map
 /// @param map is the global estimated state map	
-virtual void provide_isr_map(std::unique_ptr<RobotStateMap> *map) {}
-	
+virtual void provide_isr_map(std::unique_ptr<RobotStateArray> *map) {}
+
 /// @brief Send the current sensor data to the comms layer.
 virtual void send_to_comms() const = 0;
 
+/// @brief Prints a formatted dashboard of live sensor values. Default does nothing.
+virtual void print_live_data(){}
 };

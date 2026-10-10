@@ -93,7 +93,7 @@ public:
 	bool mode_changed() override;
 
 	/// @copydoc Transmitter::manual_controls
-	void manual_controls(const RobotStateMap& estimated_state_map, RobotStateMap& target_state_map, bool not_safety_mode, float& feed, float& last_feed) override;
+	void manual_controls(const RobotStateArray& estimated_state_array, RobotStateArray& target_state_array, bool not_safety_mode, float& feed, float& last_feed) override;
 
 public:
 	/// @brief Zeros the normalized input array
@@ -143,6 +143,8 @@ public:
 
 	/// @brief Prints the raw 18-byte packet from the receiver
 	void print_raw() override;
+	/// @brief Prints a formatted dashboard of live DR16 values
+	void print_live_data() override;
 
 	/// @brief Get mouse velocity x
 	/// @return Amount of points since last read

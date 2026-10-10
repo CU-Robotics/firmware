@@ -164,6 +164,9 @@ public:
 
   /// @brief send latest packet(s) to comms
   void send_to_comms() const override;
+	
+  /// @brief Prints a formatted dashboard of live Lidar stats
+  void print_live_data() override;
 
   /// @brief set rotation the speed of the LiDAR
   /// @param speed desired rotation speed of LiDAR (rad/s)

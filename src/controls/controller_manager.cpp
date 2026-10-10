@@ -1,5 +1,6 @@
 #include "controller_manager.hpp"
 #include "comms/data/sendable.hpp"
+#include "utils/system_log.hpp"
 
 void ControllerManager::init(const std::vector<Cfg::Controller>& controller_configurations, CANManager& can, const std::vector<Cfg::State>& state_config) {
     available_motors.clear();
@@ -16,7 +17,7 @@ void ControllerManager::init(const std::vector<Cfg::Controller>& controller_conf
 void ControllerManager::init_controller(const Cfg::Controller& controller_config, CANManager& can, const std::vector<Cfg::State>& state_config) {
     switch (controller_config.controller_type) {
         case Cfg::ControllerType::UnsetControllerType:
-            Serial.println("ControllerManager::init_controller: Unset controller type, skipping");
+            SystemLog.error(Subsystem::Controls,"ControllerManager::init_controller: Unset controller type, skipping");
             break;
         case Cfg::ControllerType::XDriveController:
             controllers.push_back(std::make_unique<XDriveController>(controller_config, can, available_motors));
@@ -37,14 +38,14 @@ void ControllerManager::init_controller(const Cfg::Controller& controller_config
             controllers.push_back(std::make_unique<LowerFeederController>(controller_config, can, available_motors, state_config));
             break;
         default:
-            Serial.printf("ControllerManager::init_controller: Unrecognized controller type %d\n", controller_config.controller_type);
+            SystemLog.error(Subsystem::Controls,"ControllerManager::init_controller: Unrecognized controller type %d\n", controller_config.controller_type);
             break;
     }
 }
 
-void ControllerManager::step(RobotStateMap& reference_map, RobotStateMap& estimate_map, RobotStateMap& target_map) {
+void ControllerManager::step(RobotStateArray& reference_array, RobotStateArray& estimate_array, RobotStateArray& target_array) {
     for (const auto& controller : controllers) {
-        controller->validate(reference_map, estimate_map);
-        controller->step(reference_map, estimate_map, target_map);
+        controller->validate(reference_array, estimate_array);
+        controller->step(reference_array, estimate_array, target_array);
     }
 }

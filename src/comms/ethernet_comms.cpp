@@ -1,4 +1,5 @@
 #include "ethernet_comms.hpp"
+#include "utils/system_log.hpp"
 
 namespace Comms {
 
@@ -6,18 +7,18 @@ bool EthernetComms::init(uint32_t data_rate) {
 	// begin the ethernet library and verify the status of the line
 	uint8_t ethernet_status = qn::Ethernet.begin(m_teensy_ip, m_teensy_netmask, m_teensy_gateway);
 	if (!ethernet_status) {
-		Serial.printf("EthernetComms: Failed to start Ethernet!\n");
+		SystemLog.warn(Subsystem::COMMS,"EthernetComms: Failed to start Ethernet!\n");
 
 		// check if this teensy even has ethernet hardware support
 		qn::EthernetHardwareStatus hw_status = qn::Ethernet.hardwareStatus();
 		if (hw_status != qn::EthernetHardwareStatus::EthernetTeensy41)
-			Serial.printf("EthernetComms: Teensy Ethernet hardware not present!\n");
+			SystemLog.warn(Subsystem::COMMS,"EthernetComms: Teensy Ethernet hardware not present!\n");
 
 		return false;
 	} else {
 	#ifdef COMMS_DEBUG
-		Serial.printf("EthernetComms: Ethernet started!\n");
-		Serial.printf("EthernetComms: IP: %u.%u.%u.%u:%u\n", qn::Ethernet.localIP()[0], qn::Ethernet.localIP()[1], qn::Ethernet.localIP()[2], qn::Ethernet.localIP()[3], m_teensy_port);
+		SystemLog.info(Subsystem::COMMS,"EthernetComms: Ethernet started!\n");
+		SystemLog.info(Subsystem::COMMS,"EthernetComms: IP: %u.%u.%u.%u:%u\n", qn::Ethernet.localIP()[0], qn::Ethernet.localIP()[1], qn::Ethernet.localIP()[2], qn::Ethernet.localIP()[3], m_teensy_port);
 	#endif
 	}
 
@@ -25,12 +26,12 @@ bool EthernetComms::init(uint32_t data_rate) {
 	uint8_t udp_status = m_udp_server.begin(m_teensy_port);
 	// this failing is extremely bad. Either the Teensy is out of memory, or the hardware is broken
 	if (!udp_status) {
-		Serial.printf("EthernetComms: UDP server failed to start!\n");
+		SystemLog.warn(Subsystem::COMMS,"EthernetComms: UDP server failed to start!\n");
 
 		return false;
 	} else {
 	#ifdef COMMS_DEBUG
-		Serial.printf("EthernetComms: UDP server started!\n");
+		SystemLog.info(Subsystem::COMMS,"EthernetComms: UDP server started!\n");
 	#endif
 	}
 
@@ -57,8 +58,8 @@ bool EthernetComms::init(uint32_t data_rate) {
 		// this is generally a problem with the Linux side, not the Teensy
 		// (the ethernet cable might be disconnected or the Linux side is not running)
 		if (micros() - warmup_start >= m_warmup_timeout) {
-			Serial.printf("EthernetComms: UDP server warmup failed!\n");
-			Serial.printf("EthernetComms: Is the ethernet cable connected?\n");
+			SystemLog.warn(Subsystem::COMMS,"EthernetComms: UDP server warmup failed!\n");
+			SystemLog.warn(Subsystem::COMMS,"EthernetComms: Is the ethernet cable connected?\n");
 
 			return false;
 		}
@@ -66,43 +67,53 @@ bool EthernetComms::init(uint32_t data_rate) {
 	}
 
 	// ethernet is now setup and udp server is online
-	Serial.printf("EthernetComms: Ethernet online!\n");
+	SystemLog.info(Subsystem::COMMS,"EthernetComms: Ethernet online!\n");
 
 	// set the initialized flag
 	m_initialized = true;
 
+	// reset stats post-warmup
+	m_packets_sent = 0;
+	m_packets_send_failed = 0;
+	m_packets_received = 0;
+	m_packets_recv_failed = 0;
+	m_total_bytes_sent = 0;
+	m_total_bytes_received = 0;
+	m_last_send_packet_size = 0;
+	m_last_recv_packet_size = 0;
+	m_last_recv_error_size = 0;
+
 	return true;
 }
-
-bool EthernetComms::send_packet(EthernetPacket& packet) {
+bool EthernetComms::send_packet(EthernetPacket& packet, uint32_t packet_size) {
+	if (packet_size < PACKET_HEADER_SIZE ||
+	    packet_size > ETHERNET_PACKET_MAX_SIZE) {
+#if defined(COMMS_DEBUG)
+		SystemLog.info(Subsystem::COMMS, "EthernetComms: Packet size incorrect\n");
+#endif
+		m_packets_send_failed++;
+		return false;
+	}
 	// update the connection status if needed
 	check_connection();
 
-	// check if the last call to this function is within the regulation time
-	// this is to prevent the Teensy from running too fast and overloading the hardware
-	// if (m_regulation_timer.get_elapsed_micros_no_restart() < m_regulation_time) {
-	// 	return {};
-	// }
-
 	m_last_send_time = micros();
-
-	// restart the regulation timer to indicate the next call to this function
+	m_last_send_packet_size = packet_size;
 	m_regulation_timer.start();
-	
-	// attempt to send the packet to the Jetson
-	bool send_status = m_udp_server.send(m_jetson_ip, m_jetson_port, packet.data_start(), Comms::ETHERNET_PACKET_MAX_SIZE);
-	if (!send_status) {
-		// log the fail, this almost always happens when the udp server is not "warmed up"
-	#if defined(COMMS_DEBUG)
-		Serial.printf("EthernetComms: Send fail\n");
-	#endif
-		return false;
+
+	const bool sent = m_udp_server.send(m_jetson_ip, m_jetson_port, packet.data_start(), packet_size);
+
+	if (sent) {
+		m_packets_sent++;
+		m_total_bytes_sent += packet_size;
 	} else {
-		// log the success
-		return true;
+		m_packets_send_failed++;
+#if defined(COMMS_DEBUG)
+		SystemLog.info(Subsystem::COMMS, "EthernetComms: Send fail\n");
+#endif
 	}
 
-	return false;
+	return sent;
 }
 
 bool EthernetComms::recv_packet(EthernetPacket& packet) {
@@ -113,31 +124,41 @@ bool EthernetComms::recv_packet(EthernetPacket& packet) {
 	// parsePacket returns the current size of the RX buffer
 	int current_buffer_size = m_udp_server.parsePacket();
 	
-	// if this buffer data is the size of a packet, process it
+	// if this buffer data is within valid packet size limits, process it
 	if (current_buffer_size == -1) {
 		// no packet to be read
 		return false;
-	} else if (current_buffer_size != Comms::ETHERNET_PACKET_MAX_SIZE) {
-		// half-read, log as a failure
+	} else if (current_buffer_size < static_cast<int>(PACKET_HEADER_SIZE) ||
+	           current_buffer_size > static_cast<int>(Comms::ETHERNET_PACKET_MAX_SIZE)) {
+		// invalid datagram size, log as a failure
+		m_packets_recv_failed++;
+		m_last_recv_error_size = current_buffer_size;
 	#if defined(COMMS_DEBUG)
-		Serial.printf("EthernetComms: Recv fail: %d\n", current_buffer_size);
+		SystemLog.info(Subsystem::COMMS, "EthernetComms: Recv fail: %d (expected %lu to %lu bytes)\n",
+		               current_buffer_size,
+		               static_cast<unsigned long>(PACKET_HEADER_SIZE),
+		               static_cast<unsigned long>(Comms::ETHERNET_PACKET_MAX_SIZE));
 	#endif
 		return false;
 	} else {
 		// grab the data pointer
 		const uint8_t* packet_data = m_udp_server.data();
 		// this should never happen, but sanity check
-		if (packet_data == NULL) {
+		if (packet_data == nullptr) {
 		#if defined(COMMS_DEBUG)
-			Serial.printf("EthernetComms: Recv data NULL\n");
+			SystemLog.info(Subsystem::COMMS, "EthernetComms: Recv data NULL\n");
 		#endif
+			return false;
 		}
 
 		// copy the data of the buffer into the receive packet
-		memcpy(packet.data_start(), m_udp_server.data(), current_buffer_size);
+		memcpy(packet.data_start(), packet_data, current_buffer_size);
 
 		// log this packet as the last packet received
 		m_last_recv_time = micros();
+		m_last_recv_packet_size = current_buffer_size;
+		m_packets_received++;
+		m_total_bytes_received += current_buffer_size;
 
 		return true;
 	}
@@ -153,11 +174,15 @@ bool EthernetComms::is_initialized() const {
 	return m_initialized;
 }
 
+bool EthernetComms::is_link_up() const {
+	return qn::Ethernet.linkStatus() == qn::EthernetLinkStatus::LinkON;
+}
+
 void EthernetComms::check_connection() {
 	// if the last packet was received too long ago, timeout the connection
 	if (micros() - m_last_recv_time > m_connection_timeout) {
 		// this check ensures this is only printed once
-		if (m_connected) Serial.printf("EthernetComms: Connection lost!\n");
+		if (m_connected) SystemLog.warn(Subsystem::COMMS,"EthernetComms: Connection lost!\n");
 		// mark the connection as disconnected
 		m_connected = false;
 	} else {

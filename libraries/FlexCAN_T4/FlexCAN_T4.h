@@ -328,6 +328,10 @@ class FlexCAN_T4_Base {
     virtual int write(const CANFD_message_t &msg) = 0;
     virtual int write(const CAN_message_t &msg) = 0;
     virtual int read(CAN_message_t &msg) = 0;
+    /* CU-Robotics addition (not upstream): lets CANManager call readFIFO() through a FlexCAN_T4_Base*
+       to drain the RX FIFO. Not pure virtual so FlexCAN_T4FD, which has no readFIFO(), doesn't
+       need to implement it; the default returns 0 (no message). Re-apply if FlexCAN_T4 is ever updated. */
+    virtual int readFIFO(CAN_message_t &msg) { return 0; }
     virtual bool isFD() = 0;
     virtual uint8_t getFirstTxBoxSize() = 0;
 };
