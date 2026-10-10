@@ -2,8 +2,8 @@ BUILD_TYPE ?= release
 BUILD_BASE_DIR := build
 
 ifneq ($(filter debug,$(MAKECMDGOALS)),)
-    BUILD_TYPE := debug
-    FEATURE_DEFINES += -DPROFILER
+	BUILD_TYPE := debug
+	FEATURE_DEFINES += -DPROFILER
 endif
 
 ifneq ($(filter release,$(MAKECMDGOALS)),)
@@ -126,14 +126,19 @@ release: build
 
 dump: $(TARGET_DUMP)
 
-config: update_config_file  
+config: update_config_file $(TARGET_HEX) 
 	@echo Updating config
-	$(MAKE) BUILD_TYPE=$(BUILD_TYPE) CONFIG_DEFINE=$(CONFIG_DEFINE) $(TARGET_HEX)
-	$(MAKE) BUILD_TYPE=$(BUILD_TYPE) update_config_file 
 
-update_config_file:
-	@mkdir -p $(dir $(CONFIG_STAMP))
-	@printf '%s\n' '$(CONFIG_DEFINE)' > $(CONFIG_STAMP)
+update_config_file: $(CONFIG_STAMP)
+
+FORCE:
+
+$(CONFIG_STAMP): FORCE
+	@mkdir -p $(dir $@)
+	@if [ ! -f "$@" ] || \
+		[ "$$(cat "$(CONFIG_STAMP)")" != "$(CONFIG_DEFINE)" ]; then \
+		printf '%s\n' '$(CONFIG_DEFINE)' > "$@"; \
+	fi
 
 $(CONFIG_CPP_FILE:%=%.o): $(CONFIG_STAMP)
 
@@ -156,7 +161,7 @@ $(TARGET_DUMP): $(TARGET_ELF)
 
 # Ensure git_scraper finishes before compiling any object files
 $(SRC_OBJS) $(LIBRARY_OBJS) $(TEENSY_OBJS) $(CONFIG_OUT_FILE:%=$(BUILD_DIR)/$.o): | git_scraper
-
+$(SRC_OBJS) $(LIBRARY_OBJS) $(TEENSY_OBJS) $(CONFIG_OUT_FILE:%=$(BUILD_DIR)/$.o): | update_config_file
 
 $(BUILD_DIR)/%.c.o: %.c
 	@mkdir -p $(dir $@)
