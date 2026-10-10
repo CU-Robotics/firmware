@@ -44,12 +44,10 @@ void RobotStateArray::from_comms_packet(const State::Raw incoming_states[NUM_STA
     }
 }
 
-void RobotStateArray::print() const{
-    Serial.println("RobotStateArray:");
-
+void RobotStateArray::print() const {
     auto state_to_str = [](Cfg::StateName name) -> const char* {
         switch (name) {
-            case Cfg::StateName::UnsetStateName: return "UnsetStateName";
+            case Cfg::StateName::UnsetStateName: return "Unset";
             case Cfg::StateName::ChassisX:       return "X";
             case Cfg::StateName::ChassisY:       return "Y";
             case Cfg::StateName::ChassisHeading: return "Z";
@@ -58,8 +56,8 @@ void RobotStateArray::print() const{
             case Cfg::StateName::Flywheels:      return "Flywheels";
             case Cfg::StateName::Feeder:         return "Feeder";
             case Cfg::StateName::LowerFeeder:    return "LowerFeeder";
-            case Cfg::StateName::StructPadding:  return "StructPadding";
-            case Cfg::StateName::StateNameCount: return "StateNameCount";
+            case Cfg::StateName::StructPadding:  return "Padding";
+            case Cfg::StateName::StateNameCount: return "Count";
             default:                             return "UNKNOWN";
         }
     };
@@ -69,15 +67,14 @@ void RobotStateArray::print() const{
             const auto& state = *robot_states[i];
             const Cfg::StateName state_name = static_cast<Cfg::StateName>(i);
 
-            Serial.printf("\tState: %-12s | Pos: %8.3f | Vel: %8.3f | Acc: %8.3f\n",
-                state_to_str(state_name),
-                state.get_position(),
-                state.get_velocity(),
-                state.get_acceleration());
-
-            Serial.printf("\t\tPos Limits: [%.2f, %.2f]\n",
-                state.config().reference_limits.position.min,
-                state.config().reference_limits.position.max);
+            // Single compact row with ANSI line clear (\033[K)
+            Serial.printf("  %-11s | P: %7.2f | V: %7.2f | A: %7.2f | Lim: [%.1f, %.1f]\033[K\n",
+                          state_to_str(state_name),
+                          state.get_position(),
+                          state.get_velocity(),
+                          state.get_acceleration(),
+                          state.config().reference_limits.position.min,
+                          state.config().reference_limits.position.max);
         }
     }
 }
