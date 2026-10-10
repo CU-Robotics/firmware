@@ -40,9 +40,12 @@ void HiveData::set_data(CommsData* data) {
     case TypeLabel::ConfigStart: {
         Cfg::ConfigStart* config_start = static_cast<Cfg::ConfigStart*>(data);
         if (config.is_configured()) {
-            Serial.printf("Recieved config start packet with %d sections; rebooting teensy to reconfigure.\n", config.config_start.num_config_sections);
-            delay(100);
-            reset_teensy();
+            // TODO: Allow restarting teensy to reset config, but for now hive thinks the teensy needs a config packet even after it has booted from sd card,
+            // so this had to be removed temporarily.
+            //Serial.printf("Recieved config start packet with %d sections; rebooting teensy to reconfigure.\n", config.config_start.num_config_sections);
+            //delay(100);
+            //reset_teensy();
+            break;
         }
         config.config_start = *config_start;
         if (config_file.has_value())
@@ -99,6 +102,8 @@ void HiveData::set_data(CommsData* data) {
     }
     case TypeLabel::TransmitterConfig: {
         Cfg::Transmitter* transmitter = static_cast<Cfg::Transmitter*>(data);
+        // TODO: Same as above
+        if (config.is_configured()) break;
         config.transmitter = *transmitter;
         config.num_sections_received++;
         if (config_file.has_value()) 

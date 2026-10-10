@@ -18,6 +18,8 @@ struct HiveData {
     // @param struct_vector The vector of the config packets to save to.
     template <typename T>
     void save_config_packet(T* packet, std::vector<T>& struct_vector) {
+        // TODO: same as in set_data
+        if (config.is_configured()) return;
         struct_vector.push_back(*packet);
         config.num_sections_received++;
         if (config_file.has_value()) { 
