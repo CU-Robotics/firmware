@@ -38,6 +38,15 @@ void HelloRobot::init() {
 
     // initialize sensors
 	sensor_manager.init(config, &estimated_state_array_interrupt_safe);
+#if APPLIED_CONTROL_CAPTURE
+    for (const auto& encoder_config : config.buff_encoders) {
+        if (encoder_config.encoder_name == Cfg::SensorName::YawBuffEncoder) {
+            captured_yaw_encoder = sensor_manager.get_sensor_by_name<BuffEncoder>(encoder_config.encoder_name);
+        } else if (encoder_config.encoder_name == Cfg::SensorName::PitchBuffEncoder) {
+            captured_pitch_encoder = sensor_manager.get_sensor_by_name<BuffEncoder>(encoder_config.encoder_name);
+        }
+    }
+#endif
 	// Begin cycle of reading sensor data
 	sensor_manager.request_read();
 
@@ -169,7 +178,6 @@ void HelloRobot::update_controls() {
     estimator_manager.step(*estimated_state_array, override_request);
 #if APPLIED_CONTROL_CAPTURE
     state_capture_ms = millis();
-    captured_encoders_present = sensor_manager.fill_fresh_gimbal_encoders(captured_raw_encoders);
     applied_state_override = override_request;
 #endif
     // estimated_state_array.print();
@@ -275,10 +283,11 @@ void HelloRobot::publish_applied_control() {
     snapshot.data.state_override = applied_state_override;
     snapshot.data.mode_changed = applied_mode_changed;
     snapshot.data.previous_armed = previous_armed;
-    snapshot.data.encoders_present = captured_encoders_present;
-    if (captured_encoders_present == 3) {
-        snapshot.data.raw_encoders[0] = captured_raw_encoders[0];
-        snapshot.data.raw_encoders[1] = captured_raw_encoders[1];
+    snapshot.data.encoders_present = static_cast<uint8_t>((captured_yaw_encoder ? 1 : 0) |
+                                                        (captured_pitch_encoder ? 2 : 0));
+    if (snapshot.data.encoders_present == 3) {
+        snapshot.data.raw_encoders[0] = captured_yaw_encoder->get_angle();
+        snapshot.data.raw_encoders[1] = captured_pitch_encoder->get_angle();
     }
     constexpr Cfg::StateName names[] = {
         Cfg::StateName::GimbalYaw, Cfg::StateName::GimbalPitch,

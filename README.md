@@ -38,6 +38,10 @@ This will build the current firmware. To build with opt-in telemetry recording f
 make release APPLIED_CONTROL_CAPTURE=1
 ```
 
+Capture snapshots the configured gimbal encoders' existing `get_angle()` values without changing
+sensor-driver behavior. These firmware-reported values may be repeated or retained after rejected
+reads; their common control-loop timestamp does not establish SPI acquisition time or freshness.
+
 To upload, run:
 
 ```bash

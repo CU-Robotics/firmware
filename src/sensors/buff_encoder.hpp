@@ -73,11 +73,6 @@ public:
     /// @brief Get the angle of the last read function adjusted by the offset
     /// @return Read angle (radians)
     inline float get_angle() const { return m_angle; }
-#if APPLIED_CONTROL_CAPTURE
-    /// @brief Whether the latest read decoded a valid completed DMA sample rather than retaining stale data.
-    /// @return True only after this read passes the CRC, status, and DMA checks.
-    inline bool has_fresh_sample() const { return fresh_sample; }
-#endif
 
     /// @brief Get the configured name of this encoder
     /// @return The name of this encoder
@@ -111,10 +106,6 @@ private:
 
     /// @brief Read angle from the encoder
     float m_angle = 0.f;
-#if APPLIED_CONTROL_CAPTURE
-    /// @brief Success-only freshness of the latest synchronous decoding call.
-    bool fresh_sample = false;
-#endif
 
     /// @brief Configuration data for the encoder
     const Cfg::BuffEncoder& config_data;

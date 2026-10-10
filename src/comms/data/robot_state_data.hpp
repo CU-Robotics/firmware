@@ -51,11 +51,12 @@ struct OverrideState : Comms::CommsData {
 struct AppliedControl : Comms::CommsData {
     /// @brief Initializes the authoritative telemetry packet without dynamic allocation.
     AppliedControl() : CommsData(Comms::TypeLabel::AppliedControl, Comms::PhysicalMedium::Ethernet, Comms::Priority::High, sizeof(AppliedControl)) {}
-    /// @brief Firmware boot milliseconds at this loop's common state/encoder capture boundary.
+    /// @brief Firmware boot milliseconds at this loop's common snapshot boundary, not encoder acquisition time.
     double time = 0.0;
     /// @brief Full position/velocity/acceleration targets: yaw, pitch, chassis x, y, heading.
     State::Raw target[5] = {};
-    /// @brief Raw yaw/pitch encoder radians decoded successfully in this loop, not field-frame truth.
+    /// @brief Firmware-reported yaw/pitch radians, optionally repeated or retained; not field-frame truth.
+    /// @details Associated with this loop's state snapshot without claiming SPI acquisition time.
     float raw_encoders[2] = {};
     /// @brief Actual selected target source: 0 manual transmitter, 1 Hive.
     uint8_t hive_mode = 0;
@@ -69,7 +70,7 @@ struct AppliedControl : Comms::CommsData {
     uint8_t mode_changed = 0;
     /// @brief Actual motor permission entering this loop, before its safety evaluation.
     uint8_t previous_armed = 0;
-    /// @brief Presence bits for raw_encoders: bit 0 yaw, bit 1 pitch.
+    /// @brief Available configured raw_encoders channels: bit 0 yaw, bit 1 pitch; not read freshness.
     uint8_t encoders_present = 0;
     /// @brief Explicit wire padding, always zero.
     uint8_t reserved[5] = {};

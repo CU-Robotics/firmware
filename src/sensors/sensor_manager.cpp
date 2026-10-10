@@ -126,25 +126,6 @@ void SensorManager::send_to_comms() {
     }
 }
 
-#if APPLIED_CONTROL_CAPTURE
-uint8_t SensorManager::fill_fresh_gimbal_encoders(float angles[2]) const {
-    uint8_t present = 0;
-    for (const auto& encoder : encoders) {
-        if (!encoder->has_fresh_sample()) {
-            continue;
-        }
-        if (encoder->get_name() == Cfg::SensorName::YawBuffEncoder) {
-            angles[0] = encoder->get_angle();
-            present |= 1;
-        } else if (encoder->get_name() == Cfg::SensorName::PitchBuffEncoder) {
-            angles[1] = encoder->get_angle();
-            present |= 2;
-        }
-    }
-    return present;
-}
-#endif
-
 void SensorManager::print_sensors_live() {
     for(auto& [sensor_name, sensor] : sensors) {
         sensor->print_live_data(); 

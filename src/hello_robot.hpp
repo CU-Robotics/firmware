@@ -113,10 +113,10 @@ class HelloRobot {
     bool applied_state_override = false;
     /// @brief Shared boot-relative capture clock for this loop's states and applied-control packet.
     double state_capture_ms = 0.0;
-    /// @brief Fixed yaw/pitch raw sample storage captured alongside this loop's estimated state.
-    float captured_raw_encoders[2] = {};
-    /// @brief Presence of successfully decoded yaw/pitch encoder samples in this loop.
-    uint8_t captured_encoders_present = 0;
+    /// @brief Configured yaw encoder handle resolved once during initialization.
+    std::shared_ptr<BuffEncoder> captured_yaw_encoder;
+    /// @brief Configured pitch encoder handle resolved once during initialization.
+    std::shared_ptr<BuffEncoder> captured_pitch_encoder;
     /// @brief Captured transmitter mode-change input used for this loop's governor reset.
     bool applied_mode_changed = false;
     /// @brief Actual motor permission before the current safety evaluation.
@@ -212,6 +212,7 @@ class HelloRobot {
 
 #if APPLIED_CONTROL_CAPTURE
     /// @brief Queues a fixed-allocation applied target/status snapshot after the actual safety boundary.
+    /// @note Cached encoder values remain unchanged between estimation and publication; no intermediate copy is needed.
     void publish_applied_control();
 #endif
 
