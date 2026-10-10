@@ -2,7 +2,7 @@
 
 #include "comms/data/comms_data.hpp"            // for CommsData
 #include "controls/state.hpp"
-#include "controls/robot_state_map.hpp"
+#include "controls/robot_state_array.hpp"
 
 /// @brief Comms data struct for sending the target reference state. 
 struct TargetState : Comms::CommsData {

@@ -2,8 +2,8 @@ BUILD_TYPE ?= release
 BUILD_BASE_DIR := build
 
 ifneq ($(filter debug,$(MAKECMDGOALS)),)
-	BUILD_TYPE := debug
-	FEATURE_DEFINES += -DPROFILER
+    BUILD_TYPE := debug
+    FEATURE_DEFINES += -DPROFILER -DCOMMS_DEBUG
 endif
 
 ifneq ($(filter release,$(MAKECMDGOALS)),)

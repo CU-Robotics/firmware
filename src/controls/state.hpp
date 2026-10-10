@@ -27,7 +27,7 @@ class State {
         /// @brief Set the position value of the state.
         /// @details This should be used for bounded/reference state updates where the value must stay inside the configured limits.
         /// For wrapped states, the value will be wrapped into range; otherwise it will be constrained to the configured limits.
-        /// Reference state maps should use this setter so controller targets stay inside the allowed operating envelope.
+        /// Reference state arrays should use this setter so controller targets stay inside the allowed operating envelope.
         /// @param position The position value to set.
         void set_position(float position);
 
@@ -38,7 +38,7 @@ class State {
         
         /// @brief Set the velocity value of the state.
         /// @details This should be used for bounded/reference state updates where the value must stay inside the configured limits.
-        /// Reference state maps should use this setter so commanded velocities remain inside the allowed operating envelope.
+        /// Reference state arrays should use this setter so commanded velocities remain inside the allowed operating envelope.
         /// @param velocity The velocity value to set.
         void set_velocity(float velocity);
         
@@ -48,7 +48,7 @@ class State {
         
         /// @brief Set the acceleration value of the state.
         /// @details This should be used for bounded/reference state updates where the value must stay inside the configured limits.
-        /// Reference state maps should use this setter so commanded accelerations remain inside the allowed operating envelope.
+        /// Reference state arrays should use this setter so commanded accelerations remain inside the allowed operating envelope.
         /// @param acceleration The acceleration value to set.
         void set_acceleration(float acceleration);
         

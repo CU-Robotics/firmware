@@ -4,9 +4,22 @@
 #include "comms/config_data/state.hpp"
 #include "utils/system_log.hpp"
 
+// Allocate the static variables in memory
+ET16S* ET16S::instance = nullptr;
+alignas(32) DMAMEM uint8_t ET16S::dma_buffer_a[32];
+alignas(32) DMAMEM uint8_t ET16S::dma_buffer_b[32];
+volatile uint8_t* ET16S::active_buffer = nullptr;
+volatile uint8_t* ET16S::dma_target_buffer = nullptr;
+
 ET16S::ET16S(const Cfg::ET16S& config) : config(config) { }
 
 void ET16S::init() {
+    instance = this;
+    
+	// Zero DMAMEM buffers
+    memset(dma_buffer_a, 0, 32);
+    memset(dma_buffer_b, 0, 32);
+    
 	Serial8.begin(100000, SERIAL_8E1_RXINV_TXINV);
 	Serial8.flush();
 	Serial8.clear();
@@ -27,56 +40,121 @@ void ET16S::init() {
 	channel[3].kind = InputKind::STICK;
 	//configure remaining channels
 	set_config();
+	setup_edma_channel();
+}
+void ET16S::setup_edma_channel() {
+    // Disable the HardwareSerial CPU RX interrupt so that it doesnt compete with dma interrupt
+    LPUART5_CTRL &= ~(LPUART_CTRL_RIE | LPUART_CTRL_ILIE);
+
+    // Clear hardware error flags (Overrun, Noise, Framing, Parity)
+    LPUART5_STAT |= (LPUART_STAT_OR | LPUART_STAT_NF | LPUART_STAT_FE | LPUART_STAT_PF);
+
+    // Set RX Watermark to 0 so every single byte immediately triggers the DMA
+    LPUART5_WATER &= ~(0xFF << 16);
+
+    // Enable DMA requests on UART RX
+    LPUART5_BAUD |= LPUART_BAUD_RDMAE;
+
+    // Clear DMA ping pong buffers
+    arm_dcache_delete((void*)dma_buffer_a, 32);
+    arm_dcache_delete((void*)dma_buffer_b, 32);
+
+    dma_target_buffer = dma_buffer_a;
+    active_buffer = dma_buffer_b;
+
+    // Align buffer with ET16S packet start
+    elapsedMillis silence = 0;
+    while (silence < 4) {
+        if (LPUART5_STAT & LPUART_STAT_RDRF) {
+            volatile uint32_t discard = LPUART5_DATA;
+            (void)discard;
+            silence = 0;
+        }
+    }
+
+    // Configure the eDMA Channel
+    rx_dma.source((volatile uint8_t&)LPUART5_DATA);
+    rx_dma.destinationBuffer(dma_target_buffer, ET16S_PACKET_SIZE);
+    rx_dma.triggerAtHardwareEvent(DMAMUX_SOURCE_LPUART5_RX);
+    rx_dma.attachInterrupt(dma_isr_wrapper);
+    rx_dma.interruptAtCompletion();
+    
+	// Disable DMA able packet has been captured
+    rx_dma.disableOnCompletion(); 
+
+    rx_dma.enable();
+}
+void ET16S::dma_isr_wrapper() {
+    if (instance != nullptr) {
+        // Route the execution back into the specific object instance
+        instance->dma_isr();
+    }
 }
 
+void ET16S::dma_isr() {
+    rx_dma.clearInterrupt();
+    rx_dma.clearComplete();
+
+    // clear DMA cache for target buffer
+    arm_dcache_delete((void*)dma_target_buffer, 32);
+
+    // Swap the ping pong pointers
+    active_buffer = dma_target_buffer;
+    dma_target_buffer = (dma_target_buffer == dma_buffer_a) ? dma_buffer_b : dma_buffer_a;
+
+    // Prepare target buffer cache and configure DMA for the NEXT 25-byte packet
+    arm_dcache_delete((void*)dma_target_buffer, 32);
+    rx_dma.destinationBuffer(dma_target_buffer, ET16S_PACKET_SIZE);
+    rx_dma.enable(); // Re-arm for the next packet
+
+    packet_ready = true;
+}
 void ET16S::read() {
-	static uint8_t last_byte = 0xAA;
-	
-	// if we have missed more than 4 packets (for example on startup), clear the buffer and start fresh
-	if (Serial8.available() > ET16S_PACKET_SIZE * 4) {
-		Serial8.clear();
-	}
+    // Resync if frame is misaligned
+    if (is_resyncing) {
+        // Discard incoming bytes while waiting for gap between packets
+        if (LPUART5_STAT & LPUART_STAT_RDRF) {
+            volatile uint32_t discard = LPUART5_DATA;
+            (void)discard;
+            gap_timer = 0; // Reset silence timer
+        }
 
-	// only start the "peeking" process if we have at least 2 packets worth of data, therefore we can afford to skip some bytes
-	if (Serial8.available() < ET16S_PACKET_SIZE * 2) {
-		return;
-	}
+        // Once the line has been completely silent for 4ms, restart DMA
+        if (gap_timer >= 4) {
+            LPUART5_STAT |= (LPUART_STAT_OR | LPUART_STAT_NF | LPUART_STAT_FE | LPUART_STAT_PF);
+            LPUART5_FIFO |= LPUART_FIFO_RXFLUSH;
 
-	// try to find the start of the frame. This is achieved by seeing if the current byte to read is 0x0f and the previous byte read was 0x00
-	// if this is the case, we have found the start of the frame
-	while (Serial8.peek() != 0x0f) {
-		last_byte = Serial8.read();
-	}
+            arm_dcache_delete((void*)dma_target_buffer, 32);
+            rx_dma.destinationBuffer(dma_target_buffer, ET16S_PACKET_SIZE);
+            rx_dma.enable();
 
-	// if the last byte was not 0x00, we have not found the start of the frame
-	if (last_byte != 0x00) {
-		return;
-	}
+            is_resyncing = false;
+            packet_ready = false;
+            SystemLog.info(Subsystem::SENSORS, "ET16S: Resync complete. DMA re-aligned.\n");
+        }
+        return;
+    }
 
-	// if we have less than a full packet available, we cannot read the full frame
-	// however we are "aligned" with the start of the frame, so we can wait for the next frame
-	if (Serial8.available() < ET16S_PACKET_SIZE) {
-		return;
-	}
+    if (!packet_ready) return;
+    packet_ready = false;
 
-	// read the full frame
-	for (int i = 0; i < ET16S_PACKET_SIZE; i++) {
-		m_inputRaw[i] = Serial8.read();
-	}
+    // Validate that the ping pong buffer holds a complete aligned frame
+    if (active_buffer[0] == 0x0F && active_buffer[24] == 0x00) {
+        format_raw((uint8_t*)active_buffer);
+        channel[16].data = channel[16].raw_format;
+        set_channel_data();
+        test_connection();
 
-	//format raw data
-	format_raw(m_inputRaw);
-	//set flag data
-	channel[16].data = channel[16].raw_format;
-	//set remaining data
-	set_channel_data();
-	//Check flag byte for disconnect
-	test_connection();
-
-	mode_changed_flag = (get_safety_switch() != prev_safety_switch_pos);
-	prev_safety_switch_pos = get_safety_switch();
+        mode_changed_flag = (get_safety_switch() != prev_safety_switch_pos);
+        prev_safety_switch_pos = get_safety_switch();
+    } else {
+        // If an electrical glitch dropped a byte, pause DMA and wait for the gap
+        SystemLog.warn(Subsystem::SENSORS, "ET16S: Desync detected. Entering gap resync...\n");
+        rx_dma.disable();
+        is_resyncing = true;
+        gap_timer = 0;
+    }
 }
-
 void ET16S::print() {
 	for (int i = 0; i < ET16S_INPUT_VALUE_COUNT; i++) {
 		SystemLog.info(Subsystem::SENSORS,"%f ", channel[i].data);
@@ -111,25 +189,52 @@ void ET16S::print_raw_bin(uint8_t m_inputRaw[ET16S_PACKET_SIZE]) {
 void ET16S::print_live_data() {
     Serial.printf("=== LIVE ET16S TRANSMITTER DATA ===\n");
     
-    const char* mode_str = "UNKNOWN";
-    if (is_safety_mode()) {
-        mode_str = "SAFETY";
-    } else if (is_teensy_mode()) {
-        mode_str = "TEENSY";
-    } else if (is_hive_mode()) {
-        mode_str = "HIVE";
+    // Raw input data
+    Serial.print(" RAW BUF: ");
+    if (active_buffer != nullptr) {
+        for (int i = 0; i < ET16S_PACKET_SIZE; i++) {
+            if (i == 0 && active_buffer[i] == 0x0F) {
+                Serial.print("\033[32m0F \033[0m"); // Green if header is perfectly aligned
+            } else if (i == 24 && active_buffer[i] == 0x00) {
+                Serial.print("\033[32m00 \033[0m"); // Green if footer is perfectly aligned
+            } else if (i == 0 || i == 24) {
+                Serial.printf("\033[31m%02X \033[0m", active_buffer[i]); // Red if misaligned
+            } else {
+                Serial.printf("%02X ", active_buffer[i]);
+            }
+        }
+    } else {
+        Serial.print("NULL");
     }
+    Serial.println();
+
+    // Error byte readout
+    uint32_t uart_stat = LPUART5_STAT;
+    Serial.print(" UART ERR: ");
+    bool has_err = false;
+    if (uart_stat & LPUART_STAT_OR) { Serial.print("\033[31m[OVERRUN]\033[0m "); has_err = true; }
+    if (uart_stat & LPUART_STAT_NF) { Serial.print("\033[31m[NOISE]\033[0m "); has_err = true; }
+    if (uart_stat & LPUART_STAT_FE) { Serial.print("\033[31m[FRAMING]\033[0m "); has_err = true; }
+    if (uart_stat & LPUART_STAT_PF) { Serial.print("\033[31m[PARITY]\033[0m "); has_err = true; }
+    if (!has_err) Serial.print("\033[32mNONE\033[0m");
+    Serial.println();
+
+    // Resync status
+    Serial.printf(" DMA STATE: %s\n", this->is_resyncing ? "\033[33mSEARCHING FOR GAP\033[0m" : "\033[32mLOCKED & RUNNING\033[0m");
+
+    Serial.println("---------------------------------------");
+    
+    const char* mode_str = "UNKNOWN";
+    if (is_safety_mode()) mode_str = "SAFETY";
+    else if (is_teensy_mode()) mode_str = "TEENSY";
+    else if (is_hive_mode()) mode_str = "HIVE";
 
     Serial.printf(" Control Mode: %-7s\n", mode_str);
     
-    Serial.println("---------------------------------------");
     Serial.printf(" L Stick : X: %5.2f | Y: %5.2f\n", get_l_stick_x(), get_l_stick_y());
     Serial.printf(" R Stick : X: %5.2f | Y: %5.2f\n", get_r_stick_x(), get_r_stick_y());
-    Serial.printf(" L Dial  :    %5.2f | R Dial  :    %5.2f\n", get_l_dial(), get_r_dial());
-    Serial.printf(" L Slider:    %5.2f | R Slider:    %5.2f\n", get_l_slider(), get_r_slider());
     Serial.println("---------------------------------------");
 
-    // Lambda to convert the float value into the SwitchPos string
     auto sw_str = [](auto val) -> const char* {
         switch (static_cast<SwitchPos>(static_cast<uint32_t>(val))) {
             case SwitchPos::FORWARD:  return "FORWARD";
@@ -139,7 +244,6 @@ void ET16S::print_live_data() {
         }
     };
 
-    // Print using the lambda and the %-8s padding to prevent text ghosting
     Serial.printf(" SW_B: %-8s | SW_C: %-8s\n", sw_str(get_switch_b()), sw_str(get_switch_c()));
     Serial.printf(" SW_D: %-8s | SW_E: %-8s\n", sw_str(get_switch_d()), sw_str(get_switch_e()));
     Serial.printf(" SW_F: %-8s | SW_G: %-8s\n", sw_str(get_switch_f()), sw_str(get_switch_g()));
@@ -649,7 +753,7 @@ ET16SData ET16S::get_ET16S_data(){
 	return ET16S_data;
 }
 
-void ET16S::manual_controls(const RobotStateMap& estimated_state_map, RobotStateMap& target_state_map, bool not_safety_mode, float& feed, float& last_feed) {	
+void ET16S::manual_controls(const RobotStateArray& estimated_state_array, RobotStateArray& target_state_array, bool not_safety_mode, float& feed, float& last_feed) {	
 	float delta = control_input_timer.delta();
 	VTMRemoteControl vtm_input = ref.ref_data.vtm_remote_control;
 	if (!vtm_input.is_fresh()) {
@@ -659,8 +763,8 @@ void ET16S::manual_controls(const RobotStateMap& estimated_state_map, RobotState
 	vtm_pos_x += vtm_input.mouse_speed_x * 0.05 * delta;
 	vtm_pos_y += -vtm_input.mouse_speed_y * 0.05 * delta;
 
-	float pitch_min = estimated_state_map[Cfg::StateName::GimbalPitch].config().reference_limits.position.min;
-    float pitch_max = estimated_state_map[Cfg::StateName::GimbalPitch].config().reference_limits.position.max;
+	float pitch_min = estimated_state_array[Cfg::StateName::GimbalPitch].config().reference_limits.position.min;
+    float pitch_max = estimated_state_array[Cfg::StateName::GimbalPitch].config().reference_limits.position.max;
     float pitch_average = 0.5 * (pitch_min + pitch_max);
     pitch_min -= pitch_average;
     pitch_max -= pitch_average;
@@ -677,14 +781,14 @@ void ET16S::manual_controls(const RobotStateMap& estimated_state_map, RobotState
 	float chassis_pos_x = 0;
 	float chassis_pos_y = 0;
 
-	if (estimated_state_map[Cfg::StateName::ChassisX].config().governor_type == Cfg::StateOrder::Velocity) { // if we should be controlling velocity
+	if (estimated_state_array[Cfg::StateName::ChassisX].config().governor_type == Cfg::StateOrder::Velocity) { // if we should be controlling velocity
 
 		chassis_vel_x = get_l_stick_y() * 5.4 +
 						(vtm_input.key_w - vtm_input.key_s) * 2.5;
 		chassis_vel_y = -(get_l_stick_x() * 5.4) +
 						(vtm_input.key_a - vtm_input.key_d) * 2.5;
 		
-	} else if (estimated_state_map[Cfg::StateName::ChassisX].config().governor_type == Cfg::StateOrder::Position) { // if we should be controlling position
+	} else if (estimated_state_array[Cfg::StateName::ChassisX].config().governor_type == Cfg::StateOrder::Position) { // if we should be controlling position
 		chassis_pos_x = get_l_stick_x() * 2 + pos_offset_x;
 		chassis_pos_y = get_l_stick_y() * 2 + pos_offset_y;
 	}
@@ -698,7 +802,7 @@ void ET16S::manual_controls(const RobotStateMap& estimated_state_map, RobotState
 	// if the right switch is forward, and either the left mouse button is pressed or the right switch is not
 	// backward, set the feeder to something. Otherwise, set it to 0
 	float feeder_target = ((vtm_input.button_left || get_switch_h() == SwitchPos::BACKWARD) && fly_wheel_target > 0) ? 12 : 0;
-	if (estimated_state_map[Cfg::StateName::Feeder].config().governor_type == Cfg::StateOrder::Position) {
+	if (estimated_state_array[Cfg::StateName::Feeder].config().governor_type == Cfg::StateOrder::Position) {
 		float dt2 = timer.delta();
 		if (dt2 > 0.1) dt2 = 0;
 		// check if the shooter is active
@@ -706,30 +810,30 @@ void ET16S::manual_controls(const RobotStateMap& estimated_state_map, RobotState
 			feed += feeder_target * dt2;
 		}
 		
-		target_state_map[Cfg::StateName::Feeder].set_position((int)feed);
+		target_state_array[Cfg::StateName::Feeder].set_position((int)feed);
 	} else { 
-		target_state_map[Cfg::StateName::Feeder].set_velocity(feeder_target);
+		target_state_array[Cfg::StateName::Feeder].set_velocity(feeder_target);
 	}
 	// if (transmitter->get_r_switch() == 1 && last_switch != 1) {
 	//     feed++;
 	// }
 	// last_switch = transmitter->get_r_switch();
 	// set manual controls
-	target_state_map[Cfg::StateName::ChassisX].set_position(chassis_pos_x);
-	target_state_map[Cfg::StateName::ChassisX].set_velocity(chassis_vel_x);
-	target_state_map[Cfg::StateName::ChassisY].set_position(chassis_pos_y);
-	target_state_map[Cfg::StateName::ChassisY].set_velocity(chassis_vel_y);
-	target_state_map[Cfg::StateName::ChassisHeading].set_velocity(chassis_spin);
-	target_state_map[Cfg::StateName::GimbalYaw].set_position(yaw_target);
-	target_state_map[Cfg::StateName::GimbalYaw].set_velocity(0);
-	target_state_map[Cfg::StateName::GimbalPitch].set_position(pitch_target);
-	target_state_map[Cfg::StateName::GimbalPitch].set_velocity(0);
-	target_state_map[Cfg::StateName::Flywheels].set_velocity(fly_wheel_target);
+	target_state_array[Cfg::StateName::ChassisX].set_position(chassis_pos_x);
+	target_state_array[Cfg::StateName::ChassisX].set_velocity(chassis_vel_x);
+	target_state_array[Cfg::StateName::ChassisY].set_position(chassis_pos_y);
+	target_state_array[Cfg::StateName::ChassisY].set_velocity(chassis_vel_y);
+	target_state_array[Cfg::StateName::ChassisHeading].set_velocity(chassis_spin);
+	target_state_array[Cfg::StateName::GimbalYaw].set_position(yaw_target);
+	target_state_array[Cfg::StateName::GimbalYaw].set_velocity(0);
+	target_state_array[Cfg::StateName::GimbalPitch].set_position(pitch_target);
+	target_state_array[Cfg::StateName::GimbalPitch].set_velocity(0);
+	target_state_array[Cfg::StateName::Flywheels].set_velocity(fly_wheel_target);
 
 	// when in teensy control mode reset hive toggle
 	if (is_teensy_mode() && mode_changed()) {
-		pos_offset_x = estimated_state_map[Cfg::StateName::ChassisX].get_position();
-		pos_offset_y = estimated_state_map[Cfg::StateName::ChassisY].get_position();
+		pos_offset_x = estimated_state_array[Cfg::StateName::ChassisX].get_position();
+		pos_offset_y = estimated_state_array[Cfg::StateName::ChassisY].get_position();
 		feed = last_feed;
 	}
 }

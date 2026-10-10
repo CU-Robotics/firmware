@@ -8,7 +8,7 @@
 #include "controls/state.hpp"
 #include "git_info.h"
 
-#include "controls/robot_state_map.hpp"
+#include "controls/robot_state_array.hpp"
 #include "utils/safety.hpp"
 #include "utils/safety_state.hpp"
 #include "sensors/buff_encoder.hpp"
@@ -124,31 +124,31 @@ class HelloRobot {
     bool has_lower_feeder = false;
 
     // ==========================================
-    // STATE MAPS
+    // STATE ARRAYS
     // ==========================================
 
     /// @brief Governor
     std::optional<Governor> governor;
 
-    /// @brief Map containing the current estimated state of the robot.
-    std::optional<RobotStateMap> estimated_state_map;
+    /// @brief Array containing the current estimated state of the robot.
+    std::optional<RobotStateArray> estimated_state_array;
     
-    /// @brief Interrupt safe estimated state map
-    std::unique_ptr<RobotStateMap> estimated_state_map_interrupt_safe;
+    /// @brief Interrupt safe estimated state array
+    std::unique_ptr<RobotStateArray> estimated_state_array_interrupt_safe;
 
-    /// @brief Map containing the immediate reference values handed to controllers.
-    std::optional<RobotStateMap> reference_map;
+    /// @brief Array containing the immediate reference values handed to controllers.
+    std::optional<RobotStateArray> reference_array;
 
     /// @brief Temp ungoverned state
-    std::optional<RobotStateMap> target_state_map;
+    std::optional<RobotStateArray> target_state_array;
 
     /// @brief Hive offset state
-    std::optional<RobotStateMap> hive_state_map_offset;
+    std::optional<RobotStateArray> hive_state_array_offset;
 	// ==========================================
     // CLI  Variables
     // ==========================================
     /// @brief Collection of Live viewmodes
-    enum class LiveMode { NONE, PROFILE_VIEW, TRANSMITTER, ESTIMATED_STATE, TARGET_STATE, SENSORS, HEARTBEAT };
+    enum class LiveMode { NONE, PROFILE_VIEW, TRANSMITTER, ESTIMATED_STATE, TARGET_STATE, SENSORS, HEARTBEAT, COMMS };
     /// @brief number of live views allowed at once
     static const uint8_t MAX_LIVE_VIEWS = 4;
     /// @brief array of current live views
@@ -174,6 +174,8 @@ class HelloRobot {
     void cmd_live();
     /// @brief CLI function to handle logging
     void cmd_log();
+    /// @brief CLI comms function
+    void cmd_comms();
 	// ==========================================
     // Major Loop functions
     // ==========================================
@@ -215,7 +217,7 @@ public:
     /**
      * @brief Bootstraps the robot's architecture.
      * * Downloads the active configuration from the Hive data layer and uses it
-     * to instantiate the state maps, reference governor, and hardware managers.
+     * to instantiate the state arrays, reference governor, and hardware managers.
      */
     void init();
 

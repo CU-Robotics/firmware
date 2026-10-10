@@ -1,14 +1,14 @@
 #pragma once
 #include "utils/timing.hpp"
-#include "controls/robot_state_map.hpp"
+#include "controls/robot_state_array.hpp"
 
 
 
 /// @brief Use reference limits from config to convert ungoverned reference states to generated governed reference states to be sent to controllers.
 class Governor {
 private:
-    /// @brief The govererned reference state map, updated and returned by the step_reference_map function towards the ungoverned reference map.
-    RobotStateMap reference_state_map;
+    /// @brief The govererned reference state array, updated and returned by the step_reference_array function towards the ungoverned reference array.
+    RobotStateArray reference_state_array;
 
     /// @brief Timer for the reference governor
     Timer governor_timer;
@@ -18,14 +18,18 @@ private:
 
 public:
 
-    /// @brief Construct the reference governor and get the state configurations to set up the reference state map
-    /// @param state_configurations The configuration data for the reference state map
-    Governor(std::vector<Cfg::State> state_configurations) : reference_state_map(state_configurations) {}
-
-    /// @brief Set the governed reference map.
+    /// @brief Construct the reference governor and get the state configurations to set up the reference state array
+    /// @param state_configurations The configuration data for the reference state array
+	explicit Governor(const std::vector<Cfg::State> &state_configurations) : reference_state_array(state_configurations) {}
+	/// @brief Insert or reinitialize an individual state in the reference array.
+	/// @param state_config The state configuration data.
+	void set_state(const Cfg::State& state_config) {
+		reference_state_array.set_state(state_config);
+	}
+    /// @brief Set the governed reference array.
     /// @note Should not be used often as it defeats the purpose of the reference governor
-    /// @param new_reference State map setting the reference map (should equal the robots current estimate)
-    void set_reference_map(const RobotStateMap& new_reference);
+    /// @param new_reference State array setting the reference array (should equal the robots current estimate)
+    void set_reference_array(const RobotStateArray& new_reference);
 
     /// @brief Sets the position reference for a given state
     /// @param state_name The name of the state to set the reference for  
@@ -52,11 +56,11 @@ public:
     void hold_position(Cfg::StateName state_name, float position);
 
     /// @brief Gives the instantaneous governed state reference matrix (also known as desired state)
-    /// @return the current reference state map
-    const RobotStateMap& get_reference_map() const;
+    /// @return the current reference state array
+    const RobotStateArray& get_reference_array() const;
 
-    /// @brief Steps the reference map towards the ungoverned reference map based on the reference limits and governor type specified in the configuration for each state.
-    /// @param ungoverned_reference_map The map of ungoverned reference state (our goal)
-    /// @return The map of governed reference states
-    const RobotStateMap& step_reference_map(const RobotStateMap& ungoverned_reference_map);
+    /// @brief Steps the reference array towards the ungoverned reference array based on the reference limits and governor type specified in the configuration for each state.
+    /// @param ungoverned_reference_array The array of ungoverned reference state (our goal)
+    /// @return The array of governed reference states
+    const RobotStateArray& step_reference_array(const RobotStateArray& ungoverned_reference_array);
 };
