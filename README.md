@@ -48,8 +48,7 @@ make help
 
 In order to update the config file, you will need to build and upload a firmware version which will do this. To do this, run:
 ```bash
-make config upload
-make remove_config_file
+make config debug upload
 ```
 
 ## Contributing

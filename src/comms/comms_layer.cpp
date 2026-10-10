@@ -30,7 +30,7 @@ CommsLayer::~CommsLayer() {
     Serial.printf("CommsLayer: destructed\n");
 };
 
-int CommsLayer::init() {
+int CommsLayer::init_hid_ethernet() {
     Serial.printf("CommsLayer: initializing\n");
     
     // hid failing is a fatal error

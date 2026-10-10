@@ -26,9 +26,9 @@ public:
     ~CommsLayer();
 
 public:
-    /// @brief Initializes the CommsLayer
+    /// @brief Initializes the CommsLayer hid and ethernet
     /// @return Exit status, 0 for success, < 0 for error
-    int init();
+    int init_hid_ethernet();
 
     /// @brief Starts the CommsLayer, runs the Ethernet and HID communication modules
     /// @return Exit status, 0 for success, < 0 for error
