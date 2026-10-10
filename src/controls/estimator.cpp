@@ -106,8 +106,8 @@ GimbalAndChassisEstimator::GimbalAndChassisEstimator(const Cfg::Estimator& estim
     pitch_state(get_state_name_by_generic_use(Cfg::GenericEstimatorStateUse::GimbalPitch, estimator_config, available_states)) {
 
     printf("State names: chassis x: %lu, chassis y: %lu, chassis heading: %lu, yaw: %lu, pitch: %lu\n", 
-        static_cast<uint32_t>(chassis_x_state), static_cast<uint32_t>(chassis_y_state), static_cast<uint32_t>(chassis_heading_state), 
-        static_cast<uint32_t>(yaw_state), static_cast<uint32_t>(pitch_state));
+        static_cast<unsigned long>(chassis_x_state), static_cast<unsigned long>(chassis_y_state), static_cast<unsigned long>(chassis_heading_state),
+        static_cast<unsigned long>(yaw_state), static_cast<unsigned long>(pitch_state));
     
     Serial.println("Initializing Gimbal and Chassis Estimator");
     chassis_1 = can.get_motor_by_name(estimator_config.get_motor_name_by_generic_use(Cfg::GenericEstimatorMotorUse::ChassisFrontRight));

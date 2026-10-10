@@ -126,13 +126,13 @@ private:
     float roll_axis_unitvector[3];
 
     /// @brief global relative yaw
-    float yaw_axis_global[3];
+    float yaw_axis_global[3] = {};
 
     /// @brief global relative pitch
-    float pitch_axis_global[3];
+    float pitch_axis_global[3] = {};
 
     /// @brief global relative roll
-    float roll_axis_global[3];
+    float roll_axis_global[3] = {};
     /// @brief current calculated yaw velocity
     float current_yaw_velocity = 0;
     /// @brief previous calculated yaw velocity
