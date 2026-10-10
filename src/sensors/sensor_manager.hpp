@@ -45,6 +45,10 @@ public:
     void read();
     /// @brief Call each sensor's send_to_comms function to send their data to comms
     void send_to_comms();
+    /// @brief Copies only gimbal encoder angles successfully decoded by this loop's read.
+    /// @param angles Fixed yaw/pitch output array; absent entries are left untouched.
+    /// @return Presence bits: bit 0 yaw, bit 1 pitch; no missing channel is synthesized.
+    uint8_t fill_fresh_gimbal_encoders(float angles[2]) const;
     /// @brief Triggers the live dashboard for any supported sensors
     void print_sensors_live();
     /// @brief Interupt Service Routine for buff encoders

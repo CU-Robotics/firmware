@@ -45,3 +45,32 @@ struct OverrideState : Comms::CommsData {
     /// @brief Whether to actively override firmware's estimated state with this incoming state.
     uint64_t active = false;
 };
+
+/// @brief Fixed-size snapshot of the targets actually used by this control loop, queued after safety.
+struct AppliedControl : Comms::CommsData {
+    /// @brief Initializes the authoritative telemetry packet without dynamic allocation.
+    AppliedControl() : CommsData(Comms::TypeLabel::AppliedControl, Comms::PhysicalMedium::Ethernet, Comms::Priority::High, sizeof(AppliedControl)) {}
+    /// @brief Firmware boot milliseconds at this loop's common state/encoder capture boundary.
+    double time = 0.0;
+    /// @brief Full position/velocity/acceleration targets: yaw, pitch, chassis x, y, heading.
+    State::Raw target[5] = {};
+    /// @brief Raw yaw/pitch encoder radians decoded successfully in this loop, not field-frame truth.
+    float raw_encoders[2] = {};
+    /// @brief Actual selected target source: 0 manual transmitter, 1 Hive.
+    uint8_t hive_mode = 0;
+    /// @brief Actual motor permission after the safety evaluation and CAN write/zero boundary.
+    uint8_t motors_armed = 0;
+    /// @brief Whether this loop passed an override request to the estimator, before clearing it.
+    uint8_t state_override = 0;
+    /// @brief Bit i is set only when target[i] is configured; absent states are not measurements.
+    uint8_t present = 0;
+    /// @brief Actual mode-change reset input used by this loop's reference governor.
+    uint8_t mode_changed = 0;
+    /// @brief Actual motor permission entering this loop, before its safety evaluation.
+    uint8_t previous_armed = 0;
+    /// @brief Presence bits for raw_encoders: bit 0 yaw, bit 1 pitch.
+    uint8_t encoders_present = 0;
+    /// @brief Explicit wire padding, always zero.
+    uint8_t reserved[5] = {};
+};
+static_assert(sizeof(AppliedControl) == 96, "AppliedControl wire layout must match Hive");

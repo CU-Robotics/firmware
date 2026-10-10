@@ -108,6 +108,18 @@ class HelloRobot {
 
     /// @brief Flag set when Hive requests an override.
     bool override_request = false;
+    /// @brief Carries the estimator's applied override flag through its request reset to safety telemetry.
+    bool applied_state_override = false;
+    /// @brief Shared boot-relative capture clock for this loop's states and applied-control packet.
+    double state_capture_ms = 0.0;
+    /// @brief Fixed yaw/pitch raw sample storage captured alongside this loop's estimated state.
+    float captured_raw_encoders[2] = {};
+    /// @brief Presence of successfully decoded yaw/pitch encoder samples in this loop.
+    uint8_t captured_encoders_present = 0;
+    /// @brief Captured transmitter mode-change input used for this loop's governor reset.
+    bool applied_mode_changed = false;
+    /// @brief Actual motor permission before the current safety evaluation.
+    bool previous_armed = false;
 
     // ==========================================
     // STATE FLAGS
@@ -195,6 +207,9 @@ class HelloRobot {
 	
 	/// @brief Checks loop timing/safety constraints and writes to the CAN bus.
     void check_safety();
+
+    /// @brief Queues a fixed-allocation applied target/status snapshot after the actual safety boundary.
+    void publish_applied_control();
 
     /// @brief Measures loop time and resets the Teensy after too many consecutive slow loops.
     /// @param loop_dt Set to the measured loop time in seconds

@@ -78,6 +78,8 @@ protected:
 
 /// @brief Estimate the yaw, pitch, and chassis heading
 struct GimbalAndChassisEstimator : public Estimator {
+    /// @brief Native adapter may seed a recorded initial condition without changing calibration.
+    friend struct FirmwareSim;
 private:
     /// @brief angle offset because calibration does not allign to our coordiate system
     float yaw_encoder_offset;

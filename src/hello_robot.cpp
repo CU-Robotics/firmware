@@ -86,6 +86,7 @@ void HelloRobot::run() {
         prof.begin("Safety");
         check_safety();
         prof.end("Safety");
+        publish_applied_control();
 
         prof.begin("CLI");
         process_cli();
@@ -96,6 +97,7 @@ void HelloRobot::run() {
 		update_controls();
 		update_comms();
 		check_safety();
+        publish_applied_control();
 		process_cli();
 #endif
         loop_timing();		
@@ -161,6 +163,9 @@ void HelloRobot::process_behaviors() {
 void HelloRobot::update_controls() {
     // step estimates and construct estimated state
     estimator_manager.step(*estimated_state_array, override_request);
+    state_capture_ms = millis();
+    captured_encoders_present = sensor_manager.fill_fresh_gimbal_encoders(captured_raw_encoders);
+    applied_state_override = override_request;
     // estimated_state_array.print();
 
     noInterrupts();
@@ -182,7 +187,8 @@ void HelloRobot::update_controls() {
         is_first_loop = false;
     }
 
-    if (transmitter_manager.mode_changed()) {
+    applied_mode_changed = transmitter_manager.mode_changed();
+    if (applied_mode_changed) {
         governor->set_reference_array(*estimated_state_array);
     }
     // reference govern
@@ -192,9 +198,9 @@ void HelloRobot::update_controls() {
     controller_manager.step(*reference_array, *estimated_state_array, *target_state_array);
 }
 void HelloRobot::update_comms() {
-    target_state_array->send_to_comms<TargetState>();
-    reference_array->send_to_comms<ReferenceState>();
-    estimated_state_array->send_to_comms<EstimatedState>();
+    target_state_array->send_to_comms<TargetState>(state_capture_ms);
+    reference_array->send_to_comms<ReferenceState>(state_capture_ms);
+    estimated_state_array->send_to_comms<EstimatedState>(state_capture_ms);
     Comms::Sendable<ConfigurationStatusData> config_status_sendable;
     config_status_sendable.data.is_configured = Comms::comms_layer.is_configured() ? 1 : 0;
     config_status_sendable.send_to_comms();
@@ -211,6 +217,7 @@ void HelloRobot::update_comms() {
 }
 
 void HelloRobot::check_safety() {
+    previous_armed = safety_state.motors_armed();
     float loop_dt = 0.0f;
     bool is_slow_loop = check_slow_loop(loop_dt);
 
@@ -237,6 +244,33 @@ void HelloRobot::check_safety() {
         SafetyState::reasons_to_string(reasons, reason_str, sizeof(reason_str));
         SystemLog.info(Subsystem::GENERAL, "Safety mode %s: %s\n", reasons ? "ON" : "OFF", reason_str);
     }
+}
+
+void HelloRobot::publish_applied_control() {
+    Comms::Sendable<AppliedControl> snapshot;
+    snapshot.data.time = state_capture_ms;
+    snapshot.data.hive_mode = transmitter_manager.is_hive_mode();
+    snapshot.data.motors_armed = motors_armed;
+    snapshot.data.state_override = applied_state_override;
+    snapshot.data.mode_changed = applied_mode_changed;
+    snapshot.data.previous_armed = previous_armed;
+    snapshot.data.encoders_present = captured_encoders_present;
+    if (captured_encoders_present == 3) {
+        snapshot.data.raw_encoders[0] = captured_raw_encoders[0];
+        snapshot.data.raw_encoders[1] = captured_raw_encoders[1];
+    }
+    constexpr Cfg::StateName names[] = {
+        Cfg::StateName::GimbalYaw, Cfg::StateName::GimbalPitch,
+        Cfg::StateName::ChassisX, Cfg::StateName::ChassisY, Cfg::StateName::ChassisHeading
+    };
+    for (size_t i = 0; i < 5; ++i) {
+        if (target_state_array->has_state(names[i])) {
+            snapshot.data.target[i] = (*target_state_array)[names[i]].get_raw();
+            snapshot.data.present |= static_cast<uint8_t>(1u << i);
+        }
+    }
+    // update_comms already ran: this snapshot is transmitted on a subsequent comms cycle.
+    snapshot.send_to_comms();
 }
 
 bool HelloRobot::check_slow_loop(float &loop_dt) {

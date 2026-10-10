@@ -94,6 +94,7 @@ struct FirmwareSim {
     PitchController pitch;
     uint64_t time_us = 0;
     bool halted = false;
+    bool first_loop = true;
     char fault[512] = {};
     explicit FirmwareSim(const FirmwareSimConfig& c) : states(states_from(c)), yaw_config(controller_from(c.yaw, true)), pitch_config(controller_from(c.pitch, false)), estimator_config(estimator_from(c.estimator)), available_motors(std::begin(motor_names), std::end(motor_names)), estimate(states), previous(states), reference(states), target(states), governor(states), estimator(estimator_config, sensors, can, {std::begin(state_names), std::end(state_names)}), yaw(yaw_config, can, available_motors), pitch(pitch_config, can, available_motors) {
         estimate[Cfg::StateName::GimbalYaw].set_position_no_bound(c.estimator.yaw_start_angle);
@@ -101,6 +102,21 @@ struct FirmwareSim {
         previous = estimate; target = estimate; reference = estimate;
         governor.set_reference_array(estimate);
         governor.step_reference_array(target); // production first-cycle dt=0 consumed without PID/estimator division by zero
+    }
+    void initialize_estimate(const float initial[6], float fixed_heading) {
+        for (size_t a = 0; a < 2; ++a) {
+            auto& s = estimate[state_names[a+3]];
+            s.set_position_no_bound(initial[a*3]); s.set_velocity_no_bound(initial[a*3+1]); s.set_acceleration_no_bound(initial[a*3+2]);
+        }
+        estimator.yaw_angle = initial[0]; estimator.pitch_angle = initial[3];
+        estimator.roll_angle = initial[2];
+        estimator.current_yaw_velocity = initial[1]; estimator.current_pitch_velocity = initial[4];
+        estimate[Cfg::StateName::ChassisHeading].set_position_no_bound(fixed_heading);
+        estimator.chassis_angle = fixed_heading;
+        estimator.initial_chassis_angle = fixed_heading;
+        estimator.prev_global_chassis_angle = fixed_heading;
+        estimator.count1 = 1; // Do not replace known initial global attitude with joint angle.
+        previous = estimate; target = estimate; reference = estimate;
     }
     void export_output(FirmwareSimOutput& out) {
         out = {}; out.time_us = time_us; out.safety_latched = halted;
@@ -124,14 +140,22 @@ extern "C" FirmwareSim* firmware_sim_create(const FirmwareSimConfig* config, cha
     catch (...) { error_text(err, capacity, "Native simulation initialization failed"); }
     return nullptr;
 }
+extern "C" int32_t firmware_sim_initialize(FirmwareSim* sim, const float estimate[6], float fixed_heading, char* err, uint32_t capacity) {
+    error_text(err, capacity, "");
+    if (!sim || sim->time_us != 0 || !estimate || !finite_values(estimate, 6) || !std::isfinite(fixed_heading)) {
+        error_text(err, capacity, "Initial estimate must be finite and precede the first cycle"); return -1;
+    }
+    sim->initialize_estimate(estimate, fixed_heading);
+    return 0;
+}
 extern "C" void firmware_sim_destroy(FirmwareSim* sim) { delete sim; }
 extern "C" int32_t firmware_sim_step(FirmwareSim* sim, const FirmwareSimInput* input, FirmwareSimOutput* output, char* err, uint32_t capacity) {
     error_text(err, capacity, ""); if (output) *output = {};
     if (!sim || !input || !output) { error_text(err, capacity, "Null simulation input/output"); return -1; }
     sim->export_output(*output);
     if (sim->halted) { error_text(err, capacity, sim->fault); return 1; }
-    if (sim->time_us > UINT64_MAX-1000 || input->time_us != sim->time_us+1000 || input->armed > 1) { error_text(err, capacity, "Expected exactly one 1000us firmware cycle and armed=0/1"); return -1; }
-    sim->time_us = input->time_us; firmware_sim_host::time_us = sim->time_us; safety_state.active = !input->armed;
+    if (sim->time_us > UINT64_MAX-1000 || input->time_us != sim->time_us+1000 || input->armed > 1 || input->previous_armed > 1 || input->mode_changed > 1) { error_text(err, capacity, "Expected exactly one 1000us firmware cycle and boolean status flags"); return -1; }
+    sim->time_us = input->time_us; firmware_sim_host::time_us = sim->time_us; safety_state.active = !input->previous_armed;
     try {
         if (!finite_values(input->target, 6) || !finite_values(input->sensors, 5)) safety::safety_procedure("Nonfinite simulation command or sensor sample");
         // Keep periodic wrapping bounded even for malicious but finite ABI samples.
@@ -147,15 +171,17 @@ extern "C" int32_t firmware_sim_step(FirmwareSim* sim, const FirmwareSimInput* i
         sim->previous = sim->estimate;
         sim->estimator.step_states(sim->estimate, sim->previous, 0);
         sim->estimator.validate(sim->estimate);
-        if (input->armed) {
-            sim->reference = sim->governor.step_reference_array(sim->target);
-            sim->yaw.validate(sim->reference, sim->estimate); sim->pitch.validate(sim->reference, sim->estimate);
-            sim->yaw.step(sim->reference, sim->estimate, sim->target); sim->pitch.step(sim->reference, sim->estimate, sim->target);
-        } else {
-            sim->can.zero(); sim->governor.set_reference_array(sim->estimate);
-            sim->governor.step_reference_array(sim->estimate); sim->reference = sim->governor.get_reference_array();
-            sim->yaw.reset(); sim->pitch.reset();
+        // HelloRobot always steps controls, then evaluates current safety and zeroes
+        // actuation. Disarming does not reset turret integrators or hold its governor.
+        if (sim->first_loop || input->mode_changed) {
+            sim->governor.set_reference_array(sim->estimate);
+            sim->first_loop = false;
         }
+        sim->reference = sim->governor.step_reference_array(sim->target);
+        sim->yaw.validate(sim->reference, sim->estimate); sim->pitch.validate(sim->reference, sim->estimate);
+        sim->yaw.step(sim->reference, sim->estimate, sim->target); sim->pitch.step(sim->reference, sim->estimate, sim->target);
+        safety_state.active = !input->armed;
+        if (!input->armed) sim->can.zero();
         // Production nonfinite checks guard states; never allow invalid sink values into the plant.
         for (auto n : motor_names) if (!std::isfinite(sim->can.get_motor_by_name(n)->torque)) safety::safety_procedure("Nonfinite firmware motor torque");
     } catch (const firmware_sim_host::FatalSafety& f) { sim->halt(f.message); }

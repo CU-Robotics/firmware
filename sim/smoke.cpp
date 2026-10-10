@@ -35,7 +35,7 @@ static FirmwareSimConfig fixture() {
     return c;
 }
 static FirmwareSimOutput step(FirmwareSim* sim, uint64_t time, float gyro = 0) {
-    FirmwareSimInput in{}; in.time_us = time; in.armed = 1;
+    FirmwareSimInput in{}; in.time_us = time; in.armed = 1; in.previous_armed = 1;
     in.target[0] = 0.5f; in.target[3] = 1.5707963f;
     in.sensors[1] = 1.5707963f; in.sensors[4] = gyro;
     FirmwareSimOutput out{}; char err[512];

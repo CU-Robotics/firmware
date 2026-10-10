@@ -6,6 +6,9 @@ namespace Comms {
 
 void FirmwareData::set_data(CommsData* data) {
     switch (data->type_label) {
+    case TypeLabel::AppliedControl:
+        // This snapshot has no polling consumer; the staged wire record is authoritative.
+        break;
     case TypeLabel::TestData: {
         // place the data in the mega struct
         test_data = *static_cast<TestData*>(data);
