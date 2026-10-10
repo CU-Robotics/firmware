@@ -6,6 +6,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include "EventResponder.h"
 
 /// @brief Most-significant-bit-first bit order placeholder.
 constexpr int MSBFIRST = 1;
@@ -30,6 +31,8 @@ public:
     void endTransaction() {}
     /// @brief Ignore the buffer and byte count, leaving the buffer unchanged.
     void transfer(void*, std::size_t) {}
+    /// @brief Leave the receive buffer untouched and report a successful DMA request.
+    bool transfer(const void*, void*, std::size_t, EventResponderRef) { return true; }
 };
 
 /// @brief Global SPI bus stub used by host unit tests.

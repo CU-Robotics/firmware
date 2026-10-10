@@ -46,6 +46,9 @@ inline void delayMicroseconds(unsigned int) {}
 inline void pinMode(std::uint8_t, int) {}
 /// @brief Ignore the pin number and output level without changing hardware.
 inline void digitalWrite(std::uint8_t, int) {}
+/// @brief Host cache operations are unnecessary for ordinary process memory.
+inline void arm_dcache_flush_delete(const void*, std::uint32_t) {}
+inline void arm_dcache_delete(const void*, std::uint32_t) {}
 /// @brief Provide a fixed time value for host tests.
 /// @return Always zero; elapsed time is not simulated.
 inline unsigned long millis() { return 0; }
