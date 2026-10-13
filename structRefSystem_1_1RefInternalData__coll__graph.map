@@ -1,0 +1,6 @@
+<map id="RefSystem::RefInternalData" name="RefSystem::RefInternalData">
+<area shape="rect" id="node1" title="Internal data struct for the RefSystem. This contains all the meta data required to read a frame." alt="" coords="16,184,199,211"/>
+<area shape="rect" id="node2" href="$structFrame.html" title="Struct for the entire Frame. Consists of a FrameHeader, Command ID, FrameData, and CRC." alt="" coords="78,95,137,121"/>
+<area shape="rect" id="node3" href="$structFrameData.html" title="Struct for the Frame data portion." alt="" coords="5,5,92,32"/>
+<area shape="rect" id="node4" href="$structFrameHeader.html" title="Struct for the Frame header portion." alt="" coords="117,5,218,32"/>
+</map>

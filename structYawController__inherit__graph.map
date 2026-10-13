@@ -1,0 +1,4 @@
+<map id="YawController" name="YawController">
+<area shape="rect" id="node1" title="Controller for the yaw." alt="" coords="5,80,108,107"/>
+<area shape="rect" id="node2" href="$structController.html" title="Parent controller struct, all controllers should be based off of this." alt="" coords="18,5,95,32"/>
+</map>
