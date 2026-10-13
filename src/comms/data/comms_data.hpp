@@ -1,11 +1,10 @@
 #pragma once
-#include <stdint.h>     // for uintN_t
-#include <string>       // for std::string
+#include <stdint.h> // for uintN_t
+#include <string>   // for std::string
 
 namespace Comms {
 
-
-    /// @brief TypeLabel is a unique identifier for each type of data that can be sent over comms.
+/// @brief TypeLabel is a unique identifier for each type of data that can be sent over comms.
 enum class TypeLabel : uint16_t {
     NONE = 0x00,
     TestData,
@@ -37,8 +36,7 @@ enum class TypeLabel : uint16_t {
     StereoCameraTriggerConfig,
     StateConfig,
     TransmitterConfig,
-    StartStereoTrigger,
-    StopStereoTrigger,
+    StereoCameraSignalCounterSync,
     TestLatencyData,
 };
 
@@ -108,13 +106,11 @@ inline std::string to_string(TypeLabel type_label) {
         return "StateConfig";
     case TypeLabel::TransmitterConfig:
         return "TransmitterConfig";
-    case TypeLabel::StartStereoTrigger:
-        return "StartStereoTrigger";
-    case TypeLabel::StopStereoTrigger:
-        return "StopStereoTrigger";
+    case TypeLabel::StereoCameraSignalCounterSync:
+        return "StereoCameraSignalCounterSync";
     case TypeLabel::TestLatencyData:
-	return "TestLatencyData";
-    // no default case, so the compiler will warn us if we forget a case
+        return "TestLatencyData";
+        // no default case, so the compiler will warn us if we forget a case
     }
 
     // because no default case, this gets rid of the no return warning
@@ -135,7 +131,7 @@ enum class Priority : uint16_t {
 
 /// @brief base class for all data structs that want to be sent over comms.
 struct CommsData {
-public:
+  public:
     /// @brief Primary constructor, initializes all fields.
     /// @param type_label The type of data being sent.
     /// @param physical_medium The medium over which the data is sent.
