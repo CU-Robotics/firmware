@@ -32,6 +32,16 @@ const char* level_to_str(LogLevel level) {
     };
 }
 
+LogText::LogText(const LogEvent& event) {
+    snprintf(this->text, sizeof(this->text),
+        "%f : %s : %s : %s\n",
+        event.timestamp,
+        level_to_str(event.level),
+        sys_to_str(event.sys),
+        event.text
+    );
+}
+
 void SystemLogger::set_context(LogLevel lvl, Subsystem sys) {
     current_level = lvl;
     current_sys = sys;
@@ -84,9 +94,12 @@ void SystemLogger::push_message() {
         }
     }
 
+    // create text representation of the log event
+    LogText log_text(messages[head]);
+
     // Log data to SD card if it's bound
     if (sd_logger)
-        sd_logger->write_log(messages[head]);
+        sd_logger->write_log(log_text);
 
     // 3. Advance circular buffer
     head = (head + 1) % LOG_HISTORY;

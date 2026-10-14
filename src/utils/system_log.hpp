@@ -17,6 +17,16 @@ struct LogEvent {
     char text[80];
 };
 
+/// @brief Text representation of a `LogEvent`
+struct LogText {
+    /// @brief Char array representing the log event
+    char text[128];
+
+    /// @brief Construct log text from a `LogEvent`
+    /// @param event `LogEvent` to convert into text representation
+    LogText(const LogEvent& event);
+};
+
 /// @brief Converts Subsystem enum to cstring
 /// @param sys Subsystem to convert
 /// @return cstring representaiton of `sys`

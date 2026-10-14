@@ -21,7 +21,12 @@ public:
     /// @brief Write a `LogEvent` to the SD card
     /// @param event `LogEvent` to log
     /// @return If write was successful
-    bool write_log(struct LogEvent& event);
+    bool write_log(const struct LogEvent& event);
+
+    /// @brief Write a `LogText` struct to the SD card
+    /// @param event `LogText` struct to log
+    /// @return If write was successful
+    bool write_log(const struct LogText& text);
 
     /// @brief Binds the logger to an SdManager
     /// @param sd_manager Pointer to the SdManager

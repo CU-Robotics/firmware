@@ -12,21 +12,16 @@ bool SdLogger::start() {
     return new_log_file();
 }
 
-bool SdLogger::write_log(LogEvent& event) {
+bool SdLogger::write_log(const LogEvent& event) {
+    LogText text(event);
+    return write_log(text);
+}
+
+bool SdLogger::write_log(const LogText& text) {
     if (!_log_file) return false;
     
-    // build string
-    char log_buffer[128];
-    snprintf(log_buffer, sizeof(log_buffer), 
-        "%f : %s : %s : %s\n",
-        event.timestamp,
-        level_to_str(event.level),
-        sys_to_str(event.sys),
-        event.text
-    );
-
     // write to file
-    if (_log_file.write(log_buffer) <= 0)
+    if (_log_file.write(text.text) <= 0)
         return false;
 
     // sync write to SD card
