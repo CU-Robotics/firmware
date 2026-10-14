@@ -18,10 +18,14 @@ bool SdLogger::write_log(const LogEvent& event) {
 }
 
 bool SdLogger::write_log(const LogText& text) {
+    return write_log(text.text);
+}
+
+bool SdLogger::write_log(const char* cstr) {
     if (!_log_file) return false;
     
     // write to file
-    if (_log_file.write(text.text) <= 0)
+    if (_log_file.write(cstr) <= 0)
         return false;
 
     // sync write to SD card

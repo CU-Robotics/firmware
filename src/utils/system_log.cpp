@@ -101,7 +101,7 @@ void SystemLogger::push_message() {
 
     // Log data to SD card if it's bound
     if (sd_logger)
-        sd_logger->write_log(log_text);
+        sd_logger->write_log(log_text.text);
 
     // Send log data over comms
     LogData log_data(log_text.text);

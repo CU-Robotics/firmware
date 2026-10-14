@@ -28,6 +28,11 @@ public:
     /// @return If write was successful
     bool write_log(const struct LogText& text);
 
+    /// @brief Write a cstring to the SD card
+    /// @param cstr cstring to log
+    /// @return If write was successful
+    bool write_log(const char* cstr);
+
     /// @brief Binds the logger to an SdManager
     /// @param sd_manager Pointer to the SdManager
     void bind_sd_manager(SdManager* sd_manager) { _sd_man = sd_manager; }
