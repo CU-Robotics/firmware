@@ -1,4 +1,6 @@
 #include "system_log.hpp"
+#include "comms/data/sendable.hpp"
+#include "utils/log_data.hpp"
 
 // Instantiate the global logger
 SystemLogger SystemLog;
@@ -100,6 +102,12 @@ void SystemLogger::push_message() {
     // Log data to SD card if it's bound
     if (sd_logger)
         sd_logger->write_log(log_text);
+
+    // Send log data over comms
+    LogData log_data(log_text.text);
+    Comms::Sendable<LogData> sendable;
+    sendable.data = log_data;
+    sendable.send_to_comms();
 
     // 3. Advance circular buffer
     head = (head + 1) % LOG_HISTORY;
