@@ -1,7 +1,13 @@
 #pragma once
-#include <Arduino.h>
 #include <utility>
 #include <functional>
+
+#ifdef FW_SIMULATION
+#include <cstdio>
+#include <stdexcept>
+#else
+#include <Arduino.h>
+#endif
 
 /// @brief How many times per second the LED should blink when a safety procedure is triggered
 constexpr int SAFETY_PROCEDURE_LED_BLINK_FREQ = 5; 
@@ -41,6 +47,15 @@ namespace safety {
     /// @tparam Args The types of the variadic arguments
     template<typename... Args>
     [[noreturn]] inline void safety_procedure(const char* message, Args&&... args) {
+    #ifdef FW_SIMULATION
+
+        // throw in simulation for graceful error handling
+        char message_buffer[512];
+        std::snprintf(message_buffer, sizeof(message_buffer), message, std::forward<Args>(args)...);
+        throw std::runtime_error(buffer);
+
+    #else
+
         Serial.printf("Safety procedure triggered!\n");
         if (!call_safety_function()) {
             Serial.printf("Safety procedure triggered but no safety function registered!\n");
@@ -55,6 +70,8 @@ namespace safety {
             digitalWrite(LED_BUILTIN, LOW);
             delay(SAFETY_PROCEDURE_LED_BLINK_DURATION_MS);
         }
+
+    #endif
     }
 
     /// @brief Assert a condition or trigger the safety procedure if the condition is not met
