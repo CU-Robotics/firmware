@@ -1,7 +1,8 @@
 #ifndef TIMING_H
 #define TIMING_H
 
-#include <Arduino.h>
+#include "clock.hpp"
+#include "hardware_clock.hpp"
 
 // Time conversion helpers
 #define NS_TO_US(ns)    (ns / 1e3f)
@@ -20,17 +21,20 @@
 #define S_TO_US(s)      (s * 1e6f)
 #define S_TO_NS(s)      (s * 1e9f)
 
-/// @brief Timer class. Operates based on micros() and provides a simple interface for timing operations
+/// @brief Timer class. Operates based on the injected clock and provides a simple interface for timing operations
 struct Timer {
+    /// @brief Reference to the clock implementation being used.
+    const Clock& clock;
     /// @brief Last recorded time, used in duration calculations
-    uint32_t start_time = micros();
-
-    /// @brief Default constructor, starts the timer
-    Timer() { start(); }
+    uint32_t start_time = 0;
+    
+    /// @brief Default constructor, starts the timer.
+    /// @param clock Optional clock implementation (the hardware clock is used by default)
+    explicit Timer(const Clock& clock = hardware_clock()) : clock(clock) { start(); }
 
     /// @brief Start the timer from the current time
     /// @note This resets all further methods to be relative to the current time
-    void start() { start_time = micros(); }
+    void start() { start_time = clock.now_us(); }
 
     /// @brief Busy delay for a set duration in us
     /// @param duration The duration in us
@@ -74,11 +78,11 @@ struct Timer {
     }
 
     /// @brief Get delta in us since last call to start()
-    /// @note This handles potential overflows within micros()
+    /// @note This handles potential overflows within now_us
     /// @note This does not restart the timer
     /// @return Delta in us
     uint32_t get_elapsed_micros_no_restart() {
-        uint32_t curr_time = micros();
+        uint32_t curr_time = clock.now_us();
         
         // if curr_time is less than start_time, then this overflowed
         if (curr_time < start_time) {
@@ -96,10 +100,10 @@ struct Timer {
 private:
     /// @brief Helper to use when waiting until a duration is finished
     /// @param duration The duration in microseconds to check for
-    /// @note This handles potential overflows within micros()
+    /// @note This handles potential overflows within now_us
     /// @return True if the duration is elapsed, else false
     bool duration_over(uint32_t duration) {
-        uint32_t curr_time = micros();
+        uint32_t curr_time = clock.now_us();
 
         // if curr_time is less than start_time, then this overflowed
         if (curr_time < start_time) {
