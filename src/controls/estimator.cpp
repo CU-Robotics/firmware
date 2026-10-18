@@ -96,9 +96,9 @@ void GimbalAndChassisEstimator::validate(const RobotStateArray& updated_state_ar
 }
 
 GimbalAndChassisEstimator::GimbalAndChassisEstimator(const Cfg::Estimator& estimator_config, SensorManager& sensor_manager, CANManager& can, std::vector<Cfg::StateName> available_states) : 
-    buff_enc_yaw(sensor_manager.get_sensor_by_name<BuffEncoder>(estimator_config.get_sensor_name_by_generic_use(Cfg::GenericSensorUse::YawBuffEncoder))), 
-    buff_enc_pitch(sensor_manager.get_sensor_by_name<BuffEncoder>(estimator_config.get_sensor_name_by_generic_use(Cfg::GenericSensorUse::PitchBuffEncoder))),
-    icm_imu(sensor_manager.get_sensor_by_name<ICM20649>(estimator_config.get_sensor_name_by_generic_use(Cfg::GenericSensorUse::YawIcmImu))),
+    buff_enc_yaw(sensor_manager.get_source_by_name<EncoderSource>(estimator_config.get_sensor_name_by_generic_use(Cfg::GenericSensorUse::YawBuffEncoder))), 
+    buff_enc_pitch(sensor_manager.get_source_by_name<EncoderSource>(estimator_config.get_sensor_name_by_generic_use(Cfg::GenericSensorUse::PitchBuffEncoder))),
+    icm_imu(sensor_manager.get_source_by_name<GyroSource>(estimator_config.get_sensor_name_by_generic_use(Cfg::GenericSensorUse::YawIcmImu))),
     chassis_x_state(get_state_name_by_generic_use(Cfg::GenericEstimatorStateUse::ChassisX, estimator_config, available_states)),
     chassis_y_state(get_state_name_by_generic_use(Cfg::GenericEstimatorStateUse::ChassisY, estimator_config, available_states)),
     chassis_heading_state(get_state_name_by_generic_use(Cfg::GenericEstimatorStateUse::ChassisHeading, estimator_config, available_states)),

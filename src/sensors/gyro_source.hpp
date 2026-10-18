@@ -1,5 +1,8 @@
 /// @brief Interface for any gyro that provides acceleration readings.
 class GyroSource {
+  public:
+    /// @brief Use derived destructor.
+    virtual ~GyroSource() = default;
     /// @brief Get acceleration of the gyro arounds the X axis.
     /// @return Acceleration around the X axis.
     virtual float get_gyro_X() = 0;
