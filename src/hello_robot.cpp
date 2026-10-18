@@ -328,7 +328,7 @@ void HelloRobot::apply_fast_mode() {
         // Shortest path to the target diagonal
         float error = target_angle - current_angle;
         while (error > PI) error -= TWO_PI;
-        while (error < PI) error += TWO_PI;
+        while (error < -PI) error += TWO_PI;
         // P controller
         constexpr float kp = 5.0f; 
         float auto_spin_vel = error * kp;
