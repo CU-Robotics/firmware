@@ -1,3 +1,4 @@
+/// @brief Interface for any encoder that provides angular value.
 class EncoderSource {
   public:
     /// @brief Get angle of the last read function.
