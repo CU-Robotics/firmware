@@ -1,6 +1,7 @@
 #pragma once
 
 #include <concepts>
+#include <type_traits>
 #include <map>
 #include <memory>
 #include <SPI.h>
@@ -59,18 +60,15 @@ public:
     template<typename SensorType>
     requires std::derived_from<SensorType, Sensor>
     std::shared_ptr<SensorType> get_sensor_by_name(const Cfg::SensorName& name) {
-        auto it = sensors.find(name);
-        if (it != sensors.end()) {
-            std::shared_ptr<SensorType> sensor_ptr = std::dynamic_pointer_cast<SensorType>(it->second);
-            if (sensor_ptr) {
-                return sensor_ptr;
-            } else {
-                safety::safety_procedure("SensorManager: Sensor with name %u found but is not of the requested type", static_cast<uint32_t>(name));
-            }
-        } else {
-            safety::safety_procedure("SensorManager: Failed to get sensor with name %u, sensor not found", static_cast<uint32_t>(name));
-        }
+        return lookup<SensorType>(name);
     }
+
+    template<typename SourceType>
+    requires std::is_polymorphic_v<SourceType>
+    std::shared_ptr<SourceType> get_source_by_name(const Cfg::SensorName& name) {
+        return lookup<SourceType>(name);
+    }
+
 private:
     /// @brief Map of sensor pointers by name
 	std::map<Cfg::SensorName, std::shared_ptr<Sensor>> sensors;
@@ -89,4 +87,26 @@ private:
 
 	/// @brief Pointer to the singleton instance of this class
 	static SensorManager *instance;
+
+    /// @brief Get the sensor or source by its name and type. Triggers safety procedure if the sensor is not found or is not of the requested type.
+    /// @tparam T The type of sensor or source to get.
+    /// @param name The name of the sensor.
+    /// @return A `shared_ptr` to the sensor with the requested name and type.
+    template<typename T>
+    std::shared_ptr<T> lookup(const Cfg::SensorName& name) {
+        auto it = sensors.find(name);
+
+        if (it == sensors.end()) {
+            safety::safety_procedure("SensorManager: failed to get sensor with name %u, sensor not found", static_cast<uint32_t>(name));
+        }
+
+        auto result = std::dynamic_pointer_cast<T>(it->second);
+
+        if (!result) {
+            safety::safety_procedure("SensorManager: sensor with name %u found but is not of the requested type", static_cast<uint32_t>(name));
+        }
+
+        return result;
+    }
+
 };
