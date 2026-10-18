@@ -1,3 +1,6 @@
+#pragma once
+#include "source.hpp"
+
 /// @brief Interface for any gyro that provides acceleration readings.
 class GyroSource {
   public:
@@ -13,3 +16,5 @@ class GyroSource {
     /// @return Acceleration around the Z axis.
     virtual float get_gyro_Z() = 0;
 };
+
+template <> inline constexpr bool is_source_v<GyroSource> = true;

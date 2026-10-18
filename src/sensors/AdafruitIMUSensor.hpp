@@ -5,7 +5,7 @@
 
 #include <Adafruit_Sensor.h>
 #include "sensors/sensor.hpp"
-#include "sensors/imu_source.hpp"
+#include "sensors/gyro_source.hpp"
 
 #define GRAVITY_EARTH (9.80665F) //  Earth's gravity in m/s^2 
 #define DPS_TO_RADS (0.017453293F) // Degrees/s to rad/s multiplier 

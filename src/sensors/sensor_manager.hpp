@@ -1,7 +1,6 @@
 #pragma once
 
 #include <concepts>
-#include <type_traits>
 #include <map>
 #include <memory>
 #include <SPI.h>
@@ -9,6 +8,7 @@
 #include "sensors/buff_encoder.hpp"
 #include "sensors/ICM20649.hpp"
 #include "sensors/sensor.hpp"
+#include "sensors/source.hpp"
 #include "comms/config_data/robot_config.hpp"
 
 #include "utils/safety.hpp"
@@ -63,10 +63,13 @@ public:
         return lookup<SensorType>(name);
     }
 
-    template<typename SourceType>
-    requires std::is_polymorphic_v<SourceType>
-    std::shared_ptr<SourceType> get_source_by_name(const Cfg::SensorName& name) {
-        return lookup<SourceType>(name);
+    /// @brief Get a source by its name and type. Will trigger safety procedure if the sensor is not found or is not of the requested type.
+    /// @tparam T The type of source to get.
+    /// @param name The name of the source to get.
+    /// @return A `shared_ptr` to the sensor with the requested name and type.
+    template<Source T>
+    std::shared_ptr<T> get_source_by_name(const Cfg::SensorName& name) {
+        return lookup<T>(name);
     }
 
 private:
