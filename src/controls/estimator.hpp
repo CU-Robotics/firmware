@@ -9,7 +9,8 @@
 
 #include "sensors/buff_encoder.hpp"
 #include "sensors/rev_encoder.hpp"
-#include "sensors/ICM20649.hpp"
+#include "sensors/encoder_source.hpp"
+#include "sensors/gyro_source.hpp"
 #include "sensors/sensor_manager.hpp"
 #include <memory>
 
@@ -197,11 +198,11 @@ private:
     float chassis_rad_to_motor_rad;
 
     /// @brief BuffEncoder on the yaw
-    std::shared_ptr<BuffEncoder> buff_enc_yaw;
+    std::shared_ptr<EncoderSource> buff_enc_yaw;
     /// @brief BuffEncoder on the pitch
-    std::shared_ptr<BuffEncoder> buff_enc_pitch;
+    std::shared_ptr<EncoderSource> buff_enc_pitch;
     /// @brief ICM20649 IMU
-    std::shared_ptr<ICM20649> icm_imu;
+    std::shared_ptr<GyroSource> icm_imu;
 
     /// @brief chassis motor 1
     std::shared_ptr<Motor> chassis_1;

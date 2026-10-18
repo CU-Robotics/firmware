@@ -5,11 +5,12 @@
 
 #include <Adafruit_Sensor.h>
 #include "sensors/sensor.hpp"
+#include "sensors/imu_source.hpp"
 
 #define GRAVITY_EARTH (9.80665F) //  Earth's gravity in m/s^2 
 #define DPS_TO_RADS (0.017453293F) // Degrees/s to rad/s multiplier 
 /// @brief Abstract parent class for all AdafruitIMUSensors, which give acceleration and gyroscope data. 
-class AdafruitIMUSensor : public Sensor {
+class AdafruitIMUSensor : public Sensor, public GyroSource {
 public:
     /// @brief Constructor that takes a SensorType and passes it to the Sensor constructor.
     AdafruitIMUSensor() : Sensor() {}
@@ -33,15 +34,15 @@ public:
 
     /// @brief Get the change in gyroscope orientation relative to the x axis
     /// @return gryoscope x in radians/s
-    inline float get_gyro_X() { return gyro_X - offset_X; };
+    inline float get_gyro_X() override { return gyro_X - offset_X; };
 
     /// @brief Get the change in gyroscope orientation relative to the y axis
     /// @return gyroscope y in radians/s
-    inline float get_gyro_Y() { return gyro_Y - offset_Y; };
+    inline float get_gyro_Y() override { return gyro_Y - offset_Y; };
 
     /// @brief Get the change in gyroscope orientation relative to the z axis
     /// @return gyroscope z in radians/s
-    inline float get_gyro_Z() { return gyro_Z - offset_Z; };
+    inline float get_gyro_Z() override { return gyro_Z - offset_Z; };
 
     /// @brief Set offsets that we calculate during calibration
     /// @param x offset in x
