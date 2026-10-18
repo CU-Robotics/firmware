@@ -1,3 +1,6 @@
+#pragma once
+#include "source.hpp"
+
 /// @brief Interface for any encoder that provides angular value.
 class EncoderSource {
   public:
@@ -7,3 +10,5 @@ class EncoderSource {
     /// @return Read angle (radians).
     virtual float get_angle() const = 0;
 };
+
+template <> inline constexpr bool is_source_v<EncoderSource> = true;
