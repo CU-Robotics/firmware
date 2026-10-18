@@ -1,0 +1,6 @@
+<map id="Comms::EthernetComms" name="Comms::EthernetComms">
+<area shape="rect" id="node1" title="Ethernet Communications. This handles all comms between the Jetson and the Teensy via Ethernet." alt="" coords="70,199,237,225"/>
+<area shape="rect" id="node2" href="$structComms_1_1EthernetPacket.html" title="A complete ethernet packet, including the header and payload." alt="" coords="5,95,168,121"/>
+<area shape="rect" id="node3" href="$structPacketHeader.html" title="Comms packet header struct." alt="" coords="34,5,139,32"/>
+<area shape="rect" id="node4" href="$structTimer.html" title="Timer class. Operates based on micros() and provides a simple interface for timing operations." alt="" coords="193,95,247,121"/>
+</map>
