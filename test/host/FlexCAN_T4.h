@@ -1,3 +1,5 @@
+#pragma once
+
 #include <cstdint>
 
 /// @brief FlexCAN CAN message struct suitable for host compilation (I stole that shi).
