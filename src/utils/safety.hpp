@@ -52,7 +52,7 @@ namespace safety {
         // throw in simulation for graceful error handling
         char message_buffer[512];
         std::snprintf(message_buffer, sizeof(message_buffer), message, std::forward<Args>(args)...);
-        throw std::runtime_error(buffer);
+        throw std::runtime_error(message_buffer);
 
     #else
 
