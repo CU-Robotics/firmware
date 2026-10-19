@@ -3,9 +3,9 @@
 
 
 void SDC104::init() {
-    // axis state is defered until the first control command is sent
-    // set_axis_state(AxisState::CLOSED_LOOP_CONTROL);
-    set_controller_mode(ControlMode::TORQUE, InputMode::DIRECT);
+    // idle first: the SDC104 holds its last command forever, even across a Teensy reset. Control mode and closed
+    // loop are set by the first torque/speed command
+    set_axis_state(AxisState::IDLE);
 }
 
 int SDC104::read(CAN_message_t& msg) {
@@ -51,10 +51,13 @@ int SDC104::read(CAN_message_t& msg) {
         m_position_estimate = *((float*)&msg.buf[0]);
         m_velocity_estimate = *((float*)&msg.buf[4]);
 
-        // update the unified state struct
-        // encoder gives revolutions, we want radians
-        m_state.position = m_position_estimate * 2 * PI;
-        m_state.speed = m_velocity_estimate * 2 * PI;
+        // update the unified state struct. The encoder is on the motor side of the gearbox and gives revolutions,
+        // we want radians at the output
+        m_position_rad = m_position_estimate * 2 * PI / m_gear_ratio;
+        m_state.speed = m_velocity_estimate * 2 * PI / m_gear_ratio;
+        // the unified position is a 16 bit count over one output revolution, like the other drivers' encoder counts
+        float output_rev = m_position_estimate / m_gear_ratio;
+        m_state.position = (uint16_t)((output_rev - floorf(output_rev)) * 65536.0f);
         break;
     }
     case CMD_GET_ENCODER_COUNT: {
@@ -70,21 +73,14 @@ int SDC104::read(CAN_message_t& msg) {
     case CMD_GET_BUS_VOLTAGE_CURRENT: {
         m_bus_voltage = *((float*)&msg.buf[0]);
         m_bus_current = *((float*)&msg.buf[4]);
-
-        // update the unified state struct
-        float torque = m_bus_current * m_torque_constant;
-        // normalize torque to -1 to 1
-        torque /= m_max_torque;
-
-        m_state.torque = torque;
         break;
     }
     case CMD_GET_TORQUES: {
         m_torque_setpoint = *((float*)&msg.buf[0]);
         m_torque_measured = *((float*)&msg.buf[4]);
 
-        // update the unified state struct
-        m_state.torque = m_torque_measured / m_max_torque;
+        // update the unified state struct: motor side torque to output torque, normalized to [-1, 1]
+        m_state.torque = m_torque_measured * m_gear_ratio / m_max_torque;
         break;
     }
     case CMD_GET_POWERS: {
@@ -102,9 +98,45 @@ int SDC104::read(CAN_message_t& msg) {
 }
 
 int SDC104::write(CAN_message_t& msg) const {
-    memcpy(&msg, &m_output, sizeof(CAN_message_t));
+    // a new one-shot command goes out right away
+    if (m_output_one_shot && !m_output_sent) {
+        memcpy(&msg, &m_output, sizeof(CAN_message_t));
+        m_output_sent = true;
+        return 0;
+    }
+
+    // otherwise alternate: command, encoder estimates, command, torques, ...
+    switch (m_write_count++ % 4) {
+    case 1: create_cmd_get_encoder_estimates(msg); break;
+    case 3: create_cmd_get_torques(msg); break;
+    default:
+        memcpy(&msg, &m_output, sizeof(CAN_message_t));
+        m_output_sent = true;
+        break;
+    }
 
     return 0;
+}
+
+void SDC104::set_output(const CAN_message_t& msg, bool one_shot) {
+    memcpy(&m_output, &msg, sizeof(CAN_message_t));
+    m_output_one_shot = one_shot;
+    m_output_sent = false;
+}
+
+bool SDC104::prepare_for(ControlMode control_mode) {
+    if (!m_control_mode_known || m_control_mode != control_mode) {
+        set_controller_mode(control_mode, InputMode::DIRECT);
+        m_control_mode = control_mode;
+        m_control_mode_known = true;
+        return false;
+    }
+    // the motor won't accept torque or speed commands in any other state
+    if (m_heartbeat.axis_state != AxisState::CLOSED_LOOP_CONTROL) {
+        set_axis_state(AxisState::CLOSED_LOOP_CONTROL);
+        return false;
+    }
+    return true;
 }
 
 void SDC104::zero_motor() {
@@ -116,38 +148,28 @@ void SDC104::execute_motor_torque_command(float torque) {
     if (torque < -1.0f) torque = -1.0f;
     if (torque > 1.0f) torque = 1.0f;
 
-    // map the -1f to 1f torque value to the actual torque value for this specific motor
-    float mapped_torque = torque * m_max_torque;
+    if (!prepare_for(ControlMode::TORQUE)) return;
 
-    // if the motor isn't in closed loop control, set it to closed loop control instead
-    // the motor wont accept torque commands in any other state
-    if (m_heartbeat.axis_state != AxisState::CLOSED_LOOP_CONTROL) {
-        set_axis_state(AxisState::CLOSED_LOOP_CONTROL);
-        return;
-    }
+    // map the -1f to 1f torque value to output torque, then to the motor side torque the SDC104 takes
+    float motor_torque = torque * m_max_torque / m_gear_ratio;
 
-    // create the command
     CAN_message_t msg;
-    create_cmd_set_input_torque(msg, mapped_torque);
-
-    // fill in the output array
-    memcpy(&m_output, &msg, sizeof(CAN_message_t));
+    create_cmd_set_input_torque(msg, motor_torque);
+    set_output(msg, false);
 }
 
 void SDC104::write_motor_speed(float speed) {
-    // if the motor isn't in closed loop control, set it to closed loop control instead
-    // the motor wont accept speed commands in any other state
-    if (m_heartbeat.axis_state != AxisState::CLOSED_LOOP_CONTROL) {
-        set_axis_state(AxisState::CLOSED_LOOP_CONTROL);
-        return;
-    }
+    if (speed < -1.0f) speed = -1.0f;
+    if (speed > 1.0f) speed = 1.0f;
 
-    // create the command
+    if (!prepare_for(ControlMode::VELOCITY)) return;
+
+    // map the -1f to 1f speed value to output RPM, then to the motor side rev/s the SDC104 takes
+    float motor_rev_per_s = speed * m_max_speed / 60.0f * m_gear_ratio;
+
     CAN_message_t msg;
-    create_cmd_set_input_velocity(msg, speed, 0);
-
-    // fill in the output array
-    memcpy(&m_output, &msg, sizeof(CAN_message_t));
+    create_cmd_set_input_velocity(msg, motor_rev_per_s, 0);
+    set_output(msg, false);
 }
 
 void SDC104::print_state() const {
@@ -159,84 +181,84 @@ void SDC104::get_error(uint8_t error_type) {
     CAN_message_t msg;
     create_cmd_get_error(msg, error_type);
 
-    memcpy(&m_output, &msg, sizeof(CAN_message_t));
+    set_output(msg);
 }
 
 void SDC104::set_axis_state(AxisState axis_state) {
     CAN_message_t msg;
     create_cmd_set_axis_state(msg, axis_state);
 
-    memcpy(&m_output, &msg, sizeof(CAN_message_t));
+    set_output(msg);
 }
 
 void SDC104::get_encoder_count() {
     CAN_message_t msg;
     create_cmd_get_encoder_count(msg);
 
-    memcpy(&m_output, &msg, sizeof(CAN_message_t));
+    set_output(msg);
 }
 
 void SDC104::set_limits(float velocity_limit, float current_limit) {
     CAN_message_t msg;
     create_cmd_set_limits(msg, velocity_limit, current_limit);
 
-    memcpy(&m_output, &msg, sizeof(CAN_message_t));
+    set_output(msg);
 }
 
 void SDC104::set_controller_mode(ControlMode control_mode, InputMode input_mode) {
     CAN_message_t msg;
     create_cmd_set_controller_mode(msg, static_cast<uint32_t>(control_mode), static_cast<uint32_t>(input_mode));
 
-    memcpy(&m_output, &msg, sizeof(CAN_message_t));
+    set_output(msg);
 }
 
 void SDC104::get_bus_voltage_current() {
     CAN_message_t msg;
     create_cmd_get_bus_voltage_current(msg);
 
-    memcpy(&m_output, &msg, sizeof(CAN_message_t));
+    set_output(msg);
 }
 
 void SDC104::clear_errors() {
     CAN_message_t msg;
     create_cmd_clear_errors(msg);
 
-    memcpy(&m_output, &msg, sizeof(CAN_message_t));
+    set_output(msg);
 }
 
 void SDC104::set_linear_count(int32_t linear_count) {
     CAN_message_t msg;
     create_cmd_set_linear_count(msg, linear_count);
 
-    memcpy(&m_output, &msg, sizeof(CAN_message_t));
+    set_output(msg);
 }
 
 void SDC104::set_position_gains(float pos_gain) {
     CAN_message_t msg;
     create_cmd_set_position_gains(msg, pos_gain);
 
-    memcpy(&m_output, &msg, sizeof(CAN_message_t));
+    set_output(msg);
 }
 
 void SDC104::set_velocity_gains(float vel_gain, float vel_integrator_gain) {
     CAN_message_t msg;
     create_cmd_set_velocity_gains(msg, vel_gain, vel_integrator_gain);
 
-    memcpy(&m_output, &msg, sizeof(CAN_message_t));
+    set_output(msg);
 }
 
 void SDC104::save_configuration() {
     CAN_message_t msg;
     create_cmd_save_configuration(msg);
 
-    memcpy(&m_output, &msg, sizeof(CAN_message_t));
+    set_output(msg);
 }
 
 void SDC104::reboot() {
     CAN_message_t msg;
     create_cmd_reboot(msg);
 
-    memcpy(&m_output, &msg, sizeof(CAN_message_t));
+    set_output(msg);
 }
 
 bool SDC104::check_msg_id(const CAN_message_t& msg) const {
@@ -288,7 +310,7 @@ void SDC104::create_cmd_set_axis_state(CAN_message_t& msg, AxisState axis_state)
     msg.buf[0] = static_cast<uint8_t>(axis_state);
 }
 
-void SDC104::create_cmd_get_encoder_estimates(CAN_message_t& msg) {
+void SDC104::create_cmd_get_encoder_estimates(CAN_message_t& msg) const {
     msg.id = ((m_base_id + m_physical_id) << 5) | CMD_GET_ENCODER_ESTIMATES;
     memset(msg.buf, 0, 8);
 }
@@ -462,7 +484,7 @@ void SDC104::create_cmd_set_velocity_gains(CAN_message_t& msg, float vel_gain, f
     msg.buf[7] = *((uint8_t*)&vel_integrator_gain + 3);
 }
 
-void SDC104::create_cmd_get_torques(CAN_message_t& msg) {
+void SDC104::create_cmd_get_torques(CAN_message_t& msg) const {
     msg.id = ((m_base_id + m_physical_id) << 5) | CMD_GET_TORQUES;
     memset(msg.buf, 0, 8);
 }
