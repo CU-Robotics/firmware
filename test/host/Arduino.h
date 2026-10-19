@@ -11,6 +11,7 @@
 #include <cstdio>
 #include <cstdarg>
 #include <cstring>
+#include <concepts>
 
 #ifndef PI
 /// @brief Ratio of a circle's circumference to its diameter.
@@ -52,6 +53,9 @@ inline void arm_dcache_delete(const void*, std::uint32_t) {}
 /// @brief Provide a fixed time value for host tests.
 /// @return Always zero; elapsed time is not simulated.
 inline unsigned long millis() { return 0; }
+/// @brief Provide a fixed time value for host tests.
+/// @return Always zero; elapsed time is not simulated.
+inline uint32_t micros() { return 0; }
 
 /// @brief Expose the standard infinity check through the Arduino interface.
 using std::isinf;
@@ -95,16 +99,40 @@ public:
         std::printf(format, args...);
     }
 
-    /// @brief Write a value as a double using the %g format, followed by a newline.
-    /// @tparam T Value type that can be explicitly converted to double.
-    /// @param value Value to print.
-    template <typename T>
-    void println(const T& value) {
+    /// @brief Print a string followed by a newline.
+    /// @param value String to print.
+    void println(const char* value) {
+        std::puts(value);
+    }
+
+    /// @brief Print a character followed by a newline
+    /// @param value Character to print
+    void println(char value) {
+        std::printf("%c\n", value);
+    }
+
+    /// @brief Print an integral type followed by a newline.
+    /// @tparam T Integral type.
+    /// @param value Integral value to print.
+    template<std::integral T>
+    void println(T value) {
+        if constexpr (std::signed_integral<T>) {
+            std::printf("%lld\n", static_cast<long long>(value));
+        } else {
+            std::printf("%llu\n", static_cast<unsigned long long>(value));
+        }
+    }
+
+    /// @brief Print a floating-point value followed by a newline.
+    /// @tparam T Floating-point type.
+    /// @param value Floating-point value to print.
+    template<std::floating_point T>
+    void println(T value) {
         std::printf("%g\n", static_cast<double>(value));
     }
 
     /// @brief Write a newline to standard output.
-    void println() { std::printf("\n"); }
+    void println() { std::putchar('\n'); }
 };
 
 /// @brief Default serial stub, backed by standard output.
