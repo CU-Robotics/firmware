@@ -50,6 +50,20 @@ inline void digitalWrite(std::uint8_t, int) {}
 /// @brief Host cache operations are unnecessary for ordinary process memory.
 inline void arm_dcache_flush_delete(const void*, std::uint32_t) {}
 inline void arm_dcache_delete(const void*, std::uint32_t) {}
+
+#ifdef FW_SIMULATION
+
+// for a simulation, definitions will be provided externally
+
+/// @brief Provide a time for simulation.
+/// @return Current virtual time in millis.
+unsigned long millis();
+/// @brief Provide a time for simulation.
+/// @return Current virtual time in micros.
+uint32_t micros();
+
+#endif
+
 /// @brief Provide a fixed time value for host tests.
 /// @return Always zero; elapsed time is not simulated.
 inline unsigned long millis() { return 0; }
