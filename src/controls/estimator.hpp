@@ -7,10 +7,19 @@
 #include "state.hpp"
 #include "utils/timing.hpp"
 
+<<<<<<< Updated upstream
 #include "sensors/buff_encoder.hpp"
 #include "sensors/rev_encoder.hpp"
+<<<<<<< Updated upstream
 #include "sensors/encoder_source.hpp"
 #include "sensors/gyro_source.hpp"
+=======
+#include "sensors/ICM20649.hpp"
+=======
+#include "sensors/encoder_source.hpp"
+#include "sensors/gyro_source.hpp"
+>>>>>>> Stashed changes
+>>>>>>> Stashed changes
 #include "sensors/sensor_manager.hpp"
 #include <memory>
 
@@ -321,7 +330,7 @@ struct FeederEstimator : public Estimator {
         /// @brief state name for the feeder ball velocity
         const Cfg::StateName& feeder_ball_state;
         /// @brief BuffEncoder on the feeder
-        std::shared_ptr<BuffEncoder> feeder_encoder;
+        std::shared_ptr<EncoderSource> feeder_encoder;
         /// @brief monitor for feeder estimate limits
         ErrorMonitor feeder_monitor;
     public:
@@ -381,9 +390,9 @@ struct LowerFeederEstimator : public Estimator {
         /// @brief state name for the lower feeder ball velocity
         const Cfg::StateName& lower_feeder_ball_state;
         /// @brief BuffEncoder on the feeder
-        std::shared_ptr<BuffEncoder> feeder_encoder;
+        std::shared_ptr<EncoderSource> feeder_encoder;
         /// @brief BuffEncoder on the lower feeder
-        std::shared_ptr<BuffEncoder> lower_feeder_encoder;
+        std::shared_ptr<EncoderSource> lower_feeder_encoder;
 
         /// @brief monitor for lower feeder estimate limits
         ErrorMonitor lower_feeder_monitor;
