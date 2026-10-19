@@ -21,19 +21,22 @@ constexpr float GIM8108_GEAR_RATIO = 9.0f; // 9:1
 constexpr float GIM8108_MAX_TORQUE = 27.38f; // Nm
 constexpr float GIM8108_MAX_SPEED = 242.0f; // RPM
 
-/// @brief Motor driver for the GIM motor
+/// @brief Motor driver for Steadywin GIM motors that use Steadywin's GIM CAN protocol (GIM3505, GIM4310, GIM8108)
+/// @note The GIM6010 uses an SDC104 controller with a different (ODrive based) protocol, see SDC104.hpp
+/// @note Verified on a GIM3505-8 and GIM4310-36. The GIM8108 hasn't been run with this driver; its docs mention an
+/// SDC103, which may use the SDC104's protocol instead
 /// @note GIM8108 docs (SDC103): https://steadywin.cn/en/pd.jsp?id=15&fromColId=0#_pp=0_752_3
 /// @note GIM4310 docs         : https://steadywin.cn/en/pd.jsp?id=11&fromColId=0#_pp=0_752_3
 /// @note GIM3505 docs         : https://steadywin.cn/en/pd.jsp?id=130&fromColId=0#_pp=0_752_3
 /// @note motor driver protocol: https://14180476.s21i.faiusr.com/61/ABUIABA9GAAgqPvVqgYo-uLA7Ac.pdf?v=1708485774
-class GIM : public Motor {
+class SteadywinGIM : public Motor {
 public:
     /// @brief Deleted default constructor, must explicitly construct this object. Incomplete objects are not allowed
-    GIM() = delete;
+    SteadywinGIM() = delete;
 
     /// @brief Main constructor. Defines the controller type, global ID, id, and can bus
     /// @param motor_config The configuration for this motor, including its controller type, physical bus and id, motor type, and motor name.
-    GIM(const Cfg::Motor& motor_config)
+    SteadywinGIM(const Cfg::Motor& motor_config)
         : Motor(motor_config) {
         // GIM frames use the bare CAN ID, both directions
         m_base_id = 0;
@@ -68,7 +71,7 @@ public:
     }
 
     /// @brief Destructor, does nothing
-    ~GIM() override { }
+    ~SteadywinGIM() override { }
 
 
 public:
