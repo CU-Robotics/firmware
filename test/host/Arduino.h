@@ -6,10 +6,11 @@
 
 #include <algorithm>
 #include <cmath>
+#include <concepts>
+#include <cstdarg>
 #include <cstddef>
 #include <cstdint>
 #include <cstdio>
-#include <cstdarg>
 #include <cstring>
 
 #ifndef PI
@@ -33,10 +34,7 @@ constexpr int LED_BUILTIN = 13;
 /// @param maximum Inclusive upper bound.
 /// @pre minimum must not exceed maximum.
 /// @return The constrained value.
-template <typename T>
-constexpr T constrain(T value, T minimum, T maximum) {
-    return std::clamp(value, minimum, maximum);
-}
+template <typename T> constexpr T constrain(T value, T minimum, T maximum) { return std::clamp(value, minimum, maximum); }
 
 /// @brief Ignore the requested delay in milliseconds and return immediately.
 inline void delay(unsigned long) {}
@@ -47,8 +45,25 @@ inline void pinMode(std::uint8_t, int) {}
 /// @brief Ignore the pin number and output level without changing hardware.
 inline void digitalWrite(std::uint8_t, int) {}
 /// @brief Host cache operations are unnecessary for ordinary process memory.
-inline void arm_dcache_flush_delete(const void*, std::uint32_t) {}
-inline void arm_dcache_delete(const void*, std::uint32_t) {}
+inline void arm_dcache_flush_delete(const void *, std::uint32_t) {}
+inline void arm_dcache_delete(const void *, std::uint32_t) {}
+
+#ifdef FW_SIMULATION
+
+// for a simulation, definitions will be provided externally
+
+/// @brief Provide a time for simulation.
+/// @return Current virtual time in micros.
+uint32_t micros();
+
+#else
+
+/// @brief Provide a fixed time value for host tests.
+/// @return Always zero; elapsed time is not simulated.
+inline uint32_t micros() { return 0; }
+
+#endif
+
 /// @brief Provide a fixed time value for host tests.
 /// @return Always zero; elapsed time is not simulated.
 inline unsigned long millis() { return 0; }
@@ -60,7 +75,7 @@ using std::isnan;
 
 /// @brief Minimal Print base required by the production system logger.
 class Print {
-public:
+  public:
     /// @brief Write one byte to the destination.
     /// @param value Byte to write.
     /// @return Number of bytes written.
@@ -70,41 +85,52 @@ public:
     /// @param buffer Bytes to write.
     /// @param size Number of bytes.
     /// @return Number of bytes written.
-    virtual size_t write(const uint8_t* buffer, size_t size) = 0;
+    virtual size_t write(const uint8_t *buffer, size_t size) = 0;
 };
 
 /// @brief Minimal serial output stub that writes to standard output.
 class HardwareSerial {
-public:
+  public:
     /// @brief Write text verbatim to standard output.
     /// @param text Null-terminated text to write.
-    void print(const char* text) { std::fputs(text, stdout); }
+    void print(const char *text) { std::fputs(text, stdout); }
 
     /// @brief Write text verbatim without interpreting format specifiers.
     /// @param text Null-terminated text to write.
-    void printf(const char* text) {
-        std::fputs(text, stdout);
-    }
+    void printf(const char *text) { std::fputs(text, stdout); }
 
     /// @brief Write formatted text to standard output using std::printf.
     /// @tparam Args Types of the formatting arguments.
     /// @param format Null-terminated printf format string.
     /// @param args Values matching the format specifiers.
-    template <typename... Args>
-    void printf(const char* format, Args... args) {
-        std::printf(format, args...);
+    template <typename... Args> void printf(const char *format, Args... args) { std::printf(format, args...); }
+
+    /// @brief Print a string followed by a newline.
+    /// @param value String to print.
+    void println(const char *value) { std::puts(value); }
+
+    /// @brief Print a character followed by a newline
+    /// @param value Character to print
+    void println(char value) { std::printf("%c\n", value); }
+
+    /// @brief Print an integral type followed by a newline.
+    /// @tparam T Integral type.
+    /// @param value Integral value to print.
+    template <std::integral T> void println(T value) {
+        if constexpr (std::signed_integral<T>) {
+            std::printf("%lld\n", static_cast<long long>(value));
+        } else {
+            std::printf("%llu\n", static_cast<unsigned long long>(value));
+        }
     }
 
-    /// @brief Write a value as a double using the %g format, followed by a newline.
-    /// @tparam T Value type that can be explicitly converted to double.
-    /// @param value Value to print.
-    template <typename T>
-    void println(const T& value) {
-        std::printf("%g\n", static_cast<double>(value));
-    }
+    /// @brief Print a floating-point value followed by a newline.
+    /// @tparam T Floating-point type.
+    /// @param value Floating-point value to print.
+    template <std::floating_point T> void println(T value) { std::printf("%g\n", static_cast<double>(value)); }
 
     /// @brief Write a newline to standard output.
-    void println() { std::printf("\n"); }
+    void println() { std::putchar('\n'); }
 };
 
 /// @brief Default serial stub, backed by standard output.
