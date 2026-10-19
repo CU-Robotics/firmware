@@ -18,8 +18,7 @@
 struct Estimator {
 public:
     /// @brief default constructor
-    /// @param clock Optional clock implementation (the hardware clock is used by default)
-    explicit Estimator(const Clock& clock = hardware_clock()) : time(clock) { };
+    Estimator() { };
     /// @brief default destructor
     virtual ~Estimator() { };
 

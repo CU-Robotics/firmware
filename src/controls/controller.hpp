@@ -66,8 +66,7 @@ protected:
 public:
     /// @brief Construct the controller and get the config data
     /// @param _controller_config config data for this controller
-    /// @param clock Optional clock implementation (the hardware clock is used by default)
-    Controller(const Cfg::Controller& _controller_config, const Clock& clock = hardware_clock()) : controller_config(_controller_config), timer(clock) { };
+    Controller(const Cfg::Controller& _controller_config) : controller_config(_controller_config) { };
 
     /// @brief Virtual destructor since this is a parent class
     virtual ~Controller() { };
