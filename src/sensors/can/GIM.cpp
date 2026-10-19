@@ -11,30 +11,36 @@ int GIM::read(CAN_message_t& msg) {
 
     uint8_t cmd_byte = msg.buf[0];
 
+    // Byte1 of every reply is the result code, 0x00 is success
+    uint8_t res = msg.buf[1];
+    if (res != 0x00) {
+        SystemLog.error(Subsystem::MOTORS, "GIM %u: command 0x%02X failed with RES 0x%02X\n", m_physical_id, cmd_byte, res);
+        return 1;
+    }
+
     switch (cmd_byte) {
     // commands that return temperature, position, speed, torque
     case CMD_TORQUE_CONTROL:
     case CMD_SPEED_CONTROL: {
         // Byte2 is temperature
-        m_state.temperature = msg.buf[2];
+        m_state.temperature = (int8_t)msg.buf[2];
 
         // Byte3–4 (Pos0, Pos1) form a 16-bit position: pos_int = (Pos1 << 8) | Pos0
         uint16_t pos_int = (msg.buf[4] << 8) | msg.buf[3];
-        float pos_float = (float)pos_int * 25.0f / 65535.0f - 12.5f;
-        m_state.position = pos_float; // Keep it as float, per spec
+        m_state.position = pos_int;
+        m_position_rad = (float)pos_int * 25.0f / 65535.0f - 12.5f;
 
-        // Speed: 12 bits = ST0 (byte 5) as high 8 bits, ST1[7:4] (top nibble) as low 4 bits
+        // Speed: 12 bits = ST0 (byte 5) as high 8 bits, ST1[7:4] (top nibble) as low 4 bits. rad/s at the output
         uint16_t speed_int = ((uint16_t)msg.buf[5] << 4) | (msg.buf[6] >> 4);
-        float speed_float = (float)speed_int * 130.0f / 4095.0f - 65.0f;
-        m_state.speed = speed_float;
+        m_state.speed = (float)speed_int * 130.0f / 4095.0f - 65.0f;
 
         // Torque: 12 bits = ST1[3:0] (low nibble) as high 4 bits, ST2 (byte 7) as low 8 bits
+        // The doc's formula is torque_int * (450 * Kt * GR) / 4095 - 225 * Kt * GR with Kt the motor-side
+        // torque constant. m_torque_constant is output-side (already Kt * GR), so don't multiply by m_gear_ratio again
         uint16_t torque_int = ((uint16_t)(msg.buf[6] & 0x0F) << 8) | msg.buf[7];
-        float torque_float =
-            (float)torque_int * (450.0f * m_torque_constant * m_gear_ratio) / 4095.0f
-            - (225.0f * m_torque_constant * m_gear_ratio);
-        m_state.torque = torque_float;
-
+        float torque_nm = (float)torque_int * (450.0f * m_torque_constant) / 4095.0f - (225.0f * m_torque_constant);
+        m_state.torque = torque_nm / m_max_torque;
+        break;
     }
     // commands that don't return anything
     case CMD_STOP_MOTOR:
@@ -60,25 +66,24 @@ void GIM::zero_motor() {
     execute_motor_torque_command(0.0f);
 }
 
+void GIM::set_output(const uint8_t buf[8]) {
+    m_output.id = m_base_id + m_physical_id;
+    m_output.len = 8;
+    memcpy(m_output.buf, buf, 8);
+}
+
 void GIM::write_motor_on() {
     uint8_t buf[8];
     create_cmd_start_motor(buf);
-
-    m_output.id = m_base_id + m_physical_id;
-    for (int i = 0; i < 8; i++) {
-        m_output.buf[i] = buf[i];
-    }
+    set_output(buf);
 }
 
 void GIM::write_motor_off() {
     uint8_t buf[8];
     create_cmd_stop_motor(buf);
-
-    m_output.id = m_base_id + m_physical_id;
-    for (int i = 0; i < 8; i++) {
-        m_output.buf[i] = buf[i];
-    }
+    set_output(buf);
 }
+
 
 void GIM::execute_motor_torque_command(float torque) {
     if (torque < -1.0f) torque = -1.0f;
@@ -87,15 +92,9 @@ void GIM::execute_motor_torque_command(float torque) {
     // map the -1f to 1f torque value to the actual torque value for this specific motor
     float mapped_torque = torque * m_max_torque;
 
-    // create the command
     uint8_t buf[8];
-    create_cmd_torque_control(buf, mapped_torque, 0);
-
-    // fill in the output array
-    m_output.id = m_base_id + m_physical_id;
-    for (int i = 0; i < 8; i++) {
-        m_output.buf[i] = buf[i];
-    }
+    create_cmd_torque_control(buf, mapped_torque);
+    set_output(buf);
 }
 
 void GIM::write_motor_speed(float speed) {
@@ -106,38 +105,15 @@ void GIM::write_motor_speed(float speed) {
     // map speed to the motor's max speed
     float mapped_rpm = speed * m_max_speed;
 
-    // create the command
     uint8_t buf[8];
-    create_cmd_speed_control(buf, mapped_rpm, 0); // hardcore 0 duration until we find out what it does
-
-    // fill the output
-    m_output.id = m_base_id + m_physical_id;
-    for (int i = 0; i < 8; i++) {
-        m_output.buf[i] = buf[i];
-    }
-}
-
-void GIM::write_motor_position(float position) {
-    // create the command
-    uint8_t buf[8];
-    create_cmd_position_control(buf, position, 0); // hardcore 0 duration until we find out what it does
-
-    // fill the output
-    m_output.id = m_base_id + m_physical_id;
-    for (int i = 0; i < 8; i++) {
-        m_output.buf[i] = buf[i];
-    }
+    create_cmd_speed_control(buf, mapped_rpm);
+    set_output(buf);
 }
 
 void GIM::write_motor_stop() {
     uint8_t buf[8];
     create_cmd_stop_control(buf);
-
-    // fill the output
-    m_output.id = m_base_id + m_physical_id;
-    for (int i = 0; i < 8; i++) {
-        m_output.buf[i] = buf[i];
-    }
+    set_output(buf);
 }
 
 
@@ -209,38 +185,29 @@ void GIM::create_cmd_stop_motor(uint8_t buf[8]) {
     buf[7] = 0;
 }
 
-void GIM::create_cmd_torque_control(uint8_t buf[8], float torque, uint32_t duration) {
+// Bytes 5-7 of torque and speed commands are an execution time in ms. 0 holds the command until the next one,
+// which is what we want since the controller sends one every loop
+
+void GIM::create_cmd_torque_control(uint8_t buf[8], float torque) {
     buf[0] = CMD_TORQUE_CONTROL;
     buf[1] = *((uint8_t*)(&torque) + 0); // low byte
     buf[2] = *((uint8_t*)(&torque) + 1);
     buf[3] = *((uint8_t*)(&torque) + 2);
     buf[4] = *((uint8_t*)(&torque) + 3); // high byte
-    buf[5] = *((uint8_t*)(&duration) + 0); // low byte
-    buf[6] = *((uint8_t*)(&duration) + 1);
-    buf[7] = *((uint8_t*)(&duration) + 2); // high byte
+    buf[5] = 0;
+    buf[6] = 0;
+    buf[7] = 0;
 }
 
-void GIM::create_cmd_speed_control(uint8_t buf[8], float speed, uint32_t duration) {
+void GIM::create_cmd_speed_control(uint8_t buf[8], float speed) {
     buf[0] = CMD_SPEED_CONTROL;
     buf[1] = *((uint8_t*)(&speed) + 0); // low byte
     buf[2] = *((uint8_t*)(&speed) + 1);
     buf[3] = *((uint8_t*)(&speed) + 2);
     buf[4] = *((uint8_t*)(&speed) + 3); // high byte
-    buf[5] = *((uint8_t*)(&duration) + 0); // low byte
-    buf[6] = *((uint8_t*)(&duration) + 1);
-    buf[7] = *((uint8_t*)(&duration) + 2); // high byte
-}
-
-
-void GIM::create_cmd_position_control(uint8_t buf[8], float position, uint32_t duration) {
-    buf[0] = CMD_POSITION_CONTROL;
-    buf[1] = *((uint8_t*)(&position) + 0); // low byte
-    buf[2] = *((uint8_t*)(&position) + 1);
-    buf[3] = *((uint8_t*)(&position) + 2);
-    buf[4] = *((uint8_t*)(&position) + 3); // high byte
-    buf[5] = *((uint8_t*)(&duration) + 0); // low byte
-    buf[6] = *((uint8_t*)(&duration) + 1);
-    buf[7] = *((uint8_t*)(&duration) + 2); // high byte
+    buf[5] = 0;
+    buf[6] = 0;
+    buf[7] = 0;
 }
 
 
@@ -255,9 +222,9 @@ void GIM::create_cmd_stop_control(uint8_t buf[8]) {
     buf[7] = 0;
 }
 
-void GIM::create_cmd_modify_parameter(uint8_t buf[8], uint8_t m_physical_id, uint32_t data) {
+void GIM::create_cmd_modify_parameter(uint8_t buf[8], uint8_t param_id, uint32_t data) {
     buf[0] = CMD_MODIFY_PARAMETER;
-    buf[1] = m_physical_id;
+    buf[1] = param_id;
     buf[2] = 0;
     buf[3] = 0;
     buf[4] = *((uint8_t*)(&data) + 0); // low byte
@@ -266,9 +233,9 @@ void GIM::create_cmd_modify_parameter(uint8_t buf[8], uint8_t m_physical_id, uin
     buf[7] = *((uint8_t*)(&data) + 3); // high byte
 }
 
-void GIM::create_cmd_retrieve_parameter(uint8_t buf[8], uint8_t m_physical_id) {
+void GIM::create_cmd_retrieve_parameter(uint8_t buf[8], uint8_t param_id) {
     buf[0] = CMD_RETRIEVE_PARAMETER;
-    buf[1] = m_physical_id;
+    buf[1] = param_id;
     buf[2] = 0;
     buf[3] = 0;
     buf[4] = 0;
