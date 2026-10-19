@@ -2,7 +2,6 @@
 #include <limits>
 
 #include "estimator.hpp"
-#include "sensors/ICM20649.hpp"
 #include "utils/vector_math.hpp"
 #include "utils/wrapping.hpp"
 #include "utils/system_log.hpp"
@@ -96,9 +95,9 @@ void GimbalAndChassisEstimator::validate(const RobotStateArray& updated_state_ar
 }
 
 GimbalAndChassisEstimator::GimbalAndChassisEstimator(const Cfg::Estimator& estimator_config, SensorManager& sensor_manager, CANManager& can, std::vector<Cfg::StateName> available_states) : 
-    buff_enc_yaw(sensor_manager.get_sensor_by_name<BuffEncoder>(estimator_config.get_sensor_name_by_generic_use(Cfg::GenericSensorUse::YawBuffEncoder))), 
-    buff_enc_pitch(sensor_manager.get_sensor_by_name<BuffEncoder>(estimator_config.get_sensor_name_by_generic_use(Cfg::GenericSensorUse::PitchBuffEncoder))),
-    icm_imu(sensor_manager.get_sensor_by_name<ICM20649>(estimator_config.get_sensor_name_by_generic_use(Cfg::GenericSensorUse::YawIcmImu))),
+    buff_enc_yaw(sensor_manager.get_source_by_name<EncoderSource>(estimator_config.get_sensor_name_by_generic_use(Cfg::GenericSensorUse::YawBuffEncoder))), 
+    buff_enc_pitch(sensor_manager.get_source_by_name<EncoderSource>(estimator_config.get_sensor_name_by_generic_use(Cfg::GenericSensorUse::PitchBuffEncoder))),
+    icm_imu(sensor_manager.get_source_by_name<GyroSource>(estimator_config.get_sensor_name_by_generic_use(Cfg::GenericSensorUse::YawIcmImu))),
     chassis_x_state(get_state_name_by_generic_use(Cfg::GenericEstimatorStateUse::ChassisX, estimator_config, available_states)),
     chassis_y_state(get_state_name_by_generic_use(Cfg::GenericEstimatorStateUse::ChassisY, estimator_config, available_states)),
     chassis_heading_state(get_state_name_by_generic_use(Cfg::GenericEstimatorStateUse::ChassisHeading, estimator_config, available_states)),
@@ -418,7 +417,7 @@ void FlywheelEstimator::validate(const RobotStateArray& updated_state_array) {
 
 FeederEstimator::FeederEstimator(const Cfg::Estimator& estimator_config, SensorManager& sensor_manager, CANManager& can, std::vector<Cfg::StateName> available_states) :
     feeder_ball_state(get_state_name_by_generic_use(Cfg::GenericEstimatorStateUse::FeederBallPosition, estimator_config, available_states)),
-    feeder_encoder(sensor_manager.get_sensor_by_name<BuffEncoder>(estimator_config.get_sensor_name_by_generic_use(Cfg::GenericSensorUse::FeederBuffEncoder))) {
+    feeder_encoder(sensor_manager.get_source_by_name<EncoderSource>(estimator_config.get_sensor_name_by_generic_use(Cfg::GenericSensorUse::FeederBuffEncoder))) {
     feeder_offset = estimator_config.sensor_info.feeder_encoder_offset;
     feeder_direction = estimator_config.sensor_info.feeder_direction;
     feeder_ratio = estimator_config.sensor_info.feeder_ratio;
@@ -460,8 +459,8 @@ void LowerFeederEstimator::validate(const RobotStateArray& updated_state_array) 
 LowerFeederEstimator::LowerFeederEstimator(const Cfg::Estimator& estimator_config, SensorManager& sensor_manager, CANManager& can, std::vector<Cfg::StateName> available_states) :
     feeder_ball_state(get_state_name_by_generic_use(Cfg::GenericEstimatorStateUse::FeederBallPosition, estimator_config, available_states)),
     lower_feeder_ball_state(get_state_name_by_generic_use(Cfg::GenericEstimatorStateUse::LowerFeederBallPosition, estimator_config, available_states)),
-    feeder_encoder(sensor_manager.get_sensor_by_name<BuffEncoder>(estimator_config.get_sensor_name_by_generic_use(Cfg::GenericSensorUse::FeederBuffEncoder))),
-    lower_feeder_encoder(sensor_manager.get_sensor_by_name<BuffEncoder>(estimator_config.get_sensor_name_by_generic_use(Cfg::GenericSensorUse::LowerFeederBuffEncoder))) {
+    feeder_encoder(sensor_manager.get_source_by_name<EncoderSource>(estimator_config.get_sensor_name_by_generic_use(Cfg::GenericSensorUse::FeederBuffEncoder))),
+    lower_feeder_encoder(sensor_manager.get_source_by_name<EncoderSource>(estimator_config.get_sensor_name_by_generic_use(Cfg::GenericSensorUse::LowerFeederBuffEncoder))) {
     feeder_offset = estimator_config.sensor_info.feeder_encoder_offset;
     feeder_direction = estimator_config.sensor_info.feeder_direction;
     feeder_ratio = estimator_config.sensor_info.feeder_ratio;
