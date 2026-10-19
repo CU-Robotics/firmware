@@ -6,20 +6,8 @@
 #include "sensors/can/can_manager.hpp"
 #include "state.hpp"
 #include "utils/timing.hpp"
-
-<<<<<<< Updated upstream
-#include "sensors/buff_encoder.hpp"
-#include "sensors/rev_encoder.hpp"
-<<<<<<< Updated upstream
 #include "sensors/encoder_source.hpp"
 #include "sensors/gyro_source.hpp"
-=======
-#include "sensors/ICM20649.hpp"
-=======
-#include "sensors/encoder_source.hpp"
-#include "sensors/gyro_source.hpp"
->>>>>>> Stashed changes
->>>>>>> Stashed changes
 #include "sensors/sensor_manager.hpp"
 #include <memory>
 
