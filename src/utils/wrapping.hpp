@@ -3,6 +3,8 @@
 
 namespace Utils {
 
+// Wrap into [min, max), preserving values already in range.
+// Requires finite inputs and min < max.
 float wrap(float value, float min, float max);
 
 } // namespace Utils
