@@ -13,6 +13,7 @@ enum class TypeLabel : uint16_t {
     BuffEncoderData,
     RevEncoderData,
     ICMSensorData,
+    Vn100SensorData,
     LsmSensorData,
     LidarDataPacketSI,
     LimitSwitchData,
@@ -55,6 +56,8 @@ inline std::string to_string(TypeLabel type_label) {
         return "BigTestData";
     case TypeLabel::BuffEncoderData:
         return "BuffEncoderData";
+    case TypeLabel::Vn100SensorData:
+        return "Vn100SensorData";
     case TypeLabel::ICMSensorData:
         return "ICMSensorData";
     case TypeLabel::LsmSensorData:

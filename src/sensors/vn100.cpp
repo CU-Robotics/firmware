@@ -167,5 +167,5 @@ void vn100::binary_message_callback(vn::bin::const_bin_buf_ref_t buf,
 }
 
 void vn100::send_to_comms() const {
-    // VN100 has no telemetry type in the shared firmware/Hive protocol yet.
+    
 }
