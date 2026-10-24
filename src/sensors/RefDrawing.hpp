@@ -1,6 +1,9 @@
 #pragma once
 
 #include "RefSystem.hpp"
+#include "comms/data/ref_draw_data.hpp"
+
+
 
 enum class ClientGraphicOperation : uint8_t {
     NONE = 0,
@@ -77,6 +80,11 @@ class RefDrawing {
     /// @brief Construct a RefDrawing helper that sends packets through a RefSystem object.
     /// @param ref_system RefSystem instance used to send robot-interaction frames.
     explicit RefDrawing(RefSystem &ref_system);
+
+    /// @brief Draw a RefDrawData packet to ref system directly
+    /// @param Ref draw packet to send.
+    /// @return true when the packet is accepted for transmission.
+    bool handle_hive_draw(const RefDrawData &record);
 
     /// @brief Delete one Player's Client drawing layer.
     /// @param layer Layer number to delete, from 0 to 9.

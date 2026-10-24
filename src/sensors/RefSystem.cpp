@@ -346,8 +346,8 @@ int RefSystem::read_frame_tail(HardwareSerial* serial, uint8_t raw_buffer[REF_MA
     }
 
 
-    // increment buffer index
-    buffer_index = bytes_read;
+    // reset buffer index after a complete frame
+    buffer_index = 0;
 
     return 1;
 }

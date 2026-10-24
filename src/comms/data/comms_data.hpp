@@ -24,6 +24,7 @@ enum class TypeLabel : uint16_t {
     ReferenceState,
     EstimatedState,
     OverrideState,
+    RefDrawData,
     CommsRefData,
     ConfigStart,
     ConfigurationStatus,
@@ -84,6 +85,8 @@ inline std::string to_string(TypeLabel type_label) {
 
     case TypeLabel::CommsRefData:
         return "CommsRefData";
+    case TypeLabel::RefDrawData:
+        return "RefDrawData";
     case TypeLabel::ConfigStart:
         return "ConfigStart";
     case TypeLabel::ConfigurationStatus:

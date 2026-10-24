@@ -1,8 +1,12 @@
 #include "hive_data.hpp"
 #include "comms_data.hpp"
 #include "comms/config_data/sensor.hpp"
+#include "comms/data/ref_draw_data.hpp"       // for RefDrawData
+#include "sensors/RefDrawing.hpp"             // for ref_drawing
+#include "utils/system_log.hpp"
 
 #include "comms/comms_layer.hpp"            // for CommsLayer
+#include "sensors/RefDrawing.hpp"
 
 extern "C" void reset_teensy(void);
 
@@ -121,6 +125,17 @@ void HiveData::set_data(CommsData* data) {
         StopStereoTrigger* stop_trigger = static_cast<StopStereoTrigger*>(data);
         stereo_cam_start_stop.stop_received = true;
         Serial.printf("Stop stereo trigger for %u received\n", static_cast<uint32_t>(stop_trigger->camera_trigger_name));
+        break;
+    }
+    case TypeLabel::RefDrawData: {
+        if (data->size != REF_DRAW_RECORD_SIZE) {
+            SystemLog.warn(Subsystem::COMMS, "RefDrawData record size %u (expected %u)", data->size, REF_DRAW_RECORD_SIZE);
+            break;
+        }
+
+        RefDrawData record {};
+        memcpy(static_cast<void*>(&record), data, data->size);
+        ref_drawing.handle_hive_draw(record);
         break;
     }
     case TypeLabel::TestLatencyData: {

@@ -1,4 +1,5 @@
 #include "RefDrawing.hpp"
+#include "utils/system_log.hpp"
 
 RefDrawing ref_drawing(ref);
 
@@ -85,6 +86,35 @@ static void pack_client_graphic(const ClientGraphic &graphic, uint8_t *data) {
     put_u32(data + 11, config_3);
 }
 RefDrawing::RefDrawing(RefSystem &ref_system) : ref_system(ref_system) {}
+
+bool RefDrawing::handle_hive_draw(const RefDrawData &record) {
+    switch (static_cast<RefDrawHeader>(record.header)) {
+    case RefDrawHeader::DELETE:
+        // Purposeful no-op deletes are not sent to the Referee System.
+        if (static_cast<ClientLayerDeleteOperation>(record.payload[0]) == ClientLayerDeleteOperation::NONE) {
+            return true;
+        }
+        if (static_cast<ClientLayerDeleteOperation>(record.payload[0]) != ClientLayerDeleteOperation::DELETE_LAYER
+            && static_cast<ClientLayerDeleteOperation>(record.payload[0]) != ClientLayerDeleteOperation::DELETE_ALL) {
+            SystemLog.warn(Subsystem::REF, "Unknown client layer delete operation %u", record.payload[0]);
+            return false;
+        }
+        break;
+    case RefDrawHeader::SHAPE_1:
+    case RefDrawHeader::SHAPE_2:
+    case RefDrawHeader::SHAPE_5:
+    case RefDrawHeader::SHAPE_7:
+    case RefDrawHeader::CHARACTER:
+        break;
+    default:
+        SystemLog.warn(Subsystem::REF, "Unknown drawing record header 0x%04X", record.header);
+        return false;
+    }
+
+    // The record header is the Referee System 0x0301 sub-content ID and the record payload is
+    // already packed in the referee wire format, so both are forwarded unmodified.
+    return ref_system.write_robot_interaction(record.header, record.payload, ref_draw_content_length(record.header), 0);
+}
 
 bool RefDrawing::delete_layer(uint8_t layer, uint16_t receiver_id) {
     uint8_t payload[2] = {
