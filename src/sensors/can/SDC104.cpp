@@ -98,10 +98,11 @@ int SDC104::read(CAN_message_t& msg) {
 }
 
 int SDC104::write(CAN_message_t& msg) const {
-    // a new one-shot command goes out right away
-    if (m_output_one_shot && !m_output_sent) {
-        memcpy(&msg, &m_output, sizeof(CAN_message_t));
-        m_output_sent = true;
+    // queued one-shot commands go out first, each exactly once
+    if (m_one_shot_count > 0) {
+        memcpy(&msg, &m_one_shots[m_one_shot_head], sizeof(CAN_message_t));
+        m_one_shot_head = (m_one_shot_head + 1) % ONE_SHOT_QUEUE_SIZE;
+        m_one_shot_count--;
         return 0;
     }
 
@@ -110,8 +111,9 @@ int SDC104::write(CAN_message_t& msg) const {
     case 1: create_cmd_get_encoder_estimates(msg); break;
     case 3: create_cmd_get_torques(msg); break;
     default:
-        memcpy(&msg, &m_output, sizeof(CAN_message_t));
-        m_output_sent = true;
+        if (m_have_command) memcpy(&msg, &m_output, sizeof(CAN_message_t));
+        // nothing commanded yet: a zero torque input does nothing until it's in closed loop torque control
+        else create_cmd_set_input_torque(msg, 0.0f);
         break;
     }
 
@@ -119,21 +121,39 @@ int SDC104::write(CAN_message_t& msg) const {
 }
 
 void SDC104::set_output(const CAN_message_t& msg, bool one_shot) {
-    memcpy(&m_output, &msg, sizeof(CAN_message_t));
-    m_output_one_shot = one_shot;
-    m_output_sent = false;
+    if (!one_shot) {
+        memcpy(&m_output, &msg, sizeof(CAN_message_t));
+        m_have_command = true;
+        return;
+    }
+
+    if (m_one_shot_count >= ONE_SHOT_QUEUE_SIZE) {
+        SystemLog.error(Subsystem::MOTORS, "SDC104 %u: one-shot queue full, dropping command 0x%02lX\n", m_physical_id,
+            msg.id & 0x1F);
+        return;
+    }
+    uint8_t tail = (m_one_shot_head + m_one_shot_count) % ONE_SHOT_QUEUE_SIZE;
+    memcpy(&m_one_shots[tail], &msg, sizeof(CAN_message_t));
+    m_one_shot_count++;
 }
 
 bool SDC104::prepare_for(ControlMode control_mode) {
+    // let queued mode/axis commands go out before deciding anything else
+    if (m_one_shot_count > 0) return false;
+
     if (!m_control_mode_known || m_control_mode != control_mode) {
         set_controller_mode(control_mode, InputMode::DIRECT);
         m_control_mode = control_mode;
         m_control_mode_known = true;
         return false;
     }
-    // the motor won't accept torque or speed commands in any other state
+    // the motor won't accept torque or speed commands in any other state. The heartbeat that confirms closed loop
+    // takes up to ~100 ms, so don't re-request it every loop in the meantime
     if (m_heartbeat.axis_state != AxisState::CLOSED_LOOP_CONTROL) {
-        set_axis_state(AxisState::CLOSED_LOOP_CONTROL);
+        if (millis() - m_closed_loop_requested_ms > CLOSED_LOOP_RETRY_MS) {
+            set_axis_state(AxisState::CLOSED_LOOP_CONTROL);
+            m_closed_loop_requested_ms = millis();
+        }
         return false;
     }
     return true;
@@ -364,7 +384,7 @@ void SDC104::create_cmd_set_input_velocity(CAN_message_t& msg, float input_veloc
     msg.buf[5] = *((uint8_t*)&torque_ff + 1);
 }
 
-void SDC104::create_cmd_set_input_torque(CAN_message_t& msg, float input_torque) {
+void SDC104::create_cmd_set_input_torque(CAN_message_t& msg, float input_torque) const {
     msg.id = ((m_base_id + m_physical_id) << 5) | CMD_SET_INPUT_TORQUE;
     memset(msg.buf, 0, 8);
 

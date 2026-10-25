@@ -1,30 +1,36 @@
 #pragma once
 #include "motor.hpp"
 
-// Torque constants are output-side (they already include the gear ratio), max speeds are RPM at the output
+// Torque constants are output-side (they already include the gear ratio), max speeds are RPM at the output.
+// Rated currents are what our motors' drivers are configured with (config 0x01, set over CAN, not in the repo). The
+// driver silently ignores torque commands above rated current * Kt: a GIM4310 (17.3 Nm) didn't move at 20.16 Nm and a
+// GIM3505 (1.04 Nm) didn't move at 1.27 Nm, so commands are clamped below that
 
 //GIM3505
 constexpr float GIM3505_TORQUE_CONSTANT = 0.52f; // Nm/A
 constexpr float GIM3505_GEAR_RATIO = 8.0f; // 8:1
 constexpr float GIM3505_MAX_TORQUE = 1.27f; // Nm
 constexpr float GIM3505_MAX_SPEED = 225.0f; // RPM
+constexpr float GIM3505_RATED_CURRENT = 2.0f; // A, the rated current set in our motor's driver config
 
 //GIM4310
 constexpr float GIM4310_TORQUE_CONSTANT = 3.46f; // Nm/A
 constexpr float GIM4310_GEAR_RATIO = 36.0f; // 36:1
 constexpr float GIM4310_MAX_TORQUE = 20.16f; // Nm
 constexpr float GIM4310_MAX_SPEED = 63.0f; // RPM
+constexpr float GIM4310_RATED_CURRENT = 5.0f; // A, the rated current set in our motor's driver config
 
 //GIM8108
 constexpr float GIM8108_TORQUE_CONSTANT = 1.83f; // Nm/A
 constexpr float GIM8108_GEAR_RATIO = 9.0f; // 9:1
 constexpr float GIM8108_MAX_TORQUE = 27.38f; // Nm
 constexpr float GIM8108_MAX_SPEED = 242.0f; // RPM
+constexpr float GIM8108_RATED_CURRENT = 30.0f; // A, the rated current set in our motor's driver config
 
 /// @brief Motor driver for Steadywin GIM motors that use Steadywin's GIM CAN protocol (GIM3505, GIM4310, GIM8108)
 /// @note The GIM6010 uses an SDC104 controller with a different (ODrive based) protocol, see SDC104.hpp
-/// @note Verified on a GIM3505-8 and GIM4310-36. The GIM8108 hasn't been run with this driver; its docs mention an
-/// SDC103, which may use the SDC104's protocol instead
+/// @note Verified on a GIM3505-8, GIM4310-36 and GIM8108-9. The GIM8108's docs mention an SDC103, but ours speaks
+/// this GIM protocol
 /// @note GIM8108 docs (SDC103): https://steadywin.cn/en/pd.jsp?id=15&fromColId=0#_pp=0_752_3
 /// @note GIM4310 docs         : https://steadywin.cn/en/pd.jsp?id=11&fromColId=0#_pp=0_752_3
 /// @note GIM3505 docs         : https://steadywin.cn/en/pd.jsp?id=130&fromColId=0#_pp=0_752_3
@@ -46,6 +52,7 @@ public:
             m_torque_constant = GIM3505_TORQUE_CONSTANT;
             m_gear_ratio = GIM3505_GEAR_RATIO;
             m_max_torque = GIM3505_MAX_TORQUE;
+            m_rated_current = GIM3505_RATED_CURRENT;
             m_max_speed = GIM3505_MAX_SPEED;
             break;
         }
@@ -53,6 +60,7 @@ public:
             m_torque_constant = GIM4310_TORQUE_CONSTANT;
             m_gear_ratio = GIM4310_GEAR_RATIO;
             m_max_torque = GIM4310_MAX_TORQUE;
+            m_rated_current = GIM4310_RATED_CURRENT;
             m_max_speed = GIM4310_MAX_SPEED;
             break;
         }
@@ -60,6 +68,7 @@ public:
             m_torque_constant = GIM8108_TORQUE_CONSTANT;
             m_gear_ratio = GIM8108_GEAR_RATIO;
             m_max_torque = GIM8108_MAX_TORQUE;
+            m_rated_current = GIM8108_RATED_CURRENT;
             m_max_speed = GIM8108_MAX_SPEED;
             break;
         }
@@ -130,6 +139,12 @@ private:
 
     /// @brief The motor's maximum speed in RPM (determined by "motor_type" switch in the constructor)
     float m_max_speed = 0.0f;
+
+    /// @brief The rated current in A configured in the motor's driver (determined by "motor_type" switch in the constructor)
+    float m_rated_current = 0.0f;
+
+    /// @brief Fraction of rated current * Kt that torque commands are clamped to, a margin under the driver's cutoff
+    static constexpr float TORQUE_LIMIT_MARGIN = 0.98f;
 
     /// @brief Last reported output shaft position in radians
     float m_position_rad = 0.0f;

@@ -65,9 +65,9 @@ public:
     /// @param msg The message buffer to fill data into
     /// @return The index in the buffer where the motor data was written. The SDC104 driver will always write 8 bytes so this will always return 0
     /// @note Does not issue a CAN command over the bus
-    /// @note The SDC104 only sends heartbeats on its own, so status has to be requested. A new one-shot command
-    /// (mode, axis state, ...) is sent first; otherwise calls alternate between the current torque/speed command,
-    /// which the SDC104 holds until the next one, and a status request (encoder estimates or torques)
+    /// @note The SDC104 only sends heartbeats on its own, so status has to be requested. Queued one-shot commands
+    /// (mode, axis state, ...) are sent first, each once; otherwise calls alternate between the current torque/speed
+    /// command, which the SDC104 holds until the next one, and a status request (encoder estimates or torques)
     int write(CAN_message_t& msg) const override;
 
     /// @brief Zero the motor. This is a safety function to ensure the motor is not actively driving
@@ -141,15 +141,15 @@ public:
     void reboot();
 
 private:
-    /// @brief Put a command into the output frame
+    /// @brief Queue a one-shot command, or set the torque/speed command that's resent every loop
     /// @param msg The command to send
-    /// @param one_shot True for commands that only need to be sent once (mode, axis state, ...), false for the
-    /// torque/speed commands that are resent every loop
+    /// @param one_shot True for commands that only need to be sent once (mode, axis state, ...), queued so a later
+    /// one can't replace one that hasn't gone out yet; false for the torque/speed command
     void set_output(const CAN_message_t& msg, bool one_shot = true);
 
     /// @brief Get the motor ready for torque or speed commands: right control mode, closed loop
     /// @param control_mode The control mode the next command needs
-    /// @return True if it's ready, false if a mode or axis state command was staged instead
+    /// @return True if it's ready, false if a mode or axis state command is queued or still being waited on
     bool prepare_for(ControlMode control_mode);
 
     /// @brief Check if the message is for this motor
@@ -216,7 +216,7 @@ private:
     /// @brief Create a set input torque command
     /// @param msg The msg to fill in
     /// @param input_torque The new input torque in Nm
-    void create_cmd_set_input_torque(CAN_message_t& msg, float input_torque);
+    void create_cmd_set_input_torque(CAN_message_t& msg, float input_torque) const;
 
     /// @brief Create a set limits command
     /// @param msg The msg to fill in
@@ -306,12 +306,25 @@ private:
     /// @brief Whether m_control_mode has been sent at all
     bool m_control_mode_known = false;
 
-    /// @brief Whether m_output is a one-shot command (mode, axis state, ...) rather than a resent torque/speed command
-    bool m_output_one_shot = false;
-    /// @brief Whether m_output has been sent since it was last set
-    mutable bool m_output_sent = false;
+    /// @brief Whether m_output holds a torque/speed command yet
+    bool m_have_command = false;
+
+    /// @brief How many one-shot commands can wait to be sent
+    static constexpr uint8_t ONE_SHOT_QUEUE_SIZE = 4;
+    /// @brief One-shot commands (mode, axis state, ...) waiting to be sent, as a ring buffer
+    CAN_message_t m_one_shots[ONE_SHOT_QUEUE_SIZE] = {};
+    /// @brief Index of the next one-shot command to send
+    mutable uint8_t m_one_shot_head = 0;
+    /// @brief Number of one-shot commands waiting
+    mutable uint8_t m_one_shot_count = 0;
+
     /// @brief Counts write() calls, to alternate between the command and status requests
     mutable uint32_t m_write_count = 0;
+
+    /// @brief When closed loop was last requested, in millis()
+    uint32_t m_closed_loop_requested_ms = 0;
+    /// @brief How long to wait for the heartbeat to confirm closed loop before requesting it again
+    static constexpr uint32_t CLOSED_LOOP_RETRY_MS = 250;
 
     /// @brief Last reported multi-turn output shaft position in radians
     float m_position_rad = 0.0f;
