@@ -92,6 +92,11 @@ void SteadywinGIM::execute_motor_torque_command(float torque) {
     // map the -1f to 1f torque value to the actual torque value for this specific motor
     float mapped_torque = torque * m_max_torque;
 
+    // the motor's driver ignores commands above rated current * Kt instead of clipping them, so clip here
+    float limit = m_rated_current * m_torque_constant * TORQUE_LIMIT_MARGIN;
+    if (mapped_torque > limit) mapped_torque = limit;
+    if (mapped_torque < -limit) mapped_torque = -limit;
+
     uint8_t buf[8];
     create_cmd_torque_control(buf, mapped_torque);
     set_output(buf);
