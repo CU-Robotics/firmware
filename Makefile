@@ -106,10 +106,15 @@ GIT_SCRAPER_SRC = $(TOOLS_DIR)/git_scraper.cpp
 GIT_SCRAPER_BIN = $(BUILD_DIR)/git_scraper
 
 
-.PHONY: build debug release dump docs clean upload install gdb monitor kill restart help clangd git_scraper
+.PHONY: test test-vn100 build debug release dump docs clean upload install gdb monitor kill restart help clangd git_scraper
 
 
 build: $(TARGET_HEX)
+
+test: test-vn100
+
+test-vn100:
+	@bash tests/vn100/run.sh
 
 debug: build
 
@@ -228,6 +233,7 @@ help:
 	@echo "Basic usage: make [target]"
 	@echo "Targets:"
 	@echo "  install:       installs all required dependencies"
+	@echo "  test:          runs VN100 host tests (no hardware needed)"
 	@echo "  build:         compiles the source code and links with libraries"
 	@echo "  dump:          generates a disassembly of the built firmware"
 	@echo "  upload:        builds the source and uploads it to the Teensy"

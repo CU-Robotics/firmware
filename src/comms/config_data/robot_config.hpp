@@ -49,6 +49,8 @@ struct RobotConfig {
     std::vector<RevEncoder> rev_encoders = {};
     /// @brief List of all received icm imu configs
     std::vector<IcmImu> icm_imus = {};
+    /// @brief List of received VN100 IMU configs.
+    std::vector<Vn100Imu> vn100_imus = {};
     /// @brief List of all received lsm imu configs
     std::vector<LsmImu> lsm_imus = {};
     /// @brief List of all received d200 lidar configs

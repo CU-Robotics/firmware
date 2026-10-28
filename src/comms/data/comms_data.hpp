@@ -13,7 +13,6 @@ enum class TypeLabel : uint16_t {
     BuffEncoderData,
     RevEncoderData,
     ICMSensorData,
-    Vn100SensorData,
     LsmSensorData,
     LidarDataPacketSI,
     LimitSwitchData,
@@ -41,6 +40,8 @@ enum class TypeLabel : uint16_t {
     StartStereoTrigger,
     StopStereoTrigger,
     TestLatencyData,
+    Vn100SensorData = 33,
+    Vn100ImuConfig = 34,
 };
 
 /// @brief Converts a TypeLabel to a string.
@@ -99,6 +100,8 @@ inline std::string to_string(TypeLabel type_label) {
         return "MotorConfig";
     case TypeLabel::BuffEncoderConfig:
         return "BuffEncoderConfig";
+    case TypeLabel::Vn100ImuConfig:
+        return "Vn100ImuConfig";
     case TypeLabel::IcmImuConfig:
         return "IcmImuConfig";
     case TypeLabel::LsmImuConfig:

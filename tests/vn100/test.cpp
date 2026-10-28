@@ -4,6 +4,9 @@
 #include <vector>
 
 #include "sensors/vn100.hpp"
+#include "comms/data/sendable.hpp"
+#include "comms/data/vn100_sensor_data.hpp"
+#include <fstream>
 
 using Bytes = std::vector<uint8_t>;
 
@@ -44,6 +47,11 @@ void feed(HardwareSerial &port, const Bytes &bytes) {
 int main() {
     static_assert(!std::is_copy_constructible_v<vn100>);
     static_assert(!std::is_move_constructible_v<vn100>);
+    static_assert(static_cast<uint16_t>(Comms::TypeLabel::LsmSensorData) == 6);
+    static_assert(static_cast<uint16_t>(Comms::TypeLabel::TestLatencyData) == 32);
+    static_assert(static_cast<uint16_t>(Comms::TypeLabel::Vn100SensorData) == 33);
+    static_assert(static_cast<uint16_t>(Comms::TypeLabel::Vn100ImuConfig) == 34);
+    static_assert(static_cast<uint32_t>(Cfg::SensorName::YawVn100Imu) == 10);
     vn100 default_sensor;
     assert(Serial3.begins == 0);
     Serial3.respond = true;
@@ -55,6 +63,8 @@ int main() {
     assert(!first.is_initialized());
     assert(!first.get_data().imu_valid && !first.get_data().attitude_valid);
     first.read();
+    first.send_to_comms();
+    assert(Comms::comms_layer.queued.empty());
     assert(port1.writes == 0);
     first.init(); // No device replies: report failure and permit an explicit retry.
     assert(!first.is_initialized());
@@ -67,6 +77,8 @@ int main() {
     port1.device_baud = 115200; // Exercise probing and baud change on explicit retry.
     first.init();
     assert(first.is_initialized());
+    first.send_to_comms();
+    assert(Comms::comms_layer.queued.empty());
     assert(port1.baud == 921600 && port1.device_baud == 921600);
     writes = port1.writes;
     port2.respond = true;
@@ -95,6 +107,11 @@ int main() {
     assert(first.get_data().saturation.acc_x == 1);
     assert(!first.get_data().attitude_valid);
     assert(!second.get_data().imu_valid);
+    first.send_to_comms();
+    Vn100SensorData partial;
+    std::memcpy(&partial, Comms::comms_layer.queued.back().data(), sizeof(partial));
+    assert(partial.valid == 1 && partial.attitude_time == 0);
+    assert(partial.accel[0] == 1.f && partial.temperature == 0.f);
 
     feed(port2, imu_packet(300, 42.f));
     second.read();
@@ -142,5 +159,48 @@ int main() {
     failing.read();
     assert(failing.get_data().imu_time.time_startup == 700);
     assert(first.get_data().imu_time.time_startup == 500);
-    std::cout << "VN100 packet and wrapper tests passed\n";
+    Cfg::Vn100Imu config;
+    config.hardware_serial_port = Cfg::HardwareSerialPort::Serial5;
+    config.imu_name = Cfg::SensorName::YawVn100Imu;
+    const auto serial3_writes = Serial3.writes;
+    Serial5.respond = true;
+    vn100 configured(config);
+    assert(Serial5.begins == 0);
+    configured.init();
+    assert(configured.is_initialized() && Serial5.begins > 0);
+    assert(Serial3.writes == serial3_writes); // Configured UART, not the default.
+    feed(Serial5, attitude_packet());
+    configured.read();
+    configured.send_to_comms();
+    Vn100SensorData sample;
+    std::memcpy(&sample, Comms::comms_layer.queued.back().data(), sizeof(sample));
+    assert(sample.valid == 2 && sample.imu_time == 0 && sample.accel[0] == 0);
+    feed(Serial5, imu_packet(0x0102030405060708ULL, 11.f));
+    configured.read();
+    configured.send_to_comms();
+    const auto& bytes = Comms::comms_layer.queued.back();
+    assert(bytes.size() == 120);
+    std::memcpy(&sample, bytes.data(), sizeof(sample));
+    assert(sample.type_label == Comms::TypeLabel::Vn100SensorData);
+    assert(sample.physical_medium == Comms::PhysicalMedium::Ethernet);
+    assert(sample.priority == Comms::Priority::Medium);
+    assert(sample.imu_name == Cfg::SensorName::YawVn100Imu);
+    assert(sample.valid == 3 && sample.saturation == 8);
+    assert(sample.imu_time == 0x0102030405060708ULL && sample.attitude_time == 200);
+    assert(sample.accel[0] == 11.f && sample.gyro[2] == 6.f);
+    assert(sample.temperature == 25.f && sample.pressure == 101.f);
+    assert(sample.mag[2] == 3.f && sample.ypr[1] == -10.f);
+    assert(sample.quaternion[3] == 1.f && sample.lin_accel_ned[2] == 9.f);
+    // Golden wire fixture also consumed by the Hive integration tests.
+    std::ofstream telemetry("build/tests/vn100_telemetry.bin", std::ios::binary);
+    telemetry.write(reinterpret_cast<const char*>(bytes.data()), bytes.size());
+    assert(telemetry.good());
+    std::ofstream cfg("build/tests/vn100_config.bin", std::ios::binary);
+    cfg.write(reinterpret_cast<const char*>(&config), sizeof(config));
+    assert(cfg.good());
+    config.hardware_serial_port = Cfg::HardwareSerialPort::UnsetHardwareSerialPort;
+    bool rejected = false;
+    try { vn100 invalid(config); } catch (const std::runtime_error&) { rejected = true; }
+    assert(rejected);
+    std::cout << "VN100 packet, UART, telemetry and wire layout tests passed\n";
 }

@@ -16,6 +16,7 @@
 #include "rev_encoder_data.hpp"
 
 #include "icm_sensor_data.hpp"
+#include "vn100_sensor_data.hpp"
 
 #include "lidar_data_packet_si.hpp"
 #include "dr16_data.hpp"

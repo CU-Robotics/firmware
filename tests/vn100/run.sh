@@ -6,7 +6,7 @@ mkdir -p build/tests
 # libc's const-correct strchr overload. The production binary parser is unchanged.
 sed '/^[[:space:]]*char \*data_start = strchr/s/char \*/const char */' \
     libraries/vn100/protocol/msg_parsing.cpp > build/tests/vn100_msg_parsing.cpp
-"${CXX:-c++}" -std=c++17 -funsigned-char -Wno-format \
+"${CXX:-c++}" -std=c++20 -funsigned-char -Wno-format \
     -Itests/vn100/stubs -Isrc -Ilibraries -Ilibraries/vn100/protocol \
     tests/vn100/test.cpp src/sensors/vn100.cpp \
     libraries/vn100/protocol/serial.cpp \
@@ -15,3 +15,8 @@ sed '/^[[:space:]]*char \*data_start = strchr/s/char \*/const char */' \
     libraries/vn100/protocol/msg_creation.cpp \
     -o build/tests/vn100
 build/tests/vn100
+"${CXX:-c++}" -std=c++20 -Wno-format -DFIRMWARE \
+    -Itests/vn100/stubs -Isrc -Ilibraries \
+    tests/vn100/test_comms.cpp src/comms/data/hive_data.cpp \
+    src/comms/data/firmware_data.cpp -o build/tests/vn100_comms
+build/tests/vn100_comms

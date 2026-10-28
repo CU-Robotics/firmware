@@ -27,6 +27,7 @@ enum class SensorName : uint32_t {
     StereoCameraTrigger,
     LowerFeederEncoder,
     UpperFeederEncoder,
+    YawVn100Imu,
 
     SensorNameCount
 };
@@ -121,6 +122,18 @@ struct IcmImu : Comms::CommsData {
     /// @brief Name of this sensor
     SensorName imu_name = SensorName::UnsetSensorName;
 };
+/// @brief VN100 UART configuration; connected to the sensor's serial port 2.
+struct Vn100Imu : Comms::CommsData {
+    /// @brief Teensy UART connected to the VN100 (independent of its port number).
+    HardwareSerialPort hardware_serial_port = HardwareSerialPort::Serial3;
+    /// @brief Name used to route telemetry on firmware and Hive.
+    SensorName imu_name = SensorName::UnsetSensorName;
+    /// @brief Initialize the wire header, matching the other IMU configs.
+    Vn100Imu() : CommsData(Comms::TypeLabel::Vn100ImuConfig,
+        Comms::PhysicalMedium::Ethernet, Comms::Priority::High, sizeof(Vn100Imu)) {}
+};
+static_assert(sizeof(Vn100Imu) == 16, "VN100 config must match Hive");
+
 /// @brief D200 Lidar configuration struct.
 struct D200Lidar : Comms::CommsData {
     /// @brief The hardware serial port that this lidar is connected to

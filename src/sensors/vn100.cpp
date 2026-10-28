@@ -1,8 +1,15 @@
 #include "vn100.hpp"
+#include "comms/data/sendable.hpp"
+#include "comms/data/vn100_sensor_data.hpp"
 
 vn100 *vn100::active_reader = nullptr;
 
 vn100::vn100() : vn100(Serial3) {}
+
+vn100::vn100(const Cfg::Vn100Imu &config)
+    : vn100(Cfg::try_grab_hw_serial_port(config.hardware_serial_port)) {
+    _name = config.imu_name;
+}
 
 vn100::vn100(HardwareSerial &port) {
     // Binding alone does not open the UART during static construction.
@@ -167,5 +174,32 @@ void vn100::binary_message_callback(vn::bin::const_bin_buf_ref_t buf,
 }
 
 void vn100::send_to_comms() const {
-    
+    if (!_initialized || (!_data.imu_valid && !_data.attitude_valid)) {
+        return;
+    }
+    Comms::Sendable<Vn100SensorData> sendable;
+    auto &sample = sendable.data;
+    sample.imu_name = _name;
+    sample.valid = (_data.imu_valid ? 1u : 0u) | (_data.attitude_valid ? 2u : 0u);
+    sample.imu_time = _data.imu_time.time_startup;
+    sample.attitude_time = _data.attitude_time.time_startup;
+    for (size_t i = 0; i < 3; ++i) {
+        sample.accel[i] = _data.accel.acc[i];
+        sample.gyro[i] = _data.angular_rate.gyro[i];
+        sample.mag[i] = _data.mag.mag[i];
+        sample.lin_accel_ned[i] = _data.lin_accel_ned.lin_accel_ned[i];
+    }
+    sample.temperature = _data.temperature.temperature;
+    sample.pressure = _data.pressure.pressure;
+    sample.ypr[0] = _data.ypr.yaw;
+    sample.ypr[1] = _data.ypr.pitch;
+    sample.ypr[2] = _data.ypr.roll;
+    for (size_t i = 0; i < 4; ++i) {
+        sample.quaternion[i] = _data.quaternion.quaternion[i];
+    }
+    const auto &sat = _data.saturation;
+    sample.saturation = sat.mag_x | (sat.mag_y << 1) | (sat.mag_z << 2) |
+        (sat.acc_x << 3) | (sat.acc_y << 4) | (sat.acc_z << 5) |
+        (sat.gyro_x << 6) | (sat.gyro_y << 7) | (sat.gyro_z << 8) | (sat.pres << 9);
+    sendable.send_to_comms();
 }

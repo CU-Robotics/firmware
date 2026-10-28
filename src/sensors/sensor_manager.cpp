@@ -2,6 +2,7 @@
 #include "utils/system_log.hpp"
 
 #include "sensors/rev_encoder.hpp"
+#include "sensors/vn100.hpp"
 
 #include "sensors/LSM6DSOX.hpp"
 
@@ -94,6 +95,30 @@ void SensorManager::configure_sensors(const Cfg::RobotConfig& config_data) {
 
     for (const auto& stereo_cam_trigger_config : config_data.stereo_cam_triggers) {
         sensors.emplace(stereo_cam_trigger_config.camera_trigger_name, std::make_shared<StereoCamTrigger>(stereo_cam_trigger_config));
+    }
+    for (const auto& imu : config_data.vn100_imus) {
+        // RefSystem owns Serial2/4 and both transmitter types own Serial8.
+        if (imu.hardware_serial_port == Cfg::HardwareSerialPort::Serial2 ||
+            imu.hardware_serial_port == Cfg::HardwareSerialPort::Serial4 ||
+            imu.hardware_serial_port == Cfg::HardwareSerialPort::Serial8) {
+            safety::safety_procedure("VN100 UART is already reserved by referee/transmitter");
+        }
+        for (const auto& lidar : config_data.d200_lidars) {
+            if (lidar.hardware_serial_port == imu.hardware_serial_port) {
+                safety::safety_procedure("VN100 and D200 cannot share a UART");
+            }
+        }
+        for (const auto& other : config_data.vn100_imus) {
+            if (&other != &imu && other.hardware_serial_port == imu.hardware_serial_port) {
+                safety::safety_procedure("VN100 sensors cannot share a UART");
+            }
+        }
+        if (imu.imu_name == Cfg::SensorName::UnsetSensorName ||
+            imu.imu_name >= Cfg::SensorName::SensorNameCount || sensors.count(imu.imu_name)) {
+            safety::safety_procedure("VN100 requires a unique, valid sensor name");
+        }
+        auto sensor = std::make_shared<vn100>(imu);
+        sensors.emplace(imu.imu_name, sensor);
     }
 }
 

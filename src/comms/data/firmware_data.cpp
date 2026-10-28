@@ -53,6 +53,11 @@ void FirmwareData::set_data(CommsData* data) {
         icm_sensor_data_map.insert_or_assign(icm_sensor.imu_name, icm_sensor);
         break;
     }
+    case TypeLabel::Vn100SensorData: {
+        auto sample = *static_cast<Vn100SensorData*>(data);
+        vn100_sensor_data_map.insert_or_assign(sample.imu_name, sample);
+        break;
+    }
     case TypeLabel::LsmSensorData: {
         // place the data in the mega struct
         LsmSensorData lsm_sensor = *static_cast<LsmSensorData*>(data);

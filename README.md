@@ -45,6 +45,12 @@ make help
 ```
 
 
+## VN100 tests
+
+Run `make test` for host tests and `make build` for the Teensy firmware.
+Gerald configures the VN100 through Hive's `Sensors.Vn100 Imus` section, using
+Teensy Serial3 connected to VN100 serial port 2.
+
 ## Contributing
 `main` is the production branch, which is required to be in an always working state.
 - Only authorized members can merge to `main`. All merges must go through a review and pull request. Direct pushes to `main` branches are strictly forbidden.

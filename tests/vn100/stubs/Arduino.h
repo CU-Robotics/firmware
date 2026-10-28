@@ -61,6 +61,9 @@ public:
 };
 
 inline HardwareSerial Serial;
-inline HardwareSerial Serial3;
+inline HardwareSerial Serial1, Serial2, Serial3, Serial4, Serial5, Serial6, Serial7, Serial8;
 inline uint32_t micros() { static uint32_t time = 0; return time += 1000; }
 inline void delayMicroseconds(uint32_t) {}
+
+inline uint32_t millis() { return micros() / 1000; }
+inline void delay(uint32_t) {}

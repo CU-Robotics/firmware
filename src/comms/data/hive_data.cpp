@@ -83,6 +83,13 @@ void HiveData::set_data(CommsData* data) {
         Serial.printf("ICM IMU %u received\n", static_cast<uint32_t>(icm_imu->imu_name));
         break;
     }
+    case TypeLabel::Vn100ImuConfig: {
+        auto* imu = static_cast<Cfg::Vn100Imu*>(data);
+        config.vn100_imus.push_back(*imu);
+        config.num_sections_received++;
+        Serial.printf("VN100 IMU %u received\n", static_cast<uint32_t>(imu->imu_name));
+        break;
+    }
     case TypeLabel::D200LidarConfig: {
         Cfg::D200Lidar* d200_lidar = static_cast<Cfg::D200Lidar*>(data);
         config.d200_lidars.push_back(*d200_lidar);

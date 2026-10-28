@@ -4,14 +4,13 @@
 
 #include <vn100/protocol/serial.hpp>
 #include "sensors/sensor.hpp"
+#include "comms/config_data/sensor.hpp"
 
 /// @brief Sensor wrapper using the unchanged VN100 serial protocol library.
 /// @note Defaults to Teensy Serial3, connected to VN100 serial port 2.
 /// Call init() during setup, then read() at 1 kHz from the main loop.
 /// All instances must be initialized and polled from the same thread, outside ISRs.
 /// Getters retain the last valid sample; check get_data() validity flags before use.
-/// See docs/vn100.md for a polling example and integration notes.
-/// @see https://docs.google.com/document/d/1nKZURsbD1O32F51RnJQU3J4d7ND6OqpvrFN9zFMxKp4/edit?tab=t.0
 class vn100 : public Sensor {
 public:
     /// @brief Cached binary output; each packet group updates only after successful parsing.
@@ -33,6 +32,8 @@ public:
 
     /// @brief Construct using Serial3; UART setup is deferred until init().
     vn100();
+    /// @brief Construct from a Hive configuration, resolving the selected Teensy UART.
+    explicit vn100(const Cfg::Vn100Imu &config);
     /// @brief Construct using a selected Teensy UART.
     /// @param port UART connected to VN100 serial port 2; must outlive this sensor.
     explicit vn100(HardwareSerial &port);
@@ -45,7 +46,7 @@ public:
     void init() override;
     /// @brief Poll incoming packets if initialized, retaining the last valid readings.
     void read() override;
-    /// @brief No-op until a VN100 telemetry type is added to the firmware/Hive protocol.
+    /// @brief Queue the latest valid samples through the standard Ethernet/HID comms layer.
     void send_to_comms() const override;
 
     /// @brief Whether sensor configuration succeeded (does not indicate fresh data).
@@ -111,6 +112,8 @@ private:
     bool _initialized{false};
     /// @brief Latest complete samples from each output group.
     Data _data{};
+    /// @brief Configured identity for outgoing telemetry.
+    Cfg::SensorName _name = Cfg::SensorName::UnsetSensorName;
     /// @brief Expected IMU output layout.
     vn::bin::BinaryMessage imu_message{};
     /// @brief Expected attitude output layout.

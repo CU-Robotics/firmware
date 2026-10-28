@@ -55,6 +55,8 @@ struct FirmwareData {
 
     /// @brief Map of sensor name to icm imu data
     std::map<Cfg::SensorName, ICMSensorData> icm_sensor_data_map;
+    /// @brief Latest VN100 samples by sensor name.
+    std::map<Cfg::SensorName, Vn100SensorData> vn100_sensor_data_map;
     /// @brief Map of motor name to motor state data
     std::map<Cfg::MotorName, MotorStateData> motor_state_data_map;
     /// @brief Configuration status data. This is sent from firmware to indicate the status of the configuration process.
