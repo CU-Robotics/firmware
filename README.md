@@ -44,6 +44,12 @@ There are a few other nice helper functions within the makefile. This will list 
 make help
 ```
 
+To run tests:
+```bash
+make test
+```
+
+
 ## Contributing
 `main` is the production branch, which is required to be in an always working state.
 - Only authorized members can merge to `main`. All merges must go through a review and pull request. Direct pushes to `main` branches are strictly forbidden.
