@@ -24,6 +24,14 @@ const char* level_to_color(LogLevel lvl) {
     }
 }
 
+const char* level_to_str(LogLevel level) {
+    switch(level) {
+        case LogLevel::WARN: return "WARN";
+        case LogLevel::ERROR: return "ERROR";
+        default: return "INFO";
+    };
+}
+
 void SystemLogger::set_context(LogLevel lvl, Subsystem sys) {
     current_level = lvl;
     current_sys = sys;
@@ -75,6 +83,10 @@ void SystemLogger::push_message() {
             Serial.print(shared_cli_buffer);
         }
     }
+
+    // Log data to SD card if it's bound
+    if (sd_logger)
+        sd_logger->write_log(messages[head]);
 
     // 3. Advance circular buffer
     head = (head + 1) % LOG_HISTORY;
