@@ -179,7 +179,7 @@ static inline len_t add_uint32(buf_ref_t msg_buf, len_t msg_buf_size, len_t msg_
 	}
 
 	// append ',XXXXXXXXXX'
-	return snprintf(msg_buf + msg_len, uint32_field_size, ",%lu", value);
+	return snprintf(msg_buf + msg_len, uint32_field_size, ",%" PRIu32, value);
 }
 
 /**

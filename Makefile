@@ -47,7 +47,11 @@ HOST_TEST_COMMON_SRC := $(TEST_DIR)/host/test_runner.cpp $(HOST_TEST_UNITY_OBJ)
 HOST_TEST_SRC_test_utils := $(TEST_DIR)/test_utils/test_main.cpp src/utils/wrapping.cpp src/utils/vector_math.cpp
 HOST_TEST_SRC_test_fltrs := $(TEST_DIR)/test_fltrs/test_main.cpp src/filters/pid_filter.cpp src/filters/lowpass_filter.cpp
 HOST_TEST_SRC_test_controls := $(TEST_DIR)/test_controls/test_main.cpp src/controls/controller.cpp
-HOST_TEST_SRC_test_sensors := $(TEST_DIR)/test_sensors/test_main.cpp src/sensors/buff_encoder.cpp src/utils/system_log.cpp
+HOST_TEST_SRC_test_sensors := $(TEST_DIR)/test_sensors/test_main.cpp src/sensors/buff_encoder.cpp src/utils/system_log.cpp \
+	src/sensors/vn100.cpp $(wildcard libraries/vn100/protocol/*.cpp)
+HOST_TEST_CPPFLAGS_test_sensors := -Ilibraries
+# Match the Teensy ARM ABI's unsigned char when parsing binary serial bytes.
+HOST_TEST_CXXFLAGS_test_sensors := -funsigned-char
 
 TEENSY_SRC_DIRS := teensy4
 LIBRARY_SRC_DIRS := libraries
@@ -130,11 +134,6 @@ GIT_SCRAPER_BIN = $(BUILD_DIR)/git_scraper
 
 build: $(TARGET_HEX)
 
-test: test-vn100
-
-test-vn100:
-	@bash tests/vn100/run.sh
-
 debug: build
 
 release: build
@@ -158,8 +157,8 @@ define HOST_TEST_template
 $(TEST_BUILD_DIR)/$(1): $$(HOST_TEST_COMMON_SRC) $$(HOST_TEST_SRC_$(1)) FORCE
 	@mkdir -p $$(dir $$@)
 	@printf "HOSTTEST %s\n" "$(1)"
-	@$$(HOST_CXX) $$(HOST_TEST_CPPFLAGS) $$(CPPFLAGS) \
-		$$(HOST_TEST_CXXFLAGS) $$(CXXFLAGS) $$(filter-out FORCE,$$^) -o $$@
+	@$$(HOST_CXX) $$(HOST_TEST_CPPFLAGS) $$(HOST_TEST_CPPFLAGS_$(1)) $$(CPPFLAGS) \
+		$$(HOST_TEST_CXXFLAGS) $$(HOST_TEST_CXXFLAGS_$(1)) $$(CXXFLAGS) $$(filter-out FORCE,$$^) -o $$@
 endef
 
 $(foreach suite,$(TEST_SUITES),$(eval $(call HOST_TEST_template,$(suite))))
@@ -284,7 +283,6 @@ help:
 	@echo "Basic usage: make [target]"
 	@echo "Targets:"
 	@echo "  install:       installs all required dependencies"
-	@echo "  test:          runs VN100 host tests (no hardware needed)"
 	@echo "  build:         compiles the source code and links with libraries"
 	@echo "  dump:          generates a disassembly of the built firmware"
 	@echo "  upload:        builds the source and uploads it to the Teensy"

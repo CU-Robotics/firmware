@@ -292,7 +292,7 @@ ErrorCode parse_known_magnetic_disturbance(const_buf_ref_t msg_buf, len_t msg_le
 	}
 
 	// get the data after command header
-	char *data_start = strchr(msg_buf, DELIM);
+	const char *data_start = strchr(msg_buf, DELIM);
 
 	if (!data_start || data_start - msg_buf + 1 >= msg_len) {
 		return ErrorCode::InvalidParameter;
@@ -316,7 +316,7 @@ ErrorCode parse_known_acceleration_disturbance(const_buf_ref_t msg_buf, len_t ms
 	}
 
 	// get the data after command header
-	char *data_start = strchr(msg_buf, DELIM);
+	const char *data_start = strchr(msg_buf, DELIM);
 
 	if (!data_start || data_start - msg_buf + 1 >= msg_len) {
 		return ErrorCode::InvalidParameter;
@@ -339,7 +339,7 @@ ErrorCode parse_async_output_enable(const_buf_ref_t msg_buf, len_t msg_len, Asyn
 	}
 
 	// get the data after command header
-	char *data_start = strchr(msg_buf, DELIM);
+	const char *data_start = strchr(msg_buf, DELIM);
 
 	if (!data_start || data_start - msg_buf + 1 >= msg_len) {
 		return ErrorCode::InvalidParameter;
@@ -382,7 +382,7 @@ ErrorCode parse_user_tag(const_buf_ref_t msg_buf, len_t msg_len, UserTag &user_t
 	}
 
 	// get the data after the register delim
-	char *data_start = strchr(msg_buf + HEADER_SIZE, DELIM);
+	const char *data_start = strchr(msg_buf + HEADER_SIZE, DELIM);
 
 	if (!data_start || data_start - msg_buf + 1 >= msg_len) {
 		return ErrorCode::InvalidParameter;
@@ -408,7 +408,7 @@ ErrorCode parse_baudrate(const_buf_ref_t msg_buf, len_t msg_len, Baudrate &baudr
 	}
 
 	// get the data after the register delim
-	char *data_start = strchr(msg_buf + HEADER_SIZE, DELIM);
+	const char *data_start = strchr(msg_buf + HEADER_SIZE, DELIM);
 
 	if (!data_start || data_start - msg_buf + 1 >= msg_len) {
 		return ErrorCode::InvalidParameter;
@@ -432,7 +432,7 @@ ErrorCode parse_async_data_output_type(const_buf_ref_t msg_buf, len_t msg_len,
 	}
 
 	// get the data after the register delim
-	char *data_start = strchr(msg_buf + HEADER_SIZE, DELIM);
+	const char *data_start = strchr(msg_buf + HEADER_SIZE, DELIM);
 
 	if (!data_start || data_start - msg_buf + 1 >= msg_len) {
 		return ErrorCode::InvalidParameter;
@@ -456,7 +456,7 @@ ErrorCode parse_async_data_output_freq(const_buf_ref_t msg_buf, len_t msg_len,
 	}
 
 	// get the data after the register delim
-	char *data_start = strchr(msg_buf + HEADER_SIZE, DELIM);
+	const char *data_start = strchr(msg_buf + HEADER_SIZE, DELIM);
 
 	if (!data_start || data_start - msg_buf + 1 >= msg_len) {
 		return ErrorCode::InvalidParameter;
@@ -480,7 +480,7 @@ ErrorCode parse_communication_protocol_control(const_buf_ref_t msg_buf, len_t ms
 	}
 
 	// get the data after the register delim
-	char *data_start = strchr(msg_buf + HEADER_SIZE, DELIM);
+	const char *data_start = strchr(msg_buf + HEADER_SIZE, DELIM);
 
 	if (!data_start || data_start - msg_buf + 1 >= msg_len) {
 		return ErrorCode::InvalidParameter;
@@ -510,7 +510,7 @@ ErrorCode parse_sync_control(const_buf_ref_t msg_buf, len_t msg_len, SyncControl
 	}
 
 	// get the data after the register delim
-	char *data_start = strchr(msg_buf + HEADER_SIZE, DELIM);
+	const char *data_start = strchr(msg_buf + HEADER_SIZE, DELIM);
 
 	if (!data_start || data_start - msg_buf + 1 >= msg_len) {
 		return ErrorCode::InvalidParameter;
@@ -543,7 +543,7 @@ ErrorCode parse_legacy_compatibility_settings(const_buf_ref_t msg_buf, len_t msg
 	}
 
 	// get the data after the register delim
-	char *data_start = strchr(msg_buf + HEADER_SIZE, DELIM);
+	const char *data_start = strchr(msg_buf + HEADER_SIZE, DELIM);
 
 	if (!data_start || data_start - msg_buf + 1 >= msg_len) {
 		return ErrorCode::InvalidParameter;
@@ -737,7 +737,7 @@ ErrorCode parse_magnetic_gravity_reference(const_buf_ref_t msg_buf, len_t msg_le
 	}
 
 	// get the data after the register delim
-	char *data_start = strchr(msg_buf + HEADER_SIZE, DELIM);
+	const char *data_start = strchr(msg_buf + HEADER_SIZE, DELIM);
 
 	if (!data_start || data_start - msg_buf + 1 >= msg_len) {
 		return ErrorCode::InvalidParameter;
@@ -767,7 +767,7 @@ ErrorCode parse_vpe_basic_control(const_buf_ref_t msg_buf, len_t msg_len,
 	}
 
 	// get the data after the register delim
-	char *data_start = strchr(msg_buf + HEADER_SIZE, DELIM);
+	const char *data_start = strchr(msg_buf + HEADER_SIZE, DELIM);
 
 	if (!data_start || data_start - msg_buf + 1 >= msg_len) {
 		return ErrorCode::InvalidParameter;
@@ -795,7 +795,7 @@ ErrorCode parse_vpe_magnetometer_basic_tuning(const_buf_ref_t msg_buf, len_t msg
 	}
 
 	// get the data after the register delim
-	char *data_start = strchr(msg_buf + HEADER_SIZE, DELIM);
+	const char *data_start = strchr(msg_buf + HEADER_SIZE, DELIM);
 
 	if (!data_start || data_start - msg_buf + 1 >= msg_len) {
 		return ErrorCode::InvalidParameter;
@@ -828,7 +828,7 @@ ErrorCode parse_vpe_accelerometer_basic_tuning(const_buf_ref_t msg_buf, len_t ms
 	}
 
 	// get the data after the register delim
-	char *data_start = strchr(msg_buf + HEADER_SIZE, DELIM);
+	const char *data_start = strchr(msg_buf + HEADER_SIZE, DELIM);
 
 	if (!data_start || data_start - msg_buf + 1 >= msg_len) {
 		return ErrorCode::InvalidParameter;
@@ -861,7 +861,7 @@ ErrorCode parse_filter_startup_gyro_bias(const_buf_ref_t msg_buf, len_t msg_len,
 	}
 
 	// get the data after the register delim
-	char *data_start = strchr(msg_buf + HEADER_SIZE, DELIM);
+	const char *data_start = strchr(msg_buf + HEADER_SIZE, DELIM);
 
 	if (!data_start || data_start - msg_buf + 1 >= msg_len) {
 		return ErrorCode::InvalidParameter;
@@ -888,7 +888,7 @@ ErrorCode parse_magnetometer_calibration(const_buf_ref_t msg_buf, len_t msg_len,
 	}
 
 	// get the data after the register delim
-	char *data_start = strchr(msg_buf + HEADER_SIZE, DELIM);
+	const char *data_start = strchr(msg_buf + HEADER_SIZE, DELIM);
 
 	if (!data_start || data_start - msg_buf + 1 >= msg_len) {
 		return ErrorCode::InvalidParameter;
@@ -924,7 +924,7 @@ ErrorCode parse_accelerometer_calibration(const_buf_ref_t msg_buf, len_t msg_len
 	}
 
 	// get the data after the register delim
-	char *data_start = strchr(msg_buf + HEADER_SIZE, DELIM);
+	const char *data_start = strchr(msg_buf + HEADER_SIZE, DELIM);
 
 	if (!data_start || data_start - msg_buf + 1 >= msg_len) {
 		return ErrorCode::InvalidParameter;
@@ -960,7 +960,7 @@ ErrorCode parse_reference_frame_rotation(const_buf_ref_t msg_buf, len_t msg_len,
 	}
 
 	// get the data after the register delim
-	char *data_start = strchr(msg_buf + HEADER_SIZE, DELIM);
+	const char *data_start = strchr(msg_buf + HEADER_SIZE, DELIM);
 
 	if (!data_start || data_start - msg_buf + 1 >= msg_len) {
 		return ErrorCode::InvalidParameter;
@@ -993,7 +993,7 @@ ErrorCode parse_delta_theta_delta_velocity_config(const_buf_ref_t msg_buf, len_t
 	}
 
 	// get the data after the register delim
-	char *data_start = strchr(msg_buf + HEADER_SIZE, DELIM);
+	const char *data_start = strchr(msg_buf + HEADER_SIZE, DELIM);
 
 	if (!data_start || data_start - msg_buf + 1 >= msg_len) {
 		return ErrorCode::InvalidParameter;
@@ -1022,7 +1022,7 @@ ErrorCode parse_gyro_calibration(const_buf_ref_t msg_buf, len_t msg_len,
 	}
 
 	// get the data after the register delim
-	char *data_start = strchr(msg_buf + HEADER_SIZE, DELIM);
+	const char *data_start = strchr(msg_buf + HEADER_SIZE, DELIM);
 
 	if (!data_start || data_start - msg_buf + 1 >= msg_len) {
 		return ErrorCode::InvalidParameter;
@@ -1058,7 +1058,7 @@ ErrorCode parse_imu_filtering_config(const_buf_ref_t msg_buf, len_t msg_len,
 	}
 
 	// get the data after the register delim
-	char *data_start = strchr(msg_buf + HEADER_SIZE, DELIM);
+	const char *data_start = strchr(msg_buf + HEADER_SIZE, DELIM);
 
 	if (!data_start || data_start - msg_buf + 1 >= msg_len) {
 		return ErrorCode::InvalidParameter;
@@ -1092,7 +1092,7 @@ ErrorCode parse_real_time_hsi_control(const_buf_ref_t msg_buf, len_t msg_len,
 	}
 
 	// get the data after the register delim
-	char *data_start = strchr(msg_buf + HEADER_SIZE, DELIM);
+	const char *data_start = strchr(msg_buf + HEADER_SIZE, DELIM);
 
 	if (!data_start || data_start - msg_buf + 1 >= msg_len) {
 		return ErrorCode::InvalidParameter;
@@ -1119,7 +1119,7 @@ ErrorCode parse_velocity_aiding_measurement(const_buf_ref_t msg_buf, len_t msg_l
 	}
 
 	// get the data after the register delim
-	char *data_start = strchr(msg_buf + HEADER_SIZE, DELIM);
+	const char *data_start = strchr(msg_buf + HEADER_SIZE, DELIM);
 
 	if (!data_start || data_start - msg_buf + 1 >= msg_len) {
 		return ErrorCode::InvalidParameter;
@@ -1146,7 +1146,7 @@ ErrorCode parse_velocity_aiding_control(const_buf_ref_t msg_buf, len_t msg_len,
 	}
 
 	// get the data after the register delim
-	char *data_start = strchr(msg_buf + HEADER_SIZE, DELIM);
+	const char *data_start = strchr(msg_buf + HEADER_SIZE, DELIM);
 
 	if (!data_start || data_start - msg_buf + 1 >= msg_len) {
 		return ErrorCode::InvalidParameter;
@@ -1173,7 +1173,7 @@ ErrorCode parse_reference_model_config(const_buf_ref_t msg_buf, len_t msg_len,
 	}
 
 	// get the data after the register delim
-	char *data_start = strchr(msg_buf + HEADER_SIZE, DELIM);
+	const char *data_start = strchr(msg_buf + HEADER_SIZE, DELIM);
 
 	if (!data_start || data_start - msg_buf + 1 >= msg_len) {
 		return ErrorCode::InvalidParameter;
@@ -1206,7 +1206,7 @@ ErrorCode parse_heave_basic_config(const_buf_ref_t msg_buf, len_t msg_len,
 	}
 
 	// get the data after the register delim
-	char *data_start = strchr(msg_buf + HEADER_SIZE, DELIM);
+	const char *data_start = strchr(msg_buf + HEADER_SIZE, DELIM);
 
 	if (!data_start || data_start - msg_buf + 1 >= msg_len) {
 		return ErrorCode::InvalidParameter;
@@ -1236,7 +1236,7 @@ ErrorCode parse_model(const_buf_ref_t msg_buf, len_t msg_len, Model &model)
 	}
 
 	// get the data after the register delim
-	char *data_start = strchr(msg_buf + HEADER_SIZE, DELIM);
+	const char *data_start = strchr(msg_buf + HEADER_SIZE, DELIM);
 
 	if (!data_start || data_start - msg_buf + 1 >= msg_len) {
 		return ErrorCode::InvalidParameter;
@@ -1266,7 +1266,7 @@ ErrorCode parse_hardware_version(const_buf_ref_t msg_buf, len_t msg_len,
 	}
 
 	// get the data after the register delim
-	char *data_start = strchr(msg_buf + HEADER_SIZE, DELIM);
+	const char *data_start = strchr(msg_buf + HEADER_SIZE, DELIM);
 
 	if (!data_start || data_start - msg_buf + 1 >= msg_len) {
 		return ErrorCode::InvalidParameter;
@@ -1288,7 +1288,7 @@ ErrorCode parse_serial_number(const_buf_ref_t msg_buf, len_t msg_len, SerialNumb
 	}
 
 	// get the data after the register delim
-	char *data_start = strchr(msg_buf + HEADER_SIZE, DELIM);
+	const char *data_start = strchr(msg_buf + HEADER_SIZE, DELIM);
 
 	if (!data_start || data_start - msg_buf + 1 >= msg_len) {
 		return ErrorCode::InvalidParameter;
@@ -1311,7 +1311,7 @@ ErrorCode parse_firmware_version(const_buf_ref_t msg_buf, len_t msg_len,
 	}
 
 	// get the data after the register delim
-	char *data_start = strchr(msg_buf + HEADER_SIZE, DELIM);
+	const char *data_start = strchr(msg_buf + HEADER_SIZE, DELIM);
 
 	if (!data_start || data_start - msg_buf + 1 >= msg_len) {
 		return ErrorCode::InvalidParameter;
@@ -1341,7 +1341,7 @@ ErrorCode parse_sync_status(const_buf_ref_t msg_buf, len_t msg_len, SyncStatus &
 	}
 
 	// get the data after the register delim
-	char *data_start = strchr(msg_buf + HEADER_SIZE, DELIM);
+	const char *data_start = strchr(msg_buf + HEADER_SIZE, DELIM);
 
 	if (!data_start || data_start - msg_buf + 1 >= msg_len) {
 		return ErrorCode::InvalidParameter;
@@ -1367,7 +1367,7 @@ ErrorCode parse_yaw_pitch_roll(const_buf_ref_t msg_buf, len_t msg_len, YawPitchR
 	}
 
 	// get the data after the register delim
-	char *data_start = strchr(msg_buf + HEADER_SIZE, DELIM);
+	const char *data_start = strchr(msg_buf + HEADER_SIZE, DELIM);
 
 	if (!data_start || data_start - msg_buf + 1 >= msg_len) {
 		return ErrorCode::InvalidParameter;
@@ -1393,7 +1393,7 @@ ErrorCode parse_quaternion(const_buf_ref_t msg_buf, len_t msg_len, Quaternion &q
 	}
 
 	// get the data after the register delim
-	char *data_start = strchr(msg_buf + HEADER_SIZE, DELIM);
+	const char *data_start = strchr(msg_buf + HEADER_SIZE, DELIM);
 
 	if (!data_start || data_start - msg_buf + 1 >= msg_len) {
 		return ErrorCode::InvalidParameter;
@@ -1421,7 +1421,7 @@ ErrorCode parse_quaternion_compensated_imu(const_buf_ref_t msg_buf, len_t msg_le
 	}
 
 	// get the data after the register delim
-	char *data_start = strchr(msg_buf + HEADER_SIZE, DELIM);
+	const char *data_start = strchr(msg_buf + HEADER_SIZE, DELIM);
 
 	if (!data_start || data_start - msg_buf + 1 >= msg_len) {
 		return ErrorCode::InvalidParameter;
@@ -1458,7 +1458,7 @@ ErrorCode parse_yaw_pitch_roll_compensated_imu(const_buf_ref_t msg_buf, len_t ms
 	}
 
 	// get the data after the register delim
-	char *data_start = strchr(msg_buf + HEADER_SIZE, DELIM);
+	const char *data_start = strchr(msg_buf + HEADER_SIZE, DELIM);
 
 	if (!data_start || data_start - msg_buf + 1 >= msg_len) {
 		return ErrorCode::InvalidParameter;
@@ -1494,7 +1494,7 @@ ErrorCode parse_yaw_pitch_roll_linear_accel_gyro(const_buf_ref_t msg_buf, len_t 
 	}
 
 	// get the data after the register delim
-	char *data_start = strchr(msg_buf + HEADER_SIZE, DELIM);
+	const char *data_start = strchr(msg_buf + HEADER_SIZE, DELIM);
 
 	if (!data_start || data_start - msg_buf + 1 >= msg_len) {
 		return ErrorCode::InvalidParameter;
@@ -1527,7 +1527,7 @@ ErrorCode parse_yaw_pitch_roll_linear_inertial_accel_gyro(const_buf_ref_t msg_bu
 	}
 
 	// get the data after the register delim
-	char *data_start = strchr(msg_buf + HEADER_SIZE, DELIM);
+	const char *data_start = strchr(msg_buf + HEADER_SIZE, DELIM);
 
 	if (!data_start || data_start - msg_buf + 1 >= msg_len) {
 		return ErrorCode::InvalidParameter;
@@ -1560,7 +1560,7 @@ ErrorCode parse_compensated_magnetometer(const_buf_ref_t msg_buf, len_t msg_len,
 	}
 
 	// get the data after the register delim
-	char *data_start = strchr(msg_buf + HEADER_SIZE, DELIM);
+	const char *data_start = strchr(msg_buf + HEADER_SIZE, DELIM);
 
 	if (!data_start || data_start - msg_buf + 1 >= msg_len) {
 		return ErrorCode::InvalidParameter;
@@ -1587,7 +1587,7 @@ ErrorCode parse_compensated_accelerometer(const_buf_ref_t msg_buf, len_t msg_len
 	}
 
 	// get the data after the register delim
-	char *data_start = strchr(msg_buf + HEADER_SIZE, DELIM);
+	const char *data_start = strchr(msg_buf + HEADER_SIZE, DELIM);
 
 	if (!data_start || data_start - msg_buf + 1 >= msg_len) {
 		return ErrorCode::InvalidParameter;
@@ -1614,7 +1614,7 @@ ErrorCode parse_compensated_gyro(const_buf_ref_t msg_buf, len_t msg_len,
 	}
 
 	// get the data after the register delim
-	char *data_start = strchr(msg_buf + HEADER_SIZE, DELIM);
+	const char *data_start = strchr(msg_buf + HEADER_SIZE, DELIM);
 
 	if (!data_start || data_start - msg_buf + 1 >= msg_len) {
 		return ErrorCode::InvalidParameter;
@@ -1640,7 +1640,7 @@ ErrorCode parse_compensated_imu(const_buf_ref_t msg_buf, len_t msg_len, Compensa
 	}
 
 	// get the data after the register delim
-	char *data_start = strchr(msg_buf + HEADER_SIZE, DELIM);
+	const char *data_start = strchr(msg_buf + HEADER_SIZE, DELIM);
 
 	if (!data_start || data_start - msg_buf + 1 >= msg_len) {
 		return ErrorCode::InvalidParameter;
@@ -1673,7 +1673,7 @@ ErrorCode parse_imu_measurements(const_buf_ref_t msg_buf, len_t msg_len,
 	}
 
 	// get the data after the register delim
-	char *data_start = strchr(msg_buf + HEADER_SIZE, DELIM);
+	const char *data_start = strchr(msg_buf + HEADER_SIZE, DELIM);
 
 	if (!data_start || data_start - msg_buf + 1 >= msg_len) {
 		return ErrorCode::InvalidParameter;
@@ -1708,7 +1708,7 @@ ErrorCode parse_delta_theta_delta_velocity(const_buf_ref_t msg_buf, len_t msg_le
 	}
 
 	// get the data after the register delim
-	char *data_start = strchr(msg_buf + HEADER_SIZE, DELIM);
+	const char *data_start = strchr(msg_buf + HEADER_SIZE, DELIM);
 
 	if (!data_start || data_start - msg_buf + 1 >= msg_len) {
 		return ErrorCode::InvalidParameter;
@@ -1739,7 +1739,7 @@ ErrorCode parse_real_time_hsi_results(const_buf_ref_t msg_buf, len_t msg_len,
 	}
 
 	// get the data after the register delim
-	char *data_start = strchr(msg_buf + HEADER_SIZE, DELIM);
+	const char *data_start = strchr(msg_buf + HEADER_SIZE, DELIM);
 
 	if (!data_start || data_start - msg_buf + 1 >= msg_len) {
 		return ErrorCode::InvalidParameter;
@@ -1775,7 +1775,7 @@ ErrorCode parse_heave_and_heave_rate(const_buf_ref_t msg_buf, len_t msg_len,
 	}
 
 	// get the data after the register delim
-	char *data_start = strchr(msg_buf + HEADER_SIZE, DELIM);
+	const char *data_start = strchr(msg_buf + HEADER_SIZE, DELIM);
 
 	if (!data_start || data_start - msg_buf + 1 >= msg_len) {
 		return ErrorCode::InvalidParameter;

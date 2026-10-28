@@ -13,6 +13,7 @@
 
 #pragma once
 
+#include <inttypes.h>
 #include "protocol.hpp"
 
 // registers follow this structure:
@@ -21,7 +22,7 @@
 // - HEADER: message header for the register/command, static constant
 // - FORMAT: format string for parsing the register data, static constant
 //   - %s for strings
-//   - %lu for unsigned long (uint32_t)
+//   - SCNu32 for uint32_t, independent of the host long width
 //   - %hhu for unsigned char (uint8_t)
 //   - %hd for signed short (int16_t)
 //   - %f for float
@@ -136,7 +137,7 @@ struct Baudrate {
 	static constexpr uint8_t ID = 5u; // register ID
 	static constexpr uint8_t SIZE = 4u; // size in bytes
 	static constexpr msg::MessageType HEADER = msg::MessageType::Unknown; // command header (not used)
-	static constexpr const char *FORMAT = "%lu"; // format string for parsing
+	static constexpr const char *FORMAT = "%" SCNu32; // format string for parsing
 
 	BaudrateSetting baudrate = BaudrateSetting::BAUD_115200; // baudrate register
 };
@@ -163,7 +164,7 @@ struct AsyncDataOutputType {
 	static constexpr uint8_t ID = 6u; // register ID
 	static constexpr uint8_t SIZE = 4u; // size in bytes
 	static constexpr msg::MessageType HEADER = msg::MessageType::Unknown; // command header (not used)
-	static constexpr const char *FORMAT = "%lu"; // format string for parsing
+	static constexpr const char *FORMAT = "%" SCNu32; // format string for parsing
 
 	Ador ador = Ador::YMR; // asynchronous data output type register
 };
@@ -188,7 +189,7 @@ struct AsyncDataOutputFreq {
 	static constexpr uint8_t ID = 7u; // register ID
 	static constexpr uint8_t SIZE = 4u; // size in bytes
 	static constexpr msg::MessageType HEADER = msg::MessageType::Unknown; // command header (not used)
-	static constexpr const char *FORMAT = "%lu"; // format string for parsing
+	static constexpr const char *FORMAT = "%" SCNu32; // format string for parsing
 
 	Adof adof = Adof::HZ_40; // asynchronous data output frequency register
 };
@@ -282,7 +283,7 @@ struct SyncControl {
 	static constexpr uint8_t ID = 32u; // register ID
 	static constexpr uint8_t SIZE = 20u; // size in bytes
 	static constexpr msg::MessageType HEADER = msg::MessageType::Unknown; // command header (not used)
-	static constexpr const char *FORMAT = "%hhu,%hhu,%hu,%lu,%hhu,%hhu,%hu,%lu,%lu"; // format string for parsing
+	static constexpr const char *FORMAT = "%hhu,%hhu,%hu,%" SCNu32 ",%hhu,%hhu,%hu,%" SCNu32 ",%" SCNu32; // format string for parsing
 
 	SyncInMode sync_in_mode = SyncInMode::Count; // SyncIn mode
 	SyncInEdge sync_in_edge = SyncInEdge::Rising; // SyncIn edge
@@ -587,7 +588,7 @@ struct ReferenceModelConfig {
 	static constexpr uint8_t ID = 83u;
 	static constexpr uint8_t SIZE = 40u; // size in bytes
 	static constexpr msg::MessageType HEADER = msg::MessageType::Unknown; // command header (not used)
-	static constexpr const char *FORMAT = "%hhu,%hhu,%hhu,%hhu,%lu,%f,%lf,%lf,%lf"; // format string for parsing
+	static constexpr const char *FORMAT = "%hhu,%hhu,%hhu,%hhu,%" SCNu32 ",%f,%lf,%lf,%lf"; // format string for parsing
 
 	uint8_t enable_mag_model = false; // true: enable magnetic model as reference, false: disable magnetic model
 	uint8_t enable_gravity_model = false; // true: enable gravity model as reference, false: disable gravity model
@@ -634,7 +635,7 @@ struct HardwareVersion {
 	static constexpr uint8_t ID = 2u; // register ID
 	static constexpr uint8_t SIZE = 4u; // size in bytes
 	static constexpr msg::MessageType HEADER = msg::MessageType::Unknown; // command header (not used)
-	static constexpr const char *FORMAT = "%lu"; // format string for parsing
+	static constexpr const char *FORMAT = "%" SCNu32; // format string for parsing
 
 	uint32_t hardware_version = 0u; // hardware version number
 };
@@ -644,7 +645,7 @@ struct SerialNumber {
 	static constexpr uint8_t ID = 3u; // register ID
 	static constexpr uint8_t SIZE = 4u; // size in bytes
 	static constexpr msg::MessageType HEADER = msg::MessageType::Unknown; // command header (not used)
-	static constexpr const char *FORMAT = "%lu"; // format string for parsing
+	static constexpr const char *FORMAT = "%" SCNu32; // format string for parsing
 
 	uint32_t serial_number = 0u; // serial number
 };
@@ -664,7 +665,7 @@ struct SyncStatus {
 	static constexpr uint8_t ID = 33u; // register ID
 	static constexpr uint8_t SIZE = 12u; // size in bytes
 	static constexpr msg::MessageType HEADER = msg::MessageType::Unknown; // command header (not used)
-	static constexpr const char *FORMAT = "%lu,%lu,%lu"; // format string for parsing
+	static constexpr const char *FORMAT = "%" SCNu32 ",%" SCNu32 ",%" SCNu32; // format string for parsing
 
 	uint32_t sync_in_count = 0u; // number of SyncIn events
 	uint32_t sync_in_time = 0u; // time of the last SyncIn event in microseconds

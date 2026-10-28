@@ -1,7 +1,8 @@
 /// @file Arduino.h
 /// @brief Minimal Arduino compatibility definitions for host unit tests.
-/// @details GPIO and delay calls do nothing, millis() always returns zero, and
-/// serial output is written to standard output.
+/// @details GPIO and delay calls do nothing, millis() always returns zero,
+/// micros() advances simulated time, and UART I/O uses an in-memory queue.
+/// Console print calls write to standard output.
 #pragma once
 
 #include <algorithm>
@@ -11,6 +12,8 @@
 #include <cstdio>
 #include <cstdarg>
 #include <cstring>
+#include <deque>
+#include <functional>
 
 #ifndef PI
 /// @brief Ratio of a circle's circumference to its diameter.
@@ -52,6 +55,11 @@ inline void arm_dcache_delete(const void*, std::uint32_t) {}
 /// @brief Provide a fixed time value for host tests.
 /// @return Always zero; elapsed time is not simulated.
 inline unsigned long millis() { return 0; }
+/// @brief Advance simulated microseconds so serial timeouts are deterministic.
+inline unsigned long micros() {
+    static unsigned long now = 0;
+    return now += 1000;
+}
 
 /// @brief Expose the standard infinity check through the Arduino interface.
 using std::isinf;
@@ -73,17 +81,47 @@ public:
     virtual size_t write(const uint8_t* buffer, size_t size) = 0;
 };
 
-/// @brief Minimal serial output stub that writes to standard output.
+/// @brief In-memory UART stub with console printing to standard output.
 class HardwareSerial {
 public:
+    /// @brief Host UART state and hooks for scripted device responses.
+    uint32_t baud = 0;
+    std::deque<uint8_t> rx;
+    std::function<void(const uint8_t*, size_t)> on_write;
+    /// @brief Disable console logging while exercising an expected error path.
+    bool console_output_enabled = true;
+
+    void begin(uint32_t value) { baud = value; }
+    void end() { baud = 0; }
+    void setTimeout(unsigned long) {}
+    size_t available() const { return rx.size(); }
+    size_t readBytes(uint8_t* buffer, size_t size) {
+        const size_t count = std::min(size, rx.size());
+        for (size_t i = 0; i < count; ++i) {
+            buffer[i] = rx.front();
+            rx.pop_front();
+        }
+        return count;
+    }
+    size_t write(const uint8_t* buffer, size_t size) {
+        if (on_write) {
+            on_write(buffer, size);
+        }
+        return size;
+    }
+
     /// @brief Write text verbatim to standard output.
     /// @param text Null-terminated text to write.
-    void print(const char* text) { std::fputs(text, stdout); }
+    void print(const char* text) {
+        if (console_output_enabled) {
+            std::fputs(text, stdout);
+        }
+    }
 
     /// @brief Write text verbatim without interpreting format specifiers.
     /// @param text Null-terminated text to write.
     void printf(const char* text) {
-        std::fputs(text, stdout);
+        print(text);
     }
 
     /// @brief Write formatted text to standard output using std::printf.
@@ -92,7 +130,9 @@ public:
     /// @param args Values matching the format specifiers.
     template <typename... Args>
     void printf(const char* format, Args... args) {
-        std::printf(format, args...);
+        if (console_output_enabled) {
+            std::printf(format, args...);
+        }
     }
 
     /// @brief Write a value as a double using the %g format, followed by a newline.
@@ -100,11 +140,12 @@ public:
     /// @param value Value to print.
     template <typename T>
     void println(const T& value) {
-        std::printf("%g\n", static_cast<double>(value));
+        printf("%g\n", static_cast<double>(value));
     }
 
     /// @brief Write a newline to standard output.
-    void println() { std::printf("\n"); }
+    void println() { print("\n"); }
+    void println(const char* text) { printf("%s\n", text); }
 };
 
 /// @brief Default serial stub, backed by standard output.
