@@ -7,50 +7,28 @@
 /// 8:1 gearbox: encoder revolutions are motor revolutions and torque is motor torque. This driver converts so that
 /// everything it takes and reports is at the output, like the other motors
 class SDC104 : public Motor {
-public:
+  public:
     /// @brief Deleted default constructor, must explicitly construct this object. Incomplete objects are not allowed
     SDC104() = delete;
 
     /// @brief Main constructor. Defines the controller type, global ID, id, can bus, and motor type
     /// @param motor_config The configuration for this motor, including its controller type, physical bus and id, motor type, and motor name.
-    SDC104(Cfg::Motor motor_config)
-        : Motor(motor_config) {
-    }
+    SDC104(Cfg::Motor motor_config) : Motor(motor_config) {}
 
     /// @brief Destructor, does nothing
-    ~SDC104() override { }
+    ~SDC104() override {}
 
-public:
+  public:
     /// @brief The current driver state/mode
-    enum class AxisState : uint8_t {
-        UNDEFINED = 0,
-        IDLE = 1,
-        FULL_CALIBRATION = 3,
-        MOTOR_CALIBRATION = 4,
-        ENCODER_CALIBRATION = 7,
-        CLOSED_LOOP_CONTROL = 8
-    };
+    enum class AxisState : uint8_t { UNDEFINED = 0, IDLE = 1, FULL_CALIBRATION = 3, MOTOR_CALIBRATION = 4, ENCODER_CALIBRATION = 7, CLOSED_LOOP_CONTROL = 8 };
 
     /// @brief The current control mode
-    enum class ControlMode : uint32_t {
-        VOLTAGE = 0,
-        TORQUE = 1,
-        VELOCITY = 2,
-        POSITION = 3
-    };
+    enum class ControlMode : uint32_t { VOLTAGE = 0, TORQUE = 1, VELOCITY = 2, POSITION = 3 };
 
     /// @brief The current input mode
-    enum class InputMode : uint32_t {
-        IDLE = 0,
-        DIRECT = 1,
-        SPEED_RAMP = 2,
-        POSITION_FILTERING = 3,
-        TRAPEZOIDAL_CURVES = 5,
-        TORQUE_RAMP = 6,
-        MIT_CONTROL = 9
-    };
+    enum class InputMode : uint32_t { IDLE = 0, DIRECT = 1, SPEED_RAMP = 2, POSITION_FILTERING = 3, TRAPEZOIDAL_CURVES = 5, TORQUE_RAMP = 6, MIT_CONTROL = 9 };
 
-public:
+  public:
     /// @brief Initialize the motor by putting it in idle
     /// @note The SDC104 keeps executing its last command forever, so a Teensy reset in the middle of a move would
     /// otherwise leave it running. The first torque/speed command puts it back in closed loop
@@ -59,7 +37,7 @@ public:
     /// @brief Common read command. Fills given message if successful
     /// @param msg The message buffer to fill data into
     /// @return 0 on failure, 1 on success
-    int read(CAN_message_t& msg) override;
+    int read(CAN_message_t &msg) override;
 
     /// @brief Common write command. This fills the given message if successful. This is used to compile data to be sent over the CAN line
     /// @param msg The message buffer to fill data into
@@ -68,7 +46,7 @@ public:
     /// @note The SDC104 only sends heartbeats on its own, so status has to be requested. Queued one-shot commands
     /// (mode, axis state, ...) are sent first, each once; otherwise calls alternate between the current torque/speed
     /// command, which the SDC104 holds until the next one, and a status request (encoder estimates or torques)
-    int write(CAN_message_t& msg) const override;
+    int write(CAN_message_t &msg) const override;
 
     /// @brief Zero the motor. This is a safety function to ensure the motor is not actively driving
     /// @note Does not issue a CAN command over the bus
@@ -91,7 +69,7 @@ public:
     /// @brief Print the current state of the motor
     void print_state() const override;
 
-public:
+  public:
     /// @brief Get the motor error state
     /// @param error_type 0: motor abnormality, 1: encoder exception, 3: control exception, 4: system exception
     void get_error(uint8_t error_type);
@@ -140,12 +118,12 @@ public:
     /// @brief Reboot the motor
     void reboot();
 
-private:
+  private:
     /// @brief Queue a one-shot command, or set the torque/speed command that's resent every loop
     /// @param msg The command to send
     /// @param one_shot True for commands that only need to be sent once (mode, axis state, ...), queued so a later
     /// one can't replace one that hasn't gone out yet; false for the torque/speed command
-    void set_output(const CAN_message_t& msg, bool one_shot = true);
+    void set_output(const CAN_message_t &msg, bool one_shot = true);
 
     /// @brief Get the motor ready for torque or speed commands: right control mode, closed loop
     /// @param control_mode The control mode the next command needs
@@ -155,16 +133,16 @@ private:
     /// @brief Check if the message is for this motor
     /// @param msg The message to check
     /// @return True if the message is for this motor, false otherwise
-    bool check_msg_id(const CAN_message_t& msg) const override;
+    bool check_msg_id(const CAN_message_t &msg) const override;
 
     /// @brief Create an emergency stop command
     /// @param msg The msg to fill in
-    void create_cmd_estop(CAN_message_t& msg);
+    void create_cmd_estop(CAN_message_t &msg);
 
     /// @brief Create a get error command
     /// @param msg The msg to fill in
     /// @param error_type 0: motor abnormality, 1: encoder exception, 3: control exception, 4: system exception
-    void create_cmd_get_error(CAN_message_t& msg, uint8_t error_type);
+    void create_cmd_get_error(CAN_message_t &msg, uint8_t error_type);
 
     // unimplemented
     // void create_cmd_rxsdo(CAN_message_t& msg, uint8_t opcode, uint16_t endpoint_id, uint8_t data[4]);
@@ -175,123 +153,123 @@ private:
     /// @brief Create a set axis node ID command
     /// @param msg The msg to fill in
     /// @param node_id The new unique CAN node ID
-    void create_cmd_set_axis_node_id(CAN_message_t& msg, uint32_t node_id);
+    void create_cmd_set_axis_node_id(CAN_message_t &msg, uint32_t node_id);
 
     /// @brief Create a set axis state command
     /// @param msg The msg to fill in
     /// @param axis_state The new axis state
     /// 0: undefined, 1: idle, 3: Full calibration, 4: motor calibration, 7: encoder calibration, 8: closed loop control
-    void create_cmd_set_axis_state(CAN_message_t& msg, AxisState axis_state);
+    void create_cmd_set_axis_state(CAN_message_t &msg, AxisState axis_state);
 
     // unimplemented
     // void create_cmd_mit_control(CAN_message_t& msg);
 
     /// @brief Create a get encoder estimates command
     /// @param msg The msg to fill in
-    void create_cmd_get_encoder_estimates(CAN_message_t& msg) const;
+    void create_cmd_get_encoder_estimates(CAN_message_t &msg) const;
 
     /// @brief Create a get encoder count command
     /// @param msg The msg to fill in
-    void create_cmd_get_encoder_count(CAN_message_t& msg);
+    void create_cmd_get_encoder_count(CAN_message_t &msg);
 
     /// @brief Create a set controller mode command
     /// @param msg The msg to fill in
     /// @param control_mode 0: voltage control, 1: torque control, 2: velocity control, 3: position control
     /// @param input_mode 0: idle, 1: direct, 2: speed ramp, 3: position filtering, 5: trapezoidal curves, 6: torque ramp, 9: MIT control
-    void create_cmd_set_controller_mode(CAN_message_t& msg, uint32_t control_mode, uint32_t input_mode);
+    void create_cmd_set_controller_mode(CAN_message_t &msg, uint32_t control_mode, uint32_t input_mode);
 
     /// @brief Create a set input position command
     /// @param msg The msg to fill in
     /// @param input_position The new input position in rev
     /// @param velocity_ff The velocity feedforward in 0.001rev/s
     /// @param torque_ff The torque feedforward in 0.001Nm
-    void create_cmd_set_input_position(CAN_message_t& msg, float input_position, int16_t velocity_ff, int16_t torque_ff);
+    void create_cmd_set_input_position(CAN_message_t &msg, float input_position, int16_t velocity_ff, int16_t torque_ff);
 
     /// @brief Create a set input velocity command
     /// @param msg The msg to fill in
     /// @param input_velocity The new input velocity in rev/s
     /// @param torque_ff The torque feedforward in Nm
-    void create_cmd_set_input_velocity(CAN_message_t& msg, float input_velocity, int16_t torque_ff);
+    void create_cmd_set_input_velocity(CAN_message_t &msg, float input_velocity, int16_t torque_ff);
 
     /// @brief Create a set input torque command
     /// @param msg The msg to fill in
     /// @param input_torque The new input torque in Nm
-    void create_cmd_set_input_torque(CAN_message_t& msg, float input_torque) const;
+    void create_cmd_set_input_torque(CAN_message_t &msg, float input_torque) const;
 
     /// @brief Create a set limits command
     /// @param msg The msg to fill in
     /// @param velocity_limit The new velocity limit in rev/s
     /// @param current_limit The new current limit in A
-    void create_cmd_set_limits(CAN_message_t& msg, float velocity_limit, float current_limit);
+    void create_cmd_set_limits(CAN_message_t &msg, float velocity_limit, float current_limit);
 
     /// @brief Create a start anticogging command
     /// @param msg The msg to fill in
-    void create_cmd_start_anticogging(CAN_message_t& msg);
+    void create_cmd_start_anticogging(CAN_message_t &msg);
 
     /// @brief Create a set trajectory velocity limit command
     /// @param msg The msg to fill in
     /// @param traj_velocity_limit The new trajectory velocity limit in rev/s
-    void create_cmd_set_traj_velocity_limit(CAN_message_t& msg, float traj_velocity_limit);
+    void create_cmd_set_traj_velocity_limit(CAN_message_t &msg, float traj_velocity_limit);
 
     /// @brief Create a set trajectory acceleration limit command
     /// @param msg The msg to fill in
     /// @param traj_acceleration_limit The new trajectory acceleration limit in rev/s^2
     /// @param traj_deceleration_limit The new trajectory deceleration limit in rev/s^2
-    void create_cmd_set_traj_acceleration_limit(CAN_message_t& msg, float traj_acceleration_limit, float traj_deceleration_limit);
+    void create_cmd_set_traj_acceleration_limit(CAN_message_t &msg, float traj_acceleration_limit, float traj_deceleration_limit);
 
     /// @brief Create a set trajectory inertia command
     /// @param msg The msg to fill in
     /// @param traj_inertia The new trajectory inertia in Nm/(rev/s^2)
-    void create_cmd_set_traj_inertia(CAN_message_t& msg, float traj_inertia);
+    void create_cmd_set_traj_inertia(CAN_message_t &msg, float traj_inertia);
 
     /// @brief Create a get IQ command
     /// @param msg The msg to fill in
-    void create_cmd_get_iq(CAN_message_t& msg);
+    void create_cmd_get_iq(CAN_message_t &msg);
 
     /// @brief Create a reboot command
     /// @param msg The msg to fill in
-    void create_cmd_reboot(CAN_message_t& msg);
+    void create_cmd_reboot(CAN_message_t &msg);
 
     /// @brief Create a get bus voltage and current command
     /// @param msg The msg to fill in
-    void create_cmd_get_bus_voltage_current(CAN_message_t& msg);
+    void create_cmd_get_bus_voltage_current(CAN_message_t &msg);
 
     /// @brief Create a clear errors command
     /// @param msg The msg to fill in
-    void create_cmd_clear_errors(CAN_message_t& msg);
+    void create_cmd_clear_errors(CAN_message_t &msg);
 
     /// @brief Create a set linear count command
     /// @param msg The msg to fill in
     /// @param linear_count The new absolute encoder position in counts
-    void create_cmd_set_linear_count(CAN_message_t& msg, int32_t linear_count);
+    void create_cmd_set_linear_count(CAN_message_t &msg, int32_t linear_count);
 
     /// @brief Create a set position gains command
     /// @param msg The msg to fill in
     /// @param pos_gain The new position gain in (rev/s)/rev
-    void create_cmd_set_position_gains(CAN_message_t& msg, float pos_gain);
+    void create_cmd_set_position_gains(CAN_message_t &msg, float pos_gain);
 
     /// @brief Create a set velocity gains command
     /// @param msg The msg to fill in
     /// @param vel_gain The new velocity gain in Nm/(rev/s)
     /// @param vel_integrator_gain The new velocity integrator gain in Nm/rev
-    void create_cmd_set_velocity_gains(CAN_message_t& msg, float vel_gain, float vel_integrator_gain);
+    void create_cmd_set_velocity_gains(CAN_message_t &msg, float vel_gain, float vel_integrator_gain);
 
     /// @brief Create a get torques command
     /// @param msg The msg to fill in
-    void create_cmd_get_torques(CAN_message_t& msg) const;
+    void create_cmd_get_torques(CAN_message_t &msg) const;
 
     /// @brief Create a get powers command
     /// @param msg The msg to fill in
-    void create_cmd_get_powers(CAN_message_t& msg);
+    void create_cmd_get_powers(CAN_message_t &msg);
 
     // unimplemented
     // void create_cmd_disable_can(CAN_message_t& msg);
 
     /// @brief Create a save configuration command
     /// @param msg The msg to fill in
-    void create_cmd_save_configuration(CAN_message_t& msg);
+    void create_cmd_save_configuration(CAN_message_t &msg);
 
-private:
+  private:
     /// @brief The motor's max torque in Nm at the output
     float m_max_torque = 11.0f;
 
@@ -355,12 +333,7 @@ private:
     } m_heartbeat = {};
 
     /// @brief What error type is currently being requested. 0: motor abnormality, 1: encoder exception, 3: control exception, 4: system exception
-    enum class ErrorRequestType {
-        MOTOR = 0,
-        ENCODER = 1,
-        CONTROL = 3,
-        SYSTEM = 4
-    };
+    enum class ErrorRequestType { MOTOR = 0, ENCODER = 1, CONTROL = 3, SYSTEM = 4 };
     /// @brief The current error request type
     ErrorRequestType m_error_request_type = ErrorRequestType::MOTOR;
 
@@ -467,5 +440,4 @@ private:
     static constexpr uint8_t CMD_DISABLE_CAN = 0x1E;
     /// @brief Save configuration cmd byte
     static constexpr uint8_t CMD_SAVE_CONFIGURATION = 0x1F;
-
 };

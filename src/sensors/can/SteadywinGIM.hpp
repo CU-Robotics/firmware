@@ -6,26 +6,26 @@
 // driver silently ignores torque commands above rated current * Kt: a GIM4310 (17.3 Nm) didn't move at 20.16 Nm and a
 // GIM3505 (1.04 Nm) didn't move at 1.27 Nm, so commands are clamped below that
 
-//GIM3505
+// GIM3505
 constexpr float GIM3505_TORQUE_CONSTANT = 0.52f; // Nm/A
-constexpr float GIM3505_GEAR_RATIO = 8.0f; // 8:1
-constexpr float GIM3505_MAX_TORQUE = 1.27f; // Nm
-constexpr float GIM3505_MAX_SPEED = 225.0f; // RPM
-constexpr float GIM3505_RATED_CURRENT = 2.0f; // A, the rated current set in our motor's driver config
+constexpr float GIM3505_GEAR_RATIO = 8.0f;       // 8:1
+constexpr float GIM3505_MAX_TORQUE = 1.27f;      // Nm
+constexpr float GIM3505_MAX_SPEED = 225.0f;      // RPM
+constexpr float GIM3505_RATED_CURRENT = 2.0f;    // A, the rated current set in our motor's driver config
 
-//GIM4310
+// GIM4310
 constexpr float GIM4310_TORQUE_CONSTANT = 3.46f; // Nm/A
-constexpr float GIM4310_GEAR_RATIO = 36.0f; // 36:1
-constexpr float GIM4310_MAX_TORQUE = 20.16f; // Nm
-constexpr float GIM4310_MAX_SPEED = 63.0f; // RPM
-constexpr float GIM4310_RATED_CURRENT = 5.0f; // A, the rated current set in our motor's driver config
+constexpr float GIM4310_GEAR_RATIO = 36.0f;      // 36:1
+constexpr float GIM4310_MAX_TORQUE = 20.16f;     // Nm
+constexpr float GIM4310_MAX_SPEED = 63.0f;       // RPM
+constexpr float GIM4310_RATED_CURRENT = 5.0f;    // A, the rated current set in our motor's driver config
 
-//GIM8108
+// GIM8108
 constexpr float GIM8108_TORQUE_CONSTANT = 1.83f; // Nm/A
-constexpr float GIM8108_GEAR_RATIO = 9.0f; // 9:1
-constexpr float GIM8108_MAX_TORQUE = 27.38f; // Nm
-constexpr float GIM8108_MAX_SPEED = 242.0f; // RPM
-constexpr float GIM8108_RATED_CURRENT = 30.0f; // A, the rated current set in our motor's driver config
+constexpr float GIM8108_GEAR_RATIO = 9.0f;       // 9:1
+constexpr float GIM8108_MAX_TORQUE = 27.38f;     // Nm
+constexpr float GIM8108_MAX_SPEED = 242.0f;      // RPM
+constexpr float GIM8108_RATED_CURRENT = 30.0f;   // A, the rated current set in our motor's driver config
 
 /// @brief Motor driver for Steadywin GIM motors that use Steadywin's GIM CAN protocol (GIM3505, GIM4310, GIM8108)
 /// @note The GIM6010 uses an SDC104 controller with a different (ODrive based) protocol, see SDC104.hpp
@@ -36,14 +36,13 @@ constexpr float GIM8108_RATED_CURRENT = 30.0f; // A, the rated current set in ou
 /// @note GIM3505 docs         : https://steadywin.cn/en/pd.jsp?id=130&fromColId=0#_pp=0_752_3
 /// @note motor driver protocol: https://14180476.s21i.faiusr.com/61/ABUIABA9GAAgqPvVqgYo-uLA7Ac.pdf?v=1708485774
 class SteadywinGIM : public Motor {
-public:
+  public:
     /// @brief Deleted default constructor, must explicitly construct this object. Incomplete objects are not allowed
     SteadywinGIM() = delete;
 
     /// @brief Main constructor. Defines the controller type, global ID, id, and can bus
     /// @param motor_config The configuration for this motor, including its controller type, physical bus and id, motor type, and motor name.
-    SteadywinGIM(const Cfg::Motor& motor_config)
-        : Motor(motor_config) {
+    SteadywinGIM(const Cfg::Motor &motor_config) : Motor(motor_config) {
         // GIM frames use the bare CAN ID, both directions
         m_base_id = 0;
 
@@ -80,10 +79,9 @@ public:
     }
 
     /// @brief Destructor, does nothing
-    ~SteadywinGIM() override { }
+    ~SteadywinGIM() override {}
 
-
-public:
+  public:
     /// @brief Initialize the motor by verifying it is on
     void init() override;
 
@@ -91,14 +89,14 @@ public:
     /// @param msg The message buffer to fill data into
     /// @return 0 if the message is not for this motor, 1 otherwise
     /// @note m_state.position is the raw 16 bit position count, like the other drivers' encoder counts. Use get_position_rad() for radians
-    int read(CAN_message_t& msg) override;
+    int read(CAN_message_t &msg) override;
 
     /// @brief Common write command. This fills the given message if successful. This is used to compile data to be sent over the CAN line
     /// @param msg The message buffer to fill data into
     /// @return The index in the buffer where the motor data was written. The MG8016E-i6 driver will always write 8 bytes so this will always return 0
     /// @note Does not issue a CAN command over the bus
     /// @note Return value is mostly useless for this motor, it will always be 0
-    int write(CAN_message_t& msg) const override;
+    int write(CAN_message_t &msg) const override;
 
     /// @brief Zero the motor. This is a safety function to ensure the motor is not actively driving
     /// @note Does not issue a CAN command over the bus
@@ -116,7 +114,7 @@ public:
     /// @return Position in radians, wraps over [-12.5, 12.5]
     std::optional<float> get_position_rad() const override { return m_position_rad; }
 
-public:
+  public:
     /// @brief Turn on the motor
     void write_motor_on();
 
@@ -126,8 +124,7 @@ public:
     /// @brief Stop the motor but don't clear its state
     void write_motor_stop();
 
-
-private:
+  private:
     /// @brief The motor's gear ratio (determined by "motor_type" switch in the constructor)
     float m_gear_ratio = 0.0f;
 
@@ -163,7 +160,7 @@ private:
 
     /// @brief Creates a command to modify the configuration
     /// @param buf Output buffer to write command to
-    /// @param conf_type 1 byte. 0x00 indicates data is a 32-bit signed INTEGER. 0x01 indicates that data is a 32-bit signed FLOAT. 
+    /// @param conf_type 1 byte. 0x00 indicates data is a 32-bit signed INTEGER. 0x01 indicates that data is a 32-bit signed FLOAT.
     /// @param conf_id 1 byte specifying which configuration to modify. these are found on page number 7 of https://14180476.s21i.faiusr.com/61/ABUIABA9GAAgqPvVqgYo-uLA7Ac.pdf?v=1708485774
     /// @param data 4 bytes of data to write to the configuration.
     void create_cmd_modify_configuration(uint8_t buf[8], uint8_t conf_type, uint8_t conf_id, uint32_t data);
@@ -226,7 +223,7 @@ private:
 
     /// @brief Create a calibration command
     /// @param buf Output buffer to write command to
-    /// @param calibration_type 1 byte calibration type, 0x00 phase order calibration, 0x01 encoder calibration 
+    /// @param calibration_type 1 byte calibration type, 0x00 phase order calibration, 0x01 encoder calibration
     void create_cmd_calibration(uint8_t buf[8], uint8_t calibration_type);
 
     /// @brief Create an update firmware command
@@ -246,7 +243,6 @@ private:
     static constexpr uint8_t CMD_MODIFY_CONFIGURATION = 0x83;
     /// @brief Retrieve configuration command byte
     static constexpr uint8_t CMD_RETRIEVE_CONFIGURATION = 0x84;
-
 
     /// @brief Start motor command byte
     static constexpr uint8_t CMD_START_MOTOR = 0x91;
