@@ -6,7 +6,7 @@
 #include "sensors/can/C610.hpp"
 #include "sensors/can/C620.hpp"
 #include "sensors/can/MG8016EI6.hpp"
-#include "sensors/can/GIM.hpp"
+#include "sensors/can/SteadywinGIM.hpp"
 #include "sensors/can/SDC104.hpp"
 #include "comms/data/motor_state_data.hpp"
 #include "comms/data/sendable.hpp"
@@ -63,7 +63,7 @@ void CANManager::configure_motor(const Cfg::Motor& motor_config){
             break;
         }
         case Cfg::MotorControllerType::GIM: {
-            m_motor_name_map.insert({ motor_config.motor_name, std::make_shared<GIM>(motor_config) });
+            m_motor_name_map.insert({ motor_config.motor_name, std::make_shared<SteadywinGIM>(motor_config) });
             Serial.printf("Creating GIM Motor %u on bus %u with ID %u\n", static_cast<uint32_t>(motor_config.motor_name), motor_config.physical_bus, motor_config.physical_id);
             break;
         }

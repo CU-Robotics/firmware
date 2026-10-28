@@ -1,43 +1,58 @@
 #pragma once
 #include "motor.hpp"
+
+// Torque constants are output-side (they already include the gear ratio), max speeds are RPM at the output.
+// Rated currents are what our motors' drivers are configured with (config 0x01, set over CAN, not in the repo). The
+// driver silently ignores torque commands above rated current * Kt: a GIM4310 (17.3 Nm) didn't move at 20.16 Nm and a
+// GIM3505 (1.04 Nm) didn't move at 1.27 Nm, so commands are clamped below that
+
 //GIM3505
 constexpr float GIM3505_TORQUE_CONSTANT = 0.52f; // Nm/A
 constexpr float GIM3505_GEAR_RATIO = 8.0f; // 8:1
 constexpr float GIM3505_MAX_TORQUE = 1.27f; // Nm
 constexpr float GIM3505_MAX_SPEED = 225.0f; // RPM
+constexpr float GIM3505_RATED_CURRENT = 2.0f; // A, the rated current set in our motor's driver config
 
 //GIM4310
 constexpr float GIM4310_TORQUE_CONSTANT = 3.46f; // Nm/A
 constexpr float GIM4310_GEAR_RATIO = 36.0f; // 36:1
 constexpr float GIM4310_MAX_TORQUE = 20.16f; // Nm
 constexpr float GIM4310_MAX_SPEED = 63.0f; // RPM
+constexpr float GIM4310_RATED_CURRENT = 5.0f; // A, the rated current set in our motor's driver config
 
 //GIM8108
-constexpr float GIM8108_TORQUE_CONSTANT = 1.83f; // NmA
+constexpr float GIM8108_TORQUE_CONSTANT = 1.83f; // Nm/A
 constexpr float GIM8108_GEAR_RATIO = 9.0f; // 9:1
 constexpr float GIM8108_MAX_TORQUE = 27.38f; // Nm
 constexpr float GIM8108_MAX_SPEED = 242.0f; // RPM
+constexpr float GIM8108_RATED_CURRENT = 30.0f; // A, the rated current set in our motor's driver config
 
-/// @brief Motor driver for the GIM motor
+/// @brief Motor driver for Steadywin GIM motors that use Steadywin's GIM CAN protocol (GIM3505, GIM4310, GIM8108)
+/// @note The GIM6010 uses an SDC104 controller with a different (ODrive based) protocol, see SDC104.hpp
+/// @note Verified on a GIM3505-8, GIM4310-36 and GIM8108-9. The GIM8108's docs mention an SDC103, but ours speaks
+/// this GIM protocol
 /// @note GIM8108 docs (SDC103): https://steadywin.cn/en/pd.jsp?id=15&fromColId=0#_pp=0_752_3
 /// @note GIM4310 docs         : https://steadywin.cn/en/pd.jsp?id=11&fromColId=0#_pp=0_752_3
 /// @note GIM3505 docs         : https://steadywin.cn/en/pd.jsp?id=130&fromColId=0#_pp=0_752_3
 /// @note motor driver protocol: https://14180476.s21i.faiusr.com/61/ABUIABA9GAAgqPvVqgYo-uLA7Ac.pdf?v=1708485774
-class GIM : public Motor {
+class SteadywinGIM : public Motor {
 public:
     /// @brief Deleted default constructor, must explicitly construct this object. Incomplete objects are not allowed
-    GIM() = delete;
+    SteadywinGIM() = delete;
 
     /// @brief Main constructor. Defines the controller type, global ID, id, and can bus
     /// @param motor_config The configuration for this motor, including its controller type, physical bus and id, motor type, and motor name.
-    GIM(const Cfg::Motor& motor_config)
+    SteadywinGIM(const Cfg::Motor& motor_config)
         : Motor(motor_config) {
+        // GIM frames use the bare CAN ID, both directions
+        m_base_id = 0;
 
         switch (motor_config.motor_type) {
         case Cfg::MotorType::GIM3505: {
             m_torque_constant = GIM3505_TORQUE_CONSTANT;
             m_gear_ratio = GIM3505_GEAR_RATIO;
             m_max_torque = GIM3505_MAX_TORQUE;
+            m_rated_current = GIM3505_RATED_CURRENT;
             m_max_speed = GIM3505_MAX_SPEED;
             break;
         }
@@ -45,6 +60,7 @@ public:
             m_torque_constant = GIM4310_TORQUE_CONSTANT;
             m_gear_ratio = GIM4310_GEAR_RATIO;
             m_max_torque = GIM4310_MAX_TORQUE;
+            m_rated_current = GIM4310_RATED_CURRENT;
             m_max_speed = GIM4310_MAX_SPEED;
             break;
         }
@@ -52,6 +68,7 @@ public:
             m_torque_constant = GIM8108_TORQUE_CONSTANT;
             m_gear_ratio = GIM8108_GEAR_RATIO;
             m_max_torque = GIM8108_MAX_TORQUE;
+            m_rated_current = GIM8108_RATED_CURRENT;
             m_max_speed = GIM8108_MAX_SPEED;
             break;
         }
@@ -63,16 +80,17 @@ public:
     }
 
     /// @brief Destructor, does nothing
-    ~GIM() override { }
+    ~SteadywinGIM() override { }
 
 
 public:
     /// @brief Initialize the motor by verifying it is on
     void init() override;
 
-    /// @brief Common read command.
+    /// @brief Common read command. Parses the status in torque/speed control replies
     /// @param msg The message buffer to fill data into
-    /// @return 0 on failure, 1 on success
+    /// @return 0 if the message is not for this motor, 1 otherwise
+    /// @note m_state.position is the raw 16 bit position count, like the other drivers' encoder counts. Use get_position_rad() for radians
     int read(CAN_message_t& msg) override;
 
     /// @brief Common write command. This fills the given message if successful. This is used to compile data to be sent over the CAN line
@@ -94,9 +112,9 @@ public:
     /// @param speed Speed from -1.0f to 1.0f. This gets clamped into this range and then scaled to the individual motor type's max speed.
     void write_motor_speed(float speed);
 
-    /// @brief Write the motor's position
-    /// @param position Position in radians
-    void write_motor_position(float position);
+    /// @brief Get the last reported output shaft position
+    /// @return Position in radians, wraps over [-12.5, 12.5]
+    inline float get_position_rad() const { return m_position_rad; }
 
 public:
     /// @brief Turn on the motor
@@ -113,7 +131,7 @@ private:
     /// @brief The motor's gear ratio (determined by "motor_type" switch in the constructor)
     float m_gear_ratio = 0.0f;
 
-    /// @brief The motor's torque constant in Nm/A (determined by "motor_type" switch in the constructor)
+    /// @brief The motor's output-side torque constant in Nm/A (determined by "motor_type" switch in the constructor)
     float m_torque_constant = 0.0f;
 
     /// @brief The motor's maximum torque in Nm (determined by "motor_type" switch in the constructor)
@@ -121,6 +139,19 @@ private:
 
     /// @brief The motor's maximum speed in RPM (determined by "motor_type" switch in the constructor)
     float m_max_speed = 0.0f;
+
+    /// @brief The rated current in A configured in the motor's driver (determined by "motor_type" switch in the constructor)
+    float m_rated_current = 0.0f;
+
+    /// @brief Fraction of rated current * Kt that torque commands are clamped to, a margin under the driver's cutoff
+    static constexpr float TORQUE_LIMIT_MARGIN = 0.98f;
+
+    /// @brief Last reported output shaft position in radians
+    float m_position_rad = 0.0f;
+
+    /// @brief Put a command into the output frame addressed to this motor
+    /// @param buf The 8 byte command to send
+    void set_output(const uint8_t buf[8]);
 
     /// @brief Creates a command to reset the motor's configuration
     /// @param buf Output buffer to write command to
@@ -154,20 +185,12 @@ private:
     /// @brief Create a torque control command
     /// @param buf Output buffer to write command to
     /// @param torque Torque in unit of Nm
-    /// @param duration Torque control execution time in ms.
-    void create_cmd_torque_control(uint8_t buf[8], float torque, uint32_t duration);
+    void create_cmd_torque_control(uint8_t buf[8], float torque);
 
     /// @brief Create a speed control command
     /// @param buf Output buffer to write command to
     /// @param speed Speed in unit of RPM.
-    /// @param duration Speed control execution time in ms.
-    void create_cmd_speed_control(uint8_t buf[8], float speed, uint32_t duration);
-
-    /// @brief Create a position control command
-    /// @param buf Output buffer to write command to
-    /// @param position Target position in unit of RAD
-    /// @param duration Position control execution time in ms.
-    void create_cmd_position_control(uint8_t buf[8], float position, uint32_t duration);
+    void create_cmd_speed_control(uint8_t buf[8], float speed);
 
     /// @brief Create a stop control command
     /// @param buf Output buffer to write command to
@@ -233,10 +256,10 @@ private:
     static constexpr uint8_t CMD_TORQUE_CONTROL = 0x93;
     /// @brief Speed control command byte
     static constexpr uint8_t CMD_SPEED_CONTROL = 0x94;
-    /// @brief Position control command byte
-    static constexpr uint8_t CMD_POSITION_CONTROL = 0x95;
-
-    // note: although a PTS (position,torque,speed) control command 0x96 is mentioned in the docs, it is marked unsupported and has no usage details.
+    // note: position control (0x95) isn't used. On a GIM4310 it only moves when given a long execution time, and
+    // resending it every loop with a short one doesn't move it at all, so position is controlled through torque.
+    // A PTS (position,torque,speed) control command 0x96 is also mentioned in the docs, but it is marked
+    // unsupported and has no usage details.
 
     /// @brief Stop control command byte
     static constexpr uint8_t CMD_STOP_CONTROL = 0x97;

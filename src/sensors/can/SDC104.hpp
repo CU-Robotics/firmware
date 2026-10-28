@@ -2,8 +2,10 @@
 
 #include "motor.hpp"
 
-/// @brief SDC104 motor controller class
-/// @note The SDC104 is running firmware version 0.5.13(1)
+/// @brief SDC104 motor controller class, driving a GIM6010-8
+/// @note The SDC104 is running firmware version 0.5.13(1), ODrive based. Its CAN units are on the motor side of the
+/// 8:1 gearbox: encoder revolutions are motor revolutions and torque is motor torque. This driver converts so that
+/// everything it takes and reports is at the output, like the other motors
 class SDC104 : public Motor {
 public:
     /// @brief Deleted default constructor, must explicitly construct this object. Incomplete objects are not allowed
@@ -18,7 +20,7 @@ public:
     /// @brief Destructor, does nothing
     ~SDC104() override { }
 
-private:
+public:
     /// @brief The current driver state/mode
     enum class AxisState : uint8_t {
         UNDEFINED = 0,
@@ -49,7 +51,9 @@ private:
     };
 
 public:
-    /// @brief Initialize the motor by verifying it is on
+    /// @brief Initialize the motor by putting it in idle
+    /// @note The SDC104 keeps executing its last command forever, so a Teensy reset in the middle of a move would
+    /// otherwise leave it running. The first torque/speed command puts it back in closed loop
     void init() override;
 
     /// @brief Common read command. Fills given message if successful
@@ -61,7 +65,9 @@ public:
     /// @param msg The message buffer to fill data into
     /// @return The index in the buffer where the motor data was written. The SDC104 driver will always write 8 bytes so this will always return 0
     /// @note Does not issue a CAN command over the bus
-    /// @note Return value is mostly useless for this motor, it will always be 0
+    /// @note The SDC104 only sends heartbeats on its own, so status has to be requested. Queued one-shot commands
+    /// (mode, axis state, ...) are sent first, each once; otherwise calls alternate between the current torque/speed
+    /// command, which the SDC104 holds until the next one, and a status request (encoder estimates or torques)
     int write(CAN_message_t& msg) const override;
 
     /// @brief Zero the motor. This is a safety function to ensure the motor is not actively driving
@@ -69,12 +75,18 @@ public:
     void zero_motor() override;
 
     /// @brief Write motor torque given a normalized value
-    /// @param torque A value between [-1, 1] representing the torque range of [-33A, 33A]
+    /// @param torque A value between [-1, 1] of the max output torque. Switches the motor to torque control and
+    /// closed loop first if needed, in which case the torque is sent on a later call
     void execute_motor_torque_command(float torque) override;
 
-    /// @brief Write motor speed
-    /// @param speed The speed in rev/s
+    /// @brief Write motor speed given a normalized value
+    /// @param speed A value between [-1, 1] of the max output speed. Switches the motor to velocity control and
+    /// closed loop first if needed, in which case the speed is sent on a later call
     void write_motor_speed(float speed);
+
+    /// @brief Get the last reported output shaft position
+    /// @return Multi-turn position in radians at the output
+    inline float get_position_rad() const { return m_position_rad; }
 
     /// @brief Print the current state of the motor
     void print_state() const override;
@@ -129,6 +141,17 @@ public:
     void reboot();
 
 private:
+    /// @brief Queue a one-shot command, or set the torque/speed command that's resent every loop
+    /// @param msg The command to send
+    /// @param one_shot True for commands that only need to be sent once (mode, axis state, ...), queued so a later
+    /// one can't replace one that hasn't gone out yet; false for the torque/speed command
+    void set_output(const CAN_message_t& msg, bool one_shot = true);
+
+    /// @brief Get the motor ready for torque or speed commands: right control mode, closed loop
+    /// @param control_mode The control mode the next command needs
+    /// @return True if it's ready, false if a mode or axis state command is queued or still being waited on
+    bool prepare_for(ControlMode control_mode);
+
     /// @brief Check if the message is for this motor
     /// @param msg The message to check
     /// @return True if the message is for this motor, false otherwise
@@ -165,7 +188,7 @@ private:
 
     /// @brief Create a get encoder estimates command
     /// @param msg The msg to fill in
-    void create_cmd_get_encoder_estimates(CAN_message_t& msg);
+    void create_cmd_get_encoder_estimates(CAN_message_t& msg) const;
 
     /// @brief Create a get encoder count command
     /// @param msg The msg to fill in
@@ -193,7 +216,7 @@ private:
     /// @brief Create a set input torque command
     /// @param msg The msg to fill in
     /// @param input_torque The new input torque in Nm
-    void create_cmd_set_input_torque(CAN_message_t& msg, float input_torque);
+    void create_cmd_set_input_torque(CAN_message_t& msg, float input_torque) const;
 
     /// @brief Create a set limits command
     /// @param msg The msg to fill in
@@ -255,7 +278,7 @@ private:
 
     /// @brief Create a get torques command
     /// @param msg The msg to fill in
-    void create_cmd_get_torques(CAN_message_t& msg);
+    void create_cmd_get_torques(CAN_message_t& msg) const;
 
     /// @brief Create a get powers command
     /// @param msg The msg to fill in
@@ -269,17 +292,42 @@ private:
     void create_cmd_save_configuration(CAN_message_t& msg);
 
 private:
-    /// @brief The motor's torque constant in Nm
+    /// @brief The motor's max torque in Nm at the output
     float m_max_torque = 11.0f;
 
-    /// @brief The motor's torque constant in Nm/A
-    float m_torque_constant = 0.47f;
-
-    /// @brief The motor's gear ratio, 8:1
+    /// @brief The motor's gear ratio, 8:1. The SDC104's units are on the motor side of it
     float m_gear_ratio = 8.0f;
 
-    /// @brief The motor's maximum speed in RPM
+    /// @brief The motor's maximum speed in RPM at the output
     float m_max_speed = 420.0f;
+
+    /// @brief The control mode last sent to the motor, so it's only sent when it changes
+    ControlMode m_control_mode = ControlMode::VOLTAGE;
+    /// @brief Whether m_control_mode has been sent at all
+    bool m_control_mode_known = false;
+
+    /// @brief Whether m_output holds a torque/speed command yet
+    bool m_have_command = false;
+
+    /// @brief How many one-shot commands can wait to be sent
+    static constexpr uint8_t ONE_SHOT_QUEUE_SIZE = 4;
+    /// @brief One-shot commands (mode, axis state, ...) waiting to be sent, as a ring buffer
+    CAN_message_t m_one_shots[ONE_SHOT_QUEUE_SIZE] = {};
+    /// @brief Index of the next one-shot command to send
+    mutable uint8_t m_one_shot_head = 0;
+    /// @brief Number of one-shot commands waiting
+    mutable uint8_t m_one_shot_count = 0;
+
+    /// @brief Counts write() calls, to alternate between the command and status requests
+    mutable uint32_t m_write_count = 0;
+
+    /// @brief When closed loop was last requested, in millis()
+    uint32_t m_closed_loop_requested_ms = 0;
+    /// @brief How long to wait for the heartbeat to confirm closed loop before requesting it again
+    static constexpr uint32_t CLOSED_LOOP_RETRY_MS = 250;
+
+    /// @brief Last reported multi-turn output shaft position in radians
+    float m_position_rad = 0.0f;
 
     // Motor specific state
     /// @brief Motor heartbeat data
@@ -304,7 +352,7 @@ private:
         uint8_t : 8;
         /// @brief consecuitive "life" sequence number
         uint8_t life_seq;
-    } m_heartbeat;
+    } m_heartbeat = {};
 
     /// @brief What error type is currently being requested. 0: motor abnormality, 1: encoder exception, 3: control exception, 4: system exception
     enum class ErrorRequestType {
@@ -326,10 +374,10 @@ private:
     uint32_t m_system_exception = 0;
 
     /// @brief Current motor position estimate in rev
-    /// @note This is for the center of the motor, not the pronged part
+    /// @note This is the motor side of the gearbox, not the output
     float m_position_estimate = 0;
     /// @brief Current motor velocity estimate in rev/s
-    /// @note This is for the center of the motor, not the pronged part
+    /// @note This is the motor side of the gearbox, not the output
     float m_velocity_estimate = 0;
 
     /// @brief Encoder multi-turn count
@@ -347,9 +395,9 @@ private:
     /// @brief Current bus current in A
     float m_bus_current = 0;
 
-    /// @brief The motor torque setpoint in Nm
+    /// @brief The motor torque setpoint in Nm, motor side
     float m_torque_setpoint = 0;
-    /// @brief The motor torque measured in Nm
+    /// @brief The motor torque measured in Nm, motor side
     float m_torque_measured = 0;
 
     /// @brief The electrical power in W
