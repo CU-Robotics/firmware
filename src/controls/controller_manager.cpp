@@ -37,6 +37,12 @@ void ControllerManager::init_controller(const Cfg::Controller& controller_config
         case Cfg::ControllerType::LowerFeederController:
             controllers.push_back(std::make_unique<LowerFeederController>(controller_config, can, available_motors, state_config));
             break;
+        case Cfg::ControllerType::ArmJointController:
+            controllers.push_back(std::make_unique<ArmJointController>(controller_config, can, available_motors, false));
+            break;
+        case Cfg::ControllerType::ArmLinkagePitchController:
+            controllers.push_back(std::make_unique<ArmJointController>(controller_config, can, available_motors, true));
+            break;
         default:
             SystemLog.error(Subsystem::Controls,"ControllerManager::init_controller: Unrecognized controller type %d\n", controller_config.controller_type);
             break;

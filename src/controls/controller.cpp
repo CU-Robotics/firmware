@@ -22,6 +22,41 @@ MotorVelocities xdrive_mix(float x, float y, float rot, float heading) {
         -x * cosine - y * sine + rot,
     }};
 }
+
+float to_pitch_linkage_angle(float angle) {
+    double a = (1087 * std::sin(angle)) / 4;
+    double b = (1087 * std::cos(angle)) / 4;
+    double c = std::pow(b + 140, 2);
+    double d = std::pow(a + 72, 2);
+    return std::atan(((75 * d + (a + 147) * (d + c - 150745.0 / 4) + (b + 140) * std::sqrt(162409 * d - std::pow(d + c + 150745.0 / 4, 2) + 162409 * c) + 75 * c + 11305875.0 / 4) / (2 * d + 2 * c) - 75)
+        / ((180 * d + (b + 320) * (d + c - 150745.0 / 4) - (a + 72) * std::sqrt(162409 * d - std::pow(d + c + 150745.0 / 4, 2) + 162409 * c) + 180 * c + 6783525) / (2 * d + 2 * c) - 180));
+}
+
+float pitch_linkage_gear_ratio(float angle) {
+    const float s = std::sin(angle);
+    const float c = std::cos(angle);
+
+    const float A = s * 2.7175e2f + 7.2e1f;
+    const float B = c * 2.7175e2f + 1.4e2f;
+    const float A2 = A * A;
+    const float B2 = B * B;
+    const float C = A2 + B2;
+    const float cA = c * A;
+    const float sB = s * B;
+    const float D = s * 2.7175e2f + 1.47e2f;
+    const float E = cA * 5.435e2f - sB * 5.435e2f;
+    const float F = C - 3.768625e4f;
+    const float G = A2 * 1.62409e5f;
+    const float H = std::sqrt(G - std::pow(C + 3.768625e4f, 2.0f) + B2 * 1.62409e5f);
+    const float I = A2 * 2.0f + B2 * 2.0f;
+    const float J = cA * 1.087e3f - sB * 1.087e3f;
+    const float K = A2 * 7.5e1f + D * F + B * H + B2 * 7.5e1f + 2.82646875e6f;
+    const float L = A2 * 1.8e2f + (c * 2.7175e2f + 3.2e2f) * F - A * H + B2 * 1.8e2f + 6.783525e6f;
+
+    return (((E * D + c * F * 2.7175e2f + cA * 4.07625e4f - sB * 4.07625e4f - s * H * 2.7175e2f - (B * (cA * (-8.82692915e7f) + sB * 8.82692915e7f + E * (A2 + B2 + 3.768625e4f) * 2.0f) / H) / 2.0f) / I - 1.0f / (I * I) * J * K)
+        / (L / I - 1.8e2f) - ((E * (c * 2.7175e2f + 3.2e2f) - s * (A2 + B2 - 3.768625e4f) * 2.7175e2f - c * H * 2.7175e2f + cA * 9.783e4f - sB * 9.783e4f + (A * (cA * (-8.82692915e7f) + sB * 8.82692915e7f + E * (C + 3.768625e4f) * 2.0f) / H) / 2.0f) / I - 1.0f / (I * I) * J * L)
+        / std::pow(L / I - 1.8e2f, 2.0f) * (K / I - 7.5e1f)) / (std::pow(K / I - 7.5e1f, 2.0f) / std::pow(L / I - 1.8e2f, 2.0f) + 1.0f);
+}
 } // namespace controller
 
 #ifndef UNIT_TEST
@@ -544,4 +579,74 @@ void LowerFeederController::step(RobotStateArray& reference_array, RobotStateArr
     near_feeder_motor->write_motor_torque(lower_output);
     far_feeder_motor->write_motor_torque(-lower_output);
 }
+
+void ArmJointController::validate(const RobotStateArray& reference_array, const RobotStateArray& estimate_array) {
+    checkControllerError("ArmJointController", "Arm Joint", reference_array[joint_state], estimate_array[joint_state], joint_error_monitor);
+}
+
+void ArmJointController::step(RobotStateArray& reference_array, RobotStateArray& estimate_array, RobotStateArray& target_array) {
+    float dt = timer.delta();
+    float output = 0.0;
+
+    pidp.kp = full_state_position_controller.gains.p;
+    pidp.ki = full_state_position_controller.gains.i;
+    pidp.kd = full_state_position_controller.gains.d;
+    pidp.kf = full_state_position_controller.gains.f;
+
+    pidv.kp = full_state_velocity_controller.gains.p;
+    pidv.ki = full_state_velocity_controller.gains.i;
+    pidv.kd = full_state_velocity_controller.gains.d;
+    pidv.kf = full_state_velocity_controller.gains.f;
+
+    float reference_position = reference_array[joint_state].get_position();
+    float reference_velocity = reference_array[joint_state].get_velocity();
+    float estimate_position = estimate_array[joint_state].get_position();
+    float estimate_velocity = estimate_array[joint_state].get_velocity();
+
+    if (through_pitch_linkage) {
+        // run the loops on the motor side of the linkage, where the gear ratio changes with the joint angle
+        reference_velocity *= controller::pitch_linkage_gear_ratio(reference_position);
+        estimate_velocity *= controller::pitch_linkage_gear_ratio(estimate_position);
+        reference_position = controller::to_pitch_linkage_angle(reference_position);
+        estimate_position = controller::to_pitch_linkage_angle(estimate_position);
+        safety::assert_or_safety_procedure(std::isfinite(reference_position) && std::isfinite(estimate_position) && std::isfinite(reference_velocity) && std::isfinite(estimate_velocity),
+            "ArmJointController: pitch joint outside the linkage's range (reference %f, estimate %f)", reference_array[joint_state].get_position(), estimate_array[joint_state].get_position());
+    }
+
+    pidp.setpoint = reference_position;
+    pidp.measurement = estimate_position;
+
+    pidv.setpoint = reference_velocity;
+    pidv.measurement = estimate_velocity;
+
+    output += pidp.filter(dt, true, false);
+    output += pidv.filter(dt, true, false);
+    output = std::clamp(output, -1.0f, 1.0f);
+
+    joint_motor->write_motor_torque(controller_config.gear_ratios.motor1_direction * output);
+}
 #endif // UNIT_TEST
+
+/*
+MATLAB script that generates to_pitch_linkage_angle and pitch_linkage_gear_ratio
+%base joint positions
+x4 = 180;
+y4 = 75;
+x0 = 320;
+y0 = 147;
+%link lengths
+l1 = 271.75;
+l2 = 201.5;
+l3 = 54;
+a1 = l3^2 - l2^2;
+C = @(a,b,c,d) (a-b).^2 + (c-d).^2;
+m = -1;
+syms x
+eq = atan( ...
+    ( y4 - ( ( (sin(x).*l1 + y0).*(a1+C(x4,(cos(x).*l1 + x0),y4,(sin(x).*l1 + y0))) - y4.*(a1-C(x4,(cos(x).*l1 + x0),y4,(sin(x).*l1 + y0))) + m.*(x4 - (cos(x).*l1 + x0)).*sqrt(4.*C(x4,(cos(x).*l1 + x0),y4,(sin(x).*l1 + y0)).*l2.^2 - (a1-C(x4,(cos(x).*l1 + x0),y4,(sin(x).*l1 + y0))).^2) ) / (2.*C(x4,(cos(x).*l1 + x0),y4,(sin(x).*l1 + y0))) ) ) ...
+    ./ ...
+    ( x4 - ( ( (cos(x).*l1 + x0).*(a1+C(x4,(cos(x).*l1 + x0),y4,(sin(x).*l1 + y0))) - x4.*(a1-C(x4,(cos(x).*l1 + x0),y4,(sin(x).*l1 + y0))) + m.*((sin(x).*l1 + y0) - y4).*sqrt(4.*C(x4,(cos(x).*l1 + x0),y4,(sin(x).*l1 + y0)).*l2.^2 - (a1-C(x4,(cos(x).*l1 + x0),y4,(sin(x).*l1 + y0))).^2) ) / (2.*C(x4,(cos(x).*l1 + x0),y4,(sin(x).*l1 + y0))) ) ) ...
+);
+simplify(eq)
+diff(eq)
+*/

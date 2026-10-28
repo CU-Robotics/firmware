@@ -114,7 +114,7 @@ public:
 
     /// @brief Get the last reported output shaft position
     /// @return Position in radians, wraps over [-12.5, 12.5]
-    inline float get_position_rad() const { return m_position_rad; }
+    std::optional<float> get_position_rad() const override { return m_position_rad; }
 
 public:
     /// @brief Turn on the motor

@@ -56,6 +56,12 @@ void RobotStateArray::print() const {
             case Cfg::StateName::Flywheels:      return "Flywheels";
             case Cfg::StateName::Feeder:         return "Feeder";
             case Cfg::StateName::LowerFeeder:    return "LowerFeeder";
+            case Cfg::StateName::ArmPitch1:      return "ArmPitch1";
+            case Cfg::StateName::ArmLinear:      return "ArmLinear";
+            case Cfg::StateName::ArmPitch2:      return "ArmPitch2";
+            case Cfg::StateName::ArmYaw:         return "ArmYaw";
+            case Cfg::StateName::ArmPitch3:      return "ArmPitch3";
+            case Cfg::StateName::ArmRoll:        return "ArmRoll";
             case Cfg::StateName::StructPadding:  return "Padding";
             case Cfg::StateName::StateNameCount: return "Count";
             default:                             return "UNKNOWN";

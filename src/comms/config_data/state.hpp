@@ -14,7 +14,13 @@ enum class StateName : uint32_t {
     Flywheels,
     Feeder,
     LowerFeeder,
-    StructPadding, // needed to make the enum size 10 so that rust and cpp structs can work without having padding
+    ArmPitch1,
+    ArmLinear,
+    ArmPitch2,
+    ArmYaw,
+    ArmPitch3,
+    ArmRoll,
+    StructPadding, // needed to make the enum size even (16) so that rust and cpp structs can work without having padding
 
     StateNameCount
 };

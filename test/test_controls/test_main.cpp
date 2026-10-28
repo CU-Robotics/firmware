@@ -9,6 +9,8 @@
 using controller::MotorVelocities;
 using controller::compute_power_limit_ratio;
 using controller::xdrive_mix;
+using controller::to_pitch_linkage_angle;
+using controller::pitch_linkage_gear_ratio;
 
 namespace {
 // Keep these reference expressions independent of the helpers: they reproduce
@@ -178,6 +180,40 @@ void test_zero_power_limit_zeros_all_motors(void) {
     }
 }
 
+// Engineer Arm Pitch Linkage
+
+namespace {
+float degrees_to_radians(float degrees) {
+    return degrees * static_cast<float>(M_PI) / 180.0f;
+}
+} // namespace
+
+void test_pitch_linkage_reference_value(void) {
+    // From the MATLAB closed form, evaluated in double precision
+    TEST_ASSERT_FLOAT_WITHIN(1e-4f, 0.479836f, to_pitch_linkage_angle(degrees_to_radians(160.0f)));
+    TEST_ASSERT_FLOAT_WITHIN(1e-3f, 3.917285f, pitch_linkage_gear_ratio(degrees_to_radians(160.0f)));
+}
+
+void test_pitch_linkage_gear_ratio_is_derivative(void) {
+    // Skip the atan jump near 172 degrees, where the finite difference straddles it
+    const float ranges[][2] = {{145.0f, 170.0f}, {175.0f, 180.0f}, {238.0f, 270.0f}};
+    const float h = 1e-3f;
+    for (const auto& range : ranges) {
+        for (float degrees = range[0]; degrees <= range[1]; degrees += 1.0f) {
+            const float x = degrees_to_radians(degrees);
+            const float finite_difference = (to_pitch_linkage_angle(x + h) - to_pitch_linkage_angle(x - h)) / (2 * h);
+            const float ratio = pitch_linkage_gear_ratio(x);
+            TEST_ASSERT_FLOAT_WITHIN(1e-2f * std::fabs(finite_difference) + 1e-3f, finite_difference, ratio);
+        }
+    }
+}
+
+void test_pitch_linkage_nan_outside_range(void) {
+    TEST_ASSERT_TRUE((std::isnan)(to_pitch_linkage_angle(0.0f)));
+    TEST_ASSERT_TRUE((std::isnan)(to_pitch_linkage_angle(degrees_to_radians(200.0f))));
+    TEST_ASSERT_TRUE((std::isnan)(pitch_linkage_gear_ratio(degrees_to_radians(200.0f))));
+}
+
 void setup() {
     delay(2000);
     UNITY_BEGIN();
@@ -203,6 +239,10 @@ void setup() {
 
     RUN_TEST(test_power_limit_scales_all_motors);
     RUN_TEST(test_zero_power_limit_zeros_all_motors);
+
+    RUN_TEST(test_pitch_linkage_reference_value);
+    RUN_TEST(test_pitch_linkage_gear_ratio_is_derivative);
+    RUN_TEST(test_pitch_linkage_nan_outside_range);
 
     UNITY_END();
 }

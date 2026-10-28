@@ -533,3 +533,27 @@ void LowerFeederEstimator::step_states(RobotStateArray& updated_state_array, con
     updated_state_array[lower_feeder_ball_state].set_velocity_no_bound(lower_feeder_velocity); // ball velocity
     updated_state_array[lower_feeder_ball_state].set_acceleration_no_bound(0); // this is not the acceleration just the encoder value for debugging
 }
+
+ArmJointEstimator::ArmJointEstimator(const Cfg::Estimator& estimator_config, SensorManager& sensor_manager, CANManager& can, std::vector<Cfg::StateName> available_states) :
+    joint_state(get_state_name_by_generic_use(Cfg::GenericEstimatorStateUse::ArmJoint, estimator_config, available_states)) {
+    joint_motor = can.get_motor_by_name(estimator_config.get_motor_name_by_generic_use(Cfg::GenericEstimatorMotorUse::ArmJoint));
+    safety::assert_or_safety_procedure(joint_motor->get_position_rad().has_value(), "ArmJointEstimator: joint motor does not report its position in radians");
+
+    joint_offset = estimator_config.sensor_info.arm_joint_offset;
+    joint_ratio = estimator_config.sensor_info.arm_joint_ratio;
+    joint_direction = estimator_config.sensor_info.arm_joint_direction;
+    safety::assert_or_safety_procedure(joint_ratio != 0, "ArmJointEstimator: arm joint ratio is 0");
+}
+
+void ArmJointEstimator::step_states(RobotStateArray& updated_state_array, const RobotStateArray& previous_state_array, int override) {
+    float motor_position = joint_motor->get_position_rad().value();
+    float motor_velocity = joint_motor->get_state().speed; // rad/s at the output
+
+    updated_state_array[joint_state].set_position_no_bound(joint_direction * motor_position / joint_ratio + joint_offset);
+    updated_state_array[joint_state].set_velocity_no_bound(joint_direction * motor_velocity / joint_ratio);
+    updated_state_array[joint_state].set_acceleration_no_bound(0);
+}
+
+void ArmJointEstimator::validate(const RobotStateArray& updated_state_array) {
+    check_state_limits("ArmJointEstimator", "Arm Joint", updated_state_array[joint_state], joint_monitor);
+}

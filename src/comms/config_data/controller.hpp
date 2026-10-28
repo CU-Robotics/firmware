@@ -46,6 +46,8 @@ enum class GenericControllerMotorUse : uint32_t {
     NearFeeder,
     FarFeeder,
     UpperFeeder,
+    /// The motor driving a single arm joint, used by the arm joint controllers
+    ArmJoint,
 };
 
 
@@ -70,6 +72,8 @@ enum class GenericControllerStateUse : uint32_t {
     FeederBallPosition,
     LowerFeederBallPosition,
     UpperFeederBallPosition,
+    /// The state of a single arm joint, used by the arm joint controllers
+    ArmJoint,
 };
 /// @brief This enum represents the different types of controllers that can be configured in the config.
 enum class ControllerType : uint32_t {
@@ -80,6 +84,10 @@ enum class ControllerType : uint32_t {
     FlywheelController,
     FeederController,
     LowerFeederController,
+    /// Position and velocity PID on a single directly driven arm joint
+    ArmJointController,
+    /// Arm joint driven through the engineer's pitch four-bar linkage
+    ArmLinkagePitchController,
 };
 /// @brief This enum represents the different types of subcontrollers that a controller can be configured to have.
 enum class SubControllerType : uint32_t {

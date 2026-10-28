@@ -22,6 +22,12 @@ enum class MotorName : uint32_t{
     UpperFeeder,
     LowerFeederClose,
     LowerFeederFar,
+    ArmPitch1,
+    ArmLinear,
+    ArmPitch2,
+    ArmYaw,
+    ArmPitch3,
+    ArmRoll,
 
     MotorNameCount
 };

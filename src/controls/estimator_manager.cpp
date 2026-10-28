@@ -39,6 +39,9 @@ void EstimatorManager::init_estimator(const Cfg::Estimator& estimator_config, Se
     case Cfg::EstimatorType::LowerFeederPosition:
         estimators.push_back(std::make_unique<LowerFeederEstimator>(estimator_config, sensor_manager, can, available_states));
         break;
+    case Cfg::EstimatorType::ArmJointPosition:
+        estimators.push_back(std::make_unique<ArmJointEstimator>(estimator_config, sensor_manager, can, available_states));
+        break;
     default:
         safety::safety_procedure("Invalid estimator type received in config: %u", static_cast<uint32_t>(estimator_config.estimator_type));
         break;

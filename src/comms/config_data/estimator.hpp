@@ -58,6 +58,8 @@ enum class GenericEstimatorMotorUse : uint32_t {
     Feeder,
     FeederClose,
     FeederFar,
+    /// The motor driving a single arm joint
+    ArmJoint,
 };
 
 /// @brief This enum represents the different generic uses for states that an estimator can have. These are used to map the specific states on the robot to their generic uses in the estimator config.
@@ -80,6 +82,8 @@ enum class GenericEstimatorStateUse : uint32_t {
     ShooterBallVelocity,
     FeederBallPosition,
     LowerFeederBallPosition,
+    /// The state of a single arm joint
+    ArmJoint,
 };
 
 /// @brief The different types of estimators that can be configured in the config.
@@ -89,6 +93,8 @@ enum class EstimatorType : uint32_t {
     FlywheelVelocity,
     FeederPosition,
     LowerFeederPosition,
+    /// Single arm joint position and velocity from its motor's output encoder
+    ArmJointPosition,
 };
 /// @brief The `SensorInfo` struct contains all the sensor related information for the estimator config.
 // This includes the offsets for the encoders, the ratios and directions for the feeder, etc.
@@ -137,6 +143,12 @@ struct SensorInfo {
     float flywheel_radius = 0.0;
     /// @brief How much weight the estimator should put on the flywheel motor velocity when estimating the shooter ball velocity vs the velocity of the ball given from the referee system.
     float flywheel_motor_estimate_weight = 0.0;
+    /// @brief joint angle in radians when the arm joint motor reads 0 rad, used by the arm joint estimator.
+    float arm_joint_offset = 0.0;
+    /// @brief motor output radians per joint unit (radians, or meters for a linear joint), used by the arm joint estimator.
+    float arm_joint_ratio = 0.0;
+    /// @brief direction of the arm joint relative to its motor, either 1 or -1, used by the arm joint estimator.
+    float arm_joint_direction = 0.0;
 };
 
 /// @brief The `Estimator` struct represents the configuration for an estimator, including its type, the generic uses for states, motors and sensors, and the sensor info.

@@ -407,3 +407,33 @@ struct LowerFeederEstimator : public Estimator {
         /// @copydoc Estimator::validate
         void validate(const RobotStateArray& updated_state_array) override;
     };
+
+/// @brief Estimate a single engineer arm joint from its motor's output shaft position and speed.
+struct ArmJointEstimator : public Estimator {
+    private:
+        /// @brief motor driving the joint, which must report its output position in radians
+        std::shared_ptr<Motor> joint_motor;
+        /// @brief state name for the joint
+        const Cfg::StateName& joint_state;
+        /// @brief joint position when the motor reads 0 rad
+        float joint_offset = 0;
+        /// @brief motor output radians per joint unit
+        float joint_ratio = 1;
+        /// @brief joint direction multiplier, 1 or -1
+        float joint_direction = 1;
+        /// @brief monitor for joint estimate limits
+        ErrorMonitor joint_monitor;
+    public:
+        /// @brief Make new arm joint estimator
+        /// @param estimator_config config data for this estimator
+        /// @param sensor_manager reference to the sensor manager (not used)
+        /// @param can reference to the CAN manager to get the joint motor
+        /// @param available_states vector of state names that are available
+        ArmJointEstimator(const Cfg::Estimator& estimator_config, SensorManager& sensor_manager, CANManager& can, std::vector<Cfg::StateName> available_states);
+
+        /// @copydoc Estimator::step_states
+        void step_states(RobotStateArray& updated_state_array, const RobotStateArray& previous_state_array, int override) override;
+
+        /// @copydoc Estimator::validate
+        void validate(const RobotStateArray& updated_state_array) override;
+};

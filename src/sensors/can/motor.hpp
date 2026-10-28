@@ -6,6 +6,7 @@
 
 #include <FlexCAN_T4.h>
 #include <cstdint>
+#include <optional>
 
 /// @brief Unified motor state
 struct MotorState {
@@ -97,6 +98,10 @@ public:
     /// @brief Get the current state of the motor
     /// @return The current state of the motor
     inline MotorState get_state() const { return m_state; }
+
+    /// @brief Get the output shaft position in radians, for drivers that report one
+    /// @return The position in radians, or std::nullopt if this motor only reports raw encoder counts
+    virtual std::optional<float> get_position_rad() const { return std::nullopt; }
 
 protected:
     /// @brief Check if the message is for this motor

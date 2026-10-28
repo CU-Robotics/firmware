@@ -86,7 +86,7 @@ public:
 
     /// @brief Get the last reported output shaft position
     /// @return Multi-turn position in radians at the output
-    inline float get_position_rad() const { return m_position_rad; }
+    std::optional<float> get_position_rad() const override { return m_position_rad; }
 
     /// @brief Print the current state of the motor
     void print_state() const override;
