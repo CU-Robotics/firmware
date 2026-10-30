@@ -1,0 +1,9 @@
+<map id="Controller" name="Controller">
+<area shape="rect" id="node1" title="Parent controller struct, all controllers should be based off of this." alt="" coords="257,273,334,300"/>
+<area shape="rect" id="node2" href="$structCfg_1_1Controller.html" title="Controller configuration struct. This struct contains all the configuration data for a controller,..." alt="" coords="180,184,283,211"/>
+<area shape="rect" id="node3" href="$structComms_1_1CommsData.html" title="base class for all data structs that want to be sent over comms." alt="" coords="5,95,151,121"/>
+<area shape="rect" id="node4" href="$structCfg_1_1GearRatios.html" title="Gear ratios for a controller. These are generally used to convert between motor vaues and state value..." alt="" coords="175,95,288,121"/>
+<area shape="rect" id="node5" href="$structCfg_1_1SubController.html" title="Subcontroller configuration for a controller." alt="" coords="312,95,439,121"/>
+<area shape="rect" id="node6" href="$structCfg_1_1Gains.html" title="Gains for a sub controller." alt="" coords="334,5,417,32"/>
+<area shape="rect" id="node7" href="$structTimer.html" title="Timer class. Operates based on micros() and provides a simple interface for timing operations." alt="" coords="332,184,387,211"/>
+</map>

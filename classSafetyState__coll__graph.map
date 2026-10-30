@@ -1,0 +1,4 @@
+<map id="SafetyState" name="SafetyState">
+<area shape="rect" id="node1" title="Owns the robot&#39;s safety mode (arming) state: whether the motors may be driven and why not." alt="" coords="5,95,96,121"/>
+<area shape="rect" id="node2" href="$structTimer.html" title="Timer class. Operates based on micros() and provides a simple interface for timing operations." alt="" coords="23,5,78,32"/>
+</map>
