@@ -167,7 +167,7 @@ void GimbalAndChassisEstimator::step_states(RobotStateArray& updated_state_array
 
     // gimbal rotation axis in spherical coordinates in imu refrence frame
     if (imu_yaw_axis_vector[0] == 0)
-        yaw_axis_spherical[1] = 1.57;
+        yaw_axis_spherical[1] = HALF_PI;
     else if (imu_yaw_axis_vector[0] < 0) {
         yaw_axis_spherical[1] = PI + atan(imu_yaw_axis_vector[1] / imu_yaw_axis_vector[0]); // theta
     } else {
