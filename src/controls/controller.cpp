@@ -24,6 +24,8 @@ MotorVelocities xdrive_mix(float x, float y, float rot, float heading) {
 }
 } // namespace controller
 
+#ifndef UNIT_TEST
+
 // Host tests compile the same calculations without the hardware controllers.
 #include "sensors/can/motor.hpp"
 #include "sensors/RefSystem.hpp"
@@ -542,3 +544,4 @@ void LowerFeederController::step(RobotStateArray& reference_array, RobotStateArr
     near_feeder_motor->write_motor_torque(lower_output);
     far_feeder_motor->write_motor_torque(-lower_output);
 }
+#endif // UNIT_TEST

@@ -2,6 +2,7 @@
 
 #include <Arduino.h>
 #include <SPI.h>
+#include <EventResponder.h>
 #include <cstdint>
 #include "sensors/sensor.hpp"
 #include "comms/data/buff_encoder_data.hpp"

@@ -1,5 +1,7 @@
 #include "buff_encoder.hpp"
+#ifndef UNIT_TEST
 #include "comms/data/sendable.hpp"
+#endif
 #include "utils/safety.hpp"
 #include "utils/system_log.hpp"
 #include <SPI.h>
@@ -77,7 +79,7 @@ void BuffEncoder::read() {
 
     // convert received angle into radians
 	int raw_angle = (rx_buffer[2] << 13) | (rx_buffer[3] << 5) | (rx_buffer[4] >> 3);
-	float radians = raw_angle / (float)MT6835_CPR * (3.14159265f * 2.0f);
+	float radians = raw_angle / (float)MT6835_CPR * (PI * 2.0f);
 
     // assign angle
     m_angle = radians;
@@ -189,9 +191,11 @@ float BuffEncoder::read_zero_pos() {
 }
 
 void BuffEncoder::send_to_comms() const {
+#ifndef UNIT_TEST
     Comms::Sendable<BuffEncoderData> sendable;
     sendable.data = comms_data;
     sendable.send_to_comms();
+#endif
 }
 
 void BuffEncoder::print() const {

@@ -121,7 +121,8 @@ class HelloRobot {
 
     /// @brief Whether the active robot config contains the lower feeder state.
     bool has_lower_feeder = false;
-
+    /// @brief Used for tracking if we spin when in fast mode
+	bool fast_mode_engaged = false;
     // ==========================================
     // STATE ARRAYS
     // ==========================================
@@ -175,6 +176,7 @@ class HelloRobot {
     void cmd_log();
     /// @brief CLI comms function
     void cmd_comms();
+    
 	// ==========================================
     // Major Loop functions
     // ==========================================
@@ -211,7 +213,8 @@ class HelloRobot {
 	/// @brief LED hearbeat, feeds the watchdog, and ensures consistent loop time.
 	void loop_timing();
 
-
+    /// @brief aligns chassis heading to the nearest 45-degree diagonal
+    void apply_fast_mode();
 public:
     /**
      * @brief Bootstraps the robot's architecture.

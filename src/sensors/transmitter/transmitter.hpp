@@ -35,8 +35,12 @@ public:
 
 	/// @brief Whether the mode has been changed in between the last two reads.
 	/// @return true if the mode has been changed, false otherwise.
-	virtual bool mode_changed() = 0;
-	
+    virtual bool mode_changed() = 0;
+
+    /// @brief Whether fast mode is active or not
+    /// @return true if fast_mode is active, false otherwise
+    virtual bool is_fast_mode_active() { return false; }
+    
 	/// @brief Uses the transmitter input to update the target state array with the desired setpoints for each state.
 	/// @param estimated_state_array The current estimated state of the robot.
 	/// @param target_state_array The array of target states to update.

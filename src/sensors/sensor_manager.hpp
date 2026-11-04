@@ -3,7 +3,6 @@
 #include <concepts>
 #include <map>
 #include <memory>
-#include <string>
 #include <SPI.h>
 
 #include "sensors/buff_encoder.hpp"
