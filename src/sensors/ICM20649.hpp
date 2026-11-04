@@ -35,6 +35,9 @@ public:
     /// @param range new rate range
     void set_accel_range(Cfg::ICMImuAccelRange range);
 
+    /// @brief calibrate ICM sensor
+    void calibrate_icm_sensor();
+
 private:
     /// @brief Configuration data for this sensor
     const Cfg::IcmImu& config;

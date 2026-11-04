@@ -830,6 +830,8 @@ void ET16S::manual_controls(const RobotStateArray& estimated_state_array, RobotS
 	target_state_array[Cfg::StateName::GimbalPitch].set_velocity(0);
 	target_state_array[Cfg::StateName::Flywheels].set_velocity(fly_wheel_target);
 
+    // Add ICM recalibration here, use SensorManager::get_sensor_by_name
+
 	// when in teensy control mode reset hive toggle
 	if (is_teensy_mode() && mode_changed()) {
 		pos_offset_x = estimated_state_array[Cfg::StateName::ChassisX].get_position();

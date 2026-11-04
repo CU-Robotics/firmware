@@ -357,6 +357,9 @@ private:
 	/// @return Filled Transmitter data struct
 	ET16SData get_ET16S_data();
 
+
+    /// @brief Stores if the robot has just recalibrated the ICM sensor
+    static bool has_calibrated_icm;
 	
 	/// @brief Points to the complete buffer the CPU should read from
     static volatile uint8_t* active_buffer;
