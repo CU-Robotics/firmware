@@ -48,6 +48,9 @@ public:
     void read() override;
     /// @brief Queue the latest valid samples through the standard Ethernet/HID comms layer.
     void send_to_comms() const override;
+    /// @brief Print initialization status and cached IMU/attitude readings with units.
+    /// @note Missing packet groups are reported as waiting; received samples may be stale.
+    void print_live_data() override;
 
     /// @brief Whether sensor configuration succeeded (does not indicate fresh data).
     /// @return True after successful initialization.

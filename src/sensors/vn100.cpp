@@ -203,3 +203,28 @@ void vn100::send_to_comms() const {
         (sat.gyro_x << 6) | (sat.gyro_y << 7) | (sat.gyro_z << 8) | (sat.pres << 9);
     sendable.send_to_comms();
 }
+
+void vn100::print_live_data() {
+    Serial.printf("=== LIVE VN100 SENSOR %u ===\n", static_cast<unsigned>(_name));
+    if (!_initialized) {
+        Serial.println(" Status: not initialized");
+        return;
+    }
+
+    if (_data.imu_valid) {
+        Serial.printf(" Accel (m/s^2) | X: %10.4f | Y: %10.4f | Z: %10.4f\n",
+                      get_accel_X(), get_accel_Y(), get_accel_Z());
+        Serial.printf(" Gyro (rad/s)  | X: %10.6f | Y: %10.6f | Z: %10.6f\n",
+                      get_gyro_X(), get_gyro_Y(), get_gyro_Z());
+    } else {
+        Serial.println(" IMU: waiting for data");
+    }
+
+    if (_data.attitude_valid) {
+        Serial.printf(" Attitude (deg) | Yaw: %10.4f | Pitch: %10.4f | Roll: %10.4f\n",
+                      get_yaw(), get_pitch(), get_roll());
+        Serial.printf(" Temperature: %.2f C\n", get_temperature());
+    } else {
+        Serial.println(" Attitude: waiting for data");
+    }
+}
