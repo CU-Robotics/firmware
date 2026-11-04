@@ -118,12 +118,27 @@ struct FirmwareSim {
         estimator.count1 = 1; // Do not replace known initial global attitude with joint angle.
         previous = estimate; target = estimate; reference = estimate;
     }
+    void initialize_chassis(const float position[2], float heading) {
+        for (size_t axis = 0; axis < 2; ++axis) {
+            estimator.pos_estimate[axis] = position[axis];
+            estimator.previous_pos[axis] = position[axis];
+            estimate[state_names[axis]].set_position_no_bound(position[axis]);
+        }
+        estimator.prev_global_chassis_angle = heading;
+        estimator.initial_chassis_angle = heading;
+        estimator.count1 = 1;
+        previous = estimate;
+    }
     void export_output(FirmwareSimOutput& out) {
         out = {}; out.time_us = time_us; out.safety_latched = halted;
         for (size_t axis = 0; axis < 2; ++axis) {
             const auto name = state_names[axis+3]; const auto e = estimate[name].get_raw(); const auto r = reference[name].get_raw();
             out.estimate[axis*3] = e.position; out.estimate[axis*3+1] = e.velocity; out.estimate[axis*3+2] = e.acceleration;
             out.reference[axis*3] = r.position; out.reference[axis*3+1] = r.velocity; out.reference[axis*3+2] = r.acceleration;
+        }
+        for (size_t axis = 0; axis < 3; ++axis) {
+            const auto raw = estimate[state_names[axis]].get_raw();
+            out.chassis[axis*3] = raw.position; out.chassis[axis*3+1] = raw.velocity; out.chassis[axis*3+2] = raw.acceleration;
         }
         for (size_t i = 0; i < 4; ++i) out.motors[i] = can.get_motor_by_name(motor_names[i])->torque;
     }
@@ -148,6 +163,14 @@ extern "C" int32_t firmware_sim_initialize(FirmwareSim* sim, const float estimat
     sim->initialize_estimate(estimate, fixed_heading);
     return 0;
 }
+extern "C" int32_t firmware_sim_initialize_chassis(FirmwareSim* sim, const float position[2], float heading, char* err, uint32_t capacity) {
+    error_text(err, capacity, "");
+    if (!sim || sim->time_us != 0 || !position || !finite_values(position, 2) || !std::isfinite(heading)) {
+        error_text(err, capacity, "Initial chassis pose must be finite and precede the first cycle"); return -1;
+    }
+    sim->initialize_chassis(position, heading);
+    return 0;
+}
 extern "C" void firmware_sim_destroy(FirmwareSim* sim) { delete sim; }
 extern "C" int32_t firmware_sim_step(FirmwareSim* sim, const FirmwareSimInput* input, FirmwareSimOutput* output, char* err, uint32_t capacity) {
     error_text(err, capacity, ""); if (output) *output = {};
@@ -157,12 +180,14 @@ extern "C" int32_t firmware_sim_step(FirmwareSim* sim, const FirmwareSimInput* i
     if (sim->time_us > UINT64_MAX-1000 || input->time_us != sim->time_us+1000 || input->armed > 1 || input->previous_armed > 1 || input->mode_changed > 1) { error_text(err, capacity, "Expected exactly one 1000us firmware cycle and boolean status flags"); return -1; }
     sim->time_us = input->time_us; firmware_sim_host::time_us = sim->time_us; safety_state.active = !input->previous_armed;
     try {
-        if (!finite_values(input->target, 6) || !finite_values(input->sensors, 5)) safety::safety_procedure("Nonfinite simulation command or sensor sample");
+        if (!finite_values(input->target, 6) || !finite_values(input->sensors, 5) || !finite_values(input->chassis_motors, 4)) safety::safety_procedure("Nonfinite simulation command or sensor sample");
         // Keep periodic wrapping bounded even for malicious but finite ABI samples.
         for (size_t i = 0; i < 2; ++i) if (std::abs(input->sensors[i]) > 1000.0f) safety::safety_procedure("Encoder input exceeds raw radian sensor range");
         for (size_t i = 2; i < 5; ++i) if (std::abs(input->sensors[i]) > 10000.0f) safety::safety_procedure("Gyro input exceeds simulated rad/s range");
         sim->sensors.yaw->angle = input->sensors[0]; sim->sensors.pitch->angle = input->sensors[1];
         std::copy_n(input->sensors+2, 3, sim->sensors.imu->gyro);
+        for (size_t wheel = 0; wheel < 4; ++wheel)
+            sim->can.get_motor_by_name(static_cast<Cfg::MotorName>(wheel + 1))->state.speed = input->chassis_motors[wheel];
         for (size_t a = 0; a < 2; ++a) {
             auto& t = sim->target[state_names[a+3]];
             // wrap() is constant time; clamping setters retain the production reference envelope.

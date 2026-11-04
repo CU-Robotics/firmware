@@ -54,6 +54,8 @@ typedef struct {
     uint64_t time_us; /* exactly previous + 1000; first step is 1000 */
     float target[6];
     float sensors[5]; /* encoder yaw, encoder pitch, gyro X/Y/Z; calibrated raw sensor units */
+    /** Wheel motor rad/s: front-right, back-right, back-left, front-left. */
+    float chassis_motors[4];
     uint32_t armed; /* current safety evaluation: zero actuation only when false */
     uint32_t mode_changed; /* production transmitter transition resets governor reference */
     uint32_t previous_armed; /* prior safety evaluation observed by validators this loop */
@@ -64,19 +66,29 @@ typedef struct {
     float estimate[6];
     float reference[6];
     float motors[4]; /* normalized torque: yaw motor1/2, pitch motor1/2 */
+    /** Actual production ChassisX/Y/Heading position, velocity, acceleration triplets.
+     * Heading position is joint bearing; heading velocity is inertial base yaw rate. */
+    float chassis[9];
     uint32_t safety_latched; /* fatal production checks latch until destroy/recreate */
 } FirmwareSimOutput;
 
 typedef struct FirmwareSim FirmwareSim;
 /* Allocation occurs only here and destroy. err is always NUL terminated if capacity > 0.
  * Initial target/reference/estimate use configured yaw/pitch start angles.
- * Stationary chassis motor feedback is zero rad/s; only yaw/pitch motors are driven.
+ * Chassis wheel feedback is supplied independently; only yaw/pitch motors are driven.
  * Native safety validators are actual firmware validators; fatal checks stop this instance.
  */
 FirmwareSim* firmware_sim_create(const FirmwareSimConfig* config, char* err, uint32_t err_capacity);
 void firmware_sim_destroy(FirmwareSim* sim);
 /* One-time segment initialization before the first cycle; configuration remains unchanged. */
 int32_t firmware_sim_initialize(FirmwareSim* sim, const float estimate[6], float fixed_heading, char* err, uint32_t err_capacity);
+/**
+ * Seed chassis odometry once before stepping, without changing turret/replay initialization.
+ * @param position Initial world x/y in meters.
+ * @param heading Initial inertial chassis yaw in radians.
+ * @return Zero on success, negative for invalid initialization.
+ */
+int32_t firmware_sim_initialize_chassis(FirmwareSim* sim, const float position[2], float heading, char* err, uint32_t err_capacity);
 /* 0 success; 1 latched safety; -1 invalid input/time. No exceptions cross this ABI. */
 int32_t firmware_sim_step(FirmwareSim* sim, const FirmwareSimInput* input, FirmwareSimOutput* output, char* err, uint32_t err_capacity);
 /* Verify the C ABI struct sizes against a consumer's repr(C) declarations. */
