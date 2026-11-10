@@ -837,7 +837,34 @@ void ET16S::manual_controls(const RobotStateArray& estimated_state_array, RobotS
 		pos_offset_y = estimated_state_array[Cfg::StateName::ChassisY].get_position();
 		feed = last_feed;
     }
+
 }
 bool ET16S::is_fast_mode_active() {
     return (get_switch_f() == SwitchPos::FORWARD);
 }
+
+uint8_t ET16S::pre_flight_check() {
+    if (!is_connected()) {
+        return pre_flight_flags;
+    }
+    const bool switch_in_safety = get_safety_switch() == SwitchPos::FORWARD;
+    if (switch_in_safety) {
+		pre_flight_flags = Reason::NONE;
+    }
+    else if (pre_flight_was_safety || pre_flight_flags != Reason::NONE) {
+        pre_flight_flags = Reason::NONE;
+		if (get_wheel() != 0) {
+            pre_flight_flags |= Reason::WHEEL_NOT_ZERO;
+		}
+		if(get_switch_b() != SwitchPos::BACKWARD) {
+			pre_flight_flags|= Reason::FLYWHEEL_ON;
+		}
+		if (get_switch_h() != SwitchPos::FORWARD) {
+            pre_flight_flags |= Reason::FEEDER_ON;
+			
+		}
+    }
+    pre_flight_was_safety = switch_in_safety;
+	return pre_flight_flags;
+}
+

@@ -6,33 +6,38 @@
 /// @brief How long to stay disarmed after gimbal power turns on, to let the motors boot.
 constexpr uint32_t GIMBAL_POWER_SETTLE_US = 3000000;
 
+/// @brief Bitmask of reasons the robot is in safety mode. NONE means the motors are armed.
+struct Reason {
+    /// @brief The individual reason bits
+    enum : uint8_t {
+        NONE = 0,
+        TRANSMITTER = 1 << 0,           ///< Transmitter safety switch is engaged
+        NOT_CONFIGURED = 1 << 1,        ///< Hive has not configured the robot yet
+        SLOW_LOOP = 1 << 2,             ///< The last main loop overran its time budget
+        GIMBAL_POWER_OFF = 1 << 3,      ///< Ref system reports gimbal power is off
+        GIMBAL_POWER_SETTLING = 1 << 4, ///< Gimbal power turned on too recently for the motors to be ready
+        WHEEL_NOT_ZERO = 1 << 5,
+        FLYWHEEL_ON = 1 << 6,
+        FEEDER_ON = 1 << 7
+    };
+};
+
 /// @brief Owns the robot's safety mode (arming) state: whether the motors may be driven and why not.
 /// @note This is distinct from safety.hpp, which handles fatal safety procedures that halt the robot.
 class SafetyState {
   public:
-    /// @brief Bitmask of reasons the robot is in safety mode. NONE means the motors are armed.
-    struct Reason {
-        /// @brief The individual reason bits
-        enum : uint8_t {
-            NONE = 0,
-            TRANSMITTER = 1 << 0,           ///< Transmitter safety switch is engaged
-            NOT_CONFIGURED = 1 << 1,        ///< Hive has not configured the robot yet
-            SLOW_LOOP = 1 << 2,             ///< The last main loop overran its time budget
-            GIMBAL_POWER_OFF = 1 << 3,      ///< Ref system reports gimbal power is off
-            GIMBAL_POWER_SETTLING = 1 << 4, ///< Gimbal power turned on too recently for the motors to be ready
-        };
-    };
 
     /// @brief Buffer size that fits every reason name from reasons_to_string
-    static constexpr size_t REASON_STR_LEN = 96;
+    static constexpr size_t REASON_STR_LEN = 128;
 
     /// @brief Evaluate every arming condition and latch the result
+    /// @param pre_flight_flags contains the pre flight check conditions
     /// @param transmitter_safety_engaged Whether the transmitter's safety switch is engaged
     /// @param is_configured Whether Hive has configured the robot
     /// @param is_slow_loop Whether the last main loop overran its time budget
     /// @param gimbal_power_active Whether the ref system reports gimbal power is on
     /// @return The new Reason bitmask, Reason::NONE if the motors may be armed
-    uint8_t evaluate(bool transmitter_safety_engaged, bool is_configured, bool is_slow_loop, bool gimbal_power_active);
+    uint8_t evaluate(uint8_t pre_flight_flags,bool transmitter_safety_engaged, bool is_configured, bool is_slow_loop, bool gimbal_power_active);
 
     /// @brief Get the reason bitmask from the most recent evaluate call
     /// @return A Reason bitmask, Reason::NONE if the motors are armed
