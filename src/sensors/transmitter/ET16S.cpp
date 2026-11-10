@@ -861,8 +861,10 @@ uint16_t ET16S::pre_flight_check() {
 		}
 		if (get_switch_h() != SwitchPos::FORWARD) {
             pre_flight_flags |= Reason::FEEDER_ON;
-			
-		}
+        }
+        if (is_fast_mode_active()) {
+			pre_flight_flags |= Reason::FAST_MODE;
+        }
     }
     pre_flight_was_safety = switch_in_safety;
 	return pre_flight_flags;
