@@ -92,7 +92,7 @@ bool TransmitterManager::is_fast_mode_active() {
         safety::safety_procedure("TransmitterManager::is_Fast_mode_active called before transmitter was initialized");
     }
 }
-uint8_t TransmitterManager::pre_flight_check() {
+uint16_t TransmitterManager::pre_flight_check() {
     if (transmitter){
 		return transmitter->pre_flight_check();
     } else {

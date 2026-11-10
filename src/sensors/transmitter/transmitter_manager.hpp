@@ -35,7 +35,7 @@ public:
     /// @return true if fast mode is active, false otherwise
     bool is_fast_mode_active();
     /// @copydoc Transmitter::pre_flight_check
-    uint8_t pre_flight_check();
+    uint16_t pre_flight_check();
     /// @copydoc Transmitter::manual_controls
     void manual_controls(const RobotStateArray &estimated_state_array, RobotStateArray &target_state_array, bool not_safety_mode, float &feed, float &last_feed);
     

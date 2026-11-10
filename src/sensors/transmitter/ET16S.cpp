@@ -843,7 +843,7 @@ bool ET16S::is_fast_mode_active() {
     return (get_switch_f() == SwitchPos::FORWARD);
 }
 
-uint8_t ET16S::pre_flight_check() {
+uint16_t ET16S::pre_flight_check() {
     if (!is_connected()) {
         return pre_flight_flags;
     }

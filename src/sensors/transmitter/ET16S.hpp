@@ -231,7 +231,7 @@ class ET16S : public Transmitter {
     float get_wheel();
 
     /// @copydoc Transmitter::pre_flight_check
-    uint8_t pre_flight_check () override;
+    uint16_t pre_flight_check () override;
 
 	
 private:

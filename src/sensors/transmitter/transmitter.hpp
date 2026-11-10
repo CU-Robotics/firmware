@@ -42,7 +42,7 @@ public:
     virtual bool is_fast_mode_active() { return false; }
     /// @brief Sets pre pre flight flags and returns them
     /// @return returns bit masked pre flight flags for safetystate
-    virtual uint8_t pre_flight_check() { return 0; }
+    virtual uint16_t pre_flight_check() { return 0; }
     
 	/// @brief Uses the transmitter input to update the target state array with the desired setpoints for each state.
 	/// @param estimated_state_array The current estimated state of the robot.
