@@ -8,7 +8,7 @@ uint16_t SafetyState::evaluate(uint16_t pre_flight_flags, bool transmitter_safet
     }
     m_last_gimbal_power = gimbal_power_active;
 
-    uint8_t reasons = Reason::NONE;
+    uint16_t reasons = Reason::NONE;
     if (transmitter_safety_engaged)
         reasons |= Reason::TRANSMITTER;
     if (!is_configured)

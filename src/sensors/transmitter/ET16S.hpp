@@ -401,7 +401,7 @@ private:
 	bool pre_flight_was_safety = true;
 
 	/// @brief Preflight check failures
-    uint8_t pre_flight_flags = Reason::NONE;
+    uint16_t pre_flight_flags = Reason::NONE;
 
 
     
