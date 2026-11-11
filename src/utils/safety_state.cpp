@@ -2,13 +2,13 @@
 
 SafetyState safety_state;
 
-uint8_t SafetyState::evaluate(bool transmitter_safety_engaged, bool is_configured, bool is_slow_loop, bool gimbal_power_active) {
+uint16_t SafetyState::evaluate(uint16_t pre_flight_flags, bool transmitter_safety_engaged, bool is_configured, bool is_slow_loop, bool gimbal_power_active) {
     if (gimbal_power_active && !m_last_gimbal_power) {
         m_gimbal_power_timer.start();
     }
     m_last_gimbal_power = gimbal_power_active;
 
-    uint8_t reasons = Reason::NONE;
+    uint16_t reasons = Reason::NONE;
     if (transmitter_safety_engaged)
         reasons |= Reason::TRANSMITTER;
     if (!is_configured)
@@ -20,18 +20,24 @@ uint8_t SafetyState::evaluate(bool transmitter_safety_engaged, bool is_configure
     } else if (m_gimbal_power_timer.get_elapsed_micros_no_restart() < GIMBAL_POWER_SETTLE_US) {
         reasons |= Reason::GIMBAL_POWER_SETTLING;
     }
-
+    // Setting wheel flywheel anf eeder flags
+    reasons |= pre_flight_flags;
+    
     m_active_reasons = reasons;
     return reasons;
 }
 
-void SafetyState::reasons_to_string(uint8_t reasons, char* buf, size_t len) {
-    static const struct { uint8_t bit; const char* name; } names[] = {
+void SafetyState::reasons_to_string(uint16_t reasons, char* buf, size_t len) {
+    static const struct { uint16_t bit; const char* name; } names[] = {
         {Reason::TRANSMITTER, "transmitter"},
         {Reason::NOT_CONFIGURED, "not-configured"},
         {Reason::SLOW_LOOP, "slow-loop"},
         {Reason::GIMBAL_POWER_OFF, "gimbal-power-off"},
         {Reason::GIMBAL_POWER_SETTLING, "gimbal-power-settling"},
+        {Reason::FEEDER_ON, "feeder-on"},
+        {Reason::FLYWHEEL_ON, "flywheel-on"},
+        {Reason::WHEEL_NOT_ZERO, "wheel-not-zero"},
+        {Reason::FAST_MODE, "fast-mode"}
     };
     if (len == 0) return;
     buf[0] = '\0';

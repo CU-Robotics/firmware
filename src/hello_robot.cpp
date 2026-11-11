@@ -218,9 +218,9 @@ void HelloRobot::check_safety() {
     float loop_dt = 0.0f;
     bool is_slow_loop = check_slow_loop(loop_dt);
 
-    uint8_t previous_reasons = safety_state.active_reasons();
-
-    uint8_t reasons = safety_state.evaluate(transmitter_manager.is_safety_mode(), Comms::comms_layer.is_configured(), is_slow_loop, ref.ref_data.robot_performance.gimbal_power_active);
+    uint16_t previous_reasons = safety_state.active_reasons();
+	
+    uint16_t reasons = safety_state.evaluate(transmitter_manager.pre_flight_check(),transmitter_manager.is_safety_mode(), Comms::comms_layer.is_configured(), is_slow_loop, ref.ref_data.robot_performance.gimbal_power_active);
 
     motors_armed = safety_state.motors_armed();
 
