@@ -1,8 +1,8 @@
 #pragma once
+#include <utility>
 #include <concepts>
 #include <functional>
 #include <type_traits>
-#include <utility>
 #include <cstdint>
 
 #ifdef FW_SIMULATION
@@ -65,7 +65,7 @@ namespace safety {
     /// @param errortype The severity, which determines whether to return or halt
     /// @param args Variadic arguments to be formatted into the message
     /// @tparam Args The types of the variadic arguments
-    template <typename... Args>
+    template<typename... Args>
         requires(printable<Args> && ...)
     inline void safety_procedure(const char* message, errorSeverity errortype, Args &&... args) {
     #ifdef FW_SIMULATION
@@ -109,6 +109,7 @@ namespace safety {
 
     /// @brief Assert a condition or trigger the safety procedure if the condition is not met
     /// @param condition The condition to assert
+    /// @param errortype The severity, which determines whether to return or halt
     /// @param message The message to print if the condition is not met
     /// @param args Variadic arguments to be formatted into the message
     /// @tparam Args The types of the variadic arguments
