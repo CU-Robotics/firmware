@@ -1,6 +1,8 @@
 #pragma once
-#include <utility>
+#include <concepts>
 #include <functional>
+#include <type_traits>
+#include <utility>
 
 #ifdef FW_SIMULATION
 #include <cstdio>
@@ -9,10 +11,17 @@
 #include <Arduino.h>
 #endif
 
+/*
+Imp a bool return type so you can choose to terminate the program or not in saftey predure
+*/
+
 /// @brief How many times per second the LED should blink when a safety procedure is triggered
 constexpr int SAFETY_PROCEDURE_LED_BLINK_FREQ = 5; 
 /// @brief How long the LED should stay on/off when blinking during a safety procedure (in milliseconds)
 constexpr int SAFETY_PROCEDURE_LED_BLINK_DURATION_MS = 1000 / (2 * SAFETY_PROCEDURE_LED_BLINK_FREQ);
+
+template <typename T>
+concept printable = std::integral<std::remove_cvref_t<T>> || std::floating_point<std::remove_cvref_t<T>> || std::convertible_to<T, const char *>;
 
 namespace safety {
     /// @brief Type definition for our safety function    
@@ -41,12 +50,13 @@ namespace safety {
         return true;
     }
 
-    /// @brief Trigger the safety procedure, which will call the registered safety function and then enter an infinite loop. If a safety function is not registered, it will immediately enter the infinite loop.
+    /// @brief Trigger the safety procedure, which will call the registered safety function and then just prints a message
     /// @param message The message to print when the safety procedure is triggered, which can include format specifiers for the additional arguments
     /// @param args Variadic arguments to be formatted into the message
     /// @tparam Args The types of the variadic arguments
-    template<typename... Args>
-    [[noreturn]] inline void safety_procedure(const char* message, Args&&... args) {
+    template <typename... Args>
+        requires(printable<Args> && ...)
+    inline void safety_procedure(const char* message, Args &&... args) {
     #ifdef FW_SIMULATION
 
         // throw in simulation for graceful error handling
@@ -61,15 +71,8 @@ namespace safety {
             Serial.printf("Safety procedure triggered but no safety function registered!\n");
         }
 
-        Serial.printf(message, args...);
-        Serial.println();
-        while(true) {
-            // Blink the teensy's LED to indicate a safety procedure has been triggered
-            digitalWrite(LED_BUILTIN, HIGH);
-            delay(SAFETY_PROCEDURE_LED_BLINK_DURATION_MS);
-            digitalWrite(LED_BUILTIN, LOW);
-            delay(SAFETY_PROCEDURE_LED_BLINK_DURATION_MS);
-        }
+    Serial.printf(message, args...);
+    Serial.println();
 
     #endif
     }
