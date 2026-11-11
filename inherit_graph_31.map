@@ -1,0 +1,13 @@
+<map id="Graphical Class Hierarchy" name="Graphical Class Hierarchy">
+<area shape="rect" id="node1" href="$classEncoderSource.html" title="Interface for any encoder that provides angular value." alt="" coords="5,5,116,32"/>
+<area shape="rect" id="node2" href="$classBuffEncoder.html" title="Driver for the Buff&#45;Encoder." alt="" coords="185,5,277,32"/>
+<area shape="rect" id="node3" href="$classGyroSource.html" title="Interface for any gyro that provides angular velocity readings." alt="" coords="15,56,106,83"/>
+<area shape="rect" id="node4" href="$classAdafruitIMUSensor.html" title="Abstract parent class for all AdafruitIMUSensors, which give acceleration and gyroscope data." alt="" coords="164,56,297,83"/>
+<area shape="rect" id="node5" href="$classICM20649.html" title="Sensor access for an ICM20649 IMU Sensor. Child of the abstract IMUSensor class." alt="" coords="352,31,433,57"/>
+<area shape="rect" id="node6" href="$classLSM6DSOX.html" title="Sensor access for an LSM6DSOX IMU Sensor. Child of the abstract AdafruitIMUSensor class." alt="" coords="345,81,440,108"/>
+<area shape="rect" id="node7" href="$classSensor.html" title="Abstract class representing a sensor. All sensors should inherit from this class." alt="" coords="29,132,92,159"/>
+<area shape="rect" id="node8" href="$classD200LD14P.html" title="class for LiDAR driver" alt="" coords="185,208,277,235"/>
+<area shape="rect" id="node9" href="$classLimitSwitch.html" title="Class to manage a limit switch." alt="" coords="185,259,276,285"/>
+<area shape="rect" id="node10" href="$classRevEncoder.html" title="the class for the Rev Through Bore Encoder(www.revrobotics.com/rev&#45;11&#45;1271/)" alt="" coords="185,107,277,133"/>
+<area shape="rect" id="node11" href="$classStereoCamTrigger.html" title="define to enable FPS logging in the timer interrupt callback (debugging)" alt="" coords="167,157,294,184"/>
+</map>

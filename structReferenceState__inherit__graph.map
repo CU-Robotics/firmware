@@ -1,0 +1,4 @@
+<map id="ReferenceState" name="ReferenceState">
+<area shape="rect" id="node1" title="Comms data struct for sending the reference state output by the reference governor." alt="" coords="22,80,134,107"/>
+<area shape="rect" id="node2" href="$structComms_1_1CommsData.html" title="base class for all data structs that want to be sent over comms." alt="" coords="5,5,151,32"/>
+</map>

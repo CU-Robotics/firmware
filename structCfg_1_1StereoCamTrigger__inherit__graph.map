@@ -1,0 +1,4 @@
+<map id="Cfg::StereoCamTrigger" name="Cfg::StereoCamTrigger">
+<area shape="rect" id="node1" title="Stereo camera trigger configuration struct." alt="" coords="5,80,159,107"/>
+<area shape="rect" id="node2" href="$structComms_1_1CommsData.html" title="base class for all data structs that want to be sent over comms." alt="" coords="9,5,155,32"/>
+</map>

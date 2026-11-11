@@ -1,0 +1,4 @@
+<map id="Cfg::D200Lidar" name="Cfg::D200Lidar">
+<area shape="rect" id="node1" title="D200 Lidar configuration struct." alt="" coords="25,80,131,107"/>
+<area shape="rect" id="node2" href="$structComms_1_1CommsData.html" title="base class for all data structs that want to be sent over comms." alt="" coords="5,5,151,32"/>
+</map>
