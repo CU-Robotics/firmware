@@ -37,9 +37,8 @@ void ICM20649::init() {
     for(int i = 1; i < 31; i++) {
         tx_buffer[i] = 0x00; // Dummy bytes to clock out the other 14 data bytes
     }
-	
 
-
+    calibrate_icm_sensor();
 }
 
 void ICM20649::calibrate_icm_sensor() {
