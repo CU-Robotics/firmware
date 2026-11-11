@@ -41,6 +41,13 @@ public:
     /// @return true if fast_mode is active, false otherwise
     virtual bool is_fast_mode_active() { return false; }
     
+     
+    /// @brief Whether the icm sensor should be recalibrated at this moment
+    /// won't trigger right after icm sensor has been recalibrated if controller
+    /// switch is still in the same state.
+    /// @return true if it should be recalibrated, false otherwise
+    virtual bool should_recalib_icm() { return false; }
+    
 	/// @brief Uses the transmitter input to update the target state array with the desired setpoints for each state.
 	/// @param estimated_state_array The current estimated state of the robot.
 	/// @param target_state_array The array of target states to update.

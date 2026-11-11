@@ -725,6 +725,11 @@ bool ET16S::mode_changed(){
 	return mode_changed_flag;
 }
 
+bool ET16S::should_recalib_icm() {
+    if (get_switch_f() != SwitchPos::BACKWARD) has_calibrated_icm = false;
+    return !has_calibrated_icm && get_switch_f() == SwitchPos::BACKWARD; 
+}
+
 
 ET16SData ET16S::get_ET16S_data(){
 	ET16SData ET16S_data;
@@ -830,8 +835,6 @@ void ET16S::manual_controls(const RobotStateArray& estimated_state_array, RobotS
 	target_state_array[Cfg::StateName::GimbalPitch].set_position(pitch_target);
 	target_state_array[Cfg::StateName::GimbalPitch].set_velocity(0);
 	target_state_array[Cfg::StateName::Flywheels].set_velocity(fly_wheel_target);
-
-    // Add ICM recalibration here, use SensorManager::get_sensor_by_name
 
 	// when in teensy control mode reset hive toggle
 	if (is_teensy_mode() && mode_changed()) {

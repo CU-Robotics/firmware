@@ -34,6 +34,12 @@ public:
     /// @brief Whether fast mode is active.
     /// @return true if fast mode is active, false otherwise
 	bool is_fast_mode_active();
+    /// @brief Whether the icm sensor should be recalibrated at this moment
+    /// won't trigger right after icm sensor has been recalibrated if controller
+    /// switch is still in the same state.
+    /// @return true if it should be recalibrated, false otherwise
+    bool should_recalib_icm();
+
     
     /// @copydoc Transmitter::manual_controls
     void manual_controls(const RobotStateArray &estimated_state_array, RobotStateArray &target_state_array, bool not_safety_mode, float &feed, float &last_feed);

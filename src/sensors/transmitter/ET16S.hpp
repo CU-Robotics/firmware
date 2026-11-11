@@ -108,6 +108,8 @@ class ET16S : public Transmitter {
     bool mode_changed() override;
     /// @copydoc Transmitter::is_fast_mode_active
     bool is_fast_mode_active() override;
+    /// @copydoc Transmitter::should_recalib_icm
+    bool should_recalib_icm() override;
 
 	/// @copydoc Transmitter::manual_controls
 	void manual_controls(const RobotStateArray& estimated_state_array, RobotStateArray& target_state_array, bool not_safety_mode, float& feed, float& last_feed) override;

@@ -189,6 +189,11 @@ void HelloRobot::update_controls() {
 
     apply_fast_mode();
 
+    if (transmitter_manager.should_recalib_icm()) {
+        const Cfg::SensorName icm_name = Cfg::SensorName::YawIcmImu;
+        sensor_manager.get_sensor_by_name<ICM20649>(icm_name)->calibrate_icm_sensor();
+    }
+
     // reference govern
     *reference_array = governor->step_reference_array(*target_state_array);
 

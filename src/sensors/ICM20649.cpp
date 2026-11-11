@@ -45,7 +45,7 @@ void ICM20649::init() {
 void ICM20649::calibrate_icm_sensor() {
     Serial.println("ICM CALIBRATING...");
     float gyro_offset_x = 0, gyro_offset_y = 0, gyro_offset_z = 0;
-    float gyro_offset_x2 = 0, gyro_offset_y2 = 0, gyro_offset_z2 = 0;
+    // float gyro_offset_x2 = 0, gyro_offset_y2 = 0, gyro_offset_z2 = 0;
     for (uint32_t i = 0; i < config.num_calibration_reads; i++) {
 		if (config.communication_protocol == Cfg::CommunicationProtocol::SPI) {
             request_read();
@@ -57,10 +57,10 @@ void ICM20649::calibrate_icm_sensor() {
         gyro_offset_x += get_gyro_X();
         gyro_offset_y += get_gyro_Y();
         gyro_offset_z += get_gyro_Z();
-        //TODO: if one needs stdev it can be calculated here
-        //gyro_offset_x2 += gyro_offset_x * gyro_offset_x;
-        //gyro_offset_y2 += gyro_offset_y * gyro_offset_y;
-        //gyro_offset_z2 += gyro_offset_z * gyro_offset_z;
+        // TODO: if one needs stdev it can be calculated here
+        // gyro_offset_x2 += gyro_offset_x * gyro_offset_x;
+        // gyro_offset_y2 += gyro_offset_y * gyro_offset_y;
+        // gyro_offset_z2 += gyro_offset_z * gyro_offset_z;
         delay(1);
     }
 
@@ -68,9 +68,9 @@ void ICM20649::calibrate_icm_sensor() {
     gyro_offset_y /= config.num_calibration_reads;
     gyro_offset_z /= config.num_calibration_reads;
 
-    //float gyro_offset_x_stdev = (gyro_offset_x2 / config.num_calibration_reads) - gyro_offset_x * gyro_offset_x; 
-    //float gyro_offset_y_stdev = (gyro_offset_y2 / config.num_calibration_reads) - gyro_offset_y * gyro_offset_y; 
-    //float gyro_offset_z_stdev = (gyro_offset_z2 / config.num_calibration_reads) - gyro_offset_z * gyro_offset_z; 
+    // float gyro_offset_x_stdev = (gyro_offset_x2 / config.num_calibration_reads) - gyro_offset_x * gyro_offset_x; 
+    // float gyro_offset_y_stdev = (gyro_offset_y2 / config.num_calibration_reads) - gyro_offset_y * gyro_offset_y; 
+    // float gyro_offset_z_stdev = (gyro_offset_z2 / config.num_calibration_reads) - gyro_offset_z * gyro_offset_z; 
 
     set_offsets(gyro_offset_x, gyro_offset_y, gyro_offset_z);
 
