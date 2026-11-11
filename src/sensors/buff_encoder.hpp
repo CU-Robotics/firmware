@@ -5,6 +5,7 @@
 #include <EventResponder.h>
 #include <cstdint>
 #include "sensors/sensor.hpp"
+#include "sensors/encoder_source.hpp"
 #include "comms/data/buff_encoder_data.hpp"
 
 constexpr uint32_t read_zero_pos_max_attempts = 10;
@@ -44,7 +45,7 @@ constexpr uint32_t MT6835_REG_CAL_STATUS = 0x113;
 constexpr uint32_t MT6835_BITORDER = MSBFIRST;
 
 /// @brief Driver for the Buff-Encoder
-class BuffEncoder : public Sensor {
+class BuffEncoder : public Sensor, public EncoderSource {
 public:
     /// @brief Constructor for the BuffEncoder class
     /// @param encoder_config configuration data for the encoder
@@ -73,7 +74,7 @@ public:
 
     /// @brief Get the angle of the last read function adjusted by the offset
     /// @return Read angle (radians)
-    inline float get_angle() const { return m_angle; }
+    inline float get_angle() const override { return m_angle; }
 
     /// @brief Get the configured name of this encoder
     /// @return The name of this encoder
