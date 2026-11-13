@@ -71,7 +71,7 @@ void SensorManager::configure_sensors(const Cfg::RobotConfig& config_data) {
     if (config_data.icm_imus.size() > 1) {
         // Note the ICM IMU non-blocking logic is only capable of working with 1 IMU on the same spi bus
         // If another ICM IMU is added it will need to be daisy chained like the buff encoders or put on a seperate spi bus
-		safety::safety_procedure("SensorManager only supports a single ICM20649 IMU.");
+		safety::safety_procedure("SensorManager only supports a single ICM20649 IMU.", safety::errorSeverity::Error);
 	}
     for (const auto &icm_config : config_data.icm_imus) {
         Serial.printf("Configuring ICM20649 with name %u\n", static_cast<uint32_t>(icm_config.imu_name));

@@ -192,10 +192,12 @@ void CANManager::zero_all_motors() {
 
 void CANManager::write_motor_torque_by_name(Cfg::MotorName motor_name, float torque) {
     safety::assert_or_safety_procedure(motor_name!= Cfg::MotorName::UnsetMotorName, 
+                                        safety::errorSeverity::Critical,
                                         "CANManager: Requested write to an unset motor name");
 
     auto it = m_motor_name_map.find(motor_name);
     safety::assert_or_safety_procedure(it != m_motor_name_map.end(),
+                                        safety::errorSeverity::Critical,
                                         "CANManager: Requested write to an invalid motor name: %u", static_cast<uint32_t>(motor_name));
 
 
@@ -216,9 +218,11 @@ void CANManager::print_state() const {
 
 void CANManager::print_motor_state_by_name(Cfg::MotorName motor_name) const {
     safety::assert_or_safety_procedure(motor_name!= Cfg::MotorName::UnsetMotorName, 
+                                        safety::errorSeverity::Critical,
                                         "CANManager: Requested print of an unset motor name");
     auto it = m_motor_name_map.find(motor_name);
     safety::assert_or_safety_procedure(it != m_motor_name_map.end(),
+                                        safety::errorSeverity::Critical,
                                         "CANManager: Requested print of an invalid motor name: %u", static_cast<uint32_t>(motor_name));
 
     // print the motor state
@@ -227,9 +231,11 @@ void CANManager::print_motor_state_by_name(Cfg::MotorName motor_name) const {
 
 std::shared_ptr<Motor> CANManager::get_motor_by_name(Cfg::MotorName motor_name) {
     safety::assert_or_safety_procedure(motor_name!= Cfg::MotorName::UnsetMotorName, 
+                                        safety::errorSeverity::Critical,
                                         "CANManager: Requested get of an unset motor name");
     auto it = m_motor_name_map.find(motor_name);
     safety::assert_or_safety_procedure(it != m_motor_name_map.end(),
+                                        safety::errorSeverity::Critical,
                                         "CANManager: Requested get of an invalid motor name: %u", static_cast<uint32_t>(motor_name));
 
     return it->second;
@@ -237,9 +243,11 @@ std::shared_ptr<Motor> CANManager::get_motor_by_name(Cfg::MotorName motor_name) 
 
 MotorState CANManager::get_motor_state_by_name(Cfg::MotorName motor_name) const {
     safety::assert_or_safety_procedure(motor_name!= Cfg::MotorName::UnsetMotorName, 
+                                        safety::errorSeverity::Critical,
                                         "CANManager: Requested get of an unset motor name");
     auto it = m_motor_name_map.find(motor_name);
     safety::assert_or_safety_procedure(it != m_motor_name_map.end(),
+                                        safety::errorSeverity::Critical,
                                         "CANManager: Requested get of an invalid motor name: %u", static_cast<uint32_t>(motor_name));
 
     // return the motor state

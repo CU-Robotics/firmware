@@ -21,7 +21,7 @@ uint16_t PacketPayload::pack_staged_buffer(uint8_t* source, uint16_t& used, uint
         if (staged_bytes_remaining < sizeof(CommsData)) {
             used = 0;
             count = 0;
-            safety::assert_or_safety_procedure(false, "PacketPayload::construct_data: Staged record header is truncated");
+            safety::assert_or_safety_procedure(false, safety::errorSeverity::Warning, "PacketPayload::construct_data: Staged record header is truncated");
             return 0;
         }
 
@@ -31,7 +31,7 @@ uint16_t PacketPayload::pack_staged_buffer(uint8_t* source, uint16_t& used, uint
             const uint16_t invalid_size = header.size;
             used = 0;
             count = 0;
-            safety::assert_or_safety_procedure(false, "PacketPayload::construct_data: Invalid staged record size %u with %u bytes remaining and %u byte capacity", invalid_size, staged_bytes_remaining, max_data_size);
+            safety::assert_or_safety_procedure(false, safety::errorSeverity::Warning, "PacketPayload::construct_data: Invalid staged record size %u with %u bytes remaining and %u byte capacity", invalid_size, staged_bytes_remaining, max_data_size);
             return 0;
         }
 
@@ -46,7 +46,7 @@ uint16_t PacketPayload::pack_staged_buffer(uint8_t* source, uint16_t& used, uint
     if (emitted_count > count) {
         used = 0;
         count = 0;
-        safety::assert_or_safety_procedure(false, "PacketPayload::construct_data: Staged record count is corrupt");
+        safety::assert_or_safety_procedure(false, safety::errorSeverity::Warning, "PacketPayload::construct_data: Staged record count is corrupt");
         return 0;
     }
 
@@ -66,7 +66,7 @@ uint16_t PacketPayload::pack_staged_buffer(uint8_t* source, uint16_t& used, uint
 
 uint16_t PacketPayload::construct_data(uint8_t* destination) {
     if (destination == nullptr) {
-        safety::assert_or_safety_procedure(false, "PacketPayload::construct_data: Destination is null");
+        safety::assert_or_safety_procedure(false, safety::errorSeverity::Warning, "PacketPayload::construct_data: Destination is null");
         return 0;
     }
 
@@ -84,11 +84,11 @@ uint16_t PacketPayload::construct_data(uint8_t* destination) {
 
 void PacketPayload::deconstruct_data(uint8_t* data, uint16_t size) {
     if (data == nullptr) {
-        safety::assert_or_safety_procedure(false, "PacketPayload::deconstruct_data: Data is null");
+        safety::assert_or_safety_procedure(false, safety::errorSeverity::Warning, "PacketPayload::deconstruct_data: Data is null");
         return;
     }
     if (size > max_data_size) {
-        safety::assert_or_safety_procedure(false, "PacketPayload::deconstruct_data: Data size %u exceeds max data size %u", size, max_data_size);
+        safety::assert_or_safety_procedure(false, safety::errorSeverity::Warning, "PacketPayload::deconstruct_data: Data size %u exceeds max data size %u", size, max_data_size);
         return;
     }
 
@@ -120,11 +120,11 @@ void PacketPayload::deconstruct_data(uint8_t* data, uint16_t size) {
 
 bool PacketPayload::add(const CommsData* data) {
     if (data == nullptr) {
-        safety::assert_or_safety_procedure(false, "PacketPayload::add: Data is null");
+        safety::assert_or_safety_procedure(false, safety::errorSeverity::Warning, "PacketPayload::add: Data is null");
         return false;
     }
     if (data->size < sizeof(CommsData) || data->size > max_data_size) {
-        safety::assert_or_safety_procedure(false, "PacketPayload::add: Invalid record size %u for %u byte capacity", data->size, max_data_size);
+        safety::assert_or_safety_procedure(false, safety::errorSeverity::Warning, "PacketPayload::add: Invalid record size %u for %u byte capacity", data->size, max_data_size);
         return false;
     }
 
@@ -145,7 +145,7 @@ bool PacketPayload::add(const CommsData* data) {
         }
         break;
     default:
-        safety::assert_or_safety_procedure(false, "PacketPayload::add: Invalid priority");
+        safety::assert_or_safety_procedure(false, safety::errorSeverity::Warning, "PacketPayload::add: Invalid priority");
         return false;
     }
 

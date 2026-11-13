@@ -44,7 +44,8 @@ public:
                 return requested_state_name;
             }
         }
-        safety::safety_procedure("Estimator requesting state that is not available. (multiple estimators may be trying to estimate the same state)");
+        safety::safety_procedure("Estimator requesting state that is not available. (multiple estimators may be trying to estimate the same state)", safety::errorSeverity::Error);
+        return requested_state_name;
     }
 
 protected:

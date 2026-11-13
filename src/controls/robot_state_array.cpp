@@ -6,7 +6,7 @@
 RobotStateArray::RobotStateArray(const std::vector<Cfg::State>& _state_configurations) {
     for (const auto& state_cfg : _state_configurations) {
         if (state_cfg.name == Cfg::StateName::UnsetStateName || state_cfg.name == Cfg::StateName::StateNameCount) {
-            safety::safety_procedure("RobotStateArray: Invalid state name in state configurations: %u", static_cast<uint32_t>(state_cfg.name));
+            safety::safety_procedure("RobotStateArray: Invalid state name in state configurations: %u", safety::errorSeverity::Critical, static_cast<uint32_t>(state_cfg.name));
         }
         const size_t idx = static_cast<size_t>(state_cfg.name);
         if (idx < NUM_STATES) {
@@ -19,6 +19,7 @@ State& RobotStateArray::operator[](Cfg::StateName state_name) {
     const size_t idx = static_cast<size_t>(state_name);
     safety::assert_or_safety_procedure(
         idx < NUM_STATES && robot_states[idx].has_value(),
+        safety::errorSeverity::Critical,
         "RobotStateArray: Requested state name %u is uninitialized or out of bounds.",
         static_cast<uint32_t>(state_name)
     );
@@ -29,6 +30,7 @@ const State& RobotStateArray::operator[](Cfg::StateName state_name) const {
     const size_t idx = static_cast<size_t>(state_name);
     safety::assert_or_safety_procedure(
         idx < NUM_STATES && robot_states[idx].has_value(),
+        safety::errorSeverity::Critical,
         "RobotStateArray: Requested state name %u is uninitialized or out of bounds.",
         static_cast<uint32_t>(state_name)
     );

@@ -19,6 +19,7 @@ constexpr int SAFETY_PROCEDURE_LED_BLINK_DURATION_MS = 1000 / (2 * SAFETY_PROCED
 
 namespace safety {
     /// @brief Severity of a safety message and the corresponding firmware response.
+    /// @note Release firmware treats every severity as Warning.
     enum class errorSeverity : std::uint8_t {
         Info,    ///< Print an informational message and continue.
         Warning, ///< Print a warning message and continue.
@@ -61,6 +62,7 @@ namespace safety {
     }
 
     /// @brief Print the severity and message; Error and Critical also trigger the safety callback and halt. Simulation always throws.
+    /// @note Release firmware prints every severity as Warning and returns without invoking the safety callback.
     /// @param message The message to print when the safety procedure is triggered, which can include format specifiers for the additional arguments
     /// @param errortype The severity, which determines whether to return or halt
     /// @param args Variadic arguments to be formatted into the message
@@ -76,6 +78,10 @@ namespace safety {
         throw std::runtime_error(message_buffer);
 
     #else
+
+    #ifdef FW_RELEASE
+        errortype = errorSeverity::Warning;
+    #endif
 
         const char* severity_name = "Unknown";
         switch (errortype) {

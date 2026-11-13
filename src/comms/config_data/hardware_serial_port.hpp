@@ -49,7 +49,7 @@ inline std::optional<HardwareSerial*> resolve_hardware_serial_port(HardwareSeria
 inline HardwareSerial& try_grab_hw_serial_port(Cfg::HardwareSerialPort port) {
   auto port_opt = Cfg::resolve_hardware_serial_port(port);
   if (!port_opt.has_value()) {
-    safety::safety_procedure("D200LD14P: failed to resolve hardware serial port %u", static_cast<uint32_t>(port));
+    safety::safety_procedure("D200LD14P: failed to resolve hardware serial port %u", safety::errorSeverity::Error, static_cast<uint32_t>(port));
   }
   return *port_opt.value();
 }

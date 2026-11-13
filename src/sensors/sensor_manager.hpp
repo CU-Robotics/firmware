@@ -65,11 +65,12 @@ public:
             if (sensor_ptr) {
                 return sensor_ptr;
             } else {
-                safety::safety_procedure("SensorManager: Sensor with name %u found but is not of the requested type", static_cast<uint32_t>(name));
+                safety::safety_procedure("SensorManager: Sensor with name %u found but is not of the requested type", safety::errorSeverity::Error, static_cast<uint32_t>(name));
             }
         } else {
-            safety::safety_procedure("SensorManager: Failed to get sensor with name %u, sensor not found", static_cast<uint32_t>(name));
+            safety::safety_procedure("SensorManager: Failed to get sensor with name %u, sensor not found", safety::errorSeverity::Error, static_cast<uint32_t>(name));
         }
+        return nullptr;
     }
 private:
     /// @brief Map of sensor pointers by name

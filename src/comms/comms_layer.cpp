@@ -62,7 +62,7 @@ int CommsLayer::run() {
 
 void CommsLayer::queue_data(const CommsData* data) {
     if (data == nullptr) {
-        safety::assert_or_safety_procedure(false, "CommsLayer::queue_data: Data is null");
+        safety::assert_or_safety_procedure(false, safety::errorSeverity::Warning, "CommsLayer::queue_data: Data is null");
         return;
     }
     switch (data->physical_medium) {
@@ -89,7 +89,8 @@ void CommsLayer::queue_data(const CommsData* data) {
         (void)m_ethernet_payload.add(data);
         break;
     default:
-        assert(false && "Invalid PhysicalMedium");
+        safety::assert_or_safety_procedure(false, safety::errorSeverity::Warning, "Invalid PhysicalMedium");
+        break;
     }
 };
 

@@ -72,6 +72,7 @@ void Estimator::handleEstimatorError(const char* estimator_name, const char* sta
     const Cfg::State& config = state.config();
     safety::safety_procedure(
         "%s: %s estimate exceeded reference limits by %f (STATE: pos: %f, vel: %f, acc: %f; LIMITS: pos:[%f,%f] vel:[%f,%f] acc:[%f,%f])",
+        safety::errorSeverity::Critical,
         estimator_name,
         state_name,
         violation_amount,
