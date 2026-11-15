@@ -35,8 +35,20 @@ public:
     /// @param range new rate range
     void set_accel_range(Cfg::ICMImuAccelRange range);
 
-    /// @brief calibrate ICM sensor
-    void calibrate_icm_sensor();
+    /// @brief calibrate ICM sensor and yield between measurements
+    /// This method takes time and should not be used while the main loop is running,
+    /// or watchdog will flag it.
+    void calibrate_icm_sensor_yield();
+
+    /// @brief calibrate ICM sensor live and return before next measurement,
+    /// should be called repeatedly from main loop until this returns false
+    /// @return true if recalibration is still happening, false if finished.
+    bool calibrate_icm_sensor_live();
+    
+    /// @brief start calibrating the ICM sensor live. Should be called once
+    /// and then calibrate_icm_sensor_live should be continuously called in 
+    /// main loop until it returns false.
+    void calibrate_icm_sensor_live_init();
 
 private:
     /// @brief Configuration data for this sensor
@@ -81,4 +93,13 @@ private:
 	
 	/// @brief multiplier to adjust acceleration to rads/s
     float gyro_multiplier = 1.0f;
+    
+    /// @brief current iterations for live calibration
+    int icm_calib_iterations = 0;
+    /// @brief gryo_offset_x for live recalibration
+    float gyro_offset_x;
+    /// @brief gyro_offset_y for live recalibration
+    float gyro_offset_y;
+    /// @brief gyro_offset_z for live recalibration
+    float gyro_offset_z;
 };

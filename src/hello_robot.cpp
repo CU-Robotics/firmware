@@ -158,6 +158,10 @@ void HelloRobot::process_behaviors() {
         *estimated_state_array = *hive_state_array_offset;
         override_request = true;
     }
+
+    if (icm_recalibration_occuring) {
+        icm_recalibration_occuring = sensor_manager.calibrate_icm_sensor_live();
+    }
 }
 void HelloRobot::update_controls() {
     // step estimates and construct estimated state
@@ -189,9 +193,8 @@ void HelloRobot::update_controls() {
 
     apply_fast_mode();
 
-    if (transmitter_manager.should_recalib_icm()) {
-        const Cfg::SensorName icm_name = Cfg::SensorName::YawIcmImu;
-        sensor_manager.get_sensor_by_name<ICM20649>(icm_name)->calibrate_icm_sensor();
+    if (transmitter_manager.should_recalib_icm() && !icm_recalibration_occuring) {
+        icm_recalibration_occuring = sensor_manager.calibrate_icm_sensor_live_init();
     }
 
     // reference govern

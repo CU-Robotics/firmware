@@ -152,3 +152,22 @@ void SensorManager::encoder_isr_wrapper(EventResponderRef spi_event) {
         instance->encoder_isr();
     }
 }
+
+bool SensorManager::calibrate_icm_sensor_live_init() {
+    if (icm_imu != nullptr) {
+        icm_imu->calibrate_icm_sensor_live_init();
+        return true;
+    }
+
+    SystemLog.warn(Subsystem::SENSORS, "No icm sensor, can't recalibrate\n");
+    return false;
+}
+
+bool SensorManager::calibrate_icm_sensor_live() {
+    if (icm_imu == nullptr) {
+        SystemLog.error(Subsystem::SENSORS, "No icm sensor, SensorManager::calibrate_icm_sensor_live should not have been called\n");
+        return false;
+    }
+
+    return icm_imu->calibrate_icm_sensor_live();
+}

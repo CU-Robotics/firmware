@@ -123,6 +123,9 @@ class HelloRobot {
     bool has_lower_feeder = false;
     /// @brief Used for tracking if we spin when in fast mode
 	bool fast_mode_engaged = false;
+    /// @brief Used for checking when icm recalibration is occuring,
+    /// during which the main loop is instead used purely for this.
+    bool icm_recalibration_occuring = false;
     // ==========================================
     // STATE ARRAYS
     // ==========================================

@@ -52,6 +52,17 @@ public:
 	/// @param spi_event is required to pass encoder_isr into attach_intterupt();
     static void encoder_isr_wrapper(EventResponderRef spi_event);
     
+    /// @brief start calibrating the ICM sensor live. Should be called once
+    /// and then calibrate_icm_sensor_live should be continuously called in 
+    /// main loop until it returns false.
+    /// @return true if successfully started recalibration, false if no icm sensor.
+    bool calibrate_icm_sensor_live_init();
+
+    /// @brief calibrate ICM sensor live and return before next measurement,
+    /// should be called repeatedly from main loop until this returns false
+    /// @return true if recalibration is still happening, false if finished.
+    bool calibrate_icm_sensor_live();
+    
     /// @brief Get a sensor by its name and type. Will trigger safety procedure if the sensor is not found or is not of the requested type.
     /// @param name The name of the sensor to get
     /// @tparam SensorType The type of the sensor to get, must be derived from the Sensor class

@@ -38,10 +38,10 @@ void ICM20649::init() {
         tx_buffer[i] = 0x00; // Dummy bytes to clock out the other 14 data bytes
     }
 
-    calibrate_icm_sensor();
+    calibrate_icm_sensor_yield();
 }
 
-void ICM20649::calibrate_icm_sensor() {
+void ICM20649::calibrate_icm_sensor_yield() {
     Serial.println("ICM CALIBRATING...");
     float gyro_offset_x = 0, gyro_offset_y = 0, gyro_offset_z = 0;
     // float gyro_offset_x2 = 0, gyro_offset_y2 = 0, gyro_offset_z2 = 0;
@@ -74,6 +74,50 @@ void ICM20649::calibrate_icm_sensor() {
     set_offsets(gyro_offset_x, gyro_offset_y, gyro_offset_z);
 
     Serial.printf("ICM CALIBRATION COMPLETE! Offsets: X: %f, Y: %f, Z: %f\n", gyro_offset_x, gyro_offset_y, gyro_offset_z);
+}
+
+void ICM20649::calibrate_icm_sensor_live_init() {
+    Serial.println("ICM CALIBRATING...");
+    gyro_offset_x = 0, gyro_offset_y = 0, gyro_offset_z = 0;
+    // gyro_offset_x2 = 0, gyro_offset_y2 = 0, gyro_offset_z2 = 0;
+}
+
+bool ICM20649::calibrate_icm_sensor_live() {
+    if (config.communication_protocol == Cfg::CommunicationProtocol::SPI) {
+        if (!transfer_in_progress) request_read();
+        else if (spi_event) read();
+        else {
+            delay(1);
+            return true;
+        }
+    } else {
+        read(); // I2C fallback
+    }
+    gyro_offset_x += get_gyro_X();
+    gyro_offset_y += get_gyro_Y();
+    gyro_offset_z += get_gyro_Z();
+    // TODO: if one needs stdev it can be calculated here
+    // gyro_offset_x2 += gyro_offset_x * gyro_offset_x;
+    // gyro_offset_y2 += gyro_offset_y * gyro_offset_y;
+    // gyro_offset_z2 += gyro_offset_z * gyro_offset_z; 
+
+    if ((++icm_calib_iterations) >= config.num_calibration_reads) {
+        gyro_offset_x /= config.num_calibration_reads;
+        gyro_offset_y /= config.num_calibration_reads;
+        gyro_offset_z /= config.num_calibration_reads;
+
+        // float gyro_offset_x_stdev = (gyro_offset_x2 / config.num_calibration_reads) - gyro_offset_x * gyro_offset_x; 
+        // float gyro_offset_y_stdev = (gyro_offset_y2 / config.num_calibration_reads) - gyro_offset_y * gyro_offset_y; 
+        // float gyro_offset_z_stdev = (gyro_offset_z2 / config.num_calibration_reads) - gyro_offset_z * gyro_offset_z; 
+        
+        set_offsets(gyro_offset_x, gyro_offset_y, gyro_offset_z);
+
+        Serial.printf("ICM CALIBRATION COMPLETE! Offsets: X: %f, Y: %f, Z: %f\n", gyro_offset_x, gyro_offset_y, gyro_offset_z);
+        return false;
+    } else {
+        delay(1);
+        return true;
+    }
 }
 
 void ICM20649::request_read() {
@@ -115,6 +159,7 @@ void ICM20649::read() {
 		comms_data.gyro_Y = gyro_Y;
 		comms_data.gyro_Z = gyro_Z;
 		comms_data.temperature = temperature;
+        return;
 	}
 	if (transfer_in_progress) {
         if (spi_event) {
