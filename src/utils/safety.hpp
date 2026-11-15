@@ -4,6 +4,7 @@
 #include <functional>
 #include <type_traits>
 #include <cstdint>
+#include "system_log.hpp"
 
 #ifdef FW_SIMULATION
 #include <cstdio>
@@ -21,10 +22,10 @@ namespace safety {
     /// @brief Severity of a safety message and the corresponding firmware response.
     /// @note Release firmware treats every severity as Warning.
     enum class errorSeverity : std::uint8_t {
-        Info,    ///< Print an informational message and continue.
-        Warning, ///< Print a warning message and continue.
-        Error,   ///< Invoke the safety callback, print an error, and halt normal execution.
-        Critical ///< Invoke the safety callback, print a critical error, and halt normal execution.
+        Privileged, ///< Terminate the program won't be overwritten in release mode.
+        Warning,    ///< Print a warning message and continue.
+        Error,      ///< Invoke the safety callback, print an error, and halt normal execution.
+        Critical    ///< Invoke the safety callback, print a critical error, and halt normal execution.
     };
 
     /// @brief Compile-time filter for arguments accepted by the safety message functions.
@@ -80,25 +81,29 @@ namespace safety {
     #else
 
     #ifdef FW_RELEASE
-        errortype = errorSeverity::Warning;
+        if(errortype != errorSeverity::Privileged) errortype = errorSeverity::Warning;
     #endif
 
         const char* severity_name = "Unknown";
         switch (errortype) {
-            case errorSeverity::Info: severity_name = "Info"; break;
+            case errorSeverity::Privileged: severity_name = "Privileged"; break;
             case errorSeverity::Warning: severity_name = "Warning"; break;
             case errorSeverity::Error: severity_name = "Error"; break;
             case errorSeverity::Critical: severity_name = "Critical"; break;
         }
-        const bool should_halt = errortype != errorSeverity::Info && errortype != errorSeverity::Warning;
+        const bool should_halt = errortype != errorSeverity::Warning;
 
         if (should_halt && !call_safety_function()) {
-            Serial.printf("Safety procedure triggered but no safety function registered!\n");
+            SystemLog.error(Subsystem::GENERAL, "Safety procedure triggered but no safety function registered!");
         }
 
-        Serial.printf("%s: ", severity_name);
-        Serial.printf(message, args...);
-        Serial.println();
+        if (errortype == errorSeverity::Warning) {
+            SystemLog.warn(Subsystem::GENERAL, "%s:", severity_name);
+            SystemLog.warn(Subsystem::GENERAL, message, std::forward<Args>(args)...);
+        } else {
+            SystemLog.error(Subsystem::GENERAL, "%s:", severity_name);
+            SystemLog.error(Subsystem::GENERAL, message, std::forward<Args>(args)...);
+        }
 
         if (should_halt) {
             while (true) {
