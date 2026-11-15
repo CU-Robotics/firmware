@@ -73,7 +73,7 @@ void ICM20649::calibrate_icm_sensor_yield() {
 
     set_offsets(gyro_offset_x, gyro_offset_y, gyro_offset_z);
 
-    Serial.printf("ICM CALIBRATION COMPLETE! Offsets: X: %f, Y: %f, Z: %f\n", gyro_offset_x, gyro_offset_y, gyro_offset_z);
+    SystemLog.info(Subsystem::SENSORS, "ICM CALIBRATION COMPLETE! Offsets: X: %f, Y: %f, Z: %f\n", gyro_offset_x, gyro_offset_y, gyro_offset_z);
 }
 
 void ICM20649::calibrate_icm_sensor_live_init() {
