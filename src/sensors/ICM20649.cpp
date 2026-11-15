@@ -78,6 +78,7 @@ void ICM20649::calibrate_icm_sensor_yield() {
 
 void ICM20649::calibrate_icm_sensor_live_init() {
     Serial.println("ICM CALIBRATING...");
+    icm_calib_iterations = 0;
     gyro_offset_x = 0, gyro_offset_y = 0, gyro_offset_z = 0;
     // gyro_offset_x2 = 0, gyro_offset_y2 = 0, gyro_offset_z2 = 0;
 }
