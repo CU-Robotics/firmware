@@ -2,6 +2,8 @@
 #include "sensors/NeoPixel.hpp"
 #include <wiring.h>
 
+static NeoPixel neopixel{14, 8};
+
 #ifdef PROFILER
 Profiler prof;
 #endif
@@ -42,7 +44,10 @@ void HelloRobot::init() {
     sensor_manager.init(config, &estimated_state_array_interrupt_safe);
     // Begin cycle of reading sensor data
     sensor_manager.request_read();
-
+    
+    // Initialize NeoPixel
+    neopixel.begin();
+    
     estimator_manager.init(config.estimators, sensor_manager, can);
 
     // generate controller outputs based on governed references and estimated
@@ -266,7 +271,7 @@ void HelloRobot::update_status() {
     uint8_t reasons = safety_state.active_reasons();
 
     if (reasons & SafetyState::Reason::NOT_CONFIGURED) {
-        NeoPixel::flashForTenSeconds(14, 255, 255, 0);
+        neopixel.set_color(255, 255, 0);
     }
 }
 
