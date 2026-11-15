@@ -725,7 +725,8 @@ bool ET16S::mode_changed(){
 	return mode_changed_flag;
 }
 
-bool ET16S::has_calibrated_icm = false;
+// if the switch starts in the backward position it still only triggers on change into the backward position.
+bool ET16S::has_calibrated_icm = true;
 
 bool ET16S::should_recalib_icm() {
     if (get_switch_e() != SwitchPos::BACKWARD) ET16S::has_calibrated_icm = false;
