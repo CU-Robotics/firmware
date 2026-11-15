@@ -6,6 +6,7 @@
 
 #include "sensors/AdafruitIMUSensor.hpp"
 #include "comms/data/icm_sensor_data.hpp"
+#include "utils/system_log.hpp"
 
 
 constexpr uint32_t ICM20649_BITORDER = MSBFIRST;

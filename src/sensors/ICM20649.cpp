@@ -42,7 +42,7 @@ void ICM20649::init() {
 }
 
 void ICM20649::calibrate_icm_sensor_yield() {
-    Serial.println("ICM CALIBRATING...");
+    SystemLog.info(Subsystem::SENSORS, "ICM CALIBRATING...");
     float gyro_offset_x = 0, gyro_offset_y = 0, gyro_offset_z = 0;
     // float gyro_offset_x2 = 0, gyro_offset_y2 = 0, gyro_offset_z2 = 0;
     for (uint32_t i = 0; i < config.num_calibration_reads; i++) {
@@ -77,7 +77,7 @@ void ICM20649::calibrate_icm_sensor_yield() {
 }
 
 void ICM20649::calibrate_icm_sensor_live_init() {
-    Serial.println("ICM CALIBRATING...");
+    SystemLog.info(Subsystem::SENSORS, "ICM CALIBRATING...");
     icm_calib_iterations = 0;
     gyro_offset_x = 0, gyro_offset_y = 0, gyro_offset_z = 0;
     // gyro_offset_x2 = 0, gyro_offset_y2 = 0, gyro_offset_z2 = 0;
@@ -85,8 +85,12 @@ void ICM20649::calibrate_icm_sensor_live_init() {
 
 bool ICM20649::calibrate_icm_sensor_live() {
     if (config.communication_protocol == Cfg::CommunicationProtocol::SPI) {
-        if (!transfer_in_progress) request_read();
-        else if (spi_event) read();
+        if (!transfer_in_progress) {
+            request_read();
+            SystemLog.info(Subsystem::SENSORS, "Requested ICM read %u out of %u", icm_calib_iterations, config.num_calibration_reads);
+            delay(1);
+        }
+        if (spi_event) read();
         else {
             delay(1);
             return true;
@@ -113,7 +117,7 @@ bool ICM20649::calibrate_icm_sensor_live() {
         
         set_offsets(gyro_offset_x, gyro_offset_y, gyro_offset_z);
 
-        Serial.printf("ICM CALIBRATION COMPLETE! Offsets: X: %f, Y: %f, Z: %f\n", gyro_offset_x, gyro_offset_y, gyro_offset_z);
+        SystemLog.info(Subsystem::SENSORS, "ICM CALIBRATION COMPLETE! Offsets: X: %f, Y: %f, Z: %f\n", gyro_offset_x, gyro_offset_y, gyro_offset_z);
         return false;
     } else {
         delay(1);
