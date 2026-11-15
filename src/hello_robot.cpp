@@ -1,5 +1,6 @@
 #include "hello_robot.hpp"
 #include <wiring.h>
+#include "sensors/NeoPixel.hpp"
 
 #ifdef PROFILER
 Profiler prof; 
@@ -16,6 +17,7 @@ void HelloRobot::init() {
     Serial.println("Configuring...");
 
     Comms::comms_layer.configure();
+
 
     const Cfg::RobotConfig &config = Comms::comms_layer.get_hive_data().config;
 
@@ -59,7 +61,8 @@ void HelloRobot::init() {
     
     // start the main loop watchdog
     watchdog.start();
-}
+
+};
 
 void HelloRobot::run() {
     Serial.println("Entering main loop...\n");
@@ -97,6 +100,7 @@ void HelloRobot::run() {
 		update_controls();
 		update_comms();
 		check_safety();
+        update_status();
 		process_cli();
 #endif
         loop_timing();		
@@ -261,6 +265,16 @@ bool HelloRobot::check_slow_loop(float &loop_dt) {
     }
     return true;
 }
+
+
+void HelloRobot::update_status() {
+    uint8_t reasons = safety_state.active_reasons();
+
+    if (reasons & SafetyState::Reason::NOT_CONFIGURED) {
+        NeoPixel::flash(255, 255, 0);
+    }
+}
+
 
 void HelloRobot::hold_feeder_position() {
     governor->hold_position(Cfg::StateName::Feeder, (*estimated_state_array)[Cfg::StateName::Feeder].get_position());
