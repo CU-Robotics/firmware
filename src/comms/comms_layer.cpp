@@ -183,7 +183,7 @@ void CommsLayer::configure() {
 #ifndef FORCE_UPDATE_CONFIG
     if (BuiltinSd.file_exists(config_file_name)) {
         Serial.printf("Found config file %s already stored\n", config_file_name); 
-        // if we can load the conifg file from the sd card we are done
+        // if we can load the config file from the sd card we are done
         if (read_config_sd()) return;
     } 
 #else
