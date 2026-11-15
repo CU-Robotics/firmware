@@ -42,7 +42,7 @@ public:
 
     /// @brief calibrate ICM sensor live and return before next measurement,
     /// should be called repeatedly from main loop until this returns false
-    /// @return true if recalibration is still happening, false if finished.
+    /// @return true if recalibration is still happening, false if finished
     bool calibrate_icm_sensor_live();
     
     /// @brief start calibrating the ICM sensor live. Should be called once
@@ -95,7 +95,7 @@ private:
     float gyro_multiplier = 1.0f;
     
     /// @brief current iterations for live calibration
-    int icm_calib_iterations = 0;
+    uint32_t icm_calib_iterations = 0;
     /// @brief gryo_offset_x for live recalibration
     float gyro_offset_x;
     /// @brief gyro_offset_y for live recalibration
