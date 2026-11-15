@@ -87,6 +87,7 @@ bool ICM20649::calibrate_icm_sensor_live() {
     if (config.communication_protocol == Cfg::CommunicationProtocol::SPI) {
         if (!transfer_in_progress) {
             request_read();
+            SystemLog.info(Subsystem::SENSORS, "Requested read\n");
             delay(1);
         }
         if (!spi_event) {
