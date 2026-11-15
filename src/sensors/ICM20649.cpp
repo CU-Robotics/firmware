@@ -89,13 +89,14 @@ bool ICM20649::calibrate_icm_sensor_live() {
             request_read();
             SystemLog.info(Subsystem::SENSORS, "Requested ICM read %u out of %u", icm_calib_iterations, config.num_calibration_reads);
             delay(1);
-        }
+        } else SystemLog.info(Subsystem::SENSORS, "transfer in progress\n");
         if (spi_event) read();
         else {
             delay(1);
             return true;
         }
     } else {
+        SystemLog.info(Subsystem::SENSORS, "Reading from ICM I2C protocal, read %u out of %u", icm_calib_iterations, config.num_calibration_reads);
         read(); // I2C fallback
     }
     gyro_offset_x += get_gyro_X();
