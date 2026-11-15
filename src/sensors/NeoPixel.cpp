@@ -3,9 +3,7 @@
 
 #include <Arduino.h>
 
-NeoPixel::NeoPixel(uint8_t pin, uint16_t numPixels)
-    : pixels_(numPixels, pin, NEO_GRB + NEO_KHZ800) {
-}
+NeoPixel::NeoPixel(uint8_t pin, uint16_t numPixels) : pixels_(numPixels, pin, NEO_GRB + NEO_KHZ800) {}
 
 void NeoPixel::begin() {
     pixels_.begin();
@@ -15,8 +13,7 @@ void NeoPixel::begin() {
     pixels_.show();
 }
 
-void NeoPixel::applyColor(uint8_t red, uint8_t green,
-                          uint8_t blue) {
+void NeoPixel::applyColor(uint8_t red, uint8_t green, uint8_t blue) {
     uint32_t color = pixels_.Color(red, green, blue);
 
     for (uint16_t i = 0; i < pixels_.numPixels(); i++) {
@@ -26,23 +23,18 @@ void NeoPixel::applyColor(uint8_t red, uint8_t green,
     pixels_.show();
 }
 
-void NeoPixel::setColor(uint8_t red, uint8_t green,
-                        uint8_t blue) {
+void NeoPixel::setColor(uint8_t red, uint8_t green, uint8_t blue) {
     flashing_ = false;
     applyColor(red, green, blue);
 }
 
-void NeoPixel::setPixelColor(uint16_t index, uint8_t red,
-                             uint8_t green, uint8_t blue) {
+void NeoPixel::setPixelColor(uint16_t index, uint8_t red, uint8_t green, uint8_t blue) {
     if (index >= pixels_.numPixels()) {
         return;
     }
 
     flashing_ = false;
-    pixels_.setPixelColor(
-        index,
-        pixels_.Color(red, green, blue)
-    );
+    pixels_.setPixelColor(index, pixels_.Color(red, green, blue));
 }
 
 void NeoPixel::setBrightness(uint8_t brightness) {
@@ -57,12 +49,9 @@ void NeoPixel::clear() {
     pixels_.show();
 }
 
-void NeoPixel::show() {
-    pixels_.show();
-}
+void NeoPixel::show() { pixels_.show(); }
 
-void NeoPixel::flash(uint8_t red, uint8_t green,
-                     uint8_t blue, uint32_t intervalMs) {
+void NeoPixel::flash(uint8_t red, uint8_t green, uint8_t blue, uint32_t intervalMs) {
     flashColor_[0] = red;
     flashColor_[1] = green;
     flashColor_[2] = blue;
@@ -77,8 +66,8 @@ void NeoPixel::flash(uint8_t red, uint8_t green,
     applyColor(red, green, blue);
 }
 
-void NeoPixel::flashForTenSeconds(uint8_t red, uint8_t green, uint8_t blue) {
-    NeoPixel leds(6, 8);
+void NeoPixel::flashForTenSeconds(uint8_t pin, uint8_t red, uint8_t green, uint8_t blue) {
+    NeoPixel leds(6, pin);
     leds.begin();
 
     const uint32_t duration = 10000;
@@ -111,17 +100,11 @@ void NeoPixel::update() {
     ledsOn_ = !ledsOn_;
 
     if (ledsOn_) {
-        applyColor(
-            flashColor_[0],
-            flashColor_[1],
-            flashColor_[2]
-        );
+        applyColor(flashColor_[0], flashColor_[1], flashColor_[2]);
     } else {
         pixels_.clear();
         pixels_.show();
     }
 }
 
-void NeoPixel::stopFlashing() {
-    flashing_ = false;
-}
+void NeoPixel::stopFlashing() { flashing_ = false; }
