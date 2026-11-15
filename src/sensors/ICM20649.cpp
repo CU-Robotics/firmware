@@ -87,17 +87,18 @@ bool ICM20649::calibrate_icm_sensor_live() {
     if (config.communication_protocol == Cfg::CommunicationProtocol::SPI) {
         if (!transfer_in_progress) {
             request_read();
-            SystemLog.info(Subsystem::SENSORS, "Requested ICM read %u out of %u", icm_calib_iterations, config.num_calibration_reads);
             delay(1);
-        } else SystemLog.info(Subsystem::SENSORS, "transfer in progress\n");
-        if (spi_event) read();
-        else {
+        }
+        if (!spi_event) {
+            SystemLog.info(Subsystem::SENSORS, "Waiting for spi_event\n");
             delay(1);
             return true;
         }
+        read();
+        SystemLog.info(Subsystem::SENSORS, "Read ICM %u out of %u", icm_calib_iterations, config.num_calibration_reads);
     } else {
-        SystemLog.info(Subsystem::SENSORS, "Reading from ICM I2C protocal, read %u out of %u", icm_calib_iterations, config.num_calibration_reads);
         read(); // I2C fallback
+        SystemLog.info(Subsystem::SENSORS, "Read from ICM I2C protocal, %u out of %u", icm_calib_iterations, config.num_calibration_reads);
     }
     gyro_offset_x += get_gyro_X();
     gyro_offset_y += get_gyro_Y();
