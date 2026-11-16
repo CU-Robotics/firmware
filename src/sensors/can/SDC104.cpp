@@ -19,6 +19,14 @@ int SDC104::read(CAN_message_t& msg) {
     case CMD_HEARTBEAT: {
         // copy the data into the heartbeat struct direct
         memcpy(&m_heartbeat, msg.buf, 8);
+
+        // log a fault once when it appears. While faulted the motor won't be re-armed, see prepare_for
+        if (is_faulted() && !m_fault_logged) {
+            SystemLog.error(Subsystem::MOTORS, "SDC104 %u: fault, axis error 0x%08lX, exceptions motor %u encoder %u control %u system %u. Disarm to clear it\n", m_physical_id, m_heartbeat.axis_error, m_heartbeat.motor_exception, m_heartbeat.encoder_exception, m_heartbeat.control_exception, m_heartbeat.system_exception);
+            m_fault_logged = true;
+        } else if (!is_faulted()) {
+            m_fault_logged = false;
+        }
         break;
     }
     case CMD_GET_ERROR: {
@@ -58,6 +66,9 @@ int SDC104::read(CAN_message_t& msg) {
         // the unified position is a 16 bit count over one output revolution, like the other drivers' encoder counts
         float output_rev = m_position_estimate / m_gear_ratio;
         m_state.position = (uint16_t)((output_rev - floorf(output_rev)) * 65536.0f);
+
+        m_have_status = true;
+        m_last_status_ms = millis();
         break;
     }
     case CMD_GET_ENCODER_COUNT: {
@@ -142,6 +153,11 @@ bool SDC104::prepare_for(ControlMode control_mode) {
     if (millis() - m_zeroed_ms < REARM_HOLDOFF_MS)
         return false;
 
+    // don't arm a faulted motor (the fault is cleared on the next disarm, see zero_motor), or one whose position
+    // we can't see
+    if (is_faulted() || !is_status_fresh())
+        return false;
+
     // let queued mode/axis commands go out before deciding anything else
     if (m_one_shot_count > 0) return false;
 
@@ -163,15 +179,42 @@ bool SDC104::prepare_for(ControlMode control_mode) {
     return true;
 }
 
+bool SDC104::is_faulted() const {
+    return m_heartbeat.axis_error != 0 || m_heartbeat.motor_exception || m_heartbeat.encoder_exception || m_heartbeat.control_exception || m_heartbeat.system_exception;
+}
+
+bool SDC104::is_status_fresh() const {
+    return m_have_status && millis() - m_last_status_ms < STALE_TIMEOUT_MS;
+}
+
+bool SDC104::is_healthy() const {
+    return is_status_fresh() && !is_faulted();
+}
+
+void SDC104::hold_zero() {
+    CAN_message_t msg;
+    if (m_control_mode_known && m_control_mode == ControlMode::VELOCITY)
+        create_cmd_set_input_velocity(msg, 0.0f, 0);
+    else
+        create_cmd_set_input_torque(msg, 0.0f);
+    set_output(msg, false);
+}
+
 void SDC104::zero_motor() {
+    // the first zero_motor call after being armed: a fault latched while armed gets cleared now, so the operator
+    // clears it by disarming and re-arming
+    bool new_disarm = millis() - m_zeroed_ms >= REARM_HOLDOFF_MS;
+    if (new_disarm && is_faulted()) {
+        SystemLog.info(Subsystem::MOTORS, "SDC104 %u: clearing fault 0x%08lX\n", m_physical_id, m_heartbeat.axis_error);
+        clear_errors();
+    }
+
     // hold off re-arming: zero_motor is called every loop while the robot is disarmed, and the controllers still
     // write torque in those loops, which would otherwise put the motor back in closed loop
     m_zeroed_ms = millis();
 
     // keep the stored command harmless, the SDC104 ignores it while idle
-    CAN_message_t msg;
-    create_cmd_set_input_torque(msg, 0.0f);
-    set_output(msg, false);
+    hold_zero();
 
     // put the motor in idle (unpowered) instead of holding zero torque in closed loop. The heartbeat that confirms
     // idle takes up to ~100 ms, so don't re-request it every loop in the meantime
@@ -186,7 +229,11 @@ void SDC104::execute_motor_torque_command(float torque) {
     if (torque < -1.0f) torque = -1.0f;
     if (torque > 1.0f) torque = 1.0f;
 
-    if (!prepare_for(ControlMode::TORQUE)) return;
+    // not ready (disarmed, faulted, stale or still switching modes): send zero instead of the last command
+    if (!prepare_for(ControlMode::TORQUE)) {
+        hold_zero();
+        return;
+    }
 
     // map the -1f to 1f torque value to output torque, then to the motor side torque the SDC104 takes
     float motor_torque = torque * m_max_torque / m_gear_ratio;
@@ -200,7 +247,10 @@ void SDC104::write_motor_speed(float speed) {
     if (speed < -1.0f) speed = -1.0f;
     if (speed > 1.0f) speed = 1.0f;
 
-    if (!prepare_for(ControlMode::VELOCITY)) return;
+    if (!prepare_for(ControlMode::VELOCITY)) {
+        hold_zero();
+        return;
+    }
 
     // map the -1f to 1f speed value to output RPM, then to the motor side rev/s the SDC104 takes
     float motor_rev_per_s = speed * m_max_speed / 60.0f * m_gear_ratio;

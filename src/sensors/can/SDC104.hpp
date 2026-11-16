@@ -75,6 +75,10 @@ public:
     /// @note Does not issue a CAN command over the bus
     void zero_motor() override;
 
+    /// @brief Whether the motor's position is current and it isn't faulted
+    /// @return true if the motor's state can be trusted
+    bool is_healthy() const override;
+
     /// @brief Write motor torque given a normalized value
     /// @param torque A value between [-1, 1] of the max output torque. Switches the motor to torque control and
     /// closed loop first if needed, in which case the torque is sent on a later call
@@ -150,8 +154,20 @@ private:
 
     /// @brief Get the motor ready for torque or speed commands: right control mode, closed loop
     /// @param control_mode The control mode the next command needs
-    /// @return True if it's ready, false if a mode or axis state command is queued or still being waited on
+    /// @return True if it's ready, false if it was zeroed recently (disarmed), is faulted, its status is stale, or a
+    /// mode or axis state command is queued or still being waited on
     bool prepare_for(ControlMode control_mode);
+
+    /// @brief Whether the last heartbeat reported an axis error or exception
+    /// @return true if the motor is faulted
+    bool is_faulted() const;
+
+    /// @brief Whether an encoder estimate has been received within STALE_TIMEOUT_MS
+    /// @return true if the position and speed are current
+    bool is_status_fresh() const;
+
+    /// @brief Store a zero command for the current control mode as the output
+    void hold_zero();
 
     /// @brief Check if the message is for this motor
     /// @param msg The message to check
@@ -337,6 +353,15 @@ private:
     /// @brief How long after the last zero_motor call before torque/speed commands may re-arm the motor. zero_motor
     /// runs every loop while disarmed, so this only has to cover a few loops
     static constexpr uint32_t REARM_HOLDOFF_MS = 20;
+
+    /// @brief Whether an encoder estimate reply has been received yet
+    bool m_have_status = false;
+    /// @brief When the last encoder estimate reply was received, in millis()
+    uint32_t m_last_status_ms = 0;
+    /// @brief No encoder estimate for this long and the motor is considered stale. They're polled every 4th write
+    static constexpr uint32_t STALE_TIMEOUT_MS = 100;
+    /// @brief Whether the current fault has been logged, so it's logged once
+    bool m_fault_logged = false;
 
     /// @brief Last reported multi-turn output shaft position in radians
     float m_position_rad = 0.0f;

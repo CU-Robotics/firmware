@@ -113,8 +113,13 @@ public:
     void write_motor_speed(float speed);
 
     /// @brief Get the last reported output shaft position
-    /// @return Position in radians, wraps over [-12.5, 12.5]
+    /// @return Position in radians. The motor reports it wrapped over [-12.5, 12.5], this is unwrapped so it is
+    /// continuous across that boundary, starting from the first reading
     inline float get_position_rad() const { return m_position_rad; }
+
+    /// @brief Whether the motor has replied with status within STALE_TIMEOUT_MS and its last reply wasn't a rejection
+    /// @return true if the motor's state can be trusted
+    bool is_healthy() const override;
 
 public:
     /// @brief Turn on the motor
@@ -146,8 +151,50 @@ private:
     /// @brief Fraction of rated current * Kt that torque commands are clamped to, a margin under the driver's cutoff
     static constexpr float TORQUE_LIMIT_MARGIN = 0.98f;
 
-    /// @brief Last reported output shaft position in radians
+    /// @brief Last reported output shaft position in radians, unwrapped
     float m_position_rad = 0.0f;
+
+    /// @brief Unwrapped position in raw counts, accumulated from the 16 bit position in each reply
+    int32_t m_position_counts = 0;
+
+    /// @brief Raw 16 bit position from the previous status reply, used to unwrap
+    uint16_t m_last_position_raw = 0;
+
+    /// @brief Whether a status reply has been received yet
+    bool m_have_status = false;
+
+    /// @brief When the last status reply was received, in millis()
+    uint32_t m_last_status_ms = 0;
+
+    /// @brief Whether the motor's last reply rejected the command (non-zero RES)
+    bool m_rejected = false;
+
+    /// @brief When a rejection was last logged, in millis(), to rate limit the log
+    uint32_t m_last_reject_log_ms = 0;
+
+    /// @brief Rejections since the last log
+    uint32_t m_rejects_since_log = 0;
+
+    /// @brief When the start command was last requested, in millis()
+    uint32_t m_start_requested_ms = 0;
+
+    /// @brief Whether a start command is in m_output waiting for write() to send it. Torque/speed commands don't
+    /// overwrite it until it's sent
+    mutable bool m_start_pending = false;
+
+    /// @brief No status reply for this long and the motor is considered stale. Replies come back for every command,
+    /// once per loop
+    static constexpr uint32_t STALE_TIMEOUT_MS = 100;
+
+    /// @brief While unhealthy, how often to resend the start command, in case the motor was powered after init
+    static constexpr uint32_t RESTART_RETRY_MS = 250;
+
+    /// @brief Minimum time between rejection log messages
+    static constexpr uint32_t REJECT_LOG_INTERVAL_MS = 1000;
+
+    /// @brief Decide whether a torque/speed command may be written to the output this loop
+    /// @return false if a start command is waiting to be sent, or one was just queued because the motor is unhealthy
+    bool prepare_command();
 
     /// @brief Put a command into the output frame addressed to this motor
     /// @param buf The 8 byte command to send

@@ -98,6 +98,11 @@ public:
     /// @return The current state of the motor
     inline MotorState get_state() const { return m_state; }
 
+    /// @brief Whether the motor is reporting fresh, fault-free status
+    /// @return true unless the driver has detected stale replies, rejected commands or a fault. Drivers that don't
+    /// track this always return true
+    virtual bool is_healthy() const { return true; }
+
 protected:
     /// @brief Check if the message is for this motor
     /// @param msg The message to check

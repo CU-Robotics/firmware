@@ -14,7 +14,15 @@ int SteadywinGIM::read(CAN_message_t& msg) {
     // Byte1 of every reply is the result code, 0x00 is success
     uint8_t res = msg.buf[1];
     if (res != 0x00) {
-        SystemLog.error(Subsystem::MOTORS, "GIM %u: command 0x%02X failed with RES 0x%02X\n", m_physical_id, cmd_byte, res);
+        // mark unhealthy so commands are zeroed and the start command is retried. Rate limit the log, the motor
+        // replies to every command
+        m_rejected = true;
+        m_rejects_since_log++;
+        if (millis() - m_last_reject_log_ms >= REJECT_LOG_INTERVAL_MS) {
+            SystemLog.error(Subsystem::MOTORS, "GIM %u: command 0x%02X failed with RES 0x%02X (%lu rejections since last log)\n", m_physical_id, cmd_byte, res, m_rejects_since_log);
+            m_last_reject_log_ms = millis();
+            m_rejects_since_log = 0;
+        }
         return 1;
     }
 
@@ -28,7 +36,14 @@ int SteadywinGIM::read(CAN_message_t& msg) {
         // Byte3–4 (Pos0, Pos1) form a 16-bit position: pos_int = (Pos1 << 8) | Pos0
         uint16_t pos_int = (msg.buf[4] << 8) | msg.buf[3];
         m_state.position = pos_int;
-        m_position_rad = (float)pos_int * 25.0f / 65535.0f - 12.5f;
+        // unwrap: the motor moves far less than half the 16 bit range between replies, so the shortest signed step
+        // between consecutive readings is the real one
+        if (m_have_status)
+            m_position_counts += (int16_t)(uint16_t)(pos_int - m_last_position_raw);
+        else
+            m_position_counts = pos_int;
+        m_last_position_raw = pos_int;
+        m_position_rad = (float)m_position_counts * 25.0f / 65535.0f - 12.5f;
 
         // Speed: 12 bits = ST0 (byte 5) as high 8 bits, ST1[7:4] (top nibble) as low 4 bits. rad/s at the output
         uint16_t speed_int = ((uint16_t)msg.buf[5] << 4) | (msg.buf[6] >> 4);
@@ -40,11 +55,19 @@ int SteadywinGIM::read(CAN_message_t& msg) {
         uint16_t torque_int = ((uint16_t)(msg.buf[6] & 0x0F) << 8) | msg.buf[7];
         float torque_nm = (float)torque_int * (450.0f * m_torque_constant) / 4095.0f - (225.0f * m_torque_constant);
         m_state.torque = torque_nm / m_max_torque;
+
+        m_have_status = true;
+        m_last_status_ms = millis();
+        m_rejected = false;
+        break;
+    }
+    case CMD_START_MOTOR: {
+        // started, torque/speed commands should be accepted again
+        m_rejected = false;
         break;
     }
     // commands that don't return anything
     case CMD_STOP_MOTOR:
-    case CMD_START_MOTOR:
     case CMD_STOP_CONTROL: {
         break;
     }
@@ -58,7 +81,26 @@ int SteadywinGIM::read(CAN_message_t& msg) {
 
 int SteadywinGIM::write(CAN_message_t& msg) const {
     memcpy(&msg, &m_output, sizeof(CAN_message_t));
+    m_start_pending = false;
     return 0;
+}
+
+bool SteadywinGIM::is_healthy() const {
+    return m_have_status && !m_rejected && millis() - m_last_status_ms < STALE_TIMEOUT_MS;
+}
+
+bool SteadywinGIM::prepare_command() {
+    // a start command waiting to go out takes priority
+    if (m_start_pending)
+        return false;
+
+    // the motor rejects commands until it's started, and a motor powered after init never got the start from init.
+    // Resend it every so often while unhealthy
+    if (!is_healthy() && millis() - m_start_requested_ms > RESTART_RETRY_MS) {
+        write_motor_on();
+        return false;
+    }
+    return true;
 }
 
 void SteadywinGIM::zero_motor() {
@@ -76,6 +118,8 @@ void SteadywinGIM::write_motor_on() {
     uint8_t buf[8];
     create_cmd_start_motor(buf);
     set_output(buf);
+    m_start_pending = true;
+    m_start_requested_ms = millis();
 }
 
 void SteadywinGIM::write_motor_off() {
@@ -97,6 +141,12 @@ void SteadywinGIM::execute_motor_torque_command(float torque) {
     if (mapped_torque > limit) mapped_torque = limit;
     if (mapped_torque < -limit) mapped_torque = -limit;
 
+    if (!prepare_command())
+        return;
+    // don't drive on stale or rejected state. Still send zero torque: the reply is how the motor's state recovers
+    if (!is_healthy())
+        mapped_torque = 0.0f;
+
     uint8_t buf[8];
     create_cmd_torque_control(buf, mapped_torque);
     set_output(buf);
@@ -109,6 +159,11 @@ void SteadywinGIM::write_motor_speed(float speed) {
 
     // map speed to the motor's max speed
     float mapped_rpm = speed * m_max_speed;
+
+    if (!prepare_command())
+        return;
+    if (!is_healthy())
+        mapped_rpm = 0.0f;
 
     uint8_t buf[8];
     create_cmd_speed_control(buf, mapped_rpm);
@@ -191,7 +246,9 @@ void SteadywinGIM::create_cmd_stop_motor(uint8_t buf[8]) {
 }
 
 // Bytes 5-7 of torque and speed commands are an execution time in ms. 0 holds the command until the next one,
-// which is what we want since the controller sends one every loop
+// which is what we want since the controller sends one every loop. It isn't used as a command timeout: on position
+// control it acts as the move duration, so a non-zero value here would likely ramp torque instead of timing out.
+// Stopping the motor when the Teensy goes quiet has to come from the motor's own config, if it supports one
 
 void SteadywinGIM::create_cmd_torque_control(uint8_t buf[8], float torque) {
     buf[0] = CMD_TORQUE_CONTROL;

@@ -40,7 +40,60 @@ void CANManager::init(const std::vector<Cfg::Motor>& motor_configs) {
         configure_motor(motor_config);
     }
 
+    check_can_id_conflicts();
+
     init_motors();
+}
+
+namespace {
+/// @brief Inclusive range of CAN IDs a motor's frames use, in either direction
+struct CANIdRange {
+    /// @brief Lowest CAN ID used
+    uint32_t low;
+    /// @brief Highest CAN ID used
+    uint32_t high;
+};
+
+/// @brief Get the range of CAN IDs a motor's frames use
+/// @param motor The motor
+/// @return The inclusive ID range
+CANIdRange can_id_range(const Motor& motor) {
+    uint32_t id = motor.get_id();
+    switch (motor.get_controller_type()) {
+    // the combined command frames 0x1FF and 0x200, and replies at 0x200 + id
+    case Cfg::MotorControllerType::C610:
+    case Cfg::MotorControllerType::C620: return { 0x1FF, 0x200 + id };
+    case Cfg::MotorControllerType::MG: return { 0x140 + id, 0x140 + id };
+    case Cfg::MotorControllerType::GIM: return { id, id };
+    // node ID in the top 6 bits, command in the low 5
+    case Cfg::MotorControllerType::SDC104: return { id << 5, (id << 5) | 0x1F };
+    default: return { id, id };
+    }
+}
+} // namespace
+
+void CANManager::check_can_id_conflicts() const {
+    for (auto a = m_motor_name_map.begin(); a != m_motor_name_map.end(); ++a) {
+        for (auto b = std::next(a); b != m_motor_name_map.end(); ++b) {
+            const Motor& motor_a = *a->second;
+            const Motor& motor_b = *b->second;
+            if (motor_a.get_bus_id() != motor_b.get_bus_id())
+                continue;
+
+            // only the Steadywin drivers are checked: GIM and SDC104 IDs are the ones that can land on the others'
+            // ranges, and existing configs of the other motors shouldn't start failing here
+            auto steadywin = [](const Motor& m) { return m.get_controller_type() == Cfg::MotorControllerType::GIM || m.get_controller_type() == Cfg::MotorControllerType::SDC104; };
+            if (!steadywin(motor_a) && !steadywin(motor_b))
+                continue;
+
+            CANIdRange range_a = can_id_range(motor_a);
+            CANIdRange range_b = can_id_range(motor_b);
+            bool overlap = range_a.low <= range_b.high && range_b.low <= range_a.high;
+            safety::assert_or_safety_procedure(!overlap,
+                "CANManager: motors %u (IDs 0x%03lX-0x%03lX) and %u (IDs 0x%03lX-0x%03lX) on bus %lu use overlapping CAN IDs, change one's ID",
+                static_cast<uint32_t>(a->first), range_a.low, range_a.high, static_cast<uint32_t>(b->first), range_b.low, range_b.high, motor_a.get_bus_id());
+        }
+    }
 }
 
 void CANManager::configure_motor(const Cfg::Motor& motor_config){
