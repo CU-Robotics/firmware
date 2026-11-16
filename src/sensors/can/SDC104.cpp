@@ -22,7 +22,7 @@ int SDC104::read(CAN_message_t& msg) {
 
         // log a fault once when it appears. While faulted the motor won't be re-armed, see prepare_for
         if (is_faulted() && !m_fault_logged) {
-            SystemLog.error(Subsystem::MOTORS, "SDC104 %u: fault, axis error 0x%08lX, exceptions motor %u encoder %u control %u system %u. Disarm to clear it\n", m_physical_id, m_heartbeat.axis_error, m_heartbeat.motor_exception, m_heartbeat.encoder_exception, m_heartbeat.control_exception, m_heartbeat.system_exception);
+            SystemLog.error(Subsystem::MOTORS, "SDC104 %u: fault 0x%08lX, exc %u%u%u%u (mot/enc/ctl/sys), disarm to clear\n", m_physical_id, m_heartbeat.axis_error, m_heartbeat.motor_exception, m_heartbeat.encoder_exception, m_heartbeat.control_exception, m_heartbeat.system_exception);
             m_fault_logged = true;
         } else if (!is_faulted()) {
             m_fault_logged = false;

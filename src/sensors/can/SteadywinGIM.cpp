@@ -19,7 +19,7 @@ int SteadywinGIM::read(CAN_message_t& msg) {
         m_rejected = true;
         m_rejects_since_log++;
         if (millis() - m_last_reject_log_ms >= REJECT_LOG_INTERVAL_MS) {
-            SystemLog.error(Subsystem::MOTORS, "GIM %u: command 0x%02X failed with RES 0x%02X (%lu rejections since last log)\n", m_physical_id, cmd_byte, res, m_rejects_since_log);
+            SystemLog.error(Subsystem::MOTORS, "GIM %u: command 0x%02X failed with RES 0x%02X (%lu since last log)\n", m_physical_id, cmd_byte, res, m_rejects_since_log);
             m_last_reject_log_ms = millis();
             m_rejects_since_log = 0;
         }

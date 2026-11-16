@@ -48,6 +48,7 @@ HOST_TEST_SRC_test_utils := $(TEST_DIR)/test_utils/test_main.cpp src/utils/wrapp
 HOST_TEST_SRC_test_fltrs := $(TEST_DIR)/test_fltrs/test_main.cpp src/filters/pid_filter.cpp src/filters/lowpass_filter.cpp
 HOST_TEST_SRC_test_controls := $(TEST_DIR)/test_controls/test_main.cpp src/controls/controller.cpp
 HOST_TEST_SRC_test_sensors := $(TEST_DIR)/test_sensors/test_main.cpp src/sensors/buff_encoder.cpp src/utils/system_log.cpp
+HOST_TEST_SRC_test_motors := $(TEST_DIR)/test_motors/test_main.cpp src/sensors/can/SteadywinGIM.cpp src/sensors/can/SDC104.cpp src/utils/system_log.cpp
 
 TEENSY_SRC_DIRS := teensy4
 LIBRARY_SRC_DIRS := libraries

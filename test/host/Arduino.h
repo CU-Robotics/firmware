@@ -1,6 +1,6 @@
 /// @file Arduino.h
 /// @brief Minimal Arduino compatibility definitions for host unit tests.
-/// @details GPIO and delay calls do nothing, millis() always returns zero, and
+/// @details GPIO and delay calls do nothing, millis() returns host_millis (zero unless a test sets it), and
 /// serial output is written to standard output.
 #pragma once
 
@@ -64,9 +64,12 @@ inline uint32_t micros() { return 0; }
 
 #endif
 
-/// @brief Provide a fixed time value for host tests.
-/// @return Always zero; elapsed time is not simulated.
-inline unsigned long millis() { return 0; }
+/// @brief Value millis() returns in host tests. Zero unless a test sets it to simulate elapsed time.
+inline unsigned long host_millis = 0;
+
+/// @brief Provide a time value for host tests.
+/// @return host_millis, zero unless a test sets it.
+inline unsigned long millis() { return host_millis; }
 
 /// @brief Expose the standard infinity check through the Arduino interface.
 using std::isinf;
