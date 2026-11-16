@@ -70,7 +70,8 @@ public:
     /// command, which the SDC104 holds until the next one, and a status request (encoder estimates or torques)
     int write(CAN_message_t& msg) const override;
 
-    /// @brief Zero the motor. This is a safety function to ensure the motor is not actively driving
+    /// @brief Zero the motor. This is a safety function to ensure the motor is not actively driving: it zeroes the
+    /// command and puts the motor in idle, and blocks torque/speed commands from re-arming it for REARM_HOLDOFF_MS
     /// @note Does not issue a CAN command over the bus
     void zero_motor() override;
 
@@ -325,6 +326,17 @@ private:
     uint32_t m_closed_loop_requested_ms = 0;
     /// @brief How long to wait for the heartbeat to confirm closed loop before requesting it again
     static constexpr uint32_t CLOSED_LOOP_RETRY_MS = 250;
+
+    /// @brief When idle was last requested by zero_motor, in millis()
+    uint32_t m_idle_requested_ms = 0;
+    /// @brief How long to wait for the heartbeat to confirm idle before requesting it again
+    static constexpr uint32_t IDLE_RETRY_MS = 250;
+
+    /// @brief When zero_motor was last called, in millis()
+    uint32_t m_zeroed_ms = 0;
+    /// @brief How long after the last zero_motor call before torque/speed commands may re-arm the motor. zero_motor
+    /// runs every loop while disarmed, so this only has to cover a few loops
+    static constexpr uint32_t REARM_HOLDOFF_MS = 20;
 
     /// @brief Last reported multi-turn output shaft position in radians
     float m_position_rad = 0.0f;

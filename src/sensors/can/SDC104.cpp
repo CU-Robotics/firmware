@@ -138,6 +138,10 @@ void SDC104::set_output(const CAN_message_t& msg, bool one_shot) {
 }
 
 bool SDC104::prepare_for(ControlMode control_mode) {
+    // zeroed recently (robot disarmed): stay idle
+    if (millis() - m_zeroed_ms < REARM_HOLDOFF_MS)
+        return false;
+
     // let queued mode/axis commands go out before deciding anything else
     if (m_one_shot_count > 0) return false;
 
@@ -160,7 +164,21 @@ bool SDC104::prepare_for(ControlMode control_mode) {
 }
 
 void SDC104::zero_motor() {
-    execute_motor_torque_command(0.0f);
+    // hold off re-arming: zero_motor is called every loop while the robot is disarmed, and the controllers still
+    // write torque in those loops, which would otherwise put the motor back in closed loop
+    m_zeroed_ms = millis();
+
+    // keep the stored command harmless, the SDC104 ignores it while idle
+    CAN_message_t msg;
+    create_cmd_set_input_torque(msg, 0.0f);
+    set_output(msg, false);
+
+    // put the motor in idle (unpowered) instead of holding zero torque in closed loop. The heartbeat that confirms
+    // idle takes up to ~100 ms, so don't re-request it every loop in the meantime
+    if (m_heartbeat.axis_state != AxisState::IDLE && millis() - m_idle_requested_ms > IDLE_RETRY_MS) {
+        set_axis_state(AxisState::IDLE);
+        m_idle_requested_ms = millis();
+    }
 }
 
 void SDC104::execute_motor_torque_command(float torque) {
