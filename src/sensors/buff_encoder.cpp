@@ -79,7 +79,7 @@ void BuffEncoder::read() {
 
     // convert received angle into radians
 	int raw_angle = (rx_buffer[2] << 13) | (rx_buffer[3] << 5) | (rx_buffer[4] >> 3);
-	float radians = raw_angle / (float)MT6835_CPR * (3.14159265f * 2.0f);
+	float radians = raw_angle / (float)MT6835_CPR * (PI * 2.0f);
 
     // assign angle
     m_angle = radians;

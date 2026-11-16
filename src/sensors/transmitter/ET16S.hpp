@@ -105,7 +105,9 @@ class ET16S : public Transmitter {
 	/// @return true if in teensy mode, false if not in teensy mode
 	bool is_teensy_mode() override;
 	/// @copydoc Transmitter::mode_changed
-	bool mode_changed() override;
+    bool mode_changed() override;
+    /// @copydoc Transmitter::is_fast_mode_active
+    bool is_fast_mode_active() override;
 
 	/// @copydoc Transmitter::manual_controls
 	void manual_controls(const RobotStateArray& estimated_state_array, RobotStateArray& target_state_array, bool not_safety_mode, float& feed, float& last_feed) override;

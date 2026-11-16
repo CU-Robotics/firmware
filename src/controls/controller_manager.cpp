@@ -1,5 +1,4 @@
 #include "controller_manager.hpp"
-#include "comms/data/sendable.hpp"
 #include "utils/system_log.hpp"
 
 void ControllerManager::init(const std::vector<Cfg::Controller>& controller_configurations, CANManager& can, const std::vector<Cfg::State>& state_config) {
