@@ -97,11 +97,15 @@ SECTION_FLAGS := -ffunction-sections -fdata-sections
 # addr2line crash-report workflow in teensy4/CrashReport.cpp.
 COMMON_COMPILE_FLAGS := $(ARCH_FLAGS) $(SECTION_FLAGS) -O2 -g2 --specs=nano.specs
 CXX_LANGUAGE_FLAGS := -std=gnu++23 -fno-exceptions
-CXX_WARNING_FLAGS := -Wall -Werror -Wno-volatile
+CXX_WARNING_FLAGS := -Wall -Werror
+VENDOR_CXX_WARNING_FLAGS := -Wall -Werror -Wno-volatile
 
 PROJECT_CPPFLAGS := $(INCLUDE_FLAGS) $(PROJECT_DEFINES)
 PROJECT_CFLAGS := $(COMMON_COMPILE_FLAGS)
 PROJECT_CXXFLAGS := $(COMMON_COMPILE_FLAGS) $(CXX_LANGUAGE_FLAGS) $(CXX_WARNING_FLAGS)
+VENDOR_CXXFLAGS := $(COMMON_COMPILE_FLAGS) $(CXX_LANGUAGE_FLAGS) $(VENDOR_CXX_WARNING_FLAGS)
+
+$(TEENSY_OBJS) $(LIBRARY_OBJS): PROJECT_CXXFLAGS := $(VENDOR_CXXFLAGS)
 
 # --gc-sections: Remove unused sections to reduce binary size
 # --relax: Allow linker to relax some constraints to sometimes generate smaller code
