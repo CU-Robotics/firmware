@@ -125,7 +125,7 @@ SIZE			= $(COMPILER_TOOLS_PATH)/arm-none-eabi-size
 GIT_SCRAPER_SRC = $(TOOLS_DIR)/git_scraper.cpp
 GIT_SCRAPER_BIN = $(BUILD_DIR)/git_scraper
 
-.PHONY: build debug release dump test test-build docs clean upload install gdb monitor kill restart help clangd git_scraper FORCE
+.PHONY: build debug release dump test test-build docs clean upload install gdb monitor kill restart help clangd tidy tidy-diff git_scraper FORCE
 
 
 build: $(TARGET_HEX)
@@ -291,11 +291,14 @@ help:
 	@echo "  clean:         removes all build artifacts and generated files"
 	@echo "  clangd:        generates compile_commands.json for clangd"
 	@echo "  docs:          generates documentation of our src/ code using Doxygen"
+	@echo "  tidy:          runs clang-tidy on all of src/ (warnings only)"
+	@echo "  tidy-diff:     runs clang-tidy on src/ files changed since TIDY_BASE"
 	@echo ""
 	@echo "Variables:"
 	@echo "  JOBS=N         parallel jobs (defaults to core count)"
 	@echo "  DUMP_OBJS=1    also disassemble each object file"
 	@echo "  TEST_FILTER=\"suite ...\" selects test suites (defaults to all)"
+	@echo "  TIDY_BASE=ref  branch that tidy-diff compares against (default origin/main)"
 
 
 # Generate compile_commands.json from the Makefile's flags and source lists.
@@ -317,3 +320,18 @@ $(COMPILE_DB): Makefile $(COMPILE_DB_SCRIPT) $(COMPILE_DB_DIR_DEPS)
 	SRC_FILES='$(SRC_SRC) $(LIBRARY_SRC) $(TEENSY_SRC)' \
 	"$(COMPILE_DB_SCRIPT)"
 	@printf "CLANGD   compile_commands.json generated\n"
+
+
+# clang-tidy, using the checks in .clang-tidy. Prints findings, never fails.
+TIDY_SCRIPT = $(TOOLS_DIR)/clang_tidy.sh
+TIDY_BASE ?= origin/main
+
+# Check every source file under src/.
+tidy: $(COMPILE_DB) git_scraper
+	@JOBS="$(JOBS)" "$(TIDY_SCRIPT)" $(SRC_SRC)
+
+# Check only the files under src/ that changed since this branch left
+# TIDY_BASE, plus uncommitted changes.
+tidy-diff: $(COMPILE_DB) git_scraper
+	@JOBS="$(JOBS)" TIDY_ONLY_LISTED=1 "$(TIDY_SCRIPT)" $$(git diff --name-only --diff-filter=d \
+		$$(git merge-base $(TIDY_BASE) HEAD))

@@ -1,0 +1,24 @@
+# clang-tidy configuration, shared by `make tidy`, `make tidy-diff`, CI and clangd.
+# Start small: bugprone checks plus a few performance checks. Add more once
+# the existing findings are cleaned up.
+Checks: >
+  -*,
+  bugprone-*,
+  -bugprone-branch-clone,
+  -bugprone-easily-swappable-parameters,
+  -bugprone-narrowing-conversions,
+  performance-for-range-copy,
+  performance-implicit-conversion-in-loop,
+  performance-inefficient-vector-operation,
+  performance-move-const-arg,
+  performance-no-automatic-move,
+  performance-type-promotion-in-math-fn,
+  performance-unnecessary-copy-initialization,
+  performance-unnecessary-value-param
+
+# Only report headers in our own code. Teensy core and libraries/ are
+# vendored and included with -isystem, so they are already skipped.
+HeaderFilterRegex: '(^|/)src/'
+
+# Report, never fail.
+WarningsAsErrors: ''
