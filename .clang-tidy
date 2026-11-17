@@ -22,3 +22,16 @@ HeaderFilterRegex: '(^|/)src/'
 
 # Report, never fail.
 WarningsAsErrors: ''
+
+# compile_commands.json holds the real arm-none-eabi-gcc commands. These let
+# clang parse them: ignore GCC-only flags and warnings, don't turn the
+# project's -Werror into errors, and match the int32_t definitions that
+# arm-none-eabi-gcc uses (same fix as in .clangd).
+ExtraArgs:
+  - -Wno-unknown-warning-option
+  - -Wno-unused-command-line-argument
+  - -Wno-error
+  - -U__INT32_TYPE__
+  - "-D__INT32_TYPE__=long int"
+  - -U__UINT32_TYPE__
+  - "-D__UINT32_TYPE__=long unsigned int"
