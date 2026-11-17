@@ -97,7 +97,7 @@ SECTION_FLAGS := -ffunction-sections -fdata-sections
 # addr2line crash-report workflow in teensy4/CrashReport.cpp.
 COMMON_COMPILE_FLAGS := $(ARCH_FLAGS) $(SECTION_FLAGS) -O2 -g2 --specs=nano.specs
 CXX_LANGUAGE_FLAGS := -std=gnu++23 -fno-exceptions
-CXX_WARNING_FLAGS := -Wall -Werror
+CXX_WARNING_FLAGS := -Wall -Wpedantic -Werror
 VENDOR_CXX_WARNING_FLAGS := -Wall -Werror -Wno-volatile
 
 PROJECT_CPPFLAGS := $(INCLUDE_FLAGS) $(PROJECT_DEFINES)

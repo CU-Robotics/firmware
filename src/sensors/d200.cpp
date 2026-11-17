@@ -1,3 +1,4 @@
+#include <algorithm>
 #include "sensors/d200.hpp"
 #include "comms/config_data/hardware_serial_port.hpp"
 #include "utils/safety.hpp"
@@ -42,7 +43,7 @@ void D200LD14P::read() {
       ? D200_DATA_PACKET_LEN 
       : D200_CMD_PACKET_LEN;
     
-    uint8_t buf[packet_len];
+    uint8_t buf[std::max(D200_DATA_PACKET_LEN, D200_CMD_PACKET_LEN)];
     
     buf[0] = start_char;
     buf[1] = frame_char;
