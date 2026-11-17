@@ -94,6 +94,10 @@ void HelloRobot::run() {
         check_safety();
         prof.end("Safety");
 
+        prof.begin("Status");
+        update_status();
+        prof.end("Status");
+
         prof.begin("CLI");
         process_cli();
         prof.end("CLI");
@@ -273,6 +277,10 @@ void HelloRobot::update_status() {
     if (reasons & SafetyState::Reason::NOT_CONFIGURED) {
         neopixel.set_color(255, 255, 0);
     }
+    else{
+        neopixel.set_color(255, 255, 255)
+    }
+    neopixel.update();
 }
 
 void HelloRobot::hold_feeder_position() {
