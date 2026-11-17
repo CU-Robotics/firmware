@@ -37,8 +37,8 @@ TEST_SUITES := $(notdir $(patsubst %/,%,$(dir $(wildcard $(TEST_DIR)/test_*/test
 TEST_FILTER ?= $(TEST_SUITES)
 TEST_BINS := $(addprefix $(TEST_BUILD_DIR)/,$(TEST_FILTER))
 
-HOST_CXX ?= c++
-HOST_CC ?= cc
+HOST_CXX ?= g++
+HOST_CC ?= gcc
 HOST_TEST_CPPFLAGS := -I$(TEST_DIR)/host -Isrc -Ilibraries/unity -DUNIT_TEST
 HOST_TEST_CXXFLAGS := -std=gnu++23 -O0 -g3 -Wall -Werror
 HOST_TEST_CFLAGS := -std=c11 -O0 -g3 -Wall -Werror
@@ -48,6 +48,7 @@ HOST_TEST_SRC_test_utils := $(TEST_DIR)/test_utils/test_main.cpp src/utils/wrapp
 HOST_TEST_SRC_test_fltrs := $(TEST_DIR)/test_fltrs/test_main.cpp src/filters/pid_filter.cpp src/filters/lowpass_filter.cpp
 HOST_TEST_SRC_test_controls := $(TEST_DIR)/test_controls/test_main.cpp src/controls/controller.cpp
 HOST_TEST_SRC_test_sensors := $(TEST_DIR)/test_sensors/test_main.cpp src/sensors/buff_encoder.cpp src/utils/system_log.cpp
+HOST_TEST_SRC_test_safety := $(TEST_DIR)/test_safety/test_main.cpp src/utils/safety_state.cpp
 
 TEENSY_SRC_DIRS := teensy4
 LIBRARY_SRC_DIRS := libraries

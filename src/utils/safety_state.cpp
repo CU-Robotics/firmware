@@ -1,4 +1,29 @@
 #include "utils/safety_state.hpp"
+#ifdef _WIN32
+#include <cstring>
+
+static size_t strlcpy(char *dst, const char *src, size_t dsize) {
+    size_t l = std::strlen(src);
+    if (dsize > 0) {
+        size_t copylen = (l >= dsize) ? dsize - 1 : l;
+        std::memcpy(dst, src, copylen);
+        dst[copylen] = '\0';
+    }
+    return l;
+}
+
+static size_t strlcat(char *dst, const char *src, size_t dsize) {
+    size_t dlen = std::strlen(dst);
+    if (dlen >= dsize) dlen = dsize;
+    size_t slen = std::strlen(src);
+    size_t rest = dsize - dlen;
+    if (rest == 0) return dlen + slen;
+    size_t copylen = (slen >= rest) ? rest - 1 : slen;
+    std::memcpy(dst + dlen, src, copylen);
+    dst[dlen + copylen] = '\0';
+    return dlen + slen;
+}
+#endif
 
 SafetyState safety_state;
 
