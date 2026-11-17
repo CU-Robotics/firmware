@@ -1,0 +1,41 @@
+# Builds the Teensy firmware and runs the host unit tests on every pull request
+# and every push to main. The job name "build-and-test" is what to mark as a
+# required status check in the repository's branch protection settings.
+name: Build and Test
+
+on:
+  pull_request:
+  push:
+    branches: [ main ]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-test:
+    name: build-and-test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # The Makefile expects the ARM toolchain at tools/compiler/arm-gnu-toolchain.
+      # The cache key follows install_compiler.sh, so bumping the toolchain
+      # version there downloads the new one.
+      - name: Cache ARM toolchain
+        id: toolchain-cache
+        uses: actions/cache@v4
+        with:
+          path: tools/compiler
+          key: arm-toolchain-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('tools/install_compiler.sh') }}
+
+      - name: Install ARM toolchain
+        if: steps.toolchain-cache.outputs.cache-hit != 'true'
+        run: bash tools/install_compiler.sh
+
+      - name: Build firmware
+        run: make build
+
+      - name: Run host unit tests
+        run: make test
