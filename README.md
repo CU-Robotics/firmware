@@ -49,6 +49,10 @@ To run tests:
 make test
 ```
 
+### Linting
+
+`make tidy` runs clang-tidy with its default checks on `src/`. To check only some files, pass `TIDY_SRC="src/path/file.cpp ..."`. The first run downloads the clang-tidy version pinned in `tools/install_clang_tidy.sh` into `tools/clang-tidy` (Linux x86_64 and macOS). To use a different clang-tidy, pass `CLANG_TIDY=/path/to/clang-tidy`.
+
 
 ## Contributing
 `main` is the production branch, which is required to be in an always working state.

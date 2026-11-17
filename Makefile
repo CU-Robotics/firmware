@@ -125,7 +125,7 @@ SIZE			= $(COMPILER_TOOLS_PATH)/arm-none-eabi-size
 GIT_SCRAPER_SRC = $(TOOLS_DIR)/git_scraper.cpp
 GIT_SCRAPER_BIN = $(BUILD_DIR)/git_scraper
 
-.PHONY: build debug release dump test test-build docs clean upload install gdb monitor kill restart help clangd git_scraper FORCE
+.PHONY: build debug release dump test test-build docs clean upload install gdb monitor kill restart help clangd tidy clang-tidy-install git_scraper FORCE
 
 
 build: $(TARGET_HEX)
@@ -246,6 +246,7 @@ upload: build
 install:
 	@bash $(TOOLS_DIR)/install_tytools.sh
 	@bash $(TOOLS_DIR)/install_compiler.sh
+	@bash $(TOOLS_DIR)/install_clang_tidy.sh
 
 
 # starts GDB and attaches to the firmware running on a connected Teensy
@@ -291,11 +292,13 @@ help:
 	@echo "  clean:         removes all build artifacts and generated files"
 	@echo "  clangd:        generates compile_commands.json for clangd"
 	@echo "  docs:          generates documentation of our src/ code using Doxygen"
+	@echo "  tidy:          runs clang-tidy on src/"
 	@echo ""
 	@echo "Variables:"
 	@echo "  JOBS=N         parallel jobs (defaults to core count)"
 	@echo "  DUMP_OBJS=1    also disassemble each object file"
 	@echo "  TEST_FILTER=\"suite ...\" selects test suites (defaults to all)"
+	@echo "  TIDY_SRC=\"file ...\" selects files for tidy (defaults to all of src/)"
 
 
 # Generate compile_commands.json from the Makefile's flags and source lists.
@@ -317,3 +320,15 @@ $(COMPILE_DB): Makefile $(COMPILE_DB_SCRIPT) $(COMPILE_DB_DIR_DEPS)
 	SRC_FILES='$(SRC_SRC) $(LIBRARY_SRC) $(TEENSY_SRC)' \
 	"$(COMPILE_DB_SCRIPT)"
 	@printf "CLANGD   compile_commands.json generated\n"
+
+
+CLANG_TIDY_BIN := $(TOOLS_DIR)/clang-tidy/bin/clang-tidy
+CLANG_TIDY ?= $(CLANG_TIDY_BIN)
+TIDY_SRC ?= $(filter %.cpp %.c,$(SRC_SRC))
+
+clang-tidy-install:
+	@$(if $(filter $(CLANG_TIDY_BIN),$(CLANG_TIDY)),bash $(TOOLS_DIR)/install_clang_tidy.sh)
+	@command -v "$(CLANG_TIDY)" >/dev/null || { echo "clang-tidy not found at $(CLANG_TIDY)" >&2; exit 1; }
+
+tidy: $(COMPILE_DB) | clang-tidy-install git_scraper
+	@"$(CLANG_TIDY)" -p . --quiet $(TIDY_SRC)
