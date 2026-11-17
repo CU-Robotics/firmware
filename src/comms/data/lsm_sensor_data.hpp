@@ -31,6 +31,6 @@ struct LsmSensorData : Comms::CommsData {
     /// @brief Print the LSM sensor data to the serial console for debugging purposes.
     void print() const {
         printf("LsmSensorData - imu_name: %lu, accel_X: %f, accel_Y: %f, accel_Z: %f, gyro_X: %f, gyro_Y: %f, gyro_Z: %f, temperature: %f\n", 
-            static_cast<uint32_t>(imu_name), accel_X, accel_Y, accel_Z, gyro_X, gyro_Y, gyro_Z, temperature);
+            static_cast<uint32_t>(imu_name), (double)accel_X, (double)accel_Y, (double)accel_Z, (double)gyro_X, (double)gyro_Y, (double)gyro_Z, (double)temperature);
     }
 };

@@ -570,7 +570,7 @@ struct RobotPowerHeat {
         Serial.println("RobotPowerHeat:");
         Serial.printf("\tReserved 1: %u\n", reserved_1);
         Serial.printf("\tReserved 2: %u\n", reserved_2);
-        Serial.printf("\tReserved 3: %f\n", reserved_3);
+        Serial.printf("\tReserved 3: %f\n", (double)reserved_3);
         Serial.printf("\tBuffer Energy: %u\n", buffer_energy);
         Serial.printf("\tBarrel Heat 1 17mm: %u\n", barrel_heat_17mm);
         Serial.printf("\tBarrel Heat 42mm: %u\n", barrel_heat_42mm);
@@ -623,9 +623,9 @@ struct RobotPosition {
     /// @brief Prints the RobotPosition packet
     void print() const {
         Serial.println("RobotPosition:");
-        Serial.printf("\tX: %f\n", x);
-        Serial.printf("\tY: %f\n", y);
-        Serial.printf("\tAngle: %f\n", angle);
+        Serial.printf("\tX: %f\n", (double)x);
+        Serial.printf("\tY: %f\n", (double)y);
+        Serial.printf("\tAngle: %f\n", (double)angle);
     }
 
     /// @brief Fills in this struct with the data from a FrameData object
@@ -760,7 +760,7 @@ struct LaunchingStatus {
         Serial.printf("\tProjectile Type: %u\n", projectile_type);
         Serial.printf("\tLaunching Mechanism: %u\n", launching_mechanism);
         Serial.printf("\tLaunching Frequency: %u\n", launching_frequency);
-        Serial.printf("\tInitial Speed: %f\n", initial_speed);
+        Serial.printf("\tInitial Speed: %f\n", (double)initial_speed);
     }
 
     /// @brief Fills in this struct with the data from a FrameData object
@@ -1055,16 +1055,16 @@ struct GroundRobotPositions {
     /// @brief Prints the RobotPosition packet
     void print() const {
         Serial.println("RobotPosition:");
-        Serial.printf("\tHero X: %f\n", hero_x);
-        Serial.printf("\tHero Y: %f\n", hero_y);
-        Serial.printf("\tEngineer X: %f\n", engineer_x);
-        Serial.printf("\tEngineer Y: %f\n", engineer_y);
-        Serial.printf("\tStandard 3 X: %f\n", standard_3_x);
-        Serial.printf("\tStandard 3 Y: %f\n", standard_3_y);
-        Serial.printf("\tStandard 4 X: %f\n", standard_4_x);
-        Serial.printf("\tStandard 4 Y: %f\n", standard_4_y);
-        Serial.printf("\tReserved 1: %f\n", reserved_1);
-        Serial.printf("\tReserved 2: %f\n", reserved_2);
+        Serial.printf("\tHero X: %f\n", (double)hero_x);
+        Serial.printf("\tHero Y: %f\n", (double)hero_y);
+        Serial.printf("\tEngineer X: %f\n", (double)engineer_x);
+        Serial.printf("\tEngineer Y: %f\n", (double)engineer_y);
+        Serial.printf("\tStandard 3 X: %f\n", (double)standard_3_x);
+        Serial.printf("\tStandard 3 Y: %f\n", (double)standard_3_y);
+        Serial.printf("\tStandard 4 X: %f\n", (double)standard_4_x);
+        Serial.printf("\tStandard 4 Y: %f\n", (double)standard_4_y);
+        Serial.printf("\tReserved 1: %f\n", (double)reserved_1);
+        Serial.printf("\tReserved 2: %f\n", (double)reserved_2);
     }
 
     /// @brief Fills in this struct with the data from a FrameData object
@@ -1356,8 +1356,8 @@ struct SmallMapCommand {
     /// @brief Prints the SmallMapCommand packet
     void print() const {
         Serial.println("SmallMapCommand:");
-        Serial.printf("\tTarget Position X: %f\n", target_position_x);
-        Serial.printf("\tTarget Position Y: %f\n", target_position_y);
+        Serial.printf("\tTarget Position X: %f\n", (double)target_position_x);
+        Serial.printf("\tTarget Position Y: %f\n", (double)target_position_y);
         Serial.printf("\tCMD Keyboard: %u\n", cmd_keyboard);
         Serial.printf("\tTarget Robot ID: %u\n", target_robot_id);
         Serial.printf("\tCMD Source: %u\n", cmd_source);

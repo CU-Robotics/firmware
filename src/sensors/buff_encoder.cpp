@@ -5,6 +5,7 @@
 #include "utils/safety.hpp"
 #include "utils/system_log.hpp"
 #include <SPI.h>
+#include "utils/math_constants.hpp"
 
 const SPISettings BuffEncoder::m_settings = SPISettings(1000000, MT6835_BITORDER, SPI_MODE3);
 
@@ -54,7 +55,7 @@ void BuffEncoder::read() {
         
         if (cached_zero_pos != 0.0f) {
             zero_misalign_count++;
-            SystemLog.error(Subsystem::SENSORS, "Pin: %u, ZERO_POS Misaligned! Read: %f\n", config_data.spi_cs, cached_zero_pos);
+            SystemLog.error(Subsystem::SENSORS, "Pin: %u, ZERO_POS Misaligned! Read: %f\n", config_data.spi_cs, (double)cached_zero_pos);
             
             write_zero_pos(0); 
         }
@@ -79,7 +80,7 @@ void BuffEncoder::read() {
 
     // convert received angle into radians
 	int raw_angle = (rx_buffer[2] << 13) | (rx_buffer[3] << 5) | (rx_buffer[4] >> 3);
-	float radians = raw_angle / (float)MT6835_CPR * (PI * 2.0f);
+	float radians = raw_angle / (float)MT6835_CPR * (PI_F * 2.0f);
 
     // assign angle
     m_angle = radians;
@@ -184,7 +185,7 @@ float BuffEncoder::read_zero_pos() {
     if (zero_pos_raw != 0) {
         SystemLog.info(Subsystem::SENSORS,"Pin: %u, ZERO_POS raw = 0x%03X (%u), degrees = %.3f\n",
                   config_data.spi_cs, zero_pos_raw, zero_pos_raw,
-                  zero_pos_raw * (360.0f / 4096.0f));
+                  (double)(zero_pos_raw * (360.0f / 4096.0f)));
     }
 
     return zero_pos_raw * (360.0f / 4096.0f);
@@ -205,7 +206,7 @@ void BuffEncoder::print() const {
 void BuffEncoder::print_live_data() {
     // Note: casting get_name() to int so it prints the enum number
     Serial.printf(" [Buff Encoder %d] Angle (rad): %8.4f Z-Mis: %-4u (%.1f deg)\n", 
-                  (int)get_name(), get_angle(), zero_misalign_count, cached_zero_pos);
+                  (int)get_name(), (double)get_angle(), zero_misalign_count, (double)cached_zero_pos);
 }
 
 void BuffEncoder::bind_dma_flag(const volatile bool* flag_ptr) {

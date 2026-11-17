@@ -2,6 +2,7 @@
 #include "comms/config_data/hardware_serial_port.hpp"
 #include "utils/safety.hpp"
 #include "comms/data/sendable.hpp"
+#include "utils/math_constants.hpp"
 
 D200LD14P::D200LD14P(const Cfg::D200Lidar& config_) 
   : Sensor(),
@@ -10,14 +11,14 @@ D200LD14P::D200LD14P(const Cfg::D200Lidar& config_)
 {
   Serial.printf("D200 LIDAR CONFIGURE DATA:\n");
   Serial.printf("hardware serial port: %u\n", static_cast<uint32_t>(config.hardware_serial_port));
-  Serial.printf("x offset: %f\n", config.x_offset);
-  Serial.printf("y offset: %f\n", config.y_offset);
-  Serial.printf("yaw offset: %f\n", config.yaw_offset);
-  Serial.printf("valid region start: %f\n", config.valid_region_start);
-  Serial.printf("valid region end: %f\n", config.valid_region_end);
-  Serial.printf("dead zone start: %f\n", config.dead_zone_start);
-  Serial.printf("dead zone end: %f\n", config.dead_zone_end);
-  Serial.printf("dead zone check range: %f\n", config.dead_zone_check_range);
+  Serial.printf("x offset: %f\n", (double)config.x_offset);
+  Serial.printf("y offset: %f\n", (double)config.y_offset);
+  Serial.printf("yaw offset: %f\n", (double)config.yaw_offset);
+  Serial.printf("valid region start: %f\n", (double)config.valid_region_start);
+  Serial.printf("valid region end: %f\n", (double)config.valid_region_end);
+  Serial.printf("dead zone start: %f\n", (double)config.dead_zone_start);
+  Serial.printf("dead zone end: %f\n", (double)config.dead_zone_end);
+  Serial.printf("dead zone check range: %f\n", (double)config.dead_zone_check_range);
   Serial.printf("lidar name: %u\n", static_cast<uint32_t>(config.lidar_name));
 }
 
@@ -85,15 +86,15 @@ void D200LD14P::read() {
       cal.timestamp_delta_sum += (teensy_timestamp - lidar_timestamp_cont);
     } else {
       int lidar_timestamp_converted = lidar_timestamp_cont + cal.timestamp_delta_sum / cal.max_calibration_packets;
-      p->timestamp = (float) lidar_timestamp_converted / 1000.0; // ms (wraps after 30k) -> s
+      p->timestamp = (float) lidar_timestamp_converted / 1000.0f; // ms (wraps after 30k) -> s
     }
 
     // convert measurements to SI. only write to packet if all calibrations are complete
     if (cal.packets_recv > cal.max_calibration_packets) {
-      p->lidar_speed = (float) lidar_speed * M_PI / 180.0; // deg/s -> rad/s
-      p->start_angle = ((float) (start_angle % 36000) / 100.0) * M_PI / 180.0; // 0.01 deg -> rad
-      p->end_angle = ((float) (end_angle % 36000) / 100.0) * M_PI / 180.0; // 0.01 deg -> rad
-      p->sample_time = (float) millis() / 1000.0; // ms -> s
+      p->lidar_speed = (float) lidar_speed * PI_F / 180.0f; // deg/s -> rad/s
+      p->start_angle = ((float) (start_angle % 36000) / 100.0f) * PI_F / 180.0f; // 0.01 deg -> rad
+      p->end_angle = ((float) (end_angle % 36000) / 100.0f) * PI_F / 180.0f; // 0.01 deg -> rad
+      p->sample_time = (float) millis() / 1000.0f; // ms -> s
       p->yaw = robot_yaw;
       p->yaw_velocity = robot_yaw_velocity;
       p->lidar_name = config.lidar_name;
@@ -104,7 +105,7 @@ void D200LD14P::read() {
         uint16_t distance = (buf[base + 1] << 8) | buf[base];
         
         // convert measurements to SI
-        p->distances[i] = (float) distance / 1000.0; // mm -> m
+        p->distances[i] = (float) distance / 1000.0f; // mm -> m
         p->intensities[i] = buf[base + 2]; // units are ambiguous (not documented)
       }
     }
@@ -130,7 +131,7 @@ uint8_t D200LD14P::calc_checksum(uint8_t *buf, int len) {
 
 void D200LD14P::set_speed(float speed) {
   // convert to deg/s
-  uint16_t speed_deg = constrain((uint16_t) (speed * 180.0 / M_PI), MIN_SPEED, MAX_SPEED);
+  uint16_t speed_deg = constrain((uint16_t) (speed * 180.0f / PI_F), MIN_SPEED, MAX_SPEED);
 
   uint8_t lsb = speed_deg & 0xff;
   uint8_t msb = (speed_deg >> 8) & 0xff;
@@ -234,5 +235,5 @@ void D200LD14P::print_latest_packet() {
 }
 void D200LD14P::print_live_data() {
     Serial.printf(" [D200 Lidar]     Latest Pkt Index: %d | Yaw: %5.2f rad | Yaw Vel: %5.2f rad/s\n", 
-                  get_latest_packet_index(), robot_yaw, robot_yaw_velocity);
+                  get_latest_packet_index(), (double)robot_yaw, (double)robot_yaw_velocity);
 }

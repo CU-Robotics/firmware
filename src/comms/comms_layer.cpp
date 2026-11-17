@@ -280,7 +280,7 @@ void CommsLayer::print_live_data() {
     Serial.printf("   Packets     : Sent: %lu | Failed: %lu | Rate: %6.1f Hz (%5.1f KB/s)\033[K\n",
                   (unsigned long)tx_pkts,
                   (unsigned long)m_ethernet.get_packets_send_failed(),
-                  tx_rate_hz, tx_rate_kbs);
+                  (double)tx_rate_hz, (double)tx_rate_kbs);
     uint32_t last_tx_pkt_sz = m_ethernet.get_last_send_packet_size();
     uint16_t last_tx_pld_sz = m_last_ethernet_send_payload_size;
     float pld_pct = (float)last_tx_pld_sz * 100.0f / (float)ETHERNET_PACKET_PAYLOAD_SIZE;
@@ -289,13 +289,13 @@ void CommsLayer::print_live_data() {
                   (unsigned long)PACKET_HEADER_SIZE,
                   (unsigned int)last_tx_pld_sz,
                   (unsigned long)ETHERNET_PACKET_PAYLOAD_SIZE,
-                  pld_pct);
+                  (double)pld_pct);
     Serial.printf("   Staged      : High: %u | Medium: %u | Dropped: %lu\033[K\n",
                   (unsigned int)m_ethernet_payload.get_high_priority_queue_size(),
                   (unsigned int)m_ethernet_payload.get_medium_priority_queue_size(),
                   (unsigned long)m_ethernet_payload.get_dropped_record_count());
     if (m_ethernet.get_last_send_time() > 0) {
-        Serial.printf("   Last TX     : %.2f ms ago\033[K\n", (float)time_since_tx_us / 1000.0f);
+        Serial.printf("   Last TX     : %.2f ms ago\033[K\n", (double)((float)time_since_tx_us / 1000.0f));
     } else {
         Serial.printf("   Last TX     : Never\033[K\n");
     }
@@ -304,7 +304,7 @@ void CommsLayer::print_live_data() {
     Serial.printf("   Packets     : Recv: %lu | Dropped: %lu | Rate: %6.1f Hz (%5.1f KB/s)\033[K\n",
                   (unsigned long)rx_pkts,
                   (unsigned long)m_ethernet.get_packets_recv_failed(),
-                  rx_rate_hz, rx_rate_kbs);
+                  (double)rx_rate_hz, (double)rx_rate_kbs);
     uint32_t last_rx_pkt_sz = m_ethernet.get_last_recv_packet_size();
     int32_t last_rx_err_sz = m_ethernet.get_last_recv_error_size();
     if (last_rx_pkt_sz > 0) {
@@ -325,7 +325,7 @@ void CommsLayer::print_live_data() {
     }
     if (m_ethernet.get_last_recv_time() > 0) {
         Serial.printf("   Last RX     : %.2f ms ago (Timeout: %lu ms)\033[K\n",
-                      (float)time_since_rx_us / 1000.0f,
+                      (double)((float)time_since_rx_us / 1000.0f),
                       (unsigned long)(m_ethernet.get_connection_timeout() / 1000));
     } else {
         Serial.printf("   Last RX     : Never (Timeout: %lu ms)\033[K\n",

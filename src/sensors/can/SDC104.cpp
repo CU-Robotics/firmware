@@ -1,5 +1,6 @@
 #include "SDC104.hpp"
 #include "utils/system_log.hpp"
+#include "utils/math_constants.hpp"
 
 
 void SDC104::init() {
@@ -53,8 +54,8 @@ int SDC104::read(CAN_message_t& msg) {
 
         // update the unified state struct
         // encoder gives revolutions, we want radians
-        m_state.position = m_position_estimate * 2 * PI;
-        m_state.speed = m_velocity_estimate * 2 * PI;
+        m_state.position = m_position_estimate * 2 * PI_F;
+        m_state.speed = m_velocity_estimate * 2 * PI_F;
         break;
     }
     case CMD_GET_ENCODER_COUNT: {

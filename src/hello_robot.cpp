@@ -1,5 +1,6 @@
 #include "hello_robot.hpp"
 #include <wiring.h>
+#include "utils/math_constants.hpp"
 
 #ifdef PROFILER
 Profiler prof; 
@@ -172,7 +173,7 @@ void HelloRobot::update_controls() {
     float current_feed = (*estimated_state_array)[Cfg::StateName::Feeder].get_position();
     float target_feed = (*target_state_array)[Cfg::StateName::Feeder].get_position();
     if ((feed - current_feed > 2 && transmitter_manager.is_teensy_mode()) || (target_feed - current_feed > 2 && transmitter_manager.is_hive_mode())) {
-        SystemLog.error(Subsystem::GENERAL,"Feeder is lowkey jammed. current ball count: %f, feed: %f, hive target: %f\n", (*estimated_state_array)[Cfg::StateName::Feeder].get_position(), feed, (*target_state_array)[Cfg::StateName::Feeder].get_position());
+        SystemLog.error(Subsystem::GENERAL,"Feeder is lowkey jammed. current ball count: %f, feed: %f, hive target: %f\n", (double)(*estimated_state_array)[Cfg::StateName::Feeder].get_position(), (double)feed, (double)(*target_state_array)[Cfg::StateName::Feeder].get_position());
         feed = current_feed + 1;
         governor->set_position_reference(Cfg::StateName::Feeder, feed);
     }
@@ -233,7 +234,7 @@ void HelloRobot::check_safety() {
     }
 
     if (is_slow_loop) {
-        SystemLog.error(Subsystem::GENERAL, "Slow loop with dt: %f, consecutive slow loops: %d\n", loop_dt, consecutive_slow_loops);
+        SystemLog.error(Subsystem::GENERAL, "Slow loop with dt: %f, consecutive slow loops: %d\n", (double)loop_dt, consecutive_slow_loops);
     }
 
     if (reasons != previous_reasons) {
@@ -255,7 +256,7 @@ bool HelloRobot::check_slow_loop(float &loop_dt) {
     if (consecutive_slow_loops > MAX_CONSECUTIVE_SLOW_LOOPS) {
         can.zero_all_motors();
         // reset_teensy never returns, so this path has to log for itself
-        SystemLog.error(Subsystem::GENERAL, "Slow loop with dt: %f, consecutive slow loops: %d\n", loop_dt, consecutive_slow_loops);
+        SystemLog.error(Subsystem::GENERAL, "Slow loop with dt: %f, consecutive slow loops: %d\n", (double)loop_dt, consecutive_slow_loops);
         SystemLog.error("Kowabunga bitches\n");
         reset_teensy();
     }
@@ -284,14 +285,14 @@ void HelloRobot::loop_timing() {
     }
     // LED heartbeat -- linked to loop count to reveal slowdowns and
     // freezes.
-    loopc % (int)(1E3 / float(HEARTBEAT_FREQ)) < (int)(1E3 / float(5 * HEARTBEAT_FREQ)) ? digitalWrite(13, HIGH) : digitalWrite(13, LOW);
+    loopc % (int)(1E3f / float(HEARTBEAT_FREQ)) < (int)(1E3f / float(5 * HEARTBEAT_FREQ)) ? digitalWrite(13, HIGH) : digitalWrite(13, LOW);
     loopc++;
 
     // feed the watchdog to keep the loop running
     watchdog.feed();
 
     // Keep the loop running at the desired rate
-    loop_timer.delay_micros((int)(1E6 / (float)(LOOP_FREQ)));
+    loop_timer.delay_micros((int)(1E6f / (float)(LOOP_FREQ)));
 }
 void HelloRobot::apply_fast_mode() {
 	if (!transmitter_manager.is_fast_mode_active()) {
@@ -317,8 +318,8 @@ void HelloRobot::apply_fast_mode() {
         float stick_angle = atan2f(chassis_vel_y, chassis_vel_x);
 
         // Find the nearest 45 degree diagonal to our current heading
-        constexpr float pi_over_4 = PI / 4.0f;
-        constexpr float pi_over_2 = PI / 2.0f;
+        constexpr float pi_over_4 = PI_F / 4.0f;
+        constexpr float pi_over_2 = PI_F / 2.0f;
             
         float offset = current_angle - stick_angle;
         float snapped_offset = roundf((offset - pi_over_4) / pi_over_2) * pi_over_2 + pi_over_4; 
@@ -327,8 +328,8 @@ void HelloRobot::apply_fast_mode() {
 
         // Shortest path to the target diagonal
         float error = target_angle - current_angle;
-        while (error > PI) error -= TWO_PI;
-        while (error < -PI) error += TWO_PI;
+        while (error > PI_F) error -= TWO_PI_F;
+        while (error < -PI_F) error += TWO_PI_F;
         // P controller
         constexpr float kp = 5.0f; 
         float auto_spin_vel = error * kp;

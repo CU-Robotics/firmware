@@ -21,6 +21,6 @@ struct MotorStateData : Comms::CommsData {
     int16_t temperature = 0;
     /// @brief Print the motor state data to the serial console for debugging purposes.
     void print() const {
-        Serial.printf("MotorStateData - motor_name: %lu, torque: %f, commanded_torque: %f, speed: %f, position: %u, temperature: %d\n", static_cast<uint32_t>(motor_name), torque, commanded_torque, speed, position, temperature);
+        Serial.printf("MotorStateData - motor_name: %lu, torque: %f, commanded_torque: %f, speed: %f, position: %u, temperature: %d\n", static_cast<uint32_t>(motor_name), (double)torque, (double)commanded_torque, (double)speed, position, temperature);
     }
 };

@@ -2,6 +2,7 @@
 #include <cmath>
 #include "comms/data/rev_encoder_data.hpp"
 #include "comms/data/sendable.hpp"
+#include "utils/math_constants.hpp"
 
 void RevEncoder::init() {
     pinMode(this->config.digital_pin, INPUT);  // Set the pin used to measure the encoder to be an input
@@ -24,7 +25,7 @@ void RevEncoder::read() {
     if (freq.available()) {
         int frequency = round(this->freq.countToNanoseconds(this->freq.read()) / 1000);
         this->ticks = frequency % 1024;
-        this->radians = (((float)this->ticks) / 1024.0) * M_PI * 2;
+        this->radians = (((float)this->ticks) / 1024.0f) * PI_F * 2;
     }
 
     comms_data.radians = this->radians;
@@ -55,5 +56,5 @@ void RevEncoder::print() {
 }
 void RevEncoder::print_live_data() {
     Serial.printf(" [Rev Encoder %d]  Angle (rad): %8.4f | Ticks: %8.0f\n", 
-                  (int)config.encoder_name, get_angle_radians(), get_angle_ticks());
+                  (int)config.encoder_name, (double)get_angle_radians(), (double)get_angle_ticks());
 }

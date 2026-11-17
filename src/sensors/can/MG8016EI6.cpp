@@ -1,5 +1,6 @@
 #include "MG8016EI6.hpp"
 #include "utils/system_log.hpp"
+#include "utils/math_constants.hpp"
 
 void MG8016EI6::init() {
     write_motor_on();
@@ -169,7 +170,7 @@ void MG8016EI6::write_motor_speed(float speed) {
     // convert given speed in rad/s to 0.01dps/LSB
 
     // convert from rad/s to dps
-    speed *= (180 / PI);
+    speed *= (180 / PI_F);
 
     // convert from dps to 0.01dps
     speed *= 100;
@@ -192,7 +193,7 @@ void MG8016EI6::write_motor_angle(float angle, float speed_limit) {
     // convert given angle in rad to 0.01deg/LSB
 
     // convert from rad to deg
-    angle *= (180 / PI);
+    angle *= (180 / PI_F);
 
     // convert from deg to 0.01deg
     angle *= 100;
@@ -207,7 +208,7 @@ void MG8016EI6::write_motor_angle(float angle, float speed_limit) {
 
     // convert speed_limit from rad/s to 1dps/LSB
     // convert from rad/s to dps
-    speed_limit *= (180 / PI);
+    speed_limit *= (180 / PI_F);
 
     // convert from dps to 1dps
     speed_limit *= 1;

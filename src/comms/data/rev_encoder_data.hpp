@@ -21,6 +21,6 @@ struct RevSensorData : Comms::CommsData {
 
 	/// @brief Print the Rev encoder data to the serial console for debugging purposes.
 	void print() const {
-		printf("RevSensorData - encoder_name: %lu, ticks: %d, radians: %f\n", static_cast<uint32_t>(encoder_name), ticks, radians);
+		printf("RevSensorData - encoder_name: %lu, ticks: %d, radians: %f\n", static_cast<uint32_t>(encoder_name), ticks, (double)radians);
 	}
 };

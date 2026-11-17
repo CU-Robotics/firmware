@@ -4,6 +4,7 @@
 #include "transmitter_utils.hpp"
 #include "comms/config_data/state.hpp"
 #include "utils/system_log.hpp"
+#include "utils/math_constants.hpp"
 
 // Allocate the static variables in memory
 ET16S* ET16S::instance = nullptr;
@@ -158,7 +159,7 @@ void ET16S::read() {
 }
 void ET16S::print() {
 	for (int i = 0; i < ET16S_INPUT_VALUE_COUNT; i++) {
-		SystemLog.info(Subsystem::SENSORS,"%f ", channel[i].data);
+		SystemLog.info(Subsystem::SENSORS,"%f ", (double)channel[i].data);
 	}
 
 	Serial.println();
@@ -232,8 +233,8 @@ void ET16S::print_live_data() {
 
     Serial.printf(" Control Mode: %-7s\n", mode_str);
     
-    Serial.printf(" L Stick : X: %5.2f | Y: %5.2f\n", get_l_stick_x(), get_l_stick_y());
-    Serial.printf(" R Stick : X: %5.2f | Y: %5.2f\n", get_r_stick_x(), get_r_stick_y());
+    Serial.printf(" L Stick : X: %5.2f | Y: %5.2f\n", (double)get_l_stick_x(), (double)get_l_stick_y());
+    Serial.printf(" R Stick : X: %5.2f | Y: %5.2f\n", (double)get_r_stick_x(), (double)get_r_stick_y());
     Serial.println("---------------------------------------");
 
     auto sw_str = [](auto val) -> const char* {
@@ -761,12 +762,12 @@ void ET16S::manual_controls(const RobotStateArray& estimated_state_array, RobotS
 		vtm_input.clear();
 	}
 	
-	vtm_pos_x += vtm_input.mouse_speed_x * 0.05 * delta;
-	vtm_pos_y += -vtm_input.mouse_speed_y * 0.05 * delta;
+	vtm_pos_x += vtm_input.mouse_speed_x * 0.05f * delta;
+	vtm_pos_y += -vtm_input.mouse_speed_y * 0.05f * delta;
 
 	float pitch_min = estimated_state_array[Cfg::StateName::GimbalPitch].config().reference_limits.position.min;
     float pitch_max = estimated_state_array[Cfg::StateName::GimbalPitch].config().reference_limits.position.max;
-    float pitch_average = 0.5 * (pitch_min + pitch_max);
+    float pitch_average = 0.5f * (pitch_min + pitch_max);
     pitch_min -= pitch_average;
     pitch_max -= pitch_average;
 
@@ -784,10 +785,10 @@ void ET16S::manual_controls(const RobotStateArray& estimated_state_array, RobotS
 
 	if (estimated_state_array[Cfg::StateName::ChassisX].config().governor_type == Cfg::StateOrder::Velocity) { // if we should be controlling velocity
 
-		chassis_vel_x = get_l_stick_y() * 5.4 +
-						(vtm_input.key_w - vtm_input.key_s) * 2.5;
-		chassis_vel_y = -(get_l_stick_x() * 5.4) +
-						(vtm_input.key_a - vtm_input.key_d) * 2.5;
+		chassis_vel_x = get_l_stick_y() * 5.4f +
+						(vtm_input.key_w - vtm_input.key_s) * 2.5f;
+		chassis_vel_y = -(get_l_stick_x() * 5.4f) +
+						(vtm_input.key_a - vtm_input.key_d) * 2.5f;
 		
 	} else if (estimated_state_array[Cfg::StateName::ChassisX].config().governor_type == Cfg::StateOrder::Position) { // if we should be controlling position
 		chassis_pos_x = get_l_stick_x() * 2 + pos_offset_x;
@@ -795,8 +796,8 @@ void ET16S::manual_controls(const RobotStateArray& estimated_state_array, RobotS
 	}
 
 	float chassis_spin = get_wheel() * 25;
-	float pitch_target = HALF_PI + -get_r_stick_y() * 0.3 + vtm_pos_y;
-	float yaw_target = -get_r_stick_x() * 1.5 - vtm_pos_x;
+	float pitch_target = HALF_PI_F + -get_r_stick_y() * 0.3f + vtm_pos_y;
+	float yaw_target = -get_r_stick_x() * 1.5f - vtm_pos_x;
 
 	float fly_wheel_target =
 		(get_switch_b() == SwitchPos::FORWARD || get_switch_b() == SwitchPos::MIDDLE) ? 18 : 0; // m/s
@@ -805,7 +806,7 @@ void ET16S::manual_controls(const RobotStateArray& estimated_state_array, RobotS
 	float feeder_target = ((vtm_input.button_left || get_switch_h() == SwitchPos::BACKWARD) && fly_wheel_target > 0) ? 12 : 0;
 	if (estimated_state_array[Cfg::StateName::Feeder].config().governor_type == Cfg::StateOrder::Position) {
 		float dt2 = timer.delta();
-		if (dt2 > 0.1) dt2 = 0;
+		if (dt2 > 0.1f) dt2 = 0;
 		// check if the shooter is active
 		if (not_safety_mode && ref.ref_data.robot_performance.shooter_power_active) {
 			feed += feeder_target * dt2;

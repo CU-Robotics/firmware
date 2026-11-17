@@ -6,6 +6,7 @@
 #include "utils/wrapping.hpp"
 #include "utils/system_log.hpp"
 #include "sensors/RefSystem.hpp"
+#include "utils/math_constants.hpp"
 
 // Estimator shared checking implementation
 void Estimator::check_state_limits(const char* estimator_name, const char* state_name, const State& state, ErrorMonitor& monitor) {
@@ -149,16 +150,16 @@ GimbalAndChassisEstimator::GimbalAndChassisEstimator(const Cfg::Estimator& estim
 
 void GimbalAndChassisEstimator::step_states(RobotStateArray& updated_state_array, const RobotStateArray& previous_state_array, int override) {
     float pitch_enc_angle = (buff_enc_pitch->get_angle() * pitch_encoder_direction) - pitch_encoder_offset;
-    while (pitch_enc_angle >= PI)
-        pitch_enc_angle -= 2 * PI;
-    while (pitch_enc_angle <= -PI)
-        pitch_enc_angle += 2 * PI;
+    while (pitch_enc_angle >= PI_F)
+        pitch_enc_angle -= 2 * PI_F;
+    while (pitch_enc_angle <= -PI_F)
+        pitch_enc_angle += 2 * PI_F;
 
     float yaw_enc_angle = (buff_enc_yaw->get_angle() * yaw_encoder_direction) - yaw_encoder_offset;
-    while (yaw_enc_angle >= PI)
-        yaw_enc_angle -= 2 * PI;
-    while (yaw_enc_angle <= -PI)
-        yaw_enc_angle += 2 * PI;
+    while (yaw_enc_angle >= PI_F)
+        yaw_enc_angle -= 2 * PI_F;
+    while (yaw_enc_angle <= -PI_F)
+        yaw_enc_angle += 2 * PI_F;
 
     // calculates yaw velocity before integrating to find position
     // calculates the difference in initial and current pitch angle
@@ -168,7 +169,7 @@ void GimbalAndChassisEstimator::step_states(RobotStateArray& updated_state_array
     if (imu_yaw_axis_vector[0] == 0)
         yaw_axis_spherical[1] = HALF_PI;
     else if (imu_yaw_axis_vector[0] < 0) {
-        yaw_axis_spherical[1] = PI + atan(imu_yaw_axis_vector[1] / imu_yaw_axis_vector[0]); // theta
+        yaw_axis_spherical[1] = PI_F + atan(imu_yaw_axis_vector[1] / imu_yaw_axis_vector[0]); // theta
     } else {
         yaw_axis_spherical[1] = atan(imu_yaw_axis_vector[1] / imu_yaw_axis_vector[0]); // theta
     }
@@ -248,7 +249,7 @@ void GimbalAndChassisEstimator::step_states(RobotStateArray& updated_state_array
     
     // position integration
     dt = time.delta();
-    if (dt > .1) {
+    if (dt > .1f) {
         dt = 0; // first dt loop generates huge time so check for that
         current_pitch_velocity = 0;
     } else {
@@ -274,19 +275,19 @@ void GimbalAndChassisEstimator::step_states(RobotStateArray& updated_state_array
     if (override == 1) {
         float overridden_yaw = previous_state_array[yaw_state].get_position();
         float error = Utils::wrap(overridden_yaw - yaw_angle, -PI, PI);
-        yaw_angle += error * 0.01;
-        SystemLog.info(Subsystem::ESTIMATOR,"Overriding gimbal yaw estimate to %f. Currently %f\n", overridden_yaw, yaw_angle);
+        yaw_angle += error * 0.01f;
+        SystemLog.info(Subsystem::ESTIMATOR,"Overriding gimbal yaw estimate to %f. Currently %f\n", (double)overridden_yaw, (double)yaw_angle);
     }
 
-    while (yaw_angle >= PI)
-        yaw_angle -= 2 * PI;
-    while (yaw_angle <= -PI)
-        yaw_angle += 2 * PI;
+    while (yaw_angle >= PI_F)
+        yaw_angle -= 2 * PI_F;
+    while (yaw_angle <= -PI_F)
+        yaw_angle += 2 * PI_F;
 
-    while (chassis_angle >= PI)
-        chassis_angle -= 2 * PI;
-    while (chassis_angle <= -PI)
-        chassis_angle += 2 * PI;
+    while (chassis_angle >= PI_F)
+        chassis_angle -= 2 * PI_F;
+    while (chassis_angle <= -PI_F)
+        chassis_angle += 2 * PI_F;
 
     // output[2][0] = chassis_angle;
     // output[2][1] = 0;
@@ -314,14 +315,14 @@ void GimbalAndChassisEstimator::step_states(RobotStateArray& updated_state_array
     //     total_odom_pos[i] = odom_pos_diff[i] + total_odom_pos[i];
     // }
     float global_chassis_angle = yaw_angle - yaw_enc_angle;
-    while (global_chassis_angle >= PI)
-        global_chassis_angle -= 2 * PI;
-    while (global_chassis_angle <= -PI)
-        global_chassis_angle += 2 * PI;
+    while (global_chassis_angle >= PI_F)
+        global_chassis_angle -= 2 * PI_F;
+    while (global_chassis_angle <= -PI_F)
+        global_chassis_angle += 2 * PI_F;
     // global_chassis_angle = -(total_odom_pos[0] + total_odom_pos[2])/(2*odom_axis_offset_x)+initial_global_chassis_angle;  
     float d_chassis_heading = (global_chassis_angle - prev_global_chassis_angle);
-    if (d_chassis_heading > PI) d_chassis_heading -= 2 * PI;
-    else if (d_chassis_heading < -PI) d_chassis_heading += 2 * PI;
+    if (d_chassis_heading > PI_F) d_chassis_heading -= 2 * PI_F;
+    else if (d_chassis_heading < -PI_F) d_chassis_heading += 2 * PI_F;
     if (override == 1) {
         d_chassis_heading = 0;
     }
@@ -429,19 +430,19 @@ void FeederEstimator::step_states(RobotStateArray& updated_state_array, const Ro
     float diff;
     if (count == 0) {
         dt = 0; // first dt loop generates huge time so check for that
-        diff = fmod((feeder_angle - feeder_offset), (float)(M_PI / feeder_ratio)) ;
+        diff = fmod((feeder_angle - feeder_offset), (float)(PI_F / feeder_ratio)) ;
         count++;
     } else {
         diff = feeder_angle - prev_feeder_angle;
     }
   
     prev_feeder_angle = feeder_angle;
-    if (diff > PI) diff -= 2 * PI;
-    else if (diff < -PI) diff += 2 * PI;
+    if (diff > PI_F) diff -= 2 * PI_F;
+    else if (diff < -PI_F) diff += 2 * PI_F;
 
-    float feeder_velocity = (dt > 0) ? (diff/(M_PI/feeder_ratio))/dt : 0;
+    float feeder_velocity = (dt > 0) ? (diff/(PI_F/feeder_ratio))/dt : 0;
   
-    ball_count += diff/(M_PI/feeder_ratio);
+    ball_count += diff/(PI_F/feeder_ratio);
     updated_state_array[feeder_ball_state].set_position_no_bound(ball_count * feeder_direction); // ball count
     updated_state_array[feeder_ball_state].set_velocity_no_bound(feeder_velocity * feeder_direction); // ball velocity
     updated_state_array[feeder_ball_state].set_acceleration_no_bound(0); // this is not the acceleration just the encoder value for debugging
@@ -482,46 +483,46 @@ void LowerFeederEstimator::step_states(RobotStateArray& updated_state_array, con
     float lower_diff;
     if (count == 0) {
         dt = 0; // first dt loop generates huge time so check for that
-        diff = fmod((feeder_angle - feeder_offset), (float)(M_PI / feeder_ratio)) ;
-        lower_diff = fmod((lower_feeder_angle - lower_feeder_offset), (float)(M_PI / lower_feeder_ratio)) ;
+        diff = fmod((feeder_angle - feeder_offset), (float)(PI_F / feeder_ratio)) ;
+        lower_diff = fmod((lower_feeder_angle - lower_feeder_offset), (float)(PI_F / lower_feeder_ratio)) ;
     } else {
         diff = feeder_angle - prev_feeder_angle;
         lower_diff = lower_feeder_angle - prev_lower_feeder_angle;
     }
 
     // code to check if the encoder value is getting reset to near 0. Indicates a problem with the spi bus
-    if (fabs(diff) > 0.5 && fabs(diff) < 2*PI - 0.5 && count > 0) {
+    if (fabs(diff) > 0.5f && fabs(diff) < 2*PI_F - 0.5f && count > 0) {
         num_encoder_resets++;
         reset_value = feeder_angle;
-        SystemLog.warn(Subsystem::ESTIMATOR,"Feeder angle diff is large: %d, feeder angle: %f, prev feeder angle: %f\n", num_encoder_resets, feeder_angle, prev_feeder_angle);
+        SystemLog.warn(Subsystem::ESTIMATOR,"Feeder angle diff is large: %d, feeder angle: %f, prev feeder angle: %f\n", num_encoder_resets, (double)feeder_angle, (double)prev_feeder_angle);
         diff = 0; // set diff to 0 to avoid large jumps in ball count
     }
-    if (fabs(lower_diff) > 0.5 && fabs(lower_diff) < 2*PI - 0.5 && count > 0) {
+    if (fabs(lower_diff) > 0.5f && fabs(lower_diff) < 2*PI_F - 0.5f && count > 0) {
         num_encoder_resets++;
         reset_value = lower_feeder_angle;
-       SystemLog.warn(Subsystem::ESTIMATOR,"Lower feeder angle diff is large: %d, lower feeder angle: %f, prev lower feeder angle: %f\n", num_encoder_resets, lower_feeder_angle, prev_lower_feeder_angle);
+       SystemLog.warn(Subsystem::ESTIMATOR,"Lower feeder angle diff is large: %d, lower feeder angle: %f, prev lower feeder angle: %f\n", num_encoder_resets, (double)lower_feeder_angle, (double)prev_lower_feeder_angle);
         lower_diff = 0; // set lower_diff to 0 to avoid large jumps in ball count
     }
 
     prev_feeder_angle = feeder_angle;
     prev_lower_feeder_angle = lower_feeder_angle;
-    if (diff > PI) diff -= 2 * PI;
-    else if (diff < -PI) diff += 2 * PI;
-    if (lower_diff > PI) lower_diff -= 2 * PI;
-    else if (lower_diff < -PI) lower_diff += 2 * PI;
+    if (diff > PI_F) diff -= 2 * PI_F;
+    else if (diff < -PI_F) diff += 2 * PI_F;
+    if (lower_diff > PI_F) lower_diff -= 2 * PI_F;
+    else if (lower_diff < -PI_F) lower_diff += 2 * PI_F;
     
     // velocity estimation with buff encoder
-    float feeder_velocity = (dt > 0) ? ((diff/(M_PI/feeder_ratio))/dt) * feeder_direction : 0;
-    float lower_feeder_velocity = (dt > 0) ? ((lower_diff/(M_PI/lower_feeder_ratio))/dt) * lower_feeder_direction : 0;
+    float feeder_velocity = (dt > 0) ? ((diff/(PI_F/feeder_ratio))/dt) * feeder_direction : 0;
+    float lower_feeder_velocity = (dt > 0) ? ((lower_diff/(PI_F/lower_feeder_ratio))/dt) * lower_feeder_direction : 0;
   
-    ball_count += (diff/(M_PI/feeder_ratio)) * feeder_direction;
-    lower_ball_count += (lower_diff/(M_PI/lower_feeder_ratio)) * lower_feeder_direction;
+    ball_count += (diff/(PI_F/feeder_ratio)) * feeder_direction;
+    lower_ball_count += (lower_diff/(PI_F/lower_feeder_ratio)) * lower_feeder_direction;
 
     if (count == 0) {
-        SystemLog.info(Subsystem::ESTIMATOR,"Initial feeder ball count: %f, lower feeder ball count: %f\n", ball_count, lower_ball_count);
-        while (ball_count - lower_ball_count > 0.5) lower_ball_count += 1.0;
-        while (lower_ball_count - ball_count > 0.5) ball_count += 1.0;
-		SystemLog.info(Subsystem::ESTIMATOR,"Adjusted feeder ball count: %f, lower feeder ball count: %f\n", ball_count, lower_ball_count);
+        SystemLog.info(Subsystem::ESTIMATOR,"Initial feeder ball count: %f, lower feeder ball count: %f\n", (double)ball_count, (double)lower_ball_count);
+        while (ball_count - lower_ball_count > 0.5f) lower_ball_count += 1.0f;
+        while (lower_ball_count - ball_count > 0.5f) ball_count += 1.0f;
+		SystemLog.info(Subsystem::ESTIMATOR,"Adjusted feeder ball count: %f, lower feeder ball count: %f\n", (double)ball_count, (double)lower_ball_count);
         count++;
     }
 

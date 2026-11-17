@@ -1,6 +1,7 @@
 #pragma once
 #include <utility>
 #include <functional>
+#include <type_traits>
 
 #ifdef FW_SIMULATION
 #include <cstdio>
@@ -41,6 +42,19 @@ namespace safety {
         return true;
     }
 
+    /// @brief Pass a printf argument through, converting float to double explicitly. printf
+    /// promotes float varargs to double anyway; doing it here keeps -Wdouble-promotion quiet.
+    /// @param arg The argument to pass through
+    /// @return arg, as a double if it was a float
+    template<typename T>
+    constexpr decltype(auto) printf_arg(T&& arg) {
+        if constexpr (std::is_same_v<std::decay_t<T>, float>) {
+            return static_cast<double>(arg);
+        } else {
+            return std::forward<T>(arg);
+        }
+    }
+
     /// @brief Trigger the safety procedure, which will call the registered safety function and then enter an infinite loop. If a safety function is not registered, it will immediately enter the infinite loop.
     /// @param message The message to print when the safety procedure is triggered, which can include format specifiers for the additional arguments
     /// @param args Variadic arguments to be formatted into the message
@@ -61,7 +75,7 @@ namespace safety {
             Serial.printf("Safety procedure triggered but no safety function registered!\n");
         }
 
-        Serial.printf(message, args...);
+        Serial.printf(message, printf_arg(std::forward<Args>(args))...);
         Serial.println();
         while(true) {
             // Blink the teensy's LED to indicate a safety procedure has been triggered

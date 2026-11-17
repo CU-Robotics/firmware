@@ -5,6 +5,7 @@
 
 #include "sensors/sensor.hpp"
 #include "comms/data/lidar_data_packet_si.hpp"
+#include "utils/math_constants.hpp"
 
 // development manual
 // https://files.waveshare.com/upload/9/99/LD14P_Development_Manual.pdf
@@ -65,13 +66,13 @@ const uint8_t D200_START_CMD[ ] = { 0x54, 0xa0, 0x04, 0, 0, 0, 0, 0x5e };
 const uint8_t D200_STOP_CMD[ ] = { 0x54, 0xa1, 0x04, 0, 0, 0, 0, 0x4a };
 
 /// @brief default scanning speed (rad/s)
-const float D200_DEFAULT_SPEED = (float)(6 * 360) * M_PI / 180.0;
+const float D200_DEFAULT_SPEED = (float)(6 * 360) * PI_F / 180.0f;
 
 /// @brief min specified scanning speed (rad/s)
-const float D200_MIN_SPEED = (float)(2 * 360 + 1) * M_PI / 180.0;
+const float D200_MIN_SPEED = (float)(2 * 360 + 1) * PI_F / 180.0f;
 
 /// @brief max specified scanning speed (rad/s)
-const float D200_MAX_SPEED = (float)(8 * 360 - 1) * M_PI / 180.0;
+const float D200_MAX_SPEED = (float)(8 * 360 - 1) * PI_F / 180.0f;
 
 /// @brief max millis before lidar timestamp wraps (30s)
 const int D200_TIMESTAMP_WRAP_LIMIT = 30000;

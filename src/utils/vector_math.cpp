@@ -5,7 +5,7 @@ namespace Utils {
 float magnitude(float* a, int n) {
 	float square_sum = 0;
 	for (int i = 0; i < n; i++) {
-		square_sum += pow(a[i], 2);
+		square_sum += powf(a[i], 2.0f);
 	}
 	square_sum = sqrt(square_sum);
 	return square_sum;

@@ -64,7 +64,7 @@ void SystemLogger::push_message() {
 		Serial.print("\r\033[K");
         
         Serial.printf("[%7.2fs] %s[%s] %s\033[0m\n", 
-            messages[head].timestamp, 
+            (double)messages[head].timestamp, 
             level_to_color(messages[head].level),
             sys_to_str(messages[head].sys), 
             messages[head].text);
@@ -168,7 +168,7 @@ void SystemLogger::draw_dashboard_box() {
             if (should_show(ev.level, ev.sys)) {
                 // \033[K erases all residual characters to the right of this line
                 Serial.printf(" [%7.2fs] %s[%s] %s\033[0m\033[K\n", 
-                    ev.timestamp, 
+                    (double)ev.timestamp, 
                     level_to_color(ev.level),
                     sys_to_str(ev.sys), 
                     ev.text);

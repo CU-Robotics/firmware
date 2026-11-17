@@ -70,11 +70,11 @@ void RobotStateArray::print() const {
             // Single compact row with ANSI line clear (\033[K)
             Serial.printf("  %-11s | P: %7.2f | V: %7.2f | A: %7.2f | Lim: [%.1f, %.1f]\033[K\n",
                           state_to_str(state_name),
-                          state.get_position(),
-                          state.get_velocity(),
-                          state.get_acceleration(),
-                          state.config().reference_limits.position.min,
-                          state.config().reference_limits.position.max);
+                          (double)state.get_position(),
+                          (double)state.get_velocity(),
+                          (double)state.get_acceleration(),
+                          (double)(state.config().reference_limits.position.min),
+                          (double)(state.config().reference_limits.position.max));
         }
     }
 }

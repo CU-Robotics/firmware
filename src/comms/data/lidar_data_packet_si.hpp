@@ -59,9 +59,9 @@ struct LidarDataPacketSI : Comms::CommsData {
     /// @brief print the lidar data packet details
     void print() const {
         printf("LidarDataPacketSI - lidar_name: %lu, lidar_speed: %f, start_angle: %f, end_angle: %f, timestamp: %f, sample_time: %f, yaw: %f, yaw_velocity: %f\n", 
-            static_cast<uint32_t>(lidar_name), lidar_speed, start_angle, end_angle, timestamp, sample_time, yaw, yaw_velocity);
+            static_cast<uint32_t>(lidar_name), (double)lidar_speed, (double)start_angle, (double)end_angle, (double)timestamp, (double)sample_time, (double)yaw, (double)yaw_velocity);
         for (uint32_t i = 0; i < D200_POINTS_PER_PACKET; i++) {
-            printf("Point %ld - distance: %f m, intensity: %u\n", i, distances[i], intensities[i]);
+            printf("Point %ld - distance: %f m, intensity: %u\n", i, (double)distances[i], intensities[i]);
         }
     }
 };

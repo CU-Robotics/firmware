@@ -60,7 +60,7 @@ const RobotStateArray& Governor::step_reference_array(const RobotStateArray& ung
             if (reference.get_acceleration() != 0) {
                 if (error.get_position() > 0) {
                     // check how far it will travel when braking
-                    float dist_to_deccel = (pow(ungoverned_reference.get_velocity(), 2) - pow(reference.get_velocity(), 2)) 
+                    float dist_to_deccel = (powf(ungoverned_reference.get_velocity(), 2.0f) - powf(reference.get_velocity(), 2.0f)) 
                         / (2 * (reference.config().reference_limits.acceleration.min));
 
                     // if the minimum stopping distance is greater than the remaining distance start braking
@@ -70,7 +70,7 @@ const RobotStateArray& Governor::step_reference_array(const RobotStateArray& ung
                     }
                 } else {
                     // check how far it will travel when braking
-                    float dist_to_deccel = (pow(ungoverned_reference.get_velocity(), 2) - pow(reference.get_velocity(), 2))
+                    float dist_to_deccel = (powf(ungoverned_reference.get_velocity(), 2.0f) - powf(reference.get_velocity(), 2.0f))
                          / (2 * (reference.config().reference_limits.acceleration.max));
 
                     // if the minimum stopping distance is greater than the remaining distance start braking

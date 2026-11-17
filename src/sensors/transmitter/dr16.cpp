@@ -3,6 +3,7 @@
 #include "sensors/RefSystem.hpp"
 #include "comms/data/sendable.hpp"
 #include "utils/system_log.hpp"
+#include "utils/math_constants.hpp"
 
 DR16::DR16(const Cfg::DR16& config_) : config(config_) {
 
@@ -80,7 +81,7 @@ void DR16::read() {
 		} else {
 			uint32_t align_end = micros();
 			SystemLog.error(Subsystem::SENSORS,"DR16: Aligned successfully\n");
-			SystemLog.error(Subsystem::SENSORS,"DR16: Alignment took %fms\n\n", (align_end - align_start) / 1000.f);
+			SystemLog.error(Subsystem::SENSORS,"DR16: Alignment took %fms\n\n", (double)((align_end - align_start) / 1000.f));
 		}
 
 		// clear the buffer to get ready for the next packet
@@ -203,7 +204,7 @@ float* DR16::get_input() {
 }
 
 void DR16::print() {
-	Serial.printf("RStick X: %.2f\tRStick Y: %.2f\tLStick X: %.2f\tLStick Y: %.2f\tWheel: %.2f\tRSwitch: %.2f\tLSwitch: %.2f\n", m_input[0], m_input[1], m_input[2], m_input[3], m_input[4], m_input[5], m_input[6]);
+	Serial.printf("RStick X: %.2f\tRStick Y: %.2f\tLStick X: %.2f\tLStick Y: %.2f\tWheel: %.2f\tRSwitch: %.2f\tLSwitch: %.2f\n", (double)m_input[0], (double)m_input[1], (double)m_input[2], (double)m_input[3], (double)m_input[4], (double)m_input[5], (double)m_input[6]);
 }
 
 void DR16::print_raw() {
@@ -330,15 +331,15 @@ void DR16::manual_controls(const RobotStateArray& estimated_state_array, RobotSt
 		vtm_input.clear();
 	}
 
-	transmitter_pos_x += mouse_x * 0.05 * delta;
-	transmitter_pos_y += mouse_y * 0.05 * delta;
+	transmitter_pos_x += mouse_x * 0.05f * delta;
+	transmitter_pos_y += mouse_y * 0.05f * delta;
 
-	vtm_pos_x += vtm_input.mouse_speed_x * 0.05 * delta;
-	vtm_pos_y += -vtm_input.mouse_speed_y * 0.05 * delta;
+	vtm_pos_x += vtm_input.mouse_speed_x * 0.05f * delta;
+	vtm_pos_y += -vtm_input.mouse_speed_y * 0.05f * delta;
 
 	float pitch_min = estimated_state_array[Cfg::StateName::GimbalPitch].config().reference_limits.position.min;
     float pitch_max = estimated_state_array[Cfg::StateName::GimbalPitch].config().reference_limits.position.max;
-    float pitch_average = 0.5 * (pitch_min + pitch_max);
+    float pitch_average = 0.5f * (pitch_min + pitch_max);
     pitch_min -= pitch_average;
     pitch_max -= pitch_average;
 
@@ -363,15 +364,15 @@ void DR16::manual_controls(const RobotStateArray& estimated_state_array, RobotSt
 
 	if (estimated_state_array[Cfg::StateName::ChassisX].config().governor_type == Cfg::StateOrder::Velocity) { // if we should be controlling velocity
 
-		chassis_vel_x = get_l_stick_y() * 5.4 +
-						(vtm_input.key_w - vtm_input.key_s) * 2.5;
+		chassis_vel_x = get_l_stick_y() * 5.4f +
+						(vtm_input.key_w - vtm_input.key_s) * 2.5f;
 
-		chassis_vel_x += (-keys.w + keys.s) * 2.5;
+		chassis_vel_x += (-keys.w + keys.s) * 2.5f;
 
-		chassis_vel_y = -(get_l_stick_x() * 5.4) +
-						(vtm_input.key_a - vtm_input.key_d) * 2.5;
+		chassis_vel_y = -(get_l_stick_x() * 5.4f) +
+						(vtm_input.key_a - vtm_input.key_d) * 2.5f;
 
-		chassis_vel_y += (keys.d - keys.a) * 2.5;
+		chassis_vel_y += (keys.d - keys.a) * 2.5f;
 		
 	} else if (estimated_state_array[Cfg::StateName::ChassisX].config().governor_type == Cfg::StateOrder::Position) { // if we should be controlling position
 		chassis_pos_x = get_l_stick_x() * 2 + pos_offset_x;
@@ -379,8 +380,8 @@ void DR16::manual_controls(const RobotStateArray& estimated_state_array, RobotSt
 	}
 
 	float chassis_spin = get_wheel() * 25;
-	float pitch_target = HALF_PI + -get_r_stick_y() * 0.3 + vtm_pos_y;
-	float yaw_target = -get_r_stick_x() * 1.5 - vtm_pos_x;
+	float pitch_target = HALF_PI_F + -get_r_stick_y() * 0.3f + vtm_pos_y;
+	float yaw_target = -get_r_stick_x() * 1.5f - vtm_pos_x;
 
 	float fly_wheel_target =
 		(get_r_switch() == SwitchPos::FORWARD || get_r_switch() == SwitchPos::MIDDLE) ? 18 : 0; // m/s
@@ -390,7 +391,7 @@ void DR16::manual_controls(const RobotStateArray& estimated_state_array, RobotSt
 							get_r_switch() != SwitchPos::BACKWARD) || get_r_switch() == SwitchPos::FORWARD) ? 10 : 0;
 	if (estimated_state_array[Cfg::StateName::Feeder].config().governor_type == Cfg::StateOrder::Position) {
 		float dt2 = timer.delta();
-		if (dt2 > 0.1)
+		if (dt2 > 0.1f)
 			dt2 = 0;
 		// check if the shooter is active
 		if (not_safety_mode && ref.ref_data.robot_performance.shooter_power_active)
@@ -443,9 +444,9 @@ void DR16::print_live_data() {
     Serial.printf(" Control Mode: %-7s\n", mode_str);
     
     Serial.println("----------------------------------");
-    Serial.printf(" L Stick: X: %5.2f | Y: %5.2f\n", get_l_stick_x(), get_l_stick_y());
-    Serial.printf(" R Stick: X: %5.2f | Y: %5.2f\n", get_r_stick_x(), get_r_stick_y());
-    Serial.printf(" Wheel  : %5.2f\n", get_wheel());
+    Serial.printf(" L Stick: X: %5.2f | Y: %5.2f\n", (double)get_l_stick_x(), (double)get_l_stick_y());
+    Serial.printf(" R Stick: X: %5.2f | Y: %5.2f\n", (double)get_r_stick_x(), (double)get_r_stick_y());
+    Serial.printf(" Wheel  : %5.2f\n", (double)get_wheel());
 	
 	// Lambda to convert the float value into the SwitchPos string
     auto sw_str = [](auto val) -> const char* {

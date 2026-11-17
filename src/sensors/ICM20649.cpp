@@ -60,7 +60,7 @@ void ICM20649::init() {
 
     set_offsets(gyro_offset_x, gyro_offset_y, gyro_offset_z);
 
-    Serial.printf("ICM CALIBRATION COMPLETE! Offsets: X: %f, Y: %f, Z: %f\n", gyro_offset_x, gyro_offset_y, gyro_offset_z);
+    Serial.printf("ICM CALIBRATION COMPLETE! Offsets: X: %f, Y: %f, Z: %f\n", (double)gyro_offset_x, (double)gyro_offset_y, (double)gyro_offset_z);
 
 
 }
@@ -176,19 +176,19 @@ void ICM20649::set_accel_range(Cfg::ICMImuAccelRange range) {
     switch (range) {
         case Cfg::ICMImuAccelRange::A_4G:
             sensor.setAccelRange(ICM20649_ACCEL_RANGE_4_G);
-			accel_multiplier = GRAVITY_EARTH/8192.0;
+			accel_multiplier = GRAVITY_EARTH/8192.0f;
             break;
         case Cfg::ICMImuAccelRange::A_8G:
             sensor.setAccelRange(ICM20649_ACCEL_RANGE_8_G);
-			accel_multiplier = GRAVITY_EARTH/4096.0;
+			accel_multiplier = GRAVITY_EARTH/4096.0f;
             break;
         case Cfg::ICMImuAccelRange::A_16G:
             sensor.setAccelRange(ICM20649_ACCEL_RANGE_16_G);
-			accel_multiplier = GRAVITY_EARTH/2048.0;
+			accel_multiplier = GRAVITY_EARTH/2048.0f;
             break;
         case Cfg::ICMImuAccelRange::A_30G:
             sensor.setAccelRange(ICM20649_ACCEL_RANGE_30_G);
-			accel_multiplier = GRAVITY_EARTH/1024.0;;
+			accel_multiplier = GRAVITY_EARTH/1024.0f;;
             break;
     }
 }
@@ -197,19 +197,19 @@ void ICM20649::set_gyro_range(Cfg::ICMImuGyroRange range) {
     switch (range) {
         case Cfg::ICMImuGyroRange::DPS500:
             sensor.setGyroRange(ICM20649_GYRO_RANGE_500_DPS);
-			gyro_multiplier = DPS_TO_RADS/65.5;
+			gyro_multiplier = DPS_TO_RADS/65.5f;
             break;
         case Cfg::ICMImuGyroRange::DPS1000:
             sensor.setGyroRange(ICM20649_GYRO_RANGE_1000_DPS);
-			gyro_multiplier = DPS_TO_RADS/32.8;
+			gyro_multiplier = DPS_TO_RADS/32.8f;
             break;
         case Cfg::ICMImuGyroRange::DPS2000:
             sensor.setGyroRange(ICM20649_GYRO_RANGE_2000_DPS);
-			gyro_multiplier = DPS_TO_RADS/16.4;
+			gyro_multiplier = DPS_TO_RADS/16.4f;
             break;
         case Cfg::ICMImuGyroRange::DPS4000:
             sensor.setGyroRange(ICM20649_GYRO_RANGE_4000_DPS);
-			gyro_multiplier = DPS_TO_RADS/8.2;
+			gyro_multiplier = DPS_TO_RADS/8.2f;
             break;
     }
 }

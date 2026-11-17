@@ -99,6 +99,10 @@ SECTION_FLAGS := -ffunction-sections -fdata-sections
 COMMON_COMPILE_FLAGS := $(ARCH_FLAGS) $(SECTION_FLAGS) -O2 -g2 --specs=nano.specs
 CXX_LANGUAGE_FLAGS := -std=gnu++23 -felide-constructors -fno-exceptions -fpermissive
 CXX_WARNING_FLAGS := -Wno-trigraphs -Wno-comment -Wall -Werror -Wno-volatile
+# -Wdouble-promotion: error on implicit float -> double promotion (the Teensy FPU is
+# single precision, so double math is done in software). Applied to src/ only; the
+# vendored teensy4/ and libraries/ code is exempt.
+SRC_CXX_WARNING_FLAGS := -Wdouble-promotion
 
 PROJECT_CPPFLAGS := $(INCLUDE_FLAGS) $(PROJECT_DEFINES)
 PROJECT_CFLAGS := $(COMMON_COMPILE_FLAGS)
@@ -188,6 +192,9 @@ $(TARGET_DUMP): $(TARGET_ELF)
 
 # Ensure git_scraper finishes before compiling any object files
 $(SRC_OBJS) $(LIBRARY_OBJS) $(TEENSY_OBJS): | git_scraper
+
+# Extra warnings for our own code only (not vendored teensy4/ or libraries/)
+$(SRC_OBJS): PROJECT_CXXFLAGS += $(SRC_CXX_WARNING_FLAGS)
 
 
 $(BUILD_DIR)/%.c.o: %.c

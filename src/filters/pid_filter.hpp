@@ -1,6 +1,7 @@
 #pragma once
 #include "math.h"
 #include <Arduino.h>
+#include "utils/math_constants.hpp"
 
 
 /// @brief PIDF filter used in controls. Gains are configurable via K
@@ -38,13 +39,13 @@ struct PIDFilter {
     /// @return pidf output
     float filter(float dt, bool bound, bool wrap) {
         float error = setpoint - measurement;
-        if (error > PI && wrap) error -= 2 * PI;
-        if (error < -PI && wrap) error += 2 * PI;
+        if (error > PI_F && wrap) error -= 2 * PI_F;
+        if (error < -PI_F && wrap) error += 2 * PI_F;
         // if(wrap) Serial.println(error);
         sumError += error * dt;
         float output = (kp * error) + (kd * ((error - prevError) / dt)) + kf;
         prevError = error;
-        if (fabs(output) > 1.0 && bound) output /= fabs(output);
+        if (fabs(output) > 1.0f && bound) output /= fabs(output);
         return output;
     }
 

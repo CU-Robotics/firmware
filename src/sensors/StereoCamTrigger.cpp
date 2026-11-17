@@ -55,8 +55,8 @@ void StereoCamTrigger::init() {
   pinMode(config.camera_2_line_2_pin, OUTPUT);
 
   // determine timer resolution from FPS
-  float spf = 1.0 / float(config.fps); // seconds per frame
-  mpf = 1.0e+6 * spf; // micros per frame
+  float spf = 1.0f / float(config.fps); // seconds per frame
+  mpf = 1.0e+6f * spf; // micros per frame
 
   start(mpf);
 }

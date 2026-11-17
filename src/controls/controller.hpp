@@ -569,7 +569,7 @@ struct LowerFeederController : public Controller {
             bool found = false;
             for (auto& state: state_config) {
                 if (state.name == upper_feeder_position_state) {
-					SystemLog.info(Subsystem::Controls,"state config, reference limits velocity: min %f, max %f\n", state.reference_limits.velocity.min, state.reference_limits.velocity.max);
+					SystemLog.info(Subsystem::Controls,"state config, reference limits velocity: min %f, max %f\n", (double)state.reference_limits.velocity.min, (double)state.reference_limits.velocity.max);
 					upper_feeder_reference_state.set_state(state);
                     upper_target.set_state(state);
                     upper_feeder_reference_governor.set_state(state);

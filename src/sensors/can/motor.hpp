@@ -71,7 +71,7 @@ public:
 
     /// @brief Print the current state of the motor
     virtual void print_state() const {
-        Serial.printf("Name: %u\tBus: %u\tID: %u\tTemp: %.2dc\tTorque: % 4.3f%%\tSpeed: % 6.2frad/s\tPos: %5.5d?\n", static_cast<uint32_t>(motor_config.motor_name), motor_config.physical_bus, motor_config.physical_id, m_state.temperature, m_state.torque, m_state.speed, m_state.position);
+        Serial.printf("Name: %u\tBus: %u\tID: %u\tTemp: %.2dc\tTorque: % 4.3f%%\tSpeed: % 6.2frad/s\tPos: %5.5d?\n", static_cast<uint32_t>(motor_config.motor_name), motor_config.physical_bus, motor_config.physical_id, m_state.temperature, (double)m_state.torque, (double)m_state.speed, m_state.position);
     }
 
 public:
