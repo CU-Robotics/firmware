@@ -331,24 +331,43 @@ $(COMPILE_DB): Makefile $(COMPILE_DB_SCRIPT) $(COMPILE_DB_DIR_DEPS)
 	@printf "CLANGD   compile_commands.json generated\n"
 
 
-# clang-tidy, using the checks in .clang-tidy. Prints findings, never fails.
-# The pinned version in tools/install_clang_tidy.sh is installed into
-# tools/clang-tidy on first use. Pass CLANG_TIDY=/path/to/clang-tidy to use
-# another one instead.
-TIDY_SCRIPT = $(TOOLS_DIR)/clang_tidy.sh
-TIDY_BASE ?= origin/main
+# clang-tidy, using the checks and clang compatibility flags in .clang-tidy.
+# Prints findings, never fails. The pinned version in
+# tools/install_clang_tidy.sh is installed into tools/clang-tidy on first use.
+# Pass CLANG_TIDY=/path/to/clang-tidy to use another one instead.
 CLANG_TIDY_BIN := $(TOOLS_DIR)/clang-tidy/bin/clang-tidy
 CLANG_TIDY ?= $(CLANG_TIDY_BIN)
+TIDY_FILTER := $(TOOLS_DIR)/tidy_filter.sh
+TIDY_OUT_DIR := $(BUILD_BASE_DIR)/tidy
+TIDY_BASE ?= origin/main
+tidy_outputs = $(patsubst %,$(TIDY_OUT_DIR)/%.txt,$(1))
+
+TIDY_SRC := $(filter %.cpp %.c,$(SRC_SRC))
+
+# For tidy-diff: files under src/ changed since this branch left TIDY_BASE,
+# plus uncommitted changes. A changed header is checked through the .cpp with
+# the same name. Only computed when tidy-diff is requested.
+ifneq ($(filter tidy-diff,$(MAKECMDGOALS)),)
+TIDY_CHANGED := $(shell git diff --name-only --diff-filter=d $$(git merge-base $(TIDY_BASE) HEAD) -- src)
+TIDY_DIFF_SRC := $(sort $(filter %.cpp %.c,$(TIDY_CHANGED)) \
+	$(wildcard $(addsuffix .cpp,$(basename $(filter %.hpp %.h,$(TIDY_CHANGED))))))
+endif
 
 clang-tidy-install:
 	@$(if $(filter $(CLANG_TIDY_BIN),$(CLANG_TIDY)),bash $(TOOLS_DIR)/install_clang_tidy.sh)
+	@command -v "$(CLANG_TIDY)" >/dev/null || { echo "clang-tidy not found at $(CLANG_TIDY)" >&2; exit 1; }
+
+# One clang-tidy run per file, so make -j runs them in parallel. Exit codes
+# are ignored: findings are reported by the filter, which never fails.
+$(TIDY_OUT_DIR)/%.txt: % $(COMPILE_DB) .clang-tidy FORCE | clang-tidy-install git_scraper
+	@mkdir -p $(dir $@)
+	@printf "TIDY     %s\n" "$<"
+	@"$(CLANG_TIDY)" -p . --quiet $< > $@ 2>/dev/null || true
 
 # Check every source file under src/.
-tidy: $(COMPILE_DB) git_scraper clang-tidy-install
-	@JOBS="$(JOBS)" CLANG_TIDY="$(CLANG_TIDY)" "$(TIDY_SCRIPT)" $(SRC_SRC)
+tidy: $(call tidy_outputs,$(TIDY_SRC))
+	@cat /dev/null $^ | "$(TIDY_FILTER)"
 
-# Check only the files under src/ that changed since this branch left
-# TIDY_BASE, plus uncommitted changes.
-tidy-diff: $(COMPILE_DB) git_scraper clang-tidy-install
-	@JOBS="$(JOBS)" CLANG_TIDY="$(CLANG_TIDY)" TIDY_ONLY_LISTED=1 "$(TIDY_SCRIPT)" $$(git diff --name-only --diff-filter=d \
-		$$(git merge-base $(TIDY_BASE) HEAD))
+# Check only the changed files and report findings only in them.
+tidy-diff: $(call tidy_outputs,$(TIDY_DIFF_SRC))
+	@cat /dev/null $(filter %.txt,$^) | TIDY_ONLY_FILES="$(TIDY_CHANGED)" "$(TIDY_FILTER)"
