@@ -125,7 +125,7 @@ SIZE			= $(COMPILER_TOOLS_PATH)/arm-none-eabi-size
 GIT_SCRAPER_SRC = $(TOOLS_DIR)/git_scraper.cpp
 GIT_SCRAPER_BIN = $(BUILD_DIR)/git_scraper
 
-.PHONY: build debug release dump test test-build docs clean upload install gdb monitor kill restart help clangd tidy tidy-diff git_scraper FORCE
+.PHONY: build debug release dump test test-build docs clean upload install gdb monitor kill restart help clangd tidy tidy-diff clang-tidy-install git_scraper FORCE
 
 
 build: $(TARGET_HEX)
@@ -246,6 +246,7 @@ upload: build
 install:
 	@bash $(TOOLS_DIR)/install_tytools.sh
 	@bash $(TOOLS_DIR)/install_compiler.sh
+	@bash $(TOOLS_DIR)/install_clang_tidy.sh
 
 
 # starts GDB and attaches to the firmware running on a connected Teensy
@@ -323,15 +324,23 @@ $(COMPILE_DB): Makefile $(COMPILE_DB_SCRIPT) $(COMPILE_DB_DIR_DEPS)
 
 
 # clang-tidy, using the checks in .clang-tidy. Prints findings, never fails.
+# The pinned version in tools/install_clang_tidy.sh is installed into
+# tools/clang-tidy on first use. Pass CLANG_TIDY=/path/to/clang-tidy to use
+# another one instead.
 TIDY_SCRIPT = $(TOOLS_DIR)/clang_tidy.sh
 TIDY_BASE ?= origin/main
+CLANG_TIDY_BIN := $(TOOLS_DIR)/clang-tidy/bin/clang-tidy
+CLANG_TIDY ?= $(CLANG_TIDY_BIN)
+
+clang-tidy-install:
+	@$(if $(filter $(CLANG_TIDY_BIN),$(CLANG_TIDY)),bash $(TOOLS_DIR)/install_clang_tidy.sh)
 
 # Check every source file under src/.
-tidy: $(COMPILE_DB) git_scraper
-	@JOBS="$(JOBS)" "$(TIDY_SCRIPT)" $(SRC_SRC)
+tidy: $(COMPILE_DB) git_scraper clang-tidy-install
+	@JOBS="$(JOBS)" CLANG_TIDY="$(CLANG_TIDY)" "$(TIDY_SCRIPT)" $(SRC_SRC)
 
 # Check only the files under src/ that changed since this branch left
 # TIDY_BASE, plus uncommitted changes.
-tidy-diff: $(COMPILE_DB) git_scraper
-	@JOBS="$(JOBS)" TIDY_ONLY_LISTED=1 "$(TIDY_SCRIPT)" $$(git diff --name-only --diff-filter=d \
+tidy-diff: $(COMPILE_DB) git_scraper clang-tidy-install
+	@JOBS="$(JOBS)" CLANG_TIDY="$(CLANG_TIDY)" TIDY_ONLY_LISTED=1 "$(TIDY_SCRIPT)" $$(git diff --name-only --diff-filter=d \
 		$$(git merge-base $(TIDY_BASE) HEAD))

@@ -7,7 +7,8 @@
 # the run, unless TIDY_STRICT=1.
 #
 # Environment:
-#   CLANG_TIDY   clang-tidy binary (default: clang-tidy-18, else clang-tidy)
+#   CLANG_TIDY   clang-tidy binary (default: tools/clang-tidy/bin/clang-tidy,
+#                which tools/install_clang_tidy.sh installs)
 #   JOBS         parallel jobs (default: core count)
 #   TIDY_FORMAT  set to "github" to also print GitHub Actions annotations
 #   TIDY_ONLY_LISTED  set to 1 to report only findings in the files passed in,
@@ -15,16 +16,10 @@
 
 set -uo pipefail
 
-if [[ -z "${CLANG_TIDY:-}" ]]; then
-    if command -v clang-tidy-18 >/dev/null 2>&1; then
-        CLANG_TIDY=clang-tidy-18
-    else
-        CLANG_TIDY=clang-tidy
-    fi
-fi
+CLANG_TIDY="${CLANG_TIDY:-tools/clang-tidy/bin/clang-tidy}"
 
 if ! command -v "$CLANG_TIDY" >/dev/null 2>&1; then
-    echo "clang-tidy not found. Install clang-tidy 18 (see README) or set CLANG_TIDY." >&2
+    echo "clang-tidy not found at $CLANG_TIDY. Run tools/install_clang_tidy.sh or set CLANG_TIDY." >&2
     exit 1
 fi
 

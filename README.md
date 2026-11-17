@@ -53,16 +53,7 @@ make test
 
 `make tidy` runs clang-tidy on all of `src/`, and `make tidy-diff` runs it only on the files your branch changed compared to `origin/main`. The checks are in `.clang-tidy`, which clangd also reads. Both targets only print warnings and never fail. CI runs `make tidy-diff` on every pull request and shows the findings on the PR.
 
-Install clang-tidy 18, the version CI uses:
-
-```bash
-# Ubuntu / Debian
-sudo apt install clang-tidy-18
-# macOS (then run with CLANG_TIDY=$(brew --prefix llvm@18)/bin/clang-tidy)
-brew install llvm@18
-```
-
-The targets use `clang-tidy-18` if it is on your PATH, otherwise `clang-tidy`. Set `CLANG_TIDY=/path/to/clang-tidy` to use another one.
+The first run downloads the clang-tidy version pinned in `tools/install_clang_tidy.sh` into `tools/clang-tidy` (Linux x86_64 and macOS), so laptops and CI use the same one. `make install` also installs it. To use a different clang-tidy, pass `CLANG_TIDY=/path/to/clang-tidy`.
 
 
 ## Contributing

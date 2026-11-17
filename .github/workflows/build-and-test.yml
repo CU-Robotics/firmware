@@ -47,9 +47,6 @@ jobs:
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-24.04
     continue-on-error: true
-    env:
-      # Pinned version. Use the same one locally (see "Linting" in README.md).
-      CLANG_TIDY: clang-tidy-18
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -67,10 +64,13 @@ jobs:
         if: steps.toolchain-cache.outputs.cache-hit != 'true'
         run: bash tools/install_compiler.sh
 
-      - name: Install clang-tidy
-        run: |
-          sudo apt-get update -qq
-          sudo apt-get install -y -qq clang-tidy-18
+      # make tidy-diff installs the clang-tidy version pinned in
+      # tools/install_clang_tidy.sh into tools/clang-tidy, same as on a laptop.
+      - name: Cache clang-tidy
+        uses: actions/cache@v4
+        with:
+          path: tools/clang-tidy
+          key: clang-tidy-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('tools/install_clang_tidy.sh') }}
 
       - name: Run clang-tidy on changed files
         run: make tidy-diff TIDY_BASE=origin/${{ github.base_ref }} TIDY_FORMAT=github
