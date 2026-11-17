@@ -25,7 +25,7 @@ virtual void request_read() {}
 
 /// @brief Bind local state map with estimated state map
 /// @param map is the global estimated state map	
-virtual void provide_isr_map(std::unique_ptr<RobotStateArray> *map) {}
+virtual void provide_isr_map([[maybe_unused]] std::unique_ptr<RobotStateArray> *map) {}
 
 /// @brief Send the current sensor data to the comms layer.
 virtual void send_to_comms() const = 0;

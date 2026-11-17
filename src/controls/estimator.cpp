@@ -386,7 +386,7 @@ void GimbalAndChassisEstimator::step_states(RobotStateArray& updated_state_array
     previous_pos[1] = pos_estimate[1];
 }
 
-FlywheelEstimator::FlywheelEstimator(const Cfg::Estimator& estimator_config, SensorManager& sensor_manager, CANManager& can, std::vector<Cfg::StateName> available_states) : 
+FlywheelEstimator::FlywheelEstimator(const Cfg::Estimator& estimator_config, SensorManager&, CANManager& can, std::vector<Cfg::StateName> available_states) : 
 ball_exit_velocity(get_state_name_by_generic_use(Cfg::GenericEstimatorStateUse::ShooterBallVelocity, estimator_config, available_states)) {
 
     flywheel_motor_left = can.get_motor_by_name(estimator_config.get_motor_name_by_generic_use(Cfg::GenericEstimatorMotorUse::FlywheelLeft));
@@ -398,7 +398,7 @@ ball_exit_velocity(get_state_name_by_generic_use(Cfg::GenericEstimatorStateUse::
     ref_estimate_weight = 1 - motor_estimate_weight;
 }
 
-void FlywheelEstimator::step_states(RobotStateArray& updated_state_array, const RobotStateArray& previous_state_array, int override) {
+void FlywheelEstimator::step_states(RobotStateArray& updated_state_array, const RobotStateArray&, int) {
     float angular_velocity_l = -flywheel_motor_left->get_state().speed; //motor speed is in rad/s and negative because of orientation
     float angular_velocity_r = flywheel_motor_right->get_state().speed; //motor speed is in rad/s
     float angular_velocity_avg = (angular_velocity_l + angular_velocity_r) / 2;
@@ -415,7 +415,7 @@ void FlywheelEstimator::validate(const RobotStateArray& updated_state_array) {
     check_state_limits("FlywheelEstimator", "Flywheel Velocity", updated_state_array[ball_exit_velocity], flywheel_monitor);
 }
 
-FeederEstimator::FeederEstimator(const Cfg::Estimator& estimator_config, SensorManager& sensor_manager, CANManager& can, std::vector<Cfg::StateName> available_states) :
+FeederEstimator::FeederEstimator(const Cfg::Estimator& estimator_config, SensorManager& sensor_manager, CANManager&, std::vector<Cfg::StateName> available_states) :
     feeder_ball_state(get_state_name_by_generic_use(Cfg::GenericEstimatorStateUse::FeederBallPosition, estimator_config, available_states)),
     feeder_encoder(sensor_manager.get_source_by_name<EncoderSource>(estimator_config.get_sensor_name_by_generic_use(Cfg::GenericSensorUse::FeederBuffEncoder))) {
     feeder_offset = estimator_config.sensor_info.feeder_encoder_offset;
@@ -423,7 +423,7 @@ FeederEstimator::FeederEstimator(const Cfg::Estimator& estimator_config, SensorM
     feeder_ratio = estimator_config.sensor_info.feeder_ratio;
 }
 
-void FeederEstimator::step_states(RobotStateArray& updated_state_array, const RobotStateArray& previous_state_array, int override) {
+void FeederEstimator::step_states(RobotStateArray& updated_state_array, const RobotStateArray&, int) {
     dt = time.delta();
     float feeder_angle = feeder_encoder->get_angle();
     float diff;
@@ -474,7 +474,7 @@ LowerFeederEstimator::LowerFeederEstimator(const Cfg::Estimator& estimator_confi
     far_feeder_motor = can.get_motor_by_name(estimator_config.get_motor_name_by_generic_use(Cfg::GenericEstimatorMotorUse::FeederFar));
 }
 
-void LowerFeederEstimator::step_states(RobotStateArray& updated_state_array, const RobotStateArray& previous_state_array, int override) {
+void LowerFeederEstimator::step_states(RobotStateArray& updated_state_array, const RobotStateArray&, int) {
     dt = time.delta();
     float feeder_angle = feeder_encoder->get_angle();
     float lower_feeder_angle = lower_feeder_encoder->get_angle();

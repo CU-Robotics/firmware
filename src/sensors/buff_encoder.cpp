@@ -33,7 +33,7 @@ void BuffEncoder::isr_start_transfer(EventResponderRef spi_event) {
         SystemLog.error(Subsystem::SENSORS,"Buff Encoder SPI transfer Failed");
         }
 }
-void BuffEncoder::isr_stop_transfer(EventResponderRef spi_event) {
+void BuffEncoder::isr_stop_transfer(EventResponderRef) {
 	digitalWrite(config_data.spi_cs, HIGH);
     SPI.endTransaction();
     arm_dcache_delete(rx_buffer, 32);

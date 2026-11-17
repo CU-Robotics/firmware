@@ -81,7 +81,7 @@ public:
     /// Managers call this so controller-specific checks live outside the control loop itself.
     /// @param reference_array current target robot state array
     /// @param estimate_array current estimate robot state array
-    virtual void validate(const RobotStateArray& reference_array, const RobotStateArray& estimate_array) { }
+    virtual void validate([[maybe_unused]] const RobotStateArray& reference_array, [[maybe_unused]] const RobotStateArray& estimate_array) { }
 
     /// @brief Resets integrators/timers
     virtual void reset() { timer.start(); }

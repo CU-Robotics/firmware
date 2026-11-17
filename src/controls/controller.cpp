@@ -136,7 +136,7 @@ void Controller::checkControllerError(const char* controller_name, const char* s
     }
 }
 
-void Controller::handleControllerError(const char* controller_name, const char* state_name, const State& reference_state, const State& estimate_state, float error) {
+void Controller::handleControllerError(const char* controller_name, const char* state_name, const State& reference_state, const State&, float error) {
     const Cfg::State& config = reference_state.config();
     safety::safety_procedure(
         "%s: %s controller error exceeded threshold. error=%f threshold=%f",
@@ -147,14 +147,14 @@ void Controller::handleControllerError(const char* controller_name, const char* 
     );
 }
 
-void XDriveController::validate(const RobotStateArray& reference_array, const RobotStateArray& estimate_array) {
+void XDriveController::validate(const RobotStateArray&, const RobotStateArray&) {
     // Our estimates of the chassis states are not accurate enough to run checks against their references.
     // checkControllerError("XDriveController", "Chassis X", reference_array[chassis_x_state], estimate_array[chassis_x_state], chassis_x_error_monitor);
     // checkControllerError("XDriveController", "Chassis Y", reference_array[chassis_y_state], estimate_array[chassis_y_state], chassis_y_error_monitor);
     // checkControllerError("XDriveController", "Chassis Heading", reference_array[chassis_heading_state], estimate_array[chassis_heading_state], chassis_heading_error_monitor);
 }
 
-void XDriveController::step(RobotStateArray& reference_array, RobotStateArray& estimate_array, RobotStateArray& target_array) {
+void XDriveController::step(RobotStateArray& reference_array, RobotStateArray& estimate_array, RobotStateArray&) {
     float dt = timer.delta();
 
     Cfg::StateName drive_states[3]  = { chassis_x_state, chassis_y_state, chassis_heading_state };
@@ -310,7 +310,7 @@ void YawController::validate(const RobotStateArray& reference_array, const Robot
     checkControllerError("YawController", "Gimbal Yaw", reference_array[yaw_angle_state], estimate_array[yaw_angle_state], yaw_error_monitor);
 }
 
-void YawController::step(RobotStateArray& reference_array, RobotStateArray& estimate_array, RobotStateArray& target_array) {
+void YawController::step(RobotStateArray& reference_array, RobotStateArray& estimate_array, RobotStateArray&) {
     float dt = timer.delta();
     float output = 0.0;
 
@@ -353,7 +353,7 @@ void PitchController::validate(const RobotStateArray& reference_array, const Rob
     checkControllerError("PitchController", "Gimbal Pitch", reference_array[pitch_angle_state], estimate_array[pitch_angle_state], pitch_error_monitor);
 }
 
-void PitchController::step(RobotStateArray& reference_array, RobotStateArray& estimate_array, RobotStateArray& target_array) {
+void PitchController::step(RobotStateArray& reference_array, RobotStateArray& estimate_array, RobotStateArray&) {
     float dt = timer.delta();
     float output = 0.0;
 
@@ -389,11 +389,11 @@ void PitchController::handleControllerError(const char* controller_name, const c
     Controller::handleControllerError(controller_name, state_name, reference_state, estimate_state, error);
 }
 
-void FlywheelController::validate(const RobotStateArray& reference_array, const RobotStateArray& estimate_array) {
+void FlywheelController::validate(const RobotStateArray&, const RobotStateArray&) {
     // checkControllerError("FlywheelController", "Flywheels", reference_array[flywheel_velocity_state], estimate_array[flywheel_velocity_state], flywheel_error_monitor);
 }
 
-void FlywheelController::step(RobotStateArray& reference_array, RobotStateArray& estimate_array, RobotStateArray& target_array) {
+void FlywheelController::step(RobotStateArray& reference_array, RobotStateArray& estimate_array, RobotStateArray&) {
     float dt = timer.delta();
 
     pid_high.kp = high_level_velocity_controller.gains.p;
@@ -429,11 +429,11 @@ void FlywheelController::handleControllerError(const char* controller_name, cons
     Controller::handleControllerError(controller_name, state_name, reference_state, estimate_state, error);
 }
 
-void FeederController::validate(const RobotStateArray& reference_array, const RobotStateArray& estimate_array) {
+void FeederController::validate(const RobotStateArray&, const RobotStateArray&) {
     // checkControllerError("FeederController", "Feeder", reference_array[feeder_position_state], estimate_array[feeder_position_state], feeder_error_monitor);
 }
 
-void FeederController::step(RobotStateArray& reference_array, RobotStateArray& estimate_array, RobotStateArray& target_array) {
+void FeederController::step(RobotStateArray& reference_array, RobotStateArray& estimate_array, RobotStateArray&) {
     float dt = timer.delta();
     pidp.kp = full_state_position_controller.gains.p;
     pidp.ki = full_state_position_controller.gains.i;
@@ -458,7 +458,7 @@ void FeederController::handleControllerError(const char* controller_name, const 
     Controller::handleControllerError(controller_name, state_name, reference_state, estimate_state, error);
 }
 
-void LowerFeederController::validate(const RobotStateArray& reference_array, const RobotStateArray& estimate_array) {
+void LowerFeederController::validate(const RobotStateArray&, const RobotStateArray&) {
     // checkControllerError("LowerFeederController", "Lower Feeder", reference_array[lower_feeder_position_state], estimate_array[lower_feeder_position_state], lower_feeder_error_monitor);
 }
 

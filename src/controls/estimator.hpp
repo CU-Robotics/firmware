@@ -29,7 +29,7 @@ public:
     /// @brief Validate estimator outputs after stepping.
     /// Managers call this so limit checks live outside the estimator step logic.
     /// @param updated_state_array the current estimate array produced by the estimators
-    virtual void validate(const RobotStateArray& updated_state_array) { }
+    virtual void validate([[maybe_unused]] const RobotStateArray& updated_state_array) { }
     /// @brief Helper function to get a state name by its generic use. Will trigger safety procedure if the state is not available.
     /// @param use the generic use of the state to get
     /// @param estimator_config config data for this estimator to get the requested state name from

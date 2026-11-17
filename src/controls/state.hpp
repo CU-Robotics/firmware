@@ -19,6 +19,10 @@ class State {
         /// @param _config The configuration for the state; this includes the name of the state, the limits of the state, and whether the state wraps at those limits.
         State(const Cfg::State& _config);
 
+        /// @brief Copy a state, including its configuration.
+        /// @param other The state to copy.
+        State(const State& other) = default;
+
         /// @brief Get the configuration for this state.
         /// @return A const reference to the configuration for this state.
         const Cfg::State& config() const;

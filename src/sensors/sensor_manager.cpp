@@ -146,7 +146,7 @@ void SensorManager::encoder_isr() {
     }
 	
 }
-void SensorManager::encoder_isr_wrapper(EventResponderRef spi_event) {
+void SensorManager::encoder_isr_wrapper(EventResponderRef) {
     if (instance != nullptr) {
         // Route the execution back into the specific object instance
         instance->encoder_isr();

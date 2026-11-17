@@ -11,7 +11,7 @@ void Profiler::clear() {
         sec = profiler_section_t();
 #endif
 }
-void Profiler::begin(const char *name) {
+void Profiler::begin([[maybe_unused]] const char *name) {
 #ifdef PROFILER
     for (uint32_t i = 0; i < PROF_MAX_SECTIONS; i++) {
         if (strcmp(sections[i].name, name) == 0 || (sections[i].count == 0 && sections[i].name[0] == '\0')) {
@@ -25,7 +25,7 @@ void Profiler::begin(const char *name) {
 #endif
 }
 
-void Profiler::end(const char *name) {
+void Profiler::end([[maybe_unused]] const char *name) {
 #ifdef PROFILER
     for (uint32_t i = 0; i < PROF_MAX_SECTIONS; i++) {
         if (strcmp(sections[i].name, name) == 0) {
