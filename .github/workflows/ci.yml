@@ -1,0 +1,54 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [ main ]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # Native Unity test suites using the stubs in test/host/.
+  host-tests:
+    name: Host tests
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run host tests
+        run: make test
+
+  # Cross-compile the Teensy 4.1 firmware with the pinned ARM toolchain.
+  teensy-build:
+    name: Teensy build
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Cache ARM toolchain
+        id: toolchain-cache
+        uses: actions/cache@v4
+        with:
+          path: tools/compiler
+          key: arm-toolchain-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('tools/install_compiler.sh') }}
+
+      - name: Install ARM toolchain
+        if: steps.toolchain-cache.outputs.cache-hit != 'true'
+        run: |
+          bash tools/install_compiler.sh
+          # install_compiler.sh exits 0 even when the download fails, so check the result.
+          test -x tools/compiler/arm-gnu-toolchain/bin/arm-none-eabi-g++
+
+      - name: Build firmware
+        run: make build
+
+      - name: Upload firmware
+        uses: actions/upload-artifact@v4
+        with:
+          name: firmware-hex
+          path: build/release/firmware.hex
+          if-no-files-found: error
