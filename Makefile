@@ -40,8 +40,9 @@ TEST_BINS := $(addprefix $(TEST_BUILD_DIR)/,$(TEST_FILTER))
 HOST_CXX ?= c++
 HOST_CC ?= cc
 HOST_TEST_CPPFLAGS := -I$(TEST_DIR)/host -Isrc -Ilibraries/unity -DUNIT_TEST
-HOST_TEST_CXXFLAGS := -std=gnu++23 -O0 -g3 -Wall -Werror
-HOST_TEST_CFLAGS := -std=c11 -O0 -g3 -Wall -Werror
+HOST_SANITIZE_FLAGS := -fsanitize=address,undefined -fno-omit-frame-pointer -fno-sanitize-recover=all
+HOST_TEST_CXXFLAGS := -std=gnu++23 -O0 -g3 -Wall -Werror $(HOST_SANITIZE_FLAGS)
+HOST_TEST_CFLAGS := -std=c11 -O0 -g3 -Wall -Werror $(HOST_SANITIZE_FLAGS)
 HOST_TEST_UNITY_OBJ := $(TEST_BUILD_DIR)/unity.o
 HOST_TEST_COMMON_SRC := $(TEST_DIR)/host/test_runner.cpp $(HOST_TEST_UNITY_OBJ)
 HOST_TEST_SRC_test_utils := $(TEST_DIR)/test_utils/test_main.cpp src/utils/wrapping.cpp src/utils/vector_math.cpp
@@ -97,7 +98,7 @@ SECTION_FLAGS := -ffunction-sections -fdata-sections
 # addr2line crash-report workflow in teensy4/CrashReport.cpp.
 COMMON_COMPILE_FLAGS := $(ARCH_FLAGS) $(SECTION_FLAGS) -O2 -g2 --specs=nano.specs
 CXX_LANGUAGE_FLAGS := -std=gnu++23 -felide-constructors -fno-exceptions -fpermissive
-CXX_WARNING_FLAGS := -Wno-error=narrowing -Wno-trigraphs -Wno-comment -Wall -Werror -Wno-volatile
+CXX_WARNING_FLAGS := -Wno-trigraphs -Wno-comment -Wall -Werror -Wno-volatile
 
 PROJECT_CPPFLAGS := $(INCLUDE_FLAGS) $(PROJECT_DEFINES)
 PROJECT_CFLAGS := $(COMMON_COMPILE_FLAGS)
