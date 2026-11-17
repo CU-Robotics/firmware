@@ -1,3 +1,4 @@
+// temporary: exercise clang-tidy in CI, reverted in the next commit
 #ifndef TIMING_H
 #define TIMING_H
 
