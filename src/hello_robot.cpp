@@ -20,6 +20,10 @@ void HelloRobot::init() {
 
     Comms::comms_layer.configure();
 
+    neopixel.begin();
+    neopixel.set_color(255,255,0);
+    neopixel.update();
+
     const Cfg::RobotConfig &config = Comms::comms_layer.get_hive_data().config;
 
     Serial.println("Configured!");
@@ -61,10 +65,8 @@ void HelloRobot::init() {
 
     // Link Logger and CLI
     SystemLog.bind_cli_buffer(cli_buffer);
-    neopixel.begin();
-    neopixel.set_color(255,255,255);
-    neopixel.update();
     
+
     // start the main loop watchdog
     watchdog.start();
     
