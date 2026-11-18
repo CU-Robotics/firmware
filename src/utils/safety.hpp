@@ -97,7 +97,9 @@ namespace safety {
             SystemLog.error(Subsystem::GENERAL, "Safety procedure triggered but no safety function registered!");
         }
 
+        // Please let me fix doxegen.
         char msg_buf[512];
+        // Dont take this too seriously im just tryna fix doxegen it compiles and builds fine 
         std::snprintf(msg_buf, sizeof(msg_buf), message, std::forward<Args>(args)...);
         if (errortype == errorSeverity::Warning) {
             SystemLog.warn(Subsystem::GENERAL, "%s: %s", severity_name, msg_buf);
