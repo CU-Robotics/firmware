@@ -86,14 +86,12 @@ void ICM20649::calibrate_icm_sensor_live_init() {
 
 bool ICM20649::calibrate_icm_sensor_live() {
     if (config.communication_protocol == Cfg::CommunicationProtocol::SPI) {
-        if (!transfer_in_progress) {
-            request_read_internal(true);
-        }
-        if (!spi_event) {
-            SystemLog.info(Subsystem::SENSORS, "Waiting for spi_event\n");
-            return true;
-        }
+        if (!transfer_in_progress) request_read_internal(true);
+
+        if (!spi_event) return true;
+
         read_internal(true);
+
         if (icm_calib_iterations % 50 == 0)
             SystemLog.info(Subsystem::SENSORS, "Read ICM %u out of %u", icm_calib_iterations, config.num_calibration_reads);
     } else {
