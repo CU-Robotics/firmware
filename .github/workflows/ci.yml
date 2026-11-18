@@ -13,7 +13,7 @@ jobs:
   # Native Unity test suites using the stubs in test/host/.
   host-tests:
     name: Host tests
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-22.04
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -24,7 +24,7 @@ jobs:
   # Cross-compile the Teensy 4.1 firmware with the pinned ARM toolchain.
   teensy-build:
     name: Teensy build
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-22.04
     steps:
       - name: Checkout
         uses: actions/checkout@v4
