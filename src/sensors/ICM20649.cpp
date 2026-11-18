@@ -78,6 +78,7 @@ void ICM20649::calibrate_icm_sensor_yield() {
 
 void ICM20649::calibrate_icm_sensor_live_init() {
     SystemLog.info(Subsystem::SENSORS, "ICM CALIBRATING...");
+    recalibrating = true;
     icm_calib_iterations = 0;
     gyro_offset_x = 0, gyro_offset_y = 0, gyro_offset_z = 0;
     // gyro_offset_x2 = 0, gyro_offset_y2 = 0, gyro_offset_z2 = 0;
@@ -133,6 +134,8 @@ void ICM20649::request_read() {
 }
 
 void ICM20649::request_read_internal(bool for_recalibration) {
+    if (recalibrating && !for_recalibration) return;
+
     if (config.communication_protocol != Cfg::CommunicationProtocol::SPI) return;
     if (transfer_in_progress)
         return;
@@ -151,6 +154,8 @@ void ICM20649::read() {
 }
 
 void ICM20649::read_internal(bool for_recalibration) {
+    if (recalibrating && !for_recalibration) return;
+
 	if (config.communication_protocol == Cfg::CommunicationProtocol::I2C){
 		// get the event data from the sensor class
 		sensor.getEvent(&accel, &gyro, &temp);
