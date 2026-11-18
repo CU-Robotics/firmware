@@ -730,7 +730,8 @@ bool ET16S::has_calibrated_icm = true;
 
 bool ET16S::should_recalib_icm() {
     if (get_switch_e() != SwitchPos::BACKWARD) ET16S::has_calibrated_icm = false;
-    return !ET16S::has_calibrated_icm && get_switch_e() == SwitchPos::BACKWARD; 
+    ET16S::has_calibrated_icm = !ET16S::has_calibrated_icm && get_switch_e() == SwitchPos::BACKWARD; 
+    return ET16S::has_calibrated_icm;
 }
 
 
