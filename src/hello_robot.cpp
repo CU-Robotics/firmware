@@ -62,11 +62,9 @@ void HelloRobot::init() {
     // Link Logger and CLI
     SystemLog.bind_cli_buffer(cli_buffer);
     neopixel.begin();
-
-    while(1){
-        neopixel.set_color(255,255,255);
-        neopixel.update();
-    }
+    neopixel.set_color(255,255,255);
+    neopixel.update();
+    
     // start the main loop watchdog
     watchdog.start();
     
