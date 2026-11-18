@@ -46,7 +46,6 @@ void HelloRobot::init() {
     sensor_manager.request_read();
     
     // Initialize NeoPixel
-    neopixel.begin();
     
     estimator_manager.init(config.estimators, sensor_manager, can);
 
@@ -62,9 +61,14 @@ void HelloRobot::init() {
 
     // Link Logger and CLI
     SystemLog.bind_cli_buffer(cli_buffer);
+    neopixel.begin();
 
+    while(1){
+        neopixel.set_color(255,255,255);
+    }
     // start the main loop watchdog
     watchdog.start();
+    
 };
 
 void HelloRobot::run() {
