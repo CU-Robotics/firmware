@@ -86,7 +86,7 @@ void ICM20649::calibrate_icm_sensor_live_init() {
 bool ICM20649::calibrate_icm_sensor_live() {
     if (config.communication_protocol == Cfg::CommunicationProtocol::SPI) {
         if (!transfer_in_progress) {
-            request_read();
+            request_read_internal(true);
             SystemLog.info(Subsystem::SENSORS, "Requested read\n");
             delay(1);
         }
@@ -95,10 +95,10 @@ bool ICM20649::calibrate_icm_sensor_live() {
             delay(1);
             return true;
         }
-        read();
+        read_internal(true);
         SystemLog.info(Subsystem::SENSORS, "Read ICM %u out of %u", icm_calib_iterations, config.num_calibration_reads);
     } else {
-        read(); // I2C fallback
+        read_internal(true); // I2C fallback
         SystemLog.info(Subsystem::SENSORS, "Read from ICM I2C protocal, %u out of %u", icm_calib_iterations, config.num_calibration_reads);
     }
     gyro_offset_x += get_gyro_X();
@@ -129,6 +129,10 @@ bool ICM20649::calibrate_icm_sensor_live() {
 }
 
 void ICM20649::request_read() {
+    request_read_internal(false);
+}
+
+void ICM20649::request_read_internal(bool for_recalibration) {
     if (config.communication_protocol != Cfg::CommunicationProtocol::SPI) return;
     if (transfer_in_progress)
         return;
@@ -143,6 +147,10 @@ void ICM20649::request_read() {
 }
 
 void ICM20649::read() {
+    read_internal(false);
+}
+
+void ICM20649::read_internal(bool for_recalibration) {
 	if (config.communication_protocol == Cfg::CommunicationProtocol::I2C){
 		// get the event data from the sensor class
 		sensor.getEvent(&accel, &gyro, &temp);

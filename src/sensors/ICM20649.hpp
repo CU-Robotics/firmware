@@ -64,6 +64,16 @@ private:
     /// @brief calculate the approximate gyroscope rates in Hz from the divisor.
     /// @return gyroscope data rate in Hz 
     float get_gyro_data_rate();
+    
+    /// @brief implements the request_read function, but prevents outside calls to
+    /// request read from reading if recalibration is active.
+    /// @param whether this is being called for recalibration.
+    void request_read_internal(bool for_recalibration);
+    
+    /// @brief implements the read functon, but prevents outside calls to read 
+    /// from reading if recalibration is active
+    /// @param whether this is being called for recalibration.
+    void read_internal(bool for_recalibration);
 
     /// @brief approximate acceleration data rate (Hz) calculated from divisor. 
     float accel_rate;
@@ -95,6 +105,8 @@ private:
 	/// @brief multiplier to adjust acceleration to rads/s
     float gyro_multiplier = 1.0f;
     
+    /// @brief Is the ICM actively recalibrating
+    bool recalibrating = false;
     /// @brief current iterations for live calibration
     uint32_t icm_calib_iterations = 0;
     /// @brief gryo_offset_x for live recalibration
