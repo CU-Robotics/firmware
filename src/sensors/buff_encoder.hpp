@@ -76,6 +76,10 @@ public:
     /// @return Read angle (radians)
     inline float get_angle() const override { return m_angle; }
 
+    /// @brief Whether a reading has passed the CRC and status checks since boot
+    /// @return true once m_angle holds real encoder data
+    inline bool has_valid_reading() const override { return m_has_valid_reading; }
+
     /// @brief Get the configured name of this encoder
     /// @return The name of this encoder
     inline Cfg::SensorName get_name() const { return config_data.encoder_name; }
@@ -108,6 +112,8 @@ private:
 
     /// @brief Read angle from the encoder
     float m_angle = 0.f;
+    /// @brief true once a reading has passed the CRC and status checks
+    bool m_has_valid_reading = false;
 
     /// @brief Configuration data for the encoder
     const Cfg::BuffEncoder& config_data;

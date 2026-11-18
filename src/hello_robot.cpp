@@ -39,8 +39,11 @@ void HelloRobot::init() {
 
     // initialize sensors
 	sensor_manager.init(config, &estimated_state_array_interrupt_safe);
-	// Begin cycle of reading sensor data
-	sensor_manager.request_read();
+	// Begin cycle of reading sensor data. Wait for every encoder and the IMU to
+	// produce a valid reading so the estimators never start from default zeros.
+	if (!sensor_manager.wait_for_first_read(500)) {
+		safety::safety_procedure("SensorManager: sensors did not produce a valid reading within 500 ms");
+	}
 
     estimator_manager.init(config.estimators, sensor_manager, can);
 

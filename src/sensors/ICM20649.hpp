@@ -25,6 +25,10 @@ public:
 	void request_read() override;
     /// @copydoc AdafruitIMUSensor::read()    
     void read() override;
+
+    /// @brief Whether a reading has been parsed since boot
+    /// @return true once the gyro values hold real sensor data
+    bool has_valid_reading() const override { return has_reading; }
     /// @brief sends the current ICM sensor data to comms
     void send_to_comms() const override;
 
@@ -72,6 +76,9 @@ private:
     
     /// @brief Flag to track if there is a pending data transfer
     bool transfer_in_progress = false;
+
+    /// @brief true once a reading has been parsed
+    bool has_reading = false;
 	
 	/// @brief multiplier to adjust acceleration to m/s
     float accel_multiplier = 1.0f;

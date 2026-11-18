@@ -120,6 +120,36 @@ void SensorManager::read() {
     }
 }
 
+bool SensorManager::wait_for_first_read(uint32_t timeout_ms) {
+    auto all_valid = [this]() {
+        for (const auto& encoder : encoders) {
+            if (!encoder->has_valid_reading()) return false;
+        }
+        return icm_imu == nullptr || icm_imu->has_valid_reading();
+    };
+
+    uint32_t start = millis();
+    while (true) {
+        request_read();
+        // let the encoder DMA chain and the ICM transfer finish before parsing
+        uint32_t chain_start = micros();
+        while (encoder_isr_in_progress && micros() - chain_start < 5000) {
+            yield();
+        }
+        delayMicroseconds(200);
+        read();
+
+        if (all_valid()) {
+            request_read();
+            return true;
+        }
+        if (millis() - start >= timeout_ms) {
+            return false;
+        }
+        delay(1);
+    }
+}
+
 void SensorManager::send_to_comms() {
     for(auto& [sensor_name, sensor] : sensors) {
         sensor->send_to_comms();
