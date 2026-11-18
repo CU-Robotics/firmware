@@ -100,9 +100,9 @@ namespace safety {
         char msg_buf[512];
         std::snprintf(msg_buf, sizeof(msg_buf), message, std::forward<Args>(args)...);
         if (errortype == errorSeverity::Warning) {
-            SystemLog.warn(Subsystem::GENERAL, msg_buf);
+            SystemLog.warn(Subsystem::GENERAL, "%s: %s", severity_name, msg_buf);
         } else {
-            SystemLog.error(Subsystem::GENERAL, msg_buf);
+            SystemLog.error(Subsystem::GENERAL, "%s: %s", severity_name, msg_buf);
         }
 
         if (should_halt) {
