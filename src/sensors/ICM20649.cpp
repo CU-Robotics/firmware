@@ -89,11 +89,9 @@ bool ICM20649::calibrate_icm_sensor_live() {
         if (!transfer_in_progress) {
             request_read_internal(true);
             SystemLog.info(Subsystem::SENSORS, "Requested read\n");
-            delay(1);
         }
         if (!spi_event) {
             SystemLog.info(Subsystem::SENSORS, "Waiting for spi_event\n");
-            delay(1);
             return true;
         }
         read_internal(true);
@@ -124,7 +122,6 @@ bool ICM20649::calibrate_icm_sensor_live() {
         SystemLog.info(Subsystem::SENSORS, "ICM CALIBRATION COMPLETE! Offsets: X: %f, Y: %f, Z: %f\n", gyro_offset_x, gyro_offset_y, gyro_offset_z);
         return false;
     } else {
-        delay(1);
         return true;
     }
 }
