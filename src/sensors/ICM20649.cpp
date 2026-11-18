@@ -73,7 +73,7 @@ void ICM20649::calibrate_icm_sensor_yield() {
 
     set_offsets(gyro_offset_x, gyro_offset_y, gyro_offset_z);
 
-    SystemLog.info(Subsystem::SENSORS, "ICM CALIBRATION COMPLETE! Offsets: X: %f, Y: %f, Z: %f\n", gyro_offset_x, gyro_offset_y, gyro_offset_z);
+    Serial.printf("ICM CALIBRATION COMPLETE! Offsets: X: %f, Y: %f, Z: %f\n", gyro_offset_x, gyro_offset_y, gyro_offset_z);
 }
 
 void ICM20649::calibrate_icm_sensor_live_init() {
@@ -88,14 +88,14 @@ bool ICM20649::calibrate_icm_sensor_live() {
     if (config.communication_protocol == Cfg::CommunicationProtocol::SPI) {
         if (!transfer_in_progress) {
             request_read_internal(true);
-            SystemLog.info(Subsystem::SENSORS, "Requested read\n");
         }
         if (!spi_event) {
             SystemLog.info(Subsystem::SENSORS, "Waiting for spi_event\n");
             return true;
         }
         read_internal(true);
-        SystemLog.info(Subsystem::SENSORS, "Read ICM %u out of %u", icm_calib_iterations, config.num_calibration_reads);
+        if (icm_calib_iterations % 50 == 0)
+            SystemLog.info(Subsystem::SENSORS, "Read ICM %u out of %u", icm_calib_iterations, config.num_calibration_reads);
     } else {
         read_internal(true); // I2C fallback
         SystemLog.info(Subsystem::SENSORS, "Read from ICM I2C protocal, %u out of %u", icm_calib_iterations, config.num_calibration_reads);
@@ -119,7 +119,7 @@ bool ICM20649::calibrate_icm_sensor_live() {
         
         set_offsets(gyro_offset_x, gyro_offset_y, gyro_offset_z);
 
-        SystemLog.info(Subsystem::SENSORS, "ICM CALIBRATION COMPLETE! Offsets: X: %f, Y: %f, Z: %f\n", gyro_offset_x, gyro_offset_y, gyro_offset_z);
+        Serial.printf("ICM CALIBRATION COMPLETE! Offsets: X: %f, Y: %f, Z: %f\n", gyro_offset_x, gyro_offset_y, gyro_offset_z);
         return false;
     } else {
         return true;
