@@ -1,8 +1,9 @@
 #include "hello_robot.hpp"
-#include "sensors/NeoPixel.hpp"
+#include "utils/status_lights.hpp"
 #include <wiring.h>
 
-static NeoPixel neopixel{14, 8};
+/// @brief Status LED strip on pin 14. See StatusLights::Slot for what each segment shows.
+static StatusLights status_lights{14, 8};
 
 #ifdef PROFILER
 Profiler prof; 
@@ -18,11 +19,17 @@ void HelloRobot::init() {
     // Configure the robot from comms data, which is filled on Hive.
     Serial.println("Configuring...");
 
-    // Solid yellow while initializing, including while waiting for Hive to configure
-    neopixel.begin();
-    neopixel.set_solid(255, 255, 0);
+    using Slot = StatusLights::Slot;
+    status_lights.begin();
+    // Not armed until configured
+    status_lights.set_now(Slot::Safety, StatusLights::YELLOW);
 
-    Comms::comms_layer.configure();
+    // Hive slot: red while waiting for Hive, yellow while config sections arrive
+    Comms::comms_layer.configure([](Comms::CommsLayer::ConfigPhase phase) {
+        bool waiting = phase == Comms::CommsLayer::ConfigPhase::WaitingForHive;
+        status_lights.set_now(Slot::Hive, waiting ? StatusLights::RED : StatusLights::YELLOW);
+    });
+    status_lights.set_now(Slot::Hive, StatusLights::GREEN);
 
     const Cfg::RobotConfig &config = Comms::comms_layer.get_hive_data().config;
 
@@ -44,8 +51,15 @@ void HelloRobot::init() {
     ref.init();
     transmitter_manager.init(config.transmitter);
 
-    // initialize sensors
+    // initialize sensors. The ICM gyro calibrates inside init(), so show it as calibrating until that returns.
+    bool has_imu = !config.icm_imus.empty();
+    if (has_imu) {
+        status_lights.set_now(Slot::Imu, StatusLights::YELLOW);
+    }
 	sensor_manager.init(config, &estimated_state_array_interrupt_safe);
+    if (has_imu) {
+        status_lights.set_now(Slot::Imu, StatusLights::GREEN);
+    }
 	// Begin cycle of reading sensor data
 	sensor_manager.request_read();
 
@@ -276,22 +290,47 @@ bool HelloRobot::check_slow_loop(float &loop_dt) {
 
 void HelloRobot::update_status() {
     using Reason = SafetyState::Reason;
+    using Slot = StatusLights::Slot;
     uint8_t reasons = safety_state.active_reasons();
 
-    // One solid color per safety reason. If several are active, the first match wins.
+    // Safety slot: one color per safety reason. If several are active, the first match wins.
+    StatusLights::Color safety_color = StatusLights::GREEN;    // armed
     if (reasons & Reason::NOT_CONFIGURED) {
-        neopixel.set_solid(255, 255, 0);   // yellow
+        safety_color = StatusLights::YELLOW;
     } else if (reasons & Reason::GIMBAL_POWER_OFF) {
-        neopixel.set_solid(0, 0, 255);     // blue
+        safety_color = StatusLights::BLUE;
     } else if (reasons & Reason::GIMBAL_POWER_SETTLING) {
-        neopixel.set_solid(0, 255, 255);   // cyan
+        safety_color = StatusLights::CYAN;
     } else if (reasons & Reason::TRANSMITTER) {
-        neopixel.set_solid(255, 0, 0);     // red
+        safety_color = StatusLights::RED;
     } else if (reasons & Reason::SLOW_LOOP) {
-        neopixel.set_solid(255, 0, 255);   // magenta
-    } else {
-        neopixel.set_solid(0, 255, 0);     // green: armed
+        safety_color = StatusLights::MAGENTA;
     }
+    status_lights.set(Slot::Safety, safety_color);
+
+    // Hive slot: green while Hive packets keep arriving, red once they stop
+    bool hive_running = Comms::comms_layer.is_ethernet_connected();
+    status_lights.set(Slot::Hive, hive_running ? StatusLights::GREEN : StatusLights::RED);
+
+    // Localization slot: off when Hive is down or not running localization, red when lost, green when localized
+    StatusLights::Color localization_color = StatusLights::OFF;
+    if (hive_running) {
+        switch (Comms::comms_layer.get_hive_data().hive_status.localization_status) {
+        case LocalizationStatus::Localized:
+            localization_color = StatusLights::GREEN;
+            break;
+        case LocalizationStatus::Lost:
+            localization_color = StatusLights::RED;
+            break;
+        case LocalizationStatus::Unavailable:
+            break;
+        }
+    }
+    status_lights.set(Slot::Localization, localization_color);
+
+    // The IMU slot is set during init(), since calibration only happens there
+
+    status_lights.show();
 }
 
 void HelloRobot::hold_feeder_position() {

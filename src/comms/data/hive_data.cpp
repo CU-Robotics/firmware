@@ -128,6 +128,10 @@ void HiveData::set_data(CommsData* data) {
 	     memcpy(&latency_data, latency_data_, sizeof(TestLatencyData));
 	     break;
      }
+    case TypeLabel::HiveStatus: {
+        memcpy(&hive_status, static_cast<HiveStatus*>(data), sizeof(HiveStatus));
+        break;
+    }
     default:
         safety::safety_procedure("HiveData::set_data: Invalid type label given to place in mega struct: %u\n", static_cast<uint32_t>(data->type_label));
     }

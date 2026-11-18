@@ -10,6 +10,7 @@
 #include "config_data/robot_config.hpp"
 
 #include <array>
+#include <functional>
 
 namespace Comms {
 
@@ -31,8 +32,15 @@ public:
     /// @return Exit status, 0 for success, < 0 for error
     /// @note Should never return
     int run();
+    /// @brief Phases of configure(), reported through its callback
+    enum class ConfigPhase {
+        WaitingForHive,     ///< No config start packet from Hive yet
+        ReceivingConfig,    ///< Hive started sending config sections
+    };
+
     /// @brief Requests the configuration data from the Hive and waits until it is fully received before returning
-    void configure();
+    /// @param on_phase Optional callback, called once when each phase starts. Used to update the status lights.
+    void configure(const std::function<void(ConfigPhase)> &on_phase = nullptr);
 public:
     /// @brief Send a CommsData packet to the appropriate packet payload
     /// @param data The CommsData packet to send

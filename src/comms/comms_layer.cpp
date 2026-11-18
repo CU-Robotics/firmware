@@ -178,8 +178,9 @@ void CommsLayer::set_firmware_data(FirmwareData& data) {
     m_firmware_data = data;
 };
 
-void CommsLayer::configure() {
+void CommsLayer::configure(const std::function<void(ConfigPhase)> &on_phase) {
     int time = millis();
+    if (on_phase) on_phase(ConfigPhase::WaitingForHive);
     Sendable<ConfigurationStatusData> config_status_sendable;
     while (!m_hive_data.config.config_start.num_config_sections != 0) {
         SystemLog.info(Subsystem::COMMS,"Waiting for config start packet... time since start: %d ms\n", millis() - time);
@@ -189,6 +190,7 @@ void CommsLayer::configure() {
         config_loop_timer.delay_micros(5000);
     }
     SystemLog.info(Subsystem::COMMS,"Config start packet received, expecting %d config sections\n", m_hive_data.config.config_start.num_config_sections);
+    if (on_phase) on_phase(ConfigPhase::ReceivingConfig);
 
     while(!m_hive_data.config.is_configured()) {
         config_status_sendable.data.ready_for_config = 1;
