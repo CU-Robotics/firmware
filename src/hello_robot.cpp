@@ -65,6 +65,7 @@ void HelloRobot::init() {
 
     while(1){
         neopixel.set_color(255,255,255);
+        neopixel.update();
     }
     // start the main loop watchdog
     watchdog.start();
