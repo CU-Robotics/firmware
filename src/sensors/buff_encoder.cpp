@@ -60,6 +60,16 @@ void BuffEncoder::read() {
         }
     }
     
+    // An all-zero response (dead or unplugged encoder holding MISO low) passes the
+    // CRC check, because CRC-8 with a zero seed over zero bytes is zero. Reject it
+    // so a missing encoder can never look like a valid angle of 0. A real reading
+    // of exactly raw angle 0 with clean status is also dropped; the previous angle
+    // is kept and the next read (1 ms later) recovers.
+    if ((rx_buffer[2] | rx_buffer[3] | rx_buffer[4] | rx_buffer[5]) == 0) {
+        SystemLog.error(Subsystem::SENSORS,"Pin: %u, MT6835 all-zero response\n", config_data.spi_cs);
+        return;
+    }
+
     uint8_t status = rx_buffer[4] & 0x07;
     uint8_t crc_received = rx_buffer[5];
     uint8_t crc_computed  = mt6835_crc8(&rx_buffer[2], 3);
