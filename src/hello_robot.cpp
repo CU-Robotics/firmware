@@ -20,7 +20,6 @@ void HelloRobot::init() {
     
     neopixel.begin();
     neopixel.set_color(255,255,0);
-    neopixel.update();
 
     Comms::comms_layer.configure();
 
