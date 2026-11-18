@@ -57,8 +57,6 @@ TEENSY_SRC := $(shell find $(TEENSY_SRC_DIRS) -name '*.cpp' -or -name '*.c')
 LIBRARY_SRC := $(shell find $(LIBRARY_SRC_DIRS) -name '*.cpp' -or -name '*.c')
 SRC_SRC := $(shell find $(SRC_SRC_DIRS) -name '*.cpp' -or -name '*.c')
 
-LIBRARY_SRC := $(filter-out libraries/Adafruit_NeoPixel/%,$(LIBRARY_SRC))
-LIBRARY_SRC += libraries/Adafruit_NeoPixel/Adafruit_NeoPixel.cpp
 TEENSY_OBJS := $(TEENSY_SRC:%=$(BUILD_DIR)/%.o)
 LIBRARY_OBJS := $(LIBRARY_SRC:%=$(BUILD_DIR)/%.o)
 SRC_OBJS :=  $(SRC_SRC:%=$(BUILD_DIR)/%.o)
