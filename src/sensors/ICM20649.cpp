@@ -29,6 +29,8 @@ void ICM20649::init() {
     }
     }
 
+    sensor.enableAccelDLPF(true, ICM20X_ACCEL_FREQ_50_4_HZ);
+    sensor.setAccelRateDivisor(0);
     set_accel_range(config.accel_range);
     set_gyro_range(config.gyro_range);
 
@@ -37,7 +39,7 @@ void ICM20649::init() {
     for(int i = 1; i < 31; i++) {
         tx_buffer[i] = 0x00; // Dummy bytes to clock out the other 14 data bytes
     }
-	
+    
     Serial.println("ICM CALIBRATING...");
     float gyro_offset_x = 0, gyro_offset_y = 0, gyro_offset_z = 0;
     for (uint32_t i = 0; i < config.num_calibration_reads; i++) {
