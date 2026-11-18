@@ -1,0 +1,5 @@
+<map id="BuffEncoder" name="BuffEncoder">
+<area shape="rect" id="node1" title="Driver for the Buff&#45;Encoder." alt="" coords="45,80,137,107"/>
+<area shape="rect" id="node2" href="$classSensor.html" title="Abstract class representing a sensor. All sensors should inherit from this class." alt="" coords="5,5,68,32"/>
+<area shape="rect" id="node3" href="$classEncoderSource.html" title="Interface for any encoder that provides angular value." alt="" coords="92,5,203,32"/>
+</map>

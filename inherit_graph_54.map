@@ -1,0 +1,8 @@
+<map id="Graphical Class Hierarchy" name="Graphical Class Hierarchy">
+<area shape="rect" id="node1" href="$classMotor.html" title="An abstract class holding common information for individual CAN&#45;capable motors." alt="" coords="5,107,60,133"/>
+<area shape="rect" id="node2" href="$classC610.html" title="C610 controller driver. This manages generating CAN output messages and processing incomming CAN mess..." alt="" coords="127,5,179,32"/>
+<area shape="rect" id="node3" href="$classC620.html" title="C620 controller driver. This manages generating CAN output messages and processing incomming CAN mess..." alt="" coords="127,56,179,83"/>
+<area shape="rect" id="node4" href="$classGIM.html" title="Motor driver for the GIM motor." alt="" coords="130,107,177,133"/>
+<area shape="rect" id="node5" href="$classMG8016EI6.html" title="MG8016E&#45;i6v3 controller driver. This manages generating CAN output messages and processing incomming ..." alt="" coords="108,157,199,184"/>
+<area shape="rect" id="node6" href="$classSDC104.html" title="SDC104 motor controller class." alt="" coords="118,208,189,235"/>
+</map>

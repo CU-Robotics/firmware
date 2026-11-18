@@ -1,0 +1,11 @@
+<map id="Sensor" name="Sensor">
+<area shape="rect" id="node1" title="Abstract class representing a sensor. All sensors should inherit from this class." alt="" coords="381,5,444,32"/>
+<area shape="rect" id="node2" href="$classAdafruitIMUSensor.html" title="Abstract parent class for all AdafruitIMUSensors, which give acceleration and gyroscope data." alt="" coords="35,80,169,107"/>
+<area shape="rect" id="node5" href="$classBuffEncoder.html" title="Driver for the Buff&#45;Encoder." alt="" coords="193,80,285,107"/>
+<area shape="rect" id="node6" href="$classD200LD14P.html" title="class for LiDAR driver" alt="" coords="309,80,401,107"/>
+<area shape="rect" id="node7" href="$classLimitSwitch.html" title="Class to manage a limit switch." alt="" coords="426,80,517,107"/>
+<area shape="rect" id="node8" href="$classRevEncoder.html" title="the class for the Rev Through Bore Encoder(www.revrobotics.com/rev&#45;11&#45;1271/)" alt="" coords="541,80,633,107"/>
+<area shape="rect" id="node9" href="$classStereoCamTrigger.html" title="define to enable FPS logging in the timer interrupt callback (debugging)" alt="" coords="657,80,784,107"/>
+<area shape="rect" id="node3" href="$classICM20649.html" title="Sensor access for an ICM20649 IMU Sensor. Child of the abstract IMUSensor class." alt="" coords="5,155,87,181"/>
+<area shape="rect" id="node4" href="$classLSM6DSOX.html" title="Sensor access for an LSM6DSOX IMU Sensor. Child of the abstract AdafruitIMUSensor class." alt="" coords="111,155,205,181"/>
+</map>

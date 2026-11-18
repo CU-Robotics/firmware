@@ -1,0 +1,7 @@
+<map id="Graphical Class Hierarchy" name="Graphical Class Hierarchy">
+<area shape="rect" id="node1" href="$structEstimator.html" title="Parent estimator struct. All estimators should inherit from this." alt="" coords="5,81,83,108"/>
+<area shape="rect" id="node2" href="$structFeederEstimator.html" title="Estimate the state of the feeder ball velocity based on the feeder encoder velocity." alt="" coords="166,5,283,32"/>
+<area shape="rect" id="node3" href="$structFlywheelEstimator.html" title="Estimate the state of the flywheels as meters/second of balls exiting the barrel." alt="" coords="161,56,289,83"/>
+<area shape="rect" id="node4" href="$structGimbalAndChassisEstimator.html" title="Estimate the yaw, pitch, and chassis heading." alt="" coords="131,107,319,133"/>
+<area shape="rect" id="node5" href="$structLowerFeederEstimator.html" title="Estimate the state of the feeder ball velocity for the lower feeder based on the feeder encoder veloc..." alt="" coords="148,157,301,184"/>
+</map>

@@ -1,0 +1,4 @@
+<map id="EncoderSource" name="EncoderSource">
+<area shape="rect" id="node1" title="Interface for any encoder that provides angular value." alt="" coords="5,5,116,32"/>
+<area shape="rect" id="node2" href="$classBuffEncoder.html" title="Driver for the Buff&#45;Encoder." alt="" coords="15,80,107,107"/>
+</map>

@@ -1,0 +1,4 @@
+<map id="Estimator" name="Estimator">
+<area shape="rect" id="node1" title="Parent estimator struct. All estimators should inherit from this." alt="" coords="5,95,83,121"/>
+<area shape="rect" id="node2" href="$structTimer.html" title="Timer class. Operates based on micros() and provides a simple interface for timing operations." alt="" coords="17,5,71,32"/>
+</map>
