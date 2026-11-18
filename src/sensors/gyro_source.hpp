@@ -15,6 +15,9 @@ class GyroSource {
     /// @brief Get angular velocity of the gyro arounds the Z axis.
     /// @return Angular velocity around the Z axis.
     virtual float get_gyro_Z() = 0;
+    /// @brief Whether at least one valid reading has been received.
+    /// @return true once the get_gyro_* values reflect real sensor data.
+    virtual bool has_valid_reading() const { return true; }
 };
 
 template <> inline constexpr bool is_source_v<GyroSource> = true;

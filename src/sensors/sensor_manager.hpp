@@ -43,6 +43,12 @@ public:
 
     /// @brief Call each sensor's read function to update their data
     void read();
+
+    /// @brief Block until every buff encoder and the ICM have produced a valid reading.
+    /// Leaves a new read cycle requested on return, like request_read().
+    /// @param timeout_ms how long to keep trying before giving up
+    /// @return true if all sensors produced a valid reading within the timeout
+    bool wait_for_first_read(uint32_t timeout_ms);
     /// @brief Call each sensor's send_to_comms function to send their data to comms
     void send_to_comms();
     /// @brief Triggers the live dashboard for any supported sensors

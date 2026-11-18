@@ -142,6 +142,9 @@ GimbalAndChassisEstimator::GimbalAndChassisEstimator(const Cfg::Estimator& estim
     // odom_axis_offset_x = estimator_config.sensor_info.odom_axis_offset_x;
     // odom_axis_offset_y = estimator_config.sensor_info.odom_axis_offset_y;
     // definitions for spherical coordinates of new axis in the imu refrence frame
+    safety::assert_or_safety_procedure(buff_enc_yaw->has_valid_reading() && buff_enc_pitch->has_valid_reading() && icm_imu->has_valid_reading(),
+        "GimbalAndChassisEstimator: yaw/pitch encoder or IMU has no valid reading yet");
+
     yaw_axis_spherical[0] = 1;   // rho (1 for a spherical)
     pitch_axis_spherical[0] = 1; // rho (1 for a spherical)
     roll_axis_spherical[0] = 1;  // rho (1 for a spherical)

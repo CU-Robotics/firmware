@@ -83,6 +83,7 @@ void BuffEncoder::read() {
 
     // assign angle
     m_angle = radians;
+    m_has_valid_reading = true;
 
     // Serial.printf("Buff Encoder %u - angle: %f\n", static_cast<uint32_t>(config_data.encoder_name), m_angle);
 

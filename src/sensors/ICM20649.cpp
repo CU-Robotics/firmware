@@ -94,6 +94,7 @@ void ICM20649::read() {
 		gyro_Z = gyro.gyro.z;
 
 		temperature = temp.temperature;
+		has_reading = true;
 
 		//copy the values to the data struct
 		comms_data.accel_X = accel_X;
@@ -146,6 +147,7 @@ void ICM20649::read() {
 			comms_data.gyro_Y = gyro_Y;
 			comms_data.gyro_Z = gyro_Z;
 			comms_data.temperature = (raw_temp/333.87f)+21.0f; //Comfirm scaling is correct
+			has_reading = true;
 
         } else {
             // Transfer didn't finish. Retain old state.
