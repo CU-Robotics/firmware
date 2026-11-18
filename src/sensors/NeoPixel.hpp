@@ -14,7 +14,7 @@ public:
 private:
     Adafruit_NeoPixel pixels_;
 
-    uint8_t flashColor_[3] = {255, 255, 255};
+    uint8_t flashColor_[3] = {255, 255, 0};
 
     uint32_t flashInterval_ = 500;
     uint32_t lastFlash_ = 0;
