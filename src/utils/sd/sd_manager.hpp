@@ -5,18 +5,18 @@
 
 #ifndef BUILTIN_SDCARD_CONFIG
 #define BUILTIN_SDCARD_CONFIG SdioConfig(FIFO_SDIO)
-#endif // BUILTIN_SDCARD
+#endif // BUILTIN_SDCARD_CONFIG
 
 
 /// @brief Manages FAT filesystem reads/writes
 class SdManager {
 public:
     /// @brief Initializes teensy builtin SD card reader
-    SdManager() : _SD_CONFIG(BUILTIN_SDCARD_CONFIG) {}
+    SdManager() : _SD_CONFIG(BUILTIN_SDCARD_CONFIG), _sdfat() {}
     
     /// @brief Initialize SD card reader from chip select pin
     /// @param config Configuration 
-    SdManager(const SdioConfig& config) : _SD_CONFIG(config) {};
+    explicit SdManager(const SdioConfig& config) : _SD_CONFIG(config), _sdfat() {}
 
     /// @brief Stops the SD card manager
     ~SdManager() { stop(); }

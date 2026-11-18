@@ -5,11 +5,11 @@
 /// @brief Creates and manages a log file on the SD card
 class SdLogger {
 public:
-    SdLogger() {}
+    SdLogger() = default;
 
     /// @brief Creates a new SdLogger, which must be started with start()
     /// @param sd_man `SdManager` to use
-    SdLogger(SdManager* sd_man) : _sd_man(sd_man) {}
+    explicit SdLogger(SdManager* sd_man) : _sd_man(sd_man) {}
 
     /// @brief Closes the file associated with the logger
     ~SdLogger() { _log_file.close(); }
@@ -24,7 +24,7 @@ public:
     bool write_log(const struct LogEvent& event);
 
     /// @brief Write a `LogText` struct to the SD card
-    /// @param event `LogText` struct to log
+    /// @param text `LogText` struct to log
     /// @return If write was successful
     bool write_log(const struct LogText& text);
 
