@@ -60,7 +60,8 @@ uint32_t micros();
 
 /// @brief Provide a fixed time value for host tests.
 /// @return Always zero; elapsed time is not simulated.
-inline uint32_t micros() { return 0; }
+inline uint32_t host_fake_micros = 0;
+inline uint32_t micros() { return host_fake_micros; }
 
 #endif
 
