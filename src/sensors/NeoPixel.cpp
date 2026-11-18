@@ -6,6 +6,7 @@ NeoPixel::NeoPixel(uint8_t pin, uint16_t numPixels)
 
 void NeoPixel::begin() {
     pixels_.begin();
+    pixels_.setBrightness(BRIGHTNESS);
     off();
 }
 

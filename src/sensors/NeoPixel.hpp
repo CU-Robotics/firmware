@@ -19,6 +19,9 @@ public:
     void off();
 
 private:
+    /// @brief Global brightness, 0-255. Colors are scaled by this before being sent.
+    static constexpr uint8_t BRIGHTNESS = 32;
+
     Adafruit_NeoPixel pixels_;
 
     uint32_t currentColor_ = 0;
