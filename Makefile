@@ -37,8 +37,8 @@ TEST_SUITES := $(notdir $(patsubst %/,%,$(dir $(wildcard $(TEST_DIR)/test_*/test
 TEST_FILTER ?= $(TEST_SUITES)
 TEST_BINS := $(addprefix $(TEST_BUILD_DIR)/,$(TEST_FILTER))
 
-HOST_CXX ?= g++
-HOST_CC ?= gcc
+HOST_CXX ?= c++
+HOST_CC ?= cc
 HOST_TEST_CPPFLAGS := -I$(TEST_DIR)/host -Isrc -Ilibraries/unity -DUNIT_TEST
 HOST_TEST_CXXFLAGS := -std=gnu++23 -O0 -g3 -Wall -Werror
 HOST_TEST_CFLAGS := -std=c11 -O0 -g3 -Wall -Werror
