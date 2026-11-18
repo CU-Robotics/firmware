@@ -18,8 +18,9 @@ void HelloRobot::init() {
     // Configure the robot from comms data, which is filled on Hive.
     Serial.println("Configuring...");
     
+    // Solid yellow while initializing, including while waiting for Hive to configure
     neopixel.begin();
-    neopixel.set_color(255,255,0);
+    neopixel.set_solid(255, 255, 0);
 
     Comms::comms_layer.configure();
 
@@ -278,15 +279,23 @@ bool HelloRobot::check_slow_loop(float &loop_dt) {
 }
 
 void HelloRobot::update_status() {
+    using Reason = SafetyState::Reason;
     uint8_t reasons = safety_state.active_reasons();
 
-    if (reasons & SafetyState::Reason::NOT_CONFIGURED) {
-        neopixel.set_color(255, 255, 0);
+    // One solid color per safety reason. If several are active, the first match wins.
+    if (reasons & Reason::NOT_CONFIGURED) {
+        neopixel.set_solid(255, 255, 0);   // yellow
+    } else if (reasons & Reason::GIMBAL_POWER_OFF) {
+        neopixel.set_solid(0, 0, 255);     // blue
+    } else if (reasons & Reason::GIMBAL_POWER_SETTLING) {
+        neopixel.set_solid(0, 255, 255);   // cyan
+    } else if (reasons & Reason::TRANSMITTER) {
+        neopixel.set_solid(255, 0, 0);     // red
+    } else if (reasons & Reason::SLOW_LOOP) {
+        neopixel.set_solid(255, 0, 255);   // magenta
+    } else {
+        neopixel.set_solid(0, 255, 0);     // green: armed
     }
-    else{
-        neopixel.set_color(255, 255, 255);
-    }
-    neopixel.update();
 }
 
 void HelloRobot::hold_feeder_position() {

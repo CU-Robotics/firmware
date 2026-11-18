@@ -3,21 +3,24 @@
 #include <Arduino.h>
 #include <Adafruit_NeoPixel.h>
 
+/// @brief Drives a WS2812 strip that shows one solid color for robot status
 class NeoPixel {
 public:
     NeoPixel(uint8_t pin, uint16_t numPixels);
 
+    /// @brief Initialize the strip and turn all pixels off
     void begin();
-    void set_color(uint8_t red, uint8_t green, uint8_t blue);
-    void update();
+
+    /// @brief Set every pixel to one color and push it to the strip now.
+    /// @note Skips the write if the color is unchanged, since show() disables interrupts for ~30us per pixel.
+    void set_solid(uint8_t red, uint8_t green, uint8_t blue);
+
+    /// @brief Turn all pixels off
+    void off();
 
 private:
     Adafruit_NeoPixel pixels_;
 
-    uint8_t flashColor_[3] = {255, 255, 0};
-
-    uint32_t flashInterval_ = 500;
-    uint32_t lastFlash_ = 0;
-
-    bool ledsOn_ = false;
+    uint32_t currentColor_ = 0;
+    bool hasColor_ = false;
 };
