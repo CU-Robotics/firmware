@@ -283,7 +283,7 @@ void HelloRobot::update_status() {
         neopixel.set_color(255, 255, 0);
     }
     else{
-        neopixel.set_color(255, 255, 0);
+        neopixel.set_color(255, 255, 255);
     }
     neopixel.update();
 }
