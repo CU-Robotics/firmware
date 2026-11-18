@@ -4,10 +4,10 @@
 #include <functional>
 #include <type_traits>
 #include <cstdint>
+#include <cstdio>
 #include "system_log.hpp"
 
 #ifdef FW_SIMULATION
-#include <cstdio>
 #include <stdexcept>
 #else
 #include <Arduino.h>
@@ -97,12 +97,12 @@ namespace safety {
             SystemLog.error(Subsystem::GENERAL, "Safety procedure triggered but no safety function registered!");
         }
 
+        char msg_buf[512];
+        std::snprintf(msg_buf, sizeof(msg_buf), message, std::forward<Args>(args)...);
         if (errortype == errorSeverity::Warning) {
-            SystemLog.warn(Subsystem::GENERAL, "%s:", severity_name);
-            SystemLog.warn(Subsystem::GENERAL, message, std::forward<Args>(args)...);
+            SystemLog.warn(Subsystem::GENERAL, msg_buf);
         } else {
-            SystemLog.error(Subsystem::GENERAL, "%s:", severity_name);
-            SystemLog.error(Subsystem::GENERAL, message, std::forward<Args>(args)...);
+            SystemLog.error(Subsystem::GENERAL, msg_buf);
         }
 
         if (should_halt) {
