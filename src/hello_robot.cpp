@@ -161,6 +161,7 @@ void HelloRobot::process_behaviors() {
 
     if (icm_recalibration_occuring) {
         icm_recalibration_occuring = sensor_manager.calibrate_icm_sensor_live();
+        if (!icm_recalibration_occuring) Serial.printf("its off!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n");
     }
 }
 void HelloRobot::update_controls() {
