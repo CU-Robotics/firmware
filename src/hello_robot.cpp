@@ -5,7 +5,7 @@
 static NeoPixel neopixel{14, 8};
 
 #ifdef PROFILER
-Profiler prof;
+Profiler prof; 
 #endif
 
 void HelloRobot::init() {
@@ -17,14 +17,12 @@ void HelloRobot::init() {
 
     // Configure the robot from comms data, which is filled on Hive.
     Serial.println("Configuring...");
-    
+
     // Solid yellow while initializing, including while waiting for Hive to configure
     neopixel.begin();
     neopixel.set_solid(255, 255, 0);
 
     Comms::comms_layer.configure();
-
-    
 
     const Cfg::RobotConfig &config = Comms::comms_layer.get_hive_data().config;
 
@@ -47,12 +45,10 @@ void HelloRobot::init() {
     transmitter_manager.init(config.transmitter);
 
     // initialize sensors
-    sensor_manager.init(config, &estimated_state_array_interrupt_safe);
-    // Begin cycle of reading sensor data
-    sensor_manager.request_read();
-    
-    // Initialize NeoPixel
-    
+	sensor_manager.init(config, &estimated_state_array_interrupt_safe);
+	// Begin cycle of reading sensor data
+	sensor_manager.request_read();
+
     estimator_manager.init(config.estimators, sensor_manager, can);
 
     // generate controller outputs based on governed references and estimated
@@ -68,11 +64,9 @@ void HelloRobot::init() {
     // Link Logger and CLI
     SystemLog.bind_cli_buffer(cli_buffer);
     
-
     // start the main loop watchdog
     watchdog.start();
-    
-};
+}
 
 void HelloRobot::run() {
     Serial.println("Entering main loop...\n");
@@ -96,7 +90,7 @@ void HelloRobot::run() {
         prof.end("Controls");
         prof.begin("Comms");
         update_comms();
-        prof.end("Comms");
+		prof.end("Comms"); 
         prof.begin("Safety");
         check_safety();
         prof.end("Safety");
@@ -109,49 +103,50 @@ void HelloRobot::run() {
         process_cli();
         prof.end("CLI");
 #else
-        read_telemetry();
-        process_behaviors();
-        update_controls();
-        update_comms();
-        check_safety();
-        update_status();
-        process_cli();
+		read_telemetry();
+		process_behaviors();
+		update_controls();
+		update_comms();
+		check_safety();
+		update_status();
+		process_cli();
 #endif
-        loop_timing();
-    }
+        loop_timing();		
+	}
 }
 
-void HelloRobot::crash_report() {
-    // over Serial in the future, we'll send this directly over comms
-    if (CrashReport) {
-        while (1) {
-            Serial.println(CrashReport);
-            Serial.println("\nReflash to clear CrashReport (and also please "
-                           "fix why it crashed)");
-            delay(1000);
-        }
-    }
+void HelloRobot::crash_report(){
+	// over Serial in the future, we'll send this directly over comms
+	if (CrashReport) {
+		while (1) {
+			Serial.println(CrashReport);
+			Serial.println("\nReflash to clear CrashReport (and also please "
+						   "fix why it crashed)");
+			delay(1000);
+		}
+	}
 }
-void HelloRobot::read_telemetry() {
-    // read sensors and send to comms
-    // this happens in one function call
-    sensor_manager.read();
-    sensor_manager.send_to_comms();
-
-    // read CAN and send motor states to comms
-    can.read();
-    can.send_to_comms();
+void HelloRobot::read_telemetry(){
+	// read sensors and send to comms
+	// this happens in one function call 
+	sensor_manager.read();
+	sensor_manager.send_to_comms();
+	
+	// read CAN and send motor states to comms
+	can.read();
+	can.send_to_comms();
 
     // read ref and send to comms
     ref.read();
     ref.send_to_comms();
 
-    // read transmitter and send to comms
-    transmitter_manager.read();
-    transmitter_manager.send_to_comms();
-
-    // Begin Sensor DMA transfer for next loop
-    sensor_manager.request_read();
+	// read transmitter and send to comms
+	transmitter_manager.read();
+	transmitter_manager.send_to_comms();
+	
+	// Begin Sensor DMA transfer for next loop
+	sensor_manager.request_read();
+		
 }
 void HelloRobot::process_behaviors() {
     // manual controls on firmware
@@ -169,8 +164,8 @@ void HelloRobot::process_behaviors() {
         // clear the request
         Comms::comms_layer.get_hive_data().override_state_data.active = false;
 
-        SystemLog.info(Subsystem::GENERAL, "Overriding state with hive state\n");
-        hive_state_array_offset->from_comms_packet(Comms::comms_layer.get_hive_data().override_state_data.state);
+		SystemLog.info(Subsystem::GENERAL,"Overriding state with hive state\n");
+		hive_state_array_offset->from_comms_packet(Comms::comms_layer.get_hive_data().override_state_data.state);
 
         *estimated_state_array = *hive_state_array_offset;
         override_request = true;
@@ -184,12 +179,12 @@ void HelloRobot::update_controls() {
     noInterrupts();
     *estimated_state_array_interrupt_safe = *estimated_state_array;
     interrupts();
-
+    
     override_request = false;
     float current_feed = (*estimated_state_array)[Cfg::StateName::Feeder].get_position();
     float target_feed = (*target_state_array)[Cfg::StateName::Feeder].get_position();
     if ((feed - current_feed > 2 && transmitter_manager.is_teensy_mode()) || (target_feed - current_feed > 2 && transmitter_manager.is_hive_mode())) {
-        SystemLog.error(Subsystem::GENERAL, "Feeder is lowkey jammed. current ball count: %f, feed: %f, hive target: %f\n", (*estimated_state_array)[Cfg::StateName::Feeder].get_position(), feed, (*target_state_array)[Cfg::StateName::Feeder].get_position());
+        SystemLog.error(Subsystem::GENERAL,"Feeder is lowkey jammed. current ball count: %f, feed: %f, hive target: %f\n", (*estimated_state_array)[Cfg::StateName::Feeder].get_position(), feed, (*target_state_array)[Cfg::StateName::Feeder].get_position());
         feed = current_feed + 1;
         governor->set_position_reference(Cfg::StateName::Feeder, feed);
     }
@@ -228,6 +223,7 @@ void HelloRobot::update_comms() {
     }
 
     Comms::comms_layer.run();
+    
 }
 
 void HelloRobot::check_safety() {
@@ -316,7 +312,7 @@ void HelloRobot::hold_feeder_position() {
 void HelloRobot::loop_timing() {
     // print loopc every second to verify it is still alive
     if (loopc % 1000 == 0) {
-        // Serial.println(loopc);
+        //Serial.println(loopc);
     }
     // LED heartbeat -- linked to loop count to reveal slowdowns and
     // freezes.
@@ -330,144 +326,142 @@ void HelloRobot::loop_timing() {
     loop_timer.delay_micros((int)(1E6 / (float)(LOOP_FREQ)));
 }
 void HelloRobot::apply_fast_mode() {
-    if (!transmitter_manager.is_fast_mode_active()) {
+	if (!transmitter_manager.is_fast_mode_active()) {
         return;
     }
-
+    
     float chassis_vel_x = (*target_state_array)[Cfg::StateName::ChassisX].get_velocity();
     float chassis_vel_y = (*target_state_array)[Cfg::StateName::ChassisY].get_velocity();
     float current_angle = (*estimated_state_array)[Cfg::StateName::ChassisHeading].get_position();
     float input_mag = sqrtf((chassis_vel_x * chassis_vel_x) + (chassis_vel_y * chassis_vel_y));
-
-    constexpr float FAST_MODE_ENTER = 0.3f;
-    constexpr float FAST_MODE_EXIT = 0.1f;
-    // Hystersis to prevent twitching in and out of fast mode
+    
+	constexpr float FAST_MODE_ENTER = 0.3f;
+	constexpr float FAST_MODE_EXIT = 0.1f;
+	// Hystersis to prevent twitching in and out of fast mode
     if (input_mag > FAST_MODE_ENTER) {
         fast_mode_engaged = true;
     } else if (input_mag < FAST_MODE_EXIT) {
         fast_mode_engaged = false;
     }
-
-    if (fast_mode_engaged) {
+    
+    
+    if (fast_mode_engaged) { 
         float stick_angle = atan2f(chassis_vel_y, chassis_vel_x);
 
         // Find the nearest 45 degree diagonal to our current heading
         constexpr float pi_over_4 = PI / 4.0f;
         constexpr float pi_over_2 = PI / 2.0f;
-
+            
         float offset = current_angle - stick_angle;
-        float snapped_offset = roundf((offset - pi_over_4) / pi_over_2) * pi_over_2 + pi_over_4;
-
+        float snapped_offset = roundf((offset - pi_over_4) / pi_over_2) * pi_over_2 + pi_over_4; 
+            
         float target_angle = stick_angle + snapped_offset;
 
         // Shortest path to the target diagonal
         float error = target_angle - current_angle;
-        while (error > PI)
-            error -= TWO_PI;
-        while (error < -PI)
-            error += TWO_PI;
+        while (error > PI) error -= TWO_PI;
+        while (error < -PI) error += TWO_PI;
         // P controller
-        constexpr float kp = 5.0f;
+        constexpr float kp = 5.0f; 
         float auto_spin_vel = error * kp;
         (*target_state_array)[Cfg::StateName::ChassisHeading].set_velocity(auto_spin_vel);
-    }
+	}
 }
 void HelloRobot::process_cli() {
     // ==========================================
     // 2. LIVE VIEW RENDERER
     // ==========================================
     if (num_active_views > 0) {
-
+        
         if (millis() - last_redraw_time >= redraw_interval) {
             Serial.print("\033[H"); // Move cursor to top-left
-
+            
             // Loop through the array and draw the views in the order the user typed them
             for (int i = 0; i < num_active_views; i++) {
-                switch (active_views[i]) {
-                case LiveMode::PROFILE_VIEW:
+              switch (active_views[i]) {
+			  case LiveMode::PROFILE_VIEW:
 #ifdef PROFILER
-                    prof.print_summary();
+				prof.print_summary();
 #endif
-                    break;
+				break;
+                        
+			  case LiveMode::TRANSMITTER:
+				  transmitter_manager.print_live_data();
+				  break;
+                        
+			  case LiveMode::SENSORS:
+				  Serial.printf("=== LIVE SENSOR READOUT ===\033[K\n");
+				  sensor_manager.print_sensors_live(); 
+				  break;
+                        
+			  case LiveMode::ESTIMATED_STATE:
+				  Serial.printf("=== LIVE ESTIMATED STATE ===\033[K\n");
+				  estimated_state_array->print();
+				  break;
+				
+			  case LiveMode::TARGET_STATE:
+				  Serial.printf("=== LIVE TARGET STATE ===\033[K\n");
+				  target_state_array->print();
+				  break;
 
-                case LiveMode::TRANSMITTER:
-                    transmitter_manager.print_live_data();
-                    break;
+			  case LiveMode::HEARTBEAT:
+				  Serial.printf("=== LIVE HEARTBEAT  ===\033[K\n");
+				  Serial.println(loopc);
+				  break;
 
-                case LiveMode::SENSORS:
-                    Serial.printf("=== LIVE SENSOR READOUT ===\033[K\n");
-                    sensor_manager.print_sensors_live();
-                    break;
-
-                case LiveMode::ESTIMATED_STATE:
-                    Serial.printf("=== LIVE ESTIMATED STATE ===\033[K\n");
-                    estimated_state_array->print();
-                    break;
-
-                case LiveMode::TARGET_STATE:
-                    Serial.printf("=== LIVE TARGET STATE ===\033[K\n");
-                    target_state_array->print();
-                    break;
-
-                case LiveMode::HEARTBEAT:
-                    Serial.printf("=== LIVE HEARTBEAT  ===\033[K\n");
-                    Serial.println(loopc);
-                    break;
-
-                case LiveMode::COMMS:
-                    Comms::comms_layer.print_live_data();
-                    break;
-
-                default:
-                    break;
-                }
-                Serial.println(); // Add a blank line between stacked views
+			  case LiveMode::COMMS:
+				  Comms::comms_layer.print_live_data();
+				  break;
+                        
+			  default:
+				  break;
+              }
+              Serial.println(); // Add a blank line between stacked views
             }
-            SystemLog.draw_dashboard_box(); // puts all non-CLI prints in neat box
+			SystemLog.draw_dashboard_box(); // puts all non-CLI prints in neat box
             Serial.println("\n[ LIVE MODE ACTIVE - PRESS ENTER TO EXIT ]");
-
-            // \033[J clears everything *below* the cursor.
-            Serial.print("\033[J");
-
+            
+            // \033[J clears everything *below* the cursor. 
+            Serial.print("\033[J"); 
+            
             last_redraw_time = millis();
         }
 
         // Exit live mode on any keystroke
         if (Serial.available() > 0) {
-            num_active_views = 0;                  // Empty the array
-            SystemLog.is_live_view_active = false; // Turn standard scrolling prints back on
-            while (Serial.available())
-                Serial.read(); // Flush buffer
+            num_active_views = 0; // Empty the array
+			SystemLog.is_live_view_active = false; //Turn standard scrolling prints back on
+            while(Serial.available()) Serial.read(); // Flush buffer
             Serial.println("\n\n[Exited Live View]");
-            cli_index = 0;
+            cli_index = 0; 
         }
-
-        return;
+        
+        return; 
     }
 
     // ==========================================
     // 3. NORMAL CLI PARSING
     // ==========================================
-    /* Adding new commands is simple.
-       add command to command dictionary block below
-       If it is live add to live mode enum and switch statement above
-       as well as to view_dict lookup table in cmd_live function
-    */
+	/* Adding new commands is simple.
+	   add command to command dictionary block below
+	   If it is live add to live mode enum and switch statement above
+	   as well as to view_dict lookup table in cmd_live function
+	*/
     while (Serial.available() > 0) {
         char c = Serial.read();
-
+        
         static bool last_was_cr = false;
         // Handle Backspace (ASCII 8 or DEL 127)
         if (c == '\n' && last_was_cr) {
             last_was_cr = false;
-            continue;
+            continue; 
         }
         last_was_cr = (c == '\r');
         if (c == '\b' || c == 127) {
             if (cli_index > 0) {
                 cli_index--;
                 cli_buffer[cli_index] = '\0';
-
+                
                 // \r moves to the start of the line, \033[K erases it, then we redraw
                 Serial.print("\r\033[KRobot> ");
                 Serial.print(cli_buffer);
@@ -475,9 +469,9 @@ void HelloRobot::process_cli() {
             continue;
         }
         if (c == '\n' || c == '\r') {
-            if (cli_index == 0) {
+			if (cli_index == 0) {
                 Serial.print("\r\nRobot> "); // Reprint prompt on empty enter
-                continue;
+                continue; 
             }
 
             Serial.println(); // Move to new line so command output doesn't overwrite the prompt
@@ -485,19 +479,25 @@ void HelloRobot::process_cli() {
 
             // --- THE COMMAND DICTIONARY ---
             static const struct {
-                const char *name;
+                const char* name;
                 void (HelloRobot::*execute)();
-            } commands[] = {{"ping", &HelloRobot::cmd_ping}, {"help", &HelloRobot::cmd_help}, {"live", &HelloRobot::cmd_live}, {"log", &HelloRobot::cmd_log}, {"comms", &HelloRobot::cmd_comms}};
+            } commands[] = {
+                {"ping", &HelloRobot::cmd_ping},
+                {"help", &HelloRobot::cmd_help},
+                {"live", &HelloRobot::cmd_live},
+                {"log", &HelloRobot::cmd_log},
+                {"comms", &HelloRobot::cmd_comms}
+            };
 
             // --- THE PARSER ---
             // 1. Extract the very first word
-            char *cmd_str = strtok(cli_buffer, " ");
-
+            char* cmd_str = strtok(cli_buffer, " ");
+            
             if (cmd_str != nullptr) {
                 bool found = false;
-
+                
                 // 2. Scan the dictionary for a match
-                for (const auto &cmd : commands) {
+                for (const auto& cmd : commands) {
                     if (strcmp(cmd_str, cmd.name) == 0) {
                         // 3. Execute the matched member function
                         (this->*(cmd.execute))();
@@ -505,7 +505,7 @@ void HelloRobot::process_cli() {
                         break;
                     }
                 }
-
+                
                 if (!found) {
                     Serial.println("Unknown command. Try: help");
                 }
@@ -516,94 +516,107 @@ void HelloRobot::process_cli() {
             if (num_active_views == 0) {
                 Serial.print("\r\nRobot> ");
             }
-        } else if (cli_index < 63) {
-            cli_buffer[cli_index++] = c;
+        } 
+        else if (cli_index < 63) {
+			cli_buffer[cli_index++] = c;
             cli_buffer[cli_index] = '\0'; // keep it null-terminated
-
+            
             // Clear the line and  redraw the buffer on every keystroke
             Serial.print("\r\033[KRobot> ");
             Serial.print(cli_buffer);
         }
     }
 }
-void HelloRobot::cmd_ping() { Serial.println("pong! Robot is alive."); }
-
-void HelloRobot::cmd_help() {
-    Serial.println("NAME");
-    Serial.println("       Robot CLI - Control and monitor firmware");
-    Serial.println();
-    Serial.println("SYNOPSIS");
-    Serial.println("       [command] [arguments...]");
-    Serial.println();
-    Serial.println("DESCRIPTION");
-    Serial.println("       Provides a serial interface to interact with the robot, check");
-    Serial.println("       connection status, and launch live, real-time data dashboards.");
-    Serial.println();
-    Serial.println("COMMANDS");
-    Serial.println("       ping");
-    Serial.println("              Replies with 'pong!' to verify the serial connection is active.");
-    Serial.println();
-    Serial.println("       live [view1] [view2] ...");
-    Serial.println("              Launches a live updating dashboard with the specified views.");
-    Serial.println("              Views are stacked vertically in the order provided.");
-    Serial.println("              Press ENTER to exit live mode.");
-    Serial.println();
-    Serial.println("              Available views:");
-    Serial.println("                prof            : Execution time profiler (only available if running make debug) ");
-    Serial.println("                tx              : Real-time radio transmitter inputs");
-    Serial.println("                sensors         : Real-time readouts from all configured sensors");
-    Serial.println("                estimated_state : The robot's current estimated state array");
-    Serial.println("                target_state    : The robot's current target state array");
-    Serial.println("                heartbeat       : The main loop counter (loopc)");
-    Serial.println("                comms           : Real-time ethernet/HID packet metrics and connection status");
-    Serial.println();
-    Serial.println("       comms");
-    Serial.println("              Prints a single snapshot of the current communications status.");
-    Serial.println();
-    Serial.println("       log [subsystem] [priority]");
-    Serial.println("              Filters the system event log.");
-    Serial.println("              High-priority messages (Errors) will always bypass the subsystem filter.");
-    Serial.println("              Typing 'log' with no arguments displays the syntax menu.");
-    Serial.println();
-    Serial.println("              Available subsystems:");
-    Serial.println("                all, can, motors, sensors, est, comms");
-    Serial.println();
-    Serial.println("              Available priorities (minimum level to show):");
-    Serial.println("                info, warn, error");
-    Serial.println();
-    Serial.println("              Examples:");
-    Serial.println("                log motors warn  : Shows motor warnings/errors, and all other system errors");
-    Serial.println("                log all info     : Resets the filter to show absolutely everything");
-    Serial.println();
-    Serial.println("       help");
-    Serial.println("              Displays this manual.");
+void HelloRobot::cmd_ping() {
+    Serial.println("pong! Robot is alive.");
 }
 
-void HelloRobot::cmd_comms() { Comms::comms_layer.print_live_data(); }
+void HelloRobot::cmd_help() {
+                Serial.println("NAME");
+                Serial.println("       Robot CLI - Control and monitor firmware");
+                Serial.println();
+                Serial.println("SYNOPSIS");
+                Serial.println("       [command] [arguments...]");
+                Serial.println();
+                Serial.println("DESCRIPTION");
+                Serial.println("       Provides a serial interface to interact with the robot, check");
+                Serial.println("       connection status, and launch live, real-time data dashboards.");
+                Serial.println();
+                Serial.println("COMMANDS");
+                Serial.println("       ping");
+                Serial.println("              Replies with 'pong!' to verify the serial connection is active.");
+                Serial.println();
+                Serial.println("       live [view1] [view2] ...");
+                Serial.println("              Launches a live updating dashboard with the specified views.");
+                Serial.println("              Views are stacked vertically in the order provided.");
+                Serial.println("              Press ENTER to exit live mode.");
+                Serial.println();
+                Serial.println("              Available views:");
+                Serial.println("                prof            : Execution time profiler (only available if running make debug) ");
+                Serial.println("                tx              : Real-time radio transmitter inputs");
+                Serial.println("                sensors         : Real-time readouts from all configured sensors");
+                Serial.println("                estimated_state : The robot's current estimated state array");
+                Serial.println("                target_state    : The robot's current target state array");
+                Serial.println("                heartbeat       : The main loop counter (loopc)");
+                Serial.println("                comms           : Real-time ethernet/HID packet metrics and connection status");
+				Serial.println();
+				Serial.println("       comms");
+				Serial.println("              Prints a single snapshot of the current communications status.");
+				Serial.println();
+				Serial.println("       log [subsystem] [priority]");
+				Serial.println("              Filters the system event log.");
+				Serial.println("              High-priority messages (Errors) will always bypass the subsystem filter.");
+				Serial.println("              Typing 'log' with no arguments displays the syntax menu.");
+				Serial.println();
+				Serial.println("              Available subsystems:");
+				Serial.println("                all, can, motors, sensors, est, comms");
+				Serial.println();
+				Serial.println("              Available priorities (minimum level to show):");
+				Serial.println("                info, warn, error");
+				Serial.println();
+				Serial.println("              Examples:");
+				Serial.println("                log motors warn  : Shows motor warnings/errors, and all other system errors");
+				Serial.println("                log all info     : Resets the filter to show absolutely everything");
+                Serial.println();
+                Serial.println("       help");
+                Serial.println("              Displays this manual.");
+}
+
+void HelloRobot::cmd_comms() {
+    Comms::comms_layer.print_live_data();
+}
 
 void HelloRobot::cmd_live() {
     num_active_views = 0;
     SystemLog.is_live_view_active = true;
     redraw_interval = 1000;
-
+    
     struct LiveViewMap {
-        const char *name;
+        const char* name;
         LiveMode mode;
         uint32_t interval;
     };
+    
+    static const LiveViewMap view_dict[] = {
+        {"prof",            LiveMode::PROFILE_VIEW,    1000}, 
+        {"tx",              LiveMode::TRANSMITTER,     100},
+        {"sensors",         LiveMode::SENSORS,         100},
+        {"target_state",    LiveMode::TARGET_STATE,    100},
+        {"estimated_state", LiveMode::ESTIMATED_STATE, 100},
+        {"heartbeat",       LiveMode::HEARTBEAT,       100},
+        {"comms",           LiveMode::COMMS,           100}
+    };
 
-    static const LiveViewMap view_dict[] = {{"prof", LiveMode::PROFILE_VIEW, 1000}, {"tx", LiveMode::TRANSMITTER, 100}, {"sensors", LiveMode::SENSORS, 100}, {"target_state", LiveMode::TARGET_STATE, 100}, {"estimated_state", LiveMode::ESTIMATED_STATE, 100}, {"heartbeat", LiveMode::HEARTBEAT, 100}, {"comms", LiveMode::COMMS, 100}};
-
-    // --- THE PARSER ---
-    char *token;
+	// --- THE PARSER ---
+    char* token;
     while ((token = strtok(NULL, " ")) != NULL && num_active_views < MAX_LIVE_VIEWS) {
-
+        
         // Scan the dictionary for a matching view
-        for (const auto &view : view_dict) {
+        for (const auto& view : view_dict) {
             if (strcmp(token, view.name) == 0) {
                 // Add the view to the active stack
                 active_views[num_active_views++] = view.mode;
-
+                
                 // If this view requires a faster refresh rate, upgrade the global interval
                 if (view.interval < redraw_interval) {
                     redraw_interval = view.interval;
@@ -614,7 +627,7 @@ void HelloRobot::cmd_live() {
     }
 
     if (num_active_views > 0) {
-        last_redraw_time = 0;
+        last_redraw_time = 0;    
         Serial.print("\033[2J");
     } else {
         SystemLog.is_live_view_active = false;
@@ -623,35 +636,46 @@ void HelloRobot::cmd_live() {
 }
 
 void HelloRobot::cmd_log() {
-    char *sys_tok = strtok(NULL, " ");
-    char *lvl_tok = strtok(NULL, " ");
+    char* sys_tok = strtok(NULL, " ");
+    char* lvl_tok = strtok(NULL, " ");
 
     // --- DATA DICTIONARIES ---
     struct SysMap {
-        const char *name;
+        const char* name;
         Subsystem sys;
     };
-    static const SysMap sys_dict[] = {{"all", Subsystem::ALL}, {"can", Subsystem::CAN}, {"motors", Subsystem::MOTORS}, {"sensors", Subsystem::SENSORS}, {"est", Subsystem::ESTIMATOR}, {"comms", Subsystem::COMMS}};
+    static const SysMap sys_dict[] = {
+        {"all",     Subsystem::ALL},
+        {"can",     Subsystem::CAN},
+        {"motors",  Subsystem::MOTORS},
+        {"sensors", Subsystem::SENSORS},
+        {"est",     Subsystem::ESTIMATOR},
+        {"comms",   Subsystem::COMMS}
+    };
 
     struct LvlMap {
-        const char *name;
+        const char* name;
         LogLevel lvl;
     };
-    static const LvlMap lvl_dict[] = {{"info", LogLevel::INFO}, {"warn", LogLevel::WARN}, {"error", LogLevel::ERROR}};
+    static const LvlMap lvl_dict[] = {
+        {"info",  LogLevel::INFO},
+        {"warn",  LogLevel::WARN},
+        {"error", LogLevel::ERROR}
+    };
 
     bool error_found = false;
 
     // Check Subsystem (if provided)
     if (sys_tok) {
         bool found = false;
-        for (const auto &entry : sys_dict) {
+        for (const auto& entry : sys_dict) {
             if (strcmp(sys_tok, entry.name) == 0) {
                 SystemLog.view_filter_sys = entry.sys;
                 found = true;
                 break;
             }
         }
-
+        
         if (!found) {
             Serial.printf("Error: Unknown subsystem '%s'\n", sys_tok);
             error_found = true;
@@ -661,14 +685,14 @@ void HelloRobot::cmd_log() {
     // Check Priority Level (if provided)
     if (lvl_tok && !error_found) {
         bool found = false;
-        for (const auto &entry : lvl_dict) {
+        for (const auto& entry : lvl_dict) {
             if (strcmp(lvl_tok, entry.name) == 0) {
                 SystemLog.view_filter_level = entry.lvl;
                 found = true;
                 break;
             }
         }
-
+        
         if (!found) {
             Serial.printf("Error: Unknown priority level '%s'\n", lvl_tok);
             error_found = true;
@@ -681,8 +705,10 @@ void HelloRobot::cmd_log() {
         Serial.println("  Subsystems: all, can, motors, sensors, est, comms");
         Serial.println("  Priorities: info, warn, error");
         Serial.println("  Example:    log motors warn");
-        return;
+        return; 
     }
 
-    Serial.printf("Log filter updated. Sys: %s | Level: %s\n", sys_tok ? sys_tok : "UNCHANGED", lvl_tok ? lvl_tok : "UNCHANGED");
+    Serial.printf("Log filter updated. Sys: %s | Level: %s\n", 
+        sys_tok ? sys_tok : "UNCHANGED", 
+        lvl_tok ? lvl_tok : "UNCHANGED");
 }
