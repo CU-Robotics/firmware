@@ -18,13 +18,19 @@ public:
         uint8_t b;
     };
 
-    /// @brief Common colors used by the status slots
+    /// @brief All channels off
     static constexpr Color OFF = {0, 0, 0};
+    /// @brief Red
     static constexpr Color RED = {255, 0, 0};
+    /// @brief Yellow
     static constexpr Color YELLOW = {255, 255, 0};
+    /// @brief Green
     static constexpr Color GREEN = {0, 255, 0};
+    /// @brief Cyan
     static constexpr Color CYAN = {0, 255, 255};
+    /// @brief Blue
     static constexpr Color BLUE = {0, 0, 255};
+    /// @brief Magenta
     static constexpr Color MAGENTA = {255, 0, 255};
 
     /// @brief What each segment of the strip shows
