@@ -38,7 +38,7 @@ public:
     /// @param state_config Configuration for the state to initialize.
     void set_state(const Cfg::State& state_config) {
         const size_t idx = static_cast<size_t>(state_config.name);
-        safety::assert_or_safety_procedure(idx < NUM_STATES, "RobotStateArray: Invalid state index %u", static_cast<uint32_t>(idx));
+        safety::assert_or_safety_procedure(idx < NUM_STATES, safety::errorSeverity::Critical, "RobotStateArray: Invalid state index %u", static_cast<uint32_t>(idx));
         robot_states[idx].emplace(state_config);
     }
     /// @brief Get a const reference corresponding to the given state name. Will trigger a safety procedure if the state name is not found in the array.

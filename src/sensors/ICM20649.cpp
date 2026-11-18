@@ -12,19 +12,19 @@ void ICM20649::init() {
     switch (config.communication_protocol) {
     case Cfg::CommunicationProtocol::I2C:
     {
-        safety::assert_or_safety_procedure(sensor.begin_I2C(), "ICM: Failed to begin I2C");
+        safety::assert_or_safety_procedure(sensor.begin_I2C(), safety::errorSeverity::Error, "ICM: Failed to begin I2C");
         break;
     }
     case Cfg::CommunicationProtocol::SPI:
     {
-        safety::assert_or_safety_procedure(sensor.begin_SPI(config.spi_cs, &SPI1), "ICM: Failed to begin SPI. Pins: CS: %u, SCK: %u, MISO: %u, MOSI: %u", config.spi_cs, config.spi_sck, config.spi_miso, config.spi_mosi);
+        safety::assert_or_safety_procedure(sensor.begin_SPI(config.spi_cs, &SPI1), safety::errorSeverity::Error, "ICM: Failed to begin SPI. Pins: CS: %u, SCK: %u, MISO: %u, MOSI: %u", config.spi_cs, config.spi_sck, config.spi_miso, config.spi_mosi);
 		pinMode(config.spi_cs,OUTPUT);
         break;
     }
     default:
     {
         // any other value is unexpected and will not allow the sensor to function.
-        safety::safety_procedure("Invalid ICM20649 protocol selected! Expects only I2C or SPI. Recieved: %u", static_cast<uint32_t>(config.communication_protocol));
+        safety::safety_procedure("Invalid ICM20649 protocol selected! Expects only I2C or SPI. Recieved: %u", safety::errorSeverity::Error, static_cast<uint32_t>(config.communication_protocol));
         break;
     }
     }
@@ -74,7 +74,7 @@ void ICM20649::request_read() {
 	digitalWrite(config.spi_cs, LOW); // Select the sensor (ICM is low triggerd)
     
     // Non-blocking SPI transfer
-	safety::assert_or_safety_procedure(SPI1.transfer(tx_buffer, rx_buffer, 15, spi_event),"=== Error in SPI1 transfer ===");
+	safety::assert_or_safety_procedure(SPI1.transfer(tx_buffer, rx_buffer, 15, spi_event), safety::errorSeverity::Error, "=== Error in SPI1 transfer ===");
     transfer_in_progress = true;
 }
 

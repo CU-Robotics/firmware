@@ -158,7 +158,7 @@ struct Estimator : Comms::CommsData {
     const MotorName& get_motor_name_by_generic_use(GenericEstimatorMotorUse motor_use) const {
         int motor_index = static_cast<int>(motor_use);
 
-        safety::assert_or_safety_procedure(motor_index < (int)MAX_GENERIC_MOTOR_USES_PER_ESTIMATOR && motor_index >= 0, "Generic motor use index out of bounds");
+        safety::assert_or_safety_procedure(motor_index < (int)MAX_GENERIC_MOTOR_USES_PER_ESTIMATOR && motor_index >= 0, safety::errorSeverity::Critical, "Generic motor use index out of bounds");
         return generic_motor_uses_to_names[motor_index];
     }
 
@@ -169,7 +169,7 @@ struct Estimator : Comms::CommsData {
         int state_index = static_cast<int>(state_use);
         for(uint32_t i = 0; i < MAX_GENERIC_STATE_USES_PER_ESTIMATOR; i++) {
         }
-        safety::assert_or_safety_procedure(state_index < (int)MAX_GENERIC_STATE_USES_PER_ESTIMATOR && state_index >= 0, "Generic state use index out of bounds");
+        safety::assert_or_safety_procedure(state_index < (int)MAX_GENERIC_STATE_USES_PER_ESTIMATOR && state_index >= 0, safety::errorSeverity::Critical, "Generic state use index out of bounds");
         return generic_state_uses_to_names[state_index];
     }
 
@@ -178,7 +178,7 @@ struct Estimator : Comms::CommsData {
     /// @return The sensor name with the given generic use, or an empty sensor name if it was not found
     const SensorName& get_sensor_name_by_generic_use(GenericSensorUse sensor_use) const {
         int sensor_index = static_cast<int>(sensor_use);
-        safety::assert_or_safety_procedure(sensor_index < (int)MAX_GENERIC_SENSOR_USES_PER_ESTIMATOR && sensor_index >= 0, "Generic sensor use index out of bounds");
+        safety::assert_or_safety_procedure(sensor_index < (int)MAX_GENERIC_SENSOR_USES_PER_ESTIMATOR && sensor_index >= 0, safety::errorSeverity::Critical, "Generic sensor use index out of bounds");
         return generic_sensor_uses_to_names[sensor_index];
     }
 };

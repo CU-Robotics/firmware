@@ -10,6 +10,10 @@ ifneq ($(filter release,$(MAKECMDGOALS)),)
 	BUILD_TYPE := release
 endif
 
+ifeq ($(BUILD_TYPE),release)
+    FEATURE_DEFINES += -DFW_RELEASE
+endif
+
 BUILD_DIR := $(BUILD_BASE_DIR)/$(BUILD_TYPE)
 TOOLS_DIR := tools
 

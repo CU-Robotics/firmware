@@ -135,8 +135,8 @@ protected:
                 return can.get_motor_by_name(requested_motor_name);
             }        
         }
-        safety::safety_procedure("Controller requires motor that is not available. (multiple controllers may be trying to use the same motor)");
-        
+        safety::safety_procedure("Controller requires motor that is not available. (multiple controllers may be trying to use the same motor)", safety::errorSeverity::Error);
+        return can.get_motor_by_name(requested_motor_name);
     }
 };
 
@@ -578,7 +578,7 @@ struct LowerFeederController : public Controller {
                 }
             }
             if (!found) {
-                safety::safety_procedure("Upper Feeder state config not found in config");
+                safety::safety_procedure("Upper Feeder state config not found in config", safety::errorSeverity::Error);
             }
         }
 

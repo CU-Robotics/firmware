@@ -129,7 +129,7 @@ void HiveData::set_data(CommsData* data) {
 	     break;
      }
     default:
-        safety::safety_procedure("HiveData::set_data: Invalid type label given to place in mega struct: %u\n", static_cast<uint32_t>(data->type_label));
+        safety::safety_procedure("HiveData::set_data: Invalid type label given to place in mega struct: %u\n", safety::errorSeverity::Warning, static_cast<uint32_t>(data->type_label));
     }
 }
 

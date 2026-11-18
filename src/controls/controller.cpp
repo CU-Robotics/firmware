@@ -140,6 +140,7 @@ void Controller::handleControllerError(const char* controller_name, const char* 
     const Cfg::State& config = reference_state.config();
     safety::safety_procedure(
         "%s: %s controller error exceeded threshold. error=%f threshold=%f",
+        safety::errorSeverity::Critical,
         controller_name,
         state_name,
         error,

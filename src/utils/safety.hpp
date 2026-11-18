@@ -1,9 +1,13 @@
 #pragma once
 #include <utility>
+#include <concepts>
 #include <functional>
+#include <type_traits>
+#include <cstdint>
+#include <cstdio>
+#include "system_log.hpp"
 
 #ifdef FW_SIMULATION
-#include <cstdio>
 #include <stdexcept>
 #else
 #include <Arduino.h>
@@ -15,6 +19,23 @@ constexpr int SAFETY_PROCEDURE_LED_BLINK_FREQ = 5;
 constexpr int SAFETY_PROCEDURE_LED_BLINK_DURATION_MS = 1000 / (2 * SAFETY_PROCEDURE_LED_BLINK_FREQ);
 
 namespace safety {
+    /// @brief Severity of a safety message and the corresponding firmware response.
+    /// @note Release firmware treats every severity as Warning.
+    enum class errorSeverity : std::uint8_t {
+        Privileged, ///< Terminate the program won't be overwritten in release mode.
+        Warning,    ///< Print a warning message and continue.
+        Error,      ///< Invoke the safety callback, print an error, and halt normal execution.
+        Critical    ///< Invoke the safety callback, print a critical error, and halt normal execution.
+    };
+
+    /// @brief Compile-time filter for arguments accepted by the safety message functions.
+    /// @details Accepts integral and floating-point types regardless of cv/ref qualifiers,
+    /// and types convertible to const char*.
+    /// @tparam T The argument type to check.
+    /// @note Checks argument types only; it does not validate format strings.
+    template <typename T>
+    concept printable = std::integral<std::remove_cvref_t<T>> || std::floating_point<std::remove_cvref_t<T>> || std::convertible_to<T, const char *>;
+
     /// @brief Type definition for our safety function    
     using SafetyFunction = std::function<void()>;
 
@@ -41,12 +62,15 @@ namespace safety {
         return true;
     }
 
-    /// @brief Trigger the safety procedure, which will call the registered safety function and then enter an infinite loop. If a safety function is not registered, it will immediately enter the infinite loop.
+    /// @brief Print the severity and message; Error and Critical also trigger the safety callback and halt. Simulation always throws.
+    /// @note Release firmware prints every severity as Warning and returns without invoking the safety callback.
     /// @param message The message to print when the safety procedure is triggered, which can include format specifiers for the additional arguments
+    /// @param errortype The severity, which determines whether to return or halt
     /// @param args Variadic arguments to be formatted into the message
     /// @tparam Args The types of the variadic arguments
     template<typename... Args>
-    [[noreturn]] inline void safety_procedure(const char* message, Args&&... args) {
+        requires(printable<Args> && ...)
+    inline void safety_procedure(const char* message, errorSeverity errortype, Args &&... args) {
     #ifdef FW_SIMULATION
 
         // throw in simulation for graceful error handling
@@ -56,19 +80,41 @@ namespace safety {
 
     #else
 
-        Serial.printf("Safety procedure triggered!\n");
-        if (!call_safety_function()) {
-            Serial.printf("Safety procedure triggered but no safety function registered!\n");
+    #ifdef FW_RELEASE
+        if(errortype != errorSeverity::Privileged) errortype = errorSeverity::Warning;
+    #endif
+
+        const char* severity_name = "Unknown";
+        switch (errortype) {
+            case errorSeverity::Privileged: severity_name = "Privileged"; break;
+            case errorSeverity::Warning: severity_name = "Warning"; break;
+            case errorSeverity::Error: severity_name = "Error"; break;
+            case errorSeverity::Critical: severity_name = "Critical"; break;
+        }
+        const bool should_halt = errortype != errorSeverity::Warning;
+
+        if (should_halt && !call_safety_function()) {
+            SystemLog.error(Subsystem::GENERAL, "Safety procedure triggered but no safety function registered!");
         }
 
-        Serial.printf(message, args...);
-        Serial.println();
-        while(true) {
-            // Blink the teensy's LED to indicate a safety procedure has been triggered
-            digitalWrite(LED_BUILTIN, HIGH);
-            delay(SAFETY_PROCEDURE_LED_BLINK_DURATION_MS);
-            digitalWrite(LED_BUILTIN, LOW);
-            delay(SAFETY_PROCEDURE_LED_BLINK_DURATION_MS);
+        // Please let me fix doxegen.
+        char msg_buf[512];
+        // Dont take this too seriously im just tryna fix doxegen it compiles and builds fine 
+        std::snprintf(msg_buf, sizeof(msg_buf), message, std::forward<Args>(args)...);
+        if (errortype == errorSeverity::Warning) {
+            SystemLog.warn(Subsystem::GENERAL, "%s: %s", severity_name, msg_buf);
+        } else {
+            SystemLog.error(Subsystem::GENERAL, "%s: %s", severity_name, msg_buf);
+        }
+
+        if (should_halt) {
+            while (true) {
+                // Blink the teensy's LED to indicate a safety procedure has been triggered
+                digitalWrite(LED_BUILTIN, HIGH);
+                delay(SAFETY_PROCEDURE_LED_BLINK_DURATION_MS);
+                digitalWrite(LED_BUILTIN, LOW);
+                delay(SAFETY_PROCEDURE_LED_BLINK_DURATION_MS);
+            }
         }
 
     #endif
@@ -76,13 +122,15 @@ namespace safety {
 
     /// @brief Assert a condition or trigger the safety procedure if the condition is not met
     /// @param condition The condition to assert
+    /// @param errortype The severity, which determines whether to return or halt
     /// @param message The message to print if the condition is not met
     /// @param args Variadic arguments to be formatted into the message
     /// @tparam Args The types of the variadic arguments
     template<typename... Args>
-    inline void assert_or_safety_procedure(bool condition, const char* message, Args&&... args) {
+        requires(printable<Args> && ...)
+    inline void assert_or_safety_procedure(bool condition, errorSeverity errortype, const char* message, Args&&... args) {
         if (!condition) {
-            safety_procedure(message, std::forward<Args>(args)...);
+            safety_procedure(message, errortype, std::forward<Args>(args)...);
         }
     }
 }

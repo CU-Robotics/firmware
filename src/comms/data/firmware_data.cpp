@@ -105,7 +105,7 @@ void FirmwareData::set_data(CommsData* data) {
         break;
     }
     default:
-        safety::safety_procedure("FirmwareData::set_data: Invalid type label given to place in mega struct: %u", static_cast<uint16_t>(data->type_label));
+        safety::safety_procedure("FirmwareData::set_data: Invalid type label given to place in mega struct: %u", safety::errorSeverity::Warning, static_cast<uint16_t>(data->type_label));
     }
 
 }
