@@ -36,6 +36,8 @@
 #include "comms/data/sendable.hpp"
 #include "utils/timing.hpp"
 #include "utils/watchdog.hpp"
+#include "utils/sd/sd_manager.hpp"
+#include "utils/sd/sd_logger.hpp"
 
 extern "C" void reset_teensy(void);
 
@@ -79,6 +81,12 @@ class HelloRobot {
 
     /// @brief Hardware watchdog that resets the Teensy if the loop hangs.
     Watchdog watchdog;
+
+    /// @brief Manages the builtin SD card reader
+    SdManager sd_manager;
+
+    /// @brief Manages logging to SD card
+    SdLogger sd_logger;
 
     // ==========================================
     // SYSTEM TIMERS & COUNTERS

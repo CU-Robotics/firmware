@@ -1,4 +1,6 @@
 #include "system_log.hpp"
+#include "comms/data/sendable.hpp"
+#include "utils/log_data.hpp"
 
 // Instantiate the global logger
 SystemLogger SystemLog;
@@ -22,6 +24,24 @@ const char* level_to_color(LogLevel lvl) {
         case LogLevel::WARN:  return "\033[33m"; // Yellow
         default:              return "\033[0m";  // Reset/Terminal Default
     }
+}
+
+const char* level_to_str(LogLevel level) {
+    switch(level) {
+        case LogLevel::WARN: return "WARN";
+        case LogLevel::ERROR: return "ERROR";
+        default: return "INFO";
+    };
+}
+
+LogText::LogText(const LogEvent& event) {
+    snprintf(this->text, sizeof(this->text),
+        "%f : %s : %s : %s\n",
+        event.timestamp,
+        level_to_str(event.level),
+        sys_to_str(event.sys),
+        event.text
+    );
 }
 
 void SystemLogger::set_context(LogLevel lvl, Subsystem sys) {
@@ -75,6 +95,19 @@ void SystemLogger::push_message() {
             Serial.print(shared_cli_buffer);
         }
     }
+
+    // create text representation of the log event
+    LogText log_text(messages[head]);
+
+    // Log data to SD card if it's bound
+    if (sd_logger)
+        sd_logger->write_log(log_text.text);
+
+    // Send log data over comms
+    LogData log_data(log_text.text);
+    Comms::Sendable<LogData> sendable;
+    sendable.data = log_data;
+    sendable.send_to_comms();
 
     // 3. Advance circular buffer
     head = (head + 1) % LOG_HISTORY;

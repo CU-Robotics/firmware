@@ -1,4 +1,5 @@
 #pragma once
+#include "utils/sd/sd_logger.hpp"
 #include <Arduino.h>
 
 enum class LogLevel { INFO, WARN, ERROR };
@@ -15,6 +16,26 @@ struct LogEvent {
     /// @brief contains message with max length 80 characters
     char text[80];
 };
+
+/// @brief Text representation of a `LogEvent`
+struct LogText {
+    /// @brief Char array representing the log event
+    char text[128];
+
+    /// @brief Construct log text from a `LogEvent`
+    /// @param event `LogEvent` to convert into text representation
+    LogText(const LogEvent& event);
+};
+
+/// @brief Converts Subsystem enum to cstring
+/// @param sys Subsystem to convert
+/// @return cstring representaiton of `sys`
+const char* sys_to_str(Subsystem sys);
+
+/// @brief Converts LogLevel to appropriate string representation
+/// @param level LogLevel to convert
+/// @return cstring representation of `level`
+const char* level_to_str(LogLevel level);
 
 /// @brief Serial wrapper for handling print statements
 class SystemLogger : public Print {
@@ -38,6 +59,8 @@ private:
     uint8_t line_length = 0;
 	/// @brief pointer to link CLI to logger so print statements arent interuppted
     char* shared_cli_buffer = nullptr;
+    /// @brief pointer to SD logger to log to
+    SdLogger* sd_logger = nullptr;
   
     /// @brief Context for standard Print() calls
     LogLevel current_level = LogLevel::INFO;
@@ -108,6 +131,9 @@ public:
     /// @brief Call this once at boot to link the CLI buffer to the logger
     /// @param buffer is a pointer to CLI buffer
     void bind_cli_buffer(char* buffer) { shared_cli_buffer = buffer; }
+    /// @brief Call at boot to link to SD logger
+    /// @param logger is a pointer to the SdLogger instance
+    void bind_sd_logger(SdLogger* logger) { sd_logger = logger; }
 };
 
 // Declare a global instance so you can use it everywhere, just like 'Serial'
