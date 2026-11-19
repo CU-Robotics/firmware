@@ -3,6 +3,7 @@
 #include "comms/data/comms_data.hpp"            // for CommsData
 #include "comms/data/data_structs.hpp"          // for shared data structs
 #include "comms/config_data/robot_config.hpp"   // for RobotConfig
+#include "comms/data/hive_status_data.hpp"     // for HiveStatus
 
 namespace Comms {
 
@@ -27,6 +28,9 @@ struct HiveData {
 
     /// @brief stores the stereo camera trigger start and stop information
     StereoCamStartStop stereo_cam_start_stop;
+
+    /// @brief Latest status packet from Hive
+    HiveStatus hive_status;
     /// @brief The configuration data filled as config sections are received over comms. This should only be used after all config sections have been received.
     Cfg::RobotConfig config;
 };
