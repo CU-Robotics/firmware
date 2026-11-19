@@ -8,7 +8,6 @@ void NeoPixel::begin() {
     pixels_.begin();
     pixels_.setBrightness(BRIGHTNESS);
 
-    // Always write once so the strip matches colors_ (all off) after power up
     pixels_.clear();
     pixels_.show();
     dirty_ = false;

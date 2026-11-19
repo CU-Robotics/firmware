@@ -29,7 +29,7 @@ struct HiveData {
     /// @brief stores the stereo camera trigger start and stop information
     StereoCamStartStop stereo_cam_start_stop;
 
-    /// @brief Latest status packet from Hive, used for the status lights
+    /// @brief Latest status packet from Hive
     HiveStatus hive_status;
     /// @brief The configuration data filled as config sections are received over comms. This should only be used after all config sections have been received.
     Cfg::RobotConfig config;

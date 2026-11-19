@@ -32,14 +32,14 @@ public:
     /// @return Exit status, 0 for success, < 0 for error
     /// @note Should never return
     int run();
-    /// @brief Phases of configure(), reported through its callback
+    /// @brief Phases reported by configure()
     enum class ConfigPhase {
-        WaitingForHive,     ///< No config start packet from Hive yet
-        ReceivingConfig,    ///< Hive started sending config sections
+        WaitingForHive,     ///< No config start packet yet
+        ReceivingConfig,    ///< Receiving config sections
     };
 
     /// @brief Requests the configuration data from the Hive and waits until it is fully received before returning
-    /// @param on_phase Optional callback, called once when each phase starts. Used to update the status lights.
+    /// @param on_phase Optional callback, called when each phase starts
     void configure(const std::function<void(ConfigPhase)> &on_phase = nullptr);
 public:
     /// @brief Send a CommsData packet to the appropriate packet payload

@@ -195,7 +195,7 @@ class HelloRobot {
     /// @brief Handles all comms data transfers
     void update_comms();
 
-    /// @brief Updates the status LEDs from the safety state, Hive connection, and localization status
+    /// @brief Updates the status LEDs
     void update_status();
 	
 	/// @brief Checks loop timing/safety constraints and writes to the CAN bus.

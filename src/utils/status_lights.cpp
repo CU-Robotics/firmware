@@ -4,7 +4,6 @@ void StatusLights::set(Slot slot, Color color) {
     constexpr uint16_t slot_count = static_cast<uint16_t>(Slot::Count);
     uint16_t pixels_per_slot = strip_.num_pixels() / slot_count;
 
-    // Strips shorter than the slot count get one pixel per slot, and slots past the end are dropped
     if (pixels_per_slot == 0) {
         pixels_per_slot = 1;
     }

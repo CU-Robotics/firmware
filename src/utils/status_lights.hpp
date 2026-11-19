@@ -3,9 +3,7 @@
 #include <stdint.h>
 #include "sensors/NeoPixel.hpp"
 
-/// @brief Splits the status NeoPixel strip into one segment per status, each with its own color.
-/// @note Segments are laid out in Slot order from DIN, and the strip is split evenly between them.
-///       On the 8 pixel strip each slot gets 2 pixels.
+/// @brief Status strip split evenly into one segment per Slot, in order from DIN
 class StatusLights {
 public:
     /// @brief An RGB color
@@ -33,29 +31,29 @@ public:
     /// @brief Magenta
     static constexpr Color MAGENTA = {255, 0, 255};
 
-    /// @brief What each segment of the strip shows
+    /// @brief Strip segments
     enum class Slot : uint8_t {
-        Safety = 0,     ///< Arming state and the first active safety reason
-        Hive,           ///< Whether Hive is running and whether comms is configuring
-        Imu,            ///< IMU gyro calibration
-        Localization,   ///< Whether the robot is localized on the field
+        Safety = 0,     ///< Arming state
+        Hive,           ///< Hive running / configuring
+        Imu,            ///< IMU calibration
+        Localization,   ///< Localization
         Count
     };
 
-    /// @brief Construct the status lights. Call begin() before use.
-    /// @param pin Teensy data pin connected to the strip's DIN
-    /// @param numPixels Number of pixels on the strip
+    /// @brief Constructor. Call begin() before use.
+    /// @param pin Data pin
+    /// @param numPixels Pixel count
     StatusLights(uint8_t pin, uint16_t numPixels) : strip_(pin, numPixels) {}
 
-    /// @brief Initialize the strip and turn every slot off
+    /// @brief Initialize the strip, all off
     void begin() { strip_.begin(); }
 
-    /// @brief Stage a color for one slot. Call show() to push it to the strip.
+    /// @brief Stage a slot's color. Call show() to send.
     /// @param slot The slot to set
     /// @param color The color to show
     void set(Slot slot, Color color);
 
-    /// @brief Set a slot and push it to the strip right away. Use this outside the main loop, e.g. before a blocking step.
+    /// @brief Set a slot and send immediately
     /// @param slot The slot to set
     /// @param color The color to show
     void set_now(Slot slot, Color color) {
@@ -63,10 +61,10 @@ public:
         show();
     }
 
-    /// @brief Push staged colors to the strip, skipping the write if nothing changed
+    /// @brief Send staged colors
     void show() { strip_.show(); }
 
 private:
-    /// @brief The underlying strip
+    /// @brief Underlying strip
     NeoPixel strip_;
 };

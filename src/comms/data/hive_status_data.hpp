@@ -2,18 +2,18 @@
 
 #include "comms/data/comms_data.hpp"    // for CommsData
 
-/// @brief Localization state reported by Hive
+/// @brief Localization state from Hive. Must match hive-rs.
 enum class LocalizationStatus : uint32_t {
-    Unavailable = 0,    ///< No localization is running on Hive
-    Lost = 1,           ///< Localization is running but does not have a pose yet
-    Localized = 2,      ///< Localization has a pose
+    Unavailable = 0,    ///< No localization running
+    Lost = 1,           ///< Running, no pose yet
+    Localized = 2,      ///< Has a pose
 };
 
-/// @brief Periodic status packet from Hive, used for the status lights
+/// @brief Status packet from Hive. Must match hive-rs.
 struct HiveStatus : Comms::CommsData {
-    /// @brief Default constructor that sets the type label, medium, priority, and size
+    /// @brief Default constructor
     HiveStatus() : CommsData(Comms::TypeLabel::HiveStatus, Comms::PhysicalMedium::Ethernet, Comms::Priority::Medium, sizeof(HiveStatus)) { }
 
-    /// @brief Hive's localization state
+    /// @brief Localization state
     LocalizationStatus localization_status = LocalizationStatus::Unavailable;
 };

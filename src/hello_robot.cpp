@@ -2,7 +2,7 @@
 #include "utils/status_lights.hpp"
 #include <wiring.h>
 
-/// @brief Status LED strip on pin 14. See StatusLights::Slot for what each segment shows.
+/// @brief Status LED strip on pin 14
 static StatusLights status_lights{14, 8};
 
 #ifdef PROFILER
@@ -21,10 +21,8 @@ void HelloRobot::init() {
 
     using Slot = StatusLights::Slot;
     status_lights.begin();
-    // Not armed until configured
     status_lights.set_now(Slot::Safety, StatusLights::YELLOW);
 
-    // Hive slot: red while waiting for Hive, yellow while config sections arrive
     Comms::comms_layer.configure([](Comms::CommsLayer::ConfigPhase phase) {
         bool waiting = phase == Comms::CommsLayer::ConfigPhase::WaitingForHive;
         status_lights.set_now(Slot::Hive, waiting ? StatusLights::RED : StatusLights::YELLOW);
@@ -51,7 +49,7 @@ void HelloRobot::init() {
     ref.init();
     transmitter_manager.init(config.transmitter);
 
-    // initialize sensors. The ICM gyro calibrates inside init(), so show it as calibrating until that returns.
+    // initialize sensors. The ICM gyro calibrates inside init().
     bool has_imu = !config.icm_imus.empty();
     if (has_imu) {
         status_lights.set_now(Slot::Imu, StatusLights::YELLOW);
@@ -293,8 +291,8 @@ void HelloRobot::update_status() {
     using Slot = StatusLights::Slot;
     uint8_t reasons = safety_state.active_reasons();
 
-    // Safety slot: one color per safety reason. If several are active, the first match wins.
-    StatusLights::Color safety_color = StatusLights::GREEN;    // armed
+    // First matching reason wins
+    StatusLights::Color safety_color = StatusLights::GREEN;
     if (reasons & Reason::NOT_CONFIGURED) {
         safety_color = StatusLights::YELLOW;
     } else if (reasons & Reason::GIMBAL_POWER_OFF) {
@@ -308,11 +306,9 @@ void HelloRobot::update_status() {
     }
     status_lights.set(Slot::Safety, safety_color);
 
-    // Hive slot: green while Hive packets keep arriving, red once they stop
     bool hive_running = Comms::comms_layer.is_ethernet_connected();
     status_lights.set(Slot::Hive, hive_running ? StatusLights::GREEN : StatusLights::RED);
 
-    // Localization slot: off when Hive is down or not running localization, red when lost, green when localized
     StatusLights::Color localization_color = StatusLights::OFF;
     if (hive_running) {
         switch (Comms::comms_layer.get_hive_data().hive_status.localization_status) {
@@ -327,8 +323,6 @@ void HelloRobot::update_status() {
         }
     }
     status_lights.set(Slot::Localization, localization_color);
-
-    // The IMU slot is set during init(), since calibration only happens there
 
     status_lights.show();
 }
