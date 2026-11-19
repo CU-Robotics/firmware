@@ -6,6 +6,8 @@
 #include "comms/data/ET16S_data.hpp"
 #include "utils/timing.hpp"
 #include "comms/config_data/transmitter.hpp"
+#include "utils/safety_state.hpp"
+
 //http://www.wflysz.com/wflyftp/ET16S/ET16SENV1.00.pdf
 
 
@@ -226,7 +228,10 @@ class ET16S : public Transmitter {
 	/// @brief returns left slider
 	/// @note exists for DR16 Backwards Compatability
 	/// @return back left spin wheel value
-	float get_wheel();
+    float get_wheel();
+
+    /// @copydoc Transmitter::pre_flight_check
+    uint16_t pre_flight_check () override;
 
 	
 private:
@@ -391,7 +396,15 @@ private:
     volatile bool is_resyncing = false;
     /// @brief timer used for ensuring we dont read partial packets
     elapsedMillis gap_timer = 0;
+    
+	/// @brief Whether the last connected preflight check was in safety.
+	bool pre_flight_was_safety = true;
 
+	/// @brief Preflight check failures
+    uint16_t pre_flight_flags = Reason::NONE;
+
+
+    
 	/// @brief  Pointer to the singleton instance of this class
 	static ET16S* instance;
 };
