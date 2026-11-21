@@ -58,6 +58,10 @@ public:
     /// @param motor_config The configuration for the motor to configure, read from the config yaml
     void configure_motor(const Cfg::Motor& motor_config);
 
+    /// @brief Halt with the safety procedure if a GIM or SDC104 motor's CAN IDs overlap another motor's on the same
+    /// bus, since their frames would be read as each other's
+    void check_can_id_conflicts() const;
+
     /// @brief Read data from all busses and distribute them to the correct motors
     void read();
 

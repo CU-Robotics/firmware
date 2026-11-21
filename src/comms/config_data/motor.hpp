@@ -31,7 +31,9 @@ enum class MotorControllerType : uint32_t {
     C620,
     C610,
     MG,
+    /// Steadywin GIM protocol motors (GIM3505, GIM4310, GIM8108), driven by SteadywinGIM
     GIM,
+    /// Steadywin SDC104 controller (GIM6010)
     SDC104,
 };
 /// @brief Different types of motors that can be used on the robot.
